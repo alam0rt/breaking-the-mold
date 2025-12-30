@@ -18,15 +18,19 @@ def apply(config, args):
     # Basic settings
     # -------------------------------------------------------------------------
     
-    # Architecture: MIPS (PSX uses MIPS R3000)
-    config["arch"] = "mips"
+    # Architecture: MIPS (PSX uses MIPS R3000, little-endian)
+    config["arch"] = "mipsel"
     
     # Base directory for source files
-    config["baseimg"] = "disks/us/SLUS_000.00"  # Original binary
-    config["myimg"] = "build/us/game.bin"        # Your build
+    config["baseimg"] = "disks/pal/SLES_010.90"  # Original binary
+    config["myimg"] = "build/pal/game.bin"        # Your build
     
     # Map file from linker (shows symbol addresses)
-    config["mapfile"] = "build/us/game.map"
+    config["mapfile"] = "build/pal/game.map"
+    
+    # PSX load address: code starts at file offset 0x800, loaded to VRAM 0x80010000
+    # This tells asm-differ how to translate VRAM addresses to file offsets
+    config["base_shift"] = 0x80010000 - 0x800
     
     # Build command to run before diffing
     config["make_command"] = ["make"]
@@ -38,8 +42,8 @@ def apply(config, args):
     # MIPS-specific settings
     # -------------------------------------------------------------------------
     
-    # Instruction�comparison settings
-    config["objdump_executable"] = "mipsel-linux-gnu-objdump"
+    # Instruction comparison settings
+    config["objdump_executable"] = "mipsel-unknown-linux-gnu-objdump"
     
     # Show instruction�bytes in diff
     config["show_line_numbers"] = True
@@ -49,7 +53,7 @@ def apply(config, args):
     # -------------------------------------------------------------------------
     
     # Symbol files for address lookup
-    config["symbol_addrs_path"] = "config/symbols.us.txt"
+    config["symbol_addrs_path"] = "config/symbol_addrs.txt"
     
     # -------------------------------------------------------------------------
     # Diff display options

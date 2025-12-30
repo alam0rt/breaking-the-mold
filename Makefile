@@ -15,10 +15,11 @@
 PROJECT := game
 
 # Game version (us, eu, jp, etc.)
-VERSION := us
+# SLES_010.90
+VERSION := pal
 
 # Target binary (the original PSX executable to match)
-TARGET := disks/$(VERSION)/SLUS_000.00
+TARGET := disks/$(VERSION)/SLES_010.90
 
 # Splat configuration file
 SPLAT_CONFIG := config/splat.$(VERSION).yaml
@@ -118,7 +119,7 @@ CPPFLAGS := -I include -I include/psxsdk -D_LANGUAGE_C -DVERSION_$(VERSION)
 CFLAGS := -O2 -G0 -fno-builtin -mno-abicalls -mcpu=3000
 
 # Assembler flags
-ASFLAGS := -march=r3000 -mtune=r3000 -no-pad-sections -G0
+ASFLAGS := -march=r3000 -mtune=r3000 -no-pad-sections -G0 -Iinclude
 
 # Linker flags
 LDFLAGS := -nostdlib
@@ -133,9 +134,10 @@ C_SRCS := $(shell find $(SRC_DIR) -name '*.c' 2>/dev/null)
 # Find all ASM source files (from splat extraction)
 S_SRCS := $(shell find $(ASM_DIR) -name '*.s' 2>/dev/null)
 
-# Object files
-C_OBJS := $(C_SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.c.o)
-S_OBJS := $(S_SRCS:$(ASM_DIR)/%.s=$(BUILD_DIR)/%.s.o)
+# Object files - paths must match what splat generates in the linker script
+# splat outputs: build/pal/asm/pal/file.o (build_path + source path with .s -> .o)
+C_OBJS := $(C_SRCS:%.c=$(BUILD_DIR)/%.o)
+S_OBJS := $(S_SRCS:%.s=$(BUILD_DIR)/%.o)
 
 # All object files
 OBJS := $(C_OBJS) $(S_OBJS)
@@ -214,14 +216,15 @@ $(BUILD_DIR)/:
 #   - NOP insertion for pipeline hazards
 #   - div/rem expansion
 #   - .comm/.sdata handling
-$(BUILD_DIR)/%.c.o: $(SRC_DIR)/%.c | $(BUILD_DIR)/
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)/
 	@mkdir -p $(dir $@)
 	@echo "CC $<"
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CFLAGS) -o $(BUILD_DIR)/$*.s
 	$(MASPSX) $(MASPSX_FLAGS) $(ASFLAGS) $(BUILD_DIR)/$*.s -o $@
 
 # Assemble ASM files (from splat extraction or handwritten)
-$(BUILD_DIR)/%.s.o: $(ASM_DIR)/%.s | $(BUILD_DIR)/
+# Output to build/pal/asm/pal/*.o to match splat linker script
+$(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)/
 	@mkdir -p $(dir $@)
 	@echo "AS $<"
 	@$(AS) $(ASFLAGS) $< -o $@
@@ -272,7 +275,7 @@ ifndef FUNC
 	@echo "Usage: make diff FUNC=FunctionName"
 	@exit 1
 endif
-	$(PYTHON) tools/asm-differ/diff.py -mwo3 $(FUNC)
+	$(PYTHON) tools/asm-differ/diff.py -mw3 $(FUNC)
 
 # m2c - Decompile a function from assembly to C
 # Usage: make decompile FUNC=func_80012345
