@@ -11,14 +11,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nixgl.url = "github:nix-community/nixGL";
+    pcsx-redux.url = "github:grumpycoders/pcsx-redux";
+    #pcsx-redux.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, nixgl, pcsx-redux }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
+          overlays = [ nixgl.overlay ];
         };
 
         pythonEnv = pkgs.python3.withPackages (ps: with ps; [
@@ -80,6 +84,12 @@
             file
             which
             iconv
+
+            # openGL on nix
+            pkgs.nixgl.nixGLIntel
+
+            # PSX emulator for testing
+            pcsx-redux.packages.${system}.default
           ];
 
           shellHook = ''
