@@ -1,0 +1,29 @@
+# PSX Decompilation Tool Submodules
+# ==================================
+# These are the standard tools used across PSX decompilation projects.
+# Initialize with: git submodule update --init --recursive
+
+[submodule "tools/asm-differ"]
+	path = tools/asm-differ
+	url = https://github.com/simonlindholm/asm-differ.git
+	# ASM comparison tool - shows differences between compiled and original code
+
+[submodule "tools/m2c"]
+	path = tools/m2c
+	url = https://github.com/matt-kempster/m2c.git
+	# MIPS to C decompiler - converts disassembly to C code
+
+[submodule "tools/maspsx"]
+	path = tools/maspsx
+	url = https://github.com/mkst/maspsx.git
+	# PSX assembler macro expander - replicates PSY-Q ASPSX behavior
+
+[submodule "tools/decomp-permuter"]
+	path = tools/decomp-permuter
+	url = https://github.com/simonlindholm/decomp-permuter.git
+	# Code permutation tool - finds equivalent code that matches original
+
+[submodule "tools/mipsmatch"]
+	path = tools/mipsmatch
+	url = https://github.com/ttkb-oss/mipsmatch.git
+	# MIPS pattern matching tool

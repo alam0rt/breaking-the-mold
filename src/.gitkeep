@@ -1,0 +1,21 @@
+/* =============================================================================
+ * Main Source File - Template
+ * =============================================================================
+ * This is a template source file. Replace with actual decompiled code.
+ * =============================================================================
+ */
+
+#include "common.h"
+
+/* 
+ * Example: Include assembly for a function not yet decompiled
+ * INCLUDE_ASM("asm/us/main/nonmatchings", FunctionName);
+ */
+
+/*
+ * Example: A decompiled function
+ * 
+ * void ExampleFunction(s32 arg0) {
+ *     // Your decompiled code here
+ * }
+ */

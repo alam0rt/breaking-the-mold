@@ -1,0 +1,16 @@
+# =============================================================================
+# Relocation Addresses
+# =============================================================================
+# This file allows overriding relocations in the generated assembly.
+#
+# Use this when splat incorrectly identifies a relocation or when you need
+# to force a specific relocation type.
+#
+# Format:
+#   0xADDRESS = symbol_name
+#   0xADDRESS = symbol_name + 0xOFFSET
+#
+# Documentation: https://github.com/ethteck/splat/wiki/Advanced-Reloc
+# =============================================================================
+
+# Add relocation overrides below:

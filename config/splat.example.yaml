@@ -1,0 +1,162 @@
+# =============================================================================
+# Splat Configuration - PSX Game Template
+# =============================================================================
+# This configuration file tells splat how to split your PSX binary.
+#
+# Quick Start:
+#   1. Run: python3 -m splat create_config disks/us/SLUS_XXX.XX
+#   2. Use the generated yaml as a starting point
+#   3. Or customize this template manually
+#
+# Documentation: https://github.com/ethteck/splat/wiki/Configuration
+# =============================================================================
+
+name: My PSX Game (US)
+
+# SHA1 checksum of the target binary
+# Generate with: sha1sum disks/us/SLUS_XXX.XX
+sha1: 0000000000000000000000000000000000000000
+
+options:
+  # -------------------------------------------------------------------------
+  # Platform & Compiler
+  # -------------------------------------------------------------------------
+  platform: psx
+  compiler: GCC              # GCC for PSY-Q based games, or PSYQ for SN Systems
+
+  # -------------------------------------------------------------------------
+  # Naming
+  # -------------------------------------------------------------------------
+  basename: game             # Base name for output files
+
+  # -------------------------------------------------------------------------
+  # Paths
+  # -------------------------------------------------------------------------
+  base_path: .
+  target_path: disks/us/SLUS_XXX.XX
+  elf_path: build/us/game.elf
+
+  build_path: build/us
+  src_path: src
+  asm_path: asm/us
+  asset_path: assets
+
+  ld_script_path: build/us/game.ld
+
+  # -------------------------------------------------------------------------
+  # Symbol files
+  # -------------------------------------------------------------------------
+  symbol_addrs_path:
+    - config/symbol_addrs.txt
+
+  reloc_addrs_path:
+    - config/reloc_addrs.txt
+
+  undefined_funcs_auto_path: build/us/undefined_funcs_auto.txt
+  undefined_syms_auto_path: build/us/undefined_syms_auto.txt
+
+  # -------------------------------------------------------------------------
+  # Extensions (optional custom segment types)
+  # -------------------------------------------------------------------------
+  extensions_path: tools/splat_ext
+
+  # -------------------------------------------------------------------------
+  # Assembly options
+  # -------------------------------------------------------------------------
+  # Use .o suffix (file.c.o vs file.o)
+  o_as_suffix: True
+
+  # Use modern INCLUDE_ASM macro format
+  use_legacy_include_asm: False
+
+  # Generate macro files (include_asm.h, macro.inc, etc.)
+  generate_asm_macros_files: True
+
+  # Function/label macros for assembly
+  asm_function_macro: glabel
+  asm_jtbl_label_macro: jlabel
+  asm_data_macro: dlabel
+
+  # -------------------------------------------------------------------------
+  # Linker script options
+  # -------------------------------------------------------------------------
+  ld_dependencies: True
+
+  # Sections that will auto-generate linker entries
+  auto_link_sections: [".data", ".rodata", ".bss"]
+
+  # Section ordering (PSX typical order)
+  section_order: [".text", ".data", ".rodata", ".bss"]
+
+  # -------------------------------------------------------------------------
+  # Disassembly options
+  # -------------------------------------------------------------------------
+  find_file_boundaries: True
+  pair_rodata_to_text: True
+  migrate_rodata_to_functions: False
+
+  # String encoding (Shift-JIS common for Japanese games)
+  # string_encoding: ASCII
+  # data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  # -------------------------------------------------------------------------
+  # C file options
+  # -------------------------------------------------------------------------
+  create_c_files: True
+  auto_decompile_empty_functions: True
+  do_c_func_detection: True
+
+  generated_c_preamble: '#include "common.h"'
+
+# =============================================================================
+# Segments
+# =============================================================================
+# Define how to split the binary. Start simple, refine as you understand
+# the binary structure.
+#
+# PSX executables have an 0x800 byte header before code starts.
+# Typical PSX RAM load address is 0x80010000.
+#
+# Segment types:
+#   header - PSX executable header
+#   code   - Code segment with subsegments
+#   bin    - Raw binary data
+#
+# Subsegment types:
+#   asm/hasm - Assembly (hasm = handwritten, won't be overwritten)
+#   c        - C source file
+#   data     - Initialized data
+#   rodata   - Read-only data
+#   bss      - Uninitialized data
+# =============================================================================
+
+segments:
+  # PSX executable header
+  - name: header
+    type: header
+    start: 0x0
+
+  # Main code segment
+  - name: main
+    type: code
+    start: 0x800
+    vram: 0x80010000
+    # bss_size: 0x10000    # Uncomment and set if you know BSS size
+    subsegments:
+      # Start with all code as asm, split into c as you decompile
+      - [0x800, asm]
+
+      # As you identify functions, split them:
+      # - [0x800, c, init]
+      # - [0x1000, asm, unknown_1]
+      # - [0x2000, c, main_loop]
+
+      # Data sections (adjust offsets for your binary)
+      # - [0x10000, data]
+      # - [0x12000, rodata]
+      # - { start: 0x14000, type: bss, vram: 0x80024000 }
+
+  # End of file marker (adjust to your binary's size)
+  - [0x20000]

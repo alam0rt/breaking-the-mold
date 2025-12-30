@@ -1,0 +1,34 @@
+# =============================================================================
+# Symbol Addresses
+# =============================================================================
+# This file maps symbol names to their addresses in the binary.
+# splat uses this for disassembly and the linker uses it for symbol resolution.
+#
+# Format:
+#   symbol_name = 0xADDRESS;
+#   symbol_name = 0xADDRESS; // attribute:value
+#
+# Common attributes:
+#   type:func     - Symbol is a function
+#   type:data     - Symbol is data
+#   type:jtbl     - Symbol is a jump table
+#   size:0xNN     - Size of the symbol in bytes
+#   rom:0xNN      - ROM address of the symbol
+#   dead:true     - Symbol is unused/dead code
+#   defined:true  - Symbol is defined elsewhere (don't create label)
+#
+# Examples:
+#   main = 0x80010000; // type:func
+#   g_GameState = 0x80020000; // type:data size:0x100
+#   jtbl_80015100 = 0x80015100; // type:jtbl
+#
+# Tips:
+#   - Start by adding symbols you identify during reverse engineering
+#   - Use consistent naming conventions (g_ for globals, s_ for statics)
+#   - Add function types to improve disassembly quality
+#   - splat will generate undefined_funcs_auto.txt for unknown symbols
+#
+# Documentation: https://github.com/ethteck/splat/wiki/Adding-Symbols
+# =============================================================================
+
+# Add your discovered symbols below:
