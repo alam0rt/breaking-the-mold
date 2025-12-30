@@ -55,7 +55,7 @@ segments:
     type: code
     start: 0x800
     vram: 0x80010000
-    # bss_size: Please fill out this value when you figure out the bss size
+    bss_size: 0x0  # No BSS references found in Ghidra analysis
     subsegments:
       - [0x800, asm, 800] # estimated
       - [0x13E8, data, 13E8] # estimated
