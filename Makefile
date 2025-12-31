@@ -360,3 +360,41 @@ clean-build:
 # Calculate decompilation progress
 progress:
 	@$(PYTHON) tools/progress.py $(BUILD_DIR)/$(PROJECT).map $(TARGET)
+
+# =============================================================================
+# Debug Targets (PCSX-Redux + GDB + ret-sync)
+# =============================================================================
+# Launch PCSX-Redux in debug mode (requires nixGL for OpenGL on non-NixOS)
+# Connect Ghidra debugger to localhost:3333
+# TODO: Use the flake's nixGLIntel wrapper instead of 'nix run' once we figure out
+#       how to make the overlay work with --impure for host GPU driver access
+ISO := disks/$(VERSION)/sles-01090.iso01.iso
+ELF := $(BUILD_DIR)/$(PROJECT).elf
+GDB_PORT := 3333
+
+# Launch PCSX-Redux emulator with GDB server (runs in foreground)
+emu:
+	nix run --impure github:nix-community/nixGL#nixGLIntel -- pcsx-redux -interpreter -debugger -gdb -iso $(ISO) -run -safe
+
+# Print debug instructions for Ghidra native debugger
+debug:
+	@echo "=== PSX Debug Session (Ghidra Native Debugger) ==="
+	@echo ""
+	@echo "1. Run 'make emu' to start PCSX-Redux with GDB server on port $(GDB_PORT)"
+	@echo ""
+	@echo "2. In Ghidra:"
+	@echo "   a. Right-click project -> 'Open With' -> 'Debugger'"
+	@echo "   b. In 'Debugger Targets' window, click the connector button (top-right)"
+	@echo "   c. Select 'gdb' from dropdown"
+	@echo "   d. Set launch command to:"
+	@echo "      ghidra-gdb -i mi2"
+	@echo "   e. Click 'Connect'"
+	@echo ""
+	@echo "3. In Ghidra's GDB Interpreter window:"
+	@echo "   (gdb) source $(CURDIR)/tools/ghidra_debugger_scripts"
+	@echo "   (gdb) target remote localhost:$(GDB_PORT)"
+	@echo ""
+	@echo "4. In 'Modules' tab: right-click top line -> 'Map Module to <your project>'"
+	@echo ""
+	@echo "You're now debugging! Use Ghidra's debugger controls (F5=continue, F10=step, etc.)"
+

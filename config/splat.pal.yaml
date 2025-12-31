@@ -16,14 +16,14 @@ options:
   ld_script_path: build/pal/game.ld
   ld_dependencies: True
 
-  find_file_boundaries: False
+  find_file_boundaries: True
   gp_value: 0x800A5954
   # ld_gp_expression: main_SCOMMON_START + 0x7FF0
 
   o_as_suffix: True
   use_legacy_include_asm: False
 
-  section_order: [".rodata", ".text", ".data", ".bss"]
+  section_order: [".rodata", ".text", ".data", ".sdata", ".sbss", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]
 
   symbol_addrs_path:
@@ -55,8 +55,16 @@ segments:
     type: code
     start: 0x800
     vram: 0x80010000
-    bss_size: 0x0  # No BSS references found in Ghidra analysis
+    bss_size: 0x82C0  # .sbss (0x48) + .bss (0x8278)
     subsegments:
-      - [0x800, asm, 800] # estimated
-      - [0x13E8, data, 13E8] # estimated
-  - [0x97000]
+      # .rdata section: 0x80010000 - 0x800131EF
+      - [0x800, rodata]
+      # .text section: 0x800131F0 - 0x800907EB (includes .text.split)
+      - [0x39F0, asm]
+      # .data section: 0x800907EC - 0x800A5953
+      - [0x80FEC, data]
+      # .sdata section: 0x800A5954 - 0x800A611F
+      - [0x96154, data, sdata]
+      # .sbss: 0x800A6120 - 0x800A6167 (handled by bss_size)
+      # .bss:  0x800A6168 - 0x800AE3DF (handled by bss_size)
+  - [0x9691F]  # End of .sdata in file

@@ -1,0 +1,24 @@
+# ret-sync configuration for PSX emulation debugging
+# Place in project root or ~/.sync
+
+[INTERFACE]
+host = localhost
+port = 9100
+
+[GENERAL]
+# Use tmp logging file for gdb output capture
+use_tmp_logging_file = True
+
+[INIT]
+# PSX emulation context - provides memory mappings since /proc/<pid>/maps
+# is not available for emulated targets. This allows ret-sync to properly
+# rebase addresses between GDB and Ghidra.
+#
+# PSX Memory Map:
+#   RAM: 0x80000000 - 0x801FFFFF (2MB main RAM, KSEG0 cached)
+#   The same RAM is mirrored at:
+#     0x00000000 - 0x001FFFFF (KUSEG, user cached)
+#     0xA0000000 - 0xA01FFFFF (KSEG1, uncached)
+#
+# Format: [start, end, size, name]
+context = {"pid": 1, "mappings": [[0x80000000, 0x80200000, 0x200000, "PSX_RAM"]]}

@@ -45,6 +45,17 @@
         # Cross-compilation toolchain for MIPS (PSX uses MIPS R3000)
         mipsCross = pkgs.pkgsCross.mipsel-linux-gnu;
 
+        # Wrap pcsx-redux with nixGLIntel for OpenGL support
+        pcsx-redux-wrapped = pkgs.writeShellScriptBin "pcsx-redux" ''
+          exec ${pkgs.nixgl.nixGLIntel}/bin/nixGLIntel ${pcsx-redux.packages.${system}.default}/bin/pcsx-redux "$@"
+        '';
+
+        # GDB wrapper for Ghidra debugger with required Python paths
+        ghidra-gdb = pkgs.writeShellScriptBin "ghidra-gdb" ''
+          export PYTHONPATH="${pkgs.ghidra}/lib/ghidra/Ghidra/Debug/Debugger-agent-gdb/pypkg/src:${pkgs.ghidra}/lib/ghidra/Ghidra/Debug/Debugger-rmi-trace/pypkg/src''${PYTHONPATH:+:$PYTHONPATH}"
+          exec ${pkgs.gdb}/bin/gdb "$@"
+        '';
+
       in
       {
         devShells.default = pkgs.mkShell {
@@ -85,11 +96,15 @@
             which
             iconv
 
+            # Debugging
+            gdb
+            ghidra-gdb
+
             # openGL on nix
             pkgs.nixgl.nixGLIntel
 
-            # PSX emulator for testing
-            pcsx-redux.packages.${system}.default
+            # PSX emulator for testing (wrapped with nixGLIntel)
+            pcsx-redux-wrapped
           ];
 
           shellHook = ''
@@ -99,6 +114,10 @@
 
             # Set library path for Python packages that need libstdc++
             export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH"
+
+            # Alias for pcsx-redux with impure nixGL (for non-NixOS systems)
+            # Use this if the wrapped version doesn't work with your GPU drivers
+            alias pcsx-redux-impure='nix run --impure github:nix-community/nixGL#nixGLIntel -- ${pcsx-redux.packages.${system}.default}/bin/pcsx-redux'
 
             # Python virtual environment
             if [ ! -d .venv ]; then
