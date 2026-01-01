@@ -39,3 +39,44 @@ SetDumpFnt = 0x80088C30;
 PadRead = 0x8008767C;
 DrawSync = 0x8008A298;
 VSync = 0x80087C24;
+
+// CdBLB - CD/BLB loading subsystem functions
+CdBLB_Stub = 0x80038B98; // size:0x8 // Empty stub function
+CdBLB_ReadSectors = 0x80038BA0; // size:0x74 // Read sectors from GAME.BLB
+CdBLB_WaitReadComplete = 0x80038C14; // size:0x40 // Wait for CD read to complete
+CdMusic_SetupPosition = 0x80038C54; // size:0x58 // Setup music file position
+CdMusic_Start = 0x80038CAC; // size:0x160 // Start XA music playback
+CdMusic_Stop = 0x80038E0C; // size:0x44 // Stop XA music playback
+CdMusic_Pause = 0x80038E50; // size:0x50 // Pause XA music
+CdMusic_Resume = 0x80038EA0; // size:0x50 // Resume XA music
+CdMusic_Update = 0x80038EF0; // size:0x1A4 // Music streaming state machine
+CdSeekWithRetry = 0x80039094; // size:0x94 // Seek with retry loop
+CdResetFilter = 0x80039128; // size:0x28 // Reset CD XA filter
+
+// CdBLB - sdata globals (GP-relative)
+g_MusicFileIndex = 0x800A59EC; // type:u8 // Current music file index (0-4)
+g_MusicState = 0x800A59E9; // type:u8 // Music playback state
+g_MusicPaused = 0x800A59EA; // type:u8 // Music pause flag
+g_MusicRetryCount = 0x800A59EB; // type:u8 // Seek retry counter
+g_MusicCurrentSector = 0x800A59F4; // type:s32 // Current playback sector
+g_MusicTargetSector = 0x800A59F8; // type:s32 // Target seek sector
+
+// CdBLB - data globals
+D_8009B3EC = 0x8009B3EC; // type:u16 // Music sector offset table
+D_800A5A04 = 0x800A5A04; // type:u8 // CD mode buffer
+D_800A59FC = 0x800A59FC; // type:s32 // CD filter params
+D_800A5A0C = 0x800A5A0C; // type:u8 // XA file number
+D_800A5A0D = 0x800A5A0D; // type:u8 // XA channel number
+
+// PSY-Q libcd wrapper functions
+CdIntToPos = 0x80083768; // type:func // Convert sector to CdlLOC
+CdControlF = 0x8008331C; // type:func // Send CD command (async)
+CdRead = 0x800860FC; // type:func // Read sectors
+CdReadSync = 0x80086200; // type:func // Wait for read completion
+CdDataSync = 0x800863B0; // type:func // Check data ready
+CdSync = 0x800862FC; // type:func // Sync with timeout
+CdGetlocP = 0x80083180; // type:func // Get physical position (cmd 0x11)
+CdControlB = 0x80083454; // type:func // Send CD command (sync)
+CdSetFilter = 0x80083580; // type:func // Set XA filter (cmd 0x0D)
+CdStatus = 0x800832AC; // type:func // Get CD status
+CdCallback = 0x8008320C; // type:func // CD callback handler

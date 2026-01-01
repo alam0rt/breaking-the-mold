@@ -70,7 +70,9 @@ segments:
       - [0x1695C, asm]
       # LoadGameAssetLocations: 0x800389DC - 0x80038B97
       - [0x291DC, c, LoadGameAssetLocations]
-      - [0x29398, asm]
+      # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F
+      - [0x29398, c, CdBLB]
+      - [0x29950, asm]
       # getLevelName: 0x8007AA08 - 0x8007AA27
       - [0x6B208, c, getLevelName]
       - [0x6B228, asm]

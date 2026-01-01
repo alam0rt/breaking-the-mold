@@ -136,9 +136,18 @@ LD_SCRIPT := $(BUILD_DIR)/$(PROJECT).ld
 
 .PHONY: all clean extract expected diff context check tools help
 
-# Default target
-all: $(BUILD_DIR)/$(PROJECT).bin
+# Default target - uses recursive make if ASM files don't exist
+all:
+	@if [ ! -d "$(ASM_DIR)" ]; then \
+		echo "ASM directory missing, running splat..."; \
+		$(SPLAT) $(SPLAT_CONFIG); \
+	fi
+	@$(MAKE) --no-print-directory build
 	@echo "Build complete!"
+
+# Actual build target (called after ASM exists)
+.PHONY: build
+build: $(BUILD_DIR)/$(PROJECT).bin
 
 # Show help
 help:
@@ -180,6 +189,11 @@ extract: $(SPLAT_CONFIG)
 	@echo "Extracting binary using splat..."
 	$(SPLAT) $(SPLAT_CONFIG)
 	@echo "Extraction complete. ASM files in $(ASM_DIR)/"
+
+# Generate linker script and ASM files if they don't exist
+$(LD_SCRIPT): $(SPLAT_CONFIG) $(BASEROM)
+	@echo "Running splat to generate linker script and ASM..."
+	$(SPLAT) $(SPLAT_CONFIG)
 
 # -----------------------------------------------------------------------------
 # Compilation Rules
