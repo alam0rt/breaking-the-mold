@@ -27,6 +27,7 @@ g_AllMusicFilesFound = 0x800A59E8; // type:s8
 getLevelName = 0x8007AA08; // size:0x20
 initPlayerState = 0x800260D0; // size:0x8C
 main = 0x800828B0; // size:0x360
+LoadBLBHeader = 0x800208B0; // size:0xC4 // Initializes BLB archive system and reads header
 // PSY-Q SDK functions identified from main()
 SsUtReverbOn = 0x80013248;
 ResetCallback = 0x80087E18;

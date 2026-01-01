@@ -10,7 +10,7 @@
 1. Add function to `symbol_addrs.txt` with address and size
 2. Add segment to `config/splat.pal.yaml`
 3. Run `python3 -m splat split config/splat.pal.yaml`
-4. Use m2c to decompile: `python3 tools/m2c/m2c.py --context ctx.c <asm_file>`
+4. Use m2c to decompile: `python3 tools/m2c/m2c.py --context ctx.c --target mipsel-gcc-c <asm_file>`
 5. Create C file in `src/` with decompiled code
 
 ## Key Addresses
