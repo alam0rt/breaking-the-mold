@@ -23,8 +23,9 @@ options:
   o_as_suffix: True
   use_legacy_include_asm: False
 
-  section_order: [".rodata", ".text", ".data", ".sdata", ".sbss", ".bss"]
-  # auto_link_sections: [".data", ".rodata", ".bss"]
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  auto_link_sections: [".data", ".rodata", ".bss"]
+  #section_order: [".rodata", ".text", ".data", ".sdata", ".sbss", ".bss"]
 
   symbol_addrs_path:
     - symbol_addrs.txt
@@ -55,16 +56,49 @@ segments:
     type: code
     start: 0x800
     vram: 0x80010000
-    bss_size: 0x82C0  # .sbss (0x48) + .bss (0x8278)
+    bss_size: 0x8278
     subsegments:
-      # .rdata section: 0x80010000 - 0x800131EF
+      # .rdata: 0x80010000 - 0x800131EF (size: 0x31F0)
       - [0x800, rodata]
-      # .text section: 0x800131F0 - 0x800907EB (includes .text.split)
+      # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
       - [0x39F0, asm]
-      # .data section: 0x800907EC - 0x800A5953
+      # __main: 0x8008E6E0 - 0x8008E7B7 (constructor init)
+      - [0x7EEE0, c, __main]
+      # .text continued after __main
+      - [0x7EFB8, asm]
+      # .text.split: 0x800907D0 - 0x800907EB (size: 0x1C)
+      - [0x80FD0, asm]
+      # .data: 0x800907EC - 0x800A5953 (size: 0x15168)
       - [0x80FEC, data]
-      # .sdata section: 0x800A5954 - 0x800A611F
+      # .sdata: 0x800A5954 - 0x800A611F (size: 0x7CC)
       - [0x96154, data, sdata]
-      # .sbss: 0x800A6120 - 0x800A6167 (handled by bss_size)
-      # .bss:  0x800A6168 - 0x800AE3DF (handled by bss_size)
+      # --- Uninitialized (handled by bss_size) ---
+      # CACHE: 0x1F800000 - 0x1F8003FF (size: 0x400)
+      # UNK1: 0x1F800400 - 0x1F800FFF (size: 0xC00)
+      # MCTRL1: 0x1F801000 - 0x1F801023 (size: 0x24)
+      # IO_PORTS: 0x1F801040 - 0x1F80105F (size: 0x20)
+      # MCTRL2: 0x1F801060 - 0x1F801063 (size: 0x4)
+      # INT_CTRL: 0x1F801070 - 0x1F801075 (size: 0x6)
+      # DMA_MDEC_IN: 0x1F801080 - 0x1F80108B (size: 0xC)
+      # DMA_MDEC_OUT: 0x1F801090 - 0x1F80109B (size: 0xC)
+      # DMA_GPU: 0x1F8010A0 - 0x1F8010AB (size: 0xC)
+      # DMA_CDROM: 0x1F8010B0 - 0x1F8010BB (size: 0xC)
+      # DMA_SPU: 0x1F8010C0 - 0x1F8010CB (size: 0xC)
+      # DMA_PIO: 0x1F8010D0 - 0x1F8010DB (size: 0xC)
+      # DMA_OTC: 0x1F8010E0 - 0x1F8010EB (size: 0xC)
+      # DMA_CTRL_INT: 0x1F8010F0 - 0x1F8010F7 (size: 0x8)
+      # TMR_DOTCLOCK: 0x1F801100 - 0x1F80110F (size: 0x10)
+      # TMR_HRETRACE: 0x1F801110 - 0x1F80111F (size: 0x10)
+      # TMR_SYSCLOCK: 0x1F801120 - 0x1F80112F (size: 0x10)
+      # CDROM_REGS: 0x1F801800 - 0x1F801803 (size: 0x4)
+      # GPU_REGS: 0x1F801810 - 0x1F801817 (size: 0x8)
+      # MDEC_REGS: 0x1F801820 - 0x1F801827 (size: 0x8)
+      # SPU_VOICES: 0x1F801C00 - 0x1F801D7F (size: 0x180)
+      # SPU_CTRL_REGS: 0x1F801D80 - 0x1F801DBF (size: 0x40)
+      # GTEMAC: 0x20000000 - 0x20000263 (size: 0x264)
+      # RAM: 0x80000000 - 0x8000FFFF (size: 0x10000)
+      # .sbss: 0x800A6120 - 0x800A6167 (size: 0x48)
+      # .bss: 0x800A6168 - 0x800AE3DF (size: 0x8278)
+      # RAM: 0x800AE3E0 - 0x801FFFFF (size: 0x151C20)
+  # - [0x96920]  # End of file
   - [0x9691F]  # End of .sdata in file

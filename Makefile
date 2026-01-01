@@ -277,24 +277,6 @@ ifndef FUNC
 endif
 	$(PYTHON) tools/asm-differ/diff.py -mw3 $(FUNC)
 
-# m2c - Decompile a function from assembly to C
-# Usage: make decompile FUNC=func_80012345
-decompile:
-ifndef FUNC
-	@echo "Usage: make decompile FUNC=func_80012345"
-	@exit 1
-endif
-	$(M2C) --target mipsel-gcc-c --context ctx.c asm/$(VERSION)/nonmatchings/$(FUNC).s
-
-# Generate ctx.c context file for m2c/decomp.me
-# This creates a preprocessed version of all headers for m2c
-context: ctx.c
-
-ctx.c:
-	@echo "Generating context file..."
-	$(CPP) -P $(CPPFLAGS) include/common.h > ctx.c
-	@echo "Context saved to ctx.c"
-
 # Import function into decomp-permuter
 # Usage: make permuter-import FILE=src/main.c FUNC=FunctionName
 permuter-import:
@@ -314,33 +296,6 @@ endif
 	$(PYTHON) tools/decomp-permuter/permuter.py nonmatchings/$(FUNC) --best-only -j4
 
 # -----------------------------------------------------------------------------
-# Tools
-# -----------------------------------------------------------------------------
-
-# Download toolchain binaries (old-gcc from decompals)
-tools:
-	./tools/download-toolchain.sh
-
-# Detect compiler signature in target binary
-# This helps identify which GCC version was used originally
-detect-compiler:
-	@echo "Analyzing binary for compiler signatures..."
-	@if strings $(TARGET) 2>/dev/null | grep -q "GCC:"; then \
-		echo "GCC signature found:"; \
-		strings $(TARGET) | grep "GCC:" | head -5; \
-	fi
-	@if strings $(TARGET) 2>/dev/null | grep -qi "psyq"; then \
-		echo "PSY-Q references found:"; \
-		strings $(TARGET) | grep -i "psyq" | head -5; \
-	fi
-	@echo ""
-	@echo "Common GCC versions for PSX:"
-	@echo "  PSY-Q 4.6 -> GCC 2.95.2"
-	@echo "  PSY-Q 4.4/4.5 -> GCC 2.91.66 (egcs 1.1.2)"
-	@echo "  PSY-Q 4.0-4.3 -> GCC 2.8.x"
-	@echo "  PSY-Q 3.x -> GCC 2.7.2 or 2.6.x"
-
-# -----------------------------------------------------------------------------
 # Cleanup
 # -----------------------------------------------------------------------------
 
@@ -353,16 +308,6 @@ clean:
 clean-build:
 	rm -rf $(BUILD_DIR)
 
-# -----------------------------------------------------------------------------
-# Progress Tracking
-# -----------------------------------------------------------------------------
-
-# Calculate decompilation progress
-progress:
-	@$(PYTHON) tools/progress.py $(BUILD_DIR)/$(PROJECT).map $(TARGET)
-
-# =============================================================================
-# Debug Targets (PCSX-Redux + GDB + ret-sync)
 # =============================================================================
 # Launch PCSX-Redux in debug mode (requires nixGL for OpenGL on non-NixOS)
 # Connect Ghidra debugger to localhost:3333
