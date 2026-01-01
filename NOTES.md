@@ -54,6 +54,19 @@ The GAME.BLB file offset is found by `CdFindFiles` and stored in a global variab
 
 funny structures start at 0x1000 and 0x6000. The latter has different content however.
 
+### Runtime structures touched by `LoadBLBHeader`
+
+- `D_800A5960` always points at the live `GameState` blob (defaulting to `D_8009DC40` in `main`). The offsets we care about are:
+    - `+0x3C` (`headerMirror`): pointer to `headerBuffer + 0x1000`. The engine seems to use this as a scratch page when the active BLB window advances.
+    - `+0x40` (`headerBuffer`): destination for the first two sectors (`CdBLB_ReadSectors(0, 2, ...)`). Runtime tools and memdumps show this is `0x800AE3E0` (PAL) or `0x800AE450` (other versions).
+    - `+0x84` (`cdRequest`): 0x80-byte control block handed to `func_8007A1BC`/`func_8007BB00`, but the same window is also parsed by `func_8007A9B0`/`getLevelName`. After a synchronous read completes, `+0x84` contains the live header contents.
+    - `+0x11C` (`headerBufferSize`): length of the allocation reserved for header streaming (initialised to `0x10000`).
+    - `+0x12C` (`headerMagic`): set to `0x01234567` and mirrored to the BSS word `D_801FC400`, providing a simple "header is ready" sentinel for other subsystems.
+- `D_800A5954` points at a 0xA650-byte engine context block (`D_800907EC`). Offset `+0xA650` inside that block is a `void *` pointing at the persistent BLB header buffer in main RAM; this is now expressed as `engine->blbHeaderBufferBase` in `LoadBLBHeader`.
+- `D_801FC400` is a standalone word in the high BSS. `LoadBLBHeader` writes the same `0x01234567` magic there immediately after populating `GameState+0x12C`, which is how other high-level systems detect whether the BLB header contents in RAM are valid.
+
+The `main` loop’s hot path repeatedly dereferences `D_800A5960 + 0x84` to enumerate level assets (`func_8007A9B0`, `getLevelName`, `func_8007ACF0`, etc.), confirming that everything relying on BLB metadata shares a single in-memory window managed by `LoadBLBHeader`.
+
 
 ## Memory addresses
 
@@ -279,3 +292,28 @@ File: /mnt/share/sam/skullmonkeys/disc/blbs/slus-00601.blb
 [0x62800]	c010003801000200200080020228288000020220288080020228200080020228
 [0xcc7000]	402c003804000200200080020228288000020220288080020228200080020228
 [0x481e800]	c010003801000200200080020228288000020220288080020228200080020228
+
+## BLB header helper
+
+- `tools/parse_blb_header.py` reads the first 0x1000 bytes of a BLB file and dumps
+    the 0x10-byte entry table along with the key state bytes at `+0xF37`, `+0xF92`,
+    and `+0xF93`. Example:
+
+    ```bash
+    python3 tools/parse_blb_header.py --window 0x80 disks/blb/GAME.BLB
+    ```
+
+    The script defaults to `disks/blb/GAME.BLB`, so the path argument is optional
+    once the disc image has been unpacked.
+
+- Memory snapshots (for cross-checking against the live disc image):
+
+    | File | Size | SHA1 |
+    |------|------|------|
+    | `extracted_memory/game_blb_800AE3E0.bin` | 0x152010 | `d06b822d601007f7ba9a789848bec24b04635a20` |
+    | `extracted_memory/bss_800A6168.bin` | 0x8288 | `97ee0cafaf977bb99d980ad2fb381d8657200c5e` |
+    | `extracted_memory/sbss_800A6120.bin` | 0x48 | `de6fd14c9444f637c15b4aa780552df465b3333d` |
+
+    These dumps look consistent with the in-game header contents (state byte at
+    `+0xF37` currently reads `0x05`), but we are preferring the disc-resident
+    `GAME.BLB` going forward.

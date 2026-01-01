@@ -1,75 +1,10 @@
 #include "common.h"
+/* ============================================================================
+ * main - Main entry point and game loop
+ * Address: 0x80039140 | Size: 0x3A4
+ * ============================================================================ */
 
-/*
- * main() - Main game entry point and game loop
- * 
- * Initialization sequence:
- *   1. __main()              - C runtime init (static constructors)
- *   2. SsUtReverbOn()        - Enable sound reverb
- *   3. ResetCallback()       - Reset system callbacks
- *   4. LoadGameAssetLocations() - Find game assets on CD
- *   5. func_80013268()       - Unknown init
- *   6. D_800A5960 = &D_8009DC40 - Set global game state pointer
- *   7. PadInit(0)            - Initialize controller
- *   8. InitGeom()            - Initialize GTE geometry
- *   9. SetDispMask(1)        - Enable display
- *  10. FntLoad(960, 256)     - Load debug font to VRAM
- *  11. FntOpen(16, 32, 288, 200, 0, 512) - Open font stream
- *  12. SetDumpFnt()          - Set debug font output
- *  13. initPlayerState()     - Initialize player state
- *  14. func_8007CD34()       - Unknown setup with game data
- * 
- * Level loading loop:
- *   - Iterates through levels, calling getLevelName() for each
- *   - Stores level name pointers in D_8009DE08 array
- *   - Increments D_800A60C0 (total count) and D_800A60BC (level count)
- * 
- * Secondary asset loop:
- *   - Loads additional assets via func_8007ACDC/func_8007ACF0
- *   - Stores in D_8009DDE0 array ("sub_01" strings?)
- *   - Increments D_800A60C0 and D_800A60BE
- * 
- * Sets display constants:
- *   - D_800A596C = 0x40 (64)
- *   - D_800A596E = 0x20 (32)
- *   - D_800A5970 = 0x80 (128)
- * 
- * Main game loop (infinite):
- *   1. func_8007CCB8()       - Frame start / timing sync
- *   2. PadRead(1)            - Read controller input
- *   3. func_800259D4()       - Process input for both pads
- *   4. State machine dispatch:
- *      - Reads state index from gameState[1] (offset 0x02)
- *      - If > 0: looks up function pointer from table at gameState[2]
- *      - If < 0: uses gameState[2] directly as function pointer
- *      - Calls the function with game state + offset
- *   5. func_80020E1C()       - Process game state
- *   6. func_8001352C()       - Unknown (with PTR_DAT_800A5954)
- *   7. func_80020E80()       - More game state processing
- *   8. DrawSync(0)           - Wait for GPU drawing to complete
- *   9. Callback dispatch from game state structure
- *  10. DrawSync(0)           - Wait again
- *  11. VSync handling:
- *      - If D_800A5958 & 6: wait for 2 VSyncs
- *  12. func_80082C10()       - End of frame processing
- *  13. func_80013500()       - Frame cleanup
- *  14. Loop back to step 1
- * 
- * Key globals:
- *   - D_800A5954: Pointer used with sound/callback functions
- *   - D_800A5958: Flags (bit 1-2 control VSync wait)
- *   - D_800A5960: Main game state structure pointer -> D_8009DC40
- *   - D_800A5964: Game data pointer (levels?)
- *   - D_800A5968: Secondary game data pointer
- *   - D_800A597C: Player state pointer
- * 
- * NOTE: This function cannot be decompiled to matching C code because it
- * accesses sdata variables (D_800A60BC, D_800A60BE, D_800A60C0, D_800A6120)
- * using GP-relative addressing. GCC 2.7.2 only generates GP-relative code
- * for locally-defined variables, not externs.
- */
-
-#if 0
+#if NON_MATCHING
 // Non-matching decompiled code for reference
 // Accesses to sdata globals will generate incorrect (non-GP-relative) code
 
