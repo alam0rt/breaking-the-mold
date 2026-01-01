@@ -29,23 +29,19 @@ from blb import (
 
 # Expected values keyed by SHA256 hash of the BLB file
 EXPECTED_VALUES = {
-    # PAL version
+    # PAL (SLES-01090) / NTSC-U (SLUS-00601)
     "58ed7ec2aee9a5666d2b9db04523cbf3d527b57dfbc8a52c3460f4da91c3f09e": {
         "level_count": 26,
         "asset_count": 13,
         "sector_table_count": 32,
-        # First level entry
         "first_level_name": "Options",
-        # Last level entry
         "last_level_name": "Evil Engine #9",
-        # First sector table entry
         "first_sector_entry": {
             "code": "PIRA",
             "short_name": "Don",
             "sector_offset": 0x000C,
             "sector_count": 0x000A,
         },
-        # MENU entry (well-known)
         "menu_entry": {
             "index": 3,
             "code": "MENU",
@@ -53,7 +49,6 @@ EXPECTED_VALUES = {
             "sector_offset": 0x0819,
             "sector_count": 0x000A,
         },
-        # Last sector table entry
         "last_sector_entry": {
             "index": 31,
             "code": "OVER",
@@ -61,8 +56,132 @@ EXPECTED_VALUES = {
             "sector_count": 0x0076,
         },
     },
-    # Add other versions here as needed:
-    # "hash...": { "level_count": N, ... },
+    # PAL German (SLES-01091)
+    "0458ce72c72f5e85352b03b9dd3f664a1bd2a87aecde8fb52149d87a6fb1b7ee": {
+        "level_count": 26,
+        "asset_count": 13,
+        "sector_table_count": 32,
+        "first_level_name": "Options",
+        "last_level_name": "Evil Engine #9",
+        "first_sector_entry": {
+            "code": "PIRA",
+            "short_name": "Don",
+            "sector_offset": 0x000C,
+            "sector_count": 0x0009,
+        },
+        "menu_entry": {
+            "index": 3,
+            "code": "MENU",
+            "short_name": "Opt",
+            "sector_offset": 0x0829,
+            "sector_count": 0x000A,
+        },
+        "last_sector_entry": {
+            "index": 31,
+            "code": "OVER",
+            "sector_offset": 0x1349,
+            "sector_count": 0x0075,
+        },
+    },
+    # PAL French (SLES-01092)
+    "ede0144aabbde758b41ca32d6cd796ddc508403ee1daf403a9b21377b761c0b6": {
+        "level_count": 26,
+        "asset_count": 13,
+        "sector_table_count": 32,
+        "first_level_name": "Options",
+        "last_level_name": "Evil Engine #9",
+        "first_sector_entry": {
+            "code": "PIRA",
+            "short_name": "Don",
+            "sector_offset": 0x000C,
+            "sector_count": 0x000A,
+        },
+        "menu_entry": {
+            "index": 3,
+            "code": "MENU",
+            "short_name": "Opt",
+            "sector_offset": 0x082B,
+            "sector_count": 0x000A,
+        },
+        "last_sector_entry": {
+            "index": 31,
+            "code": "OVER",
+            "sector_offset": 0x1348,
+            "sector_count": 0x0076,
+        },
+    },
+    # NTSC-J (SLPS-01501) - Demo, only 6 levels, different sector table format
+    # Note: Demo uses binary indices in code field, not ASCII codes
+    "efa18f96ac823a053234a009efcf20142280e44f227badf80e04ddc7a1762409": {
+        "level_count": 6,
+        "asset_count": 1,
+        "sector_table_count": 4,
+        "first_level_name": "Options",
+        "last_level_name": "Shriney Guard",
+        "first_sector_entry": {
+            "code": "",  # All nulls stripped
+            "short_name": "ENU",
+            "sector_offset": 0x704F,
+            "sector_count": 0x0074,
+        },
+        "menu_entry": None,  # No MENU entry in demo
+        "last_sector_entry": {
+            "index": 3,
+            "code": "\x00\x03",  # Binary index with trailing nulls stripped
+            "sector_offset": 0x6F4D,
+            "sector_count": 0x006E,
+        },
+    },
+    # NTSC-J Demo (PAPX-90053) - Demo, only 6 levels, different sector table format
+    # Note: This file appears to be truncated - sector offsets point beyond file size
+    "20e996654c94a88af4159786935c3f28f541d29f6fcc82b2c7842437a1d13aa0": {
+        "level_count": 6,
+        "asset_count": 1,
+        "sector_table_count": 4,
+        "first_level_name": "Options",
+        "last_level_name": "Shriney Guard",
+        "first_sector_entry": {
+            "code": "",  # All nulls stripped
+            "short_name": "ENU",
+            "sector_offset": 0x704F,
+            "sector_count": 0x0074,
+        },
+        "menu_entry": None,  # No MENU entry in demo
+        "last_sector_entry": {
+            "index": 3,
+            "code": "\x00\x03",  # Binary index with trailing nulls stripped
+            "sector_offset": 0x6F4D,
+            "sector_count": 0x006E,
+        },
+        "is_truncated": True,  # Sector data not available in this file
+    },
+    # Beta
+    "bab772667336b3b3b92352045746f545729cb4cbc1e8a53b33b593bad049828e": {
+        "level_count": 26,
+        "asset_count": 13,
+        "sector_table_count": 32,
+        "first_level_name": "Options",
+        "last_level_name": "Evil Engine #9",
+        "first_sector_entry": {
+            "code": "PIRA",
+            "short_name": "Don",
+            "sector_offset": 0x000C,
+            "sector_count": 0x0009,
+        },
+        "menu_entry": {
+            "index": 3,
+            "code": "MENU",
+            "short_name": "Opt",
+            "sector_offset": 0x0818,
+            "sector_count": 0x000A,
+        },
+        "last_sector_entry": {
+            "index": 31,
+            "code": "OVER",
+            "sector_offset": 0x131E,
+            "sector_count": 0x0076,
+        },
+    },
 }
 
 # Default BLB path - can be overridden via environment variable
@@ -213,12 +332,18 @@ class TestBLBHeader(unittest.TestCase):
     def test_get_sector_entry_by_code(self):
         """Test get_sector_entry_by_code method."""
         expected = self.expected["menu_entry"]
-        entry = self.header.get_sector_entry_by_code("MENU")
         
-        self.assertIsNotNone(entry)
-        self.assertEqual(entry.index, expected["index"])
-        self.assertEqual(entry.code, expected["code"])
-        self.assertEqual(entry.sector_offset, expected["sector_offset"])
+        if expected is not None:
+            # Full version with MENU entry
+            entry = self.header.get_sector_entry_by_code("MENU")
+            self.assertIsNotNone(entry)
+            self.assertEqual(entry.index, expected["index"])
+            self.assertEqual(entry.code, expected["code"])
+            self.assertEqual(entry.sector_offset, expected["sector_offset"])
+        else:
+            # Demo version without MENU entry
+            entry = self.header.get_sector_entry_by_code("MENU")
+            self.assertIsNone(entry)
         
         # Non-existent should return None
         self.assertIsNone(self.header.get_sector_entry_by_code("XXXX"))
@@ -332,29 +457,44 @@ class TestBLBFile(unittest.TestCase):
     
     def test_read_entry(self):
         """Test reading entry data."""
+        if self.expected.get("is_truncated"):
+            self.skipTest("File is truncated - sector data not available")
+        
         with BLBFile(self.blb_path) as blb:
-            entry = blb.header.get_sector_entry_by_code("MENU")
+            # Use first entry (always exists)
+            entry = blb.header.sector_entries[0]
             data = blb.read_entry(entry)
             
             self.assertEqual(len(data), entry.byte_size)
     
     def test_read_entry_by_code(self):
         """Test read_entry_by_code method."""
+        expected = self.expected["menu_entry"]
+        
         with BLBFile(self.blb_path) as blb:
-            data = blb.read_entry_by_code("MENU")
-            expected = self.expected["menu_entry"]
-            
-            self.assertIsNotNone(data)
-            self.assertEqual(
-                len(data),
-                expected["sector_count"] * SECTOR_SIZE
-            )
+            if expected is not None:
+                # Full version with MENU entry
+                if self.expected.get("is_truncated"):
+                    self.skipTest("File is truncated - sector data not available")
+                data = blb.read_entry_by_code("MENU")
+                self.assertIsNotNone(data)
+                self.assertEqual(
+                    len(data),
+                    expected["sector_count"] * SECTOR_SIZE
+                )
+            else:
+                # Demo version without MENU entry
+                data = blb.read_entry_by_code("MENU")
+                self.assertIsNone(data)
             
             # Non-existent should return None
             self.assertIsNone(blb.read_entry_by_code("XXXX"))
     
     def test_read_entry_by_index(self):
         """Test read_entry_by_index method."""
+        if self.expected.get("is_truncated"):
+            self.skipTest("File is truncated - sector data not available")
+        
         with BLBFile(self.blb_path) as blb:
             data = blb.read_entry_by_index(0)
             expected = self.expected["first_sector_entry"]
@@ -381,8 +521,9 @@ class TestBLBFile(unittest.TestCase):
         """Test that reading without context manager raises error."""
         blb = BLBFile(self.blb_path)
         
+        # Use read_entry_by_index which always has data (index 0 always exists)
         with self.assertRaises(RuntimeError):
-            blb.read_entry_by_code("MENU")
+            blb.read_entry_by_index(0)
 
 
 class TestBLBHeaderFromBytes(unittest.TestCase):

@@ -6,26 +6,52 @@ The BLB (blob) file is the main game archive containing all levels, assets,
 and resources. The first 2 sectors (4096 bytes) contain the header with an
 index table describing the contents.
 
-Header Structure:
-- Offset 0x000: Level metadata table (0x70 bytes per entry)
-  - Each entry contains level display info, with the name at +0x5B
-- Offset 0xCD0: Sector offset table (0x10 bytes per entry)
-  - Contains BLB sector locations for loading data
+Header Structure (4096 bytes total):
+- Offset 0x000: Level metadata table (0x70 bytes per entry, count at 0xF31)
+- Offset 0xB60: Movie table (0x1C bytes per entry, count at 0xF32)
+- Offset 0xCD0: Sector/loading screen table (0x10 bytes per entry, count at 0xF33)
+- Offset 0xED0: Unknown region (97 bytes) - purpose TBD
 - Offset 0xF31: Level count (u8) - used by func_8007A9B0
-- Offset 0xF32: Asset count (u8) - used by func_8007ACDC
+- Offset 0xF32: Asset/movie count (u8) - used by func_8007ACDC
 - Offset 0xF33: Sector table entry count (u8) - total entries in sector table
+- Offset 0xF34: Unknown region (204 bytes) - state data/padding
 
-Sector Table Entry Format (16 bytes each, at offset 0xCD0):
+Level Metadata Entry Format (0x70 bytes each, at offset 0x000):
+- +0x00: u16 - Sector offset within BLB file
+- +0x02: u16 - Sector count
+- +0x04: 8 bytes - Static data
+- +0x0C: u8 - Level index
+- +0x0D: u8 - Flag
+- +0x0E: 14 bytes - Unknown data
+- +0x1C: 2 bytes - Unknown
+- +0x1E: u16 - Secondary sector offset
+- +0x20: 2 bytes - Unknown
+- +0x22: 10 bytes - Dynamic data
+- +0x2C: u16 - Secondary sector count
+- +0x2E: 16 bytes - Unknown
+- +0x3E: 2 bytes - Unknown
+- +0x40: u16 - Tertiary sector offset
+- +0x42: 2 bytes - Unknown
+- +0x44: 10 bytes - More dynamic data
+- +0x4E: u16 - Tertiary sector count
+- +0x50: 6 bytes - Unknown
+- +0x56: 5 bytes - Level ID (4-char null-terminated, e.g., "MENU", "PIRA")
+- +0x5B: 21 bytes - Level name, null-terminated
+
+Movie Entry Format (0x1C bytes each, at offset 0xB60):
+- +0x00: 2 bytes - Unknown (always 0x0000)
+- +0x02: u16 - Sector count
+- +0x04: 5 bytes - Movie ID (4-char null-terminated, e.g., "LOGO", "INT1")
+- +0x09: 3 bytes - Short name (2-char null-terminated)
+- +0x0C: 16 bytes - CD filename (e.g., "\\MVLOGO.STR;1")
+
+Sector Table Entry Format (0x10 bytes each, at offset 0xCD0):
 - +0x00: u16 - Entry type/flags
 - +0x02: u8  - Unknown byte
 - +0x03: 5 bytes - Level code (4-char null-terminated, e.g., "PIRA", "MENU")
 - +0x08: 4 bytes - Short name (truncated description)
 - +0x0C: u16 - Sector offset within BLB file
 - +0x0E: u16 - Sector count
-
-Level Metadata Entry Format (0x70 bytes each, at offset 0x000):
-- +0x00: 0x5B bytes - Various level metadata (TBD)
-- +0x5B: ~20 bytes - Level name, null-terminated (e.g., "Options", "Skullmonkey Gate")
 
 Sector size is standard CD-ROM: 2048 bytes.
 """
@@ -44,6 +70,10 @@ LEVEL_METADATA_OFFSET = 0x000
 LEVEL_METADATA_ENTRY_SIZE = 0x70
 LEVEL_NAME_OFFSET = 0x5B  # Offset of name within each level metadata entry
 
+# Movie table (0x1C bytes per entry, between level metadata and sector table)
+MOVIE_TABLE_OFFSET = 0xB60
+MOVIE_ENTRY_SIZE = 0x1C
+
 # Sector offset table (0x10 bytes per entry)
 SECTOR_TABLE_OFFSET = 0xCD0
 SECTOR_TABLE_ENTRY_SIZE = 0x10
@@ -57,7 +87,7 @@ SECTOR_TABLE_COUNT_OFFSET = 0xF33  # Total sector table entries
 @dataclass
 class SectorTableEntry:
     """
-    Represents a single entry in the BLB sector offset table.
+    Represents a single entry in the BLB sector offset table (loading screens).
     
     Located at header offset 0xCD0, with 0x10 bytes per entry.
     The number of entries is stored at header offset 0xF33.
@@ -67,10 +97,11 @@ class SectorTableEntry:
     offset: int  # Offset of this entry within the header
     entry_type: int  # u16 at +0x00, possibly type/flags
     unknown_byte: int  # u8 at +0x02
-    code: str  # 4-char level code at +0x03 (e.g., "PIRA", "MENU")
-    short_name: str  # Short name at +0x08 (truncated description)
+    code: str  # 5-byte level code at +0x03 (4-char null-terminated, e.g., "PIRA", "MENU")
+    short_name: str  # Short name at +0x08 (4 bytes, truncated description)
     sector_offset: int  # Sector offset within BLB file
     sector_count: int  # Number of sectors
+    raw_data: bytes  # Full 16 bytes of entry data
     
     @property
     def byte_offset(self) -> int:
@@ -97,15 +128,107 @@ class LevelMetadataEntry:
     
     Located at header offset 0x000, with 0x70 bytes per entry.
     The number of entries is stored at header offset 0xF31.
+    
+    Contains level data locations (primary, secondary, tertiary) and metadata.
     """
     
     index: int
     offset: int  # Offset of this entry within the header
     raw_data: bytes  # Full 0x70 bytes of entry data
-    name: str  # Level name at +0x5B (null-terminated)
+    
+    # Primary level data location
+    sector_offset: int  # u16 at +0x00, sector offset in BLB
+    sector_count: int  # u16 at +0x02, sector count
+    
+    # Static and index data
+    static_data: bytes  # 8 bytes at +0x04
+    level_index: int  # u8 at +0x0C
+    flag: int  # u8 at +0x0D
+    unknown_0e: bytes  # 14 bytes at +0x0E
+    
+    # Secondary data location (loading screen?)
+    unknown_1c: bytes  # 2 bytes at +0x1C
+    secondary_offset: int  # u16 at +0x1E
+    unknown_20: bytes  # 2 bytes at +0x20
+    dynamic_data_1: bytes  # 10 bytes at +0x22
+    secondary_count: int  # u16 at +0x2C
+    unknown_2e: bytes  # 16 bytes at +0x2E
+    
+    # Tertiary data location
+    unknown_3e: bytes  # 2 bytes at +0x3E
+    tertiary_offset: int  # u16 at +0x40
+    unknown_42: bytes  # 2 bytes at +0x42
+    dynamic_data_2: bytes  # 10 bytes at +0x44
+    tertiary_count: int  # u16 at +0x4E
+    unknown_50: bytes  # 6 bytes at +0x50
+    
+    # Identification
+    level_id: str  # 5 bytes at +0x56 (4-char null-terminated)
+    name: str  # 21 bytes at +0x5B (null-terminated)
+    
+    @property
+    def byte_offset(self) -> int:
+        """Calculate primary byte offset within the BLB file."""
+        return self.sector_offset * SECTOR_SIZE
+    
+    @property
+    def byte_size(self) -> int:
+        """Calculate primary size in bytes."""
+        return self.sector_count * SECTOR_SIZE
+    
+    @property
+    def secondary_byte_offset(self) -> int:
+        """Calculate secondary byte offset within the BLB file."""
+        return self.secondary_offset * SECTOR_SIZE
+    
+    @property
+    def secondary_byte_size(self) -> int:
+        """Calculate secondary size in bytes."""
+        return self.secondary_count * SECTOR_SIZE
+    
+    @property
+    def tertiary_byte_offset(self) -> int:
+        """Calculate tertiary byte offset within the BLB file."""
+        return self.tertiary_offset * SECTOR_SIZE
+    
+    @property
+    def tertiary_byte_size(self) -> int:
+        """Calculate tertiary size in bytes."""
+        return self.tertiary_count * SECTOR_SIZE
     
     def __repr__(self) -> str:
-        return f"LevelMetadataEntry(idx={self.index}, name='{self.name}')"
+        return f"LevelMetadataEntry(idx={self.index}, id='{self.level_id}', name='{self.name}')"
+
+
+@dataclass
+class MovieEntry:
+    """
+    Represents a single entry in the movie table.
+    
+    Located at header offset 0xB60, with 0x1C bytes per entry.
+    The number of entries matches the asset_count at header offset 0xF32.
+    
+    Movies are FMV sequences stored as .STR files on the CD.
+    """
+    
+    index: int
+    offset: int  # Offset of this entry within the header
+    raw_data: bytes  # Full 0x1C bytes of entry data
+    
+    # Fields
+    unknown_00: bytes  # 2 bytes at +0x00 (always 0x0000)
+    sector_count: int  # u16 at +0x02
+    movie_id: str  # 5 bytes at +0x04 (4-char null-terminated, e.g., "LOGO", "INT1")
+    short_name: str  # 3 bytes at +0x09 (2-char null-terminated)
+    filename: str  # 16 bytes at +0x0C (CD path, e.g., "\\MVLOGO.STR;1")
+    
+    @property
+    def byte_size(self) -> int:
+        """Calculate the size in bytes."""
+        return self.sector_count * SECTOR_SIZE
+    
+    def __repr__(self) -> str:
+        return f"MovieEntry(idx={self.index}, id='{self.movie_id}', file='{self.filename}')"
 
 
 # Keep BLBEntry as an alias for backward compatibility
@@ -119,22 +242,35 @@ class BLBHeader:
     
     The header occupies the first 2 sectors (4096 bytes) and contains:
     - Level metadata table at 0x000 (0x70 bytes per entry)
+    - Movie table at 0xB60 (0x1C bytes per entry)
     - Sector offset table at 0xCD0 (0x10 bytes per entry)
+    - Unknown region at 0xED0 (97 bytes)
     - Count fields at 0xF31-0xF33
+    - Unknown region at 0xF34 (204 bytes - state data/padding)
     """
     
     raw_data: bytes  # Raw header data (first 4096 bytes)
     sector_entries: list[SectorTableEntry]  # Sector offset table entries
     level_entries: list[LevelMetadataEntry]  # Level metadata entries
+    movie_entries: list[MovieEntry]  # Movie table entries
     level_count: int  # Number of levels (from offset 0xF31)
-    asset_count: int  # Number of assets (from offset 0xF32)
+    asset_count: int  # Number of assets/movies (from offset 0xF32)
     sector_table_count: int  # Total sector table entries (from offset 0xF33)
+    
+    # Unknown regions stored as raw bytes
+    unknown_ed0: bytes  # 97 bytes at 0xED0-0xF31
+    unknown_f34: bytes  # 204 bytes at 0xF34-0x1000
     
     # Backward compatibility property
     @property
     def entries(self) -> list[SectorTableEntry]:
         """Alias for sector_entries for backward compatibility."""
         return self.sector_entries
+    
+    @property
+    def movies(self) -> list[MovieEntry]:
+        """Alias for movie_entries."""
+        return self.movie_entries
     
     @classmethod
     def from_bytes(cls, data: bytes) -> "BLBHeader":
@@ -173,13 +309,33 @@ class BLBHeader:
             entry_data = data[offset:offset + LEVEL_METADATA_ENTRY_SIZE]
             level_entries.append(cls._parse_level_entry(i, offset, entry_data))
         
+        # Parse movie table (count from 0xF32, dynamically verified)
+        movie_entries = []
+        for i in range(asset_count):
+            offset = MOVIE_TABLE_OFFSET + (i * MOVIE_ENTRY_SIZE)
+            if offset + MOVIE_ENTRY_SIZE > SECTOR_TABLE_OFFSET:
+                # Don't read past sector table
+                break
+            entry_data = data[offset:offset + MOVIE_ENTRY_SIZE]
+            # Verify this is a valid movie entry (first 2 bytes should be 0x0000)
+            if entry_data[0:2] != b'\x00\x00':
+                break
+            movie_entries.append(cls._parse_movie_entry(i, offset, entry_data))
+        
+        # Read unknown regions as raw bytes
+        unknown_ed0 = data[0xED0:0xF31]  # 97 bytes between sector table and count fields
+        unknown_f34 = data[0xF34:0x1000]  # 204 bytes after count fields
+        
         return cls(
             raw_data=data[:HEADER_SIZE],
             sector_entries=sector_entries,
             level_entries=level_entries,
+            movie_entries=movie_entries,
             level_count=level_count,
             asset_count=asset_count,
             sector_table_count=sector_table_count,
+            unknown_ed0=unknown_ed0,
+            unknown_f34=unknown_f34,
         )
     
     @classmethod
@@ -203,11 +359,11 @@ class BLBHeader:
         entry_type = struct.unpack('<H', data[0:2])[0]
         unknown_byte = data[2]
         
-        # Level code: 4 chars starting at offset 3, null-terminated
-        code_bytes = data[3:7]
+        # Level code: 5 bytes at offset 3 (4-char null-terminated)
+        code_bytes = data[3:8]
         code = code_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
         
-        # Short name: 4 chars at offset 8
+        # Short name: 4 bytes at offset 8
         short_bytes = data[8:12]
         short_name = short_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
         
@@ -223,20 +379,98 @@ class BLBHeader:
             short_name=short_name,
             sector_offset=sector_offset,
             sector_count=sector_count,
+            raw_data=data,
         )
     
     @staticmethod
     def _parse_level_entry(index: int, offset: int, data: bytes) -> LevelMetadataEntry:
         """Parse a single 0x70-byte level metadata entry."""
-        # Name is at offset 0x5B within the entry, null-terminated
-        name_bytes = data[LEVEL_NAME_OFFSET:LEVEL_NAME_OFFSET + 20]
+        # Primary data location
+        sector_offset = struct.unpack('<H', data[0x00:0x02])[0]
+        sector_count = struct.unpack('<H', data[0x02:0x04])[0]
+        
+        # Static and index data
+        static_data = data[0x04:0x0C]
+        level_index = data[0x0C]
+        flag = data[0x0D]
+        unknown_0e = data[0x0E:0x1C]
+        
+        # Secondary data location
+        unknown_1c = data[0x1C:0x1E]
+        secondary_offset = struct.unpack('<H', data[0x1E:0x20])[0]
+        unknown_20 = data[0x20:0x22]
+        dynamic_data_1 = data[0x22:0x2C]
+        secondary_count = struct.unpack('<H', data[0x2C:0x2E])[0]
+        unknown_2e = data[0x2E:0x3E]
+        
+        # Tertiary data location
+        unknown_3e = data[0x3E:0x40]
+        tertiary_offset = struct.unpack('<H', data[0x40:0x42])[0]
+        unknown_42 = data[0x42:0x44]
+        dynamic_data_2 = data[0x44:0x4E]
+        tertiary_count = struct.unpack('<H', data[0x4E:0x50])[0]
+        unknown_50 = data[0x50:0x56]
+        
+        # Identification
+        level_id_bytes = data[0x56:0x5B]
+        level_id = level_id_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        
+        name_bytes = data[0x5B:0x70]
         name = name_bytes.split(b'\x00')[0].decode('ascii', errors='replace')
         
         return LevelMetadataEntry(
             index=index,
             offset=offset,
             raw_data=data,
+            sector_offset=sector_offset,
+            sector_count=sector_count,
+            static_data=static_data,
+            level_index=level_index,
+            flag=flag,
+            unknown_0e=unknown_0e,
+            unknown_1c=unknown_1c,
+            secondary_offset=secondary_offset,
+            unknown_20=unknown_20,
+            dynamic_data_1=dynamic_data_1,
+            secondary_count=secondary_count,
+            unknown_2e=unknown_2e,
+            unknown_3e=unknown_3e,
+            tertiary_offset=tertiary_offset,
+            unknown_42=unknown_42,
+            dynamic_data_2=dynamic_data_2,
+            tertiary_count=tertiary_count,
+            unknown_50=unknown_50,
+            level_id=level_id,
             name=name,
+        )
+    
+    @staticmethod
+    def _parse_movie_entry(index: int, offset: int, data: bytes) -> MovieEntry:
+        """Parse a single 0x1C-byte movie table entry."""
+        unknown_00 = data[0x00:0x02]
+        sector_count = struct.unpack('<H', data[0x02:0x04])[0]
+        
+        # Movie ID: 5 bytes at +0x04 (4-char null-terminated)
+        movie_id_bytes = data[0x04:0x09]
+        movie_id = movie_id_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        
+        # Short name: 3 bytes at +0x09 (2-char null-terminated)
+        short_name_bytes = data[0x09:0x0C]
+        short_name = short_name_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        
+        # Filename: 16 bytes at +0x0C
+        filename_bytes = data[0x0C:0x1C]
+        filename = filename_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        
+        return MovieEntry(
+            index=index,
+            offset=offset,
+            raw_data=data,
+            unknown_00=unknown_00,
+            sector_count=sector_count,
+            movie_id=movie_id,
+            short_name=short_name,
+            filename=filename,
         )
     
     def get_sector_entry_by_code(self, code: str) -> Optional[SectorTableEntry]:

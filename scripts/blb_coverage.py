@@ -1,0 +1,400 @@
+#!/usr/bin/env python3
+"""
+BLB Header Coverage Analysis
+
+Analyzes how much of the BLB header (first 4096 bytes) is read, parsed,
+and understood by the blb.py library.
+
+Reports:
+- Bytes covered by known structures
+- Bytes that are unprocessed/unknown
+- Coverage percentage
+"""
+
+from pathlib import Path
+import sys
+
+# ANSI color codes
+class Colors:
+    RESET = "\033[0m"
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    GRAY = "\033[90m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+
+
+from blb import (
+    BLBHeader,
+    HEADER_SIZE,
+    SECTOR_SIZE,
+    SECTOR_TABLE_OFFSET,
+    SECTOR_TABLE_ENTRY_SIZE,
+    LEVEL_METADATA_OFFSET,
+    LEVEL_METADATA_ENTRY_SIZE,
+    LEVEL_NAME_OFFSET,
+    LEVEL_COUNT_OFFSET,
+    ASSET_COUNT_OFFSET,
+    SECTOR_TABLE_COUNT_OFFSET,
+    MOVIE_TABLE_OFFSET,
+    MOVIE_ENTRY_SIZE,
+)
+
+
+def analyze_coverage(blb_path: Path) -> dict:
+    """
+    Analyze which bytes of the BLB header are read/processed by the library.
+    
+    Returns a dict with coverage statistics.
+    """
+    header = BLBHeader.from_file(blb_path)
+    
+    # Track which bytes are "covered" (read/interpreted by the library)
+    covered = [False] * HEADER_SIZE
+    
+    # Track coverage by category
+    coverage_map = {}
+    
+    def mark_range(start: int, end: int, category: str):
+        """Mark a byte range as covered."""
+        if category not in coverage_map:
+            coverage_map[category] = []
+        coverage_map[category].append((start, end))
+        for i in range(start, min(end, HEADER_SIZE)):
+            covered[i] = True
+    
+    # 1. Level metadata table (0x70 bytes per entry, starting at 0x000)
+    for i in range(header.level_count):
+        entry_start = LEVEL_METADATA_OFFSET + (i * LEVEL_METADATA_ENTRY_SIZE)
+        
+        # Parse all level metadata fields (matches LevelMetadataEntry structure)
+        mark_range(entry_start + 0x00, entry_start + 0x02, "level_sector_offset")  # u16
+        mark_range(entry_start + 0x02, entry_start + 0x04, "level_sector_count")   # u16
+        mark_range(entry_start + 0x04, entry_start + 0x0C, "level_static_data")    # 8 bytes
+        mark_range(entry_start + 0x0C, entry_start + 0x0D, "level_index")          # u8
+        mark_range(entry_start + 0x0D, entry_start + 0x0E, "level_flag")           # u8
+        mark_range(entry_start + 0x0E, entry_start + 0x1C, "level_unknown_0e")     # 14 bytes
+        mark_range(entry_start + 0x1C, entry_start + 0x1E, "level_unknown_1c")     # 2 bytes
+        mark_range(entry_start + 0x1E, entry_start + 0x20, "level_secondary_offset")  # u16
+        mark_range(entry_start + 0x20, entry_start + 0x22, "level_unknown_20")     # 2 bytes
+        mark_range(entry_start + 0x22, entry_start + 0x2C, "level_dynamic_data_1") # 10 bytes
+        mark_range(entry_start + 0x2C, entry_start + 0x2E, "level_secondary_count")  # u16
+        mark_range(entry_start + 0x2E, entry_start + 0x3E, "level_unknown_2e")     # 16 bytes
+        mark_range(entry_start + 0x3E, entry_start + 0x40, "level_unknown_3e")     # 2 bytes
+        mark_range(entry_start + 0x40, entry_start + 0x42, "level_tertiary_offset")  # u16
+        mark_range(entry_start + 0x42, entry_start + 0x44, "level_unknown_42")     # 2 bytes
+        mark_range(entry_start + 0x44, entry_start + 0x4E, "level_dynamic_data_2") # 10 bytes
+        mark_range(entry_start + 0x4E, entry_start + 0x50, "level_tertiary_count")  # u16
+        mark_range(entry_start + 0x50, entry_start + 0x56, "level_unknown_50")     # 6 bytes
+        mark_range(entry_start + 0x56, entry_start + 0x5B, "level_id")             # 5 bytes
+        mark_range(entry_start + 0x5B, entry_start + 0x70, "level_name")           # 21 bytes
+    
+    # 2. Movie table (0x1C bytes per entry, starting at 0xB60)
+    for i in range(len(header.movie_entries)):
+        entry_start = MOVIE_TABLE_OFFSET + (i * MOVIE_ENTRY_SIZE)
+        
+        # Parse all movie fields (matches MovieEntry structure)
+        mark_range(entry_start + 0x00, entry_start + 0x02, "movie_unknown_00")   # 2 bytes
+        mark_range(entry_start + 0x02, entry_start + 0x04, "movie_sector_count") # u16
+        mark_range(entry_start + 0x04, entry_start + 0x09, "movie_id")           # 5 bytes
+        mark_range(entry_start + 0x09, entry_start + 0x0C, "movie_short_name")   # 3 bytes
+        mark_range(entry_start + 0x0C, entry_start + 0x1C, "movie_filename")     # 16 bytes
+    
+    # 3. Sector offset table (0x10 bytes per entry, starting at 0xCD0)
+    for i in range(header.sector_table_count):
+        entry_start = SECTOR_TABLE_OFFSET + (i * SECTOR_TABLE_ENTRY_SIZE)
+        
+        # Mark individual fields we parse (matches SectorTableEntry structure)
+        mark_range(entry_start + 0x00, entry_start + 0x02, "sector_entry_type")    # u16 entry_type
+        mark_range(entry_start + 0x02, entry_start + 0x03, "sector_entry_unknown")  # u8 unknown
+        mark_range(entry_start + 0x03, entry_start + 0x08, "sector_entry_code")    # 5-byte code
+        mark_range(entry_start + 0x08, entry_start + 0x0C, "sector_entry_short")   # 4-byte short name
+        mark_range(entry_start + 0x0C, entry_start + 0x0E, "sector_offset")        # u16 sector offset
+        mark_range(entry_start + 0x0E, entry_start + 0x10, "sector_count")         # u16 sector count
+    
+    # 4. Header count fields
+    mark_range(LEVEL_COUNT_OFFSET, LEVEL_COUNT_OFFSET + 1, "level_count")
+    mark_range(ASSET_COUNT_OFFSET, ASSET_COUNT_OFFSET + 1, "asset_count")
+    mark_range(SECTOR_TABLE_COUNT_OFFSET, SECTOR_TABLE_COUNT_OFFSET + 1, "sector_table_count")
+    
+    # 5. Unknown regions (stored as raw bytes in header)
+    # Gap between level metadata and movie table
+    level_meta_end = header.level_count * LEVEL_METADATA_ENTRY_SIZE
+    if level_meta_end < MOVIE_TABLE_OFFSET:
+        mark_range(level_meta_end, MOVIE_TABLE_OFFSET, "gap_level_to_movie")
+    
+    # Gap between movie table and sector table
+    movie_table_end = MOVIE_TABLE_OFFSET + (len(header.movie_entries) * MOVIE_ENTRY_SIZE)
+    if movie_table_end < SECTOR_TABLE_OFFSET:
+        mark_range(movie_table_end, SECTOR_TABLE_OFFSET, "gap_movie_to_sector")
+    
+    # Unknown region at 0xED0-0xF31 (97 bytes)
+    mark_range(0xED0, 0xF31, "unknown_ed0")
+    
+    # Unknown region at 0xF34-0x1000 (204 bytes)
+    mark_range(0xF34, 0x1000, "unknown_f34")
+    
+    # Calculate statistics
+    total_covered = sum(covered)
+    total_bytes = HEADER_SIZE
+    
+    # Find uncovered regions
+    uncovered_regions = []
+    in_uncovered = False
+    uncovered_start = 0
+    
+    for i, is_covered in enumerate(covered):
+        if not is_covered and not in_uncovered:
+            in_uncovered = True
+            uncovered_start = i
+        elif is_covered and in_uncovered:
+            in_uncovered = False
+            uncovered_regions.append((uncovered_start, i))
+    
+    if in_uncovered:
+        uncovered_regions.append((uncovered_start, HEADER_SIZE))
+    
+    # Summarize coverage by category
+    category_summary = {}
+    for category, ranges in coverage_map.items():
+        total = sum(end - start for start, end in ranges)
+        category_summary[category] = {
+            "bytes": total,
+            "ranges": len(ranges),
+        }
+    
+    # Read raw header data for hex dump
+    with open(blb_path, "rb") as f:
+        raw_header = f.read(HEADER_SIZE)
+    
+    return {
+        "file": str(blb_path),
+        "header_size": total_bytes,
+        "covered_bytes": total_covered,
+        "uncovered_bytes": total_bytes - total_covered,
+        "coverage_percent": (total_covered / total_bytes) * 100,
+        "level_count": header.level_count,
+        "asset_count": header.asset_count,
+        "sector_table_count": header.sector_table_count,
+        "categories": category_summary,
+        "uncovered_regions": uncovered_regions,
+        "covered_bitmap": covered,
+        "raw_header": raw_header,
+    }
+
+
+def print_report(analysis: dict) -> None:
+    """Print a formatted coverage report."""
+    print("=" * 70)
+    print("BLB Header Coverage Report")
+    print("=" * 70)
+    print(f"File: {analysis['file']}")
+    print()
+    
+    print("Header Counts:")
+    print(f"  Level count:        {analysis['level_count']}")
+    print(f"  Asset count:        {analysis['asset_count']}")
+    print(f"  Sector table count: {analysis['sector_table_count']}")
+    print()
+    
+    print("Coverage Summary:")
+    print(f"  Header size:    {analysis['header_size']:,} bytes (0x{analysis['header_size']:X})")
+    print(f"  Covered:        {analysis['covered_bytes']:,} bytes ({analysis['coverage_percent']:.1f}%)")
+    print(f"  Uncovered:      {analysis['uncovered_bytes']:,} bytes ({100 - analysis['coverage_percent']:.1f}%)")
+    print()
+    
+    print("Coverage by Category:")
+    print(f"  {'Category':<30} {'Bytes':>8} {'Ranges':>8}")
+    print("  " + "-" * 48)
+    
+    # Sort categories by bytes covered (descending)
+    sorted_cats = sorted(
+        analysis["categories"].items(),
+        key=lambda x: x[1]["bytes"],
+        reverse=True
+    )
+    
+    for category, info in sorted_cats:
+        print(f"  {category:<30} {info['bytes']:>8} {info['ranges']:>8}")
+    
+    print()
+    print("Uncovered Regions:")
+    if not analysis["uncovered_regions"]:
+        print("  None - 100% coverage!")
+    else:
+        print(f"  {'Start':>8} {'End':>8} {'Size':>8}  Description")
+        print("  " + "-" * 50)
+        
+        for start, end in analysis["uncovered_regions"]:
+            size = end - start
+            # Try to identify what this region might be
+            desc = identify_region(start, end, analysis)
+            print(f"  0x{start:04X}   0x{end:04X}   {size:>6}  {desc}")
+
+
+def identify_region(start: int, end: int, analysis: dict) -> str:
+    """Try to identify what an uncovered region might contain."""
+    # Known regions based on reverse engineering notes
+    
+    # Between level metadata and sector table
+    level_meta_end = analysis["level_count"] * LEVEL_METADATA_ENTRY_SIZE
+    if start >= level_meta_end and end <= SECTOR_TABLE_OFFSET:
+        return "Between level metadata and sector table (unknown)"
+    
+    # After sector table, before count fields
+    sector_table_end = SECTOR_TABLE_OFFSET + (analysis["sector_table_count"] * SECTOR_TABLE_ENTRY_SIZE)
+    if start >= sector_table_end and end <= LEVEL_COUNT_OFFSET:
+        return "Between sector table and count fields (unknown)"
+    
+    # After count fields
+    if start >= SECTOR_TABLE_COUNT_OFFSET + 1:
+        return "After count fields (unknown/padding)"
+    
+    # Within level metadata entries (unparsed fields)
+    if start < level_meta_end:
+        return "Level metadata (unparsed fields before name)"
+    
+    return "Unknown purpose"
+
+
+def print_visual_map(analysis: dict, width: int = 64) -> None:
+    """Print a visual representation of header coverage."""
+    print()
+    print("Visual Coverage Map (. = uncovered, # = covered):")
+    print("  Each character = 64 bytes")
+    print()
+    
+    bitmap = analysis["covered_bitmap"]
+    bytes_per_char = HEADER_SIZE // width
+    
+    line = "  "
+    for i in range(width):
+        start = i * bytes_per_char
+        end = start + bytes_per_char
+        covered_count = sum(bitmap[start:end])
+        
+        if covered_count == 0:
+            line += "."
+        elif covered_count == bytes_per_char:
+            line += "#"
+        else:
+            # Partially covered
+            line += "+"
+    
+    print(line)
+    print(f"  |{'─' * 14}|{'─' * 14}|{'─' * 14}|{'─' * 14}|")
+    print(f"  0x000      0x400      0x800      0xC00      0xFFF")
+
+
+def print_unknown_hex(analysis: dict) -> None:
+    """Print colorized hex dump of unknown/uncovered regions."""
+    print()
+    print(f"{Colors.BOLD}Unknown Bytes Hex Dump:{Colors.RESET}")
+    print(f"  {Colors.GRAY}(Showing uncovered regions with 16-byte context){Colors.RESET}")
+    print()
+    
+    raw_header = analysis["raw_header"]
+    bitmap = analysis["covered_bitmap"]
+    
+    for region_start, region_end in analysis["uncovered_regions"]:
+        region_size = region_end - region_start
+        
+        # Skip tiny single-byte gaps in the sector table
+        if region_size == 1:
+            continue
+        
+        print(f"  {Colors.CYAN}Region 0x{region_start:04X} - 0x{region_end:04X} ({region_size} bytes){Colors.RESET}")
+        
+        # Align to 16-byte boundary for display
+        display_start = (region_start // 16) * 16
+        display_end = ((region_end + 15) // 16) * 16
+        display_end = min(display_end, HEADER_SIZE)
+        
+        for row_start in range(display_start, display_end, 16):
+            # Address
+            line = f"  {Colors.YELLOW}0x{row_start:04X}{Colors.RESET}  "
+            
+            # Hex bytes
+            hex_part = ""
+            ascii_part = ""
+            for i in range(16):
+                addr = row_start + i
+                if addr >= HEADER_SIZE:
+                    hex_part += "   "
+                    ascii_part += " "
+                    continue
+                    
+                byte = raw_header[addr]
+                is_covered = bitmap[addr]
+                is_in_region = region_start <= addr < region_end
+                
+                if is_in_region:
+                    # Unknown byte - highlight in red
+                    hex_part += f"{Colors.RED}{Colors.BOLD}{byte:02X}{Colors.RESET} "
+                    # ASCII representation
+                    if 0x20 <= byte <= 0x7E:
+                        ascii_part += f"{Colors.RED}{chr(byte)}{Colors.RESET}"
+                    else:
+                        ascii_part += f"{Colors.RED}.{Colors.RESET}"
+                elif is_covered:
+                    # Known/covered byte - dim gray for context
+                    hex_part += f"{Colors.DIM}{byte:02X}{Colors.RESET} "
+                    if 0x20 <= byte <= 0x7E:
+                        ascii_part += f"{Colors.DIM}{chr(byte)}{Colors.RESET}"
+                    else:
+                        ascii_part += f"{Colors.DIM}.{Colors.RESET}"
+                else:
+                    # Outside region but uncovered
+                    hex_part += f"{Colors.GRAY}{byte:02X}{Colors.RESET} "
+                    if 0x20 <= byte <= 0x7E:
+                        ascii_part += f"{Colors.GRAY}{chr(byte)}{Colors.RESET}"
+                    else:
+                        ascii_part += f"{Colors.GRAY}.{Colors.RESET}"
+                
+                # Add separator after 8 bytes
+                if i == 7:
+                    hex_part += " "
+            
+            print(f"{line}{hex_part} {Colors.MAGENTA}|{Colors.RESET}{ascii_part}{Colors.MAGENTA}|{Colors.RESET}")
+        
+        print()
+    
+    # Summary of single-byte unknowns (sector table padding)
+    single_byte_regions = [(s, e) for s, e in analysis["uncovered_regions"] if e - s == 1]
+    if single_byte_regions:
+        print(f"  {Colors.CYAN}Single-byte unknowns (sector table entry byte 7):{Colors.RESET}")
+        values = []
+        for start, end in single_byte_regions:
+            byte = raw_header[start]
+            values.append(f"{Colors.RED}0x{byte:02X}{Colors.RESET}")
+        
+        # Print in rows of 16
+        for i in range(0, len(values), 16):
+            row = values[i:i+16]
+            print(f"    {' '.join(row)}")
+        print()
+
+
+def main():
+    """Run coverage analysis."""
+    if len(sys.argv) > 1:
+        blb_path = Path(sys.argv[1])
+    else:
+        blb_path = Path(__file__).parent.parent / "disks" / "blb" / "GAME.BLB"
+    
+    if not blb_path.exists():
+        print(f"Error: BLB file not found: {blb_path}")
+        sys.exit(1)
+    
+    analysis = analyze_coverage(blb_path)
+    print_report(analysis)
+    print_visual_map(analysis)
+    print_unknown_hex(analysis)
+
+
+if __name__ == "__main__":
+    main()
