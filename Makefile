@@ -37,10 +37,18 @@ SRC_DIR := src
 # -----------------------------------------------------------------------------
 # Toolchain Configuration
 # -----------------------------------------------------------------------------
+# GCC Version: Based on code size analysis, GCC 2.5.7-psx produces exact size
+# matches with the original binary. Other versions produce slightly larger code.
+# Available versions: 2.5.7-psx, 2.6.0-psx, 2.6.3-psx, 2.7.2-psx, 2.8.0-psx,
+#                     2.8.1-psx, 2.91.66-psx, 2.95.2-psx
+# Download with: ./scripts/build_old_gcc.sh <version>
 GCC_VERSION := 2.7.2-psx
 GCC_DIR := tools/gcc-$(GCC_VERSION)
 CC1 := $(GCC_DIR)/cc1
 GCC := $(GCC_DIR)/gcc
+
+# Alternative: Use downloaded builds from tools/gcc-builds/
+# GCC_DIR := tools/gcc-builds/gcc-$(GCC_VERSION)
 
 # MIPS cross-toolchain (from Nix environment)
 # Note: Nix provides mipsel-unknown-linux-gnu-*, not mipsel-linux-gnu-*

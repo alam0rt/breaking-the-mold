@@ -1,4 +1,32 @@
 
+## Compiler Investigation
+
+Testing func_8007A62C (0x254 bytes) across different GCC versions:
+
+| Version | Output Size | Difference |
+|---------|-------------|------------|
+| 2.5.7-psx | 0x254 | **EXACT MATCH** |
+| 2.6.0-psx | 0x25C | +8 bytes |
+| 2.6.3-psx | 0x25C | +8 bytes |
+| 2.7.2-psx | 0x25C | +8 bytes |
+| 2.8.0-psx | 0x25C | +8 bytes |
+| 2.8.1-psx | 0x25C | +8 bytes |
+| 2.91.66-psx | 0x258 | +4 bytes |
+| 2.95.2-psx | 0x258 | +4 bytes |
+
+**Conclusion: Skullmonkeys was likely compiled with GCC 2.5.7 (PSX variant)**
+
+Note: While size matches, byte-level differences exist due to:
+- Register allocation differences (original saves $s0 before other regs)
+- Instruction scheduling/reordering
+- Our C code may not perfectly match original source
+
+Scripts for testing:
+- `./scripts/build_old_gcc.sh` - Download/manage GCC versions
+- `./scripts/find_matching_gcc.sh` - Compare compiled output sizes
+
+---
+
 What does this sequence mean?
 
 ```
