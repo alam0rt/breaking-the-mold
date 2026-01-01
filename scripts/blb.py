@@ -13,11 +13,28 @@ Header Structure (4096 bytes total):
     0x000   2912   Level metadata table (0x70 bytes × 26 entries max)
     0xB60    364   Movie table (0x1C bytes × 13 entries max)
     0xCD0    512   Sector/loading screen table (0x10 bytes × 32 entries max)
-    0xED0     97   Unknown region - purpose TBD
+    0xED0     64   Unknown u32 array (16 entries) - per-world data, checksums/seeds?
+    0xF10     33   Credits sequence table (0x0C bytes × 2-3 entries, overlaps counts?)
     0xF31      1   Level count (u8)
     0xF32      1   Asset/movie count (u8)
     0xF33      1   Sector table entry count (u8)
-    0xF34    204   Unknown region - state data/padding
+    0xF34    204   State/config data region
+
+
+Credits Sequence Table (0x0C = 12 bytes, at offset 0xF10):
+==========================================================
+    Offset  Size  Type    Field               Description
+    ------  ----  ----    -----               -----------
+    0x00       4  str     code                4-char ID (empty for entry 0, "CRD1"/"CRD2" for others)
+    0x04       4  bytes   padding             Unused (zeros)
+    0x08       2  u16     param_a             Entry 0: level_count; CRD1/2: unknown counter
+    0x0A       2  u16     param_b             Base sector offset (CRED.sector - level_count)
+
+    Note: Entry 2 (CRD2) overlaps with count fields at 0xF31-0xF33.
+    Only 2 complete entries fit (indices 0 and 1).
+    
+    Accessed by func_8007ABCC and func_8007AC54 when state (0xF36) == 2,
+    using index from 0xF92 with stride of 12 bytes.
 
 
 Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
@@ -135,10 +152,22 @@ MOVIE_ENTRY_SIZE = 0x1C
 SECTOR_TABLE_OFFSET = 0xCD0
 SECTOR_TABLE_ENTRY_SIZE = 0x10
 
+# Unknown u32 array (16 entries between sector table and credits table)
+UNKNOWN_ARRAY_OFFSET = 0xED0
+UNKNOWN_ARRAY_COUNT = 16
+
+# Credits sequence table (0x0C bytes per entry)
+CREDITS_TABLE_OFFSET = 0xF10
+CREDITS_ENTRY_SIZE = 0x0C
+CREDITS_MAX_ENTRIES = 2  # Only 2 complete entries fit before count fields
+
 # Header count fields
 LEVEL_COUNT_OFFSET = 0xF31  # Number of level entries (used by func_8007A9B0)
 ASSET_COUNT_OFFSET = 0xF32  # Number of asset entries (used by func_8007ACDC)
 SECTOR_TABLE_COUNT_OFFSET = 0xF33  # Total sector table entries
+
+# State/config data region
+STATE_DATA_OFFSET = 0xF34
 
 
 @dataclass
@@ -325,6 +354,35 @@ class MovieEntry:
         return f"MovieEntry(idx={self.index}, id='{self.movie_id}', file='{self.filename}')"
 
 
+@dataclass
+class CreditsEntry:
+    """
+    Represents an entry in the credits sequence table.
+    
+    Located at header offset 0xF10, with 0x0C (12) bytes per entry.
+    Only 2 complete entries fit before overlapping with count fields at 0xF31.
+    
+    Used by func_8007ABCC and func_8007AC54 when game state (0xF36) == 2.
+    The index is read from 0xF92 and multiplied by 12 for table lookup.
+    
+    Entry 0 appears to be a default/header with param_a = level_count.
+    Entry 1 (CRD1) and partial Entry 2 (CRD2) are for credits sequences.
+    """
+    
+    index: int
+    offset: int  # Offset of this entry within the header
+    raw_data: bytes = None  # Full 0x0C bytes of entry data
+    
+    code: str = None  # 4-char code at +0x00 (empty for entry 0)
+    padding: bytes = None  # 4 bytes at +0x04 (zeros)
+    param_a: int = None  # u16 at +0x08 (level_count for entry 0)
+    param_b: int = None  # u16 at +0x0A (base_sector = CRED.sector - level_count)
+    
+    def __repr__(self) -> str:
+        code_str = self.code if self.code else "(empty)"
+        return f"CreditsEntry(idx={self.index}, code='{code_str}', a=0x{self.param_a:04X}, b=0x{self.param_b:04X})"
+
+
 # Keep BLBEntry as an alias for backward compatibility
 BLBEntry = SectorTableEntry
 
@@ -338,15 +396,17 @@ class BLBHeader:
     - Level metadata table at 0x000 (0x70 bytes per entry)
     - Movie table at 0xB60 (0x1C bytes per entry)
     - Sector offset table at 0xCD0 (0x10 bytes per entry)
-    - Unknown region at 0xED0 (97 bytes)
+    - Unknown u32 array at 0xED0 (16 entries, 64 bytes)
+    - Credits sequence table at 0xF10 (0x0C bytes per entry)
     - Count fields at 0xF31-0xF33
-    - Unknown region at 0xF34 (204 bytes - state data/padding)
+    - State/config data at 0xF34 (204 bytes)
     """
     
     raw_data: bytes  # Raw header data (first 4096 bytes)
     sector_entries: list[SectorTableEntry]  # Sector offset table entries
     level_entries: list[LevelMetadataEntry]  # Level metadata entries
     movie_entries: list[MovieEntry]  # Movie table entries
+    credits_entries: list[CreditsEntry]  # Credits sequence table entries
     level_count: int  # Number of levels (from offset 0xF31)
     asset_count: int  # Number of assets/movies (from offset 0xF32)
     sector_table_count: int  # Total sector table entries (from offset 0xF33)
@@ -416,15 +476,25 @@ class BLBHeader:
                 break
             movie_entries.append(cls._parse_movie_entry(i, offset, entry_data))
         
+        # Parse credits sequence table (max 2 entries before count fields)
+        credits_entries = []
+        for i in range(CREDITS_MAX_ENTRIES):
+            offset = CREDITS_TABLE_OFFSET + (i * CREDITS_ENTRY_SIZE)
+            if offset + CREDITS_ENTRY_SIZE > LEVEL_COUNT_OFFSET:
+                break
+            entry_data = data[offset:offset + CREDITS_ENTRY_SIZE]
+            credits_entries.append(cls._parse_credits_entry(i, offset, entry_data))
+        
         # Read unknown regions as raw bytes
-        unknown_ed0 = data[0xED0:0xF31]  # 97 bytes between sector table and count fields
-        unknown_f34 = data[0xF34:0x1000]  # 204 bytes after count fields
+        unknown_ed0 = data[UNKNOWN_ARRAY_OFFSET:CREDITS_TABLE_OFFSET]  # 64 bytes (16 u32 values)
+        unknown_f34 = data[STATE_DATA_OFFSET:0x1000]  # 204 bytes after count fields
         
         return cls(
             raw_data=data[:HEADER_SIZE],
             sector_entries=sector_entries,
             level_entries=level_entries,
             movie_entries=movie_entries,
+            credits_entries=credits_entries,
             level_count=level_count,
             asset_count=asset_count,
             sector_table_count=sector_table_count,
@@ -568,6 +638,30 @@ class BLBHeader:
             movie_id=movie_id,
             short_name=short_name,
             filename=filename,
+        )
+    
+    @staticmethod
+    def _parse_credits_entry(index: int, offset: int, data: bytes) -> CreditsEntry:
+        """Parse a single 0x0C-byte credits sequence table entry."""
+        # Code: 4 bytes at +0x00 (4-char, may be empty for entry 0)
+        code_bytes = data[0x00:0x04]
+        code = code_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        
+        # Padding: 4 bytes at +0x04 (zeros)
+        padding = data[0x04:0x08]
+        
+        # Parameters: u16 at +0x08 and +0x0A
+        param_a = struct.unpack('<H', data[0x08:0x0A])[0]
+        param_b = struct.unpack('<H', data[0x0A:0x0C])[0]
+        
+        return CreditsEntry(
+            index=index,
+            offset=offset,
+            raw_data=data,
+            code=code,
+            padding=padding,
+            param_a=param_a,
+            param_b=param_b,
         )
     
     def get_sector_entry_by_code(self, code: str) -> Optional[SectorTableEntry]:
