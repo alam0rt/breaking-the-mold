@@ -1,3 +1,41 @@
 __main = 0x8008E6E0;
+LoadGameAssetLocations = 0x800389DC; // Renamed from LoadGameDataAssetPointers
 D_800A515C = 0x800A515C; // type:s32
 func_800907D0 = 0x800907D0;
+
+// PSY-Q libcd functions (linked from library)
+CdInit = 0x80083030; // type:func
+CdPosToInt = 0x8008386C; // type:func
+CdSearchFile = 0x800850E4; // type:func
+
+// CD file location data
+g_GameBLBFile = 0x8009B4B4; // type:CdlFILE
+g_Music1File = 0x8009B43C; // type:CdlFILE
+g_Music2File = 0x8009B454; // type:CdlFILE
+g_Music3File = 0x8009B46C; // type:CdlFILE
+g_Music4File = 0x8009B484; // type:CdlFILE
+g_Music5File = 0x8009B49C; // type:CdlFILE
+
+// CD sector positions
+g_GameBLBSector = 0x800A59F0; // type:s32
+g_Music1Sector = 0x8009B3D8; // type:s32
+g_Music2Sector = 0x8009B3DC; // type:s32
+g_Music3Sector = 0x8009B3E0; // type:s32
+g_Music4Sector = 0x8009B3E4; // type:s32
+g_Music5Sector = 0x8009B3E8; // type:s32
+g_AllMusicFilesFound = 0x800A59E8; // type:s8
+getLevelName = 0x8007AA08; // size:0x20
+initPlayerState = 0x800260D0; // size:0x8C
+main = 0x800828B0; // size:0x360
+// PSY-Q SDK functions identified from main()
+SsUtReverbOn = 0x80013248;
+ResetCallback = 0x80087E18;
+PadInit = 0x8008762C;
+InitGeom = 0x8008D504;
+SetDispMask = 0x8008A1FC;
+FntLoad = 0x80088C70;
+FntOpen = 0x80088D14;
+SetDumpFnt = 0x80088C30;
+PadRead = 0x8008767C;
+DrawSync = 0x8008A298;
+VSync = 0x80087C24;

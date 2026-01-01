@@ -88,18 +88,18 @@ M2C := $(PYTHON) tools/m2c/m2c.py
 # -----------------------------------------------------------------------------
 
 # C preprocessor flags
-CPPFLAGS := -I include -I include/psxsdk -D_LANGUAGE_C -DVERSION_$(VERSION)
+CPPFLAGS := -I include -I psyq -D_LANGUAGE_C -DVERSION_$(VERSION)
 
 # PSX compiler flags (GCC 2.6 compatible)
 # -O2: Optimization level 2
-# -G0: No global pointer optimization (required for overlays)
+# -G8: Small data threshold (variables <=8 bytes go in .sdata for GP-relative access)
 # -fno-builtin: Don't use builtin functions
 # -mno-abicalls: No PIC/position independent code
 # -mcpu=3000: MIPS R3000 (PSX CPU)
-CFLAGS := -O2 -G0 -fno-builtin -mno-abicalls -mcpu=3000
+CFLAGS := -O2 -G8 -fno-builtin -mno-abicalls -mcpu=3000
 
 # Assembler flags
-ASFLAGS := -march=r3000 -mtune=r3000 -no-pad-sections -G0 -Iinclude
+ASFLAGS := -march=r3000 -mtune=r3000 -no-pad-sections -G8 -Iinclude
 
 # Linker flags
 LDFLAGS := -nostdlib
@@ -260,9 +260,53 @@ check: $(BUILD_DIR)/$(PROJECT).bin $(TARGET)
 		exit 1; \
 	fi
 
+# Verify all decompiled functions match using asm-differ
+# Exits non-zero if any function has differences
+verify: $(BUILD_DIR)/$(PROJECT).bin
+	@echo "Verifying decompiled functions..."
+	@FAILED=0; \
+	for src in $(C_SRCS); do \
+		FUNC=$$(basename $$src .c); \
+		if [ "$$FUNC" = "__main" ]; then continue; fi; \
+		echo -n "Checking $$FUNC... "; \
+		OUTPUT=$$($(PYTHON) tools/asm-differ/diff.py --no-pager -ms $$FUNC 2>&1); \
+		if echo "$$OUTPUT" | grep -q "differs"; then \
+			echo "DIFFERS"; \
+			echo "$$OUTPUT" | head -30; \
+			FAILED=1; \
+		elif echo "$$OUTPUT" | grep -q "error\|Error\|not found"; then \
+			echo "ERROR"; \
+			echo "$$OUTPUT"; \
+		else \
+			echo "OK"; \
+		fi; \
+	done; \
+	if [ $$FAILED -eq 1 ]; then \
+		echo ""; \
+		echo "✗ VERIFICATION FAILED - some functions differ"; \
+		exit 1; \
+	else \
+		echo ""; \
+		echo "✓ All decompiled functions match"; \
+	fi
+	@echo ""
+	@echo "=== Binary Comparison ==="
+	@echo "Build:    $$(ls -la $(BUILD_DIR)/$(PROJECT).bin | awk '{print $$5}') bytes  $$(sha1sum $(BUILD_DIR)/$(PROJECT).bin | cut -d' ' -f1)"
+	@echo "Original: $$(ls -la $(TARGET) | awk '{print $$5}') bytes  $$(sha1sum $(TARGET) | cut -d' ' -f1)"
+	@if cmp -s $(BUILD_DIR)/$(PROJECT).bin $(TARGET); then \
+		echo "Status:   ✓ EXACT MATCH"; \
+	else \
+		echo "Status:   ✗ Different"; \
+	fi
+
 # -----------------------------------------------------------------------------
 # Diff Tools
 # -----------------------------------------------------------------------------
+
+# Side-by-side binary diff
+# Usage: make bindiff
+bindiff: $(BUILD_DIR)/$(PROJECT).bin
+	$(PYTHON) scripts/bindiff.py $(BUILD_DIR)/$(PROJECT).bin $(TARGET)
 
 # Run asm-differ on a function
 # Usage: make diff FUNC=FunctionName

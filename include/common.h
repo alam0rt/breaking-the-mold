@@ -44,6 +44,37 @@ typedef s32 bool;
 typedef s16 fixed16;    /* 1.15 fixed point */
 typedef s32 fixed32;    /* 16.16 fixed point */
 
+/* BSD-style types (used by PSY-Q headers) */
+typedef unsigned char u_char;
+typedef unsigned short u_short;
+typedef unsigned int u_int;
+typedef unsigned long u_long;
+
+/* -----------------------------------------------------------------------------
+ * PSY-Q SDK headers (if available)
+ * -------------------------------------------------------------------------- */
+#if __has_include("LIBAPI.H")
+#include "LIBAPI.H"
+#endif
+#if __has_include("LIBGTE.H")
+#include "LIBGTE.H"
+#endif
+#if __has_include("LIBGPU.H")
+#include "LIBGPU.H"
+#endif
+#if __has_include("LIBCD.H")
+#include "LIBCD.H"
+#endif
+#if __has_include("LIBSPU.H")
+#include "LIBSPU.H"
+#endif
+#if __has_include("LIBETC.H")
+#include "LIBETC.H"
+#endif
+#if __has_include("LIBPAD.H")
+#include "LIBPAD.H"
+#endif
+
 /* -----------------------------------------------------------------------------
  * Compiler attributes
  * -------------------------------------------------------------------------- */

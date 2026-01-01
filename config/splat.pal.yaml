@@ -65,6 +65,18 @@ segments:
       - [0x800, rodata]
       # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
       - [0x39F0, asm]
+      # initPlayerState: 0x800260D0 - 0x8002615B
+      - [0x168D0, c, initPlayerState]
+      - [0x1695C, asm]
+      # LoadGameAssetLocations: 0x800389DC - 0x80038B97
+      - [0x291DC, c, LoadGameAssetLocations]
+      - [0x29398, asm]
+      # getLevelName: 0x8007AA08 - 0x8007AA27
+      - [0x6B208, c, getLevelName]
+      - [0x6B228, asm]
+      # main: 0x800828B0 - 0x80082C0F
+      - [0x730B0, c, main]
+      - [0x73410, asm]
       # __main: 0x8008E6E0 - 0x8008E7B7 (constructor init)
       - [0x7EEE0, c, __main]
       # .text continued after __main

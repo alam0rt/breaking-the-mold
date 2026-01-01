@@ -1,0 +1,4 @@
+# Ignore all PSY-Q SDK files for legal reasons
+*
+!.gitignore
+!.gitkeep
