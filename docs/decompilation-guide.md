@@ -15,6 +15,10 @@ Quick reference for decompiling functions with proper type information.
 
 ### 1. Add to splat config (`config/splat.pal.yaml`)
 
+`./scripts/addr2offset.sh 0x0`
+
+Or...
+
 Calculate file offset: `(VRAM - 0x80010000) + 0x800`
 
 ```yaml
@@ -64,23 +68,6 @@ Already available via `include/common.h` which includes:
 - `LIBSPU.H` - Sound
 - `LIBETC.H` - Misc utilities
 - `LIBPAD.H` - Controller
-
-### Game-specific types
-Add to `include/common.h` or create a new header:
-
-```c
-// include/game.h
-typedef struct {
-    s32 x, y, z;
-} Vec3;
-```
-
-Then include it in `common.h`:
-```c
-#if __has_include("game.h")
-#include "game.h"
-#endif
-```
 
 ## Symbol Types in symbol_addrs.txt
 
