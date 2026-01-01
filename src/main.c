@@ -4,7 +4,7 @@
  * Address: 0x80039140 | Size: 0x3A4
  * ============================================================================ */
 
-#if NON_MATCHING
+#ifdef NON_MATCHING
 // Non-matching decompiled code for reference
 // Accesses to sdata globals will generate incorrect (non-GP-relative) code
 

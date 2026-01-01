@@ -43,16 +43,17 @@ binwalk -R '\x01\x00\x18\x00\x3C\x00\x00\x00' game.blb | wc -l
 
 ## Levels?
 
-There are 90 levels, 17 worlds and the menu appears to be a "level"
+There are 26 level entries in the PAL BLB header (stored at header + 0xF31), including MENU as entry 0.
+The "90 levels, 17 worlds" count likely includes sub-areas/screens within each level entry.
 
 `>5>6>6B6B6B6B6BWBWBWFWF` appears 91 times, header for level?
 
 
 ## Game BLB loading
 
-The GAME.BLB file offset is found by `CdFindFiles` and stored in a global variable. This is then accessed ultimately by `CdReadFile(offset int, sectors int, buf *u_long)`. Each offset is 512 bytes long.
+The GAME.BLB file offset is found by `CdSearchFile` and stored in `g_GameBLBSector`. This is then accessed by `CdBLB_ReadSectors(sectorOffset, numSectors, destBuffer)`. Each sector is 2048 bytes (standard CD-ROM sector size).
 
-funny structures start at 0x1000 and 0x6000. The latter has different content however.
+Interesting structures start at 0x1000 and 0x6000. The latter has different content however.
 
 ### Runtime structures touched by `LoadBLBHeader`
 
@@ -60,6 +61,21 @@ funny structures start at 0x1000 and 0x6000. The latter has different content ho
     - `+0x3C` (`headerMirror`): pointer to `headerBuffer + 0x1000`. The engine seems to use this as a scratch page when the active BLB window advances.
     - `+0x40` (`headerBuffer`): destination for the first two sectors (`CdBLB_ReadSectors(0, 2, ...)`). Runtime tools and memdumps show this is `0x800AE3E0` (PAL) or `0x800AE450` (other versions).
     - `+0x84` (`cdRequest`): 0x80-byte control block handed to `func_8007A1BC`/`func_8007BB00`, but the same window is also parsed by `func_8007A9B0`/`getLevelName`. After a synchronous read completes, `+0x84` contains the live header contents.
+
+### CD Request Control Block layout (the 0x80-byte struct at `GameState+0x84`)
+
+These offsets are relative to `cdRequest` (i.e., `GameState+0x84`):
+
+| Offset | Size | Name | Description |
+|--------|------|------|-------------|
+| +0x00 | 0x58 | (scratch) | Cleared by `func_8007A234` – used as working area |
+| +0x58 | 4 | (unused?) | Read by `func_8007BAE4` |
+| +0x5C | 4 | headerPtr | Pointer to BLB header buffer (set by `func_8007A1BC`) |
+| +0x60 | 1 | state | Initialised to `0xFF` by `func_8007A1BC` |
+| +0x64 | 4 | callback | Completion callback (e.g., `func_80020848`) |
+| +0x68 | 0x18 | (zeroed) | Cleared by `func_8007A218` |
+
+`func_8007BB00(flag, cdRequest)` simply stores the flag in sdata global `D_800A6060` and the cdRequest pointer in `D_800A6064`, allowing background systems to poll / invoke the callback later.
     - `+0x11C` (`headerBufferSize`): length of the allocation reserved for header streaming (initialised to `0x10000`).
     - `+0x12C` (`headerMagic`): set to `0x01234567` and mirrored to the BSS word `D_801FC400`, providing a simple "header is ready" sentinel for other subsystems.
 - `D_800A5954` points at a 0xA650-byte engine context block (`D_800907EC`). Offset `+0xA650` inside that block is a `void *` pointing at the persistent BLB header buffer in main RAM; this is now expressed as `engine->blbHeaderBufferBase` in `LoadBLBHeader`.
@@ -91,14 +107,14 @@ Following CdReads to track loads from game.blb
 /* Monkey Shrines */
 0x80116450 loads 0x9c524f to 0x9c9f87 // might contain load screen image?
 0x800af450 loads 0x9ca252 to 
-
 ```
 
-0x8009DD20 to + 0x58 looks like where the level info is loaded?
+### Notes on memory location 0x8009DD20
 
-the pointer is saved and 0xa is added to it
-afterwards
+`0x8009DD20` = `D_8009DC40` + 0xE0, i.e., GameState + 0xE0
 
+The region from `0x8009DD20` to `+0x58` looks like where the level info is loaded.
+The pointer is saved and 0xA is added to it afterwards.
 
 ```
 0x80110450 is interesting and gets loaded with lots of 80 00 80 00s
@@ -107,11 +123,11 @@ afterwards
 0x80116450 is the compressed MDEC frames
 ```
 ## Load screens
-load_blb_asset offset / sector counts
+load_blb_asset sector_offset / sector_count values:
 
-0xC / 0xA == Skullmonkeys title card
-0xC5 / 0x4 == Loading screen
-0xC86 / 0x9 == Science centre
+- `0xC / 0xA` == Skullmonkeys title card (sector 12, 10 sectors = byte offset 0x6000, size 0x5000)
+- `0xC5 / 0x4` == Loading screen (sector 197, 4 sectors = byte offset 0x18A00, size 0x2000)
+- `0xC86 / 0x9` == Science centre (sector 3206, 9 sectors = byte offset 0x190C00, size 0x4800)
 
 ## Interesting bytes
 
@@ -152,8 +168,9 @@ DECIMAL       HEXADECIMAL     DESCRIPTION
 
 ## Decode function
 
-Before loading the BLB asset, two functions are called to work out the offset and the number of sectors to read. Both of these functions take in a pointer located at
-`8009DD20`. The pointer + 0x5c (at start up at least) points to the address for the game BLB header and then reads the byte at `0xf37`.
+Before loading the BLB asset, two functions are called to work out the offset and the number of sectors to read. Both of these functions take in a pointer to the GameState structure (at `D_8009DC40`). The pointer + 0x5C points to `headerMirror` (header + 0x1000), and the code reads the state byte at `header + 0xF37`.
+
+(Note: The original notes referenced address `0x8009DD20`, which is `D_8009DC40 + 0xE0` (GameState + 0xE0). The `+0x5C` offset may have been relative to a different structure.)
 
 ### BLB Header Base Addresses (version dependent)
 | Version | Header Base | Offset Table (base + 0x10) |
@@ -177,34 +194,68 @@ else if (state < 1):
     offset = 0x0
     
 else if (state >= 0x3 && state < 0x6):
-    // Level loading path
+    // Level loading path - uses the offset table at ~0xCC0
     level_index = *(header + 0xF93)           // e.g., 0x1 for PIRA
-    entry_ptr = header + (level_index * 0x10) // 0x10 byte entries
-    offset = *(u16*)(entry_ptr + 0x0)         // Sector offset
-    sectors = *(u16*)(entry_ptr + 0x2)        // Sector count
+    entry_ptr = offset_table + (level_index * 0x10) // 0x10 byte entries in offset table
+    offset = *(u16*)(entry_ptr + 0xC)         // Sector offset
+    sectors = *(u16*)(entry_ptr + 0xE)        // Sector count
 ```
 
-### Level Entry Format (0x10 bytes each)
+### BLB Header Structure Overview
+
+The BLB header (first 0x1000 bytes) contains two main structures:
+
+1. **Level Metadata Entries** (at offset 0x0000, 0x70 bytes each)
+   - Contains level name, display info, etc.
+   - Level name is at entry + 0x5B (null-terminated string)
+   - Level count stored at header + 0xF31
+
+2. **Sector Offset Table** (at offset ~0xCC0, 0x10 bytes each)
+   - Contains BLB sector offset/count for loading level data
+   - Used when actually loading level assets from disc
+
+### Level Metadata Entry Format (0x70 bytes each, starting at offset 0x0000)
 ```
-struct LevelEntry {
-    u16 sector_offset;   // +0x00: Starting sector in BLB
-    u16 sector_count;    // +0x02: Number of sectors to read
-    u8  unknown[12];     // +0x04: Remaining data (TBD)
+struct LevelMetadataEntry {
+    u8  data[0x5B];       // +0x00: Various level metadata (TBD)
+    char name[21];        // +0x5B: Level name, null-terminated (e.g., "Options", "Skullmonkey Gate")
 };
 ```
 
-**Example - PIRA level:**
-- Entry at header + 0x10: `00 0C 00 0A ...`
-- Sector offset: `0x000C`
-- Sector count: `0x000A`
+Accessed by `getLevelName(arg0, levelIndex)` which returns `*(arg0+0x5C) + (levelIndex * 0x70) + 0x5B`.
+
+### Sector Offset Table Entry Format (0x10 bytes each, starting at ~0xCC0)
+```
+struct SectorTableEntry {
+    u16 unknown0;         // +0x00: Unknown (possibly flags/type)
+    u8  unknown2;         // +0x02: Unknown
+    char code[5];         // +0x03: 4-char level code + null (e.g., "PIRA", "MENU")
+    char shortName[4];    // +0x08: Short description
+    u16 sector_offset;    // +0x0C: Starting sector in BLB
+    u16 sector_count;     // +0x0E: Number of sectors to read
+};
+```
+
+**Example - PIRA level (from offset table at 0xCD0):**
+- Entry: `37 05 0a 50 49 52 41 00 44 6f 6e 00 0c 00 0a 00`
+- Code: "PIRA"
+- Sector offset (at +0x0C): `0x000C`
+- Sector count (at +0x0E): `0x000A`
 - Byte offset in BLB: `0xC * 2048 = 0x6000`
 - Bytes to read: `0xA * 2048 = 0x5000`
+
+**Example - MENU level (from offset table at 0xD00):**
+- Entry: `00 00 00 4d 45 4e 55 00 4f 70 74 00 19 08 0a 00`
+- Code: "MENU"
+- Sector offset: `0x0819`
+- Sector count: `0x000A`
+- Byte offset in BLB: `0x819 * 2048 = 0x40C800`
 
 The offset `0x8009DD80` is initialised with `0xFF`, then it is overflowed to `0x00`... increases by 1 every time to `0x5`, then skips to `0x9`...
 	
 	
-## 0x8009DD80
-This memory location seems to define where to jump to in the BLB header. For example, 
+## 0x8009DD80 (GameState + 0x140)
+This memory location seems to define where to jump to in the BLB header (game state machine). For example, 
 
 ## Releases
 
@@ -293,18 +344,22 @@ File: /mnt/share/sam/skullmonkeys/disc/blbs/slus-00601.blb
 [0xcc7000]	402c003804000200200080020228288000020220288080020228200080020228
 [0x481e800]	c010003801000200200080020228288000020220288080020228200080020228
 
-## BLB header helper
+## BLB header analysis
 
-- `tools/parse_blb_header.py` reads the first 0x1000 bytes of a BLB file and dumps
-    the 0x10-byte entry table along with the key state bytes at `+0xF37`, `+0xF92`,
-    and `+0xF93`. Example:
+Use Python to parse the first 0x1000 bytes of a BLB file and dump the entry table:
 
-    ```bash
-    python3 tools/parse_blb_header.py --window 0x80 disks/blb/GAME.BLB
-    ```
-
-    The script defaults to `disks/blb/GAME.BLB`, so the path argument is optional
-    once the disc image has been unpacked.
+```python
+import struct
+with open('disks/blb/GAME.BLB', 'rb') as f:
+    data = f.read(0x1000)
+    # Offset table starts at ~0xCC0, each entry is 0x10 bytes
+    for i in range(26):  # 26 levels
+        entry = data[0xCC0 + i*0x10 : 0xCC0 + (i+1)*0x10]
+        code = entry[3:7].decode('ascii', errors='replace').rstrip('\x00')
+        sector_off = struct.unpack('<H', entry[0xC:0xE])[0]
+        sector_cnt = struct.unpack('<H', entry[0xE:0x10])[0]
+        print(f"{i:2d}: {code:5s} sector_off=0x{sector_off:04X} ({sector_off*2048:08X})")
+```
 
 - Memory snapshots (for cross-checking against the live disc image):
 
