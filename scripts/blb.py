@@ -166,8 +166,72 @@ LEVEL_COUNT_OFFSET = 0xF31  # Number of level entries (used by func_8007A9B0)
 ASSET_COUNT_OFFSET = 0xF32  # Number of asset entries (used by func_8007ACDC)
 SECTOR_TABLE_COUNT_OFFSET = 0xF33  # Total sector table entries
 
-# State/config data region
+# State/config data region (0xF34-0x1000, 204 bytes)
+# Runtime state fields used by BLB accessor functions
 STATE_DATA_OFFSET = 0xF34
+STATE_DATA_SIZE = 0x1000 - STATE_DATA_OFFSET  # 204 bytes
+
+# Known field offsets within state data region (relative to 0xF34)
+STATE_GAME_MODE_OFFSET = 0xF36  # u8: Game mode/state (1=movie, 2=credits, 4-5=level)
+STATE_SECONDARY_FLAG_OFFSET = 0xF37  # u8: Secondary state flag
+STATE_UNKNOWN_F91_OFFSET = 0xF91  # u8: Unknown (credits-related?)
+STATE_ASSET_INDEX_OFFSET = 0xF92  # u8: Current asset/movie/entry index for table lookups
+
+
+@dataclass
+class StateData:
+    """
+    Runtime state/config data from header offset 0xF34-0x1000 (204 bytes).
+    
+    This region contains runtime state used by BLB accessor functions to
+    determine which table entries to access. The game mode field (0xF36)
+    switches behavior between movie, credits, and level modes.
+    
+    Key fields:
+      - game_mode (0xF36): Selects which table to access
+          1 = Movie mode (movie table at 0xB60)
+          2 = Credits mode (credits table at 0xF10)
+          4-5 = Level/sector mode (sector table at 0xCD0)
+      - asset_index (0xF92): Index into the selected table
+    
+    Referenced by functions:
+      - GetMovieUnknown00 (0x8007AE14)
+      - func_8007ABCC, func_8007AC54
+      - func_8007ADC8 (GetMovieFilename)
+    """
+    
+    raw_data: bytes  # Full 204 bytes
+    
+    # Known fields
+    game_mode: int = None  # u8 at 0xF36: 1=movie, 2=credits, 4-5=level
+    secondary_flag: int = None  # u8 at 0xF37
+    unknown_f91: int = unknown("+0x5D: u8, credits-related?")
+    asset_index: int = None  # u8 at 0xF92: Current table entry index
+    
+    # The first 2 bytes (0xF34-0xF35) and remaining bytes are still unknown
+    unknown_f34_f35: bytes = unknown("0xF34-0xF35: 2 bytes, purpose TBD")
+    unknown_f38_f90: bytes = unknown("0xF38-0xF90: 89 bytes, appears to be level progression data")
+    unknown_f93_end: bytes = unknown("0xF93-0x1000: 109 bytes, level/world mapping data")
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "StateData":
+        """Parse state data from raw bytes (starting at 0xF34)."""
+        if len(data) < STATE_DATA_SIZE:
+            raise ValueError(f"State data too short: {len(data)} < {STATE_DATA_SIZE}")
+        
+        return cls(
+            raw_data=data[:STATE_DATA_SIZE],
+            game_mode=data[0xF36 - STATE_DATA_OFFSET],  # offset 2
+            secondary_flag=data[0xF37 - STATE_DATA_OFFSET],  # offset 3
+            unknown_f91=data[0xF91 - STATE_DATA_OFFSET],  # offset 0x5D
+            asset_index=data[0xF92 - STATE_DATA_OFFSET],  # offset 0x5E
+            unknown_f34_f35=data[0:2],
+            unknown_f38_f90=data[4:0x5D],  # 0xF38 to 0xF90
+            unknown_f93_end=data[0x5F:],  # 0xF93 to end
+        )
+    
+    def __repr__(self) -> str:
+        return f"StateData(mode={self.game_mode}, idx={self.asset_index})"
 
 
 @dataclass
@@ -412,8 +476,16 @@ class BLBHeader:
     sector_table_count: int  # Total sector table entries (from offset 0xF33)
     
     # Unknown regions stored as raw bytes
-    unknown_ed0: bytes = unknown("0xED0-0xF31: 97 bytes, purpose TBD")
-    unknown_f34: bytes = unknown("0xF34-0x1000: 204 bytes, state data/padding")
+    unknown_ed0: bytes = unknown("0xED0-0xF10: 64 bytes (16 u32 values), purpose TBD")
+    
+    # State/config data with parsed fields
+    state_data: StateData = None
+    
+    # Keep unknown_f34 as property for backward compatibility
+    @property
+    def unknown_f34(self) -> bytes:
+        """Raw state data bytes for backward compatibility."""
+        return self.state_data.raw_data if self.state_data else None
     
     # Backward compatibility property
     @property
@@ -487,7 +559,9 @@ class BLBHeader:
         
         # Read unknown regions as raw bytes
         unknown_ed0 = data[UNKNOWN_ARRAY_OFFSET:CREDITS_TABLE_OFFSET]  # 64 bytes (16 u32 values)
-        unknown_f34 = data[STATE_DATA_OFFSET:0x1000]  # 204 bytes after count fields
+        
+        # Parse state/config data region
+        state_data = StateData.from_bytes(data[STATE_DATA_OFFSET:0x1000])
         
         return cls(
             raw_data=data[:HEADER_SIZE],
@@ -499,7 +573,7 @@ class BLBHeader:
             asset_count=asset_count,
             sector_table_count=sector_table_count,
             unknown_ed0=unknown_ed0,
-            unknown_f34=unknown_f34,
+            state_data=state_data,
         )
     
     @classmethod

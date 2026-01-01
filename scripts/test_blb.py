@@ -16,6 +16,7 @@ from blb import (
     SectorTableEntry,
     LevelMetadataEntry,
     MovieEntry,
+    StateData,
     HEADER_SIZE,
     SECTOR_SIZE,
     SECTOR_TABLE_OFFSET,
@@ -110,6 +111,13 @@ EXPECTED_VALUES = {
             "movie_id": "END2",
             "filename": "\\MVWIN.STR;1",
         },
+        # State/config data at 0xF34
+        "state_data": {
+            "game_mode": 5,
+            "secondary_flag": 5,
+            "unknown_f91": 0,
+            "asset_index": 0,
+        },
     },
     # PAL German (SLES-01091)
     "0458ce72c72f5e85352b03b9dd3f664a1bd2a87aecde8fb52149d87a6fb1b7ee": {
@@ -174,6 +182,13 @@ EXPECTED_VALUES = {
             "index": 12,
             "movie_id": "END2",
             "filename": "\\MVWIN.STR;1",
+        },
+        # State/config data at 0xF34
+        "state_data": {
+            "game_mode": 5,
+            "secondary_flag": 5,
+            "unknown_f91": 0,
+            "asset_index": 0,
         },
     },
     # PAL French (SLES-01092)
@@ -240,6 +255,13 @@ EXPECTED_VALUES = {
             "movie_id": "END2",
             "filename": "\\MVWIN.STR;1",
         },
+        # State/config data at 0xF34
+        "state_data": {
+            "game_mode": 5,
+            "secondary_flag": 5,
+            "unknown_f91": 0,
+            "asset_index": 0,
+        },
     },
     # NTSC-J (SLPS-01501) - Demo, only 6 levels, different sector table format
     # Note: Demo uses binary indices in code field, not ASCII codes
@@ -261,6 +283,13 @@ EXPECTED_VALUES = {
             "code": "\x00\x03",  # Binary index with trailing nulls stripped
             "sector_offset": 0x6F4D,
             "sector_count": 0x006E,
+        },
+        # State/config data at 0xF34 - Japanese has different values
+        "state_data": {
+            "game_mode": 4,
+            "secondary_flag": 3,
+            "unknown_f91": 7,
+            "asset_index": 3,
         },
     },
     # NTSC-J Demo (PAPX-90053) - Demo, only 6 levels, different sector table format
@@ -285,6 +314,13 @@ EXPECTED_VALUES = {
             "sector_count": 0x006E,
         },
         "is_truncated": True,  # Sector data not available in this file
+        # State/config data at 0xF34 - PAPX demo values
+        "state_data": {
+            "game_mode": 5,
+            "secondary_flag": 5,
+            "unknown_f91": 7,
+            "asset_index": 3,
+        },
     },
     # Beta
     "bab772667336b3b3b92352045746f545729cb4cbc1e8a53b33b593bad049828e": {
@@ -349,6 +385,13 @@ EXPECTED_VALUES = {
             "index": 12,
             "movie_id": "END2",
             "filename": "\\MVWIN.STR;1",
+        },
+        # State/config data at 0xF34 - Beta has same values as release
+        "state_data": {
+            "game_mode": 5,
+            "secondary_flag": 5,
+            "unknown_f91": 0,
+            "asset_index": 0,
         },
     },
 }
@@ -653,6 +696,71 @@ class TestBLBHeader(unittest.TestCase):
             len(self.header.movie_entries),
             self.expected["asset_count"],
             "Movie entry count should match asset_count"
+        )
+    
+    # -------------------------------------------------------------------------
+    # State data tests
+    # -------------------------------------------------------------------------
+    
+    def test_state_data_exists(self):
+        """Verify state_data is parsed."""
+        self.assertIsNotNone(self.header.state_data)
+        self.assertIsInstance(self.header.state_data, StateData)
+    
+    def test_state_data_raw_data_size(self):
+        """Verify state_data raw_data is 204 bytes."""
+        self.assertEqual(len(self.header.state_data.raw_data), 204)
+    
+    def test_state_data_game_mode(self):
+        """Verify state_data game_mode field."""
+        if "state_data" not in self.expected:
+            self.skipTest("No state_data expected values for this version")
+        expected = self.expected["state_data"]
+        self.assertEqual(
+            self.header.state_data.game_mode,
+            expected["game_mode"],
+            "game_mode should match expected value"
+        )
+    
+    def test_state_data_secondary_flag(self):
+        """Verify state_data secondary_flag field."""
+        if "state_data" not in self.expected:
+            self.skipTest("No state_data expected values for this version")
+        expected = self.expected["state_data"]
+        self.assertEqual(
+            self.header.state_data.secondary_flag,
+            expected["secondary_flag"],
+            "secondary_flag should match expected value"
+        )
+    
+    def test_state_data_asset_index(self):
+        """Verify state_data asset_index field."""
+        if "state_data" not in self.expected:
+            self.skipTest("No state_data expected values for this version")
+        expected = self.expected["state_data"]
+        self.assertEqual(
+            self.header.state_data.asset_index,
+            expected["asset_index"],
+            "asset_index should match expected value"
+        )
+    
+    def test_state_data_unknown_f91(self):
+        """Verify state_data unknown_f91 field."""
+        if "state_data" not in self.expected:
+            self.skipTest("No state_data expected values for this version")
+        expected = self.expected["state_data"]
+        self.assertEqual(
+            self.header.state_data.unknown_f91,
+            expected["unknown_f91"],
+            "unknown_f91 should match expected value"
+        )
+    
+    def test_state_data_backward_compat_unknown_f34(self):
+        """Verify unknown_f34 property returns state_data.raw_data."""
+        self.assertEqual(
+            self.header.unknown_f34,
+            self.header.state_data.raw_data,
+            "unknown_f34 should return state_data.raw_data"
         )
     
     # -------------------------------------------------------------------------

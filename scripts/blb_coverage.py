@@ -236,11 +236,18 @@ def analyze_coverage(blb_path: Path) -> dict:
     if movie_table_end < SECTOR_TABLE_OFFSET:
         mark_range(movie_table_end, SECTOR_TABLE_OFFSET, "gap_movie_to_sector", is_unknown=True)
     
-    # Unknown region at 0xED0-0xF31 (97 bytes)
-    mark_range(0xED0, 0xF31, "unknown_ed0", is_unknown=True)
+    # Unknown region at 0xED0-0xF10 (64 bytes) - u32 array
+    mark_range(0xED0, 0xF10, "unknown_ed0", is_unknown=True)
     
-    # Unknown region at 0xF34-0x1000 (204 bytes)
-    mark_range(0xF34, 0x1000, "unknown_f34", is_unknown=True)
+    # State/config data region at 0xF34-0x1000 (204 bytes)
+    # Some fields are now understood:
+    mark_range(0xF34, 0xF36, "state_unknown_f34_f35", is_unknown=True)
+    mark_range(0xF36, 0xF37, "state_game_mode")  # Known: game mode (1=movie, 2=credits, 4-5=level)
+    mark_range(0xF37, 0xF38, "state_secondary_flag")  # Known: secondary state flag
+    mark_range(0xF38, 0xF91, "state_unknown_f38_f90", is_unknown=True)
+    mark_range(0xF91, 0xF92, "state_unknown_f91", is_unknown=True)  # Credits-related?
+    mark_range(0xF92, 0xF93, "state_asset_index")  # Known: current asset/movie index
+    mark_range(0xF93, 0x1000, "state_unknown_f93_end", is_unknown=True)
     
     # Calculate statistics
     total_covered = sum(covered)

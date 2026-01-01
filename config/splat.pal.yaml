@@ -76,6 +76,9 @@ segments:
       # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F
       - [0x29398, c, CdBLB]
       - [0x29950, asm]
+      # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
+      - [0x6AE2C, c, LevelDataParser]
+      - [0x6B080, asm]
       # getLevelName: 0x8007AA08 - 0x8007AA27
       - [0x6B208, c, getLevelName]
       - [0x6B228, asm]
