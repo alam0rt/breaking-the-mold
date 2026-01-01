@@ -27,3 +27,6 @@
 	path = tools/mipsmatch
 	url = https://github.com/ttkb-oss/mipsmatch.git
 	# MIPS pattern matching tool
+[submodule "tools/old-gcc"]
+	path = tools/old-gcc
+	url = https://github.com/decompals/old-gcc.git
