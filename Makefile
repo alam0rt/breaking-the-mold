@@ -37,30 +37,10 @@ SRC_DIR := src
 # -----------------------------------------------------------------------------
 # Toolchain Configuration
 # -----------------------------------------------------------------------------
-
-# GCC 2.95.3 TOOLCHAIN (From Nix minimal-bootstrap)
-# =================================================
-# The flake provides GCC 2.95.3 via Nix's minimal-bootstrap package.
-# This matches PSY-Q 4.6/4.7's CC1PSX.EXE compiler output.
-#
-# NO EXTERNAL DOWNLOADS REQUIRED - everything comes from Nix!
-#
-# The GCC295_PATH environment variable is set by the flake's shellHook.
-# If you need a different GCC version (2.7.2, 2.8.1, etc.), you can:
-#   1. Download from decompals/old-gcc: ./tools/download-toolchain.sh 2.7.2
-#   2. Override GCC_DIR below
-
-# GCC from Nix (set by flake) or fallback to downloaded version
-ifdef GCC295_PATH
-  CC1 := $(GCC295_PATH)/bin/cc1
-  GCC := $(GCC295_PATH)/bin/gcc
-else
-  # Fallback: downloaded old-gcc
-  GCC_VERSION := 2.95.2
-  GCC_DIR := tools/gcc-$(GCC_VERSION)
-  CC1 := $(GCC_DIR)/cc1
-  GCC := $(GCC_DIR)/gcc
-endif
+GCC_VERSION := 2.7.2-psx
+GCC_DIR := tools/gcc-$(GCC_VERSION)
+CC1 := $(GCC_DIR)/cc1
+GCC := $(GCC_DIR)/gcc
 
 # MIPS cross-toolchain (from Nix environment)
 # Note: Nix provides mipsel-unknown-linux-gnu-*, not mipsel-linux-gnu-*
