@@ -372,9 +372,32 @@ ISO := disks/$(VERSION)/sles-01090.iso01.iso
 ELF := $(BUILD_DIR)/$(PROJECT).elf
 GDB_PORT := 3333
 
+# PCSX-Redux executable (via nixGL for GPU access)
+# Note: \# escapes the hash which Make treats as comment
+PCSX := nix run --impure github:nix-community/nixGL\#nixGLIntel -- pcsx-redux
+
 # Launch PCSX-Redux emulator with GDB server (runs in foreground)
 emu:
-	nix run --impure github:nix-community/nixGL#nixGLIntel -- pcsx-redux -interpreter -debugger -gdb -iso $(ISO) -run -safe
+	$(PCSX) -interpreter -debugger -gdb -iso $(ISO) -run -safe
+
+# Run a Lua script in PCSX-Redux
+# Usage: make lua SCRIPT=scripts/hello.lua
+# Note: -interpreter -debugger required for breakpoints to work
+lua:
+ifndef SCRIPT
+	@echo "Usage: make lua SCRIPT=scripts/hello.lua"
+	@exit 1
+endif
+	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile $(SCRIPT) -run
+
+# Run inline Lua code
+# Usage: make lua-exec CODE='print("hello")'
+lua-exec:
+ifndef CODE
+	@echo "Usage: make lua-exec CODE='print(\"hello\")'"
+	@exit 1
+endif
+	$(PCSX) -lua_stdout -iso $(ISO) -exec '$(CODE)' -run
 
 # Print debug instructions for Ghidra native debugger
 debug:
