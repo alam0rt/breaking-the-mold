@@ -39,8 +39,8 @@ Level Metadata Entry Format (0x70 bytes each, at offset 0x000):
 - +0x5B: 21 bytes - Level name, null-terminated
 
 Movie Entry Format (0x1C bytes each, at offset 0xB60):
-- +0x00: 2 bytes - Unknown (always 0x0000)
-- +0x02: u16 - Sector count
+- +0x00: u16 - Reserved/unused (always 0, accessed by func_8007AE14)
+- +0x02: u16 - Sector count (accessed by func_8007AE58)
 - +0x04: 5 bytes - Movie ID (4-char null-terminated, e.g., "LOGO", "INT1")
 - +0x09: 3 bytes - Short name (2-char null-terminated)
 - +0x0C: 16 bytes - CD filename (e.g., "\\MVLOGO.STR;1")
@@ -57,9 +57,30 @@ Sector size is standard CD-ROM: 2048 bytes.
 """
 
 import struct
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO, Iterator, Optional
+
+
+# Helper for marking fields as unknown/not fully understood
+def unknown(description: str = "") -> field:
+    """Mark a dataclass field as unknown/not fully understood purpose.
+    
+    Usage:
+        unknown_field: bytes = unknown("Purpose TBD")
+    
+    The coverage tool will exclude these fields from the "understood" count.
+    """
+    return field(default=None, metadata={"unknown": True, "description": description})
+
+
+def is_unknown_field(cls, field_name: str) -> bool:
+    """Check if a field is marked as unknown."""
+    from dataclasses import fields
+    for f in fields(cls):
+        if f.name == field_name:
+            return f.metadata.get("unknown", False)
+    return False
 
 # Constants
 SECTOR_SIZE = 2048
@@ -95,13 +116,13 @@ class SectorTableEntry:
     
     index: int
     offset: int  # Offset of this entry within the header
-    entry_type: int  # u16 at +0x00, possibly type/flags
-    unknown_byte: int  # u8 at +0x02
-    code: str  # 5-byte level code at +0x03 (4-char null-terminated, e.g., "PIRA", "MENU")
-    short_name: str  # Short name at +0x08 (4 bytes, truncated description)
-    sector_offset: int  # Sector offset within BLB file
-    sector_count: int  # Number of sectors
-    raw_data: bytes  # Full 16 bytes of entry data
+    entry_type: int  = unknown("+0x00: u16 at +0x00, possibly type/flags")
+    unknown_byte: int = unknown("+0x02: u8, purpose TBD")  # u8 at +0x02
+    code: str = None  # 5-byte level code at +0x03 (4-char null-terminated)
+    short_name: str = None  # Short name at +0x08 (4 bytes, truncated description)
+    sector_offset: int = None  # Sector offset within BLB file
+    sector_count: int = None  # Number of sectors
+    raw_data: bytes = None  # Full 16 bytes of entry data
     
     @property
     def byte_offset(self) -> int:
@@ -137,34 +158,34 @@ class LevelMetadataEntry:
     raw_data: bytes  # Full 0x70 bytes of entry data
     
     # Primary level data location
-    sector_offset: int  # u16 at +0x00, sector offset in BLB
-    sector_count: int  # u16 at +0x02, sector count
+    sector_offset: int = None  # u16 at +0x00, sector offset in BLB
+    sector_count: int = None  # u16 at +0x02, sector count
     
     # Static and index data
-    static_data: bytes  # 8 bytes at +0x04
-    level_index: int  # u8 at +0x0C
-    flag: int  # u8 at +0x0D
-    unknown_0e: bytes  # 14 bytes at +0x0E
+    static_data: bytes = unknown("+0x04: 8 bytes, purpose TBD")
+    level_index: int = None  # u8 at +0x0C
+    flag: int = unknown("+0x0D: u8, purpose TBD")
+    unknown_0e: bytes = unknown("+0x0E: 14 bytes")
     
     # Secondary data location (loading screen?)
-    unknown_1c: bytes  # 2 bytes at +0x1C
-    secondary_offset: int  # u16 at +0x1E
-    unknown_20: bytes  # 2 bytes at +0x20
-    dynamic_data_1: bytes  # 10 bytes at +0x22
-    secondary_count: int  # u16 at +0x2C
-    unknown_2e: bytes  # 16 bytes at +0x2E
+    unknown_1c: bytes = unknown("+0x1C: 2 bytes")
+    secondary_offset: int = None  # u16 at +0x1E
+    unknown_20: bytes = unknown("+0x20: 2 bytes")
+    dynamic_data_1: bytes = unknown("+0x22: 10 bytes, contains pointers?")
+    secondary_count: int = None  # u16 at +0x2C
+    unknown_2e: bytes = unknown("+0x2E: 16 bytes")
     
     # Tertiary data location
-    unknown_3e: bytes  # 2 bytes at +0x3E
-    tertiary_offset: int  # u16 at +0x40
-    unknown_42: bytes  # 2 bytes at +0x42
-    dynamic_data_2: bytes  # 10 bytes at +0x44
-    tertiary_count: int  # u16 at +0x4E
-    unknown_50: bytes  # 6 bytes at +0x50
+    unknown_3e: bytes = unknown("+0x3E: 2 bytes")
+    tertiary_offset: int = None  # u16 at +0x40
+    unknown_42: bytes = unknown("+0x42: 2 bytes")
+    dynamic_data_2: bytes = unknown("+0x44: 10 bytes, contains pointers?")
+    tertiary_count: int = None  # u16 at +0x4E
+    unknown_50: bytes = unknown("+0x50: 6 bytes")
     
     # Identification
-    level_id: str  # 5 bytes at +0x56 (4-char null-terminated)
-    name: str  # 21 bytes at +0x5B (null-terminated)
+    level_id: str = None  # 5 bytes at +0x56 (4-char null-terminated)
+    name: str = None  # 21 bytes at +0x5B (null-terminated)
     
     @property
     def byte_offset(self) -> int:
@@ -209,18 +230,22 @@ class MovieEntry:
     The number of entries matches the asset_count at header offset 0xF32.
     
     Movies are FMV sequences stored as .STR files on the CD.
+    
+    The unknown_00 field is accessed by func_8007AE14 as a u16, but is always 0
+    in all known versions. It may have been intended as a start_sector offset,
+    but movies are loaded by filename from the filesystem instead.
     """
     
     index: int
     offset: int  # Offset of this entry within the header
-    raw_data: bytes  # Full 0x1C bytes of entry data
+    raw_data: bytes = None  # Full 0x1C bytes of entry data (for debugging)
     
     # Fields
-    unknown_00: bytes  # 2 bytes at +0x00 (always 0x0000)
-    sector_count: int  # u16 at +0x02
-    movie_id: str  # 5 bytes at +0x04 (4-char null-terminated, e.g., "LOGO", "INT1")
-    short_name: str  # 3 bytes at +0x09 (2-char null-terminated)
-    filename: str  # 16 bytes at +0x0C (CD path, e.g., "\\MVLOGO.STR;1")
+    unknown_00: int = unknown("+0x00: u16, always 0 - reserved/unused (accessed by func_8007AE14)")
+    sector_count: int = None  # u16 at +0x02
+    movie_id: str = None  # 5 bytes at +0x04 (4-char null-terminated)
+    short_name: str = None  # 3 bytes at +0x09 (2-char null-terminated)
+    filename: str = None  # 16 bytes at +0x0C (CD path)
     
     @property
     def byte_size(self) -> int:
@@ -258,8 +283,8 @@ class BLBHeader:
     sector_table_count: int  # Total sector table entries (from offset 0xF33)
     
     # Unknown regions stored as raw bytes
-    unknown_ed0: bytes  # 97 bytes at 0xED0-0xF31
-    unknown_f34: bytes  # 204 bytes at 0xF34-0x1000
+    unknown_ed0: bytes = unknown("0xED0-0xF31: 97 bytes, purpose TBD")
+    unknown_f34: bytes = unknown("0xF34-0x1000: 204 bytes, state data/padding")
     
     # Backward compatibility property
     @property
@@ -447,7 +472,8 @@ class BLBHeader:
     @staticmethod
     def _parse_movie_entry(index: int, offset: int, data: bytes) -> MovieEntry:
         """Parse a single 0x1C-byte movie table entry."""
-        unknown_00 = data[0x00:0x02]
+        # unknown_00: u16 at +0x00 (always 0 in all known versions)
+        unknown_00 = struct.unpack('<H', data[0x00:0x02])[0]
         sector_count = struct.unpack('<H', data[0x02:0x04])[0]
         
         # Movie ID: 5 bytes at +0x04 (4-char null-terminated)

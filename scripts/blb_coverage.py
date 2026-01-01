@@ -42,6 +42,10 @@ from blb import (
     SECTOR_TABLE_COUNT_OFFSET,
     MOVIE_TABLE_OFFSET,
     MOVIE_ENTRY_SIZE,
+    LevelMetadataEntry,
+    MovieEntry,
+    SectorTableEntry,
+    is_unknown_field,
 )
 
 
@@ -59,62 +63,81 @@ def analyze_coverage(blb_path: Path) -> dict:
     # Track coverage by category
     coverage_map = {}
     
-    def mark_range(start: int, end: int, category: str):
+    # Track which categories are "unknown" (parsed but purpose not understood)
+    unknown_categories = set()
+    
+    def mark_range(start: int, end: int, category: str, is_unknown: bool = False):
         """Mark a byte range as covered."""
         if category not in coverage_map:
             coverage_map[category] = []
         coverage_map[category].append((start, end))
         for i in range(start, min(end, HEADER_SIZE)):
             covered[i] = True
+        if is_unknown:
+            unknown_categories.add(category)
     
     # 1. Level metadata table (0x70 bytes per entry, starting at 0x000)
     for i in range(header.level_count):
         entry_start = LEVEL_METADATA_OFFSET + (i * LEVEL_METADATA_ENTRY_SIZE)
         
         # Parse all level metadata fields (matches LevelMetadataEntry structure)
-        mark_range(entry_start + 0x00, entry_start + 0x02, "level_sector_offset")  # u16
-        mark_range(entry_start + 0x02, entry_start + 0x04, "level_sector_count")   # u16
-        mark_range(entry_start + 0x04, entry_start + 0x0C, "level_static_data")    # 8 bytes
-        mark_range(entry_start + 0x0C, entry_start + 0x0D, "level_index")          # u8
-        mark_range(entry_start + 0x0D, entry_start + 0x0E, "level_flag")           # u8
-        mark_range(entry_start + 0x0E, entry_start + 0x1C, "level_unknown_0e")     # 14 bytes
-        mark_range(entry_start + 0x1C, entry_start + 0x1E, "level_unknown_1c")     # 2 bytes
-        mark_range(entry_start + 0x1E, entry_start + 0x20, "level_secondary_offset")  # u16
-        mark_range(entry_start + 0x20, entry_start + 0x22, "level_unknown_20")     # 2 bytes
-        mark_range(entry_start + 0x22, entry_start + 0x2C, "level_dynamic_data_1") # 10 bytes
-        mark_range(entry_start + 0x2C, entry_start + 0x2E, "level_secondary_count")  # u16
-        mark_range(entry_start + 0x2E, entry_start + 0x3E, "level_unknown_2e")     # 16 bytes
-        mark_range(entry_start + 0x3E, entry_start + 0x40, "level_unknown_3e")     # 2 bytes
-        mark_range(entry_start + 0x40, entry_start + 0x42, "level_tertiary_offset")  # u16
-        mark_range(entry_start + 0x42, entry_start + 0x44, "level_unknown_42")     # 2 bytes
-        mark_range(entry_start + 0x44, entry_start + 0x4E, "level_dynamic_data_2") # 10 bytes
-        mark_range(entry_start + 0x4E, entry_start + 0x50, "level_tertiary_count")  # u16
-        mark_range(entry_start + 0x50, entry_start + 0x56, "level_unknown_50")     # 6 bytes
-        mark_range(entry_start + 0x56, entry_start + 0x5B, "level_id")             # 5 bytes
-        mark_range(entry_start + 0x5B, entry_start + 0x70, "level_name")           # 21 bytes
+        # Check is_unknown_field for each field
+        mark_range(entry_start + 0x00, entry_start + 0x02, "level_sector_offset")
+        mark_range(entry_start + 0x02, entry_start + 0x04, "level_sector_count")
+        mark_range(entry_start + 0x04, entry_start + 0x0C, "level_static_data", 
+                   is_unknown_field(LevelMetadataEntry, "static_data"))
+        mark_range(entry_start + 0x0C, entry_start + 0x0D, "level_index")
+        mark_range(entry_start + 0x0D, entry_start + 0x0E, "level_flag",
+                   is_unknown_field(LevelMetadataEntry, "flag"))
+        mark_range(entry_start + 0x0E, entry_start + 0x1C, "level_unknown_0e",
+                   is_unknown_field(LevelMetadataEntry, "unknown_0e"))
+        mark_range(entry_start + 0x1C, entry_start + 0x1E, "level_unknown_1c",
+                   is_unknown_field(LevelMetadataEntry, "unknown_1c"))
+        mark_range(entry_start + 0x1E, entry_start + 0x20, "level_secondary_offset")
+        mark_range(entry_start + 0x20, entry_start + 0x22, "level_unknown_20",
+                   is_unknown_field(LevelMetadataEntry, "unknown_20"))
+        mark_range(entry_start + 0x22, entry_start + 0x2C, "level_dynamic_data_1",
+                   is_unknown_field(LevelMetadataEntry, "dynamic_data_1"))
+        mark_range(entry_start + 0x2C, entry_start + 0x2E, "level_secondary_count")
+        mark_range(entry_start + 0x2E, entry_start + 0x3E, "level_unknown_2e",
+                   is_unknown_field(LevelMetadataEntry, "unknown_2e"))
+        mark_range(entry_start + 0x3E, entry_start + 0x40, "level_unknown_3e",
+                   is_unknown_field(LevelMetadataEntry, "unknown_3e"))
+        mark_range(entry_start + 0x40, entry_start + 0x42, "level_tertiary_offset")
+        mark_range(entry_start + 0x42, entry_start + 0x44, "level_unknown_42",
+                   is_unknown_field(LevelMetadataEntry, "unknown_42"))
+        mark_range(entry_start + 0x44, entry_start + 0x4E, "level_dynamic_data_2",
+                   is_unknown_field(LevelMetadataEntry, "dynamic_data_2"))
+        mark_range(entry_start + 0x4E, entry_start + 0x50, "level_tertiary_count")
+        mark_range(entry_start + 0x50, entry_start + 0x56, "level_unknown_50",
+                   is_unknown_field(LevelMetadataEntry, "unknown_50"))
+        mark_range(entry_start + 0x56, entry_start + 0x5B, "level_id")
+        mark_range(entry_start + 0x5B, entry_start + 0x70, "level_name")
     
     # 2. Movie table (0x1C bytes per entry, starting at 0xB60)
     for i in range(len(header.movie_entries)):
         entry_start = MOVIE_TABLE_OFFSET + (i * MOVIE_ENTRY_SIZE)
         
         # Parse all movie fields (matches MovieEntry structure)
-        mark_range(entry_start + 0x00, entry_start + 0x02, "movie_unknown_00")   # 2 bytes
-        mark_range(entry_start + 0x02, entry_start + 0x04, "movie_sector_count") # u16
-        mark_range(entry_start + 0x04, entry_start + 0x09, "movie_id")           # 5 bytes
-        mark_range(entry_start + 0x09, entry_start + 0x0C, "movie_short_name")   # 3 bytes
-        mark_range(entry_start + 0x0C, entry_start + 0x1C, "movie_filename")     # 16 bytes
+        mark_range(entry_start + 0x00, entry_start + 0x02, "movie_unknown_00",
+                   is_unknown_field(MovieEntry, "unknown_00"))
+        mark_range(entry_start + 0x02, entry_start + 0x04, "movie_sector_count")
+        mark_range(entry_start + 0x04, entry_start + 0x09, "movie_id")
+        mark_range(entry_start + 0x09, entry_start + 0x0C, "movie_short_name")
+        mark_range(entry_start + 0x0C, entry_start + 0x1C, "movie_filename")
     
     # 3. Sector offset table (0x10 bytes per entry, starting at 0xCD0)
     for i in range(header.sector_table_count):
         entry_start = SECTOR_TABLE_OFFSET + (i * SECTOR_TABLE_ENTRY_SIZE)
         
         # Mark individual fields we parse (matches SectorTableEntry structure)
-        mark_range(entry_start + 0x00, entry_start + 0x02, "sector_entry_type")    # u16 entry_type
-        mark_range(entry_start + 0x02, entry_start + 0x03, "sector_entry_unknown")  # u8 unknown
-        mark_range(entry_start + 0x03, entry_start + 0x08, "sector_entry_code")    # 5-byte code
-        mark_range(entry_start + 0x08, entry_start + 0x0C, "sector_entry_short")   # 4-byte short name
-        mark_range(entry_start + 0x0C, entry_start + 0x0E, "sector_offset")        # u16 sector offset
-        mark_range(entry_start + 0x0E, entry_start + 0x10, "sector_count")         # u16 sector count
+        mark_range(entry_start + 0x00, entry_start + 0x02, "sector_entry_type")
+        mark_range(entry_start + 0x02, entry_start + 0x03, "sector_entry_unknown",
+                   is_unknown_field(SectorTableEntry, "unknown_byte"))
+        mark_range(entry_start + 0x03, entry_start + 0x08, "sector_entry_code")
+        mark_range(entry_start + 0x08, entry_start + 0x0C, "sector_entry_short")
+        mark_range(entry_start + 0x0C, entry_start + 0x0E, "sector_offset")
+        mark_range(entry_start + 0x0E, entry_start + 0x10, "sector_count")
     
     # 4. Header count fields
     mark_range(LEVEL_COUNT_OFFSET, LEVEL_COUNT_OFFSET + 1, "level_count")
@@ -125,18 +148,18 @@ def analyze_coverage(blb_path: Path) -> dict:
     # Gap between level metadata and movie table
     level_meta_end = header.level_count * LEVEL_METADATA_ENTRY_SIZE
     if level_meta_end < MOVIE_TABLE_OFFSET:
-        mark_range(level_meta_end, MOVIE_TABLE_OFFSET, "gap_level_to_movie")
+        mark_range(level_meta_end, MOVIE_TABLE_OFFSET, "gap_level_to_movie", is_unknown=True)
     
     # Gap between movie table and sector table
     movie_table_end = MOVIE_TABLE_OFFSET + (len(header.movie_entries) * MOVIE_ENTRY_SIZE)
     if movie_table_end < SECTOR_TABLE_OFFSET:
-        mark_range(movie_table_end, SECTOR_TABLE_OFFSET, "gap_movie_to_sector")
+        mark_range(movie_table_end, SECTOR_TABLE_OFFSET, "gap_movie_to_sector", is_unknown=True)
     
     # Unknown region at 0xED0-0xF31 (97 bytes)
-    mark_range(0xED0, 0xF31, "unknown_ed0")
+    mark_range(0xED0, 0xF31, "unknown_ed0", is_unknown=True)
     
     # Unknown region at 0xF34-0x1000 (204 bytes)
-    mark_range(0xF34, 0x1000, "unknown_f34")
+    mark_range(0xF34, 0x1000, "unknown_f34", is_unknown=True)
     
     # Calculate statistics
     total_covered = sum(covered)
@@ -165,7 +188,18 @@ def analyze_coverage(blb_path: Path) -> dict:
         category_summary[category] = {
             "bytes": total,
             "ranges": len(ranges),
+            "unknown": category in unknown_categories,
         }
+    
+    # Calculate known vs unknown bytes
+    known_bytes = sum(
+        info["bytes"] for cat, info in category_summary.items() 
+        if not info["unknown"]
+    )
+    unknown_bytes_parsed = sum(
+        info["bytes"] for cat, info in category_summary.items() 
+        if info["unknown"]
+    )
     
     # Read raw header data for hex dump
     with open(blb_path, "rb") as f:
@@ -177,10 +211,14 @@ def analyze_coverage(blb_path: Path) -> dict:
         "covered_bytes": total_covered,
         "uncovered_bytes": total_bytes - total_covered,
         "coverage_percent": (total_covered / total_bytes) * 100,
+        "known_bytes": known_bytes,
+        "unknown_bytes": unknown_bytes_parsed,
+        "known_percent": (known_bytes / total_bytes) * 100,
         "level_count": header.level_count,
         "asset_count": header.asset_count,
         "sector_table_count": header.sector_table_count,
         "categories": category_summary,
+        "unknown_categories": unknown_categories,
         "uncovered_regions": uncovered_regions,
         "covered_bitmap": covered,
         "raw_header": raw_header,
@@ -207,9 +245,14 @@ def print_report(analysis: dict) -> None:
     print(f"  Uncovered:      {analysis['uncovered_bytes']:,} bytes ({100 - analysis['coverage_percent']:.1f}%)")
     print()
     
+    print(f"{Colors.BOLD}Understanding Summary:{Colors.RESET}")
+    print(f"  {Colors.GREEN}Known:    {analysis['known_bytes']:,} bytes ({analysis['known_percent']:.1f}%){Colors.RESET}")
+    print(f"  {Colors.YELLOW}Unknown:  {analysis['unknown_bytes']:,} bytes ({100 - analysis['known_percent']:.1f}%){Colors.RESET}")
+    print()
+    
     print("Coverage by Category:")
-    print(f"  {'Category':<30} {'Bytes':>8} {'Ranges':>8}")
-    print("  " + "-" * 48)
+    print(f"  {'Category':<34} {'Bytes':>8} {'Ranges':>6} {'Status':>8}")
+    print("  " + "-" * 58)
     
     # Sort categories by bytes covered (descending)
     sorted_cats = sorted(
@@ -219,7 +262,11 @@ def print_report(analysis: dict) -> None:
     )
     
     for category, info in sorted_cats:
-        print(f"  {category:<30} {info['bytes']:>8} {info['ranges']:>8}")
+        if info["unknown"]:
+            status = f"{Colors.YELLOW}unknown{Colors.RESET}"
+        else:
+            status = f"{Colors.GREEN}known{Colors.RESET}"
+        print(f"  {category:<34} {info['bytes']:>8} {info['ranges']:>6} {status}")
     
     print()
     print("Uncovered Regions:")

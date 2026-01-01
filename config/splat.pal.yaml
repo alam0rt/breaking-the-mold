@@ -79,6 +79,9 @@ segments:
       # getLevelName: 0x8007AA08 - 0x8007AA27
       - [0x6B208, c, getLevelName]
       - [0x6B228, asm]
+      # GetMovieUnknown00, GetMovieSectorCount: 0x8007AE14 - 0x8007AE9B
+      - [0x6B614, c, BLBHeaderAccessors]
+      - [0x6B69C, asm]
       # SetupSound: 0x8007B8B8 - 0x8007c084 ?
       - [0x6C7B8, c, SetupSound]
       - [0x6C888, asm]

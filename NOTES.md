@@ -372,3 +372,34 @@ with open('disks/blb/GAME.BLB', 'rb') as f:
     These dumps look consistent with the in-game header contents (state byte at
     `+0xF37` currently reads `0x05`), but we are preferring the disc-resident
     `GAME.BLB` going forward.
+
+
+## TODO: Research Original Compiler
+
+The current build uses GCC 2.7.2 with maspsx, but register allocation differs from
+the original binary in some functions (e.g., `GetMovieUnknown00`, `GetMovieSectorCount`).
+These functions currently use `INCLUDE_ASM` to achieve byte-matching.
+
+### Research Tasks
+
+1. **Test other PSY-Q SDK compilers:**
+   - PSYQ 3.5, 3.6, 4.0, 4.1, 4.3, 4.4, 4.5, 4.6
+   - Check if any produce matching register allocation
+
+2. **Test GCC variants:**
+   - GCC 2.6.x, 2.7.x, 2.8.x, 2.91, 2.95.x
+   - Try different -O levels (-O1, -O2, -O3)
+   - Try with/without specific flags (-fforce-mem, -fforce-addr, etc.)
+
+3. **Analyze register patterns:**
+   - Original uses $a1 for header, $v0 for result
+   - GCC 2.7.2 uses $a2 for header, $a1 for result
+   - This suggests a different register allocator preference
+
+4. **Check for compiler hints in binary:**
+   - Look for compiler-specific patterns or padding
+   - Compare with known PSX game compilations
+
+5. **Tools to try:**
+   - decomp.me for collaborative matching
+   - Compare with other Neverhood/DreamWorks PSX decomps if available

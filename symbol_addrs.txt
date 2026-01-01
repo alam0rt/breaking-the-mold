@@ -25,6 +25,11 @@ g_Music4Sector = 0x8009B3E4; // type:s32
 g_Music5Sector = 0x8009B3E8; // type:s32
 g_AllMusicFilesFound = 0x800A59E8; // type:s8
 getLevelName = 0x8007AA08; // size:0x20
+
+// BLB Header accessor functions (movie table)
+GetMovieUnknown00 = 0x8007AE14; // size:0x44 // Get reserved u16 field from movie entry (+0x00)
+GetMovieSectorCount = 0x8007AE58; // size:0x44 // Get sector count from movie entry (+0x02)
+
 initPlayerState = 0x800260D0; // size:0x8C
 main = 0x800828B0; // size:0x360
 LoadBLBHeader = 0x800208B0; // size:0xC4 // Initializes BLB archive system and reads header
