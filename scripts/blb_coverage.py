@@ -30,6 +30,7 @@ class Colors:
 
 from blb import (
     BLBHeader,
+    BLBFile,
     HEADER_SIZE,
     SECTOR_SIZE,
     SECTOR_TABLE_OFFSET,
@@ -47,6 +48,85 @@ from blb import (
     SectorTableEntry,
     is_unknown_field,
 )
+
+
+def analyze_file_coverage(blb_path: Path) -> dict:
+    """
+    Analyze how much of the entire BLB file is covered by extractable data.
+    
+    Returns a dict with file coverage statistics.
+    """
+    import os
+    
+    file_size = os.path.getsize(blb_path)
+    header = BLBHeader.from_file(blb_path)
+    
+    # Track covered byte ranges (start, end, description)
+    covered_ranges = []
+    
+    # Header is always covered
+    covered_ranges.append((0, HEADER_SIZE, "header"))
+    
+    # Level primary, secondary, tertiary data
+    for level in header.level_entries:
+        if level.sector_count > 0:
+            start = level.sector_offset * SECTOR_SIZE
+            end = start + (level.sector_count * SECTOR_SIZE)
+            covered_ranges.append((start, end, f"level_{level.index}_primary"))
+        
+        if level.secondary_count > 0:
+            start = level.secondary_offset * SECTOR_SIZE
+            end = start + (level.secondary_count * SECTOR_SIZE)
+            covered_ranges.append((start, end, f"level_{level.index}_secondary"))
+        
+        if level.tertiary_count > 0:
+            start = level.tertiary_offset * SECTOR_SIZE
+            end = start + (level.tertiary_count * SECTOR_SIZE)
+            covered_ranges.append((start, end, f"level_{level.index}_tertiary"))
+    
+    # Sector table entries
+    for entry in header.sector_entries:
+        if entry.sector_count > 0:
+            start = entry.sector_offset * SECTOR_SIZE
+            end = start + (entry.sector_count * SECTOR_SIZE)
+            covered_ranges.append((start, end, f"sector_{entry.index}_{entry.code}"))
+    
+    # Merge overlapping ranges and calculate total coverage
+    # Sort by start position
+    covered_ranges.sort(key=lambda x: x[0])
+    
+    # Merge overlapping ranges
+    merged = []
+    for start, end, desc in covered_ranges:
+        if merged and start <= merged[-1][1]:
+            # Overlapping - extend previous range
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end), merged[-1][2] + "+" + desc)
+        else:
+            merged.append((start, end, desc))
+    
+    # Calculate total covered bytes
+    total_covered = sum(end - start for start, end, _ in merged)
+    
+    # Find gaps
+    gaps = []
+    prev_end = 0
+    for start, end, desc in merged:
+        if start > prev_end:
+            gaps.append((prev_end, start, start - prev_end))
+        prev_end = end
+    
+    # Check for gap at end of file
+    if prev_end < file_size:
+        gaps.append((prev_end, file_size, file_size - prev_end))
+    
+    return {
+        "file_size": file_size,
+        "covered_bytes": total_covered,
+        "uncovered_bytes": file_size - total_covered,
+        "coverage_percent": (total_covered / file_size) * 100 if file_size > 0 else 0,
+        "covered_ranges": merged,
+        "gaps": gaps,
+    }
 
 
 def analyze_coverage(blb_path: Path) -> dict:
@@ -131,7 +211,8 @@ def analyze_coverage(blb_path: Path) -> dict:
         entry_start = SECTOR_TABLE_OFFSET + (i * SECTOR_TABLE_ENTRY_SIZE)
         
         # Mark individual fields we parse (matches SectorTableEntry structure)
-        mark_range(entry_start + 0x00, entry_start + 0x02, "sector_entry_type")
+        mark_range(entry_start + 0x00, entry_start + 0x01, "sector_level_index")
+        mark_range(entry_start + 0x01, entry_start + 0x02, "sector_entry_flags")
         mark_range(entry_start + 0x02, entry_start + 0x03, "sector_entry_unknown",
                    is_unknown_field(SectorTableEntry, "unknown_byte"))
         mark_range(entry_start + 0x03, entry_start + 0x08, "sector_entry_code")
@@ -437,10 +518,27 @@ def main():
         print(f"Error: BLB file not found: {blb_path}")
         sys.exit(1)
     
+    # Header coverage analysis
     analysis = analyze_coverage(blb_path)
     print_report(analysis)
     print_visual_map(analysis)
     print_unknown_hex(analysis)
+    
+    # Full file coverage analysis
+    file_coverage = analyze_file_coverage(blb_path)
+    print()
+    print("=" * 70)
+    print("BLB File Content Coverage (entire file, not just header)")
+    print("=" * 70)
+    print(f"  File size:      {file_coverage['file_size']:,} bytes ({file_coverage['file_size'] / 1024 / 1024:.2f} MB)")
+    print(f"  {Colors.GREEN}Extracted:      {file_coverage['covered_bytes']:,} bytes ({file_coverage['coverage_percent']:.1f}%){Colors.RESET}")
+    print(f"  {Colors.YELLOW}Unextracted:    {file_coverage['uncovered_bytes']:,} bytes ({100 - file_coverage['coverage_percent']:.1f}%){Colors.RESET}")
+    
+    if file_coverage['gaps']:
+        print()
+        print(f"  Gaps (unextracted regions):")
+        for gap_start, gap_end, gap_size in file_coverage['gaps']:
+            print(f"    0x{gap_start:08X} - 0x{gap_end:08X} ({gap_size:,} bytes)")
 
 
 if __name__ == "__main__":

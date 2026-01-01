@@ -38,6 +38,7 @@
           requests
           graphviz
           black
+          coverage
           pip
           virtualenv
         ]);

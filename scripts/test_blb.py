@@ -15,6 +15,7 @@ from blb import (
     BLBFile,
     SectorTableEntry,
     LevelMetadataEntry,
+    MovieEntry,
     HEADER_SIZE,
     SECTOR_SIZE,
     SECTOR_TABLE_OFFSET,
@@ -24,6 +25,7 @@ from blb import (
     LEVEL_COUNT_OFFSET,
     ASSET_COUNT_OFFSET,
     SECTOR_TABLE_COUNT_OFFSET,
+    is_unknown_field,
 )
 
 
@@ -36,24 +38,77 @@ EXPECTED_VALUES = {
         "sector_table_count": 32,
         "first_level_name": "Options",
         "last_level_name": "Evil Engine #9",
+        # First level metadata entry details
+        "first_level_entry": {
+            "index": 0,
+            "level_id": "MENU",
+            "name": "Options",
+            "sector_offset": 0x00C9,
+            "sector_count": 0x0020,
+            "secondary_offset": 0x00E9,
+            "secondary_count": 0x0043,
+            "tertiary_offset": 0x03D5,
+            "tertiary_count": 0x0002,
+            "level_index": 0,
+        },
+        # Last level metadata entry
+        "last_level_entry": {
+            "index": 25,
+            "level_id": "EVIL",
+            "name": "Evil Engine #9",
+            "level_index": 25,
+        },
+        # First sector table entry (PIRA - special loading screen)
         "first_sector_entry": {
             "code": "PIRA",
             "short_name": "Don",
             "sector_offset": 0x000C,
             "sector_count": 0x000A,
+            "level_index": 0x37,
+            "entry_flags": 0x05,
+            "unknown_byte": 0x0A,
         },
+        # MENU sector entry (standard level loading screen)
         "menu_entry": {
             "index": 3,
             "code": "MENU",
             "short_name": "Opt",
             "sector_offset": 0x0819,
             "sector_count": 0x000A,
+            "level_index": 0x00,
+            "entry_flags": 0x00,
+            "unknown_byte": 0x0A,
         },
+        # Last sector entry (OVER - game over screen)
         "last_sector_entry": {
             "index": 31,
             "code": "OVER",
             "sector_offset": 0x131F,
             "sector_count": 0x0076,
+            "level_index": 0x36,
+            "entry_flags": 0x03,
+            "unknown_byte": 0x63,  # 'c' for game over
+        },
+        # Credits sector entry (first one at index 2)
+        "credits_entry": {
+            "index": 2,
+            "code": "CRED",
+            "level_index": 0x35,
+            "entry_flags": 0x00,
+        },
+        # First movie entry
+        "first_movie_entry": {
+            "index": 0,
+            "movie_id": "DREA",
+            "short_name": "DW",
+            "filename": "\\MVDWI.STR;1",
+            "sector_count": 0x004F,
+        },
+        # Last movie entry
+        "last_movie_entry": {
+            "index": 12,
+            "movie_id": "END2",
+            "filename": "\\MVWIN.STR;1",
         },
     },
     # PAL German (SLES-01091)
@@ -63,11 +118,26 @@ EXPECTED_VALUES = {
         "sector_table_count": 32,
         "first_level_name": "Options",
         "last_level_name": "Evil Engine #9",
+        "first_level_entry": {
+            "index": 0,
+            "level_id": "MENU",
+            "name": "Options",
+            "level_index": 0,
+        },
+        "last_level_entry": {
+            "index": 25,
+            "level_id": "EVIL",
+            "name": "Evil Engine #9",
+            "level_index": 25,
+        },
         "first_sector_entry": {
             "code": "PIRA",
             "short_name": "Don",
             "sector_offset": 0x000C,
             "sector_count": 0x0009,
+            "level_index": 0x37,
+            "entry_flags": 0x05,
+            "unknown_byte": 0x0A,
         },
         "menu_entry": {
             "index": 3,
@@ -75,12 +145,35 @@ EXPECTED_VALUES = {
             "short_name": "Opt",
             "sector_offset": 0x0829,
             "sector_count": 0x000A,
+            "level_index": 0x00,
+            "entry_flags": 0x00,
+            "unknown_byte": 0x0A,
         },
         "last_sector_entry": {
             "index": 31,
             "code": "OVER",
             "sector_offset": 0x1349,
             "sector_count": 0x0075,
+            "level_index": 0x36,
+            "entry_flags": 0x03,
+            "unknown_byte": 0x63,
+        },
+        "credits_entry": {
+            "index": 2,
+            "code": "CRED",
+            "level_index": 0x35,
+            "entry_flags": 0x00,
+        },
+        "first_movie_entry": {
+            "index": 0,
+            "movie_id": "DREA",
+            "short_name": "DW",
+            "filename": "\\MVDWI.STR;1",
+        },
+        "last_movie_entry": {
+            "index": 12,
+            "movie_id": "END2",
+            "filename": "\\MVWIN.STR;1",
         },
     },
     # PAL French (SLES-01092)
@@ -90,11 +183,26 @@ EXPECTED_VALUES = {
         "sector_table_count": 32,
         "first_level_name": "Options",
         "last_level_name": "Evil Engine #9",
+        "first_level_entry": {
+            "index": 0,
+            "level_id": "MENU",
+            "name": "Options",
+            "level_index": 0,
+        },
+        "last_level_entry": {
+            "index": 25,
+            "level_id": "EVIL",
+            "name": "Evil Engine #9",
+            "level_index": 25,
+        },
         "first_sector_entry": {
             "code": "PIRA",
             "short_name": "Don",
             "sector_offset": 0x000C,
             "sector_count": 0x000A,
+            "level_index": 0x37,
+            "entry_flags": 0x05,
+            "unknown_byte": 0x0A,
         },
         "menu_entry": {
             "index": 3,
@@ -102,12 +210,35 @@ EXPECTED_VALUES = {
             "short_name": "Opt",
             "sector_offset": 0x082B,
             "sector_count": 0x000A,
+            "level_index": 0x00,
+            "entry_flags": 0x00,
+            "unknown_byte": 0x0A,
         },
         "last_sector_entry": {
             "index": 31,
             "code": "OVER",
             "sector_offset": 0x1348,
             "sector_count": 0x0076,
+            "level_index": 0x36,
+            "entry_flags": 0x03,
+            "unknown_byte": 0x63,
+        },
+        "credits_entry": {
+            "index": 2,
+            "code": "CRED",
+            "level_index": 0x35,
+            "entry_flags": 0x00,
+        },
+        "first_movie_entry": {
+            "index": 0,
+            "movie_id": "DREA",
+            "short_name": "DW",
+            "filename": "\\MVDWI.STR;1",
+        },
+        "last_movie_entry": {
+            "index": 12,
+            "movie_id": "END2",
+            "filename": "\\MVWIN.STR;1",
         },
     },
     # NTSC-J (SLPS-01501) - Demo, only 6 levels, different sector table format
@@ -162,11 +293,26 @@ EXPECTED_VALUES = {
         "sector_table_count": 32,
         "first_level_name": "Options",
         "last_level_name": "Evil Engine #9",
+        "first_level_entry": {
+            "index": 0,
+            "level_id": "MENU",
+            "name": "Options",
+            "level_index": 0,
+        },
+        "last_level_entry": {
+            "index": 25,
+            "level_id": "EVIL",
+            "name": "Evil Engine #9",
+            "level_index": 25,
+        },
         "first_sector_entry": {
             "code": "PIRA",
             "short_name": "Don",
             "sector_offset": 0x000C,
             "sector_count": 0x0009,
+            "level_index": 0x37,
+            "entry_flags": 0x05,
+            "unknown_byte": 0x0A,
         },
         "menu_entry": {
             "index": 3,
@@ -174,12 +320,35 @@ EXPECTED_VALUES = {
             "short_name": "Opt",
             "sector_offset": 0x0818,
             "sector_count": 0x000A,
+            "level_index": 0x00,
+            "entry_flags": 0x00,
+            "unknown_byte": 0x0A,
         },
         "last_sector_entry": {
             "index": 31,
             "code": "OVER",
             "sector_offset": 0x131E,
             "sector_count": 0x0076,
+            "level_index": 0x36,
+            "entry_flags": 0x03,
+            "unknown_byte": 0x63,
+        },
+        "credits_entry": {
+            "index": 2,
+            "code": "CRED",
+            "level_index": 0x35,
+            "entry_flags": 0x00,
+        },
+        "first_movie_entry": {
+            "index": 0,
+            "movie_id": "DREA",
+            "short_name": "DW",
+            "filename": "\\MVDWI.STR;1",
+        },
+        "last_movie_entry": {
+            "index": 12,
+            "movie_id": "END2",
+            "filename": "\\MVWIN.STR;1",
         },
     },
 }
@@ -372,6 +541,120 @@ class TestBLBHeader(unittest.TestCase):
             expected["sector_count"] * SECTOR_SIZE
         )
     
+    def test_sector_entry_new_fields(self):
+        """Test level_index, entry_flags, unknown_byte fields."""
+        entry = self.header.sector_entries[0]
+        expected = self.expected["first_sector_entry"]
+        
+        if "level_index" in expected:
+            self.assertEqual(entry.level_index, expected["level_index"])
+        if "entry_flags" in expected:
+            self.assertEqual(entry.entry_flags, expected["entry_flags"])
+        if "unknown_byte" in expected:
+            self.assertEqual(entry.unknown_byte, expected["unknown_byte"])
+    
+    def test_credits_entry(self):
+        """Test credits entry identification."""
+        expected = self.expected.get("credits_entry")
+        if expected is None:
+            self.skipTest("No credits entry in this BLB version")
+        
+        entry = self.header.get_sector_entry_by_code(expected["code"])
+        self.assertIsNotNone(entry)
+        self.assertEqual(entry.index, expected["index"])
+        self.assertEqual(entry.level_index, expected["level_index"])
+        self.assertEqual(entry.entry_flags, expected["entry_flags"])
+        self.assertTrue(entry.is_credits)
+    
+    # -------------------------------------------------------------------------
+    # Level metadata detailed tests
+    # -------------------------------------------------------------------------
+    
+    def test_first_level_entry_details(self):
+        """Verify first level metadata entry with full details."""
+        expected = self.expected.get("first_level_entry")
+        if expected is None:
+            self.skipTest("No first_level_entry in this BLB version")
+        
+        entry = self.header.level_entries[0]
+        self.assertEqual(entry.index, expected["index"])
+        self.assertEqual(entry.level_id, expected["level_id"])
+        self.assertEqual(entry.name, expected["name"])
+        
+        if "sector_offset" in expected:
+            self.assertEqual(entry.sector_offset, expected["sector_offset"])
+        if "sector_count" in expected:
+            self.assertEqual(entry.sector_count, expected["sector_count"])
+        if "secondary_offset" in expected:
+            self.assertEqual(entry.secondary_offset, expected["secondary_offset"])
+        if "secondary_count" in expected:
+            self.assertEqual(entry.secondary_count, expected["secondary_count"])
+        if "tertiary_offset" in expected:
+            self.assertEqual(entry.tertiary_offset, expected["tertiary_offset"])
+        if "tertiary_count" in expected:
+            self.assertEqual(entry.tertiary_count, expected["tertiary_count"])
+        if "level_index" in expected:
+            self.assertEqual(entry.level_index, expected["level_index"])
+    
+    def test_last_level_entry_details(self):
+        """Verify last level metadata entry with full details."""
+        expected = self.expected.get("last_level_entry")
+        if expected is None:
+            self.skipTest("No last_level_entry in this BLB version")
+        
+        entry = self.header.level_entries[-1]
+        self.assertEqual(entry.index, expected["index"])
+        self.assertEqual(entry.level_id, expected["level_id"])
+        self.assertEqual(entry.name, expected["name"])
+        if "level_index" in expected:
+            self.assertEqual(entry.level_index, expected["level_index"])
+    
+    # -------------------------------------------------------------------------
+    # Movie entry tests
+    # -------------------------------------------------------------------------
+    
+    def test_first_movie_entry(self):
+        """Verify first movie entry."""
+        expected = self.expected.get("first_movie_entry")
+        if expected is None:
+            self.skipTest("No first_movie_entry in this BLB version")
+        
+        if len(self.header.movie_entries) == 0:
+            self.skipTest("No movie entries in header")
+        
+        entry = self.header.movie_entries[0]
+        self.assertEqual(entry.index, expected["index"])
+        self.assertEqual(entry.movie_id, expected["movie_id"])
+        if "short_name" in expected:
+            self.assertEqual(entry.short_name, expected["short_name"])
+        if "filename" in expected:
+            self.assertEqual(entry.filename, expected["filename"])
+        if "sector_count" in expected:
+            self.assertEqual(entry.sector_count, expected["sector_count"])
+    
+    def test_last_movie_entry(self):
+        """Verify last movie entry."""
+        expected = self.expected.get("last_movie_entry")
+        if expected is None:
+            self.skipTest("No last_movie_entry in this BLB version")
+        
+        if len(self.header.movie_entries) == 0:
+            self.skipTest("No movie entries in header")
+        
+        entry = self.header.movie_entries[-1]
+        self.assertEqual(entry.index, expected["index"])
+        self.assertEqual(entry.movie_id, expected["movie_id"])
+        if "filename" in expected:
+            self.assertEqual(entry.filename, expected["filename"])
+    
+    def test_movie_count_matches_asset_count(self):
+        """Verify movie entry count matches asset_count."""
+        self.assertEqual(
+            len(self.header.movie_entries),
+            self.expected["asset_count"],
+            "Movie entry count should match asset_count"
+        )
+    
     # -------------------------------------------------------------------------
     # Backward compatibility tests
     # -------------------------------------------------------------------------
@@ -554,6 +837,235 @@ class TestBLBHeaderFromBytes(unittest.TestCase):
             BLBHeader.from_bytes(b"too short")
         
         self.assertIn("too short", str(ctx.exception).lower())
+
+
+class TestSectorTableEntryProperties(unittest.TestCase):
+    """Tests for SectorTableEntry helper properties."""
+    
+    @classmethod
+    def setUpClass(cls):
+        """Load the BLB file."""
+        import os
+        cls.blb_path = Path(os.environ.get("BLB_PATH", DEFAULT_BLB_PATH))
+        
+        if not cls.blb_path.exists():
+            raise unittest.SkipTest(f"BLB file not found: {cls.blb_path}")
+        
+        cls.blb_hash = get_blb_hash(cls.blb_path)
+        
+        if cls.blb_hash not in EXPECTED_VALUES:
+            raise unittest.SkipTest(f"Unknown BLB version (hash: {cls.blb_hash})")
+        
+        cls.expected = EXPECTED_VALUES[cls.blb_hash]
+        cls.header = BLBHeader.from_file(cls.blb_path)
+    
+    def test_entry_type_property(self):
+        """Test entry_type backward-compat property."""
+        # Entry 0 in PAL is PIRA with entry_flags=0x05, level_index=0x37
+        entry = self.header.sector_entries[0]
+        expected_type = (entry.entry_flags << 8) | entry.level_index
+        self.assertEqual(entry.entry_type, expected_type)
+    
+    def test_is_level_screen(self):
+        """Test is_level_screen property."""
+        # Find a level screen entry (entry_flags=0x00, level_index < 0x20)
+        # In PAL, MENU is at index 3 with entry_flags=0x00, level_index=0x00
+        menu_entry = self.header.get_sector_entry_by_code("MENU")
+        if menu_entry:
+            self.assertTrue(menu_entry.is_level_screen)
+        
+        # PIRA at index 0 is NOT a level screen (entry_flags=0x05)
+        pira_entry = self.header.sector_entries[0]
+        if pira_entry.entry_flags == 0x05:
+            self.assertFalse(pira_entry.is_level_screen)
+    
+    def test_is_special_loading(self):
+        """Test is_special_loading property."""
+        # In PAL, PIRA (index 0) has entry_flags=0x05
+        pira_entry = self.header.sector_entries[0]
+        if pira_entry.entry_flags == 0x05:
+            self.assertTrue(pira_entry.is_special_loading)
+        
+        # MENU should NOT be special loading
+        menu_entry = self.header.get_sector_entry_by_code("MENU")
+        if menu_entry:
+            self.assertFalse(menu_entry.is_special_loading)
+    
+    def test_is_game_over(self):
+        """Test is_game_over property."""
+        # In PAL, OVER entries (index 30, 31) have entry_flags=0x03
+        if len(self.header.sector_entries) > 30:
+            over_entry = self.header.sector_entries[30]
+            if over_entry.entry_flags == 0x03:
+                self.assertTrue(over_entry.is_game_over)
+        
+        # MENU should NOT be game over
+        menu_entry = self.header.get_sector_entry_by_code("MENU")
+        if menu_entry:
+            self.assertFalse(menu_entry.is_game_over)
+    
+    def test_is_credits(self):
+        """Test is_credits property."""
+        # In PAL, CRED entries have entry_flags=0x00, level_index=0x35
+        cred_entry = self.header.get_sector_entry_by_code("CRED")
+        if cred_entry and cred_entry.level_index == 0x35:
+            self.assertTrue(cred_entry.is_credits)
+        
+        # MENU should NOT be credits
+        menu_entry = self.header.get_sector_entry_by_code("MENU")
+        if menu_entry:
+            self.assertFalse(menu_entry.is_credits)
+    
+    def test_sector_entry_repr(self):
+        """Test SectorTableEntry __repr__."""
+        entry = self.header.sector_entries[0]
+        repr_str = repr(entry)
+        self.assertIn("SectorTableEntry", repr_str)
+        self.assertIn(entry.code, repr_str)
+
+
+class TestLevelMetadataEntryProperties(unittest.TestCase):
+    """Tests for LevelMetadataEntry helper properties."""
+    
+    @classmethod
+    def setUpClass(cls):
+        """Load the BLB file."""
+        import os
+        cls.blb_path = Path(os.environ.get("BLB_PATH", DEFAULT_BLB_PATH))
+        
+        if not cls.blb_path.exists():
+            raise unittest.SkipTest(f"BLB file not found: {cls.blb_path}")
+        
+        cls.header = BLBHeader.from_file(cls.blb_path)
+    
+    def test_secondary_byte_offset(self):
+        """Test secondary_byte_offset property."""
+        entry = self.header.level_entries[0]
+        expected = entry.secondary_offset * SECTOR_SIZE
+        self.assertEqual(entry.secondary_byte_offset, expected)
+    
+    def test_secondary_byte_size(self):
+        """Test secondary_byte_size property."""
+        entry = self.header.level_entries[0]
+        expected = entry.secondary_count * SECTOR_SIZE
+        self.assertEqual(entry.secondary_byte_size, expected)
+    
+    def test_tertiary_byte_offset(self):
+        """Test tertiary_byte_offset property."""
+        entry = self.header.level_entries[0]
+        expected = entry.tertiary_offset * SECTOR_SIZE
+        self.assertEqual(entry.tertiary_byte_offset, expected)
+    
+    def test_tertiary_byte_size(self):
+        """Test tertiary_byte_size property."""
+        entry = self.header.level_entries[0]
+        expected = entry.tertiary_count * SECTOR_SIZE
+        self.assertEqual(entry.tertiary_byte_size, expected)
+    
+    def test_level_entry_repr(self):
+        """Test LevelMetadataEntry __repr__."""
+        entry = self.header.level_entries[0]
+        repr_str = repr(entry)
+        self.assertIn("LevelMetadataEntry", repr_str)
+        self.assertIn(entry.level_id, repr_str)
+        self.assertIn(entry.name, repr_str)
+
+
+class TestMovieEntryProperties(unittest.TestCase):
+    """Tests for MovieEntry helper properties."""
+    
+    @classmethod
+    def setUpClass(cls):
+        """Load the BLB file."""
+        import os
+        cls.blb_path = Path(os.environ.get("BLB_PATH", DEFAULT_BLB_PATH))
+        
+        if not cls.blb_path.exists():
+            raise unittest.SkipTest(f"BLB file not found: {cls.blb_path}")
+        
+        cls.header = BLBHeader.from_file(cls.blb_path)
+    
+    def test_movie_byte_size(self):
+        """Test MovieEntry byte_size property."""
+        if len(self.header.movie_entries) == 0:
+            self.skipTest("No movie entries in this BLB version")
+        
+        movie = self.header.movie_entries[0]
+        expected = movie.sector_count * SECTOR_SIZE
+        self.assertEqual(movie.byte_size, expected)
+    
+    def test_movie_repr(self):
+        """Test MovieEntry __repr__."""
+        if len(self.header.movie_entries) == 0:
+            self.skipTest("No movie entries in this BLB version")
+        
+        movie = self.header.movie_entries[0]
+        repr_str = repr(movie)
+        self.assertIn("MovieEntry", repr_str)
+        self.assertIn(movie.movie_id, repr_str)
+    
+    def test_movies_property(self):
+        """Test BLBHeader.movies property alias."""
+        self.assertIs(self.header.movies, self.header.movie_entries)
+
+
+class TestIsUnknownField(unittest.TestCase):
+    """Tests for is_unknown_field helper function."""
+    
+    def test_unknown_field_returns_true(self):
+        """Test is_unknown_field returns True for unknown fields."""
+        # SectorTableEntry.unknown_byte is marked as unknown
+        result = is_unknown_field(SectorTableEntry, "unknown_byte")
+        self.assertTrue(result)
+    
+    def test_known_field_returns_false(self):
+        """Test is_unknown_field returns False for known fields."""
+        # SectorTableEntry.code is NOT marked as unknown
+        result = is_unknown_field(SectorTableEntry, "code")
+        self.assertFalse(result)
+    
+    def test_nonexistent_field_returns_false(self):
+        """Test is_unknown_field returns False for nonexistent fields."""
+        result = is_unknown_field(SectorTableEntry, "nonexistent_field")
+        self.assertFalse(result)
+
+
+class TestPrintTable(unittest.TestCase):
+    """Tests for BLBHeader.print_table method."""
+    
+    @classmethod
+    def setUpClass(cls):
+        """Load the BLB file."""
+        import os
+        cls.blb_path = Path(os.environ.get("BLB_PATH", DEFAULT_BLB_PATH))
+        
+        if not cls.blb_path.exists():
+            raise unittest.SkipTest(f"BLB file not found: {cls.blb_path}")
+        
+        cls.header = BLBHeader.from_file(cls.blb_path)
+    
+    def test_print_table_runs(self):
+        """Test that print_table executes without error."""
+        import io
+        import sys
+        
+        # Capture stdout
+        captured = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = captured
+        
+        try:
+            self.header.print_table()
+        finally:
+            sys.stdout = old_stdout
+        
+        output = captured.getvalue()
+        
+        # Verify output contains expected content
+        self.assertIn("BLB Header Summary", output)
+        self.assertIn("Level Metadata Table", output)
+        self.assertIn("Sector Offset Table", output)
+        self.assertIn(str(self.header.level_count), output)
 
 
 if __name__ == "__main__":

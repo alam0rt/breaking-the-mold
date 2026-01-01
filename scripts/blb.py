@@ -7,53 +7,89 @@ and resources. The first 2 sectors (4096 bytes) contain the header with an
 index table describing the contents.
 
 Header Structure (4096 bytes total):
-- Offset 0x000: Level metadata table (0x70 bytes per entry, count at 0xF31)
-- Offset 0xB60: Movie table (0x1C bytes per entry, count at 0xF32)
-- Offset 0xCD0: Sector/loading screen table (0x10 bytes per entry, count at 0xF33)
-- Offset 0xED0: Unknown region (97 bytes) - purpose TBD
-- Offset 0xF31: Level count (u8) - used by func_8007A9B0
-- Offset 0xF32: Asset/movie count (u8) - used by func_8007ACDC
-- Offset 0xF33: Sector table entry count (u8) - total entries in sector table
-- Offset 0xF34: Unknown region (204 bytes) - state data/padding
+=====================================
+    Offset  Size   Description
+    ------  ----   -----------
+    0x000   2912   Level metadata table (0x70 bytes × 26 entries max)
+    0xB60    364   Movie table (0x1C bytes × 13 entries max)
+    0xCD0    512   Sector/loading screen table (0x10 bytes × 32 entries max)
+    0xED0     97   Unknown region - purpose TBD
+    0xF31      1   Level count (u8)
+    0xF32      1   Asset/movie count (u8)
+    0xF33      1   Sector table entry count (u8)
+    0xF34    204   Unknown region - state data/padding
 
-Level Metadata Entry Format (0x70 bytes each, at offset 0x000):
-- +0x00: u16 - Sector offset within BLB file
-- +0x02: u16 - Sector count
-- +0x04: 8 bytes - Static data
-- +0x0C: u8 - Level index
-- +0x0D: u8 - Flag
-- +0x0E: 14 bytes - Unknown data
-- +0x1C: 2 bytes - Unknown
-- +0x1E: u16 - Secondary sector offset
-- +0x20: 2 bytes - Unknown
-- +0x22: 10 bytes - Dynamic data
-- +0x2C: u16 - Secondary sector count
-- +0x2E: 16 bytes - Unknown
-- +0x3E: 2 bytes - Unknown
-- +0x40: u16 - Tertiary sector offset
-- +0x42: 2 bytes - Unknown
-- +0x44: 10 bytes - More dynamic data
-- +0x4E: u16 - Tertiary sector count
-- +0x50: 6 bytes - Unknown
-- +0x56: 5 bytes - Level ID (4-char null-terminated, e.g., "MENU", "PIRA")
-- +0x5B: 21 bytes - Level name, null-terminated
 
-Movie Entry Format (0x1C bytes each, at offset 0xB60):
-- +0x00: u16 - Reserved/unused (always 0, accessed by func_8007AE14)
-- +0x02: u16 - Sector count (accessed by func_8007AE58)
-- +0x04: 5 bytes - Movie ID (4-char null-terminated, e.g., "LOGO", "INT1")
-- +0x09: 3 bytes - Short name (2-char null-terminated)
-- +0x0C: 16 bytes - CD filename (e.g., "\\MVLOGO.STR;1")
+Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
+=========================================================
+    Offset  Size  Type    Field               Description
+    ------  ----  ----    -----               -----------
+    0x00       2  u16     sector_offset       Primary data sector offset in BLB
+    0x02       2  u16     sector_count        Primary data sector count
+    0x04       8  bytes   static_data         Unknown static data
+    0x0C       1  u8      level_index         Level index number
+    0x0D       1  u8      flag                Unknown flag
+    0x0E      14  bytes   unknown_0e          Unknown
+    0x1C       2  bytes   unknown_1c          Unknown
+    0x1E       2  u16     secondary_offset    Secondary data sector offset
+    0x20       2  bytes   unknown_20          Unknown
+    0x22      10  bytes   dynamic_data_1      Unknown, may contain pointers
+    0x2C       2  u16     secondary_count     Secondary data sector count
+    0x2E      16  bytes   unknown_2e          Unknown
+    0x3E       2  bytes   unknown_3e          Unknown
+    0x40       2  u16     tertiary_offset     Tertiary data sector offset
+    0x42       2  bytes   unknown_42          Unknown
+    0x44      10  bytes   dynamic_data_2      Unknown, may contain pointers
+    0x4E       2  u16     tertiary_count      Tertiary data sector count
+    0x50       6  bytes   unknown_50          Unknown
+    0x56       5  str     level_id            4-char null-terminated (e.g., "MENU")
+    0x5B      21  str     name                Level name, null-terminated
 
-Sector Table Entry Format (0x10 bytes each, at offset 0xCD0):
-- +0x00: u16 - Entry type/flags
-- +0x02: u8  - Unknown byte
-- +0x03: 5 bytes - Level code (4-char null-terminated, e.g., "PIRA", "MENU")
-- +0x08: 4 bytes - Short name (truncated description)
-- +0x0C: u16 - Sector offset within BLB file
-- +0x0E: u16 - Sector count
 
-Sector size is standard CD-ROM: 2048 bytes.
+Movie Entry (0x1C = 28 bytes, at offset 0xB60):
+===============================================
+    Offset  Size  Type    Field               Description
+    ------  ----  ----    -----               -----------
+    0x00       2  u16     unknown_00          Reserved/unused (always 0)
+    0x02       2  u16     sector_count        Movie size in sectors
+    0x04       5  str     movie_id            4-char null-terminated (e.g., "LOGO")
+    0x09       3  str     short_name          2-char null-terminated
+    0x0C      16  str     filename            CD path (e.g., "\\MVLOGO.STR;1")
+
+    Note: Movies are external .STR files on the CD, not embedded in GAME.BLB.
+
+
+Sector Table Entry (0x10 = 16 bytes, at offset 0xCD0):
+======================================================
+    Offset  Size  Type    Field               Description
+    ------  ----  ----    -----               -----------
+    0x00       1  u8      level_index         Level index (0-25) when hi_byte=0
+    0x01       1  u8      entry_flags         Entry type flags (0x00=level, 0x03=game over, 0x05=loading)
+    0x02       1  u8      unknown_byte        Unknown (0x0A for loading screens, 0x63 for game over)
+    0x03       5  str     code                4-char null-terminated (e.g., "PIRA")
+    0x08       4  str     short_name          Truncated description
+    0x0C       2  u16     sector_offset       Sector offset in BLB
+    0x0E       2  u16     sector_count        Sector count
+
+    Entry type patterns observed in PAL version:
+      - entry_flags=0x00: Level loading screens (level_index = 0-25)
+      - entry_flags=0x05: Special loading screens (PIRA=0x37, LEGL=0x32)
+      - entry_flags=0x03: Game over screens (unknown_byte=0x63)
+      - entry_flags=0x00, level_index=0x35: Credits screen
+
+
+Constants:
+==========
+    SECTOR_SIZE = 2048 bytes (standard CD-ROM sector)
+    HEADER_SIZE = 4096 bytes (2 sectors)
+
+File Coverage (PAL version):
+============================
+    Header parsing covers 100% of header bytes (4,096 / 4,096).
+    Of those, ~45% are understood fields, ~55% are unknown/TBD.
+    
+    Extractable data covers ~43% of total file size.
+    Remaining ~57% may be padding, unreferenced data, or additional tables.
 """
 
 import struct
@@ -112,17 +148,30 @@ class SectorTableEntry:
     
     Located at header offset 0xCD0, with 0x10 bytes per entry.
     The number of entries is stored at header offset 0xF33.
+    
+    Entry type patterns:
+      - entry_flags=0x00, level_index=0-25: Level loading screens
+      - entry_flags=0x05: Special loading screens (level_index=0x37 or 0x32)
+      - entry_flags=0x03: Game over screens (unknown_byte=0x63)
+      - entry_flags=0x00, level_index=0x35: Credits screen
     """
     
     index: int
     offset: int  # Offset of this entry within the header
-    entry_type: int  = unknown("+0x00: u16 at +0x00, possibly type/flags")
-    unknown_byte: int = unknown("+0x02: u8, purpose TBD")  # u8 at +0x02
+    level_index: int = None  # u8 at +0x00: Level index when entry_flags=0x00
+    entry_flags: int = None  # u8 at +0x01: Entry type (0x00=level, 0x03=game over, 0x05=loading)
+    unknown_byte: int = unknown("+0x02: u8, 0x0A for loading screens, 0x63 for game over")
     code: str = None  # 5-byte level code at +0x03 (4-char null-terminated)
     short_name: str = None  # Short name at +0x08 (4 bytes, truncated description)
     sector_offset: int = None  # Sector offset within BLB file
     sector_count: int = None  # Number of sectors
     raw_data: bytes = None  # Full 16 bytes of entry data
+    
+    # Keep entry_type for backward compatibility (combines level_index and entry_flags)
+    @property
+    def entry_type(self) -> int:
+        """Combined u16 of level_index (lo) and entry_flags (hi) for compatibility."""
+        return (self.entry_flags << 8) | self.level_index
     
     @property
     def byte_offset(self) -> int:
@@ -133,6 +182,26 @@ class SectorTableEntry:
     def byte_size(self) -> int:
         """Calculate the size in bytes."""
         return self.sector_count * SECTOR_SIZE
+    
+    @property
+    def is_level_screen(self) -> bool:
+        """Check if this is a standard level loading screen."""
+        return self.entry_flags == 0x00 and self.level_index < 0x20
+    
+    @property
+    def is_special_loading(self) -> bool:
+        """Check if this is a special loading screen (PIRA/LEGL intro)."""
+        return self.entry_flags == 0x05
+    
+    @property
+    def is_game_over(self) -> bool:
+        """Check if this is a game over screen."""
+        return self.entry_flags == 0x03
+    
+    @property
+    def is_credits(self) -> bool:
+        """Check if this is a credits screen."""
+        return self.entry_flags == 0x00 and self.level_index == 0x35
     
     def __repr__(self) -> str:
         return (
@@ -381,8 +450,9 @@ class BLBHeader:
     @staticmethod
     def _parse_sector_entry(index: int, offset: int, data: bytes) -> SectorTableEntry:
         """Parse a single 16-byte sector table entry."""
-        entry_type = struct.unpack('<H', data[0:2])[0]
-        unknown_byte = data[2]
+        level_index = data[0]  # u8 at +0x00
+        entry_flags = data[1]  # u8 at +0x01
+        unknown_byte = data[2]  # u8 at +0x02
         
         # Level code: 5 bytes at offset 3 (4-char null-terminated)
         code_bytes = data[3:8]
@@ -398,7 +468,8 @@ class BLBHeader:
         return SectorTableEntry(
             index=index,
             offset=offset,
-            entry_type=entry_type,
+            level_index=level_index,
+            entry_flags=entry_flags,
             unknown_byte=unknown_byte,
             code=code,
             short_name=short_name,
