@@ -2,7 +2,21 @@
 
 This document describes the structure of level and asset data in Skullmonkeys' GAME.BLB archive.
 
-## Overview
+## Game Structure Overview
+
+Skullmonkeys contains **90 individual stages** spread across **26 level themes** stored in the BLB:
+
+| Category | Count | BLB IDs |
+|----------|-------|---------|
+| Menu | 1 | MENU |
+| Regular Worlds | 17 | PHRO, SCIE, TMPL, BOIL, SNOW, FOOD, BRG1, GLID, CAVE, WEED, EGGS, CLOU, SOAR, CRYS, CSTL, MOSS, EVIL |
+| Bosses | 5 | MEGA (Shriney Guard), HEAD (Joe-Head-Joe), GLEN (Glenn Yntis), WIZZ (Monkey Mage), KLOG (Klogg) |
+| Special Modes | 2 | FINN (swimming), RUNN (runner) |
+| Secret Bonus | 1 | SEVN (1970's) |
+
+Each "world" theme contains multiple stages (Stage 01, 02-A, 02-B, 03, etc.) plus bonus rooms.
+
+## Data Segment Overview
 
 Each level in the game consists of three data segments loaded from GAME.BLB:
 - **Primary**: Level geometry, collision, and palette data
@@ -17,14 +31,61 @@ The BLB header (first 0x1000 bytes) contains metadata for all levels:
 Offset   Size   Description
 ------   ----   -----------
 0x000    0xB60  Level Metadata Table (26 entries × 0x70 bytes)
-0xB60    0x170  Movie Table (13 entries × 0x1C bytes)
-0xCD0    0x200  Sector Offset Table (32 entries × 0x10 bytes)
-0xED0    0x040  Unknown u32 array (16 values - file offsets)
-0xF10    0x021  Credits Table (3 entries × 12 bytes, partially overlaps counts)
+0xB60    0x168  Movie Table (13 entries × 0x1C bytes)
+0xCC8    0x008  Padding (zeros)
+0xCD0    0x028  Unknown Table (looks like special level entries)
+0xCF8    0x1A0  Level Order Table (26+ entries × 0x10 bytes)
+0xE98    0x078  Additional entries (credits, game over, etc.)
+0xF10    0x021  Unknown data
 0xF31    0x001  Level Count (26)
-0xF32    0x001  Asset/Movie Count (13)
-0xF33    0x001  Sector Table Count (32)
+0xF32    0x001  Movie Count (13)
+0xF33    0x001  Level Order Table Count
 0xF34    0x0CC  Game State Data
+```
+
+## Movie Table (0xB60-0xCC7)
+
+13 FMV movie entries, 0x1C (28) bytes each:
+
+```
+Offset   Size   Description
+------   ----   -----------
+0x00     u16    Unknown (always 0)
+0x02     u16    Sector count
+0x04     char[4] Movie ID (e.g., "DREA", "LOGO")
+0x08     char[4] Short name
+0x0C     char[16] ISO path (e.g., "\MVDWI.STR;1")
+```
+
+| # | ID | Sectors | Path | Description |
+|--:|:---|-------:|:-----|:------------|
+| 0 | DREA | 79 | \MVDWI.STR | Dreamworks intro |
+| 1 | LOGO | 105 | \MVLOGO.STR | Logo |
+| 2 | ELEC | 60 | \MVEA.STR | EA logo |
+| 3 | INT1 | 3091 | \MVINTRO1.STR | Intro part 1 |
+| 4 | INT2 | 156 | \MVINTRO2.STR | Intro part 2 |
+| 5 | GASS | 1545 | \MVGAS.STR | ? |
+| 6 | YAMM | 1776 | \MVYAM.STR | ? |
+| 7 | REDD | 2119 | \MVRED.STR | ? |
+| 8 | YNTS | 463 | \MVYNT.STR | YNT world intro |
+| 9 | EYES | 918 | \MVEYE.STR | ? |
+| 10 | EVIL | 1008 | \MVEVIL.STR | Evil Engine intro |
+| 11 | END1 | 1044 | \MVEND.STR | Ending part 1 |
+| 12 | END2 | 793 | \MVWIN.STR | Ending part 2 |
+
+## Level Order Table (0xCF8-0xE97)
+
+26 entries for level loading order, 0x10 (16) bytes each:
+
+```
+Offset   Size   Description
+------   ----   -----------
+0x00     char[4] Short display name (3 chars + null)
+0x04     u16    Sector offset
+0x06     u16    Some count (4, 9, or 10)
+0x08     u16    Level index
+0x0A     u8     Padding
+0x0B     char[5] Level ID (4 chars + null)
 ```
 
 ## Level Metadata Entry (0x70 bytes)
@@ -35,11 +96,11 @@ Each level has a metadata entry at offset `index × 0x70`:
 Offset   Size   Description
 ------   ----   -----------
 # Primary data pointers (0x00-0x0B)
-0x00     u16    Primary sector offset
-0x02     u16    Primary sector count
-0x04     u16    Unknown (offset into Entry[0] data, purpose TBD)
+0x00     u16    Primary sector offset (CONFIRMED)
+0x02     u16    Primary sector count (CONFIRMED)
+0x04     u16    Unknown (large values 776-65240, purpose TBD)
 0x06     u16    Unknown count (7-20 range, purpose TBD)
-0x08     u16    Entry[1].offset low 16 bits (CONFIRMED - matches primary TOC)
+0x08     u16    Entry[1].offset low 16 bits (CONFIRMED - 26/26 match with primary TOC)
 0x0A     u16    Unknown count (0-16 range, purpose TBD)
 
 # Level identification (0x0C-0x0D)
@@ -47,7 +108,7 @@ Offset   Size   Description
 0x0D     u8     Level flag (0 or 1, purpose TBD)
 
 # Tertiary block configuration (0x0E-0x1B)
-0x0E     u16    Tertiary block count (CONFIRMED - matches non-zero tert sub-counts)
+0x0E     u16    Tertiary block count (CONFIRMED - 1-6, matches non-zero tert sub-counts)
 0x10     u16[6] Tertiary data offsets (byte offset within each tert block)
 0x1C     u16    Padding (always 0)
 
@@ -69,6 +130,18 @@ Offset   Size   Description
 0x56     char[5]  Level ID (4-char code + null, e.g., "MENU")
 0x5B     char[21] Level name (null-terminated, e.g., "Options Menu")
 ```
+
+### Unknown Fields Analysis
+
+**Fields 0x04, 0x06, 0x0A** remain unidentified. Observations:
+- Levels with identical (0x06, 0x0A) pairs often share the first few worlds:
+  - (14, 7): PHRO, SCIE, TMPL (first 3 gameplay levels)
+  - But other groupings span unrelated worlds
+- Values do NOT correlate with:
+  - Movie indices (only 13 movies, v0A goes to 16)
+  - Stage counts within worlds
+  - Direct tileset/theme sharing
+- Possibly related to asset loading parameters or memory layout
 
 ### Data Interleaving Pattern
 
