@@ -100,3 +100,100 @@ myArray = 0x8009C000; // type:s32[]
 ### Types not found by m2c
 - Ensure `ctx.c` was regenerated after adding types
 - Check for preprocessor errors: `cpp -E -I include -I psyq include/common.h 2>&1 | head`
+
+## Complete Workflow: Adding New Functions
+
+This is the full process for discovering and adding new functions to the decompilation.
+
+### Step 1: Identify Function Boundaries
+
+Use the original binary to find where functions start and end. Functions end with `jr $ra` (`08 00 e0 03` in little-endian hex).
+
+```bash
+# Convert VRAM address to file offset
+./scripts/addr2offset.sh 0x8007ABCC
+# Output: Offset: 0x6B3CC
+
+# Dump bytes to find jr $ra instructions
+od -A x -t x1 -j 0x6B3CC -N 0x100 disks/pal/SLES_010.90
+# Look for: 08 00 e0 03 (jr $ra)
+# The function ends after the delay slot (4 bytes after jr $ra)
+```
+
+**Function size calculation:**
+- Find `jr $ra` at offset X
+- Function ends at X + 8 (includes delay slot nop)
+- Size = (end_offset - start_offset)
+
+### Step 2: Add Symbols to symbol_addrs.txt
+
+```
+func_8007ABCC = 0x8007ABCC; // size:0x88
+```
+
+**Important:** Do NOT use colons (`:`) in comments after the semicolon, as splat parses them as attributes.
+
+### Step 3: Update splat.pal.yaml
+
+Add segment entries for your functions. Group related functions into a single C file:
+
+```yaml
+# Calculate: file_offset = (VRAM - 0x80010000) + 0x800
+# func_8007ABCC: (0x8007ABCC - 0x80010000) + 0x800 = 0x6B3CC
+- [0x6B3CC, c, CreditsAccessors]
+```
+
+### Step 4: Run splat
+
+```bash
+make clean  # Remove old asm files
+python3 -m splat split config/splat.pal.yaml
+```
+
+This generates:
+- `src/CreditsAccessors.c` - Stub file with INCLUDE_ASM macros
+- `asm/pal/nonmatchings/CreditsAccessors/*.s` - Assembly for each function
+
+### Step 5: Decompile with m2c
+
+```bash
+python3 tools/m2c/m2c.py --context ctx.c --target mipsel-gcc-c \
+    asm/pal/nonmatchings/CreditsAccessors/func_8007ABCC.s
+```
+
+### Step 6: Replace INCLUDE_ASM with Decompiled C
+
+Edit `src/CreditsAccessors.c`:
+- Replace `INCLUDE_ASM(...)` with the decompiled function
+- Add appropriate types and documentation
+
+### Step 7: Build and Verify
+
+```bash
+make              # Build
+make check        # Verify byte-match with original
+```
+
+If the build fails or doesn't match:
+- Check function sizes in symbol_addrs.txt
+- Use `INCLUDE_ASM` for functions that don't match yet
+- Try different compiler flags or manual tweaks
+
+## Example: Decompiling a Simple Accessor
+
+**Original assembly** (`func_8007A9B0`):
+```asm
+lw    $v0, 0x5C($a0)    ; Load header pointer
+nop
+lbu   $v0, 0xF31($v0)   ; Load byte at header+0xF31
+jr    $ra               ; Return
+nop
+```
+
+**Decompiled C:**
+```c
+u8 GetLevelCount(GameState *state) {
+    return state->headerBuffer[0xF31];
+}
+```
+

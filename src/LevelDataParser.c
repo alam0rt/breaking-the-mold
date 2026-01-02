@@ -78,7 +78,7 @@ typedef struct {
     u32 unk54;              /* 0x54 */
     u32 unk58;              /* 0x58 */
     BLBHeader *header;      /* 0x5C: Pointer to BLB header */
-    u8 headerOffset;        /* 0x60: Offset within header array */
+    u8 headerOffset;        /* 0x60: Offset within header state array (0xF34 region) */
     u8 pad61[3];            /* 0x61 */
     s32 (*loadCallback)(u16, u16, u16*, BLBHeader*); /* 0x64: CD load callback */
     u16 *tocPtr;            /* 0x68: Pointer to loaded TOC */
@@ -91,18 +91,28 @@ typedef struct {
 
 /*
  * Parse level data from loaded buffer
+ * Address: 0x8007A62C | Size: 0x254
  * 
+ * Observed header accesses from trace (with headerOffset=12, i.e. 0x0C):
+ *   - header[0xF40] at +0x98: state byte (0xF34 + 12 = 0xF40)
+ *   - header[0xF9C] at +0xB0: level index (0xF92 + 10 = 0xF9C, slight offset?)
+ *   - header[0x000] at +0xE4: Level[0].sector_offset (u16)
+ *   - header[0x002] at +0xE8: Level[0].sector_count (u16)
+ *   - header[0x008] at +0x148: Level[0].toc_offset (u32) for calculating dataOffset
+ *
  * This function:
  * 1. Clears the context structure
- * 2. Determines which table to use based on game mode (level metadata vs sector table)
- * 3. Calls the load callback to read data from CD
- * 4. Parses the TOC and locates assets by type (0x258, 0x259, 0x25A)
+ * 2. Reads state from header[0xF34 + headerOffset] to determine game mode
+ * 3. Reads level index from header[0xF92 + headerOffset]
+ * 4. Uses level index to look up sector offset/count from Level[index]
+ * 5. Calls the load callback to read data from CD
+ * 6. Parses the TOC and locates assets by type (0x258, 0x259, 0x25A)
  * 
- * @param ctx     Level data context structure
- * @param buffer  Buffer to load data into
+ * @param ctx     Level data context structure (at 0x8009DCC4 in trace)
+ * @param buffer  Buffer to load data into (at 0x800AF3E0 = header mirror)
  * @return        1 on success, 0 on failure
  */
-#if 0
+#if 1
 INCLUDE_ASM("asm/pal/nonmatchings/LevelDataParser", func_8007A62C);
 #else
 s32 func_8007A62C(LevelDataContext *ctx, u16 *buffer) {

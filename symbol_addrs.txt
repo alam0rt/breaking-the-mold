@@ -26,9 +26,26 @@ g_Music5Sector = 0x8009B3E8; // type:s32
 g_AllMusicFilesFound = 0x800A59E8; // type:s8
 getLevelName = 0x8007AA08; // size:0x20
 
-// BLB Header accessor functions (movie table)
-GetMovieUnknown00 = 0x8007AE14; // size:0x44 // Get reserved u16 field from movie entry (+0x00)
-GetMovieSectorCount = 0x8007AE58; // size:0x44 // Get sector count from movie entry (+0x02)
+// BLB Header accessor functions (movie table at 0xB60)
+// These use state at 0xF38 and index at 0xF94 to access movie entries
+GetMovieUnknown00 = 0x8007AE14; // size:0x44
+GetMovieSectorCount = 0x8007AE58; // size:0x44
+GetCurrentMovieFilename = 0x8007ADC8; // size:0x4C
+
+// BLB Header accessor functions (state sliding window)
+// These read state byte at 0xF36+offset and index byte at 0xF92+offset
+GetCurrentSectorOffset = 0x8007ABCC; // size:0x88
+GetCurrentSectorCount = 0x8007AC54; // size:0x88
+GetAssetCount = 0x8007ACDC; // size:0x14
+GetMovieReservedByIndex = 0x8007ACF0; // size:0x20
+GetMovieShortNameByIndex = 0x8007AD10; // size:0x20
+GetCurrentMovieReserved = 0x8007AD30; // size:0x4C
+GetCurrentMovieShortName = 0x8007AD7C; // size:0x4C
+
+// BLB Header level accessors (level table at 0x000, 0x70 bytes per entry)
+GetLevelCount = 0x8007A9B0; // size:0x14
+GetLevelAssetIndex = 0x8007A9C4; // size:0x24
+GetLevelDisplayName = 0x8007A9E8; // size:0x20
 
 initPlayerState = 0x800260D0; // size:0x8C
 main = 0x800828B0; // size:0x360

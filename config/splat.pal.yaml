@@ -79,9 +79,13 @@ segments:
       # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
       - [0x6AE2C, c, LevelDataParser]
       - [0x6B080, asm]
+      # func_8007A9B0: 0x8007A9B0 - 0x8007AA2F (Level asset enumerator)
+      - [0x6B1B0, c, StateAccessors]
       # getLevelName: 0x8007AA08 - 0x8007AA27
       - [0x6B208, c, getLevelName]
       - [0x6B228, asm]
+      # func_8007ABCC - func_8007ACDC + GetMovieFilename: 0x8007ABCC - 0x8007AE13
+      - [0x6B3CC, c, CreditsAccessors]
       # GetMovieUnknown00, GetMovieSectorCount: 0x8007AE14 - 0x8007AE9B
       - [0x6B614, c, BLBHeaderAccessors]
       - [0x6B69C, asm]

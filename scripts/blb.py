@@ -184,34 +184,54 @@ class StateData:
     Runtime state/config data from header offset 0xF34-0x1000 (204 bytes).
     
     This region contains runtime state used by BLB accessor functions to
-    determine which table entries to access. The game mode field (0xF36)
-    switches behavior between movie, credits, and level modes.
+    determine which table entries to access. The accessor functions use
+    a sliding window pattern with paired state/index bytes.
     
-    Key fields:
-      - game_mode (0xF36): Selects which table to access
-          1 = Movie mode (movie table at 0xB60)
-          2 = Credits mode (credits table at 0xF10)
-          4-5 = Level/sector mode (sector table at 0xCD0)
-      - asset_index (0xF92): Index into the selected table
+    Sliding Window Pattern (observed from runtime trace):
+    ======================================================
+    The accessor functions read pairs of bytes at offsets determined by
+    an internal state offset. For example:
+    
+      Offset  State Byte  Index Byte  Used By
+      ------  ----------  ----------  -------
+      0       0xF36       0xF92       func_8007ABCC, func_8007AC54 (initial credits)
+      1       0xF37       0xF93       func_8007ABCC, func_8007AC54 (after advance)
+      2       0xF38       0xF94       GetMovieUnknown00, GetMovieSectorCount, GetMovieFilename
+      3       0xF39       0xF95       (movie index 1)
+      4       0xF3A       0xF96       (movie index 2)
+      ...
+      12      0xF40       0xF9C       func_8007A62C (LevelDataParser, level mode)
+    
+    Key observations:
+      - State byte at 0xF36+n determines mode (1=movie, 2=credits, 3=level)
+      - Index byte at 0xF92+n selects entry within the relevant table
+      - Movie accessors use n=2 (0xF38, 0xF94)
+      - Level parser uses n=12 (0xF40, 0xF9C) when loading menu/level 0
     
     Referenced by functions:
-      - GetMovieUnknown00 (0x8007AE14)
-      - func_8007ABCC, func_8007AC54
-      - func_8007ADC8 (GetMovieFilename)
+      - func_8007ABCC, func_8007AC54: Read 0xF36+n, 0xF92+n
+      - GetMovieUnknown00, GetMovieSectorCount: Read 0xF38, 0xF94, then movie table
+      - GetMovieFilename (0x8007ADC8): Read 0xF38, 0xF94, then movie filename
+      - func_8007A62C (LevelDataParser): Read 0xF40, 0xF9C, then level table
+      - func_8007A9B0 (LevelAssetEnum): Read 0xF31 (level count)
+      - func_8007ACDC (AssetCountAccessor): Read 0xF32 (asset count)
     """
     
     raw_data: bytes  # Full 204 bytes
     
-    # Known fields
-    game_mode: int = None  # u8 at 0xF36: 1=movie, 2=credits, 4-5=level
-    secondary_flag: int = None  # u8 at 0xF37
-    unknown_f91: int = unknown("+0x5D: u8, credits-related?")
-    asset_index: int = None  # u8 at 0xF92: Current table entry index
+    # Known fields (absolute offsets in header)
+    game_mode: int = None  # u8 at 0xF36: base state (1=movie, 2=credits, 4-5=level)
+    secondary_flag: int = None  # u8 at 0xF37: next state slot
+    movie_state: int = None  # u8 at 0xF38: movie accessor state
+    unknown_f91: int = unknown("+0x5D: u8, part of index array?")
+    asset_index: int = None  # u8 at 0xF92: base index
+    asset_index_1: int = None  # u8 at 0xF93: index slot 1
+    movie_index: int = None  # u8 at 0xF94: movie index (for movie accessors)
     
-    # The first 2 bytes (0xF34-0xF35) and remaining bytes are still unknown
+    # The bytes form parallel arrays of state/index pairs
     unknown_f34_f35: bytes = unknown("0xF34-0xF35: 2 bytes, purpose TBD")
-    unknown_f38_f90: bytes = unknown("0xF38-0xF90: 89 bytes, appears to be level progression data")
-    unknown_f93_end: bytes = unknown("0xF93-0x1000: 109 bytes, level/world mapping data")
+    state_array: bytes = unknown("0xF36-0xF91: 92 bytes, array of state bytes")
+    index_array: bytes = unknown("0xF92-0xFFF: 110 bytes, array of index bytes")
     
     @classmethod
     def from_bytes(cls, data: bytes) -> "StateData":

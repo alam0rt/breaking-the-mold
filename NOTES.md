@@ -402,6 +402,67 @@ with open('disks/blb/GAME.BLB', 'rb') as f:
     `GAME.BLB` going forward.
 
 
+## Runtime BLB Header Access Trace
+
+Captured using `scripts/trace_blb_header.lua` with PCSX-Redux. This documents which
+functions access which parts of the BLB header during actual gameplay.
+
+### State/Index Sliding Window Pattern
+
+The BLB header region `0xF34-0xFFF` contains runtime state used by accessor functions.
+The accessor functions use a **sliding window pattern** where paired state/index bytes
+are read at offsets determined by an internal counter:
+
+| Offset | State Byte | Index Byte | Used By |
+|--------|------------|------------|---------|
+| 0 | 0xF36 | 0xF92 | func_8007ABCC, func_8007AC54 (initial credits) |
+| 1 | 0xF37 | 0xF93 | func_8007ABCC, func_8007AC54 (after advance) |
+| 2 | 0xF38 | 0xF94 | GetMovieUnknown00, GetMovieSectorCount, GetMovieFilename (movie 0) |
+| 3 | 0xF39 | 0xF95 | Movie accessors (movie 1) |
+| 4 | 0xF3A | 0xF96 | Movie accessors (movie 2) |
+| 5 | 0xF3B | 0xF97 | Movie accessors (movie 3) |
+| ... | ... | ... | ... |
+| 9 | 0xF3F | 0xF9B | Credits (before menu) |
+| 12 | 0xF40 | 0xF9C | func_8007A62C (LevelDataParser, level mode) |
+
+### Key Observations
+
+- **State byte at 0xF36+n** determines mode (1=movie, 2=credits, 3=level, etc.)
+- **Index byte at 0xF92+n** selects entry within the relevant table
+- Movie accessors use n=2 (0xF38, 0xF94) and advance with each movie
+- Level parser uses n=12 (0xF40, 0xF9C) when loading menu/level 0
+- Credits accessors advance their window offset between calls
+
+### Function Access Summary
+
+| Function | Address | First Read | Second Read | Table Access |
+|----------|---------|------------|-------------|--------------|
+| func_8007ABCC | 0x8007ABCC | 0xF36+n (mode) | 0xF92+n (index) | Credits table |
+| func_8007AC54 | 0x8007AC54 | 0xF36+n (mode) | 0xF92+n (index) | Credits table |
+| GetMovieFilename | 0x8007ADC8 | 0xF38+n (mode) | 0xF94+n (index) | Movie table |
+| GetMovieUnknown00 | 0x8007AE14 | 0xF38+n (mode) | 0xF94+n (index) | Movie[n].reserved @ 0xB60 |
+| GetMovieSectorCount | 0x8007AE58 | 0xF38+n (mode) | 0xF94+n (index) | Movie[n].sector_count @ 0xB62 |
+| func_8007A62C | 0x8007A62C | 0xF40 (mode) | 0xF9C (index) | Level[0] @ 0x000 |
+| func_8007A9B0 | 0x8007A9B0 | 0xF31 (count) | Level[n]+0x0C | Enumerates level_index |
+| func_8007ACDC | 0x8007ACDC | 0xF32 (count) | - | Asset count accessor |
+
+### Observed Startup Sequence
+
+1. `LoadBLBHeader` reads sectors 0-1 (header) to 0x800AE3E0
+2. `func_8007ABCC`/`func_8007AC54` read 0xF36, 0xF92 (credits window 0)
+3. `CdBLB_ReadSectors` loads bytes 0x1000-0x5000 (sector 2+)
+4. After some processing, window advances:
+   - 0xF37, 0xF93 (credits window 1)
+5. Movie sequence starts:
+   - `GetMovieFilename` reads 0xF38, 0xF94
+   - `GetMovieUnknown00` reads Movie[0].reserved @ 0xB60
+   - `GetMovieSectorCount` reads Movie[0].sector_count @ 0xB62
+6. Each movie advances: 0xF39/0xF95 → 0xF3A/0xF96 → 0xF3B/0xF97
+7. Credits window at 0xF3F/0xF9B before menu loads
+8. Level parsing at 0xF40/0xF9C for menu (level 0)
+9. `func_8007A9B0` enumerates all levels via 0xF31 (level count = 26)
+
+
 ## TODO: Research Original Compiler
 
 The current build uses GCC 2.7.2 with maspsx, but register allocation differs from
