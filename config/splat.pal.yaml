@@ -105,6 +105,6 @@ segments:
       - [0x80FEC, data]
       # .sdata: 0x800A5954 - 0x800A611F (size: 0x7CC)
       - [0x96154, sdata]
-      # Padding to end of file (zeros)
+      # Padding to end of file (zeros) - placed after sdata using linker_section_order
       - [0x96920, pad]
   - [0x97000]  # End of file (actual size)
