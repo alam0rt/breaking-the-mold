@@ -802,21 +802,54 @@ class BLBHeader:
     
     @staticmethod
     def _parse_sector_entry(index: int, offset: int, data: bytes) -> SectorTableEntry:
-        """Parse a single 16-byte sector table entry."""
-        level_index = data[0]  # u8 at +0x00
-        entry_flags = data[1]  # u8 at +0x01
-        unknown_byte = data[2]  # u8 at +0x02
+        """Parse a single 16-byte sector table entry.
         
-        # Level code: 5 bytes at offset 3 (4-char null-terminated)
-        code_bytes = data[3:8]
-        code = code_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        Two layout variants exist (same fields, different byte order):
         
-        # Short name: 4 bytes at offset 8
-        short_bytes = data[8:12]
-        short_name = short_bytes.rstrip(b'\x00').decode('ascii', errors='replace')
+        PAL/NTSC-US Layout:
+            0x00: u8  level_index
+            0x01: u8  entry_flags  
+            0x02: u8  unknown_byte
+            0x03: char[5] code (4-char null-terminated)
+            0x08: char[4] short_name
+            0x0C: u16 sector_offset
+            0x0E: u16 sector_count
+            
+        JP Layout (offset/count moved to front):
+            0x00: u16 sector_offset
+            0x02: u16 sector_count
+            0x04: u8  level_index
+            0x05: u8  entry_flags
+            0x06: u8  unknown_byte
+            0x07: char[5] code (4-char null-terminated)
+            0x0C: char[4] short_name
         
-        sector_offset = struct.unpack('<H', data[12:14])[0]
-        sector_count = struct.unpack('<H', data[14:16])[0]
+        Detection: In PAL, byte[3] is uppercase A-Z (code start), byte[7] is 0x00.
+                   In JP, byte[3] is 0x00 (count low byte), byte[7] is uppercase A-Z.
+        """
+        # Detect layout by checking where the code starts
+        # PAL: code at byte 3 (uppercase letter), byte 7 is null terminator
+        # JP: code at byte 7 (uppercase letter), byte 3 is low byte of count (usually small)
+        is_pal_layout = (65 <= data[3] <= 90)  # byte[3] is A-Z
+        
+        if is_pal_layout:
+            # PAL/NTSC-US layout: code at offset 3
+            level_index = data[0]
+            entry_flags = data[1]
+            unknown_byte = data[2]
+            code = data[3:8].rstrip(b'\x00').decode('ascii', errors='replace')
+            short_name = data[8:12].rstrip(b'\x00').decode('ascii', errors='replace')
+            sector_offset = struct.unpack('<H', data[12:14])[0]
+            sector_count = struct.unpack('<H', data[14:16])[0]
+        else:
+            # JP layout: offset/count at front, code at offset 7
+            sector_offset = struct.unpack('<H', data[0:2])[0]
+            sector_count = struct.unpack('<H', data[2:4])[0]
+            level_index = data[4]
+            entry_flags = data[5]
+            unknown_byte = data[6]
+            code = data[7:12].rstrip(b'\x00').decode('ascii', errors='replace')
+            short_name = data[12:16].rstrip(b'\x00').decode('ascii', errors='replace')
         
         return SectorTableEntry(
             index=index,
