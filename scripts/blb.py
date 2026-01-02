@@ -61,6 +61,11 @@ State/Config Data Region (0xF34-0xFFF, 204 bytes):
 
 Credits Sequence Table (0x0C = 12 bytes, at offset 0xF10):
 ==========================================================
+    NOTE: "Credits" is a GUESSED name based on the "CRD1"/"CRD2" codes and
+    relationship to the "CRED" sector entry. The actual purpose is not fully
+    confirmed - it may control credits sequence playback or something else.
+    JP versions don't have this table (garbage data at this offset).
+
     Offset  Size  Type    Field               Description
     ------  ----  ----    -----               -----------
     0x00       4  str     code                4-char ID (empty for entry 0, "CRD1"/"CRD2" for others)
@@ -625,7 +630,11 @@ class MovieEntry:
 @dataclass
 class CreditsEntry:
     """
-    Represents an entry in the credits sequence table.
+    Represents an entry in the credits sequence table (GUESSED NAME).
+    
+    NOTE: "Credits" is a guessed name based on the "CRD1"/"CRD2" codes found
+    in entries and their relationship to the "CRED" sector entry. The actual
+    purpose is not fully confirmed. JP versions don't have valid data here.
     
     Located at header offset 0xF10, with 0x0C (12) bytes per entry.
     Only 2 complete entries fit before overlapping with count fields at 0xF31.
@@ -758,12 +767,19 @@ class BLBHeader:
             movie_entries.append(cls._parse_movie_entry(i, offset, entry_data))
         
         # Parse credits sequence table (max 2 entries before count fields)
+        # Valid credits entries have zero padding at bytes +4 to +8
+        # JP versions have garbage data here (non-zero padding)
         credits_entries = []
         for i in range(CREDITS_MAX_ENTRIES):
             offset = CREDITS_TABLE_OFFSET + (i * CREDITS_ENTRY_SIZE)
             if offset + CREDITS_ENTRY_SIZE > LEVEL_COUNT_OFFSET:
                 break
             entry_data = data[offset:offset + CREDITS_ENTRY_SIZE]
+            # Check if this is a valid credits entry (padding must be zeros)
+            padding = entry_data[0x04:0x08]
+            if padding != b'\x00\x00\x00\x00':
+                # Invalid entry - stop parsing (JP versions have garbage here)
+                break
             credits_entries.append(cls._parse_credits_entry(i, offset, entry_data))
         
         # Read unknown regions as raw bytes

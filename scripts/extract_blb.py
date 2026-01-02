@@ -261,11 +261,16 @@ def extract_credits(blb: BLBFile, output_dir: Path) -> int:
         credits_list.append(credits_info)
         print(f"  Credits [{entry.index}] {entry.code or '(empty)'}: param_a={entry.param_a}, param_b={entry.param_b}")
     
+    if not credits_list:
+        print("  No credits entries found (JP versions don't have credits)")
+        return 0
+    
     # Write credits JSON
     credits_path = output_dir / "credits.json"
     with open(credits_path, 'w') as f:
         json.dump({
-            "description": "Credits sequence table from BLB header",
+            "description": "Credits sequence table from BLB header (GUESSED NAME - based on CRD1/CRED codes)",
+            "note": "The 'credits' name is a guess. JP versions don't have this table.",
             "count": len(credits_list),
             "entries": credits_list
         }, f, indent=2)
