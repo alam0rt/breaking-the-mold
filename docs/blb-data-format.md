@@ -34,27 +34,51 @@ Each level has a metadata entry at offset `index × 0x70`:
 ```
 Offset   Size   Description
 ------   ----   -----------
+# Primary data pointers (0x00-0x0B)
 0x00     u16    Primary sector offset
 0x02     u16    Primary sector count
-0x04     8      Static data (unknown)
-0x0C     u8     Level index
-0x0D     u8     Flags
-0x0E     14     Unknown
-0x1C     u16    Unknown
-0x1E     u16    Secondary sector offset
-0x20     u16    Unknown
-0x22     10     Dynamic data 1
-0x2C     u16    Secondary sector count
-0x2E     16     Unknown
-0x3E     u16    Unknown
-0x40     u16    Tertiary sector offset
-0x42     u16    Unknown
-0x44     10     Dynamic data 2
-0x4E     u16    Tertiary sector count
-0x50     6      Unknown
-0x56     5      Level ID (4-char code + null)
-0x5B     21     Level name (truncated)
+0x04     u16    Unknown (offset into Entry[0] data, purpose TBD)
+0x06     u16    Unknown count (7-20 range, purpose TBD)
+0x08     u16    Entry[1].offset low 16 bits (CONFIRMED - matches primary TOC)
+0x0A     u16    Unknown count (0-16 range, purpose TBD)
+
+# Level identification (0x0C-0x0D)
+0x0C     u8     Level asset index (0-25)
+0x0D     u8     Level flag (0 or 1, purpose TBD)
+
+# Tertiary block configuration (0x0E-0x1B)
+0x0E     u16    Tertiary block count (CONFIRMED - matches non-zero tert sub-counts)
+0x10     u16[6] Tertiary data offsets (byte offset within each tert block)
+0x1C     u16    Padding (always 0)
+
+# Secondary data structure (0x1E-0x39)
+0x1E     u16    Secondary base sector offset
+0x20     u16[5] Secondary sub-block sector offsets
+0x2A     u16    Padding (always 0)
+0x2C     u16    Secondary base sector count
+0x2E     u16[5] Secondary sub-block sector counts
+0x38     u16    Padding (always 0)
+
+# Tertiary data structure (0x3A-0x55)
+0x3A     u16[6] Tertiary sub-block sector offsets
+0x46     u16    Padding (always 0)
+0x48     u16[6] Tertiary sub-block sector counts
+0x54     u16    Padding (always 0)
+
+# Level strings (0x56-0x6F)
+0x56     char[5]  Level ID (4-char code + null, e.g., "MENU")
+0x5B     char[21] Level name (null-terminated, e.g., "Options Menu")
 ```
+
+### Data Interleaving Pattern
+
+Level data sectors are interleaved on disc for streaming:
+```
+PRIMARY → SECONDARY → TERT[0] → SEC_SUB[0] → TERT[1] → SEC_SUB[1] → ...
+```
+
+Example (MENU level): 
+- 201-232 (PRIMARY) → 233-299 (SECONDARY) → 300-787 (TERT[0]) → 788-849 (SEC_SUB[0]) → ...
 
 ## TOC (Table of Contents) Format
 
@@ -63,15 +87,19 @@ All three data segments use the same TOC format:
 ```
 Offset   Size   Description
 ------   ----   -----------
-0x00     u16    Entry count
-0x02     u16    Padding
+0x00     u32    Entry count (NOT u16 as previously documented)
 0x04+    12×N   TOC entries (N = count)
 
 Each TOC Entry (12 bytes):
-  0x00   u32    Asset type
+  0x00   u32    Asset type ID (e.g., 0x258=600, 0x259=601, 0x25A=602)
   0x04   u32    Asset size in bytes
-  0x08   u32    Offset from start of data
+  0x08   u32    Offset from start of loaded data
 ```
+
+**Relationship to Level Metadata:**
+- The `entry1_offset_lo` field at level metadata offset +0x08 contains the 
+  low 16 bits of Entry[1].offset from the primary TOC (CONFIRMED 26/26 match)
+- This allows quick access to Entry[1] (type 0x259) data without parsing TOC
 
 ## Asset Types
 

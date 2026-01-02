@@ -84,26 +84,76 @@ Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
 =========================================================
     Offset  Size  Type    Field               Description
     ------  ----  ----    -----               -----------
+    
+    # Primary data pointers (0x00-0x0B)
     0x00       2  u16     sector_offset       Primary data sector offset in BLB
     0x02       2  u16     sector_count        Primary data sector count
-    0x04       8  bytes   static_data         Unknown static data
-    0x0C       1  u8      level_index         Level index number
-    0x0D       1  u8      flag                Unknown flag
-    0x0E      14  bytes   unknown_0e          Unknown
-    0x1C       2  bytes   unknown_1c          Unknown
+    0x04       2  u16     unknown_04          Offset into Entry[0] data (purpose TBD)
+    0x06       2  u16     unknown_06          Unknown count (7-20 range, purpose TBD)
+    0x08       2  u16     entry1_offset_lo    Low 16 bits of Entry[1].offset in primary TOC (CONFIRMED)
+    0x0A       2  u16     unknown_0A          Unknown count (0-16 range, purpose TBD)
+    
+    # Level identification (0x0C-0x0D)
+    0x0C       1  u8      level_index         Level asset index (used for asset loading)
+    0x0D       1  u8      level_flag          Level flag (0 or 1, purpose TBD)
+    
+    # Tertiary block configuration (0x0E-0x1B)
+    0x0E       2  u16     tert_block_count    Number of active tertiary sub-blocks (1-6)
+    0x10       2  u16     tert_data_off_0     Offset within tertiary block 0 to data
+    0x12       2  u16     tert_data_off_1     Offset within tertiary block 1 to data
+    0x14       2  u16     tert_data_off_2     Offset within tertiary block 2 to data
+    0x16       2  u16     tert_data_off_3     Offset within tertiary block 3 to data
+    0x18       2  u16     tert_data_off_4     Offset within tertiary block 4 to data
+    0x1A       2  u16     tert_data_off_5     Offset within tertiary block 5 to data
+    0x1C       2  u16     (padding)           Always 0
+    
+    # Secondary data structure (0x1E-0x39)
     0x1E       2  u16     secondary_offset    Secondary data sector offset
-    0x20       2  bytes   unknown_20          Unknown
-    0x22      10  bytes   dynamic_data_1      Unknown, may contain pointers
+    0x20       2  u16     sec_sub_off_0       Secondary sub-block 0 sector offset
+    0x22       2  u16     sec_sub_off_1       Secondary sub-block 1 sector offset
+    0x24       2  u16     sec_sub_off_2       Secondary sub-block 2 sector offset
+    0x26       2  u16     sec_sub_off_3       Secondary sub-block 3 sector offset
+    0x28       2  u16     sec_sub_off_4       Secondary sub-block 4 sector offset
+    0x2A       2  u16     (padding)           Always 0
     0x2C       2  u16     secondary_count     Secondary data sector count
-    0x2E      16  bytes   unknown_2e          Unknown
-    0x3E       2  bytes   unknown_3e          Unknown
-    0x40       2  u16     tertiary_offset     Tertiary data sector offset
-    0x42       2  bytes   unknown_42          Unknown
-    0x44      10  bytes   dynamic_data_2      Unknown, may contain pointers
-    0x4E       2  u16     tertiary_count      Tertiary data sector count
-    0x50       6  bytes   unknown_50          Unknown
+    0x2E       2  u16     sec_sub_cnt_0       Secondary sub-block 0 sector count
+    0x30       2  u16     sec_sub_cnt_1       Secondary sub-block 1 sector count
+    0x32       2  u16     sec_sub_cnt_2       Secondary sub-block 2 sector count
+    0x34       2  u16     sec_sub_cnt_3       Secondary sub-block 3 sector count
+    0x36       2  u16     sec_sub_cnt_4       Secondary sub-block 4 sector count
+    0x38       2  u16     (padding)           Always 0
+    
+    # Tertiary data structure (0x3A-0x55)
+    0x3A       2  u16     tert_sub_off_0      Tertiary sub-block 0 sector offset
+    0x3C       2  u16     tert_sub_off_1      Tertiary sub-block 1 sector offset
+    0x3E       2  u16     tert_sub_off_2      Tertiary sub-block 2 sector offset
+    0x40       2  u16     tert_sub_off_3      Tertiary sub-block 3 sector offset
+    0x42       2  u16     tert_sub_off_4      Tertiary sub-block 4 sector offset
+    0x44       2  u16     tert_sub_off_5      Tertiary sub-block 5 sector offset
+    0x46       2  u16     (padding)           Always 0
+    0x48       2  u16     tert_sub_cnt_0      Tertiary sub-block 0 sector count
+    0x4A       2  u16     tert_sub_cnt_1      Tertiary sub-block 1 sector count
+    0x4C       2  u16     tert_sub_cnt_2      Tertiary sub-block 2 sector count
+    0x4E       2  u16     tert_sub_cnt_3      Tertiary sub-block 3 sector count
+    0x50       2  u16     tert_sub_cnt_4      Tertiary sub-block 4 sector count
+    0x52       2  u16     tert_sub_cnt_5      Tertiary sub-block 5 sector count
+    0x54       2  u16     (padding)           Always 0
+    
+    # Level strings (0x56-0x6F)
     0x56       5  str     level_id            4-char null-terminated (e.g., "MENU")
     0x5B      21  str     name                Level name, null-terminated
+    
+    Data Interleaving Pattern:
+    --------------------------
+    Level data sectors are interleaved: PRIMARY → SECONDARY → TERT[0] → SEC_SUB[0] 
+    → TERT[1] → SEC_SUB[1] → ... This creates an alternating pattern where tertiary 
+    blocks and secondary sub-blocks occupy adjacent sector ranges.
+    
+    Example (MENU level): 201-232(PRI) → 233-299(SEC) → 300-787(T0) → 788-849(S0)
+    → 850-852(T1) → 853-911(S1) → 912-917(T2) → 918-980(S2) → ...
+    
+    The tert_data_off_N values are byte offsets WITHIN each tertiary block, pointing
+    to specific embedded data structures.
 
 
 Movie Entry (0x1C = 28 bytes, at offset 0xB60):
@@ -454,27 +504,34 @@ class LevelMetadataEntry:
     sector_offset: int = None  # u16 at +0x00, sector offset in BLB
     sector_count: int = None  # u16 at +0x02, sector count
     
-    # Static and index data
-    static_data: bytes = unknown("+0x04: 8 bytes, purpose TBD")
-    level_index: int = None  # u8 at +0x0C
-    flag: int = unknown("+0x0D: u8, purpose TBD")
-    unknown_0e: bytes = unknown("+0x0E: 14 bytes")
+    # Primary data internal pointers (0x04-0x0B)
+    unknown_04: int = unknown("+0x04: u16, offset into Entry[0] data, purpose TBD")
+    unknown_06: int = unknown("+0x06: u16, count (7-20 range), purpose TBD")
+    entry1_offset_lo: int = None  # u16 at +0x08: Low 16 bits of Entry[1].offset in primary TOC (CONFIRMED)
+    unknown_0A: int = unknown("+0x0A: u16, count (0-16 range), purpose TBD")
     
-    # Secondary data location (loading screen?)
-    unknown_1c: bytes = unknown("+0x1C: 2 bytes")
-    secondary_offset: int = None  # u16 at +0x1E
-    unknown_20: bytes = unknown("+0x20: 2 bytes")
-    dynamic_data_1: bytes = unknown("+0x22: 10 bytes, contains pointers?")
-    secondary_count: int = None  # u16 at +0x2C
-    unknown_2e: bytes = unknown("+0x2E: 16 bytes")
+    # Level identification (0x0C-0x0D)
+    level_index: int = None  # u8 at +0x0C: Level asset index
+    level_flag: int = unknown("+0x0D: u8, 0 or 1, purpose TBD")
     
-    # Tertiary data location
-    unknown_3e: bytes = unknown("+0x3E: 2 bytes")
-    tertiary_offset: int = None  # u16 at +0x40
-    unknown_42: bytes = unknown("+0x42: 2 bytes")
-    dynamic_data_2: bytes = unknown("+0x44: 10 bytes, contains pointers?")
-    tertiary_count: int = None  # u16 at +0x4E
-    unknown_50: bytes = unknown("+0x50: 6 bytes")
+    # Tertiary block configuration (0x0E-0x1B)
+    tert_block_count: int = None  # u16 at +0x0E: Number of active tertiary sub-blocks (CONFIRMED)
+    tert_data_offsets: list = None  # 6× u16 at +0x10-0x1A: Offsets within each tert block to specific data
+    # +0x1C-0x1D: Padding (always 0)
+    
+    # Secondary data location (0x1E-0x39)
+    secondary_offset: int = None  # u16 at +0x1E: Secondary base sector offset
+    sec_sub_offsets: list = None  # 5× u16 at +0x20-0x28: Secondary sub-block sector offsets
+    # +0x2A-0x2B: Padding (always 0)
+    secondary_count: int = None  # u16 at +0x2C: Secondary base sector count
+    sec_sub_counts: list = None  # 5× u16 at +0x2E-0x36: Secondary sub-block sector counts
+    # +0x38-0x39: Padding (always 0)
+    
+    # Tertiary data location (0x3A-0x55)
+    tert_sub_offsets: list = None  # 6× u16 at +0x3A-0x44: Tertiary sub-block sector offsets
+    # +0x46-0x47: Padding (always 0)
+    tert_sub_counts: list = None  # 6× u16 at +0x48-0x52: Tertiary sub-block sector counts
+    # +0x54-0x55: Padding (always 0)
     
     # Identification
     level_id: str = None  # 5 bytes at +0x56 (4-char null-terminated)
@@ -502,13 +559,29 @@ class LevelMetadataEntry:
     
     @property
     def tertiary_byte_offset(self) -> int:
-        """Calculate tertiary byte offset within the BLB file."""
-        return self.tertiary_offset * SECTOR_SIZE
+        """Calculate first tertiary sub-block byte offset within the BLB file."""
+        if self.tert_sub_offsets and self.tert_sub_offsets[0]:
+            return self.tert_sub_offsets[0] * SECTOR_SIZE
+        return 0
     
     @property
     def tertiary_byte_size(self) -> int:
-        """Calculate tertiary size in bytes."""
-        return self.tertiary_count * SECTOR_SIZE
+        """Calculate total tertiary size in bytes (sum of all sub-blocks)."""
+        if self.tert_sub_counts:
+            return sum(c for c in self.tert_sub_counts if c) * SECTOR_SIZE
+        return 0
+    
+    def get_tert_sub_byte_offset(self, sub_idx: int) -> int:
+        """Calculate byte offset for a specific tertiary sub-block."""
+        if self.tert_sub_offsets and sub_idx < len(self.tert_sub_offsets):
+            return self.tert_sub_offsets[sub_idx] * SECTOR_SIZE
+        return 0
+    
+    def get_tert_sub_byte_size(self, sub_idx: int) -> int:
+        """Calculate byte size for a specific tertiary sub-block."""
+        if self.tert_sub_counts and sub_idx < len(self.tert_sub_counts):
+            return self.tert_sub_counts[sub_idx] * SECTOR_SIZE
+        return 0
     
     def __repr__(self) -> str:
         return f"LevelMetadataEntry(idx={self.index}, id='{self.level_id}', name='{self.name}')"
@@ -761,31 +834,38 @@ class BLBHeader:
     @staticmethod
     def _parse_level_entry(index: int, offset: int, data: bytes) -> LevelMetadataEntry:
         """Parse a single 0x70-byte level metadata entry."""
-        # Primary data location
+        # Primary data location (0x00-0x03)
         sector_offset = struct.unpack('<H', data[0x00:0x02])[0]
         sector_count = struct.unpack('<H', data[0x02:0x04])[0]
         
-        # Static and index data
-        static_data = data[0x04:0x0C]
+        # Primary data internal pointers (0x04-0x0B)
+        unknown_04 = struct.unpack('<H', data[0x04:0x06])[0]
+        unknown_06 = struct.unpack('<H', data[0x06:0x08])[0]
+        entry1_offset_lo = struct.unpack('<H', data[0x08:0x0A])[0]
+        unknown_0A = struct.unpack('<H', data[0x0A:0x0C])[0]
+        
+        # Level identification (0x0C-0x0D)
         level_index = data[0x0C]
-        flag = data[0x0D]
-        unknown_0e = data[0x0E:0x1C]
+        level_flag = data[0x0D]
         
-        # Secondary data location
-        unknown_1c = data[0x1C:0x1E]
+        # Tertiary block configuration (0x0E-0x1B)
+        tert_block_count = struct.unpack('<H', data[0x0E:0x10])[0]
+        tert_data_offsets = [struct.unpack('<H', data[0x10 + i*2:0x12 + i*2])[0] for i in range(6)]
+        # 0x1C-0x1D is padding
+        
+        # Secondary data location (0x1E-0x39)
         secondary_offset = struct.unpack('<H', data[0x1E:0x20])[0]
-        unknown_20 = data[0x20:0x22]
-        dynamic_data_1 = data[0x22:0x2C]
+        sec_sub_offsets = [struct.unpack('<H', data[0x20 + i*2:0x22 + i*2])[0] for i in range(5)]
+        # 0x2A-0x2B is padding
         secondary_count = struct.unpack('<H', data[0x2C:0x2E])[0]
-        unknown_2e = data[0x2E:0x3E]
+        sec_sub_counts = [struct.unpack('<H', data[0x2E + i*2:0x30 + i*2])[0] for i in range(5)]
+        # 0x38-0x39 is padding
         
-        # Tertiary data location
-        unknown_3e = data[0x3E:0x40]
-        tertiary_offset = struct.unpack('<H', data[0x40:0x42])[0]
-        unknown_42 = data[0x42:0x44]
-        dynamic_data_2 = data[0x44:0x4E]
-        tertiary_count = struct.unpack('<H', data[0x4E:0x50])[0]
-        unknown_50 = data[0x50:0x56]
+        # Tertiary data location (0x3A-0x55)
+        tert_sub_offsets = [struct.unpack('<H', data[0x3A + i*2:0x3C + i*2])[0] for i in range(6)]
+        # 0x46-0x47 is padding
+        tert_sub_counts = [struct.unpack('<H', data[0x48 + i*2:0x4A + i*2])[0] for i in range(6)]
+        # 0x54-0x55 is padding
         
         # Identification
         level_id_bytes = data[0x56:0x5B]
@@ -800,22 +880,20 @@ class BLBHeader:
             raw_data=data,
             sector_offset=sector_offset,
             sector_count=sector_count,
-            static_data=static_data,
+            unknown_04=unknown_04,
+            unknown_06=unknown_06,
+            entry1_offset_lo=entry1_offset_lo,
+            unknown_0A=unknown_0A,
             level_index=level_index,
-            flag=flag,
-            unknown_0e=unknown_0e,
-            unknown_1c=unknown_1c,
+            level_flag=level_flag,
+            tert_block_count=tert_block_count,
+            tert_data_offsets=tert_data_offsets,
             secondary_offset=secondary_offset,
-            unknown_20=unknown_20,
-            dynamic_data_1=dynamic_data_1,
+            sec_sub_offsets=sec_sub_offsets,
             secondary_count=secondary_count,
-            unknown_2e=unknown_2e,
-            unknown_3e=unknown_3e,
-            tertiary_offset=tertiary_offset,
-            unknown_42=unknown_42,
-            dynamic_data_2=dynamic_data_2,
-            tertiary_count=tertiary_count,
-            unknown_50=unknown_50,
+            sec_sub_counts=sec_sub_counts,
+            tert_sub_offsets=tert_sub_offsets,
+            tert_sub_counts=tert_sub_counts,
             level_id=level_id,
             name=name,
         )
