@@ -6,19 +6,57 @@ The BLB (blob) file is the main game archive containing all levels, assets,
 and resources. The first 2 sectors (4096 bytes) contain the header with an
 index table describing the contents.
 
+Supported Versions:
+===================
+    - PAL (SLES-01090, SLES-01091, SLES-01092): 26 levels, 13 movies
+    - NTSC-US (SLUS-00601): 26 levels, 13 movies  
+    - NTSC-JP Demo (PAPX-90053): 6 levels, 1 movie
+    - NTSC-JP Full (SLPS-01501): 6 levels, 1 movie
+    - Beta: 26 levels, 13 movies
+
 Header Structure (4096 bytes total):
 =====================================
     Offset  Size   Description
     ------  ----   -----------
     0x000   2912   Level metadata table (0x70 bytes × 26 entries max)
     0xB60    364   Movie table (0x1C bytes × 13 entries max)
-    0xCD0    512   Sector/loading screen table (0x10 bytes × 32 entries max)
-    0xED0     64   Unknown u32 array (16 entries) - per-world data, checksums/seeds?
-    0xF10     33   Credits sequence table (0x0C bytes × 2-3 entries, overlaps counts?)
+    0xCD0    512   Sector/loading screen table (0x10 bytes × 32 entries, count at 0xF33)
+    0xED0     64   Unknown u32 array (16 entries) - file offsets, purpose TBD
+    0xF10     33   Credits sequence table (0x0C bytes × 2 complete entries + overlap)
     0xF31      1   Level count (u8)
     0xF32      1   Asset/movie count (u8)
     0xF33      1   Sector table entry count (u8)
-    0xF34    204   State/config data region
+    0xF34    204   State/config data region (sliding window state machine)
+
+
+State/Config Data Region (0xF34-0xFFF, 204 bytes):
+==================================================
+    The game uses a sliding window pattern to track multiple concurrent states
+    (movie playback, credits, level loading). Each "slot" in the window uses
+    paired bytes for mode and index.
+    
+    Offset  Size  Type    Field               Description
+    ------  ----  ----    -----               -----------
+    0xF34      2  bytes   unknown_f34         Unknown (padding?)
+    0xF36      1  u8      game_mode           Base mode byte (see mode values below)
+    0xF37      1  u8      secondary_flag      Secondary state flag
+    0xF38     89  bytes   state_array         Sliding window mode bytes (0xF36 + stateOffset)
+    0xF91      1  u8      unknown_f91         Unknown
+    0xF92      1  u8      asset_index         Base index byte for table lookups
+    0xF93    109  bytes   index_array         Sliding window index bytes (0xF92 + stateOffset)
+    
+    Mode Values (observed from runtime trace):
+      1 = Movie playback mode
+      2 = Credits display mode
+      4 = Sector/asset loading mode
+      5 = Initial sector loading mode
+    
+    The accessor functions read state using:
+      mode = header[0xF36 + stateOffset]
+      index = header[0xF92 + stateOffset]
+    
+    Where stateOffset is stored at GameState+0x60 and increments as the game
+    progresses through different loading/playback states.
 
 
 Credits Sequence Table (0x0C = 12 bytes, at offset 0xF10):
@@ -27,14 +65,19 @@ Credits Sequence Table (0x0C = 12 bytes, at offset 0xF10):
     ------  ----  ----    -----               -----------
     0x00       4  str     code                4-char ID (empty for entry 0, "CRD1"/"CRD2" for others)
     0x04       4  bytes   padding             Unused (zeros)
-    0x08       2  u16     param_a             Entry 0: level_count; CRD1/2: unknown counter
-    0x0A       2  u16     param_b             Base sector offset (CRED.sector - level_count)
+    0x08       2  u16     param_a             Entry 0: level_count (26); CRD1/2: unknown counter
+    0x0A       2  u16     param_b             Base sector offset (e.g., 171)
 
-    Note: Entry 2 (CRD2) overlaps with count fields at 0xF31-0xF33.
-    Only 2 complete entries fit (indices 0 and 1).
+    Sector Calculation (verified):
+        CRED.sector_offset = param_b + level_count
+        Example: 171 + 26 = 197 = CRED sector entry
     
-    Accessed by func_8007ABCC and func_8007AC54 when state (0xF36) == 2,
-    using index from 0xF92 with stride of 12 bytes.
+    Note: Entry 2 (CRD2) at 0xF28 overlaps with count fields at 0xF31-0xF33,
+    so its param values are garbage. Only 2 complete entries fit (indices 0 and 1).
+    
+    Accessed by GetCurrentSectorOffset (0x8007ABCC) and GetCurrentSectorCount
+    (0x8007AC54) when game mode == 2, using index from header[0xF92+stateOffset]
+    with stride of 12 bytes.
 
 
 Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
@@ -93,6 +136,71 @@ Sector Table Entry (0x10 = 16 bytes, at offset 0xCD0):
       - entry_flags=0x05: Special loading screens (PIRA=0x37, LEGL=0x32)
       - entry_flags=0x03: Game over screens (unknown_byte=0x63)
       - entry_flags=0x00, level_index=0x35: Credits screen
+
+
+GameState Structure (runtime, not in BLB file):
+================================================
+    The BLB accessor functions receive a context pointer (GameState + 0x84),
+    not the raw GameState or header pointer directly.
+    
+    Key offsets discovered from runtime tracing:
+    
+    GameState (base: 0x8009DC40 in PAL):
+    ------------------------------------
+    Offset  Size  Type    Field               Description
+    ------  ----  ----    -----               -----------
+    0x5C       4  ptr     headerBuffer        Pointer to BLB header in RAM (→ 0x800AE3E0)
+    0x60       1  u8      stateOffset         Sliding window offset into state arrays
+    0x84       ?  struct  accessorContext     Context passed to accessor functions
+    
+    PAL runtime addresses (observed):
+      - GameState base: 0x8009DC40 (passed to LoadBLBHeader)
+      - Accessor context: 0x8009DCC4 (GameState + 0x84, passed to other accessors)
+      - BLB header in RAM: 0x800AE3E0 (actual header data)
+    
+    Sliding Window State Machine:
+    -----------------------------
+    The game tracks multiple concurrent states using a sliding window pattern.
+    Each "slot" uses paired bytes at offsets determined by stateOffset:
+      - Mode byte: header[0xF36 + stateOffset]
+      - Index byte: header[0xF92 + stateOffset]
+    
+    Mode Values (observed from trace):
+      1 = Movie playback mode
+      2 = Credits display mode
+      4 = Sector/asset loading mode
+      5 = Initial sector loading mode (similar to 4)
+    
+    Example state progression during boot:
+      stateOffset=0, mode=5, index=0  → Initial sector load
+      stateOffset=1, mode=5, index=1  → Second sector load
+      stateOffset=2, mode=1, index=0  → Movie 0 (first intro)
+      stateOffset=3, mode=1, index=1  → Movie 1 (second intro)
+      stateOffset=4, mode=1, index=2  → Movie 2 (third intro)
+      stateOffset=5, mode=1, index=3  → Movie 3 (fourth intro)
+      stateOffset=9, mode=4, index=3  → Sector/level loading
+      stateOffset=13, mode=4, index=5 → Menu/level data
+
+
+Known Functions (from trace analysis):
+======================================
+    Address     Name                    Description
+    -------     ----                    -----------
+    0x800208B0  LoadBLBHeader           Load BLB header into GameState
+    0x8007A62C  LevelDataParser         Parse level metadata from header
+    0x8007A9B0  GetLevelCount           Get level count from header[0xF31]
+    0x8007AA08  getLevelName            Get level name string by index
+    0x8007ABCC  GetCurrentSectorOffset  Get sector offset for current mode
+    0x8007AC54  GetCurrentSectorCount   Get sector count for current mode
+    0x8007ACDC  GetAssetCount           Get asset count from header[0xF32]
+    0x8007AD30  GetCurrentMovieReserved Get movie reserved field (uses sliding window)
+    0x8007AD7C  GetCurrentMovieShortName Get movie short name (uses sliding window)
+    0x8007ADC8  GetCurrentMovieFilename Get movie filename (uses sliding window)
+    0x8007AE14  GetMovieUnknown00       Get movie reserved u16 by explicit index
+    0x8007AE58  GetMovieSectorCount     Get movie sector count by explicit index
+    0x8007CF08  ProcessLevelEntry       Iterate through levels (calls GetLevelCount)
+    0x8008299C  DisplayLevelName        Display level names (calls getLevelName)
+    0x80038BA0  CdBLB_ReadSectors       Read sectors from CD
 
 
 Constants:
@@ -243,11 +351,14 @@ class StateData:
             raw_data=data[:STATE_DATA_SIZE],
             game_mode=data[0xF36 - STATE_DATA_OFFSET],  # offset 2
             secondary_flag=data[0xF37 - STATE_DATA_OFFSET],  # offset 3
+            movie_state=data[0xF38 - STATE_DATA_OFFSET],  # offset 4
             unknown_f91=data[0xF91 - STATE_DATA_OFFSET],  # offset 0x5D
             asset_index=data[0xF92 - STATE_DATA_OFFSET],  # offset 0x5E
+            asset_index_1=data[0xF93 - STATE_DATA_OFFSET],  # offset 0x5F
+            movie_index=data[0xF94 - STATE_DATA_OFFSET],  # offset 0x60
             unknown_f34_f35=data[0:2],
-            unknown_f38_f90=data[4:0x5D],  # 0xF38 to 0xF90
-            unknown_f93_end=data[0x5F:],  # 0xF93 to end
+            state_array=data[2:0x5E],  # 0xF36 to 0xF91 (92 bytes)
+            index_array=data[0x5E:],  # 0xF92 to end (110 bytes)
         )
     
     def __repr__(self) -> str:
@@ -446,11 +557,16 @@ class CreditsEntry:
     Located at header offset 0xF10, with 0x0C (12) bytes per entry.
     Only 2 complete entries fit before overlapping with count fields at 0xF31.
     
-    Used by func_8007ABCC and func_8007AC54 when game state (0xF36) == 2.
-    The index is read from 0xF92 and multiplied by 12 for table lookup.
+    Used by GetCurrentSectorOffset (0x8007ABCC) and GetCurrentSectorCount
+    (0x8007AC54) when game mode == 2, with index from header[0xF92+stateOffset].
     
-    Entry 0 appears to be a default/header with param_a = level_count.
-    Entry 1 (CRD1) and partial Entry 2 (CRD2) are for credits sequences.
+    Sector Calculation (verified):
+        actual_sector = param_b + level_count
+        Example: Entry 0 has param_b=171, level_count=26 → 171+26=197 = CRED sector
+    
+    Entry 0: Empty code, param_a=level_count, param_b=base_sector (credits header)
+    Entry 1 (CRD1): Credits sequence 1
+    Entry 2 (CRD2): Overlaps count fields at 0xF31-0xF33 (garbage values)
     """
     
     index: int

@@ -73,47 +73,90 @@ local ADDRESSES = {
 }
 
 -- BLB Header offsets and their meanings
+-- Coverage Report Unknown Regions Summary:
+-- ========================================
+-- 1. unknown_ed0 (0xED0-0xF0F): 64 bytes - 16 u32 values
+-- 2. Credits table (0xF10-0xF30): 33 bytes - partially documented  
+-- 3. state_unknown_f34_f35 (0xF34-0xF35): 2 bytes
+-- 4. state_array (0xF38-0xF90): 89 bytes - state bytes for sliding window
+-- 5. state_unknown_f91: 1 byte
+-- 6. index_array (0xF93-0xFFF): 109 bytes - index bytes for sliding window
+--
+-- Level Entry Unknown Fields (per entry, 26 entries):
+-- - static_data (+0x04, 8 bytes): Unknown static data
+-- - flag (+0x0D, 1 byte): Purpose TBD
+-- - unknown_0e (+0x0E, 14 bytes): Large unknown region
+-- - unknown_1c (+0x1C, 2 bytes): Before secondary_offset  
+-- - unknown_20 (+0x20, 2 bytes): After secondary_offset
+-- - dynamic_data_1 (+0x22, 10 bytes): May contain pointers
+-- - unknown_2e (+0x2E, 16 bytes): Large unknown region
+-- - unknown_3e (+0x3E, 2 bytes): Before tertiary_offset
+-- - unknown_42 (+0x42, 2 bytes): After tertiary_offset
+-- - dynamic_data_2 (+0x44, 10 bytes): May contain pointers
+-- - unknown_50 (+0x50, 6 bytes): Before level_id
+--
+-- Movie Entry Unknown Fields (per entry, 13 entries):
+-- - unknown_00 (+0x00, 2 bytes): Always 0, reserved?
+--
+-- Sector Entry Unknown Fields (per entry, 32 entries):
+-- - unknown_byte (+0x02, 1 byte): 0x0A for loading, 0x63 for game over
+
 local HEADER_REGIONS = {
     -- Level metadata table: 26 entries × 0x70 bytes = 2912 bytes
-    { start = 0x000, stop = 0xB5F, name = "LevelMetadata", desc = "26 level entries × 0x70 bytes" },
-    -- Movie table: 13 entries × 0x1C bytes = 364 bytes
-    { start = 0xB60, stop = 0xCCB, name = "MovieTable", desc = "13 movie entries × 0x1C bytes" },
+    { start = 0x000, stop = 0xB5F, name = "LevelMetadata", desc = "26 level entries × 0x70 bytes", known = true },
+    -- Movie table: 13 entries × 0x1C bytes = 364 bytes  
+    { start = 0xB60, stop = 0xCCB, name = "MovieTable", desc = "13 movie entries × 0x1C bytes", known = true },
+    -- Gap between movie and sector table
+    { start = 0xCCC, stop = 0xCCF, name = "GapMovieSector", desc = "4 bytes gap (UNKNOWN)", known = false },
     -- Sector/loading screen table: 32 entries × 0x10 bytes = 512 bytes
-    { start = 0xCD0, stop = 0xECF, name = "SectorTable", desc = "32 sector entries × 0x10 bytes" },
-    -- Unknown u32 array: 16 entries = 64 bytes
-    { start = 0xED0, stop = 0xF0F, name = "UnknownArray", desc = "16 u32 values, per-world data?" },
-    -- Credits sequence table: 2-3 entries × 0x0C bytes
-    { start = 0xF10, stop = 0xF30, name = "CreditsTable", desc = "Credits entries × 0x0C bytes" },
+    { start = 0xCD0, stop = 0xECF, name = "SectorTable", desc = "32 sector entries × 0x10 bytes", known = true },
+    -- Unknown u32 array: 16 entries = 64 bytes (UNKNOWN - need to trace!)
+    { start = 0xED0, stop = 0xF0F, name = "UnknownArray", desc = "16 u32 values (UNKNOWN)", known = false },
+    -- Credits sequence table: 2-3 entries × 0x0C bytes (PARTIALLY UNKNOWN)
+    { start = 0xF10, stop = 0xF30, name = "CreditsTable", desc = "Credits entries × 0x0C (UNKNOWN)", known = false },
     -- Count fields
-    { start = 0xF31, stop = 0xF31, name = "LevelCount", desc = "Number of levels (u8)" },
-    { start = 0xF32, stop = 0xF32, name = "AssetCount", desc = "Number of movies (u8)" },
-    { start = 0xF33, stop = 0xF33, name = "SectorTableCount", desc = "Number of sector table entries (u8)" },
-    -- State/config region
-    { start = 0xF34, stop = 0xF35, name = "UnknownF34", desc = "Unknown 2 bytes" },
-    { start = 0xF36, stop = 0xF36, name = "GameMode", desc = "1=movie, 2=credits, 4-5=level" },
-    { start = 0xF37, stop = 0xF37, name = "SecondaryFlag", desc = "Secondary state flag" },
-    { start = 0xF38, stop = 0xF90, name = "LevelProgressData", desc = "Level progression data (89 bytes)" },
-    { start = 0xF91, stop = 0xF91, name = "UnknownF91", desc = "Credits-related? (u8)" },
-    { start = 0xF92, stop = 0xF92, name = "AssetIndex", desc = "Current table entry index (u8)" },
-    { start = 0xF93, stop = 0xFFF, name = "WorldMappingData", desc = "Level/world mapping (109 bytes)" },
+    { start = 0xF31, stop = 0xF31, name = "LevelCount", desc = "Number of levels (u8)", known = true },
+    { start = 0xF32, stop = 0xF32, name = "AssetCount", desc = "Number of movies (u8)", known = true },
+    { start = 0xF33, stop = 0xF33, name = "SectorTableCount", desc = "Number of sector table entries (u8)", known = true },
+    -- State/config region (MOSTLY UNKNOWN - key tracing target!)
+    { start = 0xF34, stop = 0xF35, name = "UnknownF34", desc = "2 bytes (UNKNOWN)", known = false },
+    { start = 0xF36, stop = 0xF36, name = "GameMode", desc = "1=movie, 2=credits, 4-5=level", known = true },
+    { start = 0xF37, stop = 0xF37, name = "SecondaryFlag", desc = "Secondary state flag", known = true },
+    { start = 0xF38, stop = 0xF90, name = "StateArray", desc = "89 bytes, sliding window states (UNKNOWN)", known = false },
+    { start = 0xF91, stop = 0xF91, name = "UnknownF91", desc = "1 byte (UNKNOWN)", known = false },
+    { start = 0xF92, stop = 0xF92, name = "AssetIndex", desc = "Current table entry index (u8)", known = true },
+    { start = 0xF93, stop = 0xFFF, name = "IndexArray", desc = "109 bytes, sliding window indices (UNKNOWN)", known = false },
 }
 
 -- Known functions that access the header (for reverse lookup)
+-- Updated from symbol_addrs.txt with correct names
 local KNOWN_FUNCTIONS = {
     [0x8007AE14] = "GetMovieUnknown00",
     [0x8007AE58] = "GetMovieSectorCount",
     [0x8007AA08] = "getLevelName",
     [0x800208B0] = "LoadBLBHeader",
-    [0x8007A62C] = "func_8007A62C (LevelDataParser)",
-    [0x8007A9B0] = "func_8007A9B0 (LevelAssetEnum)",
-    [0x8007ABCC] = "func_8007ABCC (CreditsAccessor)",
-    [0x8007AC54] = "func_8007AC54 (CreditsAccessor)",
-    [0x8007ACDC] = "func_8007ACDC (AssetCountAccessor)",
-    [0x8007ACF0] = "func_8007ACF0",
-    [0x8007ADC8] = "func_8007ADC8 (GetMovieFilename)",
+    [0x8007A62C] = "LevelDataParser",
+    [0x8007A9B0] = "GetLevelCount",
+    [0x8007A9C4] = "GetLevelAssetIndex",
+    [0x8007A9E8] = "GetLevelDisplayName",
+    [0x8007ABCC] = "GetCurrentSectorOffset",
+    [0x8007AC54] = "GetCurrentSectorCount",
+    [0x8007ACDC] = "GetAssetCount",
+    [0x8007ACF0] = "GetMovieReservedByIndex",
+    [0x8007AD10] = "GetMovieShortNameByIndex",
+    [0x8007AD30] = "GetCurrentMovieReserved",
+    [0x8007AD7C] = "GetCurrentMovieShortName",
+    [0x8007ADC8] = "GetCurrentMovieFilename",
+    [0x8007B074] = "func_8007B074", -- Called from LevelDataParser
     [0x80038BA0] = "CdBLB_ReadSectors",
     [0x80038C14] = "CdBLB_WaitReadComplete",
 }
+
+-- Track accesses to unknown regions specifically
+local unknownAccessLog = {}  -- {offset -> {functions = {}, count = 0, firstValue = nil}}
+
+-- Feature flag: Set to false to disable memory breakpoints (can cause crashes/slowdowns)
+local ENABLE_MEMORY_BREAKPOINTS = false
 
 -- ============================================
 -- State
@@ -167,22 +210,67 @@ local function getFieldDetail(headerOffset)
         local entryIndex = math.floor(headerOffset / 0x70)
         local fieldOffset = headerOffset % 0x70
         local fieldName = ""
+        local isUnknown = false
         
+        -- Known fields
         if fieldOffset == 0x00 then fieldName = "sector_offset (u16)"
         elseif fieldOffset == 0x02 then fieldName = "sector_count (u16)"
-        elseif fieldOffset >= 0x04 and fieldOffset < 0x0C then fieldName = "static_data"
+        -- Unknown: static_data (+0x04, 8 bytes)
+        elseif fieldOffset >= 0x04 and fieldOffset < 0x0C then 
+            fieldName = string.format("UNKNOWN static_data[%d] (8 bytes)", fieldOffset - 0x04)
+            isUnknown = true
         elseif fieldOffset == 0x0C then fieldName = "level_index (u8)"
-        elseif fieldOffset == 0x0D then fieldName = "flag (u8)"
+        -- Unknown: flag (+0x0D, 1 byte)
+        elseif fieldOffset == 0x0D then 
+            fieldName = "UNKNOWN flag (u8)"
+            isUnknown = true
+        -- Unknown: unknown_0e (+0x0E, 14 bytes)
+        elseif fieldOffset >= 0x0E and fieldOffset < 0x1C then
+            fieldName = string.format("UNKNOWN unknown_0e[%d] (14 bytes)", fieldOffset - 0x0E)
+            isUnknown = true
+        -- Unknown: unknown_1c (+0x1C, 2 bytes)
+        elseif fieldOffset >= 0x1C and fieldOffset < 0x1E then
+            fieldName = string.format("UNKNOWN unknown_1c[%d] (2 bytes)", fieldOffset - 0x1C)
+            isUnknown = true
         elseif fieldOffset == 0x1E then fieldName = "secondary_offset (u16)"
+        -- Unknown: unknown_20 (+0x20, 2 bytes)
+        elseif fieldOffset >= 0x20 and fieldOffset < 0x22 then
+            fieldName = string.format("UNKNOWN unknown_20[%d] (2 bytes)", fieldOffset - 0x20)
+            isUnknown = true
+        -- Unknown: dynamic_data_1 (+0x22, 10 bytes)
+        elseif fieldOffset >= 0x22 and fieldOffset < 0x2C then
+            fieldName = string.format("UNKNOWN dynamic_data_1[%d] (10 bytes)", fieldOffset - 0x22)
+            isUnknown = true
         elseif fieldOffset == 0x2C then fieldName = "secondary_count (u16)"
+        -- Unknown: unknown_2e (+0x2E, 16 bytes)
+        elseif fieldOffset >= 0x2E and fieldOffset < 0x3E then
+            fieldName = string.format("UNKNOWN unknown_2e[%d] (16 bytes)", fieldOffset - 0x2E)
+            isUnknown = true
+        -- Unknown: unknown_3e (+0x3E, 2 bytes)
+        elseif fieldOffset >= 0x3E and fieldOffset < 0x40 then
+            fieldName = string.format("UNKNOWN unknown_3e[%d] (2 bytes)", fieldOffset - 0x3E)
+            isUnknown = true
         elseif fieldOffset == 0x40 then fieldName = "tertiary_offset (u16)"
+        -- Unknown: unknown_42 (+0x42, 2 bytes)
+        elseif fieldOffset >= 0x42 and fieldOffset < 0x44 then
+            fieldName = string.format("UNKNOWN unknown_42[%d] (2 bytes)", fieldOffset - 0x42)
+            isUnknown = true
+        -- Unknown: dynamic_data_2 (+0x44, 10 bytes)
+        elseif fieldOffset >= 0x44 and fieldOffset < 0x4E then
+            fieldName = string.format("UNKNOWN dynamic_data_2[%d] (10 bytes)", fieldOffset - 0x44)
+            isUnknown = true
         elseif fieldOffset == 0x4E then fieldName = "tertiary_count (u16)"
+        -- Unknown: unknown_50 (+0x50, 6 bytes)
+        elseif fieldOffset >= 0x50 and fieldOffset < 0x56 then
+            fieldName = string.format("UNKNOWN unknown_50[%d] (6 bytes)", fieldOffset - 0x50)
+            isUnknown = true
         elseif fieldOffset >= 0x56 and fieldOffset < 0x5B then fieldName = "level_id (5 bytes)"
         elseif fieldOffset >= 0x5B and fieldOffset < 0x70 then fieldName = "level_name (21 bytes)"
-        else fieldName = string.format("unknown+0x%02X", fieldOffset)
+        else fieldName = string.format("UNKNOWN +0x%02X", fieldOffset)
         end
         
-        return string.format("Level[%d].%s", entryIndex, fieldName)
+        local result = string.format("Level[%d].%s", entryIndex, fieldName)
+        return result, isUnknown
     end
     
     -- Movie entry fields (0x1C bytes each, starting at 0xB60)
@@ -190,16 +278,27 @@ local function getFieldDetail(headerOffset)
         local entryIndex = math.floor((headerOffset - 0xB60) / 0x1C)
         local fieldOffset = (headerOffset - 0xB60) % 0x1C
         local fieldName = ""
+        local isUnknown = false
         
-        if fieldOffset == 0x00 then fieldName = "reserved (u16, always 0)"
-        elseif fieldOffset == 0x02 then fieldName = "sector_count (u16)"
+        -- Unknown: unknown_00 (+0x00, 2 bytes) - always 0, reserved?
+        if fieldOffset >= 0x00 and fieldOffset < 0x02 then 
+            fieldName = string.format("UNKNOWN reserved[%d] (always 0)", fieldOffset)
+            isUnknown = true
+        elseif fieldOffset >= 0x02 and fieldOffset < 0x04 then fieldName = "sector_count (u16)"
         elseif fieldOffset >= 0x04 and fieldOffset < 0x09 then fieldName = "movie_id (5 bytes)"
         elseif fieldOffset >= 0x09 and fieldOffset < 0x0C then fieldName = "short_name (3 bytes)"
         elseif fieldOffset >= 0x0C and fieldOffset < 0x1C then fieldName = "filename (16 bytes)"
-        else fieldName = string.format("unknown+0x%02X", fieldOffset)
+        else fieldName = string.format("UNKNOWN +0x%02X", fieldOffset)
         end
         
-        return string.format("Movie[%d].%s", entryIndex, fieldName)
+        local result = string.format("Movie[%d].%s", entryIndex, fieldName)
+        return result, isUnknown
+    end
+    
+    -- Gap between movie table and sector table (0xCCC-0xCCF, 4 bytes)
+    if headerOffset >= 0xCCC and headerOffset < 0xCD0 then
+        local offset = headerOffset - 0xCCC
+        return string.format("UNKNOWN gap_movie_sector[%d] (4 bytes)", offset), true
     end
     
     -- Sector table entry fields (0x10 bytes each, starting at 0xCD0)
@@ -207,37 +306,98 @@ local function getFieldDetail(headerOffset)
         local entryIndex = math.floor((headerOffset - 0xCD0) / 0x10)
         local fieldOffset = (headerOffset - 0xCD0) % 0x10
         local fieldName = ""
+        local isUnknown = false
         
         if fieldOffset == 0x00 then fieldName = "level_index (u8)"
         elseif fieldOffset == 0x01 then fieldName = "entry_flags (u8)"
-        elseif fieldOffset == 0x02 then fieldName = "unknown_byte (u8)"
+        -- Unknown: unknown_byte (+0x02, 1 byte)
+        elseif fieldOffset == 0x02 then 
+            fieldName = "UNKNOWN unknown_byte (0x0A=loading, 0x63=gameover)"
+            isUnknown = true
         elseif fieldOffset >= 0x03 and fieldOffset < 0x08 then fieldName = "code (5 bytes)"
         elseif fieldOffset >= 0x08 and fieldOffset < 0x0C then fieldName = "short_name (4 bytes)"
-        elseif fieldOffset == 0x0C then fieldName = "sector_offset (u16)"
-        elseif fieldOffset == 0x0E then fieldName = "sector_count (u16)"
-        else fieldName = string.format("unknown+0x%02X", fieldOffset)
+        elseif fieldOffset >= 0x0C and fieldOffset < 0x0E then fieldName = "sector_offset (u16)"
+        elseif fieldOffset >= 0x0E and fieldOffset < 0x10 then fieldName = "sector_count (u16)"
+        else 
+            fieldName = string.format("UNKNOWN +0x%02X", fieldOffset)
+            isUnknown = true
         end
         
-        return string.format("Sector[%d].%s", entryIndex, fieldName)
+        local result = string.format("Sector[%d].%s", entryIndex, fieldName)
+        return result, isUnknown
     end
     
-    -- Credits entry fields (0x0C bytes each, starting at 0xF10)
+    -- Unknown u32 array (0xED0-0xF0F, 64 bytes = 16 u32s) - KEY UNKNOWN!
+    if headerOffset >= 0xED0 and headerOffset < 0xF10 then
+        local entryIndex = math.floor((headerOffset - 0xED0) / 4)
+        local byteOffset = (headerOffset - 0xED0) % 4
+        return string.format("UNKNOWN UnknownArray[%d]+%d (16 u32s, per-world?)", entryIndex, byteOffset), true
+    end
+    
+    -- Credits entry fields (0x0C bytes each, starting at 0xF10) - KEY UNKNOWN!
     if headerOffset >= 0xF10 and headerOffset < 0xF31 then
         local entryIndex = math.floor((headerOffset - 0xF10) / 0x0C)
         local fieldOffset = (headerOffset - 0xF10) % 0x0C
         local fieldName = ""
         
-        if fieldOffset >= 0x00 and fieldOffset < 0x04 then fieldName = "code (4 bytes)"
-        elseif fieldOffset >= 0x04 and fieldOffset < 0x08 then fieldName = "padding (4 bytes)"
-        elseif fieldOffset == 0x08 then fieldName = "param_a (u16)"
-        elseif fieldOffset == 0x0A then fieldName = "param_b (u16)"
-        else fieldName = string.format("unknown+0x%02X", fieldOffset)
+        -- All credits fields are UNKNOWN - need to trace their usage!
+        if fieldOffset >= 0x00 and fieldOffset < 0x04 then 
+            fieldName = string.format("UNKNOWN code[%d] (4 bytes)", fieldOffset)
+        elseif fieldOffset >= 0x04 and fieldOffset < 0x08 then 
+            fieldName = string.format("UNKNOWN padding[%d] (4 bytes)", fieldOffset - 0x04)
+        elseif fieldOffset >= 0x08 and fieldOffset < 0x0A then 
+            fieldName = string.format("UNKNOWN param_a+%d (u16)", fieldOffset - 0x08)
+        elseif fieldOffset >= 0x0A and fieldOffset < 0x0C then 
+            fieldName = string.format("UNKNOWN param_b+%d (u16)", fieldOffset - 0x0A)
+        else 
+            fieldName = string.format("UNKNOWN +0x%02X", fieldOffset)
         end
         
-        return string.format("Credits[%d].%s", entryIndex, fieldName)
+        return string.format("Credits[%d].%s", entryIndex, fieldName), true
     end
     
-    return nil
+    -- State/config region (0xF34-0xFFF) - KEY UNKNOWN AREA!
+    if headerOffset >= 0xF34 and headerOffset < 0x1000 then
+        local stateOffset = headerOffset - 0xF34
+        local fieldName = ""
+        local isUnknown = false
+        
+        if stateOffset >= 0x00 and stateOffset < 0x02 then
+            -- 0xF34-0xF35: Unknown 2 bytes
+            fieldName = string.format("UNKNOWN f34[%d] (2 bytes)", stateOffset)
+            isUnknown = true
+        elseif stateOffset == 0x02 then
+            -- 0xF36: Game mode
+            fieldName = "GameMode (1=movie, 2=credits, 3-5=level)"
+        elseif stateOffset == 0x03 then
+            -- 0xF37: Secondary flag  
+            fieldName = "SecondaryFlag"
+        elseif stateOffset >= 0x04 and stateOffset < 0x5D then
+            -- 0xF38-0xF90: State array (89 bytes) - sliding window states
+            local idx = stateOffset - 0x04
+            fieldName = string.format("UNKNOWN StateArray[%d] (slot %d state byte)", idx, idx)
+            isUnknown = true
+        elseif stateOffset == 0x5D then
+            -- 0xF91: Unknown
+            fieldName = "UNKNOWN f91 (u8)"
+            isUnknown = true
+        elseif stateOffset == 0x5E then
+            -- 0xF92: Asset index (base)
+            fieldName = "AssetIndex (base index)"
+        elseif stateOffset >= 0x5F and stateOffset < 0xCC then
+            -- 0xF93-0xFFF: Index array (109 bytes) - sliding window indices
+            local idx = stateOffset - 0x5E  -- 0 = 0xF92 (base), 1 = 0xF93, etc.
+            fieldName = string.format("UNKNOWN IndexArray[%d] (slot %d index byte)", idx, idx)
+            isUnknown = true
+        else
+            fieldName = string.format("UNKNOWN state+0x%02X", stateOffset)
+            isUnknown = true
+        end
+        
+        return string.format("State.%s (0x%03X)", fieldName, headerOffset), isUnknown
+    end
+    
+    return nil, false
 end
 
 -- Look up function name from PC address
@@ -255,12 +415,17 @@ local function getFunctionName(pc)
         { start = 0x8007AA08, size = 0x20, name = "getLevelName" },
         { start = 0x800208B0, size = 0xC4, name = "LoadBLBHeader" },
         { start = 0x8007A62C, size = 0x254, name = "func_8007A62C (LevelDataParser)" },
-        { start = 0x8007A9B0, size = 0x80, name = "func_8007A9B0 (LevelAssetEnum)" },
-        { start = 0x8007ABCC, size = 0x44, name = "func_8007ABCC (CreditsAccessor)" },
-        { start = 0x8007AC54, size = 0x44, name = "func_8007AC54 (CreditsAccessor)" },
-        { start = 0x8007ACDC, size = 0x14, name = "func_8007ACDC (AssetCountAccessor)" },
-        { start = 0x8007ACF0, size = 0x44, name = "func_8007ACF0" },
-        { start = 0x8007ADC8, size = 0x4C, name = "func_8007ADC8 (GetMovieFilename)" },
+        { start = 0x8007A9B0, size = 0x14, name = "GetLevelCount" },
+        { start = 0x8007A9C4, size = 0x24, name = "GetLevelAssetIndex" },
+        { start = 0x8007A9E8, size = 0x20, name = "GetLevelDisplayName" },
+        { start = 0x8007ABCC, size = 0x88, name = "GetCurrentSectorOffset" },
+        { start = 0x8007AC54, size = 0x88, name = "GetCurrentSectorCount" },
+        { start = 0x8007ACDC, size = 0x14, name = "GetAssetCount" },
+        { start = 0x8007ACF0, size = 0x20, name = "GetMovieReservedByIndex" },
+        { start = 0x8007AD10, size = 0x20, name = "GetMovieShortNameByIndex" },
+        { start = 0x8007AD30, size = 0x4C, name = "GetCurrentMovieReserved" },
+        { start = 0x8007AD7C, size = 0x4C, name = "GetCurrentMovieShortName" },
+        { start = 0x8007ADC8, size = 0x4C, name = "GetCurrentMovieFilename" },
         { start = 0x80038BA0, size = 0x74, name = "CdBLB_ReadSectors" },
         { start = 0x80038C14, size = 0x40, name = "CdBLB_WaitReadComplete" },
     }
@@ -308,6 +473,21 @@ end
 -- Breakpoint callback for header reads
 -- ============================================
 
+-- Read memory value at given address with specified width
+local function readMemValue(addr, width)
+    local mem = PCSX.getMemPtr()
+    local offset = bit.band(addr, 0x1FFFFF)
+    if width == 1 then
+        return mem[offset]
+    elseif width == 2 then
+        return mem[offset] + mem[offset + 1] * 0x100
+    elseif width == 4 then
+        return mem[offset] + mem[offset + 1] * 0x100 + 
+               mem[offset + 2] * 0x10000 + mem[offset + 3] * 0x1000000
+    end
+    return 0
+end
+
 local function onHeaderRead(address, width, cause)
     local regs = PCSX.getRegisters()
     local pc = regs.pc
@@ -323,19 +503,50 @@ local function onHeaderRead(address, width, cause)
     -- Get function name
     local funcName = getFunctionName(pc)
     
-    -- Skip if from unknown function and suppression is enabled
+    -- Check if from a known function (using the updated function ranges)
     local isKnownFunction = KNOWN_FUNCTIONS[pc] ~= nil
-    for _, func in ipairs({
+    local knownFuncRanges = {
         {0x8007AE14, 0x44}, {0x8007AE58, 0x44}, {0x8007AA08, 0x20},
-        {0x800208B0, 0xC4}, {0x8007A62C, 0x254}, {0x8007A9B0, 0x80},
-        {0x8007ABCC, 0x44}, {0x8007AC54, 0x44}, {0x8007ACDC, 0x14},
-        {0x8007ACF0, 0x44}, {0x8007ADC8, 0x4C}, {0x80038BA0, 0x74},
+        {0x800208B0, 0xC4}, {0x8007A62C, 0x254}, {0x8007A9B0, 0x14},
+        {0x8007A9C4, 0x24}, {0x8007A9E8, 0x20}, {0x8007ABCC, 0x88},
+        {0x8007AC54, 0x88}, {0x8007ACDC, 0x14}, {0x8007ACF0, 0x20},
+        {0x8007AD10, 0x20}, {0x8007AD30, 0x4C}, {0x8007AD7C, 0x4C},
+        {0x8007ADC8, 0x4C}, {0x8007B074, 0x100}, {0x80038BA0, 0x74},
         {0x80038C14, 0x40}
-    }) do
+    }
+    for _, func in ipairs(knownFuncRanges) do
         if pc >= func[1] and pc < func[1] + func[2] then
             isKnownFunction = true
             break
         end
+    end
+    
+    -- Get field detail and check if it's an unknown field
+    local fieldDetail, isUnknownField = getFieldDetail(headerOffset)
+    
+    -- Always track unknown field accesses, even from unknown functions!
+    if isUnknownField then
+        local offsetKey = string.format("0x%03X", headerOffset)
+        if not unknownAccessLog[offsetKey] then
+            unknownAccessLog[offsetKey] = { 
+                functions = {}, 
+                count = 0, 
+                values = {},
+                field = fieldDetail
+            }
+        end
+        unknownAccessLog[offsetKey].count = unknownAccessLog[offsetKey].count + 1
+        unknownAccessLog[offsetKey].functions[funcName] = 
+            (unknownAccessLog[offsetKey].functions[funcName] or 0) + 1
+        
+        -- Record the value being read (first few unique values)
+        local value = readMemValue(address, width)
+        local valueKey = string.format("0x%X", value)
+        if not unknownAccessLog[offsetKey].values[valueKey] then
+            unknownAccessLog[offsetKey].values[valueKey] = 0
+        end
+        unknownAccessLog[offsetKey].values[valueKey] = 
+            unknownAccessLog[offsetKey].values[valueKey] + 1
     end
     
     if suppressUnknownFunctions and not isKnownFunction then
@@ -349,9 +560,8 @@ local function onHeaderRead(address, width, cause)
         return
     end
     
-    -- Get region name and field detail
+    -- Get region name
     local regionName = getRegionName(headerOffset)
-    local fieldDetail = getFieldDetail(headerOffset)
     
     -- Create unique key for deduplication
     local key = string.format("%s:0x%03X", funcName, headerOffset)
@@ -381,8 +591,13 @@ local function onHeaderRead(address, width, cause)
             suffix = string.format(" (x%d)", accessLog[key].count)
         end
         
-        print(string.format("[%04d] READ header+0x%03X (%d bytes) by %s%s",
-            logCount, headerOffset, width, funcName, suffix))
+        local unknownMarker = ""
+        if isUnknownField then
+            unknownMarker = " [UNKNOWN]"
+        end
+        
+        print(string.format("[%04d] READ header+0x%03X (%d bytes) by %s%s%s",
+            logCount, headerOffset, width, funcName, suffix, unknownMarker))
         if fieldDetail then
             print(string.format("       -> %s", fieldDetail))
         end
@@ -406,7 +621,7 @@ local function onHeaderWrite(address, width, cause)
     
     -- Get region name and field detail
     local regionName = getRegionName(headerOffset)
-    local fieldDetail = getFieldDetail(headerOffset)
+    local fieldDetail, isUnknownField = getFieldDetail(headerOffset)
     
     logCount = logCount + 1
     print(string.format("[%04d] WRITE header+0x%03X (%d bytes) by %s",
@@ -546,11 +761,17 @@ end
 -- ============================================
 
 local function setupHeaderBreakpoints()
-    print("\n=== Setting up BLB header memory breakpoints ===")
+    print("\n=== Setting up BLB header breakpoints ===")
     
     -- Discover header address
     headerBaseAddr = discoverHeaderAddress()
     print("Header base address: " .. hex(headerBaseAddr))
+    
+    if not ENABLE_MEMORY_BREAKPOINTS then
+        print("  Memory breakpoints DISABLED (set ENABLE_MEMORY_BREAKPOINTS = true to enable)")
+        print("  Using function-only tracing mode for stability")
+        return
+    end
     
     -- Set breakpoints on key header regions
     -- Note: Setting one large breakpoint is more efficient than many small ones
@@ -611,6 +832,94 @@ local function setupHeaderBreakpoints()
 end
 
 -- ============================================
+-- Dump unknown regions from current header
+-- ============================================
+
+function dumpUnknownRegions()
+    if not headerBaseAddr then
+        print("[ERROR] Header address not set. Call setupHeaderBreakpoints() first.")
+        return
+    end
+    
+    local mem = PCSX.getMemPtr()
+    local base = bit.band(headerBaseAddr, 0x1FFFFF)
+    
+    print("\n==============================================")
+    print("UNKNOWN REGION HEX DUMP")
+    print("==============================================")
+    print(string.format("Header base: %s\n", hex(headerBaseAddr)))
+    
+    -- Unknown u32 array (0xED0-0xF0F)
+    print("Unknown Array (0xED0-0xF0F, 16 u32s):")
+    for i = 0, 15 do
+        local offset = 0xED0 + i * 4
+        local val = mem[base + offset] + 
+                    mem[base + offset + 1] * 0x100 + 
+                    mem[base + offset + 2] * 0x10000 + 
+                    mem[base + offset + 3] * 0x1000000
+        print(string.format("  [%2d] 0x%03X: 0x%08X (%d)", i, offset, val, val))
+    end
+    
+    -- Credits table (0xF10-0xF30)
+    print("\nCredits Table (0xF10-0xF30, ~3 entries of 0x0C bytes):")
+    for i = 0, 2 do
+        local entryOffset = 0xF10 + i * 0x0C
+        if entryOffset >= 0xF31 then break end
+        
+        -- Read entry bytes
+        local bytes = {}
+        for j = 0, 0x0B do
+            if entryOffset + j < 0xF31 then
+                bytes[j] = mem[base + entryOffset + j]
+            else
+                bytes[j] = 0
+            end
+        end
+        
+        -- Format as code (4 bytes), padding (4 bytes), param_a (u16), param_b (u16)
+        local code = ""
+        for j = 0, 3 do
+            if bytes[j] >= 32 and bytes[j] < 127 then
+                code = code .. string.char(bytes[j])
+            else
+                code = code .. "."
+            end
+        end
+        local param_a = bytes[8] + bytes[9] * 0x100
+        local param_b = bytes[10] + bytes[11] * 0x100
+        
+        print(string.format("  [%d] 0x%03X: code='%s' param_a=0x%04X param_b=0x%04X",
+            i, entryOffset, code, param_a, param_b))
+    end
+    
+    -- State region summary (0xF34-0xFFF)
+    print("\nState Region (0xF34-0xFFF):")
+    print(string.format("  0xF34-0xF35 (unknown): 0x%02X 0x%02X", 
+        mem[base + 0xF34], mem[base + 0xF35]))
+    print(string.format("  0xF36 (GameMode): %d", mem[base + 0xF36]))
+    print(string.format("  0xF37 (SecondaryFlag): %d", mem[base + 0xF37]))
+    print(string.format("  0xF91 (unknown): 0x%02X", mem[base + 0xF91]))
+    print(string.format("  0xF92 (AssetIndex): %d", mem[base + 0xF92]))
+    
+    -- Print first 16 bytes of state array and index array
+    print("\n  State Array (0xF38-0xF47, first 16 bytes):")
+    local stateHex = "    "
+    for i = 0, 15 do
+        stateHex = stateHex .. string.format("%02X ", mem[base + 0xF38 + i])
+    end
+    print(stateHex)
+    
+    print("\n  Index Array (0xF93-0xFA2, first 16 bytes):")
+    local indexHex = "    "
+    for i = 0, 15 do
+        indexHex = indexHex .. string.format("%02X ", mem[base + 0xF93 + i])
+    end
+    print(indexHex)
+    
+    print("\n==============================================\n")
+end
+
+-- ============================================
 -- Summary command
 -- ============================================
 
@@ -653,6 +962,87 @@ function printSummary()
         print(string.format("  %6dx  %s", entry.count, entry.key))
     end
     print("======================================")
+end
+
+-- Print summary of unknown field accesses
+function printUnknownFieldSummary()
+    print("\n==============================================")
+    print("UNKNOWN FIELD ACCESS SUMMARY")
+    print("==============================================")
+    print("These are accesses to fields marked as UNKNOWN")
+    print("in the BLB header coverage report.\n")
+    
+    -- Sort by offset
+    local sortedOffsets = {}
+    for offset, data in pairs(unknownAccessLog) do
+        table.insert(sortedOffsets, { offset = offset, data = data })
+    end
+    table.sort(sortedOffsets, function(a, b) return a.offset < b.offset end)
+    
+    if #sortedOffsets == 0 then
+        print("No unknown fields accessed yet.")
+        print("Run the game and play through different scenarios to trigger accesses.")
+    else
+        print(string.format("Found %d unknown field offsets accessed:\n", #sortedOffsets))
+        
+        for _, entry in ipairs(sortedOffsets) do
+            local offset = entry.offset
+            local data = entry.data
+            
+            print(string.format("  Offset %s (%dx):", offset, data.count))
+            print(string.format("    Field: %s", data.field or "Unknown"))
+            
+            -- List functions that accessed it
+            print("    Accessed by:")
+            local funcList = {}
+            for func, count in pairs(data.functions) do
+                table.insert(funcList, { name = func, count = count })
+            end
+            table.sort(funcList, function(a, b) return a.count > b.count end)
+            for i, f in ipairs(funcList) do
+                if i <= 5 then  -- Top 5 functions
+                    print(string.format("      - %s (%dx)", f.name, f.count))
+                end
+            end
+            
+            -- List observed values
+            print("    Values observed:")
+            local valueList = {}
+            for val, count in pairs(data.values) do
+                table.insert(valueList, { value = val, count = count })
+            end
+            table.sort(valueList, function(a, b) return a.count > b.count end)
+            for i, v in ipairs(valueList) do
+                if i <= 5 then  -- Top 5 values
+                    print(string.format("      %s (%dx)", v.value, v.count))
+                end
+            end
+            print("")
+        end
+    end
+    
+    print("==============================================")
+    print("Key unknown regions to investigate:")
+    print("  0xED0-0xF0F: UnknownArray (16 u32s)")
+    print("  0xF10-0xF30: Credits table entries")
+    print("  0xF34-0xF35: Unknown 2 bytes") 
+    print("  0xF38-0xF90: State array (89 bytes)")
+    print("  0xF91:       Unknown byte")
+    print("  0xF93-0xFFF: Index array (109 bytes)")
+    print("")
+    print("Level entry unknown fields:")
+    print("  +0x04-0x0B: static_data (8 bytes)")
+    print("  +0x0D:      flag (1 byte)")
+    print("  +0x0E-0x1B: unknown_0e (14 bytes)")
+    print("  +0x1C-0x1D: unknown_1c (2 bytes)")
+    print("  +0x20-0x21: unknown_20 (2 bytes)")
+    print("  +0x22-0x2B: dynamic_data_1 (10 bytes)")
+    print("  +0x2E-0x3D: unknown_2e (16 bytes)")
+    print("  +0x3E-0x3F: unknown_3e (2 bytes)")
+    print("  +0x42-0x43: unknown_42 (2 bytes)")
+    print("  +0x44-0x4D: dynamic_data_2 (10 bytes)")
+    print("  +0x50-0x55: unknown_50 (6 bytes)")
+    print("==============================================\n")
 end
 
 -- Toggle verbose mode
@@ -715,12 +1105,21 @@ table.insert(breakpoints, bp)
 
 print("\n===========================================")
 print("Commands:")
-print("  printSummary()           - Print access summary")
-print("  setVerbose(true/false)   - Toggle verbose logging")
-print("  showUnknown(true/false)  - Show/hide unknown function accesses")
-print("  setupHeaderBreakpoints() - Manually set up header breakpoints")
+print("  printSummary()             - Print general access summary")
+print("  printUnknownFieldSummary() - Print UNKNOWN field accesses (key for RE!)")
+print("  dumpUnknownRegions()       - Hex dump unknown header regions")
+print("  setVerbose(true/false)     - Toggle verbose logging")
+print("  showUnknown(true/false)    - Show/hide unknown function accesses")
+print("  setupHeaderBreakpoints()   - Manually set up header breakpoints")
+print("")
+print("Workflow for reverse engineering:")
+print("  1. Run game through various scenarios (menu, levels, movies, credits)")
+print("  2. Call printSummary() to see function call patterns")
+print("  3. Note the offset parameter values to understand slot usage")
+print("  4. Use this info to update blb.py field definitions")
 print("")
 print("Current settings:")
 print("  Verbose mode: " .. (verboseMode and "ON" or "OFF"))
 print("  Show unknown: " .. (suppressUnknownFunctions and "OFF" or "ON"))
+print("  Memory breakpoints: " .. (ENABLE_MEMORY_BREAKPOINTS and "ON" or "OFF (stable mode)"))
 print("===========================================\n")

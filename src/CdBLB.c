@@ -20,8 +20,6 @@
 
 #include "common.h"
 
-/* PSY-Q CD functions are declared in LIBCD.H */
-
 /* sdata globals - GP-relative access prevents matching */
 extern s32 g_GameBLBSector;
 extern s32 g_Music1Sector;
@@ -56,9 +54,9 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdBLB_Stub);
  * ============================================================================ */
 #ifdef NON_MATCHING
 s32 CdBLB_ReadSectors(s32 sectorOffset, s32 numSectors, void *destBuffer) {
-    u8 pos[8];  /* CdlLOC */
-    CdIntToPos(g_GameBLBSector + (sectorOffset & 0xFFFF), pos);
-    CdControlF(0x02, pos, 0);  /* CdlSetloc */
+    CdlLOC pos;
+    CdIntToPos(g_GameBLBSector + (sectorOffset & 0xFFFF), &pos);
+    CdControlF(0x02, (u_char *)&pos);  /* CdlSetloc */
     CdRead(numSectors & 0xFFFF, destBuffer, 0x80);
     CdReadSync(0, 0);
     return 1;
@@ -89,7 +87,7 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdBLB_WaitReadComplete);
 #ifdef NON_MATCHING
 s32 CdMusic_SetupPosition(void) {
     g_MusicCurrentSector = (&g_Music1Sector)[g_MusicFileIndex];
-    return CdControlF(0x1B, (u8*)&g_Music1File + (g_MusicFileIndex * 0x18), 0) == 1;
+    return CdControlF(0x1B, (u_char *)&g_Music1File + (g_MusicFileIndex * 0x18)) == 1;
 }
 #else
 INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdMusic_SetupPosition);
@@ -113,16 +111,16 @@ s32 CdMusic_Start(u8 fileIndex, s8 channel) {
     
     D_800A5A04 = 0xC0;  /* CD mode: speed + XA-ADPCM */
     g_MusicTargetSector = (&g_Music1Sector)[fileIndex] + (targetOffset * 8);
-    CdControlF(0x0E, &D_800A5A04, 0);  /* CdlSetmode */
+    CdControlF(0x0E, &D_800A5A04);  /* CdlSetmode */
     
     for (retries = 8; retries > 0; retries--) {
         g_MusicCurrentSector = (&g_Music1Sector)[g_MusicFileIndex];
-        if (CdControlF(0x1B, (u8*)&g_Music1File + (g_MusicFileIndex * 0x18), 0) == 1) {
+        if (CdControlF(0x1B, (u_char *)&g_Music1File + (g_MusicFileIndex * 0x18)) == 1) {
             D_800A5A04 = 0xC8;  /* realtime mode */
-            CdControlF(0x0E, &D_800A5A04, 0);
+            CdControlF(0x0E, &D_800A5A04);
             D_800A5A0C = 1;
             D_800A5A0D = channel;
-            CdControlF(0x0D, &D_800A5A0C, &D_800A59FC);
+            CdControlF(0x0D, &D_800A5A0C);  /* CdlSetfilter */
             g_MusicState = 1;
             return 1;
         }
@@ -140,7 +138,7 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdMusic_Start);
 #ifdef NON_MATCHING
 s32 CdMusic_Stop(void) {
     if (g_AllMusicFilesFound == 0) return 0;
-    CdControlF(0x08, 0, 0);  /* CdlStop */
+    CdControlF(0x08, NULL);  /* CdlStop */
     CdCallback();
     g_MusicState = 0;
     return 1;
@@ -157,7 +155,7 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdMusic_Stop);
 s32 CdMusic_Pause(void) {
     if (g_AllMusicFilesFound == 0) return 0;
     if (g_MusicPaused == 0) {
-        CdControlF(0x09, 0, 0);  /* CdlPause */
+        CdControlF(0x09, NULL);  /* CdlPause */
         g_MusicPaused = 1;
     }
     return 1;
@@ -174,7 +172,7 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdMusic_Pause);
 s32 CdMusic_Resume(void) {
     if (g_AllMusicFilesFound == 0) return 0;
     if (g_MusicPaused == 0) return 1;
-    CdControlF(0x1B, 0, 0);  /* CdlReadS */
+    CdControlF(0x1B, NULL);  /* CdlReadS */
     g_MusicPaused = 0;
     return 1;
 }
@@ -188,37 +186,37 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdMusic_Resume);
  * ============================================================================ */
 #ifdef NON_MATCHING
 s32 CdMusic_Update(void) {
-    u8 loc[8];
+    CdlLOC loc;
     s32 status;
     s32 sector;
     
     if (g_MusicPaused) {
-        CdControlF(0x09, 0, 0);
+        CdControlF(0x09, NULL);
         return 1;
     }
     if (!g_MusicState || !g_AllMusicFilesFound) return 1;
     
-    status = CdStatus(1, loc);
+    status = CdStatus();
     switch (status) {
         case 2:  /* Playing */
             if (g_MusicTargetSector < g_MusicCurrentSector) {
                 /* Loop back to start */
                 g_MusicCurrentSector = (&g_Music1Sector)[g_MusicFileIndex];
-                CdControlF(0x1B, (u8*)&g_Music1File + (g_MusicFileIndex * 0x18), 0);
+                CdControlF(0x1B, (u_char *)&g_Music1File + (g_MusicFileIndex * 0x18));
                 g_MusicRetryCount = 0;
             } else {
                 /* Update position */
-                if (CdGetlocP(loc) == 0x11) {
-                    sector = CdPosToInt(loc);
+                if (CdGetlocP((u_char *)&loc) == 0x11) {
+                    sector = CdPosToInt(&loc);
                     if (sector > 0) g_MusicCurrentSector = sector;
                 }
-                CdControlB(0x11, 0);
+                CdControlB(0x11, NULL, (u_char *)&loc);
             }
             break;
         case 5:  /* Error */
             if (++g_MusicRetryCount >= 6) {
                 g_MusicCurrentSector = (&g_Music1Sector)[g_MusicFileIndex];
-                CdControlF(0x1B, (u8*)&g_Music1File + (g_MusicFileIndex * 0x18), 0);
+                CdControlF(0x1B, (u_char *)&g_Music1File + (g_MusicFileIndex * 0x18));
                 g_MusicRetryCount = 0;
             }
             return 0;
@@ -234,16 +232,16 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdMusic_Update);
  * Address: 0x80039094 | Size: 0x94
  * ============================================================================ */
 #ifdef NON_MATCHING
-s32 CdSeekWithRetry(void *pos) {
+s32 CdSeekWithRetry(CdlLOC *pos) {
     s32 outer, inner;
     
     for (outer = 8; outer > 0; outer--) {
         for (inner = 8; inner > 0; inner--) {
-            if (CdControlF(0x15, pos, 0)) goto seek_ok;  /* CdlSeekL */
+            if (CdControlF(0x15, (u_char *)pos)) goto seek_ok;  /* CdlSeekL */
         }
         return 0;
     seek_ok:
-        if (CdSync(0x1E0) != 0) return 1;
+        if (CdSync(0, NULL) != 0) return 1;
     }
     return 0;
 }
@@ -257,7 +255,7 @@ INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdSeekWithRetry);
  * ============================================================================ */
 #ifdef NON_MATCHING
 void CdResetFilter(void) {
-    CdControlF(0x09, 0, 0);  /* CdlPause */
+    CdControlF(0x09, NULL);  /* CdlPause */
 }
 #else
 INCLUDE_ASM("asm/pal/nonmatchings/CdBLB", CdResetFilter);

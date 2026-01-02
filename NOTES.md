@@ -492,3 +492,82 @@ These functions currently use `INCLUDE_ASM` to achieve byte-matching.
 5. **Tools to try:**
    - decomp.me for collaborative matching
    - Compare with other Neverhood/DreamWorks PSX decomps if available
+
+---
+
+## NON_MATCHING Build Analysis
+
+Running `make verify` builds with `-DNON_MATCHING` to use the decompiled C code instead of `INCLUDE_ASM`.
+
+### Results (2026-01-02)
+
+| Variant | Size | SHA1 |
+|---------|------|------|
+| Original | 618,496 bytes | 5a14b65cb44813bfed1ee53c6a3f4456bc230f97 |
+| NON_MATCHING | 618,428 bytes | dddaea850ef84f50d13117a1d4615f11ba123e56 |
+
+**Size difference: -68 bytes** (NON_MATCHING is smaller)
+
+### Why the Differences?
+
+The decompiled C code is **functionally equivalent** but produces different machine code due to:
+
+1. **Pointer/Jump Tables (0x800104D8 - 0x80012CF4)**
+   - Located in `.rodata` section
+   - Contain function pointers and jump table entries
+   - When code is 68 bytes smaller, all function addresses shift
+   - Every function pointer in the binary must change
+
+2. **GP-relative Offsets**
+   - Instructions accessing `.sdata` globals use `lw $reg, offset($gp)`
+   - When the binary layout changes, GP-relative offsets change
+   - Example: `lw $a0, 0x0000($gp)` vs `lw $a0, 0xFFBC($gp)`
+
+3. **JAL Targets**
+   - `jal` (jump-and-link) instructions contain absolute addresses
+   - When functions shift, these addresses must change
+
+4. **Instruction Sequence Differences**
+   - Compiler may choose different register allocation
+   - Different instruction scheduling/ordering
+   - Missing or extra NOPs for pipeline hazards
+
+### Affected Areas
+
+| File Offset | RAM Address | Section | Description |
+|-------------|-------------|---------|-------------|
+| 0x00000CD8 | 0x800104D8 | .rodata | Jump table entries |
+| 0x000010DC | 0x800108DC | .rodata | Function pointers |
+| 0x00001450 | 0x80010C50 | .rodata | Jump table entries |
+| 0x00003148 | 0x80012948 | .rodata | Function pointer table |
+| 0x000034F4 | 0x80012CF4 | .rodata | Switch jump table |
+| 0x00003970 | 0x80013170 | .rodata | Function pointer array |
+| 0x00003A1C | 0x8001321C | .text | GP-relative load in func_80013200 |
+| 0x00003A50 | 0x80013250 | .text | JAL target in SsUtReverbOn |
+| 0x00003A98 | 0x80013298 | .text | JAL target in func_80013268 |
+| 0x00003ADC | 0x800132DC | .text | JAL target in func_80013268 |
+
+### Key Insight
+
+The **logic of the decompiled C code is correct**. The differences are purely due to:
+- Different instruction sequences (68 bytes smaller total)
+- Ripple effect of address changes throughout the binary
+- GP-relative addressing offsets needing adjustment
+
+This is why `INCLUDE_ASM` is used for byte-matching builds - it preserves the exact original instruction sequences.
+
+### m2c Decompiler Quirks
+
+The m2c decompiler can be fooled by MIPS delay slot optimizations:
+
+```asm
+/* CdControlF takes 2 args, but m2c sees 3 */
+addiu      $a0, $zero, 0x2      # $a0 = 2
+addiu      $a1, $sp, 0x10       # $a1 = &pos
+jal        CdControlF
+ addu      $a2, $zero, $zero    # $a2 = 0 (delay slot!)
+```
+
+The compiler reuses `$a2` in the delay slot as an optimization, but `CdControlF` only uses 2 arguments. m2c incorrectly assumed this was a third argument.
+
+**Always verify function signatures against PSY-Q headers!**

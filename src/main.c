@@ -10,7 +10,7 @@
 
 extern void __main(void);
 extern void SsUtReverbOn(s32);
-extern void ResetCallback(void);
+/* ResetCallback declared in LIBETC.H */
 extern void LoadGameAssetLocations(void);
 extern void func_80013268(s32);
 extern void PadInit(s32);
@@ -21,17 +21,17 @@ extern s32 FntOpen(s32, s32, s32, s32, s32, s32);
 extern void SetDumpFnt(s32);
 extern void initPlayerState(u8 *);
 extern void func_8007CD34(void *, s32);
-extern u8 func_8007A9B0(void *);
+extern u8 GetLevelCount(void *);
 extern char *getLevelName(void *, u8);
-extern u8 func_8007ACDC(void *);
-extern void *func_8007ACF0(void *, u8);
+extern u8 GetAssetCount(void *);
+extern void *GetMovieReservedByIndex(void *, u8);
 extern void func_8007CCB8(void);
-extern u32 PadRead(s32);
+/* PadRead declared in LIBETC.H */
 extern void func_800259D4(s32, u32);
 extern void func_80020E1C(void *);
 extern void func_8001352C(s32);
 extern void func_80020E80(void *);
-extern void DrawSync(s32);
+/* DrawSync declared in LIBGPU.H */
 extern s32 VSync(s32);
 extern void func_80082C10(void);
 extern void func_80013500(s32);
@@ -65,6 +65,7 @@ void main(void) {
     void (*stateFunc)(void *);
     s16 stateOffset;
     s32 vsyncCount;
+    s16 baseOffset;
 
     __main();
 
@@ -87,15 +88,15 @@ void main(void) {
     levelData = (u8 *)D_800A5960 + 0x84;
 
     // Load level names
-    for (i = 0; (i & 0xFF) < (func_8007A9B0(levelData) & 0xFF); i++) {
+    for (i = 0; (i & 0xFF) < (GetLevelCount(levelData) & 0xFF); i++) {
         D_8009DE08[i & 0xFF] = getLevelName(levelData, i & 0xFF);
         D_800A60C0++;
         D_800A60BC++;
     }
 
     // Load additional assets
-    for (i = 0; (i & 0xFF) < (func_8007ACDC(levelData) & 0xFF); i++) {
-        D_8009DDE0[D_800A60C0] = func_8007ACF0(levelData, i & 0xFF);
+    for (i = 0; (i & 0xFF) < (GetAssetCount(levelData) & 0xFF); i++) {
+        D_8009DDE0[D_800A60C0] = GetMovieReservedByIndex(levelData, i & 0xFF);
         D_800A60C0++;
         D_800A60BE++;
     }
@@ -128,7 +129,7 @@ void main(void) {
                 stateOffset = 0;
             }
 
-            s16 baseOffset = *(s16 *)gameState;
+            baseOffset = *(s16 *)gameState;
             if ((stateIndex << 16) > 0) {
                 baseOffset += stateOffset;
             }

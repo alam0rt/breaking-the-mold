@@ -1,6 +1,8 @@
 #include "common.h"
 
 #ifdef NON_MATCHING
+typedef s32 M2C_UNK;
+
 M2C_UNK func_8008E7FC();                            /* extern */
 M2C_UNK func_8008FA60(s32 *);                       /* extern */
 extern s32 D_8009D1FC;

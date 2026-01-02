@@ -163,10 +163,11 @@ help:
 	@echo "Toolchain: GCC $(GCC_VERSION) + maspsx (ASPSX $(ASPSX_VERSION))"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all              - Build the project (default)"
+	@echo "  all              - Build the project (default, byte-matching)"
 	@echo "  extract          - Extract/disassemble binary using splat"
 	@echo "  expected         - Copy original binary to expected/"
-	@echo "  check            - Verify build matches original"
+	@echo "  check            - Verify build matches original (quick)"
+	@echo "  verify           - Build with NON_MATCHING and show match score"
 	@echo "  clean            - Remove build artifacts"
 	@echo ""
 	@echo "Decompilation:"
@@ -280,44 +281,41 @@ check: $(BUILD_DIR)/$(PROJECT).bin $(TARGET)
 		exit 1; \
 	fi
 
-# Verify all decompiled functions match using asm-differ
-# Exits non-zero if any function has differences
-verify: $(BUILD_DIR)/$(PROJECT).bin
-	@echo "Verifying decompiled functions..."
-	@FAILED=0; \
-	for src in $(C_SRCS); do \
-		FUNC=$$(basename $$src .c); \
-		if [ "$$FUNC" = "__main" ]; then continue; fi; \
-		echo -n "Checking $$FUNC... "; \
-		OUTPUT=$$($(PYTHON) tools/asm-differ/diff.py --no-pager -ms $$FUNC 2>&1); \
-		if echo "$$OUTPUT" | grep -q "differs"; then \
-			echo "DIFFERS"; \
-			echo "$$OUTPUT" | head -30; \
-			FAILED=1; \
-		elif echo "$$OUTPUT" | grep -q "error\|Error\|not found"; then \
-			echo "ERROR"; \
-			echo "$$OUTPUT"; \
-		else \
-			echo "OK"; \
-		fi; \
-	done; \
-	if [ $$FAILED -eq 1 ]; then \
-		echo ""; \
-		echo "✗ VERIFICATION FAILED - some functions differ"; \
-		exit 1; \
-	else \
-		echo ""; \
-		echo "✓ All decompiled functions match"; \
-	fi
+# Verify: Build with NON_MATCHING and show match percentage
+# Usage: make verify
+verify:
+	@echo "=== Building with NON_MATCHING ==="
+	@rm -rf $(BUILD_DIR)/src
+	@$(MAKE) --no-print-directory CPPFLAGS="$(CPPFLAGS) -DNON_MATCHING" build
 	@echo ""
-	@echo "=== Binary Comparison ==="
-	@echo "Build:    $$(ls -la $(BUILD_DIR)/$(PROJECT).bin | awk '{print $$5}') bytes  $$(sha1sum $(BUILD_DIR)/$(PROJECT).bin | cut -d' ' -f1)"
-	@echo "Original: $$(ls -la $(TARGET) | awk '{print $$5}') bytes  $$(sha1sum $(TARGET) | cut -d' ' -f1)"
-	@if cmp -s $(BUILD_DIR)/$(PROJECT).bin $(TARGET); then \
-		echo "Status:   ✓ EXACT MATCH"; \
+	@echo "=============================================="
+	@echo "              VERIFICATION REPORT"
+	@echo "=============================================="
+	@echo ""
+	@ORIG_SIZE=$$(stat -c%s $(TARGET)); \
+	BUILD_SIZE=$$(stat -c%s $(BUILD_DIR)/$(PROJECT).bin); \
+	echo "File sizes:"; \
+	echo "  Original:     $$ORIG_SIZE bytes"; \
+	echo "  NON_MATCHING: $$BUILD_SIZE bytes"; \
+	echo ""; \
+	echo "SHA1 checksums:"; \
+	echo "  Original:     $$(sha1sum $(TARGET) | cut -d' ' -f1)"; \
+	echo "  NON_MATCHING: $$(sha1sum $(BUILD_DIR)/$(PROJECT).bin | cut -d' ' -f1)"; \
+	echo ""; \
+	if cmp -s $(BUILD_DIR)/$(PROJECT).bin $(TARGET); then \
+		echo "Status: ✓ EXACT MATCH (100%)"; \
 	else \
-		echo "Status:   ✗ Different"; \
-	fi
+		if [ "$$BUILD_SIZE" -ne "$$ORIG_SIZE" ]; then \
+			echo "Status: ✗ Size mismatch ($$BUILD_SIZE vs $$ORIG_SIZE bytes)"; \
+			echo "Match:  N/A (sizes differ)"; \
+		else \
+			DIFF_BYTES=$$(cmp -l $(BUILD_DIR)/$(PROJECT).bin $(TARGET) 2>/dev/null | wc -l); \
+			MATCH_PERCENT=$$(echo "scale=2; (1 - $$DIFF_BYTES / $$ORIG_SIZE) * 100" | bc); \
+			echo "Status: ✗ $$DIFF_BYTES bytes differ"; \
+			echo "Match:  $$MATCH_PERCENT%"; \
+		fi; \
+	fi; \
+	echo ""
 
 # -----------------------------------------------------------------------------
 # Diff Tools

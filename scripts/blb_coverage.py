@@ -236,8 +236,19 @@ def analyze_coverage(blb_path: Path) -> dict:
     if movie_table_end < SECTOR_TABLE_OFFSET:
         mark_range(movie_table_end, SECTOR_TABLE_OFFSET, "gap_movie_to_sector", is_unknown=True)
     
-    # Unknown region at 0xED0-0xF10 (64 bytes) - u32 array
+    # Unknown region at 0xED0-0xF10 (64 bytes) - u32 array of file offsets
     mark_range(0xED0, 0xF10, "unknown_ed0", is_unknown=True)
+    
+    # Credits table at 0xF10-0xF31 (33 bytes)
+    # 3 entries x 12 bytes = 36 bytes, but entry 2 overlaps count fields
+    # Entry format: 4-byte code, 4-byte padding, u16 param_a, u16 param_b
+    # Formula: sector_offset = param_b + level_count
+    # Entry 0: empty code, param_a=level_count, param_b=base_sector
+    # Entry 1: 'CRD1' code
+    # Entry 2: 'CRD2' code (partially overlaps count fields)
+    mark_range(0xF10, 0xF1C, "credits_entry_0")  # Entry 0 (before CRD1)
+    mark_range(0xF1C, 0xF28, "credits_entry_1")  # Entry 1 (CRD1)
+    mark_range(0xF28, 0xF31, "credits_entry_2_partial", is_unknown=True)  # Entry 2 partial (CRD2, overlaps counts)
     
     # State/config data region at 0xF34-0x1000 (204 bytes)
     # Some fields are now understood:
