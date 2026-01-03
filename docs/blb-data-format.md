@@ -23,6 +23,17 @@ Each level in the game consists of three data segments loaded from GAME.BLB:
 - **Secondary**: Sprites and animations
 - **Tertiary**: Audio and music (optional for some levels)
 
+### Verified Level Sizes (via PCSX-Redux MCP, PAL / SLES-01090)
+
+| Level | ID | Index | Geometry (0x258) | Collision (0x259) | Palette (0x25A) | Total |
+|-------|-----|-------|------------------|-------------------|-----------------|-------|
+| Menu | MENU | 0 | 53,308 B | 11,420 B | 24 B | ~65 KB |
+| Skullmonkey Gate | PHRO | 1 | - | - | - | - |
+| Science Centre | SCIE | 2 | 524,212 B | 126,256 B | 148 B | ~650 KB |
+| Monkey Shrines | TMPL | 3 | 510,108 B | 188,288 B | 196 B | ~699 KB |
+
+*Note: TMPL is used as the demo/attract mode level when idle at menu.*
+
 ## BLB Header Reference
 
 The BLB header (first 0x1000 bytes) contains metadata for all levels:
@@ -155,18 +166,18 @@ Example (MENU level):
 
 ## TOC (Table of Contents) Format
 
-All three data segments use the same TOC format:
+All three data segments (Primary, Secondary, Tertiary) use the same TOC format:
 
 ```
 Offset   Size   Description
 ------   ----   -----------
-0x00     u32    Entry count (NOT u16 as previously documented)
+0x00     u32    Entry count
 0x04+    12×N   TOC entries (N = count)
 
 Each TOC Entry (12 bytes):
   0x00   u32    Asset type ID (e.g., 0x258=600, 0x259=601, 0x25A=602)
   0x04   u32    Asset size in bytes
-  0x08   u32    Offset from start of loaded data
+  0x08   u32    Offset from start of segment data
 ```
 
 **Relationship to Level Metadata:**
@@ -174,32 +185,82 @@ Each TOC Entry (12 bytes):
   low 16 bits of Entry[1].offset from the primary TOC (CONFIRMED 26/26 match)
 - This allows quick access to Entry[1] (type 0x259) data without parsing TOC
 
+## Asset Sub-TOC Format (VERIFIED)
+
+Container assets (types 0x258, 0x259, 0x190) have an internal sub-TOC structure:
+
+```
+Offset   Size   Description
+------   ----   -----------
+0x00     u32    Sub-entry count
+0x04+    12×N   Sub-entries (N = count)
+
+Each Sub-Entry (12 bytes):
+  0x00   u32    Flags (type/metadata, format TBD)
+  0x04   u32    Data size in bytes
+  0x08   u32    Offset from start of asset
+```
+
+**Verification:** Entry[0].offset always equals `4 + count * 12` (the header size).
+
+**Container vs Raw Assets:**
+- **Container assets** (have sub-TOC): 0x258, 0x259, 0x190
+- **Raw assets** (data starts immediately): 0x25A, 0x064, 0x12C, 0x12D, 0x12E, 0x191
+
+## Complete File Hierarchy
+
+```
+BLB File
+├── Header (0x1000 bytes = 2 sectors)
+│   └── Level Table: 26 entries × 0x70 bytes
+│         ├── +0x00: Primary sector offset/count
+│         ├── +0x1E: Secondary sector offset/count
+│         └── +0x3A: Tertiary sector offsets/counts
+│
+└── Level Data Segments (at sector offsets from header)
+    └── Segment TOC
+          ├── count: u32
+          └── entries[count]: {type, size, offset}
+                │
+                ├── Container Asset (0x258, 0x259, 0x190)
+                │   └── Sub-TOC
+                │         ├── count: u32
+                │         └── entries[count]: {flags, size, offset}
+                │               └── Raw sub-asset data
+                │
+                └── Raw Asset (0x25A, 0x064, 0x12C, etc.)
+                    └── Raw data (no sub-TOC)
+```
+
 ## Asset Types
 
 ### Primary Data (Level Geometry)
-| Type | Hex | Description | Typical Size |
-|------|-----|-------------|--------------|
-| 600 | 0x258 | Level graphics/world data | 500KB-1MB |
-| 601 | 0x259 | Collision/physics data | 100-300KB |
-| 602 | 0x25A | Palette/color data | 24-200 bytes |
+| Type | Hex | Structure | Description | Typical Size |
+|------|-----|-----------|-------------|--------------|
+| 600 | 0x258 | CONTAINER | Level graphics/world data | 500KB-1MB |
+| 601 | 0x259 | CONTAINER | Collision/layout data | 100-300KB |
+| 602 | 0x25A | RAW | Palette/color data (15-bit PSX) | 24-200 bytes |
 
 ### Secondary Data (Sprites)
-| Type | Hex | Description |
-|------|-----|-------------|
-| 100 | 0x064 | Header/index entry |
-| 101 | 0x065 | Secondary header (optional) |
-| 300 | 0x12C | Main sprite graphics data |
-| 301 | 0x12D | Sprite metadata |
-| 400 | 0x190 | Animation frame data |
-| 401 | 0x191 | Animation configuration |
+| Type | Hex | Structure | Description |
+|------|-----|-----------|-------------|
+| 100 | 0x064 | RAW | Header/index entry |
+| 101 | 0x065 | RAW | Secondary header (optional) |
+| 300 | 0x12C | RAW | Main sprite graphics data |
+| 301 | 0x12D | RAW | Sprite metadata |
+| 302 | 0x12E | RAW | Sprite metadata 2 |
+| 400 | 0x190 | CONTAINER | Animation frame data |
+| 401 | 0x191 | RAW | Animation configuration |
+| 601 | 0x259 | CONTAINER | Secondary layout data |
+| 602 | 0x25A | RAW | Secondary palette |
 
 ### Tertiary Data (Audio)
-| Type | Hex | Description |
-|------|-----|-------------|
-| 100 | 0x064 | Entry headers |
-| 200 | 0x0C8 | Sound effect data |
-| 201 | 0x0C9 | Sound headers/index |
-| 401 | 0x191 | Audio configuration |
+| Type | Hex | Structure | Description |
+|------|-----|-----------|-------------|
+| 100 | 0x064 | RAW | Entry headers |
+| 200 | 0x0C8 | RAW | Sound effect data |
+| 201 | 0x0C9 | RAW | Sound headers/index |
+| 401 | 0x191 | RAW | Audio configuration |
 | 500 | 0x1F4 | Music/sequence data |
 | 501 | 0x1F5 | Music configuration |
 
@@ -213,17 +274,28 @@ The sector files extracted to `sectors/` contain preview/loading graphics:
 
 ## Loading Process
 
-Based on decompiled code in `LevelDataParser.c`:
+Based on decompiled code in `LevelDataParser.c` and **verified via PCSX-Redux MCP debugging**:
 
-1. Game reads BLB header from sectors 0-1 (0x1000 bytes)
+1. Game reads BLB header from sectors 0-1 (0x1000 bytes) into RAM at 0x800AE3E0
 2. When loading a level:
-   - Look up level index in header at 0xF92
-   - Get sector offset/count from level metadata table
-   - Load primary data from BLB
-   - Parse TOC to locate asset pointers (0x258, 0x259, 0x25A)
+   - Read game mode from header+0xF36 (3=level mode, 6=special mode)
+   - Read level index from header+0xF92
+   - Look up level metadata at header + (index × 0x70)
+   - Get sector offset/count from bytes 0x00-0x03 of level entry
+   - Call `CdBLB_ReadSectors` to load primary data from BLB
+   - Parse TOC at loaded data to locate asset pointers:
+     - Entry count at offset 0x00 (u32)
+     - Each entry: type (u32), size (u32), offset (u32)
+   - Store pointers in LevelDataContext structure
 3. For secondary/tertiary:
    - Use secondary_offset/count and tertiary_offset/count from metadata
    - Parse similar TOC structures with different asset types
+
+**Verified level load example (Science Centre):**
+- Level index: 2
+- Primary sector offset: 0x0F2F (3887)
+- Primary sector count: 0x10A7 (4263)
+- Loaded 3 TOC entries totaling ~650KB of level data
 
 ## Code References
 
@@ -294,6 +366,50 @@ Example: 0x3FFF = white (R=31, G=31, B=15 in 5-bit each)
      - ctx+0x7C: Asset 0x25A pointer (palette)
 4. Rendering functions access ctx+0x70 to draw level graphics
 5. Physics functions access ctx+0x74 for collision detection
+
+### LevelDataContext Structure (VERIFIED via PCSX-Redux MCP)
+
+**NOTE: These addresses are for PAL version (SLES-01090).**
+
+The context structure at 0x8009DCC4 was verified by reading RAM during gameplay:
+
+```
+Offset  Size  Type    Field           Description
+------  ----  ----    -----           -----------
+0x00    0x5C  var     unk00-unk58     Cleared on level load (zero-initialized)
+0x5C    4     ptr     header          Pointer to BLB header (→ 0x800AE3E0)
+0x60    1     u8      headerOffset    Offset within header state arrays (0xF34 region)
+0x61    3     -       pad61           Padding
+0x64    4     ptr     loadCallback    CD load callback function (→ 0x80020848)
+0x68    4     ptr     tocPtr          Pointer to loaded TOC (after sector read)
+0x6C    4     ptr     dataOffset      Pointer to asset data after TOC
+0x70    4     ptr     asset258        Pointer to geometry/world data (type 0x258)
+0x74    4     ptr     asset259        Pointer to collision data (type 0x259)
+0x78    4     u32     asset259Size    Size of collision data in bytes
+0x7C    4     ptr     asset25A        Pointer to palette data (type 0x25A)
+```
+
+**Verified Runtime Example (Science Centre / SCIE, level index 2):**
+
+Captured while Science Centre was loaded in PCSX-Redux:
+
+| Field | Address/Value | Description |
+|-------|--------------|-------------|
+| ctx | 0x8009DCC4 | LevelDataContext base |
+| header | 0x800AE3E0 | BLB header in RAM |
+| headerOffset | 0x0E (14) | State window offset |
+| loadCallback | 0x80020848 | CD read function |
+| tocPtr | 0x800AF3E0 | Loaded TOC (3 entries) |
+| asset258 | 0x800AF408 | 524,212 bytes geometry |
+| asset259 | 0x8012F3BC | 126,256 bytes collision |
+| asset25A | 0x8014E0EC | 148 bytes palette |
+
+**TOC Contents for Science Centre:**
+```
+Entry 0: type=0x258, size=524,212 bytes, offset=0x28
+Entry 1: type=0x259, size=126,256 bytes, offset=0x07FFDC  
+Entry 2: type=0x25A, size=148 bytes, offset=0x09ED0C
+```
 
 ## Example Usage
 

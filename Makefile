@@ -386,7 +386,8 @@ clean-build:
 # Connect Ghidra debugger to localhost:3333
 # TODO: Use the flake's nixGLIntel wrapper instead of 'nix run' once we figure out
 #       how to make the overlay work with --impure for host GPU driver access
-ISO := disks/$(VERSION)/sles-01090.iso01.iso
+# Override with: make emu ISO=path/to/game.iso
+ISO ?= disks/$(VERSION)/sles-01090.iso01.iso
 ELF := $(BUILD_DIR)/$(PROJECT).elf
 GDB_PORT := 3333
 
@@ -395,8 +396,16 @@ GDB_PORT := 3333
 PCSX := nix run --impure github:nix-community/nixGL\#nixGLIntel -- pcsx-redux
 
 # Launch PCSX-Redux emulator with GDB server (runs in foreground)
+# NOTE: Web server must be enabled manually in GUI:
+#   Configuration > Emulation > Enable Web Server
 emu:
-	$(PCSX) -interpreter -debugger -gdb -iso $(ISO) -run -safe
+	$(PCSX) -interpreter -debugger -gdb -iso $(ISO) -run -fastboot
+
+# Run MCP server for Copilot integration
+# PCSX-Redux must have web server enabled on port 8080
+# Enable: Configuration > Emulation > Enable Web Server
+mcp-server:
+	python3 scripts/pcsx_mcp_server.py
 
 # Run a Lua script in PCSX-Redux
 # Usage: make lua SCRIPT=scripts/hello.lua

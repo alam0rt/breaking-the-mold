@@ -163,4 +163,134 @@ JP versions appear to be a subset of the full game with only 6 playable levels.
 
 ---
 
-*Last updated: January 2, 2026*
+## Level Metadata Unknown Fields Analysis
+
+Analysis performed on all 26 levels across PAL, NTSC-US, Beta, and JP versions.
+
+### Field 0x08: `entry1_offset_lo` - NOW CONFIRMED
+
+**Previous understanding:** "Low 16 bits of Entry[1].offset in primary TOC"
+
+**Actual meaning:** This is `TOC[6].offset` from the primary data blob (100% match on all 26 levels).
+
+**Verification method:**
+```python
+# For each level:
+toc6_offset = struct.unpack_from('<H', primary_data, 6*4)[0]
+assert toc6_offset == level.entry1_offset_lo  # Always true
+```
+
+**Recommendation:** Rename field to `toc6_offset` and update documentation.
+
+**Runtime verification:**
+```bash
+# Run the verification Lua script in PCSX-Redux:
+make lua SCRIPT=scripts/verify_toc_fields.lua
+
+# After level loads, check console output for TOC comparison
+```
+
+### Field 0x0A: `unknown_0A` - NOW CONFIRMED
+
+**Actual meaning:** This is `TOC[2].count` from the primary data blob (100% match on all 26 levels).
+
+**Verification method:**
+```python
+# For each level:
+toc2_count = struct.unpack_from('<H', primary_data, 2*4+2)[0]
+assert toc2_count == level.unknown_0A  # Always true
+```
+
+**Cross-version consistency:** Same values between PAL and JP for identical levels (PHRO, SCIE, TMPL, FINN, MEGA).
+
+**Recommendation:** Rename field to `toc2_count` and investigate what TOC[2] points to.
+
+**Runtime verification:**
+```bash
+# Run the verification Lua script in PCSX-Redux:
+make lua SCRIPT=scripts/verify_toc_fields.lua
+
+# The script will:
+# 1. Dump all level metadata fields
+# 2. After a level loads, compare field 0x0A with TOC[2].count
+# 3. Report PASS/FAIL for each verification
+```
+
+### Field 0x06: `unknown_06` - PARTIALLY UNDERSTOOD
+
+**Range:** 7-20
+
+**Observations:**
+- Does NOT directly match any single TOC entry count
+- Consistent across regions (PAL, NTSC-US, Beta have identical values)
+- Same values between PAL and JP for identical levels
+- Pattern: Bosses tend to have higher values (18-20), simple/special levels have lower (7-12)
+
+**Grouped by value:**
+| Value | Levels |
+|-------|--------|
+| 7 | FINN |
+| 9 | RUNN |
+| 10 | KLOG |
+| 12 | GLEN |
+| 13 | FOOD |
+| 14 | PHRO, SCIE, TMPL, GLID, WEED, SEVN, CRYS |
+| 15 | SNOW, CAVE, BRG1, EGGS, CLOU, SOAR, CSTL, EVIL |
+| 16 | MENU, BOIL, MOSS |
+| 18 | MEGA, WIZZ |
+| 20 | HEAD |
+
+**Hypothesis:** May represent total asset complexity, memory requirements, or a computed value from multiple TOC entries.
+
+### Field 0x04: `unknown_04` - UNKNOWN
+
+**Range:** 776-65,240 (large u16 values)
+
+**Observations:**
+- Values differ slightly between PAL and JP for same levels (build-dependent)
+- Points to valid data within primary blob (not garbage)
+- Does NOT match any TOC entry offset directly
+- Data at this offset varies (no consistent structure detected)
+
+**Hypothesis:** Byte offset to specific asset data within primary blob (palette? collision map? geometry start?). Needs runtime tracing to confirm.
+
+### Field 0x0D: `level_flag` - PARTIALLY UNDERSTOOD
+
+**Values:** 0 or 1 only
+
+**Pattern analysis:**
+| Flag | Levels |
+|------|--------|
+| flag=0, tert=1 | FINN, MEGA, HEAD, GLEN, WIZZ, KLOG (all bosses + special) |
+| flag=0, tert=2 | RUNN |
+| flag=0, tert=3 | PHRO |
+| flag=0, tert=4 | SOAR |
+| flag=0, tert=5 | EGGS, SEVN, CSTL, EVIL |
+| flag=0, tert=6 | SNOW, CLOU, CRYS, MOSS |
+| flag=1, tert=4 | TMPL, FOOD, WEED |
+| flag=1, tert=5 | SCIE, BRG1, CAVE |
+| flag=1, tert=6 | MENU, BOIL, GLID |
+
+**Key observation:** All bosses have `flag=0` and `tert_block_count=1`.
+
+**Hypothesis:** May indicate level type (boss vs regular) or loading behavior. Needs runtime confirmation.
+
+### Groupings by (0x06, 0x0A) Pairs
+
+Levels with identical `(unknown_06, unknown_0A)` pairs often share characteristics:
+
+| Pair | Levels | Notes |
+|------|--------|-------|
+| (14, 7) | PHRO, SCIE, TMPL | First 3 gameplay worlds |
+| (14, 9) | GLID, WEED, SEVN, CRYS | Ynt worlds + secret level |
+| (15, 9) | SNOW, CAVE, CLOU, CSTL | Ice/castle themed |
+| (15, 8) | BRG1, EGGS | Bridge + Eggs |
+| (16, 9) | BOIL, MOSS | Industrial themed |
+| (18, 15) | MEGA | Boss: Shriney Guard |
+| (20, 16) | HEAD | Boss: Joe-Head-Joe |
+
+This suggests these fields may relate to shared asset characteristics or tileset groupings.
+
+---
+
+*Last updated: January 3, 2026*

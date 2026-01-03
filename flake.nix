@@ -75,6 +75,7 @@
 
             # Python
             pythonEnv
+            uv
 
             # Utilities
             git

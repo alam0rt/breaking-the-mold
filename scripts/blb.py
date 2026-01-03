@@ -216,26 +216,56 @@ GameState Structure (runtime, not in BLB file):
     Sliding Window State Machine:
     -----------------------------
     The game tracks multiple concurrent states using a sliding window pattern.
-    Each "slot" uses paired bytes at offsets determined by stateOffset:
-      - Mode byte: header[0xF36 + stateOffset]
-      - Index byte: header[0xF92 + stateOffset]
+    Each "slot" uses paired bytes at offsets determined by arrayPosition:
+      - Mode byte: header[0xF36 + arrayPosition]
+      - Index byte: header[0xF92 + arrayPosition]
+    
+    VERIFIED FORMULA (via PCSX-Redux MCP):
+      arrayPosition = headerOffset - 0x0A
+      levelIndex = header[0xF92 + arrayPosition]
+      levelEntry = header + (levelIndex * 0x70)
+    
+    Where headerOffset is read from LevelDataContext at ctx+0x60.
+    The base offset 0x0A corresponds to MENU being loaded.
     
     Mode Values (observed from trace):
       1 = Movie playback mode
       2 = Credits display mode
+      3 = Level mode (use level metadata table)
       4 = Sector/asset loading mode
       5 = Initial sector loading mode (similar to 4)
+      6 = Special mode (use sector table at 0xECC)
     
-    Example state progression during boot:
-      stateOffset=0, mode=5, index=0  → Initial sector load
-      stateOffset=1, mode=5, index=1  → Second sector load
-      stateOffset=2, mode=1, index=0  → Movie 0 (first intro)
-      stateOffset=3, mode=1, index=1  → Movie 1 (second intro)
-      stateOffset=4, mode=1, index=2  → Movie 2 (third intro)
-      stateOffset=5, mode=1, index=3  → Movie 3 (fourth intro)
-      stateOffset=9, mode=4, index=3  → Sector/level loading
-      stateOffset=13, mode=4, index=5 → Menu/level data
+    Verified examples:
+      headerOffset=0x0A, arrayPosition=0, levelIndex=0  → MENU
+      headerOffset=0x20, arrayPosition=22, levelIndex=9 → FOOD
 
+
+LevelDataContext Structure (verified via emulator MCP):
+========================================================
+    NOTE: These addresses are for PAL version (SLES-01090).
+    
+    Offset  Size  Type    Field           Description
+    ------  ----  ----    -----           -----------
+    0x00    0x5C  var     unk00-unk58     Cleared on level load
+    0x5C    4     ptr     header          Pointer to BLB header (→ 0x800AE3E0)
+    0x60    1     u8      headerOffset    Offset within header state array
+    0x61    3     -       pad61           Padding
+    0x64    4     ptr     loadCallback    CD load callback function (→ 0x80020848)
+    0x68    4     ptr     tocPtr          Pointer to loaded TOC
+    0x6C    4     ptr     dataOffset      Pointer to data after TOC
+    0x70    4     ptr     asset258        Pointer to geometry data (type 0x258)
+    0x74    4     ptr     asset259        Pointer to collision data (type 0x259)
+    0x78    4     u32     asset259Size    Size of collision data in bytes
+    0x7C    4     ptr     asset25A        Pointer to palette data (type 0x25A)
+
+    Verified runtime example (Science Centre / SCIE, level index 2):
+      ctx @ 0x8009DCC4:
+        header     = 0x800AE3E0 (BLB header)
+        tocPtr     = 0x800AF3E0 (loaded TOC, 3 entries)
+        asset258   = 0x800AF408 (524,212 bytes geometry)
+        asset259   = 0x8012F3BC (126,256 bytes collision)
+        asset25A   = 0x8014E0EC (148 bytes palette)
 
 Known Functions (from trace analysis):
 ======================================

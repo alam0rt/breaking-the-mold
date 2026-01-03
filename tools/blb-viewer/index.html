@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLB Viewer - Skullmonkeys Asset Browser</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-panel: #16213e;
+            --bg-hover: #0f3460;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-dim: #533a3e;
+            --border: #2a2a4a;
+            --tree-line: #4a4a6a;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background: var(--bg-panel);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        #file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #ff6b6b;
+        }
+        
+        #file-name {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0; /* Critical for nested flex scroll */
+        }
+        
+        /* Tree Panel */
+        .tree-panel {
+            width: 350px;
+            min-width: 250px;
+            max-width: 350px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .tree-panel h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tree-node {
+            user-select: none;
+        }
+        
+        .tree-node-header {
+            display: flex;
+            align-items: center;
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+            gap: 0.5rem;
+        }
+        
+        .tree-node-header:hover {
+            background: var(--bg-hover);
+        }
+        
+        .tree-node-header.selected {
+            background: var(--accent-dim);
+        }
+        
+        .tree-toggle {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            transition: transform 0.15s;
+        }
+        
+        .tree-toggle.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .tree-toggle.hidden {
+            visibility: hidden;
+        }
+        
+        .tree-icon {
+            font-size: 0.9rem;
+        }
+        
+        .tree-label {
+            flex: 1;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tree-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        
+        .tree-children {
+            margin-left: 1.25rem;
+            border-left: 1px solid var(--tree-line);
+            display: none;
+        }
+        
+        .tree-children.expanded {
+            display: block;
+        }
+        
+        /* Viewer Panel */
+        .viewer-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0; /* Prevent flex blowout */
+            min-height: 0; /* Prevent flex blowout */
+        }
+        
+        .viewer-toolbar {
+            background: var(--bg-panel);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            flex-shrink: 0; /* Don't shrink toolbar */
+        }
+        
+        .viewer-toolbar label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .viewer-toolbar select {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .viewer-info {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-family: monospace;
+        }
+        
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0; /* Critical for flex overflow */
+        }
+        
+        /* Binary Visualization */
+        .binvis-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            padding: 1rem;
+            min-width: 0; /* Prevent flex blowout */
+            min-height: 0; /* Prevent flex blowout */
+        }
+        
+        #binvis-canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            border: 1px solid var(--border);
+            cursor: crosshair;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* Hex View */
+        .hex-panel {
+            width: 400px;
+            min-width: 300px;
+            max-width: 400px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0; /* Don't shrink hex panel */
+        }
+        
+        .hex-panel h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        
+        .hex-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            min-height: 0; /* Critical for scroll to work */
+        }
+        
+        .hex-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .hex-offset {
+            color: var(--accent);
+            min-width: 70px;
+        }
+        
+        .hex-bytes {
+            flex: 1;
+            word-spacing: 0.25em;
+        }
+        
+        .hex-bytes span {
+            display: inline-block;
+            width: 2ch;
+            text-align: center;
+        }
+        
+        .hex-bytes span:hover {
+            background: var(--accent);
+            color: white;
+            border-radius: 2px;
+        }
+        
+        .hex-ascii {
+            color: var(--text-secondary);
+            min-width: 140px;
+        }
+        
+        .byte-null { color: #666; }
+        .byte-ascii { color: #4fc3f7; }
+        .byte-ctrl { color: #81c784; }
+        .byte-high { color: #ef5350; }
+        .byte-ff { color: #fff; }
+        
+        /* Color Legend */
+        .legend {
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎮 BLB Viewer</h1>
+        <div id="file-input-wrapper">
+            <label class="btn" for="file-input">Open BLB File</label>
+            <input type="file" id="file-input" accept=".blb,.BLB">
+            <span id="file-name">No file loaded</span>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <aside class="tree-panel" id="tree-panel">
+            <h2>Structure</h2>
+            <div id="tree-root">
+                <div class="empty-state" style="padding: 2rem 0;">
+                    <p>Load a BLB file to view its structure</p>
+                </div>
+            </div>
+        </aside>
+        
+        <main class="viewer-panel">
+            <div class="viewer-toolbar">
+                <label>Color Scheme:</label>
+                <select id="color-scheme">
+                    <option value="byteclass">Byte Class</option>
+                    <option value="magnitude">Magnitude</option>
+                    <option value="detail">Detail (Hilbert)</option>
+                </select>
+                
+                <label>Layout:</label>
+                <select id="layout-mode">
+                    <option value="hilbert">Hilbert Curve</option>
+                    <option value="linear">Linear</option>
+                </select>
+                
+                <div class="viewer-info" id="viewer-info"></div>
+            </div>
+            
+            <div class="viewer-content">
+                <div class="binvis-container" id="binvis-container">
+                    <div class="empty-state" id="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                        </svg>
+                        <h2>No Asset Selected</h2>
+                        <p>Select an asset from the tree to visualize its binary content</p>
+                    </div>
+                    <canvas id="binvis-canvas" style="display: none;"></canvas>
+                </div>
+                
+                <aside class="hex-panel" id="hex-panel" style="display: none;">
+                    <h3>Hex View</h3>
+                    <div class="hex-content" id="hex-content"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #666;"></div>
+                            <span>0x00</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4fc3f7;"></div>
+                            <span>ASCII</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #81c784;"></div>
+                            <span>Control</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ef5350;"></div>
+                            <span>High</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fff;"></div>
+                            <span>0xFF</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    // ============================================================================
+    // BLB Parser - JavaScript port of scripts/blb.py
+    // ============================================================================
+    
+    const SECTOR_SIZE = 2048;
+    const HEADER_SIZE = 4096;
+    const LEVEL_ENTRY_SIZE = 0x70;
+    const MOVIE_ENTRY_SIZE = 0x1C;
+    const SECTOR_ENTRY_SIZE = 0x10;
+    
+    class BLBFile {
+        constructor(arrayBuffer) {
+            this.buffer = arrayBuffer;
+            this.data = new Uint8Array(arrayBuffer);
+            this.view = new DataView(arrayBuffer);
+            
+            // Parse header
+            this.levelCount = this.data[0xF31];
+            this.assetCount = this.data[0xF32];
+            this.sectorTableCount = this.data[0xF33];
+            
+            // Parse levels
+            this.levels = [];
+            for (let i = 0; i < this.levelCount; i++) {
+                this.levels.push(this.parseLevelEntry(i));
+            }
+            
+            // Parse movies
+            this.movies = [];
+            for (let i = 0; i < this.assetCount; i++) {
+                this.movies.push(this.parseMovieEntry(i));
+            }
+            
+            // Parse sector table
+            this.sectorEntries = [];
+            for (let i = 0; i < this.sectorTableCount; i++) {
+                this.sectorEntries.push(this.parseSectorEntry(i));
+            }
+        }
+        
+        parseLevelEntry(index) {
+            const offset = index * LEVEL_ENTRY_SIZE;
+            
+            // Read level ID (4 chars at offset 0x56)
+            let levelId = '';
+            for (let i = 0; i < 4; i++) {
+                const c = this.data[offset + 0x56 + i];
+                if (c === 0) break;
+                levelId += String.fromCharCode(c);
+            }
+            
+            // Read level name (at offset 0x5B)
+            let name = '';
+            for (let i = 0; i < 20; i++) {
+                const c = this.data[offset + 0x5B + i];
+                if (c === 0) break;
+                name += String.fromCharCode(c);
+            }
+            
+            return {
+                index,
+                levelId,
+                name,
+                primarySectorOffset: this.view.getUint16(offset + 0x00, true),
+                primarySectorCount: this.view.getUint16(offset + 0x02, true),
+                secondarySectorOffset: this.view.getUint16(offset + 0x1E, true),
+                secondarySectorCount: this.view.getUint16(offset + 0x2C, true),
+                tertiaryBlockCount: this.view.getUint16(offset + 0x0E, true),
+                tertiarySectorOffsets: [
+                    this.view.getUint16(offset + 0x3A, true),
+                    this.view.getUint16(offset + 0x3C, true),
+                    this.view.getUint16(offset + 0x3E, true),
+                    this.view.getUint16(offset + 0x40, true),
+                    this.view.getUint16(offset + 0x42, true),
+                    this.view.getUint16(offset + 0x44, true),
+                ],
+                tertiarySectorCounts: [
+                    this.view.getUint16(offset + 0x48, true),
+                    this.view.getUint16(offset + 0x4A, true),
+                    this.view.getUint16(offset + 0x4C, true),
+                    this.view.getUint16(offset + 0x4E, true),
+                    this.view.getUint16(offset + 0x50, true),
+                    this.view.getUint16(offset + 0x52, true),
+                ],
+                metadataOffset: offset,
+                metadataSize: LEVEL_ENTRY_SIZE,
+            };
+        }
+        
+        parseMovieEntry(index) {
+            const offset = 0xB60 + index * MOVIE_ENTRY_SIZE;
+            
+            let movieId = '';
+            for (let i = 0; i < 4; i++) {
+                const c = this.data[offset + 0x04 + i];
+                if (c === 0) break;
+                movieId += String.fromCharCode(c);
+            }
+            
+            let filename = '';
+            for (let i = 0; i < 15; i++) {
+                const c = this.data[offset + 0x0C + i];
+                if (c === 0) break;
+                filename += String.fromCharCode(c);
+            }
+            
+            return {
+                index,
+                movieId,
+                filename,
+                sectorCount: this.view.getUint16(offset + 0x02, true),
+                metadataOffset: offset,
+                metadataSize: MOVIE_ENTRY_SIZE,
+            };
+        }
+        
+        parseSectorEntry(index) {
+            const offset = 0xCD0 + index * SECTOR_ENTRY_SIZE;
+            
+            let code = '';
+            for (let i = 0; i < 4; i++) {
+                const c = this.data[offset + 0x03 + i];
+                if (c === 0) break;
+                code += String.fromCharCode(c);
+            }
+            
+            return {
+                index,
+                levelIndex: this.data[offset + 0x00],
+                entryFlags: this.data[offset + 0x01],
+                code,
+                sectorOffset: this.view.getUint16(offset + 0x0C, true),
+                sectorCount: this.view.getUint16(offset + 0x0E, true),
+                metadataOffset: offset,
+                metadataSize: SECTOR_ENTRY_SIZE,
+            };
+        }
+        
+        // Read segment data and parse TOC
+        readSegment(sectorOffset, sectorCount) {
+            const byteOffset = sectorOffset * SECTOR_SIZE;
+            const byteLength = sectorCount * SECTOR_SIZE;
+            
+            if (byteOffset + byteLength > this.data.length) {
+                return null;
+            }
+            
+            const segmentData = this.data.slice(byteOffset, byteOffset + byteLength);
+            return this.parseTOC(segmentData, byteOffset);
+        }
+        
+        // Parse TOC structure from segment data
+        parseTOC(segmentData, absoluteOffset = 0) {
+            if (segmentData.length < 4) return null;
+            
+            const view = new DataView(segmentData.buffer, segmentData.byteOffset);
+            const count = view.getUint32(0, true);
+            
+            // Sanity check
+            if (count > 100 || count * 12 + 4 > segmentData.length) {
+                return null;
+            }
+            
+            const entries = [];
+            for (let i = 0; i < count; i++) {
+                const entryOffset = 4 + i * 12;
+                const type = view.getUint32(entryOffset + 0, true);
+                const size = view.getUint32(entryOffset + 4, true);
+                const offset = view.getUint32(entryOffset + 8, true);
+                
+                // Check if this is a container type (has sub-TOC)
+                const isContainer = [0x258, 0x259, 0x190].includes(type);
+                
+                let subEntries = null;
+                if (isContainer && offset < segmentData.length && size > 4) {
+                    subEntries = this.parseSubTOC(segmentData, offset, size);
+                }
+                
+                entries.push({
+                    type,
+                    typeName: this.getTypeName(type),
+                    size,
+                    offset,
+                    absoluteOffset: absoluteOffset + offset,
+                    isContainer,
+                    subEntries,
+                });
+            }
+            
+            return {
+                count,
+                tocSize: 4 + count * 12,
+                entries,
+            };
+        }
+        
+        parseSubTOC(parentData, offset, maxSize) {
+            if (offset + 4 > parentData.length) return null;
+            
+            const view = new DataView(parentData.buffer, parentData.byteOffset + offset);
+            const count = view.getUint32(0, true);
+            
+            if (count > 50 || count * 12 + 4 > maxSize) {
+                return null;
+            }
+            
+            const entries = [];
+            for (let i = 0; i < count; i++) {
+                const entryOffset = 4 + i * 12;
+                if (entryOffset + 12 > maxSize) break;
+                
+                entries.push({
+                    flags: view.getUint32(entryOffset + 0, true),
+                    size: view.getUint32(entryOffset + 4, true),
+                    offset: view.getUint32(entryOffset + 8, true),
+                });
+            }
+            
+            return entries;
+        }
+        
+        getTypeName(type) {
+            const names = {
+                0x258: 'Geometry',
+                0x259: 'Collision',
+                0x25A: 'Palette',
+                0x064: 'Header',
+                0x12C: 'Sprites',
+                0x12D: 'SpriteMeta',
+                0x12E: 'SpriteMeta2',
+                0x190: 'Animation',
+                0x191: 'AnimConfig',
+            };
+            return names[type] || `Type_${type.toString(16).toUpperCase()}`;
+        }
+        
+        // Get raw bytes for a range
+        getBytes(offset, length) {
+            if (offset + length > this.data.length) {
+                length = this.data.length - offset;
+            }
+            return this.data.slice(offset, offset + length);
+        }
+    }
+    
+    // ============================================================================
+    // Binary Visualization (binvis-style)
+    // ============================================================================
+    
+    // Hilbert curve implementation
+    function hilbertD2xy(n, d) {
+        let rx, ry, s, t = d;
+        let x = 0, y = 0;
+        for (s = 1; s < n; s *= 2) {
+            rx = 1 & (t / 2);
+            ry = 1 & (t ^ rx);
+            if (ry === 0) {
+                if (rx === 1) {
+                    x = s - 1 - x;
+                    y = s - 1 - y;
+                }
+                [x, y] = [y, x];
+            }
+            x += s * rx;
+            y += s * ry;
+            t = Math.floor(t / 4);
+        }
+        return [x, y];
+    }
+    
+    // Color schemes
+    const ColorSchemes = {
+        byteclass: (byte) => {
+            if (byte === 0) return '#000000';
+            if (byte === 255) return '#ffffff';
+            if (byte >= 32 && byte <= 126) return '#4fc3f7'; // ASCII printable
+            if (byte === 9 || byte === 10 || byte === 13) return '#4fc3f7'; // Tab, LF, CR
+            if (byte < 32) return '#81c784'; // Control chars
+            return '#ef5350'; // High bytes
+        },
+        
+        magnitude: (byte) => {
+            // Purple-magenta gradient
+            const t = byte / 255;
+            const r = Math.floor(t * 144);
+            const g = 0;
+            const b = Math.floor(94 + t * 161);
+            return `rgb(${r}, ${g}, ${b})`;
+        },
+        
+        detail: (byte) => {
+            // Hilbert curve through color cube (simplified)
+            const hue = (byte / 255) * 360;
+            const sat = 70;
+            const lum = 20 + (byte / 255) * 60;
+            return `hsl(${hue}, ${sat}%, ${lum}%)`;
+        }
+    };
+    
+    class BinVis {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.data = null;
+            this.colorScheme = 'byteclass';
+            this.layoutMode = 'hilbert';
+        }
+        
+        setData(data) {
+            this.data = data;
+            this.render();
+        }
+        
+        setColorScheme(scheme) {
+            this.colorScheme = scheme;
+            if (this.data) this.render();
+        }
+        
+        setLayoutMode(mode) {
+            this.layoutMode = mode;
+            if (this.data) this.render();
+        }
+        
+        render() {
+            if (!this.data || this.data.length === 0) return;
+            
+            const colorFn = ColorSchemes[this.colorScheme] || ColorSchemes.byteclass;
+            
+            if (this.layoutMode === 'hilbert') {
+                this.renderHilbert(colorFn);
+            } else {
+                this.renderLinear(colorFn);
+            }
+        }
+        
+        renderHilbert(colorFn) {
+            // Calculate dimensions for Hilbert curve
+            // Find next power of 2 that can fit all bytes
+            const totalBytes = this.data.length;
+            let order = 1;
+            while ((1 << (order * 2)) < totalBytes) order++;
+            
+            const size = 1 << order;
+            const pixelSize = Math.max(1, Math.min(4, Math.floor(512 / size)));
+            
+            this.canvas.width = size * pixelSize;
+            this.canvas.height = size * pixelSize;
+            
+            const imageData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+            
+            for (let i = 0; i < totalBytes; i++) {
+                const [x, y] = hilbertD2xy(size, i);
+                const color = this.parseColor(colorFn(this.data[i]));
+                
+                // Fill pixel block
+                for (let py = 0; py < pixelSize; py++) {
+                    for (let px = 0; px < pixelSize; px++) {
+                        const idx = ((y * pixelSize + py) * this.canvas.width + (x * pixelSize + px)) * 4;
+                        imageData.data[idx] = color.r;
+                        imageData.data[idx + 1] = color.g;
+                        imageData.data[idx + 2] = color.b;
+                        imageData.data[idx + 3] = 255;
+                    }
+                }
+            }
+            
+            this.ctx.putImageData(imageData, 0, 0);
+        }
+        
+        renderLinear(colorFn) {
+            // Linear layout - 256 bytes per row
+            const width = 256;
+            const height = Math.ceil(this.data.length / width);
+            const pixelSize = Math.max(1, Math.min(4, Math.floor(1024 / width)));
+            
+            this.canvas.width = width * pixelSize;
+            this.canvas.height = Math.min(height * pixelSize, 2048);
+            
+            const imageData = this.ctx.createImageData(this.canvas.width, this.canvas.height);
+            
+            for (let i = 0; i < this.data.length && i < width * Math.floor(this.canvas.height / pixelSize); i++) {
+                const x = i % width;
+                const y = Math.floor(i / width);
+                const color = this.parseColor(colorFn(this.data[i]));
+                
+                for (let py = 0; py < pixelSize; py++) {
+                    for (let px = 0; px < pixelSize; px++) {
+                        const idx = ((y * pixelSize + py) * this.canvas.width + (x * pixelSize + px)) * 4;
+                        imageData.data[idx] = color.r;
+                        imageData.data[idx + 1] = color.g;
+                        imageData.data[idx + 2] = color.b;
+                        imageData.data[idx + 3] = 255;
+                    }
+                }
+            }
+            
+            this.ctx.putImageData(imageData, 0, 0);
+        }
+        
+        parseColor(colorStr) {
+            if (colorStr.startsWith('#')) {
+                const hex = colorStr.slice(1);
+                return {
+                    r: parseInt(hex.slice(0, 2), 16),
+                    g: parseInt(hex.slice(2, 4), 16),
+                    b: parseInt(hex.slice(4, 6), 16)
+                };
+            } else if (colorStr.startsWith('rgb')) {
+                const match = colorStr.match(/(\d+)/g);
+                return {
+                    r: parseInt(match[0]),
+                    g: parseInt(match[1]),
+                    b: parseInt(match[2])
+                };
+            } else if (colorStr.startsWith('hsl')) {
+                // Convert HSL to RGB
+                const match = colorStr.match(/[\d.]+/g);
+                const h = parseFloat(match[0]) / 360;
+                const s = parseFloat(match[1]) / 100;
+                const l = parseFloat(match[2]) / 100;
+                
+                let r, g, b;
+                if (s === 0) {
+                    r = g = b = l;
+                } else {
+                    const hue2rgb = (p, q, t) => {
+                        if (t < 0) t += 1;
+                        if (t > 1) t -= 1;
+                        if (t < 1/6) return p + (q - p) * 6 * t;
+                        if (t < 1/2) return q;
+                        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                        return p;
+                    };
+                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                    const p = 2 * l - q;
+                    r = hue2rgb(p, q, h + 1/3);
+                    g = hue2rgb(p, q, h);
+                    b = hue2rgb(p, q, h - 1/3);
+                }
+                return {
+                    r: Math.round(r * 255),
+                    g: Math.round(g * 255),
+                    b: Math.round(b * 255)
+                };
+            }
+            return { r: 0, g: 0, b: 0 };
+        }
+    }
+    
+    // ============================================================================
+    // Hex View
+    // ============================================================================
+    
+    function renderHexView(container, data, maxBytes = 4096) {
+        const displayData = data.slice(0, maxBytes);
+        let html = '';
+        
+        for (let i = 0; i < displayData.length; i += 16) {
+            const rowBytes = displayData.slice(i, Math.min(i + 16, displayData.length));
+            
+            // Offset
+            html += `<div class="hex-row">`;
+            html += `<span class="hex-offset">${i.toString(16).padStart(8, '0').toUpperCase()}</span>`;
+            
+            // Hex bytes
+            html += `<span class="hex-bytes">`;
+            for (let j = 0; j < rowBytes.length; j++) {
+                const byte = rowBytes[j];
+                const cls = getByteClass(byte);
+                html += `<span class="${cls}" title="Offset: 0x${(i+j).toString(16)}, Value: ${byte}">${byte.toString(16).padStart(2, '0').toUpperCase()}</span>`;
+            }
+            // Pad if row is incomplete
+            for (let j = rowBytes.length; j < 16; j++) {
+                html += `<span>  </span>`;
+            }
+            html += `</span>`;
+            
+            // ASCII
+            html += `<span class="hex-ascii">`;
+            for (let j = 0; j < rowBytes.length; j++) {
+                const byte = rowBytes[j];
+                if (byte >= 32 && byte <= 126) {
+                    html += String.fromCharCode(byte);
+                } else {
+                    html += '.';
+                }
+            }
+            html += `</span>`;
+            
+            html += `</div>`;
+        }
+        
+        if (data.length > maxBytes) {
+            html += `<div style="padding: 1rem; color: var(--text-secondary);">... ${data.length - maxBytes} more bytes</div>`;
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function getByteClass(byte) {
+        if (byte === 0) return 'byte-null';
+        if (byte === 255) return 'byte-ff';
+        if (byte >= 32 && byte <= 126) return 'byte-ascii';
+        if (byte < 32) return 'byte-ctrl';
+        return 'byte-high';
+    }
+    
+    // ============================================================================
+    // Tree View
+    // ============================================================================
+    
+    function buildTree(blb) {
+        const root = document.createElement('div');
+        
+        // Header node
+        root.appendChild(createTreeNode({
+            label: 'Header',
+            icon: '📄',
+            meta: '4,096 bytes',
+            children: [
+                { label: `Level Count: ${blb.levelCount}`, icon: '🔢' },
+                { label: `Asset Count: ${blb.assetCount}`, icon: '🔢' },
+                { label: `Sector Entries: ${blb.sectorTableCount}`, icon: '🔢' },
+            ],
+            data: { type: 'header', offset: 0, size: HEADER_SIZE }
+        }));
+        
+        // Levels node
+        const levelsChildren = blb.levels.map(level => {
+            const levelChildren = [];
+            
+            // Primary segment
+            if (level.primarySectorCount > 0) {
+                const toc = blb.readSegment(level.primarySectorOffset, level.primarySectorCount);
+                levelChildren.push(createSegmentNode('Primary', level.primarySectorOffset, level.primarySectorCount, toc, blb));
+            }
+            
+            // Secondary segment
+            if (level.secondarySectorCount > 0) {
+                const toc = blb.readSegment(level.secondarySectorOffset, level.secondarySectorCount);
+                levelChildren.push(createSegmentNode('Secondary', level.secondarySectorOffset, level.secondarySectorCount, toc, blb));
+            }
+            
+            // Tertiary segments
+            for (let i = 0; i < level.tertiaryBlockCount; i++) {
+                if (level.tertiarySectorCounts[i] > 0) {
+                    const toc = blb.readSegment(level.tertiarySectorOffsets[i], level.tertiarySectorCounts[i]);
+                    levelChildren.push(createSegmentNode(`Tertiary[${i}]`, level.tertiarySectorOffsets[i], level.tertiarySectorCounts[i], toc, blb));
+                }
+            }
+            
+            return {
+                label: `${level.levelId || '????'} - ${level.name || 'Unknown'}`,
+                icon: '🎮',
+                meta: `${level.primarySectorCount + level.secondarySectorCount} sectors`,
+                children: levelChildren,
+                data: { type: 'level-meta', offset: level.metadataOffset, size: level.metadataSize }
+            };
+        });
+        
+        root.appendChild(createTreeNode({
+            label: 'Levels',
+            icon: '📁',
+            meta: `${blb.levelCount} levels`,
+            children: levelsChildren.map(c => createTreeNode(c))
+        }));
+        
+        // Movies node
+        const moviesChildren = blb.movies.filter(m => m.movieId).map(movie => ({
+            label: `${movie.movieId} - ${movie.filename}`,
+            icon: '🎬',
+            meta: `${movie.sectorCount} sectors`,
+            data: { type: 'movie-meta', offset: movie.metadataOffset, size: movie.metadataSize }
+        }));
+        
+        if (moviesChildren.length > 0) {
+            root.appendChild(createTreeNode({
+                label: 'Movies',
+                icon: '📁',
+                meta: `${moviesChildren.length} movies`,
+                children: moviesChildren.map(c => createTreeNode(c))
+            }));
+        }
+        
+        return root;
+    }
+    
+    function createSegmentNode(name, sectorOffset, sectorCount, toc, blb) {
+        const byteOffset = sectorOffset * SECTOR_SIZE;
+        const byteSize = sectorCount * SECTOR_SIZE;
+        
+        const children = [];
+        
+        if (toc && toc.entries) {
+            toc.entries.forEach((entry, idx) => {
+                const assetChildren = [];
+                
+                if (entry.subEntries) {
+                    entry.subEntries.forEach((sub, subIdx) => {
+                        assetChildren.push({
+                            label: `Sub[${subIdx}]`,
+                            icon: '📦',
+                            meta: `${formatSize(sub.size)} @ 0x${sub.offset.toString(16)}`,
+                            data: { 
+                                type: 'sub-asset',
+                                offset: byteOffset + entry.offset + sub.offset,
+                                size: sub.size,
+                                flags: sub.flags
+                            }
+                        });
+                    });
+                }
+                
+                children.push({
+                    label: `${entry.typeName}`,
+                    icon: entry.isContainer ? '📦' : '📄',
+                    meta: `${formatSize(entry.size)}`,
+                    children: assetChildren.length > 0 ? assetChildren.map(c => createTreeNode(c)) : undefined,
+                    data: { 
+                        type: 'asset',
+                        offset: byteOffset + entry.offset,
+                        size: entry.size,
+                        assetType: entry.type,
+                        isContainer: entry.isContainer
+                    }
+                });
+            });
+        }
+        
+        return {
+            label: name,
+            icon: '📂',
+            meta: `${formatSize(byteSize)}`,
+            children: children.length > 0 ? children.map(c => createTreeNode(c)) : undefined,
+            data: { type: 'segment', offset: byteOffset, size: byteSize }
+        };
+    }
+    
+    function createTreeNode(config) {
+        const { label, icon, meta, children, data } = config;
+        
+        const node = document.createElement('div');
+        node.className = 'tree-node';
+        
+        const header = document.createElement('div');
+        header.className = 'tree-node-header';
+        
+        // Toggle arrow
+        const toggle = document.createElement('span');
+        toggle.className = 'tree-toggle' + (children ? '' : ' hidden');
+        toggle.textContent = '▶';
+        header.appendChild(toggle);
+        
+        // Icon
+        const iconEl = document.createElement('span');
+        iconEl.className = 'tree-icon';
+        iconEl.textContent = icon || '📄';
+        header.appendChild(iconEl);
+        
+        // Label
+        const labelEl = document.createElement('span');
+        labelEl.className = 'tree-label';
+        labelEl.textContent = label;
+        header.appendChild(labelEl);
+        
+        // Meta
+        if (meta) {
+            const metaEl = document.createElement('span');
+            metaEl.className = 'tree-meta';
+            metaEl.textContent = meta;
+            header.appendChild(metaEl);
+        }
+        
+        node.appendChild(header);
+        
+        // Children container
+        if (children) {
+            const childContainer = document.createElement('div');
+            childContainer.className = 'tree-children';
+            
+            if (Array.isArray(children)) {
+                children.forEach(child => {
+                    if (child instanceof HTMLElement) {
+                        childContainer.appendChild(child);
+                    } else {
+                        childContainer.appendChild(createTreeNode(child));
+                    }
+                });
+            }
+            
+            node.appendChild(childContainer);
+            
+            // Toggle expand/collapse
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggle.classList.toggle('expanded');
+                childContainer.classList.toggle('expanded');
+            });
+        }
+        
+        // Selection handling
+        if (data) {
+            header.addEventListener('click', () => {
+                selectNode(header, data);
+            });
+        }
+        
+        return node;
+    }
+    
+    function formatSize(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    }
+    
+    // ============================================================================
+    // Application State
+    // ============================================================================
+    
+    let currentBlb = null;
+    let binvis = null;
+    let selectedHeader = null;
+    
+    function selectNode(header, data) {
+        // Update selection UI
+        if (selectedHeader) {
+            selectedHeader.classList.remove('selected');
+        }
+        header.classList.add('selected');
+        selectedHeader = header;
+        
+        // Show viewer
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('binvis-canvas').style.display = 'block';
+        document.getElementById('hex-panel').style.display = 'flex';
+        
+        // Get data bytes
+        const bytes = currentBlb.getBytes(data.offset, data.size);
+        
+        // Update viewer info
+        document.getElementById('viewer-info').textContent = 
+            `Offset: 0x${data.offset.toString(16).toUpperCase()} | Size: ${formatSize(data.size)}`;
+        
+        // Render visualization
+        binvis.setData(bytes);
+        
+        // Render hex view
+        renderHexView(document.getElementById('hex-content'), bytes);
+    }
+    
+    // ============================================================================
+    // Initialization
+    // ============================================================================
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        binvis = new BinVis(document.getElementById('binvis-canvas'));
+        
+        // File input handler
+        document.getElementById('file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('file-name').textContent = file.name;
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                currentBlb = new BLBFile(arrayBuffer);
+                
+                // Build tree
+                const treeRoot = document.getElementById('tree-root');
+                treeRoot.innerHTML = '';
+                treeRoot.appendChild(buildTree(currentBlb));
+                
+                // Reset viewer
+                document.getElementById('empty-state').style.display = 'flex';
+                document.getElementById('binvis-canvas').style.display = 'none';
+                document.getElementById('hex-panel').style.display = 'none';
+                document.getElementById('viewer-info').textContent = '';
+                
+            } catch (err) {
+                alert('Error loading BLB file: ' + err.message);
+                console.error(err);
+            }
+        });
+        
+        // Color scheme selector
+        document.getElementById('color-scheme').addEventListener('change', (e) => {
+            binvis.setColorScheme(e.target.value);
+        });
+        
+        // Layout mode selector
+        document.getElementById('layout-mode').addEventListener('change', (e) => {
+            binvis.setLayoutMode(e.target.value);
+        });
+    });
+    </script>
+</body>
+</html>
