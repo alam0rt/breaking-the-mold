@@ -79,10 +79,13 @@ def analyze_file_coverage(blb_path: Path) -> dict:
             end = start + (level.secondary_count * SECTOR_SIZE)
             covered_ranges.append((start, end, f"level_{level.index}_secondary"))
         
-        if level.tertiary_count > 0:
-            start = level.tertiary_offset * SECTOR_SIZE
-            end = start + (level.tertiary_count * SECTOR_SIZE)
-            covered_ranges.append((start, end, f"level_{level.index}_tertiary"))
+        # Tertiary uses multiple sub-blocks
+        if level.tert_sub_counts:
+            for i, (offset, count) in enumerate(zip(level.tert_sub_offsets, level.tert_sub_counts)):
+                if count > 0:
+                    start = offset * SECTOR_SIZE
+                    end = start + (count * SECTOR_SIZE)
+                    covered_ranges.append((start, end, f"level_{level.index}_tertiary_{i}"))
     
     # Sector table entries
     for entry in header.sector_entries:

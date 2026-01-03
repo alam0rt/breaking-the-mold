@@ -48,8 +48,8 @@ EXPECTED_VALUES = {
             "sector_count": 0x0020,
             "secondary_offset": 0x00E9,
             "secondary_count": 0x0043,
-            "tertiary_offset": 0x03D5,
-            "tertiary_count": 0x0002,
+            "tertiary_offset": 0x012C,  # First sub-block (tert_sub_offsets[0])
+            "tertiary_count": 488,  # First sub-block count (tert_sub_counts[0])
             "level_index": 0,
         },
         # Last level metadata entry
@@ -633,9 +633,11 @@ class TestBLBHeader(unittest.TestCase):
         if "secondary_count" in expected:
             self.assertEqual(entry.secondary_count, expected["secondary_count"])
         if "tertiary_offset" in expected:
-            self.assertEqual(entry.tertiary_offset, expected["tertiary_offset"])
+            # tertiary_offset in test data refers to first sub-block offset
+            self.assertEqual(entry.tert_sub_offsets[0], expected["tertiary_offset"])
         if "tertiary_count" in expected:
-            self.assertEqual(entry.tertiary_count, expected["tertiary_count"])
+            # tertiary_count in test data refers to first sub-block count
+            self.assertEqual(entry.tert_sub_counts[0], expected["tertiary_count"])
         if "level_index" in expected:
             self.assertEqual(entry.level_index, expected["level_index"])
     
@@ -1061,14 +1063,22 @@ class TestLevelMetadataEntryProperties(unittest.TestCase):
     def test_tertiary_byte_offset(self):
         """Test tertiary_byte_offset property."""
         entry = self.header.level_entries[0]
-        expected = entry.tertiary_offset * SECTOR_SIZE
-        self.assertEqual(entry.tertiary_byte_offset, expected)
+        # tertiary_byte_offset returns first sub-block offset
+        if entry.tert_sub_offsets and entry.tert_sub_offsets[0]:
+            expected = entry.tert_sub_offsets[0] * SECTOR_SIZE
+            self.assertEqual(entry.tertiary_byte_offset, expected)
+        else:
+            self.assertEqual(entry.tertiary_byte_offset, 0)
     
     def test_tertiary_byte_size(self):
         """Test tertiary_byte_size property."""
         entry = self.header.level_entries[0]
-        expected = entry.tertiary_count * SECTOR_SIZE
-        self.assertEqual(entry.tertiary_byte_size, expected)
+        # tertiary_byte_size sums all sub-blocks
+        if entry.tert_sub_counts:
+            expected = sum(c for c in entry.tert_sub_counts if c) * SECTOR_SIZE
+            self.assertEqual(entry.tertiary_byte_size, expected)
+        else:
+            self.assertEqual(entry.tertiary_byte_size, 0)
     
     def test_level_entry_repr(self):
         """Test LevelMetadataEntry __repr__."""

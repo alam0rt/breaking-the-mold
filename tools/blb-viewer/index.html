@@ -368,16 +368,119 @@
         .empty-state p {
             font-size: 0.9rem;
         }
+        
+        /* Metadata Panel */
+        .metadata-panel {
+            width: 300px;
+            min-width: 250px;
+            max-width: 350px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .metadata-panel h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        
+        .metadata-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            min-height: 0;
+        }
+        
+        .metadata-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: var(--bg-dark);
+            border-left: 3px solid var(--accent);
+            border-radius: 2px;
+        }
+        
+        .metadata-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .metadata-value {
+            color: var(--text-primary);
+            font-family: 'Consolas', 'Monaco', monospace;
+            word-break: break-word;
+        }
+        
+        /* Info Tooltip */
+        .info-tooltip {
+            font-size: 0.75rem;
+            background: var(--accent-dim);
+            border-left: 3px solid var(--accent);
+            padding: 0.75rem;
+            margin-top: 1rem;
+            border-radius: 2px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        
+        .info-tooltip strong {
+            color: var(--text-primary);
+        }
+        
+        /* Format Reference */
+        .format-reference {
+            font-size: 0.7rem;
+            background: var(--bg-dark);
+            padding: 0.75rem;
+            margin: 1rem 0;
+            border-radius: 2px;
+            border: 1px solid var(--border);
+        }
+        
+        .format-reference table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .format-reference th, .format-reference td {
+            text-align: left;
+            padding: 0.35rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        
+        .format-reference th {
+            color: var(--text-primary);
+            font-weight: 600;
+            background: var(--bg-panel);
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>🎮 BLB Viewer</h1>
+        <h1>🎮 BLB Viewer - SLES-01090 (PAL)</h1>
         <div id="file-input-wrapper">
             <label class="btn" for="file-input">Open BLB File</label>
             <input type="file" id="file-input" accept=".blb,.BLB">
             <span id="file-name">No file loaded</span>
         </div>
+        <div id="file-info" style="margin-left: auto; font-size: 0.85rem; color: var(--text-secondary);"></div>
     </header>
     
     <div class="main-container">
@@ -445,6 +548,11 @@
                             <span>0xFF</span>
                         </div>
                     </div>
+                </aside>
+                
+                <aside class="metadata-panel" id="metadata-panel" style="display: none;">
+                    <h3>Metadata</h3>
+                    <div class="metadata-content" id="metadata-content"></div>
                 </aside>
             </div>
         </main>
@@ -674,15 +782,19 @@
         
         getTypeName(type) {
             const names = {
-                0x258: 'Geometry',
-                0x259: 'Collision',
-                0x25A: 'Palette',
-                0x064: 'Header',
-                0x12C: 'Sprites',
-                0x12D: 'SpriteMeta',
-                0x12E: 'SpriteMeta2',
-                0x190: 'Animation',
-                0x191: 'AnimConfig',
+                0x258: 'Geometry (0x258)',
+                0x259: 'Collision (0x259)',
+                0x25A: 'Palette (0x25A)',
+                0x064: 'Header (0x064)',
+                0x12C: 'Sprites (0x12C)',
+                0x12D: 'SpriteMeta (0x12D)',
+                0x12E: 'SpriteMeta2 (0x12E)',
+                0x190: 'Animation (0x190)',
+                0x191: 'AnimConfig (0x191)',
+                0x0C8: 'SoundFX (0x0C8)',
+                0x0C9: 'SoundHdr (0x0C9)',
+                0x1F4: 'Music (0x1F4)',
+                0x1F5: 'MusicCfg (0x1F5)',
             };
             return names[type] || `Type_${type.toString(16).toUpperCase()}`;
         }
@@ -965,16 +1077,20 @@
     function buildTree(blb) {
         const root = document.createElement('div');
         
-        // Header node
+        // Header node with detailed info
+        const headerChildren = [
+            { label: `Level Count: ${blb.levelCount}`, icon: '🔢' },
+            { label: `Movie Count: ${blb.assetCount}`, icon: '🔢' },
+            { label: `Sector Entries: ${blb.sectorTableCount}`, icon: '🔢' },
+            { label: `Header Size: 0x1000 (2 sectors)`, icon: '📏' },
+            { label: `Data Offset: 0x${(0x800).toString(16).toUpperCase()}`, icon: '📍' },
+        ];
+        
         root.appendChild(createTreeNode({
-            label: 'Header',
+            label: 'BLB Header',
             icon: '📄',
             meta: '4,096 bytes',
-            children: [
-                { label: `Level Count: ${blb.levelCount}`, icon: '🔢' },
-                { label: `Asset Count: ${blb.assetCount}`, icon: '🔢' },
-                { label: `Sector Entries: ${blb.sectorTableCount}`, icon: '🔢' },
-            ],
+            children: headerChildren,
             data: { type: 'header', offset: 0, size: HEADER_SIZE }
         }));
         
@@ -1002,11 +1118,23 @@
                 }
             }
             
+            // Metadata entry
+            levelChildren.push({
+                label: 'Metadata',
+                icon: '📋',
+                meta: `0x${level.metadataOffset.toString(16).toUpperCase()}, 0x70 bytes`,
+                data: { type: 'level-meta', offset: level.metadataOffset, size: level.metadataSize }
+            });
+            
+            const totalSectors = level.primarySectorCount + level.secondarySectorCount + 
+                                level.tertiarySectorCounts.reduce((a, b) => a + b, 0);
+            const sectorSize = totalSectors * 2048;
+            
             return {
                 label: `${level.levelId || '????'} - ${level.name || 'Unknown'}`,
                 icon: '🎮',
-                meta: `${level.primarySectorCount + level.secondarySectorCount} sectors`,
-                children: levelChildren,
+                meta: `${formatSize(sectorSize)} (${totalSectors} sec)`,
+                children: levelChildren.map(c => createTreeNode(c)),
                 data: { type: 'level-meta', offset: level.metadataOffset, size: level.metadataSize }
             };
         });
@@ -1022,8 +1150,8 @@
         const moviesChildren = blb.movies.filter(m => m.movieId).map(movie => ({
             label: `${movie.movieId} - ${movie.filename}`,
             icon: '🎬',
-            meta: `${movie.sectorCount} sectors`,
-            data: { type: 'movie-meta', offset: movie.metadataOffset, size: movie.metadataSize }
+            meta: `${formatSize(movie.sectorCount * 2048)}`,
+            data: { type: 'movie-meta', offset: movie.metadataOffset, size: movie.metadataSize, movieId: movie.movieId, filename: movie.filename, sectorCount: movie.sectorCount }
         }));
         
         if (moviesChildren.length > 0) {
@@ -1187,6 +1315,7 @@
         document.getElementById('empty-state').style.display = 'none';
         document.getElementById('binvis-canvas').style.display = 'block';
         document.getElementById('hex-panel').style.display = 'flex';
+        document.getElementById('metadata-panel').style.display = 'flex';
         
         // Get data bytes
         const bytes = currentBlb.getBytes(data.offset, data.size);
@@ -1200,6 +1329,223 @@
         
         // Render hex view
         renderHexView(document.getElementById('hex-content'), bytes);
+        
+        // Render metadata
+        renderMetadata(document.getElementById('metadata-content'), data, currentBlb);
+    }
+    
+    function renderMetadata(container, data, blb) {
+        let html = '';
+        
+        // Asset type reference
+        const assetTypeInfo = {
+            0x258: { name: 'Geometry', category: 'Primary', desc: 'Level graphics/world data' },
+            0x259: { name: 'Collision', category: 'Primary', desc: 'Collision/layout data' },
+            0x25A: { name: 'Palette', category: 'Primary', desc: '15-bit PSX color data' },
+            0x064: { name: 'Header', category: 'Secondary', desc: 'Header/index entry' },
+            0x12C: { name: 'Sprites', category: 'Secondary', desc: 'Sprite graphics data' },
+            0x12D: { name: 'SpriteMeta', category: 'Secondary', desc: 'Sprite metadata' },
+            0x12E: { name: 'SpriteMeta2', category: 'Secondary', desc: 'Sprite metadata 2' },
+            0x190: { name: 'Animation', category: 'Secondary', desc: 'Animation frame data' },
+            0x191: { name: 'AnimConfig', category: 'Secondary', desc: 'Animation configuration' },
+            0x0C8: { name: 'SoundFX', category: 'Tertiary', desc: 'Sound effect data' },
+            0x0C9: { name: 'SoundHdr', category: 'Tertiary', desc: 'Sound headers/index' },
+            0x1F4: { name: 'Music', category: 'Tertiary', desc: 'Music/sequence data' },
+            0x1F5: { name: 'MusicCfg', category: 'Tertiary', desc: 'Music configuration' },
+        };
+        
+        // Movie reference (from blb-data-format.md)
+        const movieInfo = {
+            'DREA': 'Dreamworks intro',
+            'LOGO': 'Logo',
+            'ELEC': 'EA logo',
+            'INT1': 'Intro part 1',
+            'INT2': 'Intro part 2',
+            'GASS': 'Gas intro',
+            'YAMM': 'Yam intro',
+            'REDD': 'Red intro',
+            'YNTS': 'YNT world intro',
+            'EYES': 'Eyes sequence',
+            'EVIL': 'Evil Engine intro',
+            'END1': 'Ending part 1',
+            'END2': 'Ending part 2',
+        };
+        
+        if (data.type === 'header') {
+            html += `
+                <div class="metadata-field">
+                    <span class="metadata-label">File Type</span>
+                    <span class="metadata-value">BLB Archive</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Version</span>
+                    <span class="metadata-value">PAL (SLES-01090)</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Header Size</span>
+                    <span class="metadata-value">0x1000 (2 sectors)</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Levels</span>
+                    <span class="metadata-value">${blb.levelCount} (@ 0xF31)</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Movies</span>
+                    <span class="metadata-value">${blb.assetCount} (@ 0xF32)</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Sector Entries</span>
+                    <span class="metadata-value">${blb.sectorTableCount} (@ 0xF33)</span>
+                </div>
+                <div class="info-tooltip">
+                    <strong>Structure:</strong> Header contains metadata for all 26 levels, 13 FMV movies, 
+                    and sector allocation tables. Data segments follow at sector 2+.
+                </div>
+            `;
+        } else if (data.type === 'movie-meta') {
+            const desc = movieInfo[data.movieId] || 'Unknown movie';
+            html += `
+                <div class="metadata-field">
+                    <span class="metadata-label">Movie ID</span>
+                    <span class="metadata-value">${data.movieId}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Description</span>
+                    <span class="metadata-value">${desc}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Filename</span>
+                    <span class="metadata-value">${data.filename}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Sectors</span>
+                    <span class="metadata-value">${data.sectorCount} (${formatSize(data.sectorCount * 2048)})</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Metadata Offset</span>
+                    <span class="metadata-value">0x${data.offset.toString(16).toUpperCase()} (0xB60+)</span>
+                </div>
+                <div class="info-tooltip">
+                    <strong>Movie Table:</strong> 13 entries at 0xB60, 0x1C bytes each. 
+                    Contains FMV pointers for intros, outros, and transitions.
+                </div>
+            `;
+        } else if (data.type === 'level-meta') {
+            // Find the corresponding level
+            for (const level of blb.levels) {
+                if (level.metadataOffset === data.offset) {
+                    html += `
+                        <div class="metadata-field">
+                            <span class="metadata-label">Level ID</span>
+                            <span class="metadata-value">${level.levelId || 'Unknown'}</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Name</span>
+                            <span class="metadata-value">${level.name || 'Unknown'}</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Index</span>
+                            <span class="metadata-value">0x${level.index.toString(16).toUpperCase()}</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Metadata Offset</span>
+                            <span class="metadata-value">0x${level.metadataOffset.toString(16).toUpperCase()} (index × 0x70 bytes)</span>
+                        </div>
+                        <hr style="border: none; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+                        <div class="metadata-field">
+                            <span class="metadata-label">Primary Sector</span>
+                            <span class="metadata-value">0x${level.primarySectorOffset.toString(16).toUpperCase()}</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Primary Count</span>
+                            <span class="metadata-value">${level.primarySectorCount} sectors (${formatSize(level.primarySectorCount * 2048)})</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Secondary Sector</span>
+                            <span class="metadata-value">0x${level.secondarySectorOffset.toString(16).toUpperCase()}</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Secondary Count</span>
+                            <span class="metadata-value">${level.secondarySectorCount} sectors (${formatSize(level.secondarySectorCount * 2048)})</span>
+                        </div>
+                        <div class="metadata-field">
+                            <span class="metadata-label">Tertiary Blocks</span>
+                            <span class="metadata-value">${level.tertiaryBlockCount} blocks</span>
+                        </div>
+                        <div class="info-tooltip">
+                            <strong>Layout:</strong> Each level is divided into three segments: 
+                            Primary (geometry/collision), Secondary (sprites), and Tertiary (audio). 
+                            Each segment contains a TOC with typed assets.
+                        </div>
+                    `;
+                    break;
+                }
+            }
+        } else if (data.type === 'asset') {
+            const info = assetTypeInfo[data.assetType];
+            html += `
+                <div class="metadata-field">
+                    <span class="metadata-label">Type ID</span>
+                    <span class="metadata-value">0x${data.assetType.toString(16).toUpperCase()}</span>
+                </div>
+                ${info ? `
+                    <div class="metadata-field">
+                        <span class="metadata-label">Type Name</span>
+                        <span class="metadata-value">${info.name}</span>
+                    </div>
+                    <div class="metadata-field">
+                        <span class="metadata-label">Category</span>
+                        <span class="metadata-value">${info.category}</span>
+                    </div>
+                    <div class="metadata-field">
+                        <span class="metadata-label">Description</span>
+                        <span class="metadata-value">${info.desc}</span>
+                    </div>
+                ` : ''}
+                <div class="metadata-field">
+                    <span class="metadata-label">Structure</span>
+                    <span class="metadata-value">${data.isContainer ? 'Container (has sub-TOC)' : 'Raw Data'}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Offset</span>
+                    <span class="metadata-value">0x${data.offset.toString(16).toUpperCase()}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Size</span>
+                    <span class="metadata-value">${formatSize(data.size)}</span>
+                </div>
+                ${data.isContainer ? `
+                    <div class="info-tooltip">
+                        <strong>Container Format:</strong> Starts with entry count (u32), 
+                        followed by variable-length sub-entries with flags, size, and offset.
+                    </div>
+                ` : ''}
+            `;
+        } else if (data.type === 'sub-asset') {
+            html += `
+                <div class="metadata-field">
+                    <span class="metadata-label">Flags</span>
+                    <span class="metadata-value">0x${data.flags.toString(16).toUpperCase()}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Offset</span>
+                    <span class="metadata-value">0x${data.offset.toString(16).toUpperCase()}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Size</span>
+                    <span class="metadata-value">${formatSize(data.size)}</span>
+                </div>
+                <div class="metadata-field">
+                    <span class="metadata-label">Type</span>
+                    <span class="metadata-value">Container Sub-Entry</span>
+                </div>
+                <div class="info-tooltip">
+                    <strong>Sub-Entry Format:</strong> 12 bytes = flags (u32) + size (u32) + offset (u32)
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
     }
     
     // ============================================================================
@@ -1220,6 +1566,15 @@
                 const arrayBuffer = await file.arrayBuffer();
                 currentBlb = new BLBFile(arrayBuffer);
                 
+                // Display file info
+                const totalLevelSize = currentBlb.levels.reduce((sum, level) => {
+                    const sectors = level.primarySectorCount + level.secondarySectorCount + 
+                                   level.tertiarySectorCounts.reduce((a, b) => a + b, 0);
+                    return sum + sectors * 2048;
+                }, 0);
+                const fileInfo = `${formatSize(file.size)} | ${currentBlb.levelCount} levels | ${currentBlb.assetCount} movies`;
+                document.getElementById('file-info').textContent = fileInfo;
+                
                 // Build tree
                 const treeRoot = document.getElementById('tree-root');
                 treeRoot.innerHTML = '';
@@ -1229,6 +1584,7 @@
                 document.getElementById('empty-state').style.display = 'flex';
                 document.getElementById('binvis-canvas').style.display = 'none';
                 document.getElementById('hex-panel').style.display = 'none';
+                document.getElementById('metadata-panel').style.display = 'none';
                 document.getElementById('viewer-info').textContent = '';
                 
             } catch (err) {
