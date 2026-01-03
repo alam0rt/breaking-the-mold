@@ -367,26 +367,103 @@ Example: 0x3FFF = white (R=31, G=31, B=15 in 5-bit each)
 4. Rendering functions access ctx+0x70 to draw level graphics
 5. Physics functions access ctx+0x74 for collision detection
 
-### LevelDataContext Structure (VERIFIED via PCSX-Redux MCP)
+### LevelDataContext Structure (VERIFIED via Ghidra + PCSX-Redux MCP)
 
 **NOTE: These addresses are for PAL version (SLES-01090).**
 
-The context structure at 0x8009DCC4 was verified by reading RAM during gameplay:
+The context structure at GameState+0x84 (0x8009DCC4) is the central data structure for level loading.
+It is initialized by `InitLevelDataContext` (0x8007A1BC) and populated by `LevelDataParser` (0x8007A62C)
+and `LoadAssetContainer` (0x8007B074).
 
 ```
-Offset  Size  Type    Field           Description
-------  ----  ----    -----           -----------
-0x00    0x5C  var     unk00-unk58     Cleared on level load (zero-initialized)
-0x5C    4     ptr     header          Pointer to BLB header (→ 0x800AE3E0)
-0x60    1     u8      headerOffset    Offset within header state arrays (0xF34 region)
-0x61    3     -       pad61           Padding
-0x64    4     ptr     loadCallback    CD load callback function (→ 0x80020848)
-0x68    4     ptr     tocPtr          Pointer to loaded TOC (after sector read)
-0x6C    4     ptr     dataOffset      Pointer to asset data after TOC
-0x70    4     ptr     asset258        Pointer to geometry/world data (type 0x258)
-0x74    4     ptr     asset259        Pointer to collision data (type 0x259)
-0x78    4     u32     asset259Size    Size of collision data in bytes
-0x7C    4     ptr     asset25A        Pointer to palette data (type 0x25A)
+Offset  WIdx  Size  Type    Field                   Description
+------  ----  ----  ----    -----                   -----------
+# Asset Pointers (populated by LoadAssetContainer from sub-TOC)
+0x00    [0]   4     int     subBlockFlag            Set to subBlockIndex or 1, indicates loaded sub-block
+0x04    [1]   4     ptr     assetGeometry100        ID 100: Geometry/tiles pointer
+0x08    [2]   4     ptr     assetGeometry101        ID 101: Unknown geometry pointer
+0x0C    [3]   4     ptr     assetSprite200          ID 200: Sprites pointer
+0x10    [4]   4     ptr     assetSprite201          ID 201: Animations pointer (0xC9)
+0x14    [5]   4     ptr     asset300                ID 300: Unknown asset pointer
+0x18    [6]   4     ptr     asset301                ID 301: Unknown asset pointer (0x12D)
+0x1C    [7]   4     ptr     asset302                ID 302: Unknown asset pointer (0x12E)
+0x20    [8]   4     ptr     assetObject400          ID 400: Object data pointer
+0x24    [9]   4     ptr     assetObject401          ID 401: Object data pointer (0x191)
+0x28    [10]  4     ptr     asset303                ID 303: Unknown asset pointer (0x12F)
+0x2C    [11]  4     ptr     asset500                ID 500: Unknown asset pointer (0x1F4)
+0x30    [12]  4     ptr     asset503                ID 503: Unknown asset pointer (0x1F7)
+0x34    [13]  4     ptr     asset504                ID 504: Unknown asset pointer (0x1F8)
+0x38    [14]  4     ptr     asset501                ID 501: Unknown asset pointer (0x1F5)
+0x3C    [15]  4     ptr     asset502                ID 502: Unknown asset pointer (0x1F6)
+0x40    [16]  4     ptr     assetLevel600           ID 600: Level geometry pointer (0x258)
+0x44    [17]  4     u32     assetLevel600Size       Size of level geometry in bytes
+0x48    [18]  4     ptr     assetCollision601       ID 601: Collision data pointer (0x259)
+0x4C    [19]  4     u32     assetCollision601Size   Size of collision data in bytes
+0x50    [20]  4     ptr     assetPalette602         ID 602: Palette data pointer (0x25A)
+0x54    [21]  4     ptr     assetAudio700           ID 700: Audio/music pointer (0x2BC)
+0x58    [22]  4     u32     assetAudio700Size       Size of audio data in bytes
+
+# Context State (set by InitLevelDataContext and LevelDataParser)
+0x5C    [23]  4     ptr     blbHeaderBuffer         Pointer to BLB header (→ 0x800AE3E0)
+0x60    [24]  1     u8      slidingWindowIndex      Playback index byte (init 0xFF)
+0x61          3     -       pad61                   (Padding - part of word access)
+0x64    [25]  4     ptr     loaderCallback          CD loader callback (→ 0x80020848)
+0x68    [26]  4     ptr     primaryDataBuffer       Primary TOC buffer pointer (set by LevelDataParser)
+0x6C    [27]  4     ptr     secondaryDataBuffer     Secondary container buffer pointer
+
+# Primary TOC Asset Pointers (set by LevelDataParser, separate from sub-TOC assets)
+0x70    [28]  4     ptr     primaryLevel600         Primary TOC ID 600 pointer
+0x74    [29]  4     ptr     primaryCollision601     Primary TOC ID 601 pointer
+0x78    [30]  4     u32     primaryCollision601Size Primary collision size
+0x7C    [31]  4     ptr     primaryPalette602       Primary TOC ID 602 pointer
+```
+
+**Total structure size: 0x80 (128) bytes**
+
+#### Key Functions
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `InitLevelDataContext` | 0x8007A1BC | Sets blbHeaderBuffer [0x17], loaderCallback [0x19], slidingWindowIndex [0x18]=0xFF |
+| `LevelDataParser` | 0x8007A62C | Clears all fields, parses primary TOC, sets [0x1A-0x1F], calls LoadAssetContainer |
+| `LoadAssetContainer` | 0x8007B074 | Parses sub-TOC, populates asset pointers [0x00-0x16] based on asset IDs |
+| `CdBLB_ReadSectors` | 0x80038BA0 | Low-level CD read, called via loaderCallback |
+
+#### Asset ID Mapping (LoadAssetContainer)
+
+The sub-TOC contains entries with asset IDs that map to specific context offsets:
+
+| Asset ID | Hex | Word Index | Field Name | Description |
+|----------|-----|------------|------------|-------------|
+| 100 | 0x64 | [1] | assetGeometry100 | Geometry/tiles |
+| 101 | 0x65 | [2] | assetGeometry101 | Unknown geometry |
+| 200 | 0xC8 | [3] | assetSprite200 | Sprites |
+| 201 | 0xC9 | [4] | assetSprite201 | Animations |
+| 300 | 0x12C | [5] | asset300 | Unknown |
+| 301 | 0x12D | [6] | asset301 | Unknown |
+| 302 | 0x12E | [7] | asset302 | Unknown |
+| 303 | 0x12F | [10] | asset303 | Unknown |
+| 400 | 0x190 | [8] | assetObject400 | Object data |
+| 401 | 0x191 | [9] | assetObject401 | Object data |
+| 500 | 0x1F4 | [11] | asset500 | Unknown |
+| 501 | 0x1F5 | [14] | asset501 | Unknown |
+| 502 | 0x1F6 | [15] | asset502 | Unknown |
+| 503 | 0x1F7 | [12] | asset503 | Unknown |
+| 504 | 0x1F8 | [13] | asset504 | Unknown |
+| 600 | 0x258 | [16-17] | assetLevel600 + size | Level geometry (with size) |
+| 601 | 0x259 | [18-19] | assetCollision601 + size | Collision data (with size) |
+| 602 | 0x25A | [20] | assetPalette602 | Palette data |
+| 700 | 0x2BC | [21-22] | assetAudio700 + size | Audio/music (with size) |
+
+#### Loader Callback Chain
+
+```
+LoadAssetContainer/LevelDataParser
+    └─→ (*loaderCallback)(sectorOffset, sectorCount, destBuffer)
+            │ (function pointer at ctx+0x64)
+            └─→ 0x80020848 (thin wrapper)
+                    └─→ CdBLB_ReadSectors(g_GameBLBSector + offset, count, buffer)
+                            └─→ PSY-Q: CdIntToPos → CdControl → CdRead → CdReadSync
 ```
 
 **Verified Runtime Example (Science Centre / SCIE, level index 2):**

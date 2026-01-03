@@ -1299,5 +1299,268 @@ def main():
             print(f"Found '{code}': {entry}")
 
 
+# =============================================================================
+# Asset Container Parsing
+# =============================================================================
+
+@dataclass
+class AssetTOCEntry:
+    """A single entry in an asset container's TOC."""
+    asset_id: int       # Asset type ID (100, 200, 300, 400, etc.)
+    size: int           # Size in bytes
+    offset: int         # Offset from start of container
+    data: bytes = None  # Raw asset data (optional)
+    
+    @property
+    def asset_id_hex(self) -> str:
+        return f"0x{self.asset_id:03X}"
+
+
+@dataclass
+class TileHeader:
+    """
+    Header structure from asset 100 (geometry header).
+    
+    Contains tile counts used by FUN_8007B53C to calculate total tiles.
+    """
+    raw_data: bytes
+    count_16x16: int  # u16 at offset 0x10: Number of 16×16 tiles
+    count_8x8_a: int  # u16 at offset 0x12: First 8×8 tile count
+    count_8x8_b: int  # u16 at offset 0x14: Second 8×8 tile count
+    
+    @property
+    def total_tiles(self) -> int:
+        return self.count_16x16 + self.count_8x8_a + self.count_8x8_b
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "TileHeader":
+        if len(data) < 0x16:
+            raise ValueError(f"Header too short: {len(data)} bytes")
+        
+        return cls(
+            raw_data=data,
+            count_16x16=struct.unpack('<H', data[0x10:0x12])[0],
+            count_8x8_a=struct.unpack('<H', data[0x12:0x14])[0],
+            count_8x8_b=struct.unpack('<H', data[0x14:0x16])[0],
+        )
+
+
+def parse_container_toc(data: bytes) -> list[AssetTOCEntry]:
+    """
+    Parse a container's TOC (Table of Contents).
+    
+    Container format:
+        0x00: u32 entry_count
+        0x04: entries[count] - each entry is 12 bytes:
+            0x00: u32 asset_id
+            0x04: u32 size
+            0x08: u32 offset (from container start)
+    
+    Returns list of AssetTOCEntry with data populated.
+    """
+    if len(data) < 4:
+        return []
+    
+    count = struct.unpack('<I', data[0:4])[0]
+    entries = []
+    
+    for i in range(count):
+        toc_offset = 4 + i * 12
+        if toc_offset + 12 > len(data):
+            break
+        
+        asset_id, size, data_offset = struct.unpack('<III', data[toc_offset:toc_offset+12])
+        
+        # Extract actual data if within bounds
+        asset_data = None
+        if data_offset + size <= len(data):
+            asset_data = data[data_offset:data_offset+size]
+        
+        entries.append(AssetTOCEntry(
+            asset_id=asset_id,
+            size=size,
+            offset=data_offset,
+            data=asset_data,
+        ))
+    
+    return entries
+
+
+def psx_color_to_rgb(color: int) -> tuple:
+    """
+    Convert PSX 15-bit color to RGB tuple.
+    
+    PSX format: ABBBBBGGGGGRRRRR (little-endian u16)
+        - Bits 0-4: Red (0-31)
+        - Bits 5-9: Green (0-31)
+        - Bits 10-14: Blue (0-31)
+        - Bit 15: STP (semi-transparency)
+    """
+    r = (color & 0x1F) * 8
+    g = ((color >> 5) & 0x1F) * 8
+    b = ((color >> 10) & 0x1F) * 8
+    return (r, g, b)
+
+
+def parse_psx_palette(data: bytes, num_colors: int = 256) -> list[tuple]:
+    """
+    Parse a PSX CLUT (Color Look-Up Table) to RGB tuples.
+    
+    Each color is a 15-bit value stored as little-endian u16.
+    Standard palettes are 16 colors (32 bytes) or 256 colors (512 bytes).
+    """
+    colors = []
+    max_colors = min(num_colors, len(data) // 2)
+    
+    for i in range(max_colors):
+        color = struct.unpack('<H', data[i*2:i*2+2])[0]
+        colors.append(psx_color_to_rgb(color))
+    
+    return colors
+
+
+def extract_tile_8bpp(tile_data: bytes, width: int = 16, height: int = 16) -> list[list[int]]:
+    """
+    Extract an 8bpp tile to a 2D array of palette indices.
+    
+    8bpp format: Each byte is one pixel index (0-255).
+    16×16 tile = 256 bytes.
+    """
+    pixels = []
+    
+    for y in range(height):
+        row = []
+        for x in range(width):
+            byte_idx = y * width + x
+            if byte_idx < len(tile_data):
+                row.append(tile_data[byte_idx])
+            else:
+                row.append(0)
+        pixels.append(row)
+    
+    return pixels
+
+
+def extract_tile_4bpp(tile_data: bytes, width: int = 16, height: int = 16) -> list[list[int]]:
+    """
+    Extract a 4bpp tile to a 2D array of palette indices.
+    
+    4bpp format: Each byte contains 2 pixels (low nibble first).
+    16×16 tile = 128 bytes (8 bytes per row).
+    """
+    pixels = []
+    bytes_per_row = width // 2
+    
+    for y in range(height):
+        row = []
+        for x in range(0, width, 2):
+            byte_idx = y * bytes_per_row + x // 2
+            if byte_idx < len(tile_data):
+                byte = tile_data[byte_idx]
+                row.append(byte & 0x0F)        # Low nibble = first pixel
+                row.append((byte >> 4) & 0x0F) # High nibble = second pixel
+            else:
+                row.extend([0, 0])
+        pixels.append(row)
+    
+    return pixels
+
+
+def tile_to_image(pixel_indices: list[list[int]], palette: list[tuple]) -> "Image":
+    """
+    Convert a 2D array of palette indices to a PIL Image.
+    
+    Args:
+        pixel_indices: 2D array from extract_tile_8bpp or extract_tile_4bpp
+        palette: List of RGB tuples from parse_psx_palette
+        
+    Returns:
+        PIL Image in RGB mode
+        
+    Example:
+        >>> indices = extract_tile_8bpp(tile_data)
+        >>> palette = parse_psx_palette(palette_data)
+        >>> img = tile_to_image(indices, palette)
+        >>> img.save("tile.png")
+    """
+    from PIL import Image
+    
+    height = len(pixel_indices)
+    width = len(pixel_indices[0]) if pixel_indices else 0
+    
+    img = Image.new('RGB', (width, height))
+    pixels = img.load()
+    
+    for y, row in enumerate(pixel_indices):
+        for x, idx in enumerate(row):
+            if idx < len(palette):
+                pixels[x, y] = palette[idx]
+            else:
+                pixels[x, y] = (255, 0, 255)  # Magenta for invalid index
+    
+    return img
+
+
+def extract_level_tiles(blb: "BLBFile", level_index: int, palette_index: int = 0) -> list["Image"]:
+    """
+    Extract all tiles from a level's secondary container.
+    
+    Args:
+        blb: Open BLBFile instance
+        level_index: Index of the level to extract from
+        palette_index: Which palette to use (default: 0)
+        
+    Returns:
+        List of PIL Images, one per tile
+        
+    Example:
+        >>> with BLBFile('game.blb') as blb:
+        ...     tiles = extract_level_tiles(blb, level_index=0)
+        ...     for i, tile in enumerate(tiles):
+        ...         tile.save(f"tile_{i:04d}.png")
+    """
+    from PIL import Image
+    
+    level = blb.header.get_level_by_index(level_index)
+    sec_data = blb.read_sectors(level.secondary_offset, level.secondary_count)
+    entries = parse_container_toc(sec_data)
+    
+    # Find required assets
+    asset100 = next((e for e in entries if e.asset_id == 100), None)
+    asset300 = next((e for e in entries if e.asset_id == 300), None)
+    asset400 = next((e for e in entries if e.asset_id == 400), None)
+    
+    if not all([asset100, asset300, asset400]):
+        return []
+    
+    # Parse header for tile counts
+    header = TileHeader.from_bytes(asset100.data)
+    
+    # Parse palettes
+    palette_entries = parse_container_toc(asset400.data)
+    if palette_index >= len(palette_entries):
+        palette_index = 0
+    palette = parse_psx_palette(palette_entries[palette_index].data)
+    
+    tiles = []
+    pixel_offset = 0
+    
+    # Extract 16×16 tiles
+    for i in range(header.count_16x16):
+        tile_bytes = asset300.data[pixel_offset:pixel_offset + 256]
+        indices = extract_tile_8bpp(tile_bytes, 16, 16)
+        tiles.append(tile_to_image(indices, palette))
+        pixel_offset += 256
+    
+    # Extract 8×8 tiles
+    for i in range(header.count_8x8_a + header.count_8x8_b):
+        tile_bytes = asset300.data[pixel_offset:pixel_offset + 64]
+        indices = extract_tile_8bpp(tile_bytes, 8, 8)
+        tiles.append(tile_to_image(indices, palette))
+        pixel_offset += 64
+    
+    return tiles
+
+
 if __name__ == "__main__":
     main()
