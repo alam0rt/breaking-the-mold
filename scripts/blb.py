@@ -26,13 +26,14 @@ Header Structure (4096 bytes total):
     0xF31      1   Level count (u8)
     0xF32      1   Asset/movie count (u8)
     0xF33      1   Sector table entry count (u8)
-    0xF34    204   State/config data region (sliding window state machine)
+    0xF34    204   Playback Sequence data (mode array at 0xF36, index array at 0xF92)
 
 
-State/Config Data Region (0xF34-0xFFF, 204 bytes):
-==================================================
-    The game uses a sliding window pattern to track multiple concurrent states
-    (movie playback, credits, level loading). Each "slot" in the window uses
+Playback Sequence (0xF34-0xFFF, 204 bytes):
+===========================================
+    The game uses a "playback sequence" to define what happens before/during
+    level loading (intro movies, credits, etc). The InitializeAndLoadLevel
+    function walks through this sequence using AdvancePlaybackSequence.
     paired bytes for mode and index.
     
     Offset  Size  Type    Field               Description
@@ -40,16 +41,25 @@ State/Config Data Region (0xF34-0xFFF, 204 bytes):
     0xF34      2  bytes   unknown_f34         Unknown (padding?)
     0xF36      1  u8      game_mode           Base mode byte (see mode values below)
     0xF37      1  u8      secondary_flag      Secondary state flag
-    0xF38     89  bytes   state_array         Sliding window mode bytes (0xF36 + stateOffset)
+    0xF38     89  bytes   mode_array          Playback mode bytes (0xF36 + stateOffset)
     0xF91      1  u8      unknown_f91         Unknown
     0xF92      1  u8      asset_index         Base index byte for table lookups
-    0xF93    109  bytes   index_array         Sliding window index bytes (0xF92 + stateOffset)
+    0xF93    109  bytes   index_array         Playback index bytes (0xF92 + stateOffset)
     
-    Mode Values (observed from runtime trace):
-      1 = Movie playback mode
-      2 = Credits display mode
-      4 = Sector/asset loading mode
-      5 = Initial sector loading mode
+    Mode Values (CONFIRMED via decompilation of InitializeAndLoadLevel):
+      0 = Invalid/Reset - search for next valid item
+      1 = Movie playback mode (uses movie table at 0xB60)
+      2 = Credits display mode (uses credits table at 0xF10)
+      3 = Level mode - load and play level (uses level table at 0x000)
+      4 = Special sector loading mode (uses sector order data)
+      5 = Initial sector loading mode (similar to 4)
+      6 = End/Special - sequence terminator or special mode
+    
+    String Markers for Flow Control (CONFIRMED via decompilation):
+      "INT1" (0x800A6094) - After playing intro 1, skip next two items
+      "CRD1" (0x800A609C) - After credits 1, skip to level
+      "CRD2" (0x800A6058) - Credits 2 terminator (used by AdvancePlaybackSequence)
+      "END2" (0x800A608C) - Ending 2, skipped under certain conditions
     
     The accessor functions read state using:
       mode = header[0xF36 + stateOffset]
@@ -228,13 +238,14 @@ GameState Structure (runtime, not in BLB file):
     Where headerOffset is read from LevelDataContext at ctx+0x60.
     The base offset 0x0A corresponds to MENU being loaded.
     
-    Mode Values (observed from trace):
-      1 = Movie playback mode
-      2 = Credits display mode
-      3 = Level mode (use level metadata table)
-      4 = Sector/asset loading mode
+    Mode Values (CONFIRMED via decompilation of InitializeAndLoadLevel):
+      0 = Invalid/Reset - AdvancePlaybackSequence calls SeekToLevelInSequence
+      1 = Movie playback mode (uses movie table at header+0xB60)
+      2 = Credits display mode (uses credits table at header+0xF10)
+      3 = Level mode - load and play (uses level table at header+0x000)
+      4 = Special sector loading mode (uses sector order data at header+0xCD0)
       5 = Initial sector loading mode (similar to 4)
-      6 = Special mode (use sector table at 0xECC)
+      6 = End/Special - sequence terminator, exits playback loop
     
     Verified examples:
       headerOffset=0x0A, arrayPosition=0, levelIndex=0  → MENU
@@ -267,25 +278,54 @@ LevelDataContext Structure (verified via emulator MCP):
         asset259   = 0x8012F3BC (126,256 bytes collision)
         asset25A   = 0x8014E0EC (148 bytes palette)
 
-Known Functions (from trace analysis):
-======================================
-    Address     Name                    Description
-    -------     ----                    -----------
-    0x800208B0  LoadBLBHeader           Load BLB header into GameState
-    0x8007A62C  LevelDataParser         Parse level metadata from header
-    0x8007A9B0  GetLevelCount           Get level count from header[0xF31]
-    0x8007AA08  getLevelName            Get level name string by index
-    0x8007ABCC  GetCurrentSectorOffset  Get sector offset for current mode
-    0x8007AC54  GetCurrentSectorCount   Get sector count for current mode
-    0x8007ACDC  GetAssetCount           Get asset count from header[0xF32]
-    0x8007AD30  GetCurrentMovieReserved Get movie reserved field (uses sliding window)
-    0x8007AD7C  GetCurrentMovieShortName Get movie short name (uses sliding window)
-    0x8007ADC8  GetCurrentMovieFilename Get movie filename (uses sliding window)
-    0x8007AE14  GetMovieUnknown00       Get movie reserved u16 by explicit index
-    0x8007AE58  GetMovieSectorCount     Get movie sector count by explicit index
-    0x8007CF08  ProcessLevelEntry       Iterate through levels (calls GetLevelCount)
-    0x8008299C  DisplayLevelName        Display level names (calls getLevelName)
-    0x80038BA0  CdBLB_ReadSectors       Read sectors from CD
+Known Functions (from trace + decompilation analysis):
+=========================================================
+    Address     Name                        Description
+    -------     ----                        -----------
+    
+    # Level Loading System (CONFIRMED via Ghidra decompilation)
+    0x8007A294  AdvancePlaybackSequence     Advance through playback sequence, return next mode
+    0x8007A3AC  SeekToLevelInSequence       Search for level with matching asset index
+    0x8007A62C  LevelDataParser             Parse level metadata from header (func_8007A62C)
+    0x8007B074  LoadAssetContainer          Load secondary/tertiary container, parse sub-TOC
+    0x8007D1D0  InitializeAndLoadLevel      Main level loading orchestrator
+    
+    # BLB Header Accessors (StateAccessors.c)
+    0x8007A9B0  GetLevelCount               Get level count from header[0xF31]
+    0x8007A9C4  GetLevelAssetIndex          Get level asset index at level[n]+0x0C
+    0x8007A9E8  GetLevelDisplayName         Get level display name ptr at level[n]+0x56
+    0x8007AA08  getLevelName                Get level name string at level[n]+0x5B
+    0x8007AA28  GetLevelFlagByIndex         Get level flag at level[n]+0x0D
+    0x8007AA4C  GetCurrentLevelAssetIndex   Get current level asset index (mode 3)
+    0x8007AA90  GetCurrentLevelDisplayName  Get current level display name (mode 3)
+    0x8007AAE8  GetCurrentLevelName         Get current level name (modes 3, 6)
+    0x8007AB44  GetCurrentSectorOrderUnk1   Get sector order +0xCD1 (modes 4-5)
+    0x8007AB88  GetCurrentSectorOrderUnk2   Get sector order +0xCD2 (modes 4-5)
+    
+    # BLB Header Accessors (CreditsAccessors.c)
+    0x8007ABCC  GetCurrentSectorOffset      Get sector offset for current mode
+    0x8007AC54  GetCurrentSectorCount       Get sector count for current mode
+    0x8007ACDC  GetAssetCount               Get asset count from header[0xF32]
+    0x8007ACF0  GetMovieReservedByIndex     Get movie reserved ptr at movie[n]+0x04
+    0x8007AD10  GetMovieShortNameByIndex    Get movie short name at movie[n]+0x09
+    0x8007AD30  GetCurrentMovieReserved     Get current movie reserved (mode 1)
+    0x8007AD7C  GetCurrentMovieShortName    Get current movie short name (mode 1)
+    0x8007ADC8  GetCurrentMovieFilename     Get current movie filename at +0xB6C (mode 1)
+    
+    # BLB Header Accessors (BLBHeaderAccessors.c)
+    0x8007AE14  GetMovieUnknown00           Get movie u16 at +0xB60 (mode 1)
+    0x8007AE58  GetMovieSectorCount         Get movie sector count at +0xB62 (mode 1)
+    0x8007AE9C  GetCurrentModeReservedData  Mode-specific reserved data dispatcher (switch)
+    0x8007AFA4  GetCurrentLevelFlag         Get flag byte for current level (mode 3)
+    0x8007AFF8  GetCurrentTertiaryDataSize  Calculate tertiary block size
+    
+    # CD/BLB Loading
+    0x800208B0  LoadBLBHeader               Load BLB header into GameState
+    0x80038BA0  CdBLB_ReadSectors           Read sectors from CD
+    
+    # Other
+    0x8007CF08  ProcessLevelEntry           Iterate through levels
+    0x8008299C  DisplayLevelName            Display level names
 
 
 Constants:
@@ -374,46 +414,56 @@ STATE_ASSET_INDEX_OFFSET = 0xF92  # u8: Current asset/movie/entry index for tabl
 @dataclass
 class StateData:
     """
-    Runtime state/config data from header offset 0xF34-0x1000 (204 bytes).
+    Playback Sequence data from header offset 0xF34-0x1000 (204 bytes).
     
-    This region contains runtime state used by BLB accessor functions to
-    determine which table entries to access. The accessor functions use
-    a sliding window pattern with paired state/index bytes.
+    This region defines the "playback sequence" - a list of items (movies,
+    credits, levels) that the game walks through before/during gameplay.
+    The InitializeAndLoadLevel function (0x8007D1D0) iterates through this
+    sequence using AdvancePlaybackSequence (0x8007A294).
     
-    Sliding Window Pattern (observed from runtime trace):
-    ======================================================
-    The accessor functions read pairs of bytes at offsets determined by
-    an internal state offset. For example:
+    Structure: Parallel Arrays (CONFIRMED via decompilation)
+    =========================================================
+    The region contains two parallel arrays:
+      - Mode array at 0xF36-0xF91 (92 bytes): Determines item type
+      - Index array at 0xF92-0xFFF (110 bytes): Selects entry in relevant table
     
-      Offset  State Byte  Index Byte  Used By
-      ------  ----------  ----------  -------
-      0       0xF36       0xF92       func_8007ABCC, func_8007AC54 (initial credits)
-      1       0xF37       0xF93       func_8007ABCC, func_8007AC54 (after advance)
-      2       0xF38       0xF94       GetMovieUnknown00, GetMovieSectorCount, GetMovieFilename
-      3       0xF39       0xF95       (movie index 1)
-      4       0xF3A       0xF96       (movie index 2)
-      ...
-      12      0xF40       0xF9C       func_8007A62C (LevelDataParser, level mode)
+    For each position n in the sequence:
+      mode = header[0xF36 + n]   // What type of item
+      index = header[0xF92 + n]  // Which entry in that table
     
-    Key observations:
-      - State byte at 0xF36+n determines mode (1=movie, 2=credits, 3=level)
-      - Index byte at 0xF92+n selects entry within the relevant table
-      - Movie accessors use n=2 (0xF38, 0xF94)
-      - Level parser uses n=12 (0xF40, 0xF9C) when loading menu/level 0
+    Mode Values (CONFIRMED via decompilation):
+      0 = Invalid/Reset - search for next valid item
+      1 = Movie - play movie[index] from movie table at 0xB60
+      2 = Credits - show credits[index] from credits table at 0xF10
+      3 = Level - load level[index] from level table at 0x000
+      4 = Special loading (uses sector order data at 0xCD0)
+      5 = Initial loading (similar to 4)
+      6 = End - sequence terminator, exit playback loop
     
-    Referenced by functions:
-      - func_8007ABCC, func_8007AC54: Read 0xF36+n, 0xF92+n
-      - GetMovieUnknown00, GetMovieSectorCount: Read 0xF38, 0xF94, then movie table
-      - GetMovieFilename (0x8007ADC8): Read 0xF38, 0xF94, then movie filename
-      - func_8007A62C (LevelDataParser): Read 0xF40, 0xF9C, then level table
-      - func_8007A9B0 (LevelAssetEnum): Read 0xF31 (level count)
-      - func_8007ACDC (AssetCountAccessor): Read 0xF32 (asset count)
+    Example Sequence (typical game start):
+      n=0: mode=1, idx=0  → Play DREA (Dreamworks logo)
+      n=1: mode=1, idx=1  → Play LOGO
+      n=2: mode=1, idx=2  → Play ELEC (EA logo)
+      n=3: mode=1, idx=3  → Play INT1 (intro part 1)
+      n=4: mode=1, idx=4  → Play INT2 (intro part 2)
+      n=5: mode=3, idx=0  → Load MENU level
+    
+    String Markers for Flow Control:
+      - "INT1": After playing, skip next two items
+      - "CRD1": After credits 1, skip to level
+      - "CRD2": Credits 2 terminator
+      - "END2": Ending marker, skipped under conditions
+    
+    Functions that use this:
+      - AdvancePlaybackSequence (0x8007A294): Walk to next item
+      - SeekToLevelInSequence (0x8007A3AC): Find level by asset index
+      - InitializeAndLoadLevel (0x8007D1D0): Main orchestrator
     """
     
     raw_data: bytes  # Full 204 bytes
     
     # Known fields (absolute offsets in header)
-    game_mode: int = None  # u8 at 0xF36: base state (1=movie, 2=credits, 4-5=level)
+    game_mode: int = None  # u8 at 0xF36: base state (0-6, see mode values above)
     secondary_flag: int = None  # u8 at 0xF37: next state slot
     movie_state: int = None  # u8 at 0xF38: movie accessor state
     unknown_f91: int = unknown("+0x5D: u8, part of index array?")
@@ -421,10 +471,10 @@ class StateData:
     asset_index_1: int = None  # u8 at 0xF93: index slot 1
     movie_index: int = None  # u8 at 0xF94: movie index (for movie accessors)
     
-    # The bytes form parallel arrays of state/index pairs
+    # The bytes form parallel arrays of mode/index pairs (playback sequence)
     unknown_f34_f35: bytes = unknown("0xF34-0xF35: 2 bytes, purpose TBD")
-    state_array: bytes = unknown("0xF36-0xF91: 92 bytes, array of state bytes")
-    index_array: bytes = unknown("0xF92-0xFFF: 110 bytes, array of index bytes")
+    mode_array: bytes = unknown("0xF36-0xF91: 92 bytes, playback sequence mode values")
+    index_array: bytes = unknown("0xF92-0xFFF: 110 bytes, playback sequence index values")
     
     @classmethod
     def from_bytes(cls, data: bytes) -> "StateData":
@@ -442,9 +492,22 @@ class StateData:
             asset_index_1=data[0xF93 - STATE_DATA_OFFSET],  # offset 0x5F
             movie_index=data[0xF94 - STATE_DATA_OFFSET],  # offset 0x60
             unknown_f34_f35=data[0:2],
-            state_array=data[2:0x5E],  # 0xF36 to 0xF91 (92 bytes)
-            index_array=data[0x5E:],  # 0xF92 to end (110 bytes)
+            mode_array=data[2:0x5E],  # 0xF36 to 0xF91 (92 bytes) - playback sequence modes
+            index_array=data[0x5E:],  # 0xF92 to end (110 bytes) - playback sequence indices
         )
+    
+    def get_sequence_item(self, position: int) -> tuple:
+        """Get (mode, index) for a position in the playback sequence.
+        
+        Args:
+            position: Position in sequence (0 = first item at 0xF36/0xF92)
+        
+        Returns:
+            Tuple of (mode, index) for that position
+        """
+        if position < 0 or position >= len(self.mode_array):
+            return (0, 0)
+        return (self.mode_array[position], self.index_array[position])
     
     def __repr__(self) -> str:
         return f"StateData(mode={self.game_mode}, idx={self.asset_index})"

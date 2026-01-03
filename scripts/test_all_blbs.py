@@ -45,19 +45,19 @@ def test_blb(blb_path: Path) -> bool:
         print(f"    Asset index @ 0xF92: {header.state_data.asset_index}")
         print(f"    Unknown F91: {header.state_data.unknown_f91}")
         
-        # State arrays (sliding window data)
-        state_array = header.state_data.state_array
+        # Playback sequence arrays (mode/index pairs for game flow)
+        mode_array = header.state_data.mode_array
         index_array = header.state_data.index_array
-        print(f"    State array (0xF38-0xF90): {len(state_array)} bytes")
-        print(f"      First 16 bytes: {state_array[:16].hex()}")
+        print(f"    Mode array (0xF38-0xF90): {len(mode_array)} bytes")
+        print(f"      First 16 bytes: {mode_array[:16].hex()}")
         print(f"    Index array (0xF93-0xFFF): {len(index_array)} bytes")
         print(f"      First 16 bytes: {index_array[:16].hex()}")
         
-        # Check for non-zero values in sliding window
-        nonzero_states = [i for i, b in enumerate(state_array) if b != 0]
+        # Check for non-zero values in playback sequence
+        nonzero_modes = [i for i, b in enumerate(mode_array) if b != 0]
         nonzero_indices = [i for i, b in enumerate(index_array) if b != 0]
-        if nonzero_states:
-            print(f"    Non-zero state offsets: {nonzero_states[:10]}{'...' if len(nonzero_states) > 10 else ''}")
+        if nonzero_modes:
+            print(f"    Non-zero mode offsets: {nonzero_modes[:10]}{'...' if len(nonzero_modes) > 10 else ''}")
         if nonzero_indices:
             print(f"    Non-zero index offsets: {nonzero_indices[:10]}{'...' if len(nonzero_indices) > 10 else ''}")
         

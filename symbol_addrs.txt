@@ -112,9 +112,22 @@ D_800A59FC = 0x800A59FC; // type:s32 // CD filter params
 D_800A5A0C = 0x800A5A0C; // type:u8 // XA file number
 D_800A5A0D = 0x800A5A0D; // type:u8 // XA channel number
 
-// BLB Level Data Parser functions
-func_8007A62C = 0x8007A62C; // size:0x254 // Initialize level data structure from BLB
-func_8007B074 = 0x8007B074; // type:func // Called from func_8007A62C
+// =============================================================================
+// Level Loading System (0x8007A294 - 0x8007D1D0+)
+// Orchestrates playback sequences, asset loading, and level initialization
+// =============================================================================
+AdvancePlaybackSequence = 0x8007A294; // size:0x118 // Advances through BLB playback sequence (movies/credits/levels)
+SeekToLevelInSequence = 0x8007A3AC; // size:0x1A4 // Searches for level with matching asset index
+func_8007A62C = 0x8007A62C; // size:0x254 // LevelDataParser - Initialize level data structure from BLB
+LoadAssetContainer = 0x8007B074; // size:0x308 // Load secondary/tertiary container and parse sub-TOC
+InitializeAndLoadLevel = 0x8007D1D0; // size:0x490 // Main level loading orchestrator
+
+// Level Loading - Data globals
+g_MenuDemoRotationCounter = 0x800A60A4; // type:u8 // Cycles 0-4 for attract mode on menu
+STR_END2 = 0x800A608C; // "END2" - ending movie marker
+STR_INT1 = 0x800A6094; // "INT1" - intro movie marker
+STR_CRD1 = 0x800A609C; // "CRD1" - credits 1 marker
+STR_CRD2 = 0x800A6058; // "CRD2" - credits 2 terminator
 
 // PSY-Q libcd wrapper functions
 CdIntToPos = 0x80083768; // type:func // Convert sector to CdlLOC

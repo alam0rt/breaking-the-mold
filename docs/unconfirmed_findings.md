@@ -293,4 +293,115 @@ This suggests these fields may relate to shared asset characteristics or tileset
 
 ---
 
-*Last updated: January 3, 2026*
+## Level Loading System Analysis (January 4, 2026)
+
+Analysis of `InitializeAndLoadLevel` (0x8007D1D0) reveals the complete level loading architecture.
+
+### GameState Structure
+
+The main `GameState` structure passed to loading functions:
+
+```
+Offset  Size  Type                Description
+------  ----  ----                -----------
+0x00    4     u32                 flags (set to 0xFFFF0000)
+0x04    4     func*               update function pointer (LAB_8007e654)
+0x08    4     u32                 flags2 (set to 0xFFFF0000)
+0x0C    4     func*               render function pointer (LAB_80020f48)
+0x3C    4     void*               destination buffer for level data
+0x84    -     LevelDataContext    BLB accessor context (starts at offset +0x21 × 4)
+```
+
+### LevelDataContext Structure
+
+Used by all BLB accessor functions:
+
+```
+Offset  Size  Type     Description
+------  ----  ----     -----------
+0x5C    4     void*    headerBuffer - pointer to loaded BLB header
+0x60    1     u8       stateOffset - current position in playback sequence
+0x64    4     func*    loader callback function pointer
+0x68    4     void*    secondary asset buffer
+0x6C    4     void*    tertiary asset buffer
+```
+
+### Playback Sequence Modes
+
+The BLB header contains a "playback sequence" that defines pre-level content:
+
+| Mode | Type | Description |
+|------|------|-------------|
+| 0 | Invalid | Reset/skip, search for next valid item |
+| 1 | Movie | FMV playback using movie table |
+| 2 | Credits | Credits screen using credits table |
+| 3 | Level | Actual level - load and play |
+| 4-5 | Special | Special loading (sector order data) |
+| 6 | End | Sequence terminator |
+
+Mode is stored at `header + stateOffset + 0xF36`.
+Level/movie index is stored at `header + stateOffset + 0xF92`.
+
+### String Markers in Playback Sequence
+
+Special string markers control playback flow:
+
+| Address | String | Purpose |
+|---------|--------|---------|
+| 0x800A6058 | "CRD2" | Credits 2 - terminates credits sequence |
+| 0x800A608C | "END2" | Ending 2 - skipped under certain conditions |
+| 0x800A6094 | "INT1" | Intro 1 - skip next two items after playback |
+| 0x800A609C | "CRD1" | Credits 1 - skip to level after credits |
+
+### Menu Demo Rotation
+
+When at the menu (level index 0), the game cycles through demo modes:
+
+```c
+// g_MenuDemoRotationCounter at 0x800A60A4
+if (counter == 4) counter = 0;
+else if (counter == 0) mode = 1;  // Normal
+else if (counter == 2) mode = 6;  // End sequence?
+else mode = 5;                     // Attract mode
+counter++;
+```
+
+### LoadAssetContainer Sub-TOC Asset IDs
+
+The `LoadAssetContainer` function parses container sub-TOCs with these asset IDs:
+
+| ID (dec) | ID (hex) | Destination Offset | Description |
+|----------|----------|-------------------|-------------|
+| 100 | 0x64 | +0x04 | Geometry/tiles? |
+| 101 | 0x65 | +0x08 | Unknown |
+| 200 | 0xC8 | +0x0C | Sprites? |
+| 201 | 0xC9 | +0x10 | Animations? |
+| 300 | 0x12C | +0x14 | Unknown |
+| 302 | 0x12E | +0x1C | Unknown |
+| 303 | 0x12F | +0x28 | Unknown |
+| 400 | 0x190 | +0x20 | Object data? |
+| 401 | 0x191 | +0x24 | Unknown |
+| 500 | 0x1F4 | +0x2C | Unknown |
+| 501 | 0x1F5 | +0x38 | Unknown |
+| 502 | 0x1F6 | +0x3C | Unknown |
+| 503 | 0x1F7 | +0x30 | Unknown |
+| 504 | 0x1F8 | +0x34 | Unknown |
+| 600 | 0x258 | +0x40, +0x44 | Level geometry (size stored) |
+| 601 | 0x259 | +0x48, +0x4C | Collision data (size stored) |
+| 602 | 0x25A | +0x50 | Palette data |
+| 700 | 0x2BC | +0x54, +0x58 | Audio/music (size stored) |
+
+**Verification needed:** Runtime tracing to confirm asset type purposes.
+
+### Functions Added to Ghidra
+
+| Address | Name | Description |
+|---------|------|-------------|
+| 0x8007A294 | AdvancePlaybackSequence | Iterates through playback items |
+| 0x8007A3AC | SeekToLevelInSequence | Finds level by asset index |
+| 0x8007B074 | LoadAssetContainer | Loads/parses asset containers |
+| 0x8007D1D0 | InitializeAndLoadLevel | Main orchestrator |
+
+---
+
+*Last updated: January 4, 2026*

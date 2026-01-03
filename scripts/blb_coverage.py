@@ -242,15 +242,21 @@ def analyze_coverage(blb_path: Path) -> dict:
     # Unknown region at 0xED0-0xF10 (64 bytes) - u32 array
     mark_range(0xED0, 0xF10, "unknown_ed0", is_unknown=True)
     
-    # State/config data region at 0xF34-0x1000 (204 bytes)
-    # Some fields are now understood:
-    mark_range(0xF34, 0xF36, "state_unknown_f34_f35", is_unknown=True)
-    mark_range(0xF36, 0xF37, "state_game_mode")  # Known: game mode (1=movie, 2=credits, 4-5=level)
-    mark_range(0xF37, 0xF38, "state_secondary_flag")  # Known: secondary state flag
-    mark_range(0xF38, 0xF91, "state_unknown_f38_f90", is_unknown=True)
-    mark_range(0xF91, 0xF92, "state_unknown_f91", is_unknown=True)  # Credits-related?
-    mark_range(0xF92, 0xF93, "state_asset_index")  # Known: current asset/movie index
-    mark_range(0xF93, 0x1000, "state_unknown_f93_end", is_unknown=True)
+    # Credits sequence table at 0xF10-0xF34 (36 bytes)
+    # Contains CRD1/CRD2 entries (12 bytes each) used by mode 2 (credits display)
+    # Structure per entry: u16 unknown, u16 unknown, 4-char code (e.g., "CRD1"), u32 unknown
+    mark_range(0xF10, 0xF34, "credits_table")  # Known: credits sequence entries
+    
+    # Playback Sequence data region at 0xF34-0x1000 (204 bytes)
+    # Controls game flow through levels, movies, credits via mode/index pairs
+    # Confirmed via decompilation of InitializeAndLoadLevel (0x8007D1D0)
+    mark_range(0xF34, 0xF36, "playback_unknown_f34_f35", is_unknown=True)
+    mark_range(0xF36, 0xF37, "playback_game_mode")  # Known: base mode (0=invalid, 1=movie, 2=credits, 3=level, 4-5=sector, 6=end)
+    mark_range(0xF37, 0xF38, "playback_secondary_flag")  # Known: secondary state flag
+    mark_range(0xF38, 0xF91, "playback_mode_array")  # Known: mode bytes indexed by sequence offset
+    mark_range(0xF91, 0xF92, "playback_unknown_f91", is_unknown=True)  # Unknown separator
+    mark_range(0xF92, 0xF93, "playback_asset_index")  # Known: base index for table lookups
+    mark_range(0xF93, 0x1000, "playback_index_array")  # Known: index bytes indexed by sequence offset
     
     # Calculate statistics
     total_covered = sum(covered)
