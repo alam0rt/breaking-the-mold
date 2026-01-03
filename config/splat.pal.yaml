@@ -79,13 +79,21 @@ segments:
       # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
       - [0x6AE2C, c, LevelDataParser]
       - [0x6B080, asm]
-      # func_8007A9B0: 0x8007A9B0 - 0x8007AA2F (Level asset enumerator)
+      # StateAccessors: 0x8007A9B0 - 0x8007AA27
+      # GetLevelCount, GetLevelAssetIndex, GetLevelDisplayName, getLevelName
       - [0x6B1B0, c, StateAccessors]
+      # ASM gap: GetLevelFlagByIndex, GetCurrentLevelAssetIndex, GetCurrentLevelDisplayName,
+      # GetCurrentLevelName, GetCurrentSectorOrderUnk1, GetCurrentSectorOrderUnk2
       - [0x6B228, asm]
-      # func_8007ABCC - func_8007ACDC + GetMovieFilename: 0x8007ABCC - 0x8007AE13
+      # CreditsAccessors: 0x8007ABCC - 0x8007AE13
+      # GetCurrentSectorOffset, GetCurrentSectorCount, GetAssetCount,
+      # GetMovieReservedByIndex, GetMovieShortNameByIndex, GetCurrentMovieReserved,
+      # GetCurrentMovieShortName, GetCurrentMovieFilename
       - [0x6B3CC, c, CreditsAccessors]
-      # GetMovieUnknown00, GetMovieSectorCount: 0x8007AE14 - 0x8007AE9B
+      # BLBHeaderAccessors: 0x8007AE14 - 0x8007AE9B
+      # GetMovieUnknown00, GetMovieSectorCount
       - [0x6B614, c, BLBHeaderAccessors]
+      # ASM: GetCurrentModeReservedData (has jumptable), GetCurrentLevelFlag, GetCurrentTertiaryDataSize
       - [0x6B69C, asm]
       # SetupSound: 0x8007B8B8 - 0x8007c084 ?
       - [0x6C7B8, c, SetupSound]

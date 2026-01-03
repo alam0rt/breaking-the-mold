@@ -24,28 +24,49 @@ g_Music3Sector = 0x8009B3E0; // type:s32
 g_Music4Sector = 0x8009B3E4; // type:s32
 g_Music5Sector = 0x8009B3E8; // type:s32
 g_AllMusicFilesFound = 0x800A59E8; // type:s8
-getLevelName = 0x8007AA08; // size:0x20
 
-// BLB Header accessor functions (movie table at 0xB60)
-// These use state at 0xF38 and index at 0xF94 to access movie entries
-GetMovieUnknown00 = 0x8007AE14; // size:0x44
-GetMovieSectorCount = 0x8007AE58; // size:0x44
-GetCurrentMovieFilename = 0x8007ADC8; // size:0x4C
+// =============================================================================
+// BLB Header Accessor Functions (StateAccessors.c: 0x8007A9B0 - 0x8007AA27)
+// Level table at header+0x000, 0x70 bytes per entry
+// =============================================================================
+GetLevelCount = 0x8007A9B0; // size:0x14 // Returns header[0xF31] (level count = 26)
+GetLevelAssetIndex = 0x8007A9C4; // size:0x24 // Returns level[n]+0x0C (asset index byte)
+GetLevelDisplayName = 0x8007A9E8; // size:0x20 // Returns ptr to level[n]+0x56 (display flags)
+getLevelName = 0x8007AA08; // size:0x20 // Returns ptr to level[n]+0x5B (name string)
 
-// BLB Header accessor functions (state sliding window)
-// These read state byte at 0xF36+offset and index byte at 0xF92+offset
-GetCurrentSectorOffset = 0x8007ABCC; // size:0x88
-GetCurrentSectorCount = 0x8007AC54; // size:0x88
-GetAssetCount = 0x8007ACDC; // size:0x14
-GetMovieReservedByIndex = 0x8007ACF0; // size:0x20
-GetMovieShortNameByIndex = 0x8007AD10; // size:0x20
-GetCurrentMovieReserved = 0x8007AD30; // size:0x4C
-GetCurrentMovieShortName = 0x8007AD7C; // size:0x4C
+// =============================================================================
+// BLB Header Accessor Functions (StateAccessors.c continued: 0x8007AA28 - 0x8007ABCB)
+// Current level accessors using sliding window (state at +0xF36, index at +0xF92)
+// =============================================================================
+GetLevelFlagByIndex = 0x8007AA28; // size:0x24 // Returns level[n]+0x0D (flag byte)
+GetCurrentLevelAssetIndex = 0x8007AA4C; // size:0x44 // Current level asset index (mode 3)
+GetCurrentLevelDisplayName = 0x8007AA90; // size:0x54 // Current level display ptr (mode 3)
+GetCurrentLevelName = 0x8007AAE8; // size:0x5C // Current level name ptr at +0x5B (modes 3, 6)
+GetCurrentSectorOrderUnk1 = 0x8007AB44; // size:0x44 // Sector order table +0xCD1 (modes 4-5)
+GetCurrentSectorOrderUnk2 = 0x8007AB88; // size:0x44 // Sector order table +0xCD2 (modes 4-5)
 
-// BLB Header level accessors (level table at 0x000, 0x70 bytes per entry)
-GetLevelCount = 0x8007A9B0; // size:0x14
-GetLevelAssetIndex = 0x8007A9C4; // size:0x24
-GetLevelDisplayName = 0x8007A9E8; // size:0x20
+// =============================================================================
+// BLB Header Accessor Functions (CreditsAccessors.c: 0x8007ABCC - 0x8007AE13)
+// Sliding window accessors for credits (mode 2) and levels (modes 4-5)
+// =============================================================================
+GetCurrentSectorOffset = 0x8007ABCC; // size:0x88 // Sector offset (credits at +0xF18, levels at +0xCCC)
+GetCurrentSectorCount = 0x8007AC54; // size:0x88 // Sector count (credits at +0xF1A, levels at +0xCCE)
+GetAssetCount = 0x8007ACDC; // size:0x14 // Returns header[0xF32] (movie/asset count = 13)
+GetMovieReservedByIndex = 0x8007ACF0; // size:0x20 // Returns ptr to movie[n]+0x04 (reserved)
+GetMovieShortNameByIndex = 0x8007AD10; // size:0x20 // Returns ptr to movie[n]+0x09 (short name)
+GetCurrentMovieReserved = 0x8007AD30; // size:0x4C // Current movie reserved ptr (mode 1)
+GetCurrentMovieShortName = 0x8007AD7C; // size:0x4C // Current movie short name ptr (mode 1)
+GetCurrentMovieFilename = 0x8007ADC8; // size:0x4C // Current movie filename ptr at +0xB6C (mode 1)
+
+// =============================================================================
+// BLB Header Accessor Functions (BLBHeaderAccessors.c: 0x8007AE14 - 0x8007B073)
+// Movie table accessors and mode-specific dispatchers
+// =============================================================================
+GetMovieUnknown00 = 0x8007AE14; // size:0x44 // Movie u16 at +0xB60 (mode 1)
+GetMovieSectorCount = 0x8007AE58; // size:0x44 // Movie sector count at +0xB62 (mode 1)
+GetCurrentModeReservedData = 0x8007AE9C; // size:0x108 // Mode-specific reserved data dispatcher (has switch/jumptable)
+GetCurrentLevelFlag = 0x8007AFA4; // size:0x54 // Get flag byte for current level (mode 3)
+GetCurrentTertiaryDataSize = 0x8007AFF8; // size:0x7C // Tertiary block size calculation
 
 initPlayerState = 0x800260D0; // size:0x8C
 main = 0x800828B0; // size:0x360

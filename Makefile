@@ -167,7 +167,7 @@ help:
 	@echo "  extract          - Extract/disassemble binary using splat"
 	@echo "  expected         - Copy original binary to expected/"
 	@echo "  check            - Verify build matches original (quick)"
-	@echo "  verify           - Build with NON_MATCHING and show match score"
+	@echo "  verify           - Alias for 'check' (for compatibility)"
 	@echo "  clean            - Remove build artifacts"
 	@echo ""
 	@echo "Decompilation:"
@@ -281,41 +281,9 @@ check: $(BUILD_DIR)/$(PROJECT).bin $(TARGET)
 		exit 1; \
 	fi
 
-# Verify: Build with NON_MATCHING and show match percentage
+# Verify: Compatibility alias for 'check'
 # Usage: make verify
-verify:
-	@echo "=== Building with NON_MATCHING ==="
-	@rm -rf $(BUILD_DIR)/src
-	@$(MAKE) --no-print-directory CPPFLAGS="$(CPPFLAGS) -DNON_MATCHING" build
-	@echo ""
-	@echo "=============================================="
-	@echo "              VERIFICATION REPORT"
-	@echo "=============================================="
-	@echo ""
-	@ORIG_SIZE=$$(stat -c%s $(TARGET)); \
-	BUILD_SIZE=$$(stat -c%s $(BUILD_DIR)/$(PROJECT).bin); \
-	echo "File sizes:"; \
-	echo "  Original:     $$ORIG_SIZE bytes"; \
-	echo "  NON_MATCHING: $$BUILD_SIZE bytes"; \
-	echo ""; \
-	echo "SHA1 checksums:"; \
-	echo "  Original:     $$(sha1sum $(TARGET) | cut -d' ' -f1)"; \
-	echo "  NON_MATCHING: $$(sha1sum $(BUILD_DIR)/$(PROJECT).bin | cut -d' ' -f1)"; \
-	echo ""; \
-	if cmp -s $(BUILD_DIR)/$(PROJECT).bin $(TARGET); then \
-		echo "Status: ✓ EXACT MATCH (100%)"; \
-	else \
-		if [ "$$BUILD_SIZE" -ne "$$ORIG_SIZE" ]; then \
-			echo "Status: ✗ Size mismatch ($$BUILD_SIZE vs $$ORIG_SIZE bytes)"; \
-			echo "Match:  N/A (sizes differ)"; \
-		else \
-			DIFF_BYTES=$$(cmp -l $(BUILD_DIR)/$(PROJECT).bin $(TARGET) 2>/dev/null | wc -l); \
-			MATCH_PERCENT=$$(echo "scale=2; (1 - $$DIFF_BYTES / $$ORIG_SIZE) * 100" | bc); \
-			echo "Status: ✗ $$DIFF_BYTES bytes differ"; \
-			echo "Match:  $$MATCH_PERCENT%"; \
-		fi; \
-	fi; \
-	echo ""
+verify: check
 
 # -----------------------------------------------------------------------------
 # Diff Tools
