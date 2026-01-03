@@ -34,14 +34,7 @@
  * @param gameState  Pointer to GameState structure
  * @return           Number of levels defined in BLB header
  */
-#ifdef NON_MATCHING
-u8 GetLevelCount(void *gameState) {
-    u8 *headerBuffer = *(u8 **)((u8 *)gameState + 0x5C);
-    return headerBuffer[0xF31];
-}
-#else
 INCLUDE_ASM("asm/pal/nonmatchings/StateAccessors", GetLevelCount);
-#endif
 
 /**
  * GetLevelAssetIndex - Get the asset index for a specific level
@@ -54,15 +47,7 @@ INCLUDE_ASM("asm/pal/nonmatchings/StateAccessors", GetLevelCount);
  * @param levelIndex  Level entry number (0-25)
  * @return            Asset index for the specified level
  */
-#ifdef NON_MATCHING
-u8 GetLevelAssetIndex(void *gameState, s32 levelIndex) {
-    u8 *headerBuffer = *(u8 **)((u8 *)gameState + 0x5C);
-    /* Each level entry is 0x70 bytes, asset index at +0x0C */
-    return headerBuffer[((levelIndex & 0xFF) * 0x70) + 0x0C];
-}
-#else
 INCLUDE_ASM("asm/pal/nonmatchings/StateAccessors", GetLevelAssetIndex);
-#endif
 
 /**
  * GetLevelDisplayName - Get pointer to level's display name field
@@ -74,13 +59,5 @@ INCLUDE_ASM("asm/pal/nonmatchings/StateAccessors", GetLevelAssetIndex);
  * @param levelIndex  Level entry number (0-25)
  * @return            Pointer to display data at level[n]+0x56
  */
-#ifdef NON_MATCHING
-s32 GetLevelDisplayName(void *gameState, s32 levelIndex) {
-    u8 *headerBuffer = *(u8 **)((u8 *)gameState + 0x5C);
-    /* Each level entry is 0x70 bytes, display name area at +0x56 */
-    return (s32)(headerBuffer + ((levelIndex & 0xFF) * 0x70) + 0x56);
-}
-#else
 INCLUDE_ASM("asm/pal/nonmatchings/StateAccessors", GetLevelDisplayName);
-#endif
 
