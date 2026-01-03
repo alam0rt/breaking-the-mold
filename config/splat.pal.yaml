@@ -81,8 +81,6 @@ segments:
       - [0x6B080, asm]
       # func_8007A9B0: 0x8007A9B0 - 0x8007AA2F (Level asset enumerator)
       - [0x6B1B0, c, StateAccessors]
-      # getLevelName: 0x8007AA08 - 0x8007AA27
-      - [0x6B208, c, getLevelName]
       - [0x6B228, asm]
       # func_8007ABCC - func_8007ACDC + GetMovieFilename: 0x8007ABCC - 0x8007AE13
       - [0x6B3CC, c, CreditsAccessors]
