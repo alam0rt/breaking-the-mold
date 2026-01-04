@@ -284,26 +284,47 @@ BLB File
 
 ## Asset Types
 
-### Primary Data (Level Geometry)
+**IMPORTANT:** Asset 600 (0x258) appears in BOTH segments with different content:
+- **Primary Asset 600**: Level geometry/world data (background graphics)
+- **Tertiary Asset 600**: RLE-encoded character sprites with embedded palettes
+
+This was verified via runtime analysis on 2026-01-05.
+
+### Primary Segment Assets
 | Type | Hex | Structure | Description | Typical Size |
 |------|-----|-----------|-------------|--------------|
-| 600 | 0x258 | CONTAINER | Level graphics/world data | 500KB-1MB |
+| 600 | 0x258 | CONTAINER | Level geometry/world data | 500KB-1MB |
 | 601 | 0x259 | CONTAINER | Collision/layout data | 100-300KB |
 | 602 | 0x25A | RAW | Palette/color data (15-bit PSX) | 24-200 bytes |
 
-### Secondary Data (Sprites/Tiles) - VERIFIED
+### Secondary Segment Assets (Tiles) - VERIFIED
 
 | Type | Hex | Structure | Description |
 |------|-----|-----------|-------------|
 | 100 | 0x064 | RAW | Tile header (36 bytes, contains tile counts) |
-| 101 | 0x065 | RAW | Secondary header (optional) |
 | 300 | 0x12C | RAW | Tile pixel data (8bpp indexed) |
 | 301 | 0x12D | RAW | Palette index per tile (1 byte/tile) |
-| 302 | 0x12E | RAW | Tile size/category flag (1 byte/tile, see below) |
+| 302 | 0x12E | RAW | Tile size/rendering flags (1 byte/tile) |
 | 400 | 0x190 | CONTAINER | Palette container (256-color palettes) |
 | 401 | 0x191 | RAW | Animation/palette configuration |
-| 601 | 0x259 | CONTAINER | Secondary layout data |
+| 601 | 0x259 | CONTAINER | Secondary collision/layout data |
 | 602 | 0x25A | RAW | Secondary palette |
+
+### Tertiary Segment Assets (Sprites, Layers, Audio) - VERIFIED 2026-01-05
+
+| Type | Hex | Structure | Description |
+|------|-----|-----------|-------------|
+| 100 | 0x064 | RAW | Duplicate tile header |
+| 200 | 0x0C8 | RAW | Tilemap container header (layer count) |
+| 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
+| 302 | 0x12E | RAW | Duplicate tile flags |
+| 401 | 0x191 | RAW | Duplicate animation config |
+| 500 | 0x1F4 | RAW | Music/sequence data |
+| 501 | 0x1F5 | RAW | Audio configuration |
+| 502 | 0x1F6 | RAW | Audio configuration |
+| 503 | 0x1F7 | RAW | Audio configuration |
+| 600 | 0x258 | CONTAINER | **RLE sprites with embedded palettes** |
+| 700 | 0x2BC | RAW | Audio/VAB data |
 
 #### Asset 100 - Tile Header (36 bytes, CODE-VERIFIED)
 
@@ -626,11 +647,11 @@ After parsing the TOC, the game accesses three asset types:
 ### Asset 0x258 - World/Level Graphics (RLE Sprite Container)
 
 The largest asset, containing level background/decoration sprites. Uses same RLE
-format as tertiary sprite data.
+format as tertiary sprite data. Each sprite contains an embedded 256-color palette.
 
-**VERIFIED 2025-01-XX via Ghidra analysis of GetFrameMetadata (0x8007bebc)**
+**VERIFIED 2026-01-05 via Ghidra + sprite extraction (extract_sprites_600.py)**
 
-**Container Structure:**
+**Container Structure (Sub-TOC):**
 ```
 Offset  Size    Description
 ------  ----    -----------
@@ -642,76 +663,105 @@ Offset  Size    Description
 ```
 Offset  Size    Description
 ------  ----    -----------
-0x00    u32     Sprite ID
+0x00    u32     Sprite ID (lookup key for FindSpriteInTOC)
 0x04    u32     Sprite data size in bytes
 0x08    u32     Sprite data offset from asset start
 ```
 
-**Sprite Header (24 or 36 bytes):**
+**Sprite Header (12 bytes):**
 ```
 Offset  Size    Type    Description
 ------  ----    ----    -----------
-0x00    2       u16     Sprite type: 1=standard, 2=linked
-0x02    2       u16     Header size: 24 for type 1, 36 for type 2
-0x04    2       u16     Frames end offset (header_size + frame_count × frame_entry_size)
-0x06    2       u16     Padding (always 0)
-0x08    4       u32     RLE data size (approximate, may not match exactly)
-0x0C    4       u32     Sprite ID (may not match TOC for type 2)
-0x10    2       u16     Frame count
-0x12    2       u16     Padding (always 0)
-0x14    2       u16     Unknown flag (0 or 1)
-0x16    2       u16     CLUT placeholder (always 0x815D - GARBAGE, ignored at runtime)
-0x18    12      bytes   Extended header (only for type 2)
+0x00    2       u16     Animation count (number of animation groups)
+0x02    2       u16     Frame metadata offset (from sprite start)
+0x04    4       u32     RLE data offset (from sprite start)
+0x08    4       u32     Palette offset (embedded 256-color palette)
 ```
 
-**Frame Entry (36 bytes for type 1, 72 bytes for type 2):**
+**Embedded Palette (512 bytes at palette_offset):**
+```
+Format: 256 × u16 PSX 15-bit RGB colors
+  - Color 0: Typically 0x0000 (transparent)
+  - Bits 0-4:   Red (0-31, multiply by 8 for 8-bit)
+  - Bits 5-9:   Green (0-31, multiply by 8 for 8-bit)
+  - Bits 10-14: Blue (0-31, multiply by 8 for 8-bit)
+  - Bit 15:     STP (semi-transparency flag)
+
+Each sprite contains its own embedded palette, allowing per-sprite
+color schemes. This differs from tiles which share Asset 400 palettes.
+```
+
+**Animation Entry (12 bytes each, starting at offset 0x0C):**
+```
+Offset  Size    Type    Description
+------  ----    ----    -----------
+0x00    4       u32     Animation ID (identifies animation type)
+0x04    2       u16     Frame count (number of frames in animation)
+0x06    2       u16     Frame data offset (index into frame metadata)
+0x08    2       u16     Flags (animation properties)
+0x0A    2       u16     Extra (unknown, often 0)
+```
+
+**Frame Metadata (36 bytes = 0x24 per frame):**
 ```
 Offset  Size    Type    Description
 ------  ----    ----    -----------
 0x00    2       u16     Unknown (always 0)
 0x02    2       u16     Unknown (always 0)
-0x04    2       u16     Unknown (1 or 2)
+0x04    2       u16     Flags (1 or 2)
 0x06    2       s16     Render X offset (signed, for sprite positioning)
 0x08    2       s16     Render Y offset (signed)
 0x0A    2       u16     Render width (sprite visible width)
 0x0C    2       u16     Render height (sprite visible height)
 0x0E    2       u16     Unknown (0-10)
 0x10    2       u16     Unknown (always 0)
-0x12    2       s16     Hitbox X offset (signed, collision box position)
-0x14    2       s16     Hitbox Y offset (signed)
-0x16    2       u16     Hitbox width (collision box width)
-0x18    2       u16     Hitbox height (collision box height)
+0x12    2       s16     Anchor X offset (signed)
+0x14    2       s16     Anchor Y offset (signed)
+0x16    2       u16     Clip width
+0x18    2       u16     Clip height
 0x1A    6       bytes   Padding (always 0)
-0x20    4       u32     RLE data offset (from frames_end)
+0x20    4       u32     RLE data offset (from sprite's RLE base)
 ```
 
-For type 2 sprites, the frame entry is 72 bytes (two 36-byte blocks for dual hitbox/layers).
+**Key Ghidra Functions:**
+- **FindSpriteInTOC** (0x8007b968): Searches ctx+0x70 then ctx+0x40 for sprite ID
+- **InitSpriteContext** (0x8007bc3c): Parses sprite header at offsets 0, 2, 4, 8
+- **GetFrameMetadata** (0x8007bebc): Returns pointer to 36-byte frame entry
+- **DecodeRLESprite** (0x80010068): RLE decoder with mirror support
 
-**Key Formulas (verified for all 20 sprites in SCIE level):**
+**Key Formulas:**
 ```
-frames_end = header_size + frame_count × frame_entry_size
-frame_entry_size = 36 (type 1) or 72 (type 2)
-rle_absolute_offset = sprite_offset + frames_end + frame.rle_offset
+animation_entry_offset = 0x0C + anim_index × 12
+frame_meta_absolute = sprite_start + frame_meta_offset + frame_index × 0x24
+rle_data_absolute = sprite_start + rle_offset + frame.rle_offset
 ```
 
-**GetFrameMetadata (0x8007bebc) - Key offsets used:**
-- `frame_index × 0x24 + base`: Frame entry lookup (0x24 = 36 bytes)
-- `iVar4 + 0x0A`: Render width (offset 10)
-- `iVar4 + 0x0C`: Render height (offset 12)
-- `iVar4 + 0x20`: RLE data offset (offset 32)
+**RLE Pixel Data Format:**
+Located at sprite_start + rle_offset + frame.rle_offset:
+```
+Offset  Size    Description
+------  ----    -----------
+0x00    u16     Command count (number of RLE commands)
+0x02+   u16×N   RLE commands
 
-**RLE Pixel Data:**
-Located at (sprite_offset + frames_end + frame.rle_offset).
-- First u16 is NOT row count (varies independently of height)
-- Uses same RLE format as other sprite data
-- Control word (u16): bit 15=newline, bits 8-14=skip, bits 0-7=copy count
-- Raw 8bpp indexed pixels following control words
+Command format (u16):
+  bit 15:    New line flag (advance to next row)
+  bits 14-8: Skip count (transparent pixels)
+  bits 7-0:  Copy count (literal pixels to copy)
 
-**Example (SCIE level, Asset 600 from tertiary sub-TOC):**
-- 20 sprite entries
-- Type 1 sprites: 17 entries (36-byte frame entries)
-- Type 2 sprites: 3 entries (72-byte frame entries, linked/complex)
-- Frame counts range from 1 to 15 per sprite
+Pixel data follows commands as 8bpp indexed values.
+```
+
+**Example (SCIE level, Asset 600):**
+- 20 sprite entries in sub-TOC
+- Sprite 0: 3 animations × 5 frames each = 15 total frames
+- Frame sizes: 16×16 to 128×128 pixels
+- RLE compression ratio: ~40-60% of raw size
+- Each sprite has embedded 256-color palette (512 bytes)
+
+**Extraction Tool:** `scripts/extract_sprites_600.py` - extracts colored sprite sheets from BLB files
+
+**VERIFIED 2026-01-05**: Sprites extracted with embedded palettes display correctly.
 
 ### Asset 0x259 - Collision/Physics Data
 

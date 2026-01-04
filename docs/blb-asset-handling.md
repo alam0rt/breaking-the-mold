@@ -12,9 +12,12 @@ The BLB file contains three types of data segments per level:
 
 | Segment | Contents | Asset Types |
 |---------|----------|-------------|
-| **Primary** | Level geometry, collision, palette | 600, 601, 602 |
-| **Secondary** | Tiles, tilemaps, palettes | 100, 101, 200, 201, 300, 301, 302, 400, 401 |
-| **Tertiary** | Audio, music | 100, 200, 201, 500-504, 700 |
+| **Primary** | Level geometry, collision, palette | 600 (geometry), 601, 602 |
+| **Secondary** | Tiles, tile metadata, palettes | 100, 300, 301, 302, 400, 401, 601, 602 |
+| **Tertiary** | Sprites, layers, audio | 100, 200, 201, 302, 401, 500-504, 600 (sprites), 700 |
+
+**Note:** Asset 600 appears in BOTH primary (level geometry) and tertiary (RLE sprites).
+Same asset ID, different purposes. Verified via runtime analysis of SCIE level.
 
 ### Container vs Raw Assets
 
