@@ -5,6 +5,115 @@ that have not been fully verified through decompilation or runtime tracing.
 
 ---
 
+## Primary Asset 600 Entry Structure (2026-01-04)
+
+**Status:** PARTIALLY CODE-VERIFIED via Ghidra decompilation
+
+Primary Asset 600 (0x258) contains world/level layout objects. Each entry describes
+a background decoration, platform visual, or static object to be rendered.
+
+### Key Functions (from Ghidra)
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `FUN_8007b6c8` | 0x8007b6c8 | Get entry count: `return **(u16**)(ctx + 0xc)` |
+| `FUN_8007b700` | 0x8007b700 | Get entry by index: `return *(ptr*)(ctx+0x10) + index * 0x5c` |
+| `FUN_8007b6dc` | 0x8007b6dc | Get sprite data offset from sub-TOC |
+| `FUN_80024778` | 0x80024778 | Main level object initialization loop |
+
+### Entry Size
+
+Each entry is **0x5C (92) bytes**, confirmed from:
+```c
+// FUN_8007b700
+return *(int *)(param_1 + 0x10) + (param_2 & 0xffff) * 0x5c;
+```
+
+### Entry Structure (92 bytes)
+
+Based on decompilation of `FUN_80024778`:
+
+```
+Offset  Size  Type    Field               Source Code Reference
+------  ----  ----    -----               ---------------------
+0x00    4     u32     position_x?         local_38 = *puVar14
+0x04    4     u32     position_y?         local_34 = puVar14[1]
+0x08    2     s16     width               sVar2 = (short)puVar14[2]
+0x0A    2     s16     height              sVar3 = *(short*)(puVar14 + 10)
+0x0C    4     u32     sprite_index?       puVar14[3] - passed to sprite setup
+0x0E    2     u16     render_priority?    *(ushort*)(puVar14 + 0xe) - compared to layer calc
+0x10    4     u32     unknown16
+0x14    4     u32     unknown20
+0x18    4     u32     unknown24
+0x1C    4     u32     unknown28
+0x1E    1     u8      enable_flag_1       if != 0: param_1 + 0x59 = 1
+0x1F    1     u8      enable_flag_3       if != 0: param_1 + 0x5b = 1
+0x20    1     u8      unknown32           puVar14[8] low byte - also sets 0x58
+0x21    1     u8      enable_flag_2       if != 0: param_1 + 0x5a = 1
+0x22    2     ?       ...
+0x24    2     s16     scroll_x?           *(short)puVar14[9] - compared != 0
+0x26    1     u8      object_type?        *(byte*)(puVar14 + 0x26) - compared to 3
+0x28    4     u32     puVar14[10]         checked == 0 for processing
+0x2C    4     u32     puVar14[0xb] (RGB?) copied to param_1+0x124 for entry 0
+0x2D    1     u8      puVar14+0x2d        copied to param_1+0x125
+0x2E    1     u8      puVar14+0x2e        copied to param_1+0x126
+...remaining fields passed to sprite init functions...
+```
+
+### Processing Logic (simplified)
+
+```c
+// From FUN_80024778
+for (int i = 0; i < entry_count; i++) {
+    entry = entry_table + i * 0x5c;
+    
+    // Skip if entry[10] (offset 0x28) != 0 OR type == 3
+    if (entry[10] != 0 || entry->type == 3) continue;
+    
+    // First entry sets background color
+    if (i == 0) {
+        game_state->bg_color = entry->rgb;
+    }
+    
+    // Set game state flags based on entry flags
+    if (entry->flag1) game_state->flag_59 = 1;
+    if (entry->flag2) game_state->flag_5a = 1;
+    if (entry->flag3) game_state->flag_5b = 1;
+    
+    // Size-based branching (parallax layers?)
+    if (width > 63 || height > 63) {
+        // Large object - parallax background?
+        FUN_8001f534(...);  // Different sprite setup
+        FUN_80021960(...);  // Add to list type 1
+    } else if (width < 129 && height < 129) {
+        // Medium object
+        FUN_8001f150(...);
+        FUN_80021778(...);  // Add to list type 2
+    } else {
+        // Standard object
+        FUN_8001ecc0(...);
+        FUN_80021590(...);  // Add to list type 3
+    }
+}
+```
+
+### Observations
+
+1. **Entry[0] is special**: Sets background RGB color for the level
+2. **Size thresholds**: Objects are categorized by width/height (63, 128 pixels?)
+3. **Object type 3**: Skipped entirely - possibly marker/metadata entries
+4. **Multiple render lists**: Objects sorted into different lists by size
+5. **Scroll fields**: Suggest parallax background support
+
+### Verification Needed
+
+1. Dump entry data at runtime to see actual values
+2. Correlate entry positions with visible level objects
+3. Trace the sprite setup functions to confirm sprite index usage
+4. Verify the 63/128 size thresholds relate to parallax layers
+
+---
+
 ## RLE Sprite Decoder (2026-01-04)
 
 **Status:** CODE-VERIFIED via Ghidra decompilation of `FUN_80010068`
@@ -137,6 +246,103 @@ Total extracted (26 levels):
 - 196 palettes
 - 1,498 sprites (raw RLE data)
 - 104 tertiary blocks
+
+---
+
+## LevelDataContext Accessor Functions (2026-01-04)
+
+**Status:** CODE-VERIFIED via Ghidra
+
+These accessor functions operate on the LevelDataContext structure (GameState + 0x84).
+They provide the link between loaded asset data and game rendering.
+
+### Asset 600 (Level Objects) Accessors
+
+| Function | Address | Returns | Description |
+|----------|---------|---------|-------------|
+| `FUN_8007b6c8` | 0x8007b6c8 | u16 | Entry count: `**(u16**)(ctx + 0xc)` |
+| `FUN_8007b700` | 0x8007b700 | ptr | Entry by index: `*(ptr*)(ctx+0x10) + i * 0x5c` |
+| `FUN_8007b6dc` | 0x8007b6dc | ptr | Sprite data from sub-TOC |
+
+### Asset 100 (Tile Header) Accessors
+
+| Function | Address | Returns | Field |
+|----------|---------|---------|-------|
+| `GetLevelDimensions` | 0x8007b434 | void | Writes ctx+4 offsets 0x8, 0xB (width, height) |
+| `FUN_8007b458` | 0x8007b458 | void | Writes ctx+4 offsets 0xC, 0xF (alt dims?) |
+| `FUN_8007b4b8` | 0x8007b4b8 | ptr | Background RGB (offset 0x00 in Asset 100) |
+| `FUN_8007b4c4` | 0x8007b4c4 | ptr | Secondary RGB (offset 0x04 in Asset 100) |
+| `GetPaletteGroupCount` | 0x8007b4d0 | u8 | Palette count |
+| `GetTotalTileCount` | 0x8007b53c | u16 | Sum of all tile counts |
+| `CopyTilePixelData` | 0x8007b588 | void | Copy tile pixels to buffer |
+| `GetPaletteIndices` | 0x8007b6b0 | ptr | Asset 301 pointer |
+| `GetTileSizeFlags` | 0x8007b6bc | ptr | Asset 302 pointer |
+| `GetAsset100Field1C` | 0x8007b7c8 | u16 | Unknown field at +0x1C |
+| `FUN_8007b7dc` | 0x8007b7dc | ptr | ctx+0x3C (Asset 501?) |
+
+### Context Field Layout (partial)
+
+From accessor analysis, the LevelDataContext fields at low offsets:
+
+```
+Offset  Size  Description                Source
+------  ----  -----------                ------
+0x04    4     Asset 100 pointer          Used by GetLevelDimensions (+0x8, +0xB, +0xC, +0xF)
+0x0C    4     Asset 600 sub-TOC pointer  FUN_8007b6c8, FUN_8007b6dc
+0x10    4     Asset 600 entry table ptr  FUN_8007b700 (entries are 92 bytes each)
+0x3C    4     Unknown (Asset 501?)       FUN_8007b7dc
+```
+
+**Note:** These are separate from the main LevelDataContext offsets documented in
+blb-data-format.md. The ctx+0x04 here refers to content WITHIN the loaded asset
+buffers, accessed via the base pointer stored in the context.
+
+---
+
+## Primary Asset 601 - Not Pure Collision (2026-01-04)
+
+**Status:** HYPOTHESIS - needs verification
+
+Earlier documentation labeled Asset 601 (0x259) as "collision data", but this
+may be incorrect or incomplete.
+
+### Observations
+
+1. **Size mismatch**: Asset 601 is 100-300KB per level, which seems large for
+   simple tile-based collision in a 2D platformer. Most PSX platformers use
+   1-2 bits per tile for collision, which would be ~5KB for a 400x100 tile level.
+
+2. **Container format**: Asset 601 uses the same sub-TOC container format as
+   Asset 600, suggesting it contains multiple discrete objects/entries.
+
+3. **Game complexity**: Skullmonkeys has enemies, collectibles, hazards, warps,
+   and interactive objects. These need placement data somewhere.
+
+### Hypothesis
+
+Asset 601 may contain:
+- **Entity placement**: Positions and types of enemies, items, hazards
+- **Trigger zones**: Level transitions, warp points, event triggers
+- **Collision geometry**: Complex collision shapes (not just tile flags)
+- **Object properties**: Speed, behavior, timing for dynamic elements
+
+### Evidence Needed
+
+1. Parse Asset 601 sub-TOC and analyze entry sizes/patterns
+2. Find functions that read from ctx+0x74 (Asset 601 pointer)
+3. Correlate entry data with visible game objects during play
+4. Check if tile collision is stored elsewhere (Asset 302 bit flags?)
+
+### Related Code
+
+From `LevelDataParser` (0x8007a62c):
+```c
+ctx[0x1d] = asset601_ptr;   // Offset 0x74
+ctx[0x1e] = asset601_size;  // Offset 0x78
+```
+
+The size is stored separately, unlike Asset 600, suggesting the game needs
+to iterate through or bounds-check the data differently.
 
 ---
 
