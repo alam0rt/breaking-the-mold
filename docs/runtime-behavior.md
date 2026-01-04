@@ -90,13 +90,19 @@ The menu is intentionally lightweight (~10x smaller than gameplay levels).
 
 The active level's data is tracked in the LevelDataContext structure:
 
-- **Base address**: `0x8009DCC4`
+- **Base address**: `0x8009DCC4` (GameState + 0x84)
 - **BLB header pointer**: ctx+0x5C → `0x800AE3E0`
-- **Header offset**: ctx+0x60 (current state machine position)
-- **TOC pointer**: ctx+0x68 (points to loaded Table of Contents)
-- **Asset pointers**: ctx+0x70, ctx+0x74, ctx+0x7C
+- **Sliding window index**: ctx+0x60 (current state machine position, u8)
+- **Loader callback**: ctx+0x64 → `0x80020848`
+- **Primary data buffer**: ctx+0x68 (points to loaded TOC)
+- **Secondary data buffer**: ctx+0x6C
+- **Asset 0x258 pointer**: ctx+0x70 (level geometry)
+- **Asset 0x259 pointer**: ctx+0x74 (collision data)
+- **Asset 0x259 size**: ctx+0x78 
+- **Asset 0x25A pointer**: ctx+0x7C (palette data)
 
-See `docs/blb-data-format.md` for full structure documentation.
+See [blb-data-format.md](blb-data-format.md#leveldatacontext-structure-verified-via-ghidra--pcsx-redux-mcp) 
+for the complete 128-byte structure with all asset pointer mappings.
 
 ## Debugging Tips
 

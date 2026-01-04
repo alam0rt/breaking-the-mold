@@ -5,13 +5,13 @@ extract_sprites.py - Extract sprite/tile graphics from Skullmonkeys BLB files
 This script extracts tile graphics from the secondary container of level data
 and saves them as PNG images.
 
-Tile Format (discovered via Ghidra analysis):
-  - Asset 100: Header with tile counts at offsets 0x10, 0x12, 0x14
-  - Asset 300: Raw 4bpp (16-color) tile pixel data
-    - First 'count0' tiles are 16×16 (256 bytes each: 16 rows × 16 bytes)
-    - Remaining tiles are 8×8 (128 bytes each: 16 rows × 8 bytes)
+Tile Format (VERIFIED via extraction and comparison):
+  - Asset 100: Header (36 bytes) with tile counts at offsets 0x10, 0x12
+  - Asset 300: Raw 8bpp (256-color) tile pixel data
+    - First 'count_16x16' tiles: 256 bytes each (16×16, 16-byte stride)
+    - Remaining 'count_8x8' tiles: 128 bytes each (8×8, 16-byte stride)
+  - Asset 301: Palette index per tile (1 byte per tile)
   - Asset 400: Palette container (256 colors × 2 bytes = 512 bytes per palette)
-  - Asset 301/302: Palette assignment metadata
 
 PSX Color Format:
   - 15-bit RGB (5-5-5) in little-endian u16
@@ -48,26 +48,24 @@ from blb import BLBFile, SECTOR_SIZE
 
 @dataclass
 class TileHeader:
-    """Header structure from asset 100."""
+    """Header structure from asset 100 (36 bytes)."""
     raw_data: bytes
-    count_16x16: int  # Tiles at 16×16 (offset 0x10)
-    count_8x8_a: int  # First 8×8 count (offset 0x12)
-    count_8x8_b: int  # Second 8×8 count (offset 0x14)
+    count_16x16: int  # 16×16 tile count (offset 0x10)
+    count_8x8: int    # 8×8 tile count (offset 0x12)
     
     @property
     def total_tiles(self) -> int:
-        return self.count_16x16 + self.count_8x8_a + self.count_8x8_b
+        return self.count_16x16 + self.count_8x8
     
     @classmethod
     def from_bytes(cls, data: bytes) -> "TileHeader":
-        if len(data) < 0x16:
+        if len(data) < 0x14:
             raise ValueError(f"Header too short: {len(data)} bytes")
         
         return cls(
             raw_data=data,
             count_16x16=struct.unpack('<H', data[0x10:0x12])[0],
-            count_8x8_a=struct.unpack('<H', data[0x12:0x14])[0],
-            count_8x8_b=struct.unpack('<H', data[0x14:0x16])[0],
+            count_8x8=struct.unpack('<H', data[0x12:0x14])[0],
         )
 
 
@@ -205,7 +203,7 @@ def extract_tiles_from_level(blb: BLBFile, level_index: int, output_dir: Path,
     # Parse tile header
     _, _, header_data = assets[100]
     header = TileHeader.from_bytes(header_data)
-    print(f"  Tile counts: 16x16={header.count_16x16}, 8x8={header.count_8x8_a + header.count_8x8_b}")
+    print(f"  Tile counts: 16x16={header.count_16x16}, 8x8={header.count_8x8}")
     print(f"  Total tiles: {header.total_tiles}")
     
     # Get tile data

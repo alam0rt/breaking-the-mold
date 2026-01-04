@@ -42,16 +42,15 @@ The BLB header (first 0x1000 bytes) contains metadata for all levels:
 Offset   Size   Description
 ------   ----   -----------
 0x000    0xB60  Level Metadata Table (26 entries × 0x70 bytes)
-0xB60    0x168  Movie Table (13 entries × 0x1C bytes)
-0xCC8    0x008  Padding (zeros)
-0xCD0    0x028  Unknown Table (looks like special level entries)
-0xCF8    0x1A0  Level Order Table (26+ entries × 0x10 bytes)
-0xE98    0x078  Additional entries (credits, game over, etc.)
-0xF10    0x021  Unknown data
-0xF31    0x001  Level Count (26)
-0xF32    0x001  Movie Count (13)
-0xF33    0x001  Level Order Table Count
-0xF34    0x0CC  Game State Data
+0xB60    0x16C  Movie Table (13 entries × 0x1C bytes)
+0xCC8    0x008  Padding (zeros, between movie and sector tables)
+0xCD0    0x200  Sector Table (32 entries × 0x10 bytes, count at 0xF33)
+0xED0    0x040  Unknown u32 array (16 entries, file offsets, purpose TBD)
+0xF10    0x021  Credits Sequence Table (2 complete entries × 0x0C bytes + overlap)
+0xF31    0x001  Level Count (u8, value=26)
+0xF32    0x001  Movie Count (u8, value=13)
+0xF33    0x001  Sector Table Entry Count (u8)
+0xF34    0x0CC  Playback Sequence Data (mode array at 0xF36, index array at 0xF92)
 ```
 
 ## Movie Table (0xB60-0xCC7)
@@ -61,12 +60,14 @@ Offset   Size   Description
 ```
 Offset   Size   Description
 ------   ----   -----------
-0x00     u16    Unknown (always 0)
-0x02     u16    Sector count
-0x04     char[4] Movie ID (e.g., "DREA", "LOGO")
-0x08     char[4] Short name
-0x0C     char[16] ISO path (e.g., "\MVDWI.STR;1")
+0x00     u16    Reserved/unused (always 0)
+0x02     u16    Sector count (movie size in sectors)
+0x04     char[5] Movie ID (4-char null-terminated, e.g., "DREA", "LOGO")
+0x09     char[3] Short name (2-char null-terminated)
+0x0C     char[16] ISO path (e.g., "\\MVLOGO.STR;1")
 ```
+
+Note: Movies are external .STR files on the CD, not embedded in GAME.BLB.
 
 | # | ID | Sectors | Path | Description |
 |--:|:---|-------:|:-----|:------------|
@@ -84,20 +85,28 @@ Offset   Size   Description
 | 11 | END1 | 1044 | \MVEND.STR | Ending part 1 |
 | 12 | END2 | 793 | \MVWIN.STR | Ending part 2 |
 
-## Level Order Table (0xCF8-0xE97)
+## Sector Table (0xCD0-0xECF)
 
-26 entries for level loading order, 0x10 (16) bytes each:
+Loading screen and special sector entries, 0x10 (16) bytes each.
+Entry count stored at header offset 0xF33 (typically 32 entries).
 
 ```
 Offset   Size   Description
 ------   ----   -----------
-0x00     char[4] Short display name (3 chars + null)
-0x04     u16    Sector offset
-0x06     u16    Some count (4, 9, or 10)
-0x08     u16    Level index
-0x0A     u8     Padding
-0x0B     char[5] Level ID (4 chars + null)
+0x00     u8     Level index (0-25 when entry_flags=0x00)
+0x01     u8     Entry flags (0x00=level, 0x03=game over, 0x05=special loading)
+0x02     u8     Unknown byte (0x0A for loading screens, 0x63 for game over)
+0x03     char[5] Code (4-char null-terminated, e.g., "PIRA", "MENU")
+0x08     char[4] Short name (truncated description)
+0x0C     u16    Sector offset in BLB
+0x0E     u16    Sector count
 ```
+
+**Entry type patterns (PAL version):**
+- `entry_flags=0x00`: Level loading screens (level_index = 0-25)
+- `entry_flags=0x05`: Special loading screens (PIRA=pirates intro, LEGL=legal)
+- `entry_flags=0x03`: Game over screens (unknown_byte=0x63)
+- `entry_flags=0x00, level_index=0x35`: Credits screen
 
 ## Level Metadata Entry (0x70 bytes)
 
@@ -241,18 +250,79 @@ BLB File
 | 601 | 0x259 | CONTAINER | Collision/layout data | 100-300KB |
 | 602 | 0x25A | RAW | Palette/color data (15-bit PSX) | 24-200 bytes |
 
-### Secondary Data (Sprites)
+### Secondary Data (Sprites/Tiles) - VERIFIED
+
 | Type | Hex | Structure | Description |
 |------|-----|-----------|-------------|
-| 100 | 0x064 | RAW | Header/index entry |
+| 100 | 0x064 | RAW | Tile header (36 bytes, contains tile counts) |
 | 101 | 0x065 | RAW | Secondary header (optional) |
-| 300 | 0x12C | RAW | Main sprite graphics data |
-| 301 | 0x12D | RAW | Sprite metadata |
-| 302 | 0x12E | RAW | Sprite metadata 2 |
-| 400 | 0x190 | CONTAINER | Animation frame data |
-| 401 | 0x191 | RAW | Animation configuration |
+| 300 | 0x12C | RAW | Tile pixel data (8bpp indexed) |
+| 301 | 0x12D | RAW | Palette index per tile (1 byte/tile) |
+| 302 | 0x12E | RAW | Unknown per-tile metadata |
+| 400 | 0x190 | CONTAINER | Palette container (256-color palettes) |
+| 401 | 0x191 | RAW | Animation/palette configuration |
 | 601 | 0x259 | CONTAINER | Secondary layout data |
 | 602 | 0x25A | RAW | Secondary palette |
+
+#### Asset 100 - Tile Header (36 bytes, VERIFIED)
+
+```
+Offset  Size  Type   Description
+------  ----  ----   -----------
+0x00    3     u8[3]  Background RGB color
+0x03    1     u8     Padding
+0x04    3     u8[3]  Secondary RGB color  
+0x07    1     u8     Padding
+0x08    2     u16    Unknown count
+0x0A    2     u16    Unknown count
+0x0C    4     u8[4]  Unknown
+0x10    2     u16    16×16 tile count (VERIFIED - matches data)
+0x12    2     u16    8×8 tile count (VERIFIED - matches data)
+0x14    2     u16    (unused, always 0)
+0x16    14    var    Remaining header data
+```
+
+#### Asset 300 - Tile Pixel Data (VERIFIED)
+
+8-bit indexed pixel data with 16-byte row stride:
+
+- **16×16 tiles**: 256 bytes each (16 rows × 16 bytes)
+- **8×8 tiles**: 128 bytes each (8 rows × 16 bytes, only first 8 columns used)
+
+Layout in file:
+1. First `count_16x16` tiles (256 bytes each)
+2. Then `count_8x8` tiles (128 bytes each)
+
+#### Asset 301 - Palette Assignment (VERIFIED)
+
+One byte per tile, indexing into Asset 400 palette array:
+- Size = `count_16x16 + count_8x8` bytes
+- Value = palette index (0 to N-1, where N = number of palettes in Asset 400)
+
+#### Asset 400 - Palette Container (VERIFIED)
+
+Standard sub-TOC format containing 256-color palettes:
+
+```
+Offset  Size   Description
+------  ----   -----------
+0x00    4      u32: Palette count
+0x04+   12×N   Sub-entries (N = count)
+
+Each sub-entry (12 bytes):
+  0x00  u32    Palette index (0, 1, 2, ...)
+  0x04  u32    Size in bytes (always 512 = 256 colors × 2)
+  0x08  u32    Offset from container start
+
+Each palette: 512 bytes = 256 × u16 (PSX 15-bit RGB)
+  - Color 0 is transparent
+  - Bits 0-4: Red (×8 for 8-bit)
+  - Bits 5-9: Green (×8 for 8-bit)
+  - Bits 10-14: Blue (×8 for 8-bit)
+  - Bit 15: STP (semi-transparency)
+```
+
+**Extraction verified**: Tiles extracted with correct palette assignments match expected game graphics.
 
 ### Tertiary Data (Audio)
 | Type | Hex | Structure | Description |

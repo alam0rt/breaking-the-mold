@@ -255,28 +255,33 @@ GameState Structure (runtime, not in BLB file):
 LevelDataContext Structure (verified via emulator MCP):
 ========================================================
     NOTE: These addresses are for PAL version (SLES-01090).
+    See docs/blb-data-format.md for the COMPLETE 128-byte structure with all 32 fields.
     
-    Offset  Size  Type    Field           Description
-    ------  ----  ----    -----           -----------
-    0x00    0x5C  var     unk00-unk58     Cleared on level load
-    0x5C    4     ptr     header          Pointer to BLB header (→ 0x800AE3E0)
-    0x60    1     u8      headerOffset    Offset within header state array
-    0x61    3     -       pad61           Padding
-    0x64    4     ptr     loadCallback    CD load callback function (→ 0x80020848)
-    0x68    4     ptr     tocPtr          Pointer to loaded TOC
-    0x6C    4     ptr     dataOffset      Pointer to data after TOC
-    0x70    4     ptr     asset258        Pointer to geometry data (type 0x258)
-    0x74    4     ptr     asset259        Pointer to collision data (type 0x259)
-    0x78    4     u32     asset259Size    Size of collision data in bytes
-    0x7C    4     ptr     asset25A        Pointer to palette data (type 0x25A)
+    Summary of key fields:
+    
+    Offset  Size  Type    Field                   Description
+    ------  ----  ----    -----                   -----------
+    0x00-0x58     var     Asset pointers          Populated by LoadAssetContainer from sub-TOC
+                                                  (IDs 100-700 map to specific offsets)
+    0x5C    4     ptr     blbHeaderBuffer         Pointer to BLB header (→ 0x800AE3E0)
+    0x60    1     u8      slidingWindowIndex      Playback sequence position (init 0xFF)
+    0x64    4     ptr     loaderCallback          CD load callback (→ 0x80020848)
+    0x68    4     ptr     primaryDataBuffer       Primary TOC buffer pointer
+    0x6C    4     ptr     secondaryDataBuffer     Secondary container buffer
+    0x70    4     ptr     primaryLevel600         Primary TOC ID 600 pointer (geometry)
+    0x74    4     ptr     primaryCollision601     Primary TOC ID 601 pointer (collision)
+    0x78    4     u32     primaryCollision601Size Primary collision size in bytes
+    0x7C    4     ptr     primaryPalette602       Primary TOC ID 602 pointer (palette)
+    
+    Total structure size: 0x80 (128) bytes
 
     Verified runtime example (Science Centre / SCIE, level index 2):
       ctx @ 0x8009DCC4:
-        header     = 0x800AE3E0 (BLB header)
-        tocPtr     = 0x800AF3E0 (loaded TOC, 3 entries)
-        asset258   = 0x800AF408 (524,212 bytes geometry)
-        asset259   = 0x8012F3BC (126,256 bytes collision)
-        asset25A   = 0x8014E0EC (148 bytes palette)
+        blbHeaderBuffer = 0x800AE3E0 (BLB header)
+        primaryDataBuffer = 0x800AF3E0 (loaded TOC, 3 entries)
+        primaryLevel600 = 0x800AF408 (524,212 bytes geometry)
+        primaryCollision601 = 0x8012F3BC (126,256 bytes collision)
+        primaryPalette602 = 0x8014E0EC (148 bytes palette)
 
 Known Functions (from trace + decompilation analysis):
 =========================================================
