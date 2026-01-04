@@ -52,39 +52,43 @@ def get_tile_pixels(tile_idx_1based: int, n_16x16: int, pixel_data: bytes,
     16x16 tiles: 256 bytes each, stored first
     8x8 tiles: 128 bytes each (8 rows x 16-byte stride), stored after 16x16 tiles
     
+    Asset 302 flags (per-tile):
+        Bit 0 (0x01): Semi-transparency (GPU alpha blending)
+        Bit 1 (0x02): Tile size (0=16x16, 1=8x8)
+        Bit 2 (0x04): Skip flag (tile is disabled)
+    
     Args:
         tile_idx_1based: 1-based tile index (0 = empty)
         n_16x16: Number of 16x16 tiles
         pixel_data: Asset 300 raw pixel data
-        flags_data: Asset 302 size flags (0=16x16, 2=8x8)
+        flags_data: Asset 302 per-tile flags
     
     Returns:
-        (pixels, tile_size) where pixels is 2D list of palette indices,
-        or (None, None) if tile is empty/invalid
+        (pixels, tile_size, is_semi_transparent) where pixels is 2D list of palette indices,
+        or (None, None, False) if tile is empty/invalid/skipped
     """
     if tile_idx_1based == 0:
-        return None, None
+        return None, None, False
     
     idx0 = tile_idx_1based - 1
     
-    # Determine tile size from flags
-    if idx0 < len(flags_data):
-        is_8x8 = (flags_data[idx0] & 2) != 0
-    else:
-        # Fallback: assume 8x8 if index >= n_16x16
-        is_8x8 = idx0 >= n_16x16
+    # Get tile flags
+    tile_flag = flags_data[idx0] if idx0 < len(flags_data) else 0
+    is_semi_transparent = (tile_flag & 0x01) != 0
+    is_8x8 = (tile_flag & 0x02) != 0
+    is_skipped = (tile_flag & 0x04) != 0
     
+    # Skip disabled tiles
+    if is_skipped:
+        return None, None, False
+    
+    # Determine tile size from bit 1 (already calculated above)
     if is_8x8:
         # 8x8 tiles: 128 bytes each, stored after 16x16 tiles
-        # Note: pixel_data uses the corrected formula from CopyTilePixelData
-        offset = n_16x16 * 128 + (idx0 - n_16x16) * 128 if idx0 >= n_16x16 else n_16x16 * 128 + idx0 * 128
-        # Actually the formula is simpler: all 8x8 tiles start at n_16x16 * 128
-        # But idx0 for 8x8 tiles is relative to total, not to 8x8 section
-        # Let me use the correct offset based on flags
         if idx0 >= n_16x16:
             offset = n_16x16 * 128 + (idx0 - n_16x16) * 128
         else:
-            # This shouldn't happen - 8x8 tiles should have idx >= n_16x16
+            # Edge case: flag says 8x8 but index < n_16x16
             offset = idx0 * 128
         tile_size = 8
         bytes_per_tile = 128
@@ -95,7 +99,7 @@ def get_tile_pixels(tile_idx_1based: int, n_16x16: int, pixel_data: bytes,
         bytes_per_tile = 256
     
     if offset + bytes_per_tile > len(pixel_data):
-        return None, None
+        return None, None, False
     
     # Read pixels (8bpp, row stride = 16 for both sizes)
     pixels = []
@@ -110,7 +114,7 @@ def get_tile_pixels(tile_idx_1based: int, n_16x16: int, pixel_data: bytes,
                 row.append(0)
         pixels.append(row)
     
-    return pixels, tile_size
+    return pixels, tile_size, is_semi_transparent
 
 
 def extract_level_layers(blb: BLBFile, level_idx: int, output_dir: str, 
@@ -331,8 +335,8 @@ def extract_single_layer(layer_idx: int, asset200_data: bytes, asset201_data: by
             if tile_idx == 0:
                 continue
             
-            # Get tile pixels
-            tile_pixels, tile_size = get_tile_pixels(
+            # Get tile pixels (returns None for empty/disabled tiles)
+            tile_pixels, tile_size, is_semi_transparent = get_tile_pixels(
                 tile_idx, n_16x16, pixel_data, flags_data
             )
             if tile_pixels is None:
@@ -359,7 +363,13 @@ def extract_single_layer(layer_idx: int, asset200_data: bytes, asset201_data: by
                     color_idx = tile_pixels[py][px]
                     if color_idx < len(palette):
                         r, g, b = palette[color_idx]
-                        alpha = 0 if color_idx == 0 else 255
+                        # Semi-transparent tiles: use 50% alpha for non-transparent pixels
+                        if color_idx == 0:
+                            alpha = 0
+                        elif is_semi_transparent:
+                            alpha = 128  # Semi-transparent
+                        else:
+                            alpha = 255
                     else:
                         r, g, b, alpha = 255, 0, 255, 255
                     

@@ -62,17 +62,29 @@ except ImportError:
 
 @dataclass
 class SpriteHeader:
-    """Sprite header (24 bytes)"""
-    magic: int
-    header_size: int
-    frame_meta_size: int
-    padding: int
-    pixel_size: int
-    sprite_id: int
-    frame_count: int
-    unknown_12: int
-    unknown_14: int
-    unknown_16: int
+    """
+    Sprite header (24 or 36 bytes).
+    
+    VERIFIED 2026-01-04 via Ghidra analysis and data verification:
+    - type: 1=standard (24-byte header), 2=extended (36-byte header)
+    - header_size: 24 for type 1, 36 for type 2
+    - frames_end: header_size + total_frame_count × 36
+    - Frame entry size: ALWAYS 36 bytes for both types
+    - Type 2: total frames = frame_count + extra_frames (offset 0x1C)
+    - clut (0x815D): GARBAGE - game loads palettes separately
+    """
+    sprite_type: int        # 0x00: 1=standard, 2=extended
+    header_size: int        # 0x02: 24 or 36
+    frames_end: int         # 0x04: offset to RLE data
+    padding: int            # 0x06: always 0
+    rle_size: int           # 0x08: approximate RLE data size (u32)
+    sprite_id: int          # 0x0C: sprite ID (u32)
+    frame_count: int        # 0x10: number of primary frames
+    padding2: int           # 0x12: always 0
+    unknown_flag: int       # 0x14: 0 or 1
+    clut: int               # 0x16: always 0x815D (GARBAGE)
+    # Type 2 extended fields (only present if header_size == 36)
+    extra_frames: int = 0   # 0x1C: additional frame count for type 2
     
     @classmethod
     def from_bytes(cls, data: bytes) -> 'SpriteHeader':
@@ -80,18 +92,36 @@ class SpriteHeader:
             raise ValueError(f"Sprite header too short: {len(data)} bytes")
         
         fields = struct.unpack('<HHHH I I HHHH', data[:24])
-        return cls(
-            magic=fields[0],
+        header = cls(
+            sprite_type=fields[0],
             header_size=fields[1],
-            frame_meta_size=fields[2],
+            frames_end=fields[2],
             padding=fields[3],
-            pixel_size=fields[4],
+            rle_size=fields[4],
             sprite_id=fields[5],
             frame_count=fields[6],
-            unknown_12=fields[7],
-            unknown_14=fields[8],
-            unknown_16=fields[9],
+            padding2=fields[7],
+            unknown_flag=fields[8],
+            clut=fields[9],
         )
+        
+        # Parse extended header for type 2 sprites
+        if header.sprite_type == 2 and header.header_size == 36 and len(data) >= 36:
+            header.extra_frames = struct.unpack('<H', data[0x1C:0x1E])[0]
+        
+        return header
+    
+    @property
+    def total_frame_count(self) -> int:
+        """Total number of 36-byte frame entries."""
+        if self.sprite_type == 2:
+            return self.frame_count + self.extra_frames
+        return self.frame_count
+    
+    @property
+    def frame_entry_size(self) -> int:
+        """Frame entry size is ALWAYS 36 bytes."""
+        return 36
 
 
 @dataclass  
@@ -221,6 +251,12 @@ def extract_sprite(sprite_data: bytes) -> dict:
     """
     Extract a single sprite from its data blob.
     
+    VERIFIED structure (2026-01-04):
+    - Sprite type 1: 24-byte header, frame_count × 36-byte frame entries
+    - Sprite type 2: 36-byte header, (frame_count + extra_frames) × 36-byte frame entries
+    - frames_end = header_size + total_frame_count × 36
+    - RLE data starts at frames_end
+    
     Args:
         sprite_data: Raw sprite data (header + frame metadata + RLE pixels)
         
@@ -229,25 +265,25 @@ def extract_sprite(sprite_data: bytes) -> dict:
     """
     header = SpriteHeader.from_bytes(sprite_data)
     
-    if header.magic != 1:
-        raise ValueError(f"Invalid sprite magic: {header.magic}, expected 1")
+    if header.sprite_type not in (1, 2):
+        raise ValueError(f"Invalid sprite type: {header.sprite_type}, expected 1 or 2")
     
-    # Frame metadata uses fixed 36-byte stride (0x24), verified via Ghidra
-    # Note: header.frame_meta_size may include extra data, so use fixed stride
-    FRAME_META_SIZE = 36
+    # Frame entry size is ALWAYS 36 bytes
+    frame_entry_size = 36
     
     frames = []
     frame_meta_start = header.header_size
     
-    # Pixel data starts after header + all frame metadata (36 bytes each)
-    pixel_data_start = header.header_size + FRAME_META_SIZE * header.frame_count
+    # Pixel data starts at frames_end
+    pixel_data_start = header.frames_end
     pixel_data = sprite_data[pixel_data_start:]
     
-    for i in range(header.frame_count):
-        frame_offset = frame_meta_start + i * FRAME_META_SIZE
-        frame_bytes = sprite_data[frame_offset:frame_offset + FRAME_META_SIZE]
+    # Use total_frame_count which includes extra_frames for type 2
+    for i in range(header.total_frame_count):
+        frame_offset = frame_meta_start + i * frame_entry_size
+        frame_bytes = sprite_data[frame_offset:frame_offset + 36]
         
-        if len(frame_bytes) < FRAME_META_SIZE:
+        if len(frame_bytes) < 36:
             continue
             
         frame = FrameMetadata.from_bytes(frame_bytes)
@@ -283,16 +319,17 @@ def extract_sprite(sprite_data: bytes) -> dict:
     
     return {
         'header': {
-            'magic': header.magic,
+            'sprite_type': header.sprite_type,
             'header_size': header.header_size,
-            'frame_meta_size': header.frame_meta_size,
-            'pixel_size': header.pixel_size,
+            'frames_end': header.frames_end,
+            'rle_size': header.rle_size,
             'sprite_id': header.sprite_id,
             'frame_count': header.frame_count,
-            'bytes_per_frame': FRAME_META_SIZE,
-            'unknown_12': header.unknown_12,
-            'unknown_14': header.unknown_14,
-            'unknown_16': header.unknown_16,
+            'extra_frames': header.extra_frames,
+            'total_frame_count': header.total_frame_count,
+            'frame_entry_size': frame_entry_size,
+            'unknown_flag': header.unknown_flag,
+            'clut': header.clut,
         },
         'frames': frames,
     }
@@ -550,16 +587,20 @@ def extract_level_sprites(blb: BLBFile, level_idx: int, output_dir: Path,
         try:
             sprite = extract_sprite(entry.data)
             sprite_id = sprite['header']['sprite_id']
-            frame_count = sprite['header']['frame_count']
-            clut_value = sprite['header']['unknown_16']
+            total_frames = sprite['header']['total_frame_count']
+            sprite_type = sprite['header']['sprite_type']
+            clut_value = sprite['header']['clut']
             
-            # Determine palette to use
+            # Determine palette to use - always use first full 256-color palette
+            # (CLUT field is garbage, always 0x815D)
             if palette_idx > 0:
                 # Use specified palette
                 pal_to_use = palette_idx
+            elif full_indices:
+                # Use first full 256-color palette (auto mode)
+                pal_to_use = full_indices[0] + 1  # Convert to 1-indexed
             else:
-                # Auto-detect from CLUT value
-                _, _, pal_to_use = decode_clut_value(clut_value)
+                pal_to_use = 1
             
             # Clamp to available palettes
             if pal_to_use < 1 or pal_to_use > len(all_palettes):
@@ -567,8 +608,9 @@ def extract_level_sprites(blb: BLBFile, level_idx: int, output_dir: Path,
             
             palette = all_palettes[pal_to_use - 1]
             
-            print(f"\n  Sprite {i}: ID=0x{sprite_id:08X}, {frame_count} frame(s), "
-                  f"CLUT=0x{clut_value:04X} -> palette {pal_to_use}")
+            type_str = "ext" if sprite_type == 2 else "std"
+            print(f"\n  Sprite {i}: ID=0x{sprite_id:08X}, {total_frames} frame(s), "
+                  f"type={type_str}, palette {pal_to_use}")
             
             # Save each frame
             for frame in sprite['frames']:
@@ -732,16 +774,17 @@ def collect_level_sprites(blb: BLBFile, level_idx: int) -> dict:
 
 
 def create_overview_image(level_data: dict, palette_idx: int, output_path: Path,
-                          max_sprites: int = 200, tile_size: int = 64) -> int:
+                          max_sprites: int = 200, cell_height: int = 80) -> int:
     """
-    Create a single overview image showing all sprites from a level.
+    Create an overview image showing all sprites from a level.
+    Each sprite gets its own row with all animation frames displayed horizontally.
     
     Args:
         level_data: Dict from collect_level_sprites
         palette_idx: Which palette to use (0-based index, or -1 for auto)
         output_path: Path to save PNG
         max_sprites: Maximum sprites to include
-        tile_size: Size of each sprite tile in the grid
+        cell_height: Height of each row (frames scaled to fit)
         
     Returns:
         Number of sprites rendered
@@ -757,64 +800,115 @@ def create_overview_image(level_data: dict, palette_idx: int, output_path: Path,
     all_palettes = level_data['palettes']
     full_indices = level_data.get('full_indices', [0])
     
-    # Calculate grid size
-    count = len(sprites)
-    cols = min(20, count)  # Max 20 columns
-    rows = (count + cols - 1) // cols
+    # Determine palette to use
+    if palette_idx >= 0 and palette_idx < len(all_palettes):
+        pal = all_palettes[palette_idx]
+    elif full_indices:
+        pal = all_palettes[full_indices[0]]
+    elif all_palettes:
+        pal = all_palettes[0]
+    else:
+        return 0
     
-    # Create overview image with padding
-    padding = 2
-    img_width = cols * (tile_size + padding) + padding
-    img_height = rows * (tile_size + padding) + padding
+    # First pass: calculate dimensions for each sprite row
+    padding = 4
+    row_data = []  # List of (sprite_idx, frame_images, row_width, row_height)
     
-    overview = Image.new('RGBA', (img_width, img_height), (32, 32, 32, 255))
-    
-    rendered = 0
     for i, sprite_data in enumerate(sprites):
         sprite = sprite_data['sprite']
+        frames = sprite['frames']
         
-        # Get first frame
-        if not sprite['frames']:
-            continue
-        frame = sprite['frames'][0]
-        
-        if frame['width'] == 0 or frame['height'] == 0:
+        if not frames:
             continue
         
-        # Determine palette
-        if palette_idx >= 0 and palette_idx < len(all_palettes):
-            pal = all_palettes[palette_idx]
-        else:
-            # Auto: use first full 256-color palette
-            if full_indices:
-                pal = all_palettes[full_indices[0]]
-            elif all_palettes:
-                pal = all_palettes[0]
-            else:
+        # Render all frames for this sprite
+        frame_images = []
+        max_frame_height = 0
+        total_width = 0
+        
+        for frame in frames:
+            if frame['width'] == 0 or frame['height'] == 0:
                 continue
+            
+            img = sprite_to_image(frame['pixels'], pal)
+            if img:
+                frame_images.append(img)
+                max_frame_height = max(max_frame_height, img.height)
+                total_width += img.width + padding
         
-        # Render sprite
-        img = sprite_to_image(frame['pixels'], pal)
-        if not img:
-            continue
+        if frame_images:
+            # Scale factor to fit in cell_height
+            scale = min(1.0, (cell_height - padding * 2) / max_frame_height)
+            scaled_height = int(max_frame_height * scale)
+            scaled_width = sum(int(img.width * scale) for img in frame_images) + padding * len(frame_images)
+            
+            row_data.append({
+                'sprite_idx': i,
+                'sprite_id': sprite['header']['sprite_id'],
+                'sprite_type': sprite['header']['sprite_type'],
+                'frame_count': len(frame_images),
+                'frame_images': frame_images,
+                'scale': scale,
+                'row_width': scaled_width + 120,  # Extra space for label
+                'row_height': cell_height
+            })
+    
+    if not row_data:
+        return 0
+    
+    # Calculate total image size
+    img_width = max(r['row_width'] for r in row_data)
+    img_width = max(img_width, 400)  # Minimum width
+    img_height = len(row_data) * cell_height
+    
+    # Create overview image
+    overview = Image.new('RGBA', (img_width, img_height), (32, 32, 32, 255))
+    
+    # We need ImageDraw for text
+    try:
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(overview)
+        has_draw = True
+    except ImportError:
+        has_draw = False
+    
+    # Second pass: render each sprite row
+    rendered = 0
+    for row_idx, row in enumerate(row_data):
+        y_base = row_idx * cell_height
+        x = padding
         
-        # Scale to fit tile while preserving aspect ratio
-        w, h = img.size
-        scale = min(tile_size / w, tile_size / h, 1.0)  # Don't upscale
-        new_w = max(1, int(w * scale))
-        new_h = max(1, int(h * scale))
+        # Draw label
+        if has_draw:
+            type_char = 'L' if row['sprite_type'] == 2 else 'S'
+            label = f"{row['sprite_idx']:2d}:{type_char} {row['frame_count']:2d}f 0x{row['sprite_id']:08X}"
+            draw.text((x, y_base + padding), label, fill=(180, 180, 180, 255))
         
-        if scale < 1.0:
-            img = img.resize((new_w, new_h), Image.NEAREST)
+        x = 120  # Start frames after label
         
-        # Calculate position in grid
-        col = i % cols
-        row = i // cols
-        x = padding + col * (tile_size + padding) + (tile_size - new_w) // 2
-        y = padding + row * (tile_size + padding) + (tile_size - new_h) // 2
+        # Draw separator line
+        if has_draw and row_idx > 0:
+            draw.line([(0, y_base), (img_width, y_base)], fill=(60, 60, 60, 255))
         
-        # Paste onto overview
-        overview.paste(img, (x, y), img)
+        # Draw each frame
+        scale = row['scale']
+        for img in row['frame_images']:
+            # Scale frame
+            new_w = max(1, int(img.width * scale))
+            new_h = max(1, int(img.height * scale))
+            
+            if scale < 1.0:
+                scaled_img = img.resize((new_w, new_h), Image.NEAREST)
+            else:
+                scaled_img = img
+            
+            # Center vertically in row
+            y = y_base + (cell_height - new_h) // 2
+            
+            # Paste frame
+            overview.paste(scaled_img, (x, y), scaled_img)
+            x += new_w + padding
+        
         rendered += 1
     
     # Save
@@ -824,13 +918,14 @@ def create_overview_image(level_data: dict, palette_idx: int, output_path: Path,
     return rendered
 
 
-def create_all_overviews(blb_path: Path, output_dir: Path, max_sprites: int = 200):
+def create_all_overviews(blb_path: Path, output_dir: Path, max_sprites: int = 200, 
+                         auto_only: bool = False):
     """
     Create overview images for all levels, with all palette variants.
     
     For each level, creates:
         - overview_auto.png (uses first full 256-color palette)
-        - overview_palN.png for each full 256-color palette
+        - overview_palN.png for each full 256-color palette (unless auto_only=True)
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -866,10 +961,11 @@ def create_all_overviews(blb_path: Path, output_dir: Path, max_sprites: int = 20
                 print(f"  -> {auto_path.name}: {count} sprites (auto = palette {full_indices[0] if full_indices else 0})")
                 
                 # Create overview for each full 256-color palette only
-                for pal_idx in full_indices:
-                    pal_path = level_dir / f"overview_pal{pal_idx}.png"
-                    count = create_overview_image(level_data, pal_idx, pal_path, max_sprites)
-                    print(f"  -> {pal_path.name}: {count} sprites")
+                if not auto_only:
+                    for pal_idx in full_indices:
+                        pal_path = level_dir / f"overview_pal{pal_idx}.png"
+                        count = create_overview_image(level_data, pal_idx, pal_path, max_sprites)
+                        print(f"  -> {pal_path.name}: {count} sprites")
                     
             except Exception as e:
                 print(f"  Error: {e}")
@@ -894,7 +990,9 @@ def main():
     parser.add_argument('--palette', type=int, default=0, 
                         help='Palette index 1-7 (0 = auto from CLUT value)')
     parser.add_argument('--overview', action='store_true',
-                        help='Create overview images for all levels with all palette variants')
+                        help='Create overview images for all levels')
+    parser.add_argument('--all-palettes', action='store_true',
+                        help='With --overview, also generate per-palette variants')
     
     args = parser.parse_args()
     
@@ -907,7 +1005,7 @@ def main():
     
     # Handle --overview mode separately (doesn't need BLB context manager twice)
     if args.overview:
-        create_all_overviews(blb_path, output_dir, args.max)
+        create_all_overviews(blb_path, output_dir, args.max, auto_only=not args.all_palettes)
         return
     
     with BLBFile(blb_path) as blb:

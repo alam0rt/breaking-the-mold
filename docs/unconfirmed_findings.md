@@ -5,6 +5,62 @@ that have not been fully verified through decompilation or runtime tracing.
 
 ---
 
+## BLB File Coverage Analysis (2026-01-04)
+
+Run `python3 scripts/blb_asset_coverage.py` for full analysis.
+
+### File-Level Coverage
+
+| Category | Size | % of File | Description |
+|----------|------|-----------|-------------|
+| Referenced Data | 67.4 MB | 93.0% | Data pointed to by level metadata table |
+| Unreferenced Data | 5.1 MB | 7.0% | Gaps between/after levels |
+
+### Unreferenced Regions Breakdown
+
+| Location | Size | Content |
+|----------|------|---------|
+| Sectors 2-200 | 407 KB | Title screen/menu tile graphics (raw 4bpp) |
+| 12 gap containers | 2.9 MB | Complete asset containers (11 entries each) - likely bonus rooms |
+| Small gaps | ~90 KB | Level-specific tile data |
+| End of file | ~2.4 MB | Additional level containers |
+
+The gap containers contain full asset sets (100, 200, 300, 400, 600, 601, 602) but are
+NOT referenced in the level metadata table. These are likely bonus room or secret stage data
+that gets loaded via a different code path.
+
+### Asset Type Coverage (within referenced data)
+
+| Status | Bytes | % | Description |
+|--------|-------|---|-------------|
+| ✓ Parsed | 3.8 MB | 5% | Can extract and view (sprites, palettes, metadata) |
+| ◐ Partial | 9.0 MB | 12% | Structure known but not fully verified (tiles, audio) |
+| ◐ Primary | 20.8 MB | 27% | Raw level data (partial understanding) |
+| ✗ Unknown | 0.2 MB | 0.3% | Format not understood |
+
+### Known Asset Types
+
+| ID | Name | Status | Notes |
+|----|------|--------|-------|
+| 100 | Level Metadata | Parsed | 36-byte config per level |
+| 400 | Sprite Palettes | Parsed | 256-color CLUT container |
+| 600 | RLE Sprites | Parsed | RLE-encoded sprite container |
+| 601 | Audio Samples | Verified | ADPCM audio uploaded to SPU RAM |
+| 602 | Audio Metadata | Verified | Per-sample parameters (volume, channel, etc.) |
+| 200 | Background Tiles | Partial | Large graphics data |
+| 300 | Tile/Collision Data | Partial | Similar to 200 |
+| 500 | Audio Data | Partial | Sound effects or music |
+
+### Unknown Asset Types (priority investigation targets)
+
+| ID | Size | Occurrences | Notes |
+|----|------|-------------|-------|
+| 501/502/503 | 117 KB | 69 | Possibly audio/animation metadata |
+| 201/301/302 | 94 KB | 104 | Possibly tile/layer metadata |
+| 700 | 3 KB | 9 | Small entries, purpose unclear |
+
+---
+
 ## Ghidra Function Naming Summary (2026-01-05)
 
 The following functions have been renamed in Ghidra based on decompilation analysis:
@@ -634,15 +690,120 @@ The animation sequence data (exposure sheet) may be split across:
 **Hypothesis:** Asset 503's "animation frame offsets" correspond to the sequence
 files output by ToolX, providing timing and ordering for sprite playback.
 
+### Sprite Type 2 - Extended Animation Sequences (2026-01-05)
+
+**Status:** DATA-VERIFIED - Frame count formula confirmed across all Type 2 sprites
+
+Type 2 sprites (`type=2` at offset 0x00) have a 36-byte header (vs 24-byte for type 1)
+and contain additional frame entries beyond the base `frame_count`.
+
+**VERIFIED FORMULA:**
+```
+Total 36-byte frame entries = frame_count (offset 0x10) + extra_frames (offset 0x1C)
+```
+
+**Extended Header Structure (Type 2 only, 36 bytes):**
+```
+Offset  Size  Field           Description
+------  ----  -----           -----------
+0x00    24    base_header     Same as Type 1 sprite header
+0x18    4     unknown_18      Varies (sprite ID related?)
+0x1C    2     extra_frames    Additional frame entries beyond frame_count
+0x1E    2     unknown_1E      Varies (360 for most, 2736 for PIRA)
+0x20    2     unknown_20      0 or 1 (animation flags?)
+0x22    2     clut_copy       Always 0x815D (same garbage as offset 0x16)
+```
+
+**Verification (100% match across all Type 2 sprites):**
+```
+PIRA spr2:  76 + 23 = 99 frames ✓
+LEGL spr12: 10 + 10 = 20 frames ✓
+SNOW spr8:  25 + 25 = 50 frames ✓
+GLID spr2:   3 + 10 = 13 frames ✓
+```
+
+**Animation structure hypothesis:**
+- `frame_count`: Number of frames in primary animation segment
+- `extra_frames`: Number of frames in secondary animation segment
+- Both use standard 36-byte frame entry format
+- RLE offsets in extra segment often reference same data as primary (frame reuse)
+
+**Example: LEGL sprite 12 (20 total frames = 10 + 10)**
+```
+Frame  0:  51x55  rle=0x0000  (start unique)
+Frame  1:  60x38  rle=0x0484  (start unique)
+Frame  2:  40x81  rle=0x08C8  (main sequence)
+Frame  3:  51x104 rle=0x0F08  ...
+Frame  4:  50x116 rle=0x15B4  ...
+Frame  5:  49x116 rle=0x1C58  ...
+Frame  6:  49x117 rle=0x2398  ...
+Frame  7:  49x108 rle=0x2AD8  ...
+Frame  8:  50x96  rle=0x31B0  ...
+Frame  9:  48x69  rle=0x37B8  (main sequence end)
+--- Extra frames below ---
+Frame 10:  28x24  rle=0x3D50  (end unique)
+Frame 11:  29x20  rle=0x3F68  (end unique)
+Frame 12:  40x81  rle=0x08C8  (REUSES frame 2)
+Frame 13:  51x104 rle=0x0F08  (REUSES frame 3)
+Frame 14:  50x116 rle=0x15B4  (REUSES frame 4)
+...
+Frame 19:  48x69  rle=0x37B8  (REUSES frame 9)
+```
+
+**Hypothesis:** The extra frames provide a "reverse" or alternate animation path:
+- Primary: Full forward animation (intro → main → peak)
+- Extra: Reverse back (outro → loop back through main sequence)
+- This creates smooth looping or state transitions without duplicating RLE data
+
+### Sprite Unknowns Summary (2026-01-05)
+
+**Status:** UNCONFIRMED - Collected from extraction analysis
+
+#### Sprite Header Unknowns
+
+| Offset | Size | Values Observed | Hypothesis |
+|--------|------|-----------------|------------|
+| 0x14 | 2 | 0, 1 | Boolean flag - animation loop? single-shot? |
+| 0x16 | 2 | Always 0x815D | Garbage/padding - NOT actually CLUT (palette loaded at runtime) |
+
+**Note:** The CLUT value at 0x16 appears to be leftover data from ToolX export.
+At runtime, the game loads palettes from Asset 400 to fixed VRAM positions.
+
+#### Frame Entry Unknowns (36-byte structure)
+
+| Offset | Size | Values Observed | Hypothesis |
+|--------|------|-----------------|------------|
+| 0x00-0x01 | 2 | 0, 32, 79, 576, 648... | Purpose unknown - possibly tool artifact |
+| 0x02-0x03 | 2 | 0, 64, 144, 257... | Purpose unknown |
+| 0x04-0x05 | 2 | 1, 2, 3 (multi), 900 (single) | Frame index? RLE size for single-frame? |
+| 0x0E-0x0F | 2 | 0, 3, 5, 8, 10, 65519 | Animation timing? (0-10 range with outliers) |
+| 0x10-0x11 | 2 | Various | Unknown |
+
+#### Confirmed Frame Entry Fields
+
+| Offset | Size | Field | Verified By |
+|--------|------|-------|-------------|
+| 0x06 | 2 | render_x_offset (signed) | Ghidra + extraction |
+| 0x08 | 2 | render_y_offset (signed) | Ghidra + extraction |
+| 0x0A | 2 | width | `GetFrameMetadata` (0x8007bebc) |
+| 0x0C | 2 | height | `GetFrameMetadata` (0x8007bebc) |
+| 0x12 | 2 | hitbox_x (signed) | Data pattern analysis |
+| 0x14 | 2 | hitbox_y (signed) | Data pattern analysis |
+| 0x16 | 2 | hitbox_width | Data pattern analysis |
+| 0x18 | 2 | hitbox_height | Data pattern analysis |
+| 0x1A | 6 | padding (zeros) | Consistent across all sprites |
+| 0x20 | 4 | rle_offset | `GetFrameMetadata` (0x8007bebc) |
+
 ### Next Steps
 
 1. ✅ Rename sprite functions in Ghidra (9 functions renamed)
 2. ✅ Decode CLUT value encoding (GetClut/DumpClut analysis)
 3. ✅ Parse Asset 400 palette container structure
 4. ✅ Create sprite extraction script (`scripts/extract_rle_sprites.py`)
-5. ☐ Map complete 36-byte frame metadata structure
-6. ☐ Decode Asset 503 to find sequence/timing data
-7. ☐ Verify decoded sprites match in-game appearance
+5. ✅ Extract and verify sprites with correct palette colors
+6. ☐ Map complete 36-byte frame metadata (bytes 0-5, 0x0E-0x11)
+7. ☐ Decode Type 2 second 36-byte block
+8. ☐ Decode Asset 503 to find sequence/timing data
 
 ---
 
@@ -808,50 +969,75 @@ buffers, accessed via the base pointer stored in the context.
 
 ---
 
-## Primary Asset 601 - Not Pure Collision (2026-01-04)
+## Secondary Asset 601 - AUDIO SAMPLES (2026-01-04)
 
-**Status:** HYPOTHESIS - needs verification
+**Status:** VERIFIED - Asset 601 contains audio samples uploaded to SPU RAM
 
-Earlier documentation labeled Asset 601 (0x259) as "collision data", but this
-may be incorrect or incomplete.
+### Discovery
 
-### Observations
+By tracing `GetAsset601Ptr` (0x8007ba78) through Ghidra, found that Asset 601 data 
+is passed to `UploadAudioToSPU` (0x8007c088) which calls:
+- `SpuSetTransferMode(0)`
+- `SpuSetTransferStartAddr(addr)`
+- `SpuRead(data, size)`
+- `SpuIsTransferCompleted(1)`
 
-1. **Size mismatch**: Asset 601 is 100-300KB per level, which seems large for
-   simple tile-based collision in a 2D platformer. Most PSX platformers use
-   1-2 bits per tile for collision, which would be ~5KB for a 400x100 tile level.
+This confirms Asset 601 contains **audio sample data** (likely ADPCM format for PSX SPU).
 
-2. **Container format**: Asset 601 uses the same sub-TOC container format as
-   Asset 600, suggesting it contains multiple discrete objects/entries.
+### Key Code
 
-3. **Game complexity**: Skullmonkeys has enemies, collectibles, hazards, warps,
-   and interactive objects. These need placement data somewhere.
-
-### Hypothesis
-
-Asset 601 may contain:
-- **Entity placement**: Positions and types of enemies, items, hazards
-- **Trigger zones**: Level transitions, warp points, event triggers
-- **Collision geometry**: Complex collision shapes (not just tile flags)
-- **Object properties**: Speed, behavior, timing for dynamic elements
-
-### Evidence Needed
-
-1. Parse Asset 601 sub-TOC and analyze entry sizes/patterns
-2. Find functions that read from ctx+0x74 (Asset 601 pointer)
-3. Correlate entry data with visible game objects during play
-4. Check if tile collision is stored elsewhere (Asset 302 bit flags?)
-
-### Related Code
-
-From `LevelDataParser` (0x8007a62c):
+From `InitializeAndLoadLevel` (0x8007d1d0):
 ```c
-ctx[0x1d] = asset601_ptr;   // Offset 0x74
-ctx[0x1e] = asset601_size;  // Offset 0x78
+uVar9 = GetAsset601Ptr(pLevelDataCtx);    // Audio samples
+uVar10 = GetAsset602Ptr(pLevelDataCtx);   // Audio metadata (0x3FFF = all channels?)
+uVar11 = GetAsset601Size(pLevelDataCtx);  // Size in bytes
+UploadAudioToSPU(uVar9, uVar10, uVar11);
 ```
 
-The size is stored separately, unlike Asset 600, suggesting the game needs
-to iterate through or bounds-check the data differently.
+### Key Findings
+
+1. **Location**: Asset 601 is in **secondary** containers only (not tertiary).
+   - This explains why it uses different IDs than Asset 600 sprites.
+
+2. **Distribution**:
+   - Levels with 601: MENU(21), LEGL(19), SEVN(19), CLOU(15), CSTL(14), etc.
+   - Levels WITHOUT 601: PHRO, SCIE, BOIL, CAVE, SOAR, WIZZ (silent levels?)
+
+3. **Container Structure**: Same TOC format as other assets:
+   ```
+   u32  entry_count      // Number of audio samples
+   [entry_count x 12 bytes]:
+       u32  sample_id    // Unique hash ID
+       u32  data_size    // Entry size in bytes
+       u32  data_offset  // Offset from container start
+   ```
+
+4. **Entry Internal Structure** (each audio sample):
+   ```
+   Offset  Size  Description
+   0x00    16    Zero padding (SPU alignment?)
+   0x10    4     Frame count? (seen: 72, 19, 57, 20)
+   0x14    var   Audio sample data (ADPCM encoded)
+   ```
+
+5. **Asset 602**: Contains audio metadata/parameters (2-byte entries per sample).
+   Default value 0x3FFF may mean "all channels" or "full volume".
+
+### Functions
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `GetAsset601Ptr` | 0x8007ba78 | Returns pointer to audio samples |
+| `GetAsset601Size` | 0x8007ba50 | Returns size of audio data |
+| `GetAsset602Ptr` | 0x8007baa0 | Returns pointer to audio metadata |
+| `UploadAudioToSPU` | 0x8007c088 | Uploads samples to SPU RAM |
+
+### Updated Asset Naming
+
+Previous documentation incorrectly labeled 601 as "collision data". The correct mapping:
+- Asset 600 (0x258): RLE sprite pixel data (in tertiary sub-blocks)
+- Asset 601 (0x259): Audio samples for SPU (in secondary container)
+- Asset 602 (0x25A): Audio metadata/parameters (in secondary container)
 
 ---
 

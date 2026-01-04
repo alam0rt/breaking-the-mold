@@ -361,28 +361,46 @@ Verified via Ghidra decompilation of `LoadTileDataToVRAM` (0x80025240).
 
 **Bit-level interpretation (from decompiled code):**
 ```c
+// In LoadTileDataToVRAM (0x80025240):
 byte flags = asset302[tileIndex];
 if ((flags & 4) != 0) continue;  // Bit 2: skip this tile entirely
 uint tp = ((flags & 2) == 0);    // Bit 1: tile page mode (0=8x8, 1=16x16)
 uint size = (tp == 0) ? 8 : 16;  // Determines tile dimensions
-// output[tileIndex + 6] = flags & 1;  // Bit 0: stored as property (layer/priority?)
+spriteInfo[tileIndex + 6] = flags & 1;  // Bit 0: stored for semi-transparency
+
+// In FUN_80017540 (tile rendering):
+SetSemiTrans(sprite, (byte)spriteInfo[3]);  // spriteInfo[3] at ushort* = byte 6
+// This enables PSX GPU alpha blending when bit 0 is set
 ```
 
 | Bit | Mask | Meaning | Effect |
 |-----|------|---------|--------|
-| 0 | 0x01 | Unknown flag | Stored in tile metadata at offset +6 |
+| 0 | 0x01 | Semi-transparency | Enables GPU alpha blending for this tile |
 | 1 | 0x02 | Tile size | 0=16×16, 1=8×8 |
 | 2 | 0x04 | Skip flag | If set, tile is not loaded/rendered |
 
 **Observed values:**
 | Value | Bits | Meaning |
 |-------|------|---------|
-| 0 | 000 | 16×16 tile, flag off, render |
-| 1 | 001 | 16×16 tile, flag on, render |
-| 2 | 010 | 8×8 tile, flag off, render |
+| 0 | 000 | 16×16 tile, opaque, render |
+| 1 | 001 | 16×16 tile, semi-transparent, render |
+| 2 | 010 | 8×8 tile, opaque, render |
+| 3 | 011 | 8×8 tile, semi-transparent, render |
 
-**Layout:** All 8×8 tiles (value 2) appear at the end, starting at index `count_16x16`.
+**Layout:** All 8×8 tiles (bit 1 set) appear at the end, starting at index `count_16x16`.
 This matches the pixel data layout in Asset 300 (16×16 tiles first, then 8×8 tiles).
+
+**Bit distribution across levels (verified):**
+| Level | Total | Semi-Trans | 8×8 | Skip |
+|-------|-------|------------|-----|------|
+| MENU | 457 | 91 | 0 | 0 |
+| TMPL | 1440 | 25 | 281 | 0 |
+| GLID | 1089 | 215 | 0 | 0 |
+| CLOU | 1012 | 446 | 0 | 0 |
+| MOSS | 1353 | 427 | 0 | 0 |
+| RUNN | 2065 | 0 | 1577 | 0 |
+
+Semi-transparency is used for effects like translucent water, fog, or glass surfaces.
 
 #### Asset 400 - Palette Container (VERIFIED)
 
@@ -418,6 +436,146 @@ Each palette: 512 bytes = 256 × u16 (PSX 15-bit RGB)
 | 401 | 0x191 | RAW | Audio configuration |
 | 500 | 0x1F4 | Music/sequence data |
 | 501 | 0x1F5 | Music configuration |
+
+## Supplementary Graphics Containers
+
+**VERIFIED 2026-01-04 via Ghidra analysis + tile/layer extraction**
+
+The BLB file contains 17 supplementary graphics containers that are **not referenced** in the
+main level metadata table. These containers store additional tileset and UI graphics used
+by levels at runtime (e.g., end-of-level summary screens, score displays, bonus room backgrounds).
+
+### Purpose
+
+These are **NOT separate bonus room levels** - they are supplementary asset packs containing:
+- End-of-level summary text/graphics
+- Score and UI overlays  
+- Background decorations for bonus areas
+- Additional tile graphics not in the main level data
+
+The graphics are layered compositions that can be rendered over the main gameplay area.
+
+### Location and Discovery
+
+These containers exist in "gaps" between level data - sectors not referenced by any
+level's primary/secondary/tertiary offsets. They were discovered by scanning unreferenced
+sectors and finding valid container TOC signatures.
+
+| Container | File Offset | Size | World |
+|-----------|-------------|------|-------|
+| SCIE_bonus | 0x0098F800 | 256 KB | Science |
+| TMPL_bonus | 0x00EB7000 | 252 KB | Temple |
+| BOIL_bonus | 0x01355000 | 248 KB | Boiler |
+| SNOW_bonus | 0x0173E800 | 245 KB | Snow |
+| FOOD_bonus | 0x01AFB800 | 252 KB | Food |
+| GLID_bonus | 0x01ED8800 | 255 KB | Gliding |
+| CAVE_bonus | 0x02297800 | 254 KB | Cave |
+| WEED_bonus | 0x025AB000 | 254 KB | Weed |
+| EGGS_bonus | 0x02880800 | 253 KB | Eggs |
+| CLOU_bonus | 0x02D1B000 | 252 KB | Clouds |
+| SEVN_bonus | 0x032D7000 | 248 KB | 1970s |
+| SOAR_bonus | 0x0357A800 | 245 KB | Soaring |
+| CRYS_bonus | 0x0397F800 | 244 KB | Crystal |
+| WIZZ_bonus | 0x03E93000 | 250 KB | Wizard |
+| RUNN_bonus | 0x03FFC800 | 249 KB | Runner |
+| KLOG_bonus | 0x044AA800 | 236 KB | Klogg |
+| EVIL_bonus | 0x047DC800 | 654 KB | Evil Engine |
+
+### Container Structure
+
+Each bonus room container has an identical 11-asset structure:
+
+| Asset ID | Hex | Size Range | Description |
+|----------|-----|------------|-------------|
+| 100 | 0x064 | 36 bytes | Tile header (same format as secondary Asset 100) |
+| 200 | 0x0C8 | 1.5-1.7 KB | Tilemap data (layer definitions) |
+| 201 | 0x0C9 | 460 bytes | Layer entries |
+| 300 | 0x12C | 139-144 KB | **Tile pixel data (8bpp, 16×16 tiles)** |
+| 301 | 0x12D | 530-675 bytes | Palette index per tile |
+| 302 | 0x12E | 530-675 bytes | Tile size flags |
+| 400 | 0x190 | 2.1 KB | Palette container (4 palettes) |
+| 401 | 0x191 | 16-32 bytes | Palette configuration |
+| 600 | 0x258 | 52 KB | Sprites (RLE encoded) |
+| 601 | 0x259 | 38 KB | SPU audio samples |
+| 602 | 0x25A | 32 bytes | Audio metadata |
+
+### Tile Data Format (Asset 300)
+
+Same format as regular level tiles, verified via Ghidra decompilation of `CopyTilePixelData`:
+
+- **8bpp indexed pixels** (not 4bpp)
+- **16×16 tiles**: 256 bytes each (16 rows × 16 bytes)
+- **Tile count**: Stored at Asset 100 offset +0x10 (u16)
+- **Total size**: `tile_count × 256` bytes
+
+Example: SCIE_bonus has 562 tiles × 256 bytes = 143,872 bytes (matches Asset 300 size exactly)
+
+### Layer Rendering (EXTRACTION-VERIFIED 2026-01-04)
+
+Bonus room layers can be fully rendered using Assets 200+201+300+301+400.
+All 17 bonus rooms render to 480×256 pixels (30×16 tiles).
+
+**Asset 200 - Tilemap Container (Sub-TOC format):**
+```
+Offset  Size   Description
+------  ----   -----------
+0x00    u32    Layer count
+0x04+   12×N   Sub-entries (N = count)
+
+Each sub-entry:
+  0x00  u32    Layer index (0, 1, 2, ...)
+  0x04  u32    Tilemap data size in bytes
+  0x08  u32    Tilemap data offset from Asset 200 start
+```
+
+Each tilemap is an array of u16 tile indices:
+- **Bits 0-12**: Tile index (1-based, 0 = transparent)
+- **Bit 13**: Horizontal flip
+- **Bit 14**: Vertical flip
+- **Bit 15**: Unknown
+
+**Asset 201 - Layer Entries (92 bytes each, EXTRACTION-VERIFIED):**
+```
+Offset  Size   Description
+------  ----   -----------
+0x00    u16    X offset (in tiles)
+0x02    u16    Y offset (in tiles)
+0x04    u16    Layer width (in tiles)
+0x06    u16    Layer height (in tiles)
+0x08    u16    Level width (in tiles, from Asset 100)
+0x0A    u16    Level height (in tiles)
+0x10    u32    Scroll factor X (0x8000 = 1.0)
+0x14    u32    Scroll factor Y
+0x26    u8     Layer type (0=normal, 2=foreground?)
+0x2C    u8     Background R
+0x2D    u8     Background G
+0x2E    u8     Background B
+```
+
+**Rendering process:**
+1. Parse Asset 100 for level dimensions (offset +0x08, +0x0A) and tile count (+0x10)
+2. Extract tiles from Asset 300 using palette indices from Asset 301
+3. For each layer in Asset 201:
+   - Get tilemap from Asset 200 sub-TOC
+   - Render tiles at (x_offset + x, y_offset + y) positions
+   - Apply horizontal/vertical flip from tile index high bits
+4. Composite layers in order (layer 0 first, then 1, etc.)
+
+### Observation: Identical Sprite/Audio Sizes
+
+All 17 bonus rooms have nearly identical Asset 600 and Asset 400 sizes:
+- Asset 600 (sprites): 52,368 bytes in all containers
+- Asset 400 (palettes): 2,100 bytes in all containers (4 palettes × 512 bytes + header)
+
+This suggests bonus rooms share common sprite/palette templates with world-specific tile graphics.
+
+### Loading Mechanism (TBD)
+
+How the game references these unreferenced containers is not yet understood:
+- They are NOT in the level metadata table
+- May be loaded via hardcoded sector offsets
+- May be referenced by the in-level bonus room trigger code
+- Requires further investigation of bonus room loading functions
 
 ## Sector Files
 
@@ -605,12 +763,13 @@ Example: 0x3FFF = white (R=31, G=31, B=15 in 5-bit each)
    - Stores asset pointers in LevelDataContext:
      - ctx+0x68: TOC pointer
      - ctx+0x6C: Data offset
-     - ctx+0x70: Asset 0x258 pointer (world data)
-     - ctx+0x74: Asset 0x259 pointer (collision)
+     - ctx+0x70: Asset 0x258 pointer (sprites)
+     - ctx+0x74: Asset 0x259 pointer (audio samples)
      - ctx+0x78: Asset 0x259 size
-     - ctx+0x7C: Asset 0x25A pointer (palette)
-4. Rendering functions access ctx+0x70 to draw level graphics
-5. Physics functions access ctx+0x74 for collision detection
+     - ctx+0x7C: Asset 0x25A pointer (audio metadata)
+4. Rendering functions access ctx+0x70 to draw sprites
+5. `UploadAudioToSPU` (0x8007c088) uses ctx+0x74/0x78/0x7C to upload audio to SPU RAM
+6. FindSpriteInTOC searches ctx+0x70 AND ctx+0x40 for sprite data
 
 ### LevelDataContext Structure (VERIFIED via Ghidra + PCSX-Redux MCP)
 
@@ -642,9 +801,9 @@ Offset  WIdx  Size  Type    Field                   Description
 0x3C    [15]  4     ptr     asset502                ID 502: Unknown asset pointer (0x1F6)
 0x40    [16]  4     ptr     assetLevel600           ID 600: Level geometry pointer (0x258)
 0x44    [17]  4     u32     assetLevel600Size       Size of level geometry in bytes
-0x48    [18]  4     ptr     assetCollision601       ID 601: Collision data pointer (0x259)
-0x4C    [19]  4     u32     assetCollision601Size   Size of collision data in bytes
-0x50    [20]  4     ptr     assetPalette602         ID 602: Palette data pointer (0x25A)
+0x48    [18]  4     ptr     assetAudio601           ID 601: Audio samples pointer (0x259) - uploaded to SPU
+0x4C    [19]  4     u32     assetAudio601Size       Size of audio sample data in bytes
+0x50    [20]  4     ptr     assetAudioMeta602       ID 602: Audio metadata pointer (0x25A)
 0x54    [21]  4     ptr     assetAudio700           ID 700: Audio/music pointer (0x2BC)
 0x58    [22]  4     u32     assetAudio700Size       Size of audio data in bytes
 
@@ -658,9 +817,9 @@ Offset  WIdx  Size  Type    Field                   Description
 
 # Primary TOC Asset Pointers (set by LevelDataParser, separate from sub-TOC assets)
 0x70    [28]  4     ptr     primaryLevel600         Primary TOC ID 600 pointer
-0x74    [29]  4     ptr     primaryCollision601     Primary TOC ID 601 pointer
-0x78    [30]  4     u32     primaryCollision601Size Primary collision size
-0x7C    [31]  4     ptr     primaryPalette602       Primary TOC ID 602 pointer
+0x74    [29]  4     ptr     primaryAudio601         Primary TOC ID 601 pointer (audio samples)
+0x78    [30]  4     u32     primaryAudio601Size     Primary 601 size
+0x7C    [31]  4     ptr     primaryAudioMeta602     Primary TOC ID 602 pointer (audio metadata)
 ```
 
 **Total structure size: 0x80 (128) bytes**
@@ -684,11 +843,13 @@ Offset  WIdx  Size  Type    Field                   Description
 | `GetTilemapDataPtr` | 0x8007B6DC | ptr | Tilemap data pointer from Asset 200 sub-TOC |
 | `GetTotalTileCount` | 0x8007B53C | u16 | Sum of tile counts from Asset 100 |
 | `CopyTilePixelData` | 0x8007B588 | void | Copy tile pixel data (8bpp) to buffer |
-| `GetTileSizeFlags` | 0x8007B6BC | ptr | Asset 302 pointer (size flags) |
+| `GetTileSizeFlags` | 0x8007B6BC | ptr | Asset 302 pointer (per-tile flags) |
 | `GetPaletteIndices` | 0x8007B6B0 | ptr | Asset 301 pointer (palette per tile) |
 | `GetPaletteDataPtr` | 0x8007B4F8 | ptr | Palette color data from Asset 400 |
 | `GetPaletteGroupCount` | 0x8007B4D0 | u8 | Palette count from Asset 400 |
 | `GetAnimatedTileData` | 0x8007B658 | ptr | Animated tile lookup from ctx[11] |
+| `LoadTileDataToVRAM` | 0x80025240 | void | Upload tiles to VRAM, build sprite info array |
+| `InitTilemapLayer16x16` | 0x80017540 | ptr | Init 16x16 tilemap layer with SPRT_16 primitives |
 
 #### Asset ID Mapping (LoadAssetContainer)
 
@@ -697,24 +858,20 @@ The sub-TOC contains entries with asset IDs that map to specific context offsets
 | Asset ID | Hex | Word Index | Field Name | Description |
 |----------|-----|------------|------------|-------------|
 | 100 | 0x64 | [1] | tileHeader | Tile header (36 bytes, tile counts at +0x10/0x12/0x14) |
-| 101 | 0x65 | [2] | tileHeader101 | Unknown secondary header |
+| 101 | 0x65 | [2] | unknown101 | Unknown (12 bytes, sparse: {1-4, 0-1, 0}) - only 8 levels |
 | 200 | 0xC8 | [3] | tilemapContainer | Tilemap sub-TOC (layer count + data offsets) |
 | 201 | 0xC9 | [4] | layerEntries | Layer definition entries (92 bytes each) |
 | 300 | 0x12C | [5] | tilePixels | Tile pixel data (8bpp indexed) |
 | 301 | 0x12D | [6] | paletteIndices | Palette index per tile (1 byte each) |
-| 302 | 0x12E | [7] | tileSizeFlags | Size flags per tile (0=16x16, 2=8x8) |
-| 303 | 0x12F | [10] | asset303 | Unknown |
+| 302 | 0x12E | [7] | tileSizeFlags | Per-tile flags: bit0=semi-trans, bit1=8x8, bit2=skip |
+| 303 | 0x12F | [10] | animatedTileData | Animated tile lookup table |
 | 400 | 0x190 | [8] | paletteContainer | Palette container (256-color palettes) |
-| 401 | 0x191 | [9] | paletteAnimData | Palette animation flags |
-| 500 | 0x1F4 | [11] | animatedTileData | Animated tile lookup |
-| 501 | 0x1F5 | [14] | asset501 | VRAM texture coords |
-| 502 | 0x1F6 | [15] | asset502 | VRAM rectangles |
-| 503 | 0x1F7 | [12] | asset503 | Animation frame offsets |
-| 504 | 0x1F8 | [13] | asset504 | Unknown |
-| 600 | 0x258 | [16-17] | levelGeometry + size | Level geometry (with size) |
-| 601 | 0x259 | [18-19] | collisionData + size | Collision data (with size) |
-| 602 | 0x25A | [20] | paletteRaw | Palette data (15-bit RGB) |
-| 700 | 0x2BC | [21-22] | audioData + size | Audio/music (with size) |
+| 401 | 0x191 | [9] | paletteAnimData | Palette animation data (4 bytes per palette) |
+| 500 | 0x1F4 | [11] | spriteMetadata | Sprite metadata |
+| 501 | 0x1F5 | [14] | spriteRLEData | Sprite RLE pixel data |
+| 600 | 0x258 | [16-17] | spuAudioData + size | SPU audio samples (ADPCM) |
+| 601 | 0x259 | [18-19] | spuAudioData2 + size | SPU audio samples (secondary container) |
+| 602 | 0x25A | [20] | spuAudioConfig | SPU volume/pan per sample (4 bytes: u16 vol, u16 pan) |
 
 #### Loader Callback Chain
 

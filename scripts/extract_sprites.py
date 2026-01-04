@@ -11,6 +11,10 @@ Tile Format (VERIFIED via extraction and comparison):
     - First 'count_16x16' tiles: 256 bytes each (16×16, 16-byte stride)
     - Remaining 'count_8x8' tiles: 128 bytes each (8×8, 16-byte stride)
   - Asset 301: Palette index per tile (1 byte per tile)
+  - Asset 302: Per-tile flags (1 byte per tile):
+    - Bit 0 (0x01): Semi-transparency (enables GPU alpha blending)
+    - Bit 1 (0x02): Tile size (0=16×16, 1=8×8)
+    - Bit 2 (0x04): Skip flag (tile is disabled/not rendered)
   - Asset 400: Palette container (256 colors × 2 bytes = 512 bytes per palette)
 
 PSX Color Format:
@@ -243,74 +247,84 @@ def extract_tiles_from_level(blb: BLBFile, level_index: int, output_dir: Path,
         print("  No palettes found, using grayscale")
         palettes = [[(i*17, i*17, i*17) for i in range(256)]]
     
-    # Get tile size flags (asset 302) - determines 16x16 vs 8x8
+    # Get tile size flags (asset 302) - bit flags for each tile
+    # Bit 0 (0x01): Semi-transparency, Bit 1 (0x02): 8x8 size, Bit 2 (0x04): Skip
     tile_flags = None
     if 302 in assets:
         _, _, flag_data = assets[302]
         tile_flags = list(flag_data)
-        flag_counts = {}
-        for f in tile_flags:
-            flag_counts[f] = flag_counts.get(f, 0) + 1
-        print(f"  Tile flags: {dict(sorted(flag_counts.items()))}")
+        # Analyze bit distribution
+        semi_trans_count = sum(1 for f in tile_flags if f & 0x01)
+        is_8x8_count = sum(1 for f in tile_flags if f & 0x02)
+        skip_count = sum(1 for f in tile_flags if f & 0x04)
+        print(f"  Tile flags: {len(tile_flags)} tiles")
+        print(f"    Semi-transparent (bit 0): {semi_trans_count}")
+        print(f"    8x8 size (bit 1): {is_8x8_count}")
+        print(f"    Skip/disabled (bit 2): {skip_count}")
     
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Extract tiles using flags to determine size
-    # Flag 0: 16×16 (256 bytes, 16-byte stride)
-    # Flag 1: skip/special (TBD)
-    # Flag 2: 8×8 (128 bytes, 16-byte stride with padding)
-    
+    # Extract tiles using flags to determine size and properties
+    # Bit 0 (0x01): Semi-transparency (GPU alpha blending)
+    # Bit 1 (0x02): 8×8 tile (128 bytes, 16-byte stride)
+    # Bit 2 (0x04): Skip/disabled (not loaded to VRAM)
+
     extracted = 0
+    skipped = 0
     tile_offset = 0
     total_tiles = header.total_tiles
     num_to_extract = min(total_tiles, max_tiles)
-    
+
     print(f"  Extracting {num_to_extract} of {total_tiles} tiles...")
-    
+
     for i in range(num_to_extract):
-        # Determine tile size from flag
+        # Get flag bits for this tile
         flag = tile_flags[i] if tile_flags and i < len(tile_flags) else 0
-        
-        if flag == 2:
-            # 8×8 tile with 16-byte stride = 128 bytes
+        is_semi_transparent = (flag & 0x01) != 0
+        is_8x8 = (flag & 0x02) != 0
+        is_skipped = (flag & 0x04) != 0
+
+        if is_skipped:
+            # Bit 2 set: tile is disabled, skip it
+            # Still need to advance the offset though
+            if is_8x8:
+                tile_offset += 128
+            else:
+                tile_offset += 256
+            skipped += 1
+            continue
+
+        if is_8x8:
+            # Bit 1 set: 8×8 tile with 16-byte stride = 128 bytes
             tile_bytes = tile_data[tile_offset:tile_offset + 128]
             tile_offset += 128
             tile_size_name = "8x8"
-            
+            if is_semi_transparent:
+                tile_size_name += "_st"  # Mark semi-transparent
+
             if len(tile_bytes) < 128:
                 break
-            
+
             # Extract 8x8 from 16-byte stride data (only first 8 bytes of each row)
             pixels = []
             for row in range(8):
                 row_start = row * 16  # 16-byte stride
                 row_data = tile_bytes[row_start:row_start + 8]
                 pixels.append(list(row_data))
-                
-        elif flag == 1:
-            # Flag 1 - possibly skip or animated, treat as 16x16 for now
-            tile_bytes = tile_data[tile_offset:tile_offset + 256]
-            tile_offset += 256
-            tile_size_name = "16x16_f1"
-            
-            if len(tile_bytes) < 256:
-                break
-            
-            pixels = extract_tile_8bpp(tile_bytes, 16, 16)
-            
-        else:  # flag == 0 or default
-            # 16×16 @ 8bpp = 256 bytes
+
+        else:
+            # Bit 1 clear: 16×16 @ 8bpp = 256 bytes
             tile_bytes = tile_data[tile_offset:tile_offset + 256]
             tile_offset += 256
             tile_size_name = "16x16"
-            
+            if is_semi_transparent:
+                tile_size_name += "_st"  # Mark semi-transparent
+
             if len(tile_bytes) < 256:
                 break
-            
-            pixels = extract_tile_8bpp(tile_bytes, 16, 16)
-        
-        # Use per-tile palette if available, otherwise use first palette
+
+            pixels = extract_tile_8bpp(tile_bytes, 16, 16)        # Use per-tile palette if available, otherwise use first palette
         if palette_indices and i < len(palette_indices):
             pal_idx = palette_indices[i]
             if pal_idx < len(palettes):
@@ -329,11 +343,11 @@ def extract_tiles_from_level(blb: BLBFile, level_index: int, output_dir: Path,
                 f.write(tile_bytes)
         
         extracted += 1
-    
+
     print(f"  Extracted {extracted} tiles to {output_dir}")
+    if skipped > 0:
+        print(f"  Skipped {skipped} disabled tiles (bit 2 set)")
     return extracted
-
-
 def create_tile_sheet(blb: BLBFile, level_index: int, output_path: Path,
                       tiles_per_row: int = 16, max_tiles: int = 256) -> bool:
     """
