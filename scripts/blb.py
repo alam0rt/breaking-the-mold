@@ -169,6 +169,27 @@ Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
     
     The tert_data_off_N values are byte offsets WITHIN each tertiary block, pointing
     to specific embedded data structures.
+    
+    Secondary/Tertiary Pairing (CRITICAL):
+    --------------------------------------
+    Each tertiary sub-block uses tiles from the secondary that PRECEDES it in the
+    sector layout, NOT from its corresponding stage-indexed secondary. This is because
+    the game loads data sequentially and the preceding secondary is in memory when
+    the tertiary is processed.
+    
+    Sector order:  BASE_SEC → TERT[0] → SEC_SUB[0] → TERT[1] → SEC_SUB[1] → ...
+    Pairing:       TERT[0] uses BASE_SEC
+                   TERT[1] uses SEC_SUB[0]
+                   TERT[2] uses SEC_SUB[1]
+                   TERT[N] uses SEC_SUB[N-1] (for N > 0)
+    
+    Example (BOIL level):
+        Base secondary (sectors 8053-8200) → 974 tiles
+        Stage 0 tertiary (8201-8382) uses base secondary tiles
+        Stage 0 secondary (8383-8524) → 783 tiles  
+        Stage 1 tertiary (8525-8727) uses stage 0 secondary tiles
+        ...
+        Stage 5 tertiary (9881-9897) uses stage 4 secondary tiles
 
 
 Movie Entry (0x1C = 28 bytes, at offset 0xB60):

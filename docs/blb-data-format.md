@@ -214,6 +214,90 @@ PRIMARY → SECONDARY → TERT[0] → SEC_SUB[0] → TERT[1] → SEC_SUB[1] → 
 Example (MENU level): 
 - 201-232 (PRIMARY) → 233-299 (SECONDARY) → 300-787 (TERT[0]) → 788-849 (SEC_SUB[0]) → ...
 
+## Stage Structure (VERIFIED 2026-01-05)
+
+Each "level" in the BLB actually contains multiple **stages** (individual gameplay areas).
+The game has **104 total stages** across 26 levels.
+
+### Stage Data Organization
+
+| Data Type | Scope | Contents |
+|-----------|-------|----------|
+| **Primary** | Per-level (shared) | Level geometry container |
+| **Secondary base** | Per-level (shared) | Base tileset, palettes |
+| **Secondary sub-blocks** | Per-stage | Stage-specific tile overrides |
+| **Tertiary sub-blocks** | Per-stage | Sprites, layers, audio |
+
+### Stage Counts by Level
+
+| Level | ID | Name | Stages | Pattern |
+|-------|-----|------|--------|---------|
+| 0 | MENU | Options | 6 | Menu screens |
+| 1-3 | PHRO/SCIE/TMPL | World 1 | 3-5 | Stages + bonus |
+| 4 | FINN | Swimming | 1 | Special mode |
+| 5 | MEGA | Boss | 1 | Boss fight |
+| 6-8 | BOIL/SNOW/FOOD | World 2 | 4-6 | Stages + bonus |
+| 9 | HEAD | Boss | 1 | Boss fight |
+| 10-14 | BRG1-EGGS | World 3-4 | 4-6 | Stages + bonus |
+| 15 | GLEN | Boss | 1 | Boss fight |
+| 16-20 | CLOU-CSTL | World 5-6 | 5-6 | Stages + bonus |
+| 21 | WIZZ | Boss | 1 | Boss fight |
+| 22 | RUNN | Runner | 2 | Special mode |
+| 23 | MOSS | World 7 | 6 | Stages + bonus |
+| 24 | KLOG | Final Boss | 1 | Boss fight |
+| 25 | EVIL | Evil Engine | 5 | Final world |
+
+### Secondary/Tertiary Sector Pairing (VERIFIED 2026-01-07)
+
+**CRITICAL:** Each stage's tertiary block uses the secondary block that **precedes it** 
+in the sector layout, NOT its corresponding stage-indexed secondary.
+
+**Sector Layout Pattern:**
+```
+Base secondary    → Stage 0 tertiary → Stage 0 secondary → Stage 1 tertiary → 
+Stage 1 secondary → Stage 2 tertiary → Stage 2 secondary → ... → 
+Stage 4 secondary → Stage 5 tertiary (if exists)
+```
+
+**Pairing Rules:**
+| Tertiary Block | Uses Secondary Block |
+|----------------|---------------------|
+| Stage 0 tertiary | **Base secondary** |
+| Stage 1 tertiary | Stage 0 secondary |
+| Stage 2 tertiary | Stage 1 secondary |
+| Stage N tertiary | Stage (N-1) secondary |
+| Stage 5 tertiary (if no sec_sub[4]) | Stage 4 secondary |
+
+**Example (Level 6 BOIL, sectors):**
+```
+Base secondary:    8053-8200
+Stage 0 tertiary:  8201-8382  ← uses base secondary (974 tiles)
+Stage 0 secondary: 8383-8524
+Stage 1 tertiary:  8525-8727  ← uses stage 0 secondary (783 tiles)
+Stage 1 secondary: 8728-8900
+...
+Stage 5 tertiary:  9881-9897  ← uses stage 4 secondary (466 tiles)
+```
+
+**Why This Matters:**
+Each secondary contains a different tileset with different tile counts. 
+Using the wrong secondary results in "jumbled" layer rendering because the 
+tilemap indices in the tertiary reference tiles from the preceding secondary.
+
+### Identifying Bonus Rooms
+
+Bonus rooms can be identified by:
+- Small tertiary block size (< 20 sectors, < 40 KB)
+- Few sprites (typically 0-3)
+- Usually the last stage in a multi-stage level
+
+### Extraction Statistics
+
+Full extraction yields:
+- **1,334 sprites** (from all tertiary blocks)
+- **26,208 tiles** (from secondary segments)
+- **571 layers** (from all tertiary blocks)
+
 ## TOC (Table of Contents) Format
 
 All three data segments (Primary, Secondary, Tertiary) use the same TOC format:

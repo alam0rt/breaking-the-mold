@@ -5,8 +5,17 @@ extract_all_graphics.py - Extract ALL graphics from Skullmonkeys BLB files
 Extracts:
   - Asset 600 (0x258): RLE sprites with embedded palettes (Primary segment)
   - Asset 300 (0x12C): Tiles with palette from Asset 400 (Secondary segment)
-  - Asset 200/201: Tilemap layers rendered as full images (Secondary segment)
+  - Asset 200/201: Tilemap layers rendered as full images (Tertiary segment)
   - Tertiary sprites: RLE sprites from tertiary blocks
+
+IMPORTANT - Secondary/Tertiary Pairing:
+    Each stage's tertiary block uses tiles from the secondary that PRECEDES it
+    in the sector layout, NOT from its corresponding stage-indexed secondary.
+    
+    Sector order:  BASE_SEC → TERT[0] → SEC_SUB[0] → TERT[1] → SEC_SUB[1] → ...
+    Pairing:       Stage 0 uses BASE_SEC
+                   Stage 1 uses SEC_SUB[0]
+                   Stage N uses SEC_SUB[N-1] (for N > 0)
 
 Usage:
     # Extract everything from all BLB files
@@ -145,8 +154,12 @@ class LevelMeta:
     primary_count: int
     secondary_sector: int
     secondary_count: int
-    tertiary_sector: int
-    tertiary_count: int
+    # Per-stage secondary sub-blocks (5 max)
+    sec_sub_offsets: List[int]
+    sec_sub_counts: List[int]
+    # Per-stage tertiary sub-blocks (6 max)
+    tert_sub_offsets: List[int]
+    tert_sub_counts: List[int]
     tert_block_count: int  # Number of tertiary sub-blocks
 
 
@@ -164,9 +177,11 @@ def read_level_metadata(blb_path: str, level_index: int) -> LevelMeta:
         # +0x02: u16 primary_count
         # +0x0E: u16 tert_block_count
         # +0x1E: u16 secondary_sector
-        # +0x2C: u16 secondary_count
-        # +0x3A: u16 tertiary_sector (first tertiary block)
-        # +0x48: u16 tertiary_count (first tertiary block)
+        # +0x20: 5x u16 secondary sub-block offsets
+        # +0x2C: u16 secondary_count (base)
+        # +0x2E: 5x u16 secondary sub-block counts
+        # +0x3A: 6x u16 tertiary sub-block offsets
+        # +0x48: 6x u16 tertiary sub-block counts
         # +0x56: 5-byte level_id
         # +0x5B: 21-byte level_name
         
@@ -178,8 +193,10 @@ def read_level_metadata(blb_path: str, level_index: int) -> LevelMeta:
             primary_count=struct.unpack('<H', meta[0x02:0x04])[0],
             secondary_sector=struct.unpack('<H', meta[0x1E:0x20])[0],
             secondary_count=struct.unpack('<H', meta[0x2C:0x2E])[0],
-            tertiary_sector=struct.unpack('<H', meta[0x3A:0x3C])[0],
-            tertiary_count=struct.unpack('<H', meta[0x48:0x4A])[0],
+            sec_sub_offsets=list(struct.unpack('<5H', meta[0x20:0x2A])),
+            sec_sub_counts=list(struct.unpack('<5H', meta[0x2E:0x38])),
+            tert_sub_offsets=list(struct.unpack('<6H', meta[0x3A:0x46])),
+            tert_sub_counts=list(struct.unpack('<6H', meta[0x48:0x54])),
             tert_block_count=struct.unpack('<H', meta[0x0E:0x10])[0],
         )
 
@@ -564,6 +581,67 @@ def extract_tiles(secondary_data: bytes, output_dir: Path, level_id: str) -> int
 # LAYER EXTRACTION (Asset 200/201)
 # ============================================================================
 
+def get_tile_pixels(tile_idx_1based: int, n_16x16: int, pixel_data: bytes, 
+                     flags_data: bytes) -> Tuple[Optional[List[List[int]]], Optional[int], bool]:
+    """
+    Get pixel data for a tile, handling both 16x16 and 8x8 sizes.
+    
+    Tile indices are 1-based (0 = empty/transparent).
+    16x16 tiles: 256 bytes each (16 rows × 16 bytes), stored first
+    8x8 tiles: 128 bytes each (8 rows × 16-byte stride), stored after 16x16 tiles
+    
+    Returns:
+        (pixels, tile_size, is_semi_transparent) where pixels is 2D list,
+        or (None, None, False) if tile is empty/invalid/skipped
+    """
+    if tile_idx_1based == 0:
+        return None, None, False
+    
+    idx0 = tile_idx_1based - 1
+    
+    # Get tile flags
+    tile_flag = flags_data[idx0] if idx0 < len(flags_data) else 0
+    is_semi_transparent = (tile_flag & 0x01) != 0
+    is_8x8 = (tile_flag & 0x02) != 0
+    is_skipped = (tile_flag & 0x04) != 0
+    
+    if is_skipped:
+        return None, None, False
+    
+    if is_8x8:
+        # 8x8 tiles: 128 bytes each, stored after 16x16 tiles
+        if idx0 >= n_16x16:
+            offset = n_16x16 * 128 + (idx0 - n_16x16) * 128
+        else:
+            # Edge case: flag says 8x8 but index < n_16x16
+            offset = idx0 * 128
+        tile_size = 8
+        bytes_per_tile = 128
+    else:
+        # 16x16 tiles: 256 bytes each
+        offset = idx0 * 256
+        tile_size = 16
+        bytes_per_tile = 256
+    
+    if offset < 0 or offset + bytes_per_tile > len(pixel_data):
+        return None, None, False
+    
+    # Read pixels with 16-byte row stride
+    pixels = []
+    stride = 16
+    for y in range(tile_size):
+        row = []
+        for x in range(tile_size):
+            byte_offset = offset + y * stride + x
+            if byte_offset < len(pixel_data):
+                row.append(pixel_data[byte_offset])
+            else:
+                row.append(0)
+        pixels.append(row)
+    
+    return pixels, tile_size, is_semi_transparent
+
+
 def extract_layers(secondary_data: bytes, tertiary_data: bytes, output_dir: Path, level_id: str) -> int:
     """Extract rendered tilemap layers (layer defs in tertiary, tiles in secondary)."""
     sec_toc = parse_toc(secondary_data)
@@ -578,25 +656,25 @@ def extract_layers(secondary_data: bytes, tertiary_data: bytes, output_dir: Path
     if not all(a in tert_toc for a in required_tert):
         return 0
     
-    _, _, tilemap_data = tert_toc[ASSET_TILEMAP]
-    _, _, layer_entries = tert_toc[ASSET_LAYER_ENTRIES]
+    _, _, asset200_data = tert_toc[ASSET_TILEMAP]  # Tilemap container with sub-TOC
+    _, _, asset201_data = tert_toc[ASSET_LAYER_ENTRIES]  # Layer entries (92 bytes each)
     _, _, pixel_data = sec_toc[ASSET_TILE_PIXELS]
     _, _, palette_container = sec_toc[ASSET_PALETTE]
     
-    # Parse palettes
+    # Parse palettes from Asset 400 container
     palettes = []
     for _, _, _, pal_data in parse_sub_toc(palette_container):
-        palettes.append(parse_palette_256(pal_data))
+        # Convert to RGB tuples
+        pal = []
+        for i in range(min(256, len(pal_data) // 2)):
+            color = struct.unpack('<H', pal_data[i*2:i*2+2])[0]
+            r = (color & 0x1F) * 8
+            g = ((color >> 5) & 0x1F) * 8
+            b = ((color >> 10) & 0x1F) * 8
+            pal.append((r, g, b))
+        palettes.append(pal)
     
     if not palettes:
-        return 0
-    
-    # Parse tilemap sub-TOC to get layer data
-    tilemap_entries = parse_sub_toc(tilemap_data)
-    
-    # Get layer count from sub-TOC
-    layer_count = len(tilemap_entries)
-    if layer_count == 0:
         return 0
     
     # Get tile info from secondary segment
@@ -606,7 +684,7 @@ def extract_layers(secondary_data: bytes, tertiary_data: bytes, output_dir: Path
     
     if ASSET_HEADER in sec_toc:
         _, _, header_data = sec_toc[ASSET_HEADER]
-        if len(header_data) >= 0x16:
+        if len(header_data) >= 0x14:
             n_16x16 = struct.unpack('<H', header_data[0x10:0x12])[0]
     
     if ASSET_PALETTE_IDX in sec_toc:
@@ -615,95 +693,103 @@ def extract_layers(secondary_data: bytes, tertiary_data: bytes, output_dir: Path
     if ASSET_SIZE_FLAGS in sec_toc:
         _, _, flags_data = sec_toc[ASSET_SIZE_FLAGS]
     
+    # Get layer count from Asset 201 size (92 bytes per entry)
+    n_layers = len(asset201_data) // 92
+    if n_layers == 0:
+        return 0
+    
     layers_dir = output_dir / "layers"
     layers_dir.mkdir(parents=True, exist_ok=True)
     
     extracted = 0
     
-    # Each layer entry is 92 bytes
-    LAYER_ENTRY_SIZE = 92
-    
-    for layer_idx in range(layer_count):
-        entry_offset = layer_idx * LAYER_ENTRY_SIZE
-        if entry_offset + LAYER_ENTRY_SIZE > len(layer_entries):
+    for layer_idx in range(n_layers):
+        # Parse layer entry (92 bytes) from Asset 201
+        layer_offset = layer_idx * 92
+        layer = asset201_data[layer_offset:layer_offset + 92]
+        
+        if len(layer) < 92:
             continue
         
-        entry = layer_entries[entry_offset:entry_offset+LAYER_ENTRY_SIZE]
+        # Layer dimensions at offsets 4, 6
+        src_w = struct.unpack('<H', layer[4:6])[0]
+        src_h = struct.unpack('<H', layer[6:8])[0]
         
-        # Parse layer entry (92 bytes)
-        # Offset 0x04: u16 src_width_tiles
-        # Offset 0x06: u16 src_height_tiles
-        # Offset 0x08: u16 dst_width
-        # Offset 0x0A: u16 dst_height
-        width_tiles = struct.unpack('<H', entry[4:6])[0]
-        height_tiles = struct.unpack('<H', entry[6:8])[0]
-        
-        if width_tiles == 0 or height_tiles == 0:
+        if src_w == 0 or src_h == 0:
             continue
-        if width_tiles > 256 or height_tiles > 256:
+        if src_w > 1024 or src_h > 1024:
             continue
         
-        # Get tilemap data for this layer
-        if layer_idx >= len(tilemap_entries):
+        # Get tilemap data from Asset 200 sub-TOC
+        # Asset 200 structure: count (u32) + entries (12 bytes each: flags, size, offset)
+        subtoc_offset = 4 + layer_idx * 12
+        if subtoc_offset + 12 > len(asset200_data):
             continue
         
-        _, _, _, layer_tilemap = tilemap_entries[layer_idx]
+        _, tilemap_size, tilemap_data_off = struct.unpack(
+            '<III', asset200_data[subtoc_offset:subtoc_offset + 12]
+        )
         
-        # Create layer image (16x16 per tile)
-        layer_width = width_tiles * 16
-        layer_height = height_tiles * 16
-        
-        if layer_width > 4096 or layer_height > 4096:
+        if tilemap_data_off + tilemap_size > len(asset200_data):
             continue
         
-        img = Image.new('RGBA', (layer_width, layer_height), (0, 0, 0, 0))
+        tilemap = asset200_data[tilemap_data_off:tilemap_data_off + tilemap_size]
+        
+        # Create layer image (16 pixels per tile)
+        img_w = src_w * 16
+        img_h = src_h * 16
+        
+        if img_w > 16384 or img_h > 16384:
+            continue
+        
+        img = Image.new('RGBA', (img_w, img_h), (0, 0, 0, 0))
         
         # Render tiles
-        for ty in range(height_tiles):
-            for tx in range(width_tiles):
-                tile_map_idx = ty * width_tiles + tx
-                if tile_map_idx * 2 + 2 > len(layer_tilemap):
+        for ty in range(src_h):
+            for tx in range(src_w):
+                tile_data_idx = (ty * src_w + tx) * 2
+                if tile_data_idx + 2 > len(tilemap):
                     continue
                 
-                tile_idx = struct.unpack('<H', layer_tilemap[tile_map_idx*2:tile_map_idx*2+2])[0]
+                raw_idx = struct.unpack('<H', tilemap[tile_data_idx:tile_data_idx + 2])[0]
+                tile_idx = raw_idx & 0x7FF  # Lower 11 bits = tile index
+                
                 if tile_idx == 0:
                     continue
                 
-                tile_idx_0 = tile_idx - 1  # Convert to 0-based
-                
-                # Get tile properties
-                is_8x8 = False
-                if tile_idx_0 < len(flags_data):
-                    is_8x8 = (flags_data[tile_idx_0] & 0x02) != 0
-                
-                tile_size = 8 if is_8x8 else 16
-                
-                # Calculate pixel offset
-                if is_8x8:
-                    offset = n_16x16 * 256 + (tile_idx_0 - n_16x16) * 64
-                    bytes_per_tile = 64
-                else:
-                    offset = tile_idx_0 * 256
-                    bytes_per_tile = 256
-                
-                if offset + bytes_per_tile > len(pixel_data):
+                # Get tile pixels using helper
+                tile_pixels, tile_size, is_semi_transparent = get_tile_pixels(
+                    tile_idx, n_16x16, pixel_data, flags_data
+                )
+                if tile_pixels is None:
                     continue
                 
-                tile_data = pixel_data[offset:offset+bytes_per_tile]
+                # Get palette for this tile
+                tile_idx0 = tile_idx - 1
+                pal_idx = palette_indices[tile_idx0] if tile_idx0 < len(palette_indices) else 0
+                palette = palettes[pal_idx] if pal_idx < len(palettes) else palettes[0]
                 
-                # Get palette
-                pal_idx = 0
-                if tile_idx_0 < len(palette_indices):
-                    pal_idx = palette_indices[tile_idx_0]
-                pal_idx = min(pal_idx, len(palettes) - 1)
-                palette = palettes[pal_idx]
+                # Render tile (scale 8x8 to 16x16 for consistent output)
+                scale = 16 // tile_size
                 
-                # Draw tile
                 for py in range(tile_size):
                     for px in range(tile_size):
-                        px_idx = tile_data[py * tile_size + px] if (py * tile_size + px) < len(tile_data) else 0
-                        if px_idx > 0 and px_idx < len(palette):
-                            img.putpixel((tx * 16 + px, ty * 16 + py), palette[px_idx])
+                        color_idx = tile_pixels[py][px]
+                        if color_idx == 0:
+                            continue  # Transparent
+                        
+                        if color_idx < len(palette):
+                            r, g, b = palette[color_idx]
+                            alpha = 128 if is_semi_transparent else 255
+                        else:
+                            r, g, b, alpha = 255, 0, 255, 255
+                        
+                        for dy in range(scale):
+                            for dx in range(scale):
+                                ix = tx * 16 + px * scale + dx
+                                iy = ty * 16 + py * scale + dy
+                                if 0 <= ix < img_w and 0 <= iy < img_h:
+                                    img.putpixel((ix, iy), (r, g, b, alpha))
         
         filename = f"layer_{layer_idx:02d}.png"
         img.save(layers_dir / filename)
@@ -717,7 +803,7 @@ def extract_layers(secondary_data: bytes, tertiary_data: bytes, output_dir: Path
 # ============================================================================
 
 def extract_level(blb_path: str, level_idx: int, output_base: Path, blb_name: str) -> dict:
-    """Extract all graphics from a single level."""
+    """Extract all graphics from a single level (all stages)."""
     try:
         meta = read_level_metadata(blb_path, level_idx)
     except Exception as e:
@@ -729,36 +815,64 @@ def extract_level(blb_path: str, level_idx: int, output_base: Path, blb_name: st
     results = {
         'level_id': meta.level_id,
         'level_name': meta.level_name,
+        'stages': [],
         'sprites': 0,
         'tiles': 0,
         'layers': 0,
     }
     
-    # Read segment data
-    # NOTE: Verified via runtime analysis:
-    # - Primary segment: Asset 600 (level geometry), 601 (collision), 602 (palette)
-    # - Secondary segment: Assets 100, 300-302, 400-401 (tiles + metadata)
-    # - Tertiary segment[0]: Assets 200/201 (layers), 500-504 (audio), 600 (SPRITES!), 700
-    
+    # Read base secondary segment (tiles shared across stages)
     secondary_data = None
     if meta.secondary_count > 0:
         secondary_data = read_segment(blb_path, meta.secondary_sector, meta.secondary_count)
     
-    tertiary_data = None
-    if meta.tertiary_count > 0 and meta.tert_block_count > 0:
-        tertiary_data = read_segment(blb_path, meta.tertiary_sector, meta.tertiary_count)
-    
-    # Extract sprites from TERTIARY segment (Asset 600 = RLE sprites there)
-    if tertiary_data:
-        results['sprites'] = extract_sprites_600(tertiary_data, level_dir, meta.level_id)
-    
-    # Extract tiles from secondary segment
+    # Extract base tiles from secondary segment (once per level)
     if secondary_data:
         results['tiles'] = extract_tiles(secondary_data, level_dir, meta.level_id)
     
-    # Extract layers (uses tile data from secondary, layer definitions from tertiary)
-    if secondary_data and tertiary_data:
-        results['layers'] = extract_layers(secondary_data, tertiary_data, level_dir, meta.level_id)
+    # Build per-stage secondary data mapping
+    # Pattern: tertiary N uses the secondary that PRECEDES it in sector layout
+    # Base secondary → Stage 0 tertiary → Stage 0 secondary → Stage 1 tertiary → ...
+    # So: Stage 0 uses base, Stage 1 uses stage 0's secondary, etc.
+    stage_secondaries = [secondary_data]  # Stage 0 uses base
+    for i in range(5):
+        if meta.sec_sub_counts[i] > 0:
+            stage_secondaries.append(read_segment(blb_path, meta.sec_sub_offsets[i], meta.sec_sub_counts[i]))
+        else:
+            # Inherit from previous
+            stage_secondaries.append(stage_secondaries[-1] if stage_secondaries else secondary_data)
+    
+    # Extract from EACH STAGE (tertiary sub-blocks)
+    for stage_idx in range(6):
+        if meta.tert_sub_counts[stage_idx] == 0:
+            continue
+        
+        stage_dir = level_dir / f"stage_{stage_idx}"
+        stage_dir.mkdir(parents=True, exist_ok=True)
+        
+        stage_results = {
+            'stage': stage_idx,
+            'sprites': 0,
+            'layers': 0,
+        }
+        
+        # Read tertiary data for this stage
+        tertiary_data = read_segment(blb_path, meta.tert_sub_offsets[stage_idx], meta.tert_sub_counts[stage_idx])
+        
+        # Get secondary for this stage (uses the one before it in sector layout)
+        sec_for_layers = stage_secondaries[stage_idx]
+        
+        # Extract sprites from this stage's tertiary
+        if tertiary_data:
+            stage_results['sprites'] = extract_sprites_600(tertiary_data, stage_dir, f"{meta.level_id}_s{stage_idx}")
+            results['sprites'] += stage_results['sprites']
+        
+        # Extract layers using stage's preceding secondary
+        if sec_for_layers and tertiary_data:
+            stage_results['layers'] = extract_layers(sec_for_layers, tertiary_data, stage_dir, f"{meta.level_id}_s{stage_idx}")
+            results['layers'] += stage_results['layers']
+        
+        results['stages'].append(stage_results)
     
     # Save metadata
     with open(level_dir / "metadata.json", 'w') as f:
@@ -766,7 +880,13 @@ def extract_level(blb_path: str, level_idx: int, output_base: Path, blb_name: st
             'level_index': level_idx,
             'level_id': meta.level_id,
             'level_name': meta.level_name,
-            'extracted': results,
+            'num_stages': len(results['stages']),
+            'stages': results['stages'],
+            'totals': {
+                'sprites': results['sprites'],
+                'tiles': results['tiles'],
+                'layers': results['layers'],
+            }
         }, f, indent=2)
     
     return results
