@@ -416,3 +416,33 @@ debug:
 	@echo ""
 	@echo "You're now debugging! Use Ghidra's debugger controls (F5=continue, F10=step, etc.)"
 
+# -----------------------------------------------------------------------------
+# Asset Extraction
+# -----------------------------------------------------------------------------
+
+.PHONY: layers layers-all sprites
+
+# Extract all tilemap layers from all levels (default action for layers)
+layers: layers-all
+
+# Extract all tilemap layers from all levels
+layers-all:
+	@echo "Extracting all tilemap layers..."
+	python3 scripts/extract_layers.py --output output/layers
+	@echo "Done! Layers saved to output/layers/"
+
+# Extract layers from a specific level (usage: make layers-level LEVEL=PHRO)
+layers-level:
+ifndef LEVEL
+	@echo "Usage: make layers-level LEVEL=PHRO"
+	@echo "       make layers-level LEVEL=1"
+	@echo ""
+	@echo "Use 'make layers-list' to see available levels"
+	@exit 1
+endif
+	python3 scripts/extract_layers.py --level $(LEVEL) --output output/layers
+
+# List all available levels
+layers-list:
+	python3 scripts/extract_layers.py --list
+

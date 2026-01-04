@@ -307,7 +307,7 @@ BLB File
 
 #### Asset 100 - Tile Header (36 bytes, CODE-VERIFIED)
 
-Verified via Ghidra decompilation of `FUN_8007b588` (tile accessor) and `FUN_8007b53c` (tile count).
+Verified via Ghidra decompilation of `CopyTilePixelData` (0x8007b588) and `GetTotalTileCount` (0x8007b53c).
 
 ```
 Offset  Size  Type   Description
@@ -316,19 +316,19 @@ Offset  Size  Type   Description
 0x03    1     u8     Padding
 0x04    3     u8[3]  Secondary RGB color  
 0x07    1     u8     Padding
-0x08    2     u16    Level width in tiles (*16 for pixels, see FUN_8007b434)
-0x0A    2     u16    Level height in tiles (*16 for pixels, see FUN_8007b434)
+0x08    2     u16    Level width in tiles (*16 for pixels, see GetLevelDimensions)
+0x0A    2     u16    Level height in tiles (*16 for pixels, see GetLevelDimensions)
 0x0C    2     u16    Unknown (not accessed in analyzed functions)
 0x0E    2     u16    Unknown (not accessed in analyzed functions)
-0x10    2     u16    16×16 tile count (CODE-VERIFIED: FUN_8007b588 uses for data offset)
-0x12    2     u16    8×8 tile count (CODE-VERIFIED: summed in FUN_8007b53c)
-0x14    2     u16    Additional tile count (summed in FUN_8007b53c with 0x10, 0x12)
+0x10    2     u16    16×16 tile count (CODE-VERIFIED: CopyTilePixelData uses for data offset)
+0x12    2     u16    8×8 tile count (CODE-VERIFIED: summed in GetTotalTileCount)
+0x14    2     u16    Additional tile count (summed in GetTotalTileCount with 0x10, 0x12)
 0x16    6     var    Unknown
-0x1C    2     u16    Unknown (read by FUN_8007b7c8)
+0x1C    2     u16    Unknown (read by GetAsset100Field1C)
 0x1E    4     var    Remaining header data
 ```
 
-**Code reference:** `FUN_8007b53c` computes total tiles as:
+**Code reference:** `GetTotalTileCount` (0x8007b53c) computes total tiles as:
 `*(u16*)(asset100 + 0x10) + *(u16*)(asset100 + 0x12) + *(u16*)(asset100 + 0x14)`
 
 #### Asset 300 - Tile Pixel Data (EXTRACTION-VERIFIED)
@@ -354,10 +354,10 @@ One byte per tile, indexing into Asset 400 palette array:
 #### Asset 302 - Tile Size/Category Flag (CODE-VERIFIED)
 
 One byte per tile indicating tile size and properties.
-Verified via Ghidra decompilation of `FUN_80025240` (tile loading function).
+Verified via Ghidra decompilation of `LoadTileDataToVRAM` (0x80025240).
 
 - Size = `count_16x16 + count_8x8` bytes (same as Asset 301)
-- Accessed via `FUN_8007b6bc` which returns `ctx[7]` (offset 0x1C in LevelDataContext)
+- Accessed via `GetTileSizeFlags` (0x8007b6bc) which returns `ctx[7]` (offset 0x1C in LevelDataContext)
 
 **Bit-level interpretation (from decompiled code):**
 ```c
@@ -633,7 +633,23 @@ Offset  WIdx  Size  Type    Field                   Description
 | `InitLevelDataContext` | 0x8007A1BC | Sets blbHeaderBuffer [0x17], loaderCallback [0x19], slidingWindowIndex [0x18]=0xFF |
 | `LevelDataParser` | 0x8007A62C | Clears all fields, parses primary TOC, sets [0x1A-0x1F], calls LoadAssetContainer |
 | `LoadAssetContainer` | 0x8007B074 | Parses sub-TOC, populates asset pointers [0x00-0x16] based on asset IDs |
+| `LoadTileDataToVRAM` | 0x80025240 | Uploads tile pixel data to VRAM after container load |
 | `CdBLB_ReadSectors` | 0x80038BA0 | Low-level CD read, called via loaderCallback |
+
+#### Key Accessor Functions (Ghidra-named)
+
+| Function | Address | Returns | Description |
+|----------|---------|---------|-------------|
+| `GetLayerCount` | 0x8007B6C8 | u16 | Layer count from Asset 200 |
+| `GetLayerEntry` | 0x8007B700 | ptr | Layer entry from Asset 201 (92-byte stride) |
+| `GetTilemapDataPtr` | 0x8007B6DC | ptr | Tilemap data pointer from Asset 200 sub-TOC |
+| `GetTotalTileCount` | 0x8007B53C | u16 | Sum of tile counts from Asset 100 |
+| `CopyTilePixelData` | 0x8007B588 | void | Copy tile pixel data (8bpp) to buffer |
+| `GetTileSizeFlags` | 0x8007B6BC | ptr | Asset 302 pointer (size flags) |
+| `GetPaletteIndices` | 0x8007B6B0 | ptr | Asset 301 pointer (palette per tile) |
+| `GetPaletteDataPtr` | 0x8007B4F8 | ptr | Palette color data from Asset 400 |
+| `GetPaletteGroupCount` | 0x8007B4D0 | u8 | Palette count from Asset 400 |
+| `GetAnimatedTileData` | 0x8007B658 | ptr | Animated tile lookup from ctx[11] |
 
 #### Asset ID Mapping (LoadAssetContainer)
 
@@ -641,25 +657,25 @@ The sub-TOC contains entries with asset IDs that map to specific context offsets
 
 | Asset ID | Hex | Word Index | Field Name | Description |
 |----------|-----|------------|------------|-------------|
-| 100 | 0x64 | [1] | assetGeometry100 | Geometry/tiles |
-| 101 | 0x65 | [2] | assetGeometry101 | Unknown geometry |
-| 200 | 0xC8 | [3] | assetSprite200 | Sprites |
-| 201 | 0xC9 | [4] | assetSprite201 | Animations |
-| 300 | 0x12C | [5] | asset300 | Unknown |
-| 301 | 0x12D | [6] | asset301 | Unknown |
-| 302 | 0x12E | [7] | asset302 | Unknown |
+| 100 | 0x64 | [1] | tileHeader | Tile header (36 bytes, tile counts at +0x10/0x12/0x14) |
+| 101 | 0x65 | [2] | tileHeader101 | Unknown secondary header |
+| 200 | 0xC8 | [3] | tilemapContainer | Tilemap sub-TOC (layer count + data offsets) |
+| 201 | 0xC9 | [4] | layerEntries | Layer definition entries (92 bytes each) |
+| 300 | 0x12C | [5] | tilePixels | Tile pixel data (8bpp indexed) |
+| 301 | 0x12D | [6] | paletteIndices | Palette index per tile (1 byte each) |
+| 302 | 0x12E | [7] | tileSizeFlags | Size flags per tile (0=16x16, 2=8x8) |
 | 303 | 0x12F | [10] | asset303 | Unknown |
-| 400 | 0x190 | [8] | assetObject400 | Object data |
-| 401 | 0x191 | [9] | assetObject401 | Object data |
-| 500 | 0x1F4 | [11] | asset500 | Unknown |
-| 501 | 0x1F5 | [14] | asset501 | Unknown |
-| 502 | 0x1F6 | [15] | asset502 | Unknown |
-| 503 | 0x1F7 | [12] | asset503 | Unknown |
+| 400 | 0x190 | [8] | paletteContainer | Palette container (256-color palettes) |
+| 401 | 0x191 | [9] | paletteAnimData | Palette animation flags |
+| 500 | 0x1F4 | [11] | animatedTileData | Animated tile lookup |
+| 501 | 0x1F5 | [14] | asset501 | VRAM texture coords |
+| 502 | 0x1F6 | [15] | asset502 | VRAM rectangles |
+| 503 | 0x1F7 | [12] | asset503 | Animation frame offsets |
 | 504 | 0x1F8 | [13] | asset504 | Unknown |
-| 600 | 0x258 | [16-17] | assetLevel600 + size | Level geometry (with size) |
-| 601 | 0x259 | [18-19] | assetCollision601 + size | Collision data (with size) |
-| 602 | 0x25A | [20] | assetPalette602 | Palette data |
-| 700 | 0x2BC | [21-22] | assetAudio700 + size | Audio/music (with size) |
+| 600 | 0x258 | [16-17] | levelGeometry + size | Level geometry (with size) |
+| 601 | 0x259 | [18-19] | collisionData + size | Collision data (with size) |
+| 602 | 0x25A | [20] | paletteRaw | Palette data (15-bit RGB) |
+| 700 | 0x2BC | [21-22] | audioData + size | Audio/music (with size) |
 
 #### Loader Callback Chain
 

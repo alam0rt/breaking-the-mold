@@ -5,6 +5,31 @@ that have not been fully verified through decompilation or runtime tracing.
 
 ---
 
+## Ghidra Function Naming Summary (2026-01-05)
+
+The following functions have been renamed in Ghidra based on decompilation analysis:
+
+| Address | Old Name | New Name | Purpose |
+|---------|----------|----------|---------|
+| 0x8007b6c8 | FUN_8007b6c8 | GetLayerCount | Layer count from Asset 200 |
+| 0x8007b700 | FUN_8007b700 | GetLayerEntry | Layer entry from Asset 201 (92-byte stride) |
+| 0x8007b6dc | FUN_8007b6dc | GetTilemapDataPtr | Tilemap data pointer from Asset 200 sub-TOC |
+| 0x8007b658 | FUN_8007b658 | GetAnimatedTileData | Animated tile lookup from ctx[11] |
+| 0x8007b4f8 | FUN_8007b4f8 | GetPaletteDataPtr | Palette color data from Asset 400 |
+| 0x8007b530 | FUN_8007b530 | GetPaletteAnimData | Palette animation flags from ctx[9] |
+
+Functions with comments added (already had names):
+- `GetTotalTileCount` (0x8007b53c) - Sum of Asset 100 offsets 0x10+0x12+0x14
+- `CopyTilePixelData` (0x8007b588) - Copies tile pixels with 16x16/8x8 handling
+- `GetTileSizeFlags` (0x8007b6bc) - Returns Asset 302 pointer (ctx[7])
+- `GetPaletteIndices` (0x8007b6b0) - Returns Asset 301 pointer (ctx[6])
+- `GetPaletteGroupCount` (0x8007b4d0) - Returns palette count from Asset 400
+- `LoadAssetContainer` (0x8007b074) - Full asset loading with ID mapping
+- `LoadTileDataToVRAM` (0x80025240) - VRAM upload with size flag processing
+- `GetAsset100Field1C` (0x8007b7c8) - Unknown field at Asset 100 offset 0x1C
+
+---
+
 ## Primary Asset 600 Entry Structure (2026-01-04)
 
 **Status:** CORRECTED - Asset 600 is RLE sprite container, not 92-byte entries
@@ -31,10 +56,10 @@ These are the 92-byte entries accessed by `FUN_80024778`.
 ### Discovery Path
 
 The accessor functions reveal the structure:
-- `FUN_8007b6c8(ctx)` → returns `**(u16**)(ctx + 0xc)` = count from Asset 200
-- `FUN_8007b700(ctx, i)` → returns `*(ptr*)(ctx + 0x10) + i * 0x5c` = entry from Asset 201
+- `GetLayerCount(ctx)` (0x8007b6c8) → returns `**(u16**)(ctx + 0xc)` = count from Asset 200
+- `GetLayerEntry(ctx, i)` (0x8007b700) → returns `*(ptr*)(ctx + 0x10) + i * 0x5c` = entry from Asset 201
 
-`LoadAssetContainer` sets:
+`LoadAssetContainer` (0x8007b074) sets:
 - `ctx[3]` (offset 0x0C) = Asset 200 pointer (has count at offset 0)
 - `ctx[4]` (offset 0x10) = Asset 201 pointer (92-byte entry table)
 
@@ -111,14 +136,14 @@ Offset  Size  Field           Description
 7. **Tilemap rendering**: The src dimensions define the tilemap stored in Asset 200.
    The dst dimensions define how it's rendered (stretched/tiled to fill layer).
 
-### Processing Logic (FUN_80024778)
+### Processing Logic (FUN_80024778 / ProcessLayerEntries)
 
 ```c
-count = **((u16**)ctx + 3);  // From Asset 200
-entries = *(ptr*)(ctx + 0x10);  // Asset 201 base
+count = GetLayerCount(ctx);      // From Asset 200
+entries = *(ptr*)(ctx + 0x10);   // Asset 201 base
 
 for (int i = 0; i < count; i++) {
-    entry = entries + i * 0x5c;
+    entry = GetLayerEntry(ctx, i);  // entries + i * 0x5c
     
     if (entry->skip_flag != 0) continue;
     if (entry->object_type == 3) continue;
@@ -225,7 +250,7 @@ Values in range ~28000-30000 have high bits set. See "Tile Index Encoding" below
 
 ## Tile Data Format (2026-01-04, UPDATED 2026-01-04)
 
-**Status:** CODE-VERIFIED via Ghidra decompilation of `CopyTilePixelData` (0x800252C0)
+**Status:** CODE-VERIFIED via Ghidra decompilation of `CopyTilePixelData` (0x8007b588)
 
 ### Asset 100 Header (Secondary Segment)
 
@@ -244,7 +269,7 @@ Offset  Size  Field           Description
 
 ### Tile Pixel Storage (Asset 300)
 
-From `CopyTilePixelData` (0x800252C0):
+From `CopyTilePixelData` (0x8007b588):
 
 **16×16 tiles** are stored first:
 - 256 bytes each (16×16 8bpp)
@@ -458,20 +483,21 @@ Total extracted (26 levels):
 
 ---
 
-## LevelDataContext Accessor Functions (2026-01-04)
+## LevelDataContext Accessor Functions (2026-01-04, UPDATED 2026-01-05)
 
-**Status:** CODE-VERIFIED via Ghidra
+**Status:** CODE-VERIFIED via Ghidra (functions renamed)
 
 These accessor functions operate on the LevelDataContext structure (GameState + 0x84).
 They provide the link between loaded asset data and game rendering.
 
-### Asset 600 (Level Objects) Accessors
+### Asset 600/200/201 (Level Layer/Sprite) Accessors
 
 | Function | Address | Returns | Description |
 |----------|---------|---------|-------------|
-| `FUN_8007b6c8` | 0x8007b6c8 | u16 | Entry count: `**(u16**)(ctx + 0xc)` |
-| `FUN_8007b700` | 0x8007b700 | ptr | Entry by index: `*(ptr*)(ctx+0x10) + i * 0x5c` |
-| `FUN_8007b6dc` | 0x8007b6dc | ptr | Sprite data from sub-TOC |
+| `GetLayerCount` | 0x8007b6c8 | u16 | Entry count: `**(u16**)(ctx + 0xc)` (from Asset 200) |
+| `GetLayerEntry` | 0x8007b700 | ptr | Entry by index: `*(ptr*)(ctx+0x10) + i * 0x5c` (from Asset 201) |
+| `GetTilemapDataPtr` | 0x8007b6dc | ptr | Tilemap data from Asset 200 sub-TOC |
+| `GetAnimatedTileData` | 0x8007b658 | ptr | Animated tile lookup from ctx[11] |
 
 ### Asset 100 (Tile Header) Accessors
 
@@ -481,25 +507,48 @@ They provide the link between loaded asset data and game rendering.
 | `FUN_8007b458` | 0x8007b458 | void | Writes ctx+4 offsets 0xC, 0xF (alt dims?) |
 | `FUN_8007b4b8` | 0x8007b4b8 | ptr | Background RGB (offset 0x00 in Asset 100) |
 | `FUN_8007b4c4` | 0x8007b4c4 | ptr | Secondary RGB (offset 0x04 in Asset 100) |
-| `GetPaletteGroupCount` | 0x8007b4d0 | u8 | Palette count |
-| `GetTotalTileCount` | 0x8007b53c | u16 | Sum of all tile counts |
-| `CopyTilePixelData` | 0x8007b588 | void | Copy tile pixels to buffer |
-| `GetPaletteIndices` | 0x8007b6b0 | ptr | Asset 301 pointer |
-| `GetTileSizeFlags` | 0x8007b6bc | ptr | Asset 302 pointer |
+| `GetPaletteGroupCount` | 0x8007b4d0 | u8 | Palette count from Asset 400 |
+| `GetTotalTileCount` | 0x8007b53c | u16 | Sum of offsets 0x10+0x12+0x14 in Asset 100 |
+| `CopyTilePixelData` | 0x8007b588 | void | Copy tile pixels to buffer (8bpp) |
+| `GetPaletteIndices` | 0x8007b6b0 | ptr | Asset 301 pointer (ctx[6]) |
+| `GetTileSizeFlags` | 0x8007b6bc | ptr | Asset 302 pointer (ctx[7]) |
 | `GetAsset100Field1C` | 0x8007b7c8 | u16 | Unknown field at +0x1C |
 | `FUN_8007b7dc` | 0x8007b7dc | ptr | ctx+0x3C (Asset 501?) |
+
+### Asset 400 (Palette) Accessors
+
+| Function | Address | Returns | Description |
+|----------|---------|---------|-------------|
+| `GetPaletteGroupCount` | 0x8007b4d0 | u8 | Palette count from Asset 400 sub-TOC |
+| `GetPaletteDataPtr` | 0x8007b4f8 | ptr | Palette color data pointer (navigates sub-TOC) |
+| `GetPaletteAnimData` | 0x8007b530 | ptr | Palette animation flags from ctx[9] (Asset 401) |
+
+### Core Loading Functions
+
+| Function | Address | Description |
+|----------|---------|-------------|
+| `LoadAssetContainer` | 0x8007b074 | Parses sub-TOC, populates ctx[1-22] based on asset IDs |
+| `LoadTileDataToVRAM` | 0x80025240 | Uploads tiles to VRAM (called after LoadAssetContainer) |
+| `InitLevelDataContext` | 0x8007a1bc | Initializes context with header pointer and callback |
+| `LevelDataParser` | 0x8007a62c | Parses primary TOC, calls LoadAssetContainer |
 
 ### Context Field Layout (partial)
 
 From accessor analysis, the LevelDataContext fields at low offsets:
 
 ```
-Offset  Size  Description                Source
-------  ----  -----------                ------
-0x04    4     Asset 100 pointer          Used by GetLevelDimensions (+0x8, +0xB, +0xC, +0xF)
-0x0C    4     Asset 600 sub-TOC pointer  FUN_8007b6c8, FUN_8007b6dc
-0x10    4     Asset 600 entry table ptr  FUN_8007b700 (entries are 92 bytes each)
-0x3C    4     Unknown (Asset 501?)       FUN_8007b7dc
+Word   Offset  Description                           Source / Accessor
+----   ------  -----------                           -----------------
+[1]    0x04    Asset 100 pointer (tile header)       GetLevelDimensions, GetTotalTileCount
+[3]    0x0C    Asset 200 pointer (tilemap TOC)       GetLayerCount (reads count at *[3])
+[4]    0x10    Asset 201 pointer (layer entries)     GetLayerEntry (entries are 92 bytes each)
+[5]    0x14    Asset 300 pointer (tile pixels)       CopyTilePixelData
+[6]    0x18    Asset 301 pointer (palette indices)   GetPaletteIndices
+[7]    0x1C    Asset 302 pointer (size flags)        GetTileSizeFlags
+[8]    0x20    Asset 400 pointer (palette container) GetPaletteDataPtr
+[9]    0x24    Asset 401 pointer (palette anim)      GetPaletteAnimData
+[11]   0x2C    Asset 500 pointer (animated tiles)    GetAnimatedTileData
+[15]   0x3C    Asset 501 pointer                     FUN_8007b7dc
 ```
 
 **Note:** These are separate from the main LevelDataContext offsets documented in
@@ -872,38 +921,38 @@ counter++;
 
 ---
 
-## Sprite/Entity Data Accessors (2026-01-04)
+## Layer/Entity Data Accessors (2026-01-04, UPDATED 2026-01-05)
 
-**Status:** Decompiled via Ghidra
+**Status:** Decompiled via Ghidra, functions renamed
 
-Functions that access sprite/entity data from the secondary segment:
+Functions that access layer/entity data from the tertiary segment:
 
-### FUN_8007b6c8 - GetEntityCount (0x8007B6C8)
+### GetLayerCount (0x8007B6C8)
 
 ```c
-u16 FUN_8007b6c8(int ctx) {
-    return **(u16**)(ctx + 0x0C);  // ctx[3] → assetSprite200
+u16 GetLayerCount(int ctx) {
+    return **(u16**)(ctx + 0x0C);  // ctx[3] → Asset 200 (tilemapContainer)
 }
 ```
 
-Returns the entity/sprite count from the first u16 of Asset 200 (0xC8).
-- `ctx + 0x0C` = LevelDataContext[3] = assetSprite200 pointer
+Returns the layer count from the first u16 of Asset 200 (0xC8).
+- `ctx + 0x0C` = LevelDataContext[3] = tilemapContainer pointer
 - Reads count from the beginning of the asset data
 
-### FUN_8007b700 - GetEntityEntry (0x8007B700)
+### GetLayerEntry (0x8007B700)
 
 ```c
-int FUN_8007b700(int ctx, uint index) {
+int GetLayerEntry(int ctx, uint index) {
     return *(int*)(ctx + 0x10) + (index & 0xFFFF) * 0x5C;
 }
 ```
 
-Returns pointer to entity entry at given index.
-- `ctx + 0x10` = LevelDataContext[4] = assetSprite201 pointer
+Returns pointer to layer entry at given index.
+- `ctx + 0x10` = LevelDataContext[4] = layerEntries pointer
 - Each entry is **0x5C (92) bytes**
-- Asset 201 (0xC9) contains the entity/sprite definition table
+- Asset 201 (0xC9) contains the layer definition table
 
-### Entity Entry Structure (0x5C = 92 bytes, PARTIAL)
+### Layer Entry Structure (0x5C = 92 bytes, PARTIAL)
 
 From FUN_80024778 analysis, each entity entry contains:
 
@@ -931,13 +980,13 @@ Offset  Size  Type    Description
 0x2C    4     u32     RGB color (bytes at +0x2C, +0x2D, +0x2E copied to GameState+0x124-126)
 ```
 
-**Entity Type 3:** When `*(short*)(entry + 0x26) == 3`, the entity is skipped in FUN_80024778.
+**Layer Type 3:** When `*(short*)(entry + 0x26) == 3`, the layer is skipped in FUN_80024778.
 
-**First Entity Special Handling:** When index == 0, copies RGB from entry+0x2C to GameState+0x124 (background color).
+**First Layer Special Handling:** When index == 0, copies RGB from entry+0x2C to GameState+0x124 (background color).
 
-### FUN_8007b6dc - GetEntityPaletteInfo (0x8007B6DC)
+### GetTilemapDataPtr (0x8007B6DC)
 
-Called for each entity in FUN_80024778. Returns palette-related data for the entity.
+Called for each layer in FUN_80024778. Returns tilemap data pointer for the layer by navigating the Asset 200 sub-TOC.
 
 ---
 
