@@ -296,16 +296,20 @@ Asset 201 defines how each tilemap layer is rendered:
 
 ### Layer Categories (from PHRO analysis)
 
+**UPDATED 2026-01-05: Layers 8-11 contain ENTITY SPAWN DATA, not just collision zones.**
+
 | Layer | src Size | dst Size | Purpose |
 |-------|----------|----------|---------|
-| 0-5 | 4-25×6-15 | 25×25 or 600×90 | Enemy/collectible spawn markers |
+| 0-5 | 4-25×6-15 | 25×25 or 600×90 | Parallax background tiles |
 | 6 | 9×9 | 600×90 | Foreground decorative element |
 | 7 | 11×12 | 600×90 | Same as 6, different parallax |
-| 8 | 109×41 | 600×90 | Death/hazard zones |
-| 9 | 454×42 | 456×70 | Main playable tileset (ground) |
-| 10 | 439×37 | 456×70 | Solid collision platforms |
-| 11 | 237×37 | 456×70 | One-way platforms (hypothesis) |
+| 8 | 109×41 | 600×90 | Entity spawn layer (parallax objects) |
+| 9 | 454×42 | 456×70 | Entity spawn layer (main level objects) |
+| 10 | 439×37 | 456×70 | Entity spawn layer (platforms) |
+| 11 | 237×37 | 456×70 | Entity spawn layer (additional objects) |
 | 12 | 15×46 | 600×90 | Foreground decoration |
+
+**See "Entity Spawn System" in blb-data-format.md for full details.**
 
 ### Tile Index Format
 
@@ -363,60 +367,83 @@ For PHRO: `1109 * 256 + 540 * 128 = 283,904 + 69,120 = 353,024 bytes` ✅ Matche
 
 ### Tile Index Encoding (Tilemap u16 values)
 
-For layers 0-7 and 12, tile indices are direct (no flags).
+**UPDATED 2026-01-05: Bit 12 is the ENTITY FLAG, not just a palette bank.**
 
-For layers 8-11, upper bits encode flags:
+For all layers, tile indices use this format:
 
 ```
-Bits 0-10 (0x7FF):  Tile index (1-based, 0 = empty)
-Bits 11-15:         Flags (purpose TBD - possibly palette bank or layer info)
+Bits 0-12 (0x1FFF): Tile index with entity flag
+  - If bit 12 = 0: Regular tile from secondary tileset (indices 0 to tile_count-1)
+  - If bit 12 = 1: ENTITY TILE (bits 0-11 index into entity tile atlas)
+Bits 13-15:         Flip flags (horizontal, vertical, unknown)
 ```
 
-Example from Layer 8: `0x120A` → tile index = `0x20A` (522), flags = `0x12`
-Example from Layer 9: `0x7097` → tile index = `0x097` (151), flags = `0x38` (but &0x7FF gives 151)
+**Entity Detection:** If `(tile_index & 0x1FFF) > total_tile_count`, this is an entity tile.
+The entity tile index is `tile_index & 0xFFF` (masking off bit 12).
 
-**Verification needed:** Confirm flag bit meanings via runtime tracing.
+Example from Layer 9: 
+- Index `0x1050` (4176 decimal) → bit 12 set → entity tile index = 80
+- Index `0x7097` → tile index = `0x097` (151), flip flags = `0x38`
+
+Layers 8-11 contain many tile indices with bit 12 set, forming connected regions
+that represent entity spawn positions. See blb-data-format.md for details.
 
 ---
 
-## Layer Purpose Analysis (2026-01-04)
+## Layer Purpose Analysis (2026-01-04, UPDATED 2026-01-05)
 
-**Status:** VISUAL-VERIFIED via tilemap extraction (PHRO level)
+**Status:** ENTITY-VERIFIED via tilemap extraction and bit analysis (PHRO level)
 
 Based on visual inspection of extracted layer images:
 
-| Layer | Dimensions | Visual Content | Hypothesized Purpose |
+| Layer | Dimensions | Visual Content | Verified Purpose |
 |-------|------------|----------------|---------------------|
-| 0-5 | 25×14, etc | Small sprites/icons | Enemy spawn points or collectible markers |
+| 0-5 | 25×14, etc | Small sprites/icons | Parallax background patterns |
 | 6 | 9×9 | Foreground object | Decorative foreground element |
 | 7 | 11×12 | Same as layer 6 | Same object on different parallax plane |
-| 8 | 109×41 | Rectangular zones | **Death zones** or hazard areas |
-| 9 | 454×42 | Main level tiles | **Playable tileset** - ground/platforms player stands on |
-| 10 | 439×37 | Solid platforms | **Collision layer** - platforms player collides with |
-| 11 | 237×37 | Additional platforms | **One-way platforms** (collide from bottom only?) |
-| 12 | 15×46 | Tall structure | **Foreground decoration** (rendered in front of player) |
+| 8 | 109×41 | Rectangular zones | **Entity spawn layer** - large objects/decorations |
+| 9 | 454×42 | Main level tiles | **Entity spawn layer** - main level objects |
+| 10 | 439×37 | Additional zones | **Entity spawn layer** - platforms/hazards |
+| 11 | 237×37 | Additional zones | **Entity spawn layer** - additional objects |
+| 12 | 15×46 | Tall structure | Foreground decoration |
+
+### Entity Spawn Discovery (2026-01-05)
+
+**STATUS: VERIFIED** - Layers 8-11 contain entity spawn data encoded in tilemap indices.
+
+Key findings:
+- Tile indices with bit 12 set (value >= 4096) are entity tiles
+- Connected regions of entity tiles form single entity instances  
+- 28 entity regions found in PHRO across layers 8-11
+- 23 unique entity types identified by their tile ID sets
+- Entity tile indices range 9-1102 (after masking bit 12)
+
+See **Entity Spawn System** section in `blb-data-format.md` for complete documentation.
 
 ### Layer Rendering Order (Hypothesis)
 
 Layers are likely rendered back-to-front based on priority field in Asset 201:
 1. Background color (from Entry 0)
-2. Far parallax layers (3-5) - tiny repeating patterns
-3. Mid parallax layers (6-8)
-4. Main level layers (9-11) - gameplay tiles
+2. Far parallax layers (0-5) - tiny repeating patterns
+3. Mid parallax layers (6-8) - entity objects + decorations
+4. Main level layers (9-11) - entity spawn markers (platforms, objects, hazards)
 5. Foreground layer (12)
 
-### Collision vs Visual Layers
+### Entity vs Collision Layers (UPDATED 2026-01-05)
 
-The game likely uses separate layers for:
-- **Visual rendering**: What the player sees
-- **Collision detection**: What the player collides with
+Previous hypothesis about layers 9-11 being "collision layers" was incorrect.
 
-Layers 9-11 appear to be different collision/visual combinations:
-- Layer 9: Main visual tileset
-- Layer 10: Solid collision from all directions
-- Layer 11: Platform collision (pass through from below?)
+**New understanding:**
+- Layers 8-11 contain **entity spawn data** encoded as tile indices with bit 12 set
+- Entity tiles reference graphics from tertiary Asset 600 sprite data
+- Each connected region of entity tiles = one entity instance
+- True collision data is likely in **Primary Asset 601 (0x259)**, not in tilemaps
 
-**Verification needed:** Trace collision detection code to confirm layer usage.
+The distinction is:
+- **Tilemaps (layers)**: Visual rendering + entity spawn positions
+- **Asset 601**: Collision geometry and physics boundaries
+
+**Investigation needed:** Decode Asset 601 collision format to understand actual collision detection.
 
 ---
 

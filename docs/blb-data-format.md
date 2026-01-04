@@ -682,6 +682,170 @@ How the game references these unreferenced containers is not yet understood:
 - May be referenced by the in-level bonus room trigger code
 - Requires further investigation of bonus room loading functions
 
+## Entity Spawn System (DISCOVERED 2026-01-05)
+
+Layers 8-11 in tertiary data contain **entity spawn markers** rather than background tiles.
+This system encodes spawn positions and entity types directly in the tilemap data.
+
+### Tile Index Encoding (VERIFIED)
+
+The u16 tile index in tilemap data uses bit 12 as an entity marker:
+
+```
+Tile Index Format (16 bits):
+┌─────────────────────────────────────┐
+│ 15 14 13 12 │ 11-0                  │
+│ FL FL FL EN │ TILE_INDEX            │
+└─────────────────────────────────────┘
+
+FL (bits 13-15): Flip flags (horizontal, vertical, unknown)
+EN (bit 12):     Entity flag
+  0 = Regular tile from secondary tileset (indices 0 to tile_count-1)
+  1 = Entity tile (bits 11-0 index into entity tile atlas)
+```
+
+**Detection:** If `(tile_index & 0x1FFF) > total_tile_count`, this is an entity tile.
+
+### Entity Layer Purpose
+
+| Layer Range | Typical Content | Observed Pattern |
+|-------------|-----------------|------------------|
+| Layers 0-7 | Background/parallax tiles | Normal tile indices (0 to tile_count) |
+| Layer 8 | Parallax decorations OR entity spawns | Large connected regions, repeating patterns |
+| Layers 9-11 | Entity spawn markers | Multi-tile entity footprints |
+
+### Entity Region Structure
+
+Entity spawns appear as **connected regions** of entity tiles in the tilemap:
+
+```
+Example (PHRO Layer 9, World position 132,30):
+
+Grid of entity tile indices (5×3 region):
+  Y=30: [3126, 3127, 3128, 3129, 3130]  ← Sequential in X
+  Y=31: [2527, 2896, 2897, 2898, 2899]  ← Different base
+  Y=32: [3258, 3259, 3260, 3261, 3262]  ← Sequential in X
+
+Each unique tile index maps to a tile in the entity graphics atlas.
+All tiles in a region together form one entity's visual footprint.
+```
+
+### Entity Type Identification
+
+Entities are identified by their **tile ID set** (the unique set of entity tile indices):
+
+| Property | Description |
+|----------|-------------|
+| Tile ID Set | The set of entity tile indices comprising the entity |
+| Region Size | Width × Height in tiles (e.g., 5×3, 6×6) |
+| World Position | Layer offset + local tile position |
+
+**Observed (PHRO level):**
+- 28 entity instances across layers 8-11
+- 23 unique entity types (by tile ID set)
+- 2 entity types appear at multiple positions (duplicates)
+- Entity tile index range: 9 to 1102 (after masking bit 12)
+
+### Entity Tile Graphics
+
+Entity tiles are stored separately from secondary tileset tiles:
+
+| Component | Source | Purpose |
+|-----------|--------|---------|
+| Entity tile indices | Bits 11-0 of tilemap entries with bit 12 set | Index into entity tile atlas |
+| Entity tile graphics | Tertiary Asset 600 sprite data | Visual pixels for entity tiles |
+| Palettes | Embedded in each sprite (Asset 600) | Per-sprite color schemes |
+
+**Hypothesis:** The entity tile indices (0-1102) reference pre-rendered tiles extracted
+from sprite frames in Asset 600. Each sprite's frames are composited into the atlas at 
+specific tile offsets, allowing the tilemap to reference individual 16×16 pieces.
+
+### Spawn Data Summary
+
+```
+PHRO Level Entity Analysis:
+  Layers with entity data: 8, 9, 10, 11
+  Layer 8: 1153 entity tile positions, 63 unique tile indices
+  Layer 9: 222 entity tile positions, 137 unique tile indices
+  Layer 10: 70 entity tile positions
+  Layer 11: 31 entity tile positions
+
+  Total entity spawn regions: 28
+  Unique entity types: 23
+  Duplicate placements: 2 types appear 2× each
+```
+
+### Relationship to Sprites
+
+The entity regions likely correspond to **static level objects** (platforms, decorations,
+hazards) that use sprite graphics but don't animate or have complex runtime behavior.
+True animated enemies and interactive objects may be spawned via a separate mechanism 
+(likely in the collision/physics data Asset 0x259 or code-driven spawn tables).
+
+## Tertiary Asset 600 - Sprite Container (DETAILED 2026-01-05)
+
+Tertiary Asset 600 contains sprite data with a different structure than Primary Asset 600.
+
+### Container Structure
+
+```
+Offset  Size    Description
+------  ----    -----------
+0x00    u32     Sprite count (N)
+0x04    N×12    Sprite header table
+
+Sprite Header (12 bytes each):
+  0x00  u32     Sprite ID (hash-like value, e.g., 0x5a89815f)
+  0x04  u32     Data offset (relative to data section start)
+  0x08  u32     Data size in bytes
+```
+
+### Sprite Definition Block
+
+Each sprite has a definition block found by searching for the sprite ID in the data section:
+
+```
+Structure at (sprite_id_location - 8):
+  -8    u32     Frame graphics size
+  -4    u32     Frame graphics offset (relative to data section)
+   0    u32     Sprite ID (the search key)
+  +4    u32     Frame count
+  +8    u32     Flags (typically 0x815d0001 or 0x815d0000)
+```
+
+### Sprite ID Patterns
+
+Sprite IDs appear to be hash values with related sprites having similar IDs:
+
+| Sprite ID | Hex Bytes | Likely Relationship |
+|-----------|-----------|---------------------|
+| 0x5a89815f | 5f 81 89 5a | Variant A |
+| 0x5ab9815f | 5f 81 b9 5a | Variant B (same entity?) |
+| 0x5ad9815f | 5f 81 d9 5a | Variant C (animation states?) |
+
+**Example (PHRO tertiary, 22 sprites):**
+```
+  ID: 0x09406d8a  gfx_offset:   936  gfx_size:   60  frames:  1
+  ID: 0x2cda4604  gfx_offset:  2724  gfx_size:  240  frames:  6
+  ID: 0x5a89815f  gfx_offset:  2376  gfx_size:  276  frames:  7
+  ID: 0x5ab9815f  gfx_offset:  1960  gfx_size:  276  frames:  7
+  ID: 0x5ad9815f  gfx_offset:  4044  gfx_size:  384  frames: 10
+```
+
+Three sprites (0x5a89815f, 0x5ab9815f, 0x5ad9815f) share similar IDs and frame counts,
+suggesting they are animation variants of the same game entity.
+
+### Purpose
+
+Tertiary sprites are used for:
+- Entity graphics (referenced by entity spawn layers)
+- Level-specific animated objects
+- Interactive elements (coins, power-ups, hazards)
+- Background decoration sprites
+
+Unlike Primary Asset 600 sprites (level geometry/backgrounds), tertiary sprites
+are typically smaller, animated, and associated with gameplay objects.
+
 ## Sector Files
 
 The sector files extracted to `sectors/` contain preview/loading graphics:
