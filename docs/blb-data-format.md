@@ -470,11 +470,13 @@ After parsing the TOC, the game accesses three asset types:
 The largest asset, containing level background/decoration sprites. Uses same RLE
 format as tertiary sprite data.
 
+**VERIFIED 2025-01-XX via Ghidra analysis of GetFrameMetadata (0x8007bebc)**
+
 **Container Structure:**
 ```
 Offset  Size    Description
 ------  ----    -----------
-0x00    u32     Entry count (typically 24-82 per level)
+0x00    u32     Sprite count (typically 20-82 per level)
 0x04+   12×N    Entry table
 ```
 
@@ -482,39 +484,76 @@ Offset  Size    Description
 ```
 Offset  Size    Description
 ------  ----    -----------
-0x00    u32     Sprite ID (same value stored in sprite header at +0x0C)
-0x04    u32     Data size in bytes
-0x08    u32     Offset from asset start
+0x00    u32     Sprite ID
+0x04    u32     Sprite data size in bytes
+0x08    u32     Sprite data offset from asset start
 ```
 
-**Entry Data (Sprite Header - 24 bytes):**
+**Sprite Header (24 or 36 bytes):**
 ```
 Offset  Size    Type    Description
 ------  ----    ----    -----------
-0x00    2       u16     Magic (always 1)
-0x02    2       u16     Header size (always 0x18 = 24)
-0x04    2       u16     Frame metadata size (varies)
-0x06    2       u16     Padding (0)
-0x08    4       u32     Pixel data size (RLE compressed)
-0x0C    4       u32     Sprite ID (matches entry flags)
+0x00    2       u16     Sprite type: 1=standard, 2=linked
+0x02    2       u16     Header size: 24 for type 1, 36 for type 2
+0x04    2       u16     Frames end offset (header_size + frame_count × frame_entry_size)
+0x06    2       u16     Padding (always 0)
+0x08    4       u32     RLE data size (approximate, may not match exactly)
+0x0C    4       u32     Sprite ID (may not match TOC for type 2)
 0x10    2       u16     Frame count
-0x12    6       var     Unknown (often 0x0000 0x0001 0x815D)
+0x12    2       u16     Padding (always 0)
+0x14    2       u16     Unknown flag (0 or 1)
+0x16    2       u16     CLUT placeholder (always 0x815D - GARBAGE, ignored at runtime)
+0x18    12      bytes   Extended header (only for type 2)
 ```
 
-**Frame Metadata (0x24 = 36 bytes per frame):**
-Located at offset 0x18 (header_size). Contains per-frame positioning:
-- Signed 16-bit offsets (x, y positioning)
-- Bounding box or hotspot data
+**Frame Entry (36 bytes for type 1, 72 bytes for type 2):**
+```
+Offset  Size    Type    Description
+------  ----    ----    -----------
+0x00    2       u16     Unknown (always 0)
+0x02    2       u16     Unknown (always 0)
+0x04    2       u16     Unknown (1 or 2)
+0x06    2       s16     Render X offset (signed, for sprite positioning)
+0x08    2       s16     Render Y offset (signed)
+0x0A    2       u16     Render width (sprite visible width)
+0x0C    2       u16     Render height (sprite visible height)
+0x0E    2       u16     Unknown (0-10)
+0x10    2       u16     Unknown (always 0)
+0x12    2       s16     Hitbox X offset (signed, collision box position)
+0x14    2       s16     Hitbox Y offset (signed)
+0x16    2       u16     Hitbox width (collision box width)
+0x18    2       u16     Hitbox height (collision box height)
+0x1A    6       bytes   Padding (always 0)
+0x20    4       u32     RLE data offset (from frames_end)
+```
+
+For type 2 sprites, the frame entry is 72 bytes (two 36-byte blocks for dual hitbox/layers).
+
+**Key Formulas (verified for all 20 sprites in SCIE level):**
+```
+frames_end = header_size + frame_count × frame_entry_size
+frame_entry_size = 36 (type 1) or 72 (type 2)
+rle_absolute_offset = sprite_offset + frames_end + frame.rle_offset
+```
+
+**GetFrameMetadata (0x8007bebc) - Key offsets used:**
+- `frame_index × 0x24 + base`: Frame entry lookup (0x24 = 36 bytes)
+- `iVar4 + 0x0A`: Render width (offset 10)
+- `iVar4 + 0x0C`: Render height (offset 12)
+- `iVar4 + 0x20`: RLE data offset (offset 32)
 
 **RLE Pixel Data:**
-Located at (header_size + frame_meta_size). Uses same RLE format as tertiary:
+Located at (sprite_offset + frames_end + frame.rle_offset).
+- First u16 is NOT row count (varies independently of height)
+- Uses same RLE format as other sprite data
 - Control word (u16): bit 15=newline, bits 8-14=skip, bits 0-7=copy count
 - Raw 8bpp indexed pixels following control words
 
-**Example (PHRO level):**
-- 77 sprite entries
-- Entry 0: ID=0x000AC607, 12 frames, 3540 bytes total
-- Multiple entries can share same offset (data reuse)
+**Example (SCIE level, Asset 600 from tertiary sub-TOC):**
+- 20 sprite entries
+- Type 1 sprites: 17 entries (36-byte frame entries)
+- Type 2 sprites: 3 entries (72-byte frame entries, linked/complex)
+- Frame counts range from 1 to 15 per sprite
 
 ### Asset 0x259 - Collision/Physics Data
 

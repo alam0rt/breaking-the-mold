@@ -9,6 +9,8 @@ that have not been fully verified through decompilation or runtime tracing.
 
 The following functions have been renamed in Ghidra based on decompilation analysis:
 
+### Tileset/Layer Functions
+
 | Address | Old Name | New Name | Purpose |
 |---------|----------|----------|---------|
 | 0x8007b6c8 | FUN_8007b6c8 | GetLayerCount | Layer count from Asset 200 |
@@ -18,7 +20,21 @@ The following functions have been renamed in Ghidra based on decompilation analy
 | 0x8007b4f8 | FUN_8007b4f8 | GetPaletteDataPtr | Palette color data from Asset 400 |
 | 0x8007b530 | FUN_8007b530 | GetPaletteAnimData | Palette animation flags from ctx[9] |
 
-Functions with comments added (already had names):
+### Sprite/Animation Functions (2026-01-04)
+
+| Address | Old Name | New Name | Purpose |
+|---------|----------|----------|---------|
+| 0x80010068 | FUN_80010068 | DecodeRLESprite | RLE decompression with mirror support |
+| 0x8007bf7c | FUN_8007bf7c | DecodeRLESpriteChecked | Checks valid flag, then calls DecodeRLESprite |
+| 0x8007bde8 | FUN_8007bde8 | RenderSprite | Sprite render orchestration |
+| 0x8007bebc | FUN_8007bebc | GetFrameMetadata | Frame accessor: `ctx[0] + frame_idx * 0x24` |
+| 0x8007bc3c | FUN_8007bc3c | InitSpriteContext | Initializes 20-byte SpriteContext |
+| 0x8007bc18 | FUN_8007bc18 | ClearSpriteContext | Zeros 20-byte SpriteContext |
+| 0x8007bb10 | FUN_8007bb10 | LookupSpriteById | Searches DAT_800a6064, then DAT_800a6060 |
+| 0x8007bb00 | FUN_8007bb00 | SetSpriteTables | Sets global sprite table pointers |
+| 0x8007b968 | FUN_8007b968 | FindSpriteInTOC | Searches ctx+0x70, then ctx+0x40 (12B stride) |
+
+### Functions with comments added (already had names):
 - `GetTotalTileCount` (0x8007b53c) - Sum of Asset 100 offsets 0x10+0x12+0x14
 - `CopyTilePixelData` (0x8007b588) - Copies tile pixels with 16x16/8x8 handling
 - `GetTileSizeFlags` (0x8007b6bc) - Returns Asset 302 pointer (ctx[7])
@@ -392,6 +408,241 @@ Skip direction is also reversed.
 - Primary Asset 600 (0x258): Background decoration sprites
 
 **Verification needed:** Implement decoder and verify output matches VRAM captures.
+
+---
+
+## Sprite Animation System - ToolX (2026-01-04)
+
+**Status:** RESEARCHING - Ghidra analysis in progress
+
+### Developer Context
+
+From a 1998 developer interview:
+
+> "We took [the captured frames] and built our sequences using our proprietary
+> animation scripting software, ToolX, which was written by Kenton Leach.
+> Using this tool was similar to entering the images into an exposure sheet,
+> which then wrote out a sequence file which could be read by our game engine."
+
+This confirms:
+1. **Exposure sheet model** - Frame metadata follows animation industry conventions
+2. **Sequence files** - Animation data is separate from sprite pixel data
+3. **ToolX output** - The 36-byte frame metadata structure is ToolX's output format
+
+### Sprite Container Structure (Asset 600)
+
+```
+Container:
+├── Count (u32) - Number of sprites
+├── Sub-TOC (12 bytes × count):
+│   ├── ID (u32)
+│   ├── Size (u32)
+│   └── Offset (u32)
+└── Sprite data (for each entry):
+    ├── Sprite Header (24 bytes)
+    ├── Frame Metadata (36 bytes × frame_count)
+    └── RLE Pixel Data
+```
+
+### Sprite Header (24 bytes)
+
+```
+Offset  Size  Field              Description
+------  ----  -----              -----------
+0x00    2     magic              Always 1
+0x02    2     header_size        Always 24 (0x18)
+0x04    2     frame_meta_size    Total bytes for all frame metadata
+0x06    2     padding            Usually 0
+0x08    4     pixel_size         Total bytes of RLE pixel data
+0x0C    4     sprite_id          Same as Sub-TOC ID
+0x10    2     frame_count        Number of animation frames
+0x12    2     unknown_12         ?
+0x14    2     unknown_14         ?
+0x16    2     clut_value         CLUT VRAM position encoding (see below)
+```
+
+**Bytes per frame:** `frame_meta_size / frame_count` = 36 (0x24) bytes
+
+### CLUT Value Encoding (2026-01-04)
+
+**Status:** CODE-VERIFIED via `GetClut` (0x80089720) and `DumpClut` (0x80089798)
+
+The `clut_value` (offset 0x16 in sprite header) encodes a VRAM position where
+the 256-color palette is loaded at runtime:
+
+```c
+// GetClut formula (0x80089720):
+u_short GetClut(int x, int y) {
+    return (y << 6) | ((x >> 4) & 0x3f);
+}
+
+// DumpClut decode (0x80089798):
+void DumpClut(u_short clut) {
+    printf("clut: (%d,%d)\n", (clut & 0x3f) << 4, clut >> 6);
+}
+```
+
+**Encoding:**
+- `CLUT = (vram_y << 6) | ((vram_x >> 4) & 0x3F)`
+- X is stored in low 6 bits (in units of 16 pixels)
+- Y is stored in upper 10 bits
+
+**Decoding:**
+- `vram_x = (clut & 0x3F) << 4`
+- `vram_y = clut >> 6`
+
+**Example:** CLUT value 0x815D:
+- X = (0x815D & 0x3F) << 4 = 29 << 4 = 464
+- Y = 0x815D >> 6 = 517
+- VRAM position: (464, 517)
+
+**Palette Index Mapping:**
+For this game, palettes are loaded into VRAM starting at Y=512 in the CLUT area.
+Each row holds one 256-color palette. The palette index is:
+- `palette_idx = vram_y - 512 + 1` (1-indexed)
+
+For 0x815D: Y=517 → palette index = 517 - 512 + 1 = 6
+
+### Asset 400 - Palette Container (2026-01-04)
+
+**Status:** DATA-VERIFIED via BLB analysis
+
+Asset 400 in the SECONDARY segment contains multiple 256-color palettes.
+
+**Structure:**
+```
+Offset  Size        Field              Description
+------  ----        -----              -----------
+0x00    4           count              Number of palette entries
+0x04    524         entry_0            Lookup table entry
+0x?     524 × (N-1) entries_1..N       Raw 256-color palettes
+```
+
+**Entry 0 (Lookup Table):**
+```
+Offset  Size  Field         Description
+------  ----  -----         -----------
+0x00    12    header        VRAM RECT info (x, y, w, h, ...)
+0x0C    12×N  entries       Palette sub-TOC entries
+```
+
+**Sub-TOC Entry (12 bytes each):**
+```
+u16 palette_idx    Index (1-7)
+u16 padding
+u16 size           Always 512 (256 colors × 2 bytes)
+u16 padding
+u16 offset         Offset within Asset 400 to palette data
+u16 padding
+```
+
+**Palette Data:**
+Each palette is 512 bytes = 256 colors × 2 bytes (PSX 15-bit RGB).
+
+**PSX 15-bit Color Format:**
+```
+Bit 15:    STP (semi-transparency bit, usually 0)
+Bits 10-14: Blue (0-31)
+Bits 5-9:   Green (0-31)
+Bits 0-4:   Red (0-31)
+```
+
+Conversion to 8-bit RGB:
+```c
+r = (color & 0x1F) << 3;
+g = ((color >> 5) & 0x1F) << 3;
+b = ((color >> 10) & 0x1F) << 3;
+```
+
+**PHRO Level Example:**
+- Asset 400 size: 4196 bytes
+- Palette count: 8
+- Palette offsets: 612, 1124, 1636, 2148, 2660, 3172, 3684
+- Tertiary sprites use palette 6 (CLUT 0x815D → Y=517 → index 6)
+
+### Frame Metadata (36 bytes per frame)
+
+From `FUN_8007bebc` (frame accessor) and `FUN_8007bc3c` (sprite context init):
+
+```
+Offset  Size  Field              Description
+------  ----  -----              -----------
+0x00    ?     unknown_00         
+0x0A    2     width              Frame width in pixels
+0x0C    2     height             Frame height in pixels
+0x0E    ?     unknown_0E         
+0x20    4     pixel_offset       Offset to RLE data for this frame
+0x24    -     (end of frame)
+```
+
+The remaining 28 bytes likely contain **exposure sheet data**:
+- X/Y offset (hotspot/origin)
+- Duration (frames to display)
+- Flip flags
+- Palette override
+- Sound trigger
+- Hit/hurt box offsets
+
+### Sprite Context Structure (20 bytes, runtime)
+
+From `InitSpriteContext` (0x8007bc3c):
+
+```c
+struct SpriteContext {
+    void* frame_metadata;   // [0] Base pointer to frame metadata
+    void* secondary_ptr;    // [1] From sprite_data+4 (pixel offset table?)
+    void* pixel_data;       // [2] RLE pixel data base
+    u16   max_width;        // [3] +0x0C: Maximum width across all frames
+    u16   max_height;       //     +0x0E: Maximum height across all frames
+    u16   frame_count;      // [4] +0x10: Number of frames
+    u8    unknown_12;       //     +0x12: Unknown byte
+    u8    valid_flag;       //     +0x13: 1 = initialized, 0 = invalid
+};
+```
+
+### Sprite System Functions (renamed in Ghidra)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80010068 | `DecodeRLESprite` | RLE decompression with mirror support |
+| 0x8007bf7c | `DecodeRLESpriteChecked` | Checks +0x13 valid flag before decode |
+| 0x8007bde8 | `RenderSprite` | Sprite render orchestration |
+| 0x8007bebc | `GetFrameMetadata` | Gets frame metadata: `ctx[0] + frame_idx * 0x24` |
+| 0x8007bc3c | `InitSpriteContext` | Initializes SpriteContext from sprite data |
+| 0x8007bc18 | `ClearSpriteContext` | Zeros 20-byte context |
+| 0x8007bb10 | `LookupSpriteById` | Finds sprite by ID in DAT_800a6064/60 |
+| 0x8007bb00 | `SetSpriteTables` | Sets global sprite table pointers |
+| 0x8007b968 | `FindSpriteInTOC` | Searches ctx+0x70, then ctx+0x40 (12B stride) |
+
+### Global Sprite Tables
+
+From `FUN_8007bb10`:
+- `DAT_800a6064` - Primary sprite table (searched first)
+- `DAT_800a6060` - Secondary sprite table (fallback)
+
+These are set by `FUN_8007bb00` during level loading.
+
+### Connection to Assets 500-503
+
+The animation sequence data (exposure sheet) may be split across:
+- **Asset 401** (SEC/TERT): Palette animation config
+- **Asset 500** (TERT): Unknown container - possibly animation sequences
+- **Asset 501** (TERT): VRAM texture coordinates
+- **Asset 502** (TERT): VRAM rectangles
+- **Asset 503** (TERT): Animation frame offsets - **likely ToolX sequence data**
+
+**Hypothesis:** Asset 503's "animation frame offsets" correspond to the sequence
+files output by ToolX, providing timing and ordering for sprite playback.
+
+### Next Steps
+
+1. ✅ Rename sprite functions in Ghidra (9 functions renamed)
+2. ✅ Decode CLUT value encoding (GetClut/DumpClut analysis)
+3. ✅ Parse Asset 400 palette container structure
+4. ✅ Create sprite extraction script (`scripts/extract_rle_sprites.py`)
+5. ☐ Map complete 36-byte frame metadata structure
+6. ☐ Decode Asset 503 to find sequence/timing data
+7. ☐ Verify decoded sprites match in-game appearance
 
 ---
 
