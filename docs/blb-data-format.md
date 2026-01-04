@@ -460,38 +460,89 @@ Based on decompiled code in `LevelDataParser.c` and **verified via PCSX-Redux MC
 - `scripts/blb.py`: Python parsing library
 - `scripts/extract_blb.py`: Extraction tool
 
-## Primary.bin Internal Structure
+## Primary.bin Internal Structure (PARTIALLY DECODED 2026-01-04)
 
 The primary.bin files contain the main level geometry and collision data.
 After parsing the TOC, the game accesses three asset types:
 
-### Asset 0x258 - World/Level Graphics
+### Asset 0x258 - World/Level Graphics (RLE Sprite Container)
 
-The largest asset, containing level geometry. Structure:
+The largest asset, containing level background/decoration sprites. Uses same RLE
+format as tertiary sprite data.
 
+**Container Structure:**
 ```
 Offset  Size    Description
 ------  ----    -----------
-0x00    u32     Entry count
-0x04+   var     Entry table (variable stride, ~12-24 bytes per entry)
-...     var     Graphics data (referenced by entries)
+0x00    u32     Entry count (typically 24-82 per level)
+0x04+   12×N    Entry table
 ```
 
-Each entry appears to contain:
-- Type/flags field
-- Position coordinates (possibly u16 x, u16 y)
-- Offset to graphics data within asset
+**Entry Table (12 bytes each):**
+```
+Offset  Size    Description
+------  ----    -----------
+0x00    u32     Sprite ID (same value stored in sprite header at +0x0C)
+0x04    u32     Data size in bytes
+0x08    u32     Offset from asset start
+```
+
+**Entry Data (Sprite Header - 24 bytes):**
+```
+Offset  Size    Type    Description
+------  ----    ----    -----------
+0x00    2       u16     Magic (always 1)
+0x02    2       u16     Header size (always 0x18 = 24)
+0x04    2       u16     Frame metadata size (varies)
+0x06    2       u16     Padding (0)
+0x08    4       u32     Pixel data size (RLE compressed)
+0x0C    4       u32     Sprite ID (matches entry flags)
+0x10    2       u16     Frame count
+0x12    6       var     Unknown (often 0x0000 0x0001 0x815D)
+```
+
+**Frame Metadata (0x24 = 36 bytes per frame):**
+Located at offset 0x18 (header_size). Contains per-frame positioning:
+- Signed 16-bit offsets (x, y positioning)
+- Bounding box or hotspot data
+
+**RLE Pixel Data:**
+Located at (header_size + frame_meta_size). Uses same RLE format as tertiary:
+- Control word (u16): bit 15=newline, bits 8-14=skip, bits 0-7=copy count
+- Raw 8bpp indexed pixels following control words
+
+**Example (PHRO level):**
+- 77 sprite entries
+- Entry 0: ID=0x000AC607, 12 frames, 3540 bytes total
+- Multiple entries can share same offset (data reuse)
 
 ### Asset 0x259 - Collision/Physics Data
 
-Contains collision geometry and physics properties:
+Contains collision geometry for the level. Structure partially understood.
 
+**Container Structure:**
 ```
 Offset  Size    Description
 ------  ----    -----------
-0x00    u16     Entry count (or type?)
-0x02    var     Collision geometry data
+0x00    u32     Entry count (typically 6-49 per level)
+0x04+   12×N    Entry table (same format as 0x258)
 ```
+
+**Entry Data Structure:**
+```
+Offset  Size    Description
+------  ----    -----------
+0x00    16      Zeros (header/padding)
+0x10+   var     Collision data (format TBD)
+```
+
+The entry "flags" field appears to be an ID (like Asset 0x258).
+The actual collision geometry format is not yet decoded.
+
+**Example (PHRO level):**
+- 37 collision entries
+- Entry sizes: 480 - 8832 bytes
+- First 16 bytes always zero
 
 ### Asset 0x25A - Palette/Color Data
 

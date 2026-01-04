@@ -5,6 +5,53 @@ that have not been fully verified through decompilation or runtime tracing.
 
 ---
 
+## RLE Sprite Decoder (2026-01-04)
+
+**Status:** CODE-VERIFIED via Ghidra decompilation of `FUN_80010068`
+
+The game uses a sparse RLE format for sprite compression, optimized for sprites
+with large transparent regions.
+
+**Decoder Function:** `FUN_80010068` at 0x80010068
+
+**Context Structure (passed as param_2):**
+```c
+struct RLEContext {
+    int control_count;      // [0] Number of control words remaining
+    int stride;             // [1] Row stride (bytes per row in output)
+    void* dest_row;         // [2] Current destination row pointer
+    u16* control_ptr;       // [3] Pointer to control word array
+    u8* pixel_ptr;          // [4] Pointer to pixel data
+    short mirror_flag;      // [5] Non-zero = draw mirrored (right-to-left)
+};
+```
+
+**Control Word Format (u16):**
+```
+Bit 15 (0x8000): New row flag - advance to next row
+Bits 8-14 (0x7F00 >> 8): Skip count - transparent pixels to skip
+Bits 0-7 (0xFF): Copy count - pixels to copy from source
+```
+
+**Algorithm:**
+1. Read control word
+2. If bit 15 set: advance destination to next row
+3. Skip `(ctrl >> 8) & 0x7F` pixels (transparent)
+4. Copy `ctrl & 0xFF` pixels from pixel data
+5. Repeat until control_count == 0
+
+**Mirror Mode:**
+When mirror_flag != 0, pixels are written right-to-left instead of left-to-right.
+Skip direction is also reversed.
+
+**Used by:**
+- Tertiary Asset 600 (0x258): Character sprites
+- Primary Asset 600 (0x258): Background decoration sprites
+
+**Verification needed:** Implement decoder and verify output matches VRAM captures.
+
+---
+
 ## Asset 302 Value 0 vs 1 Meaning (2026-01-04, UPDATED 2026-01-04)
 
 **Status:** Partially verified via Ghidra decompilation
@@ -35,9 +82,68 @@ This flag is preserved but its rendering effect is unknown.
 
 ---
 
-## BLB Asset File Headers
+## Complete Asset Type Reference (2026-01-04)
 
-The extracted level assets from GAME.BLB have consistent header structures.
+**Status:** Documented from extraction analysis
+
+### Segment Overview
+
+| Segment | Purpose | Key Assets |
+|---------|---------|------------|
+| PRIMARY | Level geometry, collision | 600, 601, 602 |
+| SECONDARY | Background tiles | 100, 300, 301, 302, 400, 401 |
+| TERTIARY | Character sprites, audio | 100, 200, 201, 302, 401, 500-503, 600, 700 |
+
+### Asset Extraction Status
+
+| Asset | Hex | Segment(s) | Structure | Extraction |
+|-------|-----|------------|-----------|------------|
+| 100 | 0x064 | SEC, TERT | RAW 36B | ✅ Header with tile/sprite counts |
+| 101 | 0x065 | SEC, TERT | RAW | ❓ Optional header (8 levels) |
+| 200 | 0x0C8 | TERT | CONTAINER | ✅ Sprite index sub-TOC |
+| 201 | 0x0C9 | TERT | RAW | ⚠️ Animation definitions (partial) |
+| 300 | 0x12C | SEC | RAW | ✅ Tile pixels 8bpp |
+| 301 | 0x12D | SEC | RAW | ✅ Palette index per tile |
+| 302 | 0x12E | SEC, TERT | RAW | ✅ Tile/sprite size flags |
+| 400 | 0x190 | SEC | CONTAINER | ✅ Palette container |
+| 401 | 0x191 | SEC, TERT | RAW | ⚠️ Animation config |
+| 500 | 0x1F4 | TERT | CONTAINER | ❓ Unknown sub-TOC |
+| 501 | 0x1F5 | TERT | RAW | ⚠️ VRAM texture coords |
+| 502 | 0x1F6 | TERT | RAW | ⚠️ VRAM rectangles |
+| 503 | 0x1F7 | TERT | CONTAINER | ⚠️ Animation frame offsets |
+| 600 | 0x258 | PRIM, TERT | CONTAINER | ✅ RLE sprite container |
+| 601 | 0x259 | PRIM, SEC | CONTAINER | ⚠️ Collision data |
+| 602 | 0x25A | PRIM, SEC | RAW | ✅ Palette (15-bit RGB) |
+| 700 | 0x2BC | TERT | RAW | ❓ Audio (9 levels only) |
+
+Legend: ✅ Fully documented, ⚠️ Partially understood, ❓ Unknown
+
+### Extraction Script
+
+`scripts/extract_all_assets.py` extracts all known assets:
+```
+output/assets/
+├── 00_MENU/
+│   ├── primary/palette_602.bin, .png
+│   ├── secondary/tileset.png, palettes.png, *.bin
+│   └── tertiary/block_N/sprites/, *.bin
+├── 01_PHRO/
+...
+└── all_stats.json
+```
+
+Total extracted (26 levels):
+- 21,525 tiles (16×16) + 4,683 tiles (8×8)
+- 196 palettes
+- 1,498 sprites (raw RLE data)
+- 104 tertiary blocks
+
+---
+
+## BLB Asset File Headers (OUTDATED)
+
+> **NOTE:** This section is outdated. See blb-data-format.md for current documentation.
+> The actual format uses standard TOC structures, not the format described below.
 
 ### Primary.bin (Level Data)
 
