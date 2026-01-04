@@ -175,9 +175,16 @@ def tile_to_image(pixels: list, palette: list, transparent_index: int = 0) -> "I
 
 
 def extract_tiles_from_level(blb: BLBFile, level_index: int, output_dir: Path, 
-                             max_tiles: int = 100) -> int:
+                             max_tiles: int = 100, use_per_tile_palette: bool = True) -> int:
     """
     Extract tiles from a level's secondary container.
+    
+    Args:
+        blb: BLB file object
+        level_index: Level index (0-25)
+        output_dir: Output directory for PNG files
+        max_tiles: Maximum tiles to extract
+        use_per_tile_palette: If True, use asset 301 palette index per tile
     
     Returns number of tiles extracted.
     """
@@ -210,6 +217,14 @@ def extract_tiles_from_level(blb: BLBFile, level_index: int, output_dir: Path,
     _, tile_size, tile_data = assets[300]
     print(f"  Tile data: {tile_size} bytes")
     
+    # Get palette index per tile (asset 301)
+    palette_indices = None
+    if 301 in assets and use_per_tile_palette:
+        _, _, pal_idx_data = assets[301]
+        palette_indices = list(pal_idx_data)
+        unique_pals = sorted(set(palette_indices))
+        print(f"  Palette indices: {len(palette_indices)} entries, uses palettes {unique_pals}")
+    
     # Get palettes from asset 400
     palettes = []
     if 400 in assets:
@@ -226,42 +241,91 @@ def extract_tiles_from_level(blb: BLBFile, level_index: int, output_dir: Path,
     if not palettes:
         # Create grayscale fallback palette
         print("  No palettes found, using grayscale")
-        palettes = [[(i*17, i*17, i*17) for i in range(16)]]
+        palettes = [[(i*17, i*17, i*17) for i in range(256)]]
+    
+    # Get tile size flags (asset 302) - determines 16x16 vs 8x8
+    tile_flags = None
+    if 302 in assets:
+        _, _, flag_data = assets[302]
+        tile_flags = list(flag_data)
+        flag_counts = {}
+        for f in tile_flags:
+            flag_counts[f] = flag_counts.get(f, 0) + 1
+        print(f"  Tile flags: {dict(sorted(flag_counts.items()))}")
     
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Extract tiles
+    # Extract tiles using flags to determine size
+    # Flag 0: 16×16 (256 bytes, 16-byte stride)
+    # Flag 1: skip/special (TBD)
+    # Flag 2: 8×8 (128 bytes, 16-byte stride with padding)
+    
     extracted = 0
     tile_offset = 0
+    total_tiles = header.total_tiles
+    num_to_extract = min(total_tiles, max_tiles)
     
-    # Extract 16×16 tiles (256 bytes each = 16 rows × 16 bytes for 8bpp)
-    # But the copy loop does 16 iterations copying 16 bytes = 256 bytes
-    # If it's 4bpp: 16×16 = 256 pixels, at 4bpp = 128 bytes
-    # The decompiled code shows 0x100 (256) bytes per 16×16 tile, so it's 8bpp
+    print(f"  Extracting {num_to_extract} of {total_tiles} tiles...")
     
-    num_16x16 = min(header.count_16x16, max_tiles)
-    print(f"  Extracting {num_16x16} tiles (16×16)...")
-    
-    for i in range(num_16x16):
-        # 16×16 @ 8bpp = 256 bytes
-        tile_bytes = tile_data[tile_offset:tile_offset + 256]
-        tile_offset += 256
+    for i in range(num_to_extract):
+        # Determine tile size from flag
+        flag = tile_flags[i] if tile_flags and i < len(tile_flags) else 0
         
-        if len(tile_bytes) < 256:
-            break
+        if flag == 2:
+            # 8×8 tile with 16-byte stride = 128 bytes
+            tile_bytes = tile_data[tile_offset:tile_offset + 128]
+            tile_offset += 128
+            tile_size_name = "8x8"
+            
+            if len(tile_bytes) < 128:
+                break
+            
+            # Extract 8x8 from 16-byte stride data (only first 8 bytes of each row)
+            pixels = []
+            for row in range(8):
+                row_start = row * 16  # 16-byte stride
+                row_data = tile_bytes[row_start:row_start + 8]
+                pixels.append(list(row_data))
+                
+        elif flag == 1:
+            # Flag 1 - possibly skip or animated, treat as 16x16 for now
+            tile_bytes = tile_data[tile_offset:tile_offset + 256]
+            tile_offset += 256
+            tile_size_name = "16x16_f1"
+            
+            if len(tile_bytes) < 256:
+                break
+            
+            pixels = extract_tile_8bpp(tile_bytes, 16, 16)
+            
+        else:  # flag == 0 or default
+            # 16×16 @ 8bpp = 256 bytes
+            tile_bytes = tile_data[tile_offset:tile_offset + 256]
+            tile_offset += 256
+            tile_size_name = "16x16"
+            
+            if len(tile_bytes) < 256:
+                break
+            
+            pixels = extract_tile_8bpp(tile_bytes, 16, 16)
         
-        pixels = extract_tile_8bpp(tile_bytes, 16, 16)
-        
-        # Use first palette for now
-        palette = palettes[0] if palettes else [(i*17, i*17, i*17) for i in range(256)]
+        # Use per-tile palette if available, otherwise use first palette
+        if palette_indices and i < len(palette_indices):
+            pal_idx = palette_indices[i]
+            if pal_idx < len(palettes):
+                palette = palettes[pal_idx]
+            else:
+                palette = palettes[0] if palettes else [(j*17, j*17, j*17) for j in range(256)]
+        else:
+            palette = palettes[0] if palettes else [(j*17, j*17, j*17) for j in range(256)]
         
         if HAS_PIL:
             img = tile_to_image(pixels, palette)
-            img.save(output_dir / f"tile_{i:04d}_16x16.png")
+            img.save(output_dir / f"tile_{i:04d}_{tile_size_name}.png")
         else:
             # Save raw data
-            with open(output_dir / f"tile_{i:04d}_16x16.raw", 'wb') as f:
+            with open(output_dir / f"tile_{i:04d}_{tile_size_name}.raw", 'wb') as f:
                 f.write(tile_bytes)
         
         extracted += 1
@@ -274,6 +338,7 @@ def create_tile_sheet(blb: BLBFile, level_index: int, output_path: Path,
                       tiles_per_row: int = 16, max_tiles: int = 256) -> bool:
     """
     Create a single spritesheet image with all tiles.
+    Uses per-tile palette from asset 301.
     """
     if not HAS_PIL:
         print("Error: PIL required for tile sheet")
@@ -301,19 +366,37 @@ def create_tile_sheet(blb: BLBFile, level_index: int, output_path: Path,
     # Get tile data
     _, _, tile_data = assets[300]
     
-    # Get first palette
-    palette = [(i*17, i*17, i*17) for i in range(256)]  # Grayscale default
+    # Get palette indices (asset 301)
+    palette_indices = None
+    if 301 in assets:
+        _, _, pal_idx_data = assets[301]
+        palette_indices = list(pal_idx_data)
+    
+    # Get all palettes
+    palettes = []
     if 400 in assets:
         _, _, pal_container = assets[400]
         if len(pal_container) >= 4:
             pal_count = struct.unpack('<I', pal_container[0:4])[0]
-            if pal_count > 0:
-                _, pal_size, pal_offset = struct.unpack('<III', pal_container[4:16])
+            for i in range(pal_count):
+                toc_off = 4 + i * 12
+                _, pal_size, pal_offset = struct.unpack('<III', pal_container[toc_off:toc_off+12])
                 pal_data = pal_container[pal_offset:pal_offset+pal_size]
-                palette = parse_palette(pal_data)
+                palettes.append(parse_palette(pal_data))
     
-    # Calculate sheet dimensions
-    num_tiles = min(header.count_16x16, max_tiles)
+    # Fallback grayscale palette
+    if not palettes:
+        palettes = [[(i*17, i*17, i*17) for i in range(256)]]
+    
+    # Get tile flags (asset 302)
+    tile_flags = None
+    if 302 in assets:
+        _, _, flag_data = assets[302]
+        tile_flags = list(flag_data)
+    
+    # Calculate sheet dimensions - use 16x16 grid cells even for 8x8 tiles
+    total_tiles = header.total_tiles
+    num_tiles = min(total_tiles, max_tiles)
     rows = (num_tiles + tiles_per_row - 1) // tiles_per_row
     
     sheet_width = tiles_per_row * 16
@@ -325,13 +408,43 @@ def create_tile_sheet(blb: BLBFile, level_index: int, output_path: Path,
     
     tile_offset = 0
     for i in range(num_tiles):
-        tile_bytes = tile_data[tile_offset:tile_offset + 256]
-        tile_offset += 256
+        # Determine tile size from flag
+        flag = tile_flags[i] if tile_flags and i < len(tile_flags) else 0
         
-        if len(tile_bytes) < 256:
-            break
+        if flag == 2:
+            # 8×8 tile with 16-byte stride = 128 bytes
+            tile_bytes = tile_data[tile_offset:tile_offset + 128]
+            tile_offset += 128
+            
+            if len(tile_bytes) < 128:
+                break
+            
+            # Extract 8x8 from 16-byte stride data
+            pixels = []
+            for row in range(8):
+                row_start = row * 16
+                row_data = tile_bytes[row_start:row_start + 8]
+                pixels.append(list(row_data))
+        else:
+            # 16×16 @ 8bpp = 256 bytes (flag 0 or 1)
+            tile_bytes = tile_data[tile_offset:tile_offset + 256]
+            tile_offset += 256
+            
+            if len(tile_bytes) < 256:
+                break
+            
+            pixels = extract_tile_8bpp(tile_bytes, 16, 16)
         
-        pixels = extract_tile_8bpp(tile_bytes, 16, 16)
+        # Use per-tile palette from asset 301
+        if palette_indices and i < len(palette_indices):
+            pal_idx = palette_indices[i]
+            if pal_idx < len(palettes):
+                palette = palettes[pal_idx]
+            else:
+                palette = palettes[0]
+        else:
+            palette = palettes[0]
+        
         tile_img = tile_to_image(pixels, palette)
         
         x = (i % tiles_per_row) * 16
@@ -349,8 +462,8 @@ def main():
         sys.exit(1)
     
     blb_path = Path(sys.argv[1])
-    level_index = int(sys.argv[2]) if len(sys.argv) > 2 else 0
-    output_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else Path(f"output/tiles_{level_index}")
+    level_arg = sys.argv[2] if len(sys.argv) > 2 else "0"
+    output_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else None
     
     if not blb_path.exists():
         print(f"Error: File not found: {blb_path}")
@@ -361,14 +474,36 @@ def main():
         print(f"Level count: {blb.header.level_count}")
         print()
         
-        # Create individual tiles
-        count = extract_tiles_from_level(blb, level_index, output_dir, max_tiles=50)
-        
-        # Also create a tile sheet
-        if HAS_PIL and count > 0:
-            print()
-            sheet_path = output_dir / f"tilesheet_{level_index}.png"
-            create_tile_sheet(blb, level_index, sheet_path)
+        # Check for "all" mode
+        if level_arg.lower() == "all":
+            # Extract tilesheets for all levels
+            base_output = output_dir or Path("output/tilesets")
+            base_output.mkdir(parents=True, exist_ok=True)
+            
+            for idx in range(blb.header.level_count):
+                level = blb.header.get_level_by_index(idx)
+                if level.secondary_count == 0:
+                    print(f"Skipping {idx}: {level.level_id} (no secondary data)")
+                    continue
+                
+                print(f"\n{'='*60}")
+                sheet_path = base_output / f"{idx:02d}_{level.level_id}_tileset.png"
+                create_tile_sheet(blb, idx, sheet_path, max_tiles=10000)
+            
+            print(f"\n{'='*60}")
+            print(f"All tilesets saved to: {base_output}")
+        else:
+            level_index = int(level_arg)
+            out_dir = output_dir or Path(f"output/tiles_{level_index}")
+            
+            # Create individual tiles
+            count = extract_tiles_from_level(blb, level_index, out_dir, max_tiles=50)
+            
+            # Also create a tile sheet
+            if HAS_PIL and count > 0:
+                print()
+                sheet_path = out_dir / f"tilesheet_{level_index}.png"
+                create_tile_sheet(blb, level_index, sheet_path, max_tiles=10000)
 
 
 if __name__ == "__main__":

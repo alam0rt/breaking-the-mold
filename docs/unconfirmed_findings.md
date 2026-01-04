@@ -3,6 +3,38 @@
 This document contains observations and guesses about the Skullmonkeys data structures
 that have not been fully verified through decompilation or runtime tracing.
 
+---
+
+## Asset 302 Value 0 vs 1 Meaning (2026-01-04, UPDATED 2026-01-04)
+
+**Status:** Partially verified via Ghidra decompilation
+
+Asset 302 (0x12E) contains one byte per tile with values 0, 1, or 2.
+
+**CODE-VERIFIED from `LoadTileDataToVRAM` (0x80025240):**
+```c
+byte flags = asset302[tileIndex];
+if ((flags & 4) != 0) continue;  // Bit 2: skip tile
+uint tp = ((flags & 2) == 0);    // Bit 1: 0=16x16, 1=8x8
+output[tileIndex + 6] = flags & 1;  // Bit 0: stored as property
+```
+
+**Confirmed:**
+- Bit 1 (mask 0x02): Tile size - 0=16×16, 1=8×8 (verified by data matching)
+- Bit 2 (mask 0x04): Skip flag - if set, tile is not loaded (no such tiles observed in data)
+
+**Still unconfirmed - Bit 0 (mask 0x01):**
+The value 0 vs 1 difference is stored in the tile output structure at offset +6.
+This flag is preserved but its rendering effect is unknown.
+
+**Hypothesis: Layer/Rendering property**
+- Value 0 = Default rendering
+- Value 1 = Special rendering (foreground layer, transparency, or priority)
+
+**Verification needed:** Find code that reads the stored flag at offset +6 during rendering.
+
+---
+
 ## BLB Asset File Headers
 
 The extracted level assets from GAME.BLB have consistent header structures.
@@ -316,6 +348,143 @@ counter++;
 ```
 
 **Verification needed:** Confirm counter behavior and mode meanings.
+
+---
+
+## Sprite/Entity Data Accessors (2026-01-04)
+
+**Status:** Decompiled via Ghidra
+
+Functions that access sprite/entity data from the secondary segment:
+
+### FUN_8007b6c8 - GetEntityCount (0x8007B6C8)
+
+```c
+u16 FUN_8007b6c8(int ctx) {
+    return **(u16**)(ctx + 0x0C);  // ctx[3] → assetSprite200
+}
+```
+
+Returns the entity/sprite count from the first u16 of Asset 200 (0xC8).
+- `ctx + 0x0C` = LevelDataContext[3] = assetSprite200 pointer
+- Reads count from the beginning of the asset data
+
+### FUN_8007b700 - GetEntityEntry (0x8007B700)
+
+```c
+int FUN_8007b700(int ctx, uint index) {
+    return *(int*)(ctx + 0x10) + (index & 0xFFFF) * 0x5C;
+}
+```
+
+Returns pointer to entity entry at given index.
+- `ctx + 0x10` = LevelDataContext[4] = assetSprite201 pointer
+- Each entry is **0x5C (92) bytes**
+- Asset 201 (0xC9) contains the entity/sprite definition table
+
+### Entity Entry Structure (0x5C = 92 bytes, PARTIAL)
+
+From FUN_80024778 analysis, each entity entry contains:
+
+```
+Offset  Size  Type    Description
+------  ----  ----    -----------
+0x00    4     u32     Position X (fixed point?)
+0x04    4     u32     Position Y (fixed point?)
+0x08    4     var     Width/size parameter
+0x0A    2     u16     Height/size parameter (short access)
+0x0C    4     var     Unknown (short at +0x0C checked)
+0x0E    2     u16     Priority/layer value (compared against blb header)
+0x10    4     var     Unknown
+0x14    4     var     Unknown
+0x18    4     var     Unknown
+0x1A    2     u16     Unknown (copied to output +0x32)
+0x1C    4     var     Unknown
+0x1E    1     u8      Flag A - sets GameState+0x59 if non-zero
+0x1F    1     u8      Flag B - sets GameState+0x5B if non-zero
+0x20    1     u8      Flag C - sets GameState+0x58 via puVar14[8] low byte
+0x21    1     u8      Flag D - sets GameState+0x5A if non-zero
+0x24    4     var     Unknown (short at +0x24 checked against 0)
+0x26    1     u8      Entity type (3 = special, skipped in some processing)
+0x28    4     var     Unknown
+0x2C    4     u32     RGB color (bytes at +0x2C, +0x2D, +0x2E copied to GameState+0x124-126)
+```
+
+**Entity Type 3:** When `*(short*)(entry + 0x26) == 3`, the entity is skipped in FUN_80024778.
+
+**First Entity Special Handling:** When index == 0, copies RGB from entry+0x2C to GameState+0x124 (background color).
+
+### FUN_8007b6dc - GetEntityPaletteInfo (0x8007B6DC)
+
+Called for each entity in FUN_80024778. Returns palette-related data for the entity.
+
+---
+
+## Level Background Investigation (2026-01-04)
+
+**Status:** In progress
+
+### MDEC Frame Loading
+
+From NOTES.md observations:
+- `0x80116450` = Compressed MDEC frame buffer in RAM
+- Various BLB offsets get loaded here during level transitions
+
+Loading screens use `FUN_800399a8` (single MDEC frame) and `FUN_8003958c` (slideshow).
+These call DecDCTvlc2 and DecDCTin for decompression.
+
+### Slideshow Frame Structure (FUN_8003a13c)
+
+```c
+bool FUN_8003a13c(uint frameIndex) {
+    if (frameIndex >= (byte)buffer[0x33800]) return false;
+    DecDCTvlc2(
+        buffer + *(int*)(buffer + frameIndex * 6 + 0x33806) + 0x67000,
+        outputBuffer,
+        vlcTable
+    );
+    return true;
+}
+```
+
+- Frame count at `buffer + 0x33800` (1 byte)
+- Frame offset table at `buffer + 0x33806` (6-byte stride entries)
+- Frame data starts at `buffer + 0x67000` + entry offset
+
+### Level Background Source
+
+**Question:** Where does the static level background come from?
+
+**Observations:**
+1. Not in Asset 600 (0x258) - that's level geometry/tilemap
+2. Not in Asset 200/201 - that's sprites/entities
+3. Loading screens use sector table entries with MDEC frames
+4. Level backgrounds might be:
+   - Embedded in tertiary data
+   - Part of a sector table entry loaded separately
+   - Composed from tiles only (no static background image)
+
+**Verification needed:** 
+- Check if levels have a static MDEC background or just tile-based graphics
+- Trace what happens during actual level rendering to VRAM
+
+### Level Background Structure (FINDINGS)
+
+**Conclusion: Skullmonkeys uses tile-based backgrounds, NOT static MDEC images during gameplay.**
+
+Evidence:
+1. **Loading screens** (sector table entries) use MDEC frames at 0x80116450
+2. **Level backgrounds** use a solid RGB color from Asset 100 or first entity
+   - Stored at GameState+0x124, +0x125, +0x126 (R, G, B)
+   - Set by FUN_80024778 from first entity entry bytes at +0x2C, +0x2D, +0x2E
+3. **Tile-based graphics** fill the playable area on top of the solid color
+
+The MDEC decoder functions (`FUN_800399a8`, `FUN_8003958c`) are only used for:
+- Loading screens (before level starts)
+- Special screens (credits, game over)
+- FMV movies (external .STR files)
+
+No MDEC decompression occurs during normal level gameplay - all graphics are tile/sprite based.
 
 ---
 

@@ -108,6 +108,47 @@ Offset   Size   Description
 - `entry_flags=0x03`: Game over screens (unknown_byte=0x63)
 - `entry_flags=0x00, level_index=0x35`: Credits screen
 
+### Loading Screen MDEC Frame Format (VERIFIED)
+
+Loading screens are stored as **BS v2** (Bitstream version 2) MDEC frames - the standard
+PSX compressed video format also used for STR movies. Each sector table entry points to
+one compressed MDEC frame.
+
+**BS Frame Header (8 bytes):**
+```
+Offset   Size   Description
+------   ----   -----------
+0x00     u16    Frame size in 16-bit words (includes header)
+0x02     u16    Magic number (0x3800 = BS format marker)
+0x04     u16    Quantization scale (typically 1-63, lower = better quality)
+0x06     u16    Version (0x0002 = v2, 0x0003 = v3)
+0x08+    var    VLC-encoded DCT coefficient data
+```
+
+**Decoding Pipeline (from FUN_800399a8):**
+1. `CdBLB_ReadSectors()` - Read raw BS frame from disc
+2. `DecDCTvlcBuild()` - Build VLC lookup table (once per session)
+3. `DecDCTvlc2()` - Decompress VLC to DCT coefficient blocks
+4. `DecDCTin()` - Send DCT blocks to MDEC hardware
+5. `DecDCTout()` - Receive decompressed 15-bit RGB pixels
+
+**Display Configuration:**
+- Resolution: 320×256 pixels (0x140 × 0x100)
+- Color depth: 15-bit RGB (no 24-bit mode)
+- Double buffered: Alternates Y=0 and Y=256
+
+**Example Sector Table Entries (PAL):**
+| Level | ID | Sector | Count | Bytes | Frame Size |
+|-------|-----|--------|-------|-------|------------|
+| SCIE | Science | 0x1395 | 10 | 20,480 | 0x34C0 words (27,008 B) |
+| MENU | Menu | 0x0819 | 6 | 12,288 | ~12 KB |
+| PHRO | Pharaoh | 0x0C86 | 8 | 16,384 | ~16 KB |
+
+**RAM Locations:**
+- VLC table base: Passed as param_3 to decoder
+- Compressed frame: param_3 + 0x33800 (offset 211,968 bytes)
+- VRAM output: Y=0 or Y=256 (double-buffered)
+
 ## Level Metadata Entry (0x70 bytes)
 
 Each level has a metadata entry at offset `index × 0x70`:
@@ -258,31 +299,39 @@ BLB File
 | 101 | 0x065 | RAW | Secondary header (optional) |
 | 300 | 0x12C | RAW | Tile pixel data (8bpp indexed) |
 | 301 | 0x12D | RAW | Palette index per tile (1 byte/tile) |
-| 302 | 0x12E | RAW | Unknown per-tile metadata |
+| 302 | 0x12E | RAW | Tile size/category flag (1 byte/tile, see below) |
 | 400 | 0x190 | CONTAINER | Palette container (256-color palettes) |
 | 401 | 0x191 | RAW | Animation/palette configuration |
 | 601 | 0x259 | CONTAINER | Secondary layout data |
 | 602 | 0x25A | RAW | Secondary palette |
 
-#### Asset 100 - Tile Header (36 bytes, VERIFIED)
+#### Asset 100 - Tile Header (36 bytes, CODE-VERIFIED)
+
+Verified via Ghidra decompilation of `FUN_8007b588` (tile accessor) and `FUN_8007b53c` (tile count).
 
 ```
 Offset  Size  Type   Description
 ------  ----  ----   -----------
-0x00    3     u8[3]  Background RGB color
+0x00    3     u8[3]  Background RGB color (written to param+0x124 on first entity)
 0x03    1     u8     Padding
 0x04    3     u8[3]  Secondary RGB color  
 0x07    1     u8     Padding
-0x08    2     u16    Unknown count
-0x0A    2     u16    Unknown count
-0x0C    4     u8[4]  Unknown
-0x10    2     u16    16×16 tile count (VERIFIED - matches data)
-0x12    2     u16    8×8 tile count (VERIFIED - matches data)
-0x14    2     u16    (unused, always 0)
-0x16    14    var    Remaining header data
+0x08    2     u16    Level width in tiles (*16 for pixels, see FUN_8007b434)
+0x0A    2     u16    Level height in tiles (*16 for pixels, see FUN_8007b434)
+0x0C    2     u16    Unknown (not accessed in analyzed functions)
+0x0E    2     u16    Unknown (not accessed in analyzed functions)
+0x10    2     u16    16×16 tile count (CODE-VERIFIED: FUN_8007b588 uses for data offset)
+0x12    2     u16    8×8 tile count (CODE-VERIFIED: summed in FUN_8007b53c)
+0x14    2     u16    Additional tile count (summed in FUN_8007b53c with 0x10, 0x12)
+0x16    6     var    Unknown
+0x1C    2     u16    Unknown (read by FUN_8007b7c8)
+0x1E    4     var    Remaining header data
 ```
 
-#### Asset 300 - Tile Pixel Data (VERIFIED)
+**Code reference:** `FUN_8007b53c` computes total tiles as:
+`*(u16*)(asset100 + 0x10) + *(u16*)(asset100 + 0x12) + *(u16*)(asset100 + 0x14)`
+
+#### Asset 300 - Tile Pixel Data (EXTRACTION-VERIFIED)
 
 8-bit indexed pixel data with 16-byte row stride:
 
@@ -293,11 +342,47 @@ Layout in file:
 1. First `count_16x16` tiles (256 bytes each)
 2. Then `count_8x8` tiles (128 bytes each)
 
-#### Asset 301 - Palette Assignment (VERIFIED)
+**Extraction script:** `scripts/extract_sprites.py` successfully extracts tiles
+using Assets 300+301+302+400 to produce correctly colored PNG images.
+
+#### Asset 301 - Palette Assignment (EXTRACTION-VERIFIED)
 
 One byte per tile, indexing into Asset 400 palette array:
 - Size = `count_16x16 + count_8x8` bytes
 - Value = palette index (0 to N-1, where N = number of palettes in Asset 400)
+
+#### Asset 302 - Tile Size/Category Flag (CODE-VERIFIED)
+
+One byte per tile indicating tile size and properties.
+Verified via Ghidra decompilation of `FUN_80025240` (tile loading function).
+
+- Size = `count_16x16 + count_8x8` bytes (same as Asset 301)
+- Accessed via `FUN_8007b6bc` which returns `ctx[7]` (offset 0x1C in LevelDataContext)
+
+**Bit-level interpretation (from decompiled code):**
+```c
+byte flags = asset302[tileIndex];
+if ((flags & 4) != 0) continue;  // Bit 2: skip this tile entirely
+uint tp = ((flags & 2) == 0);    // Bit 1: tile page mode (0=8x8, 1=16x16)
+uint size = (tp == 0) ? 8 : 16;  // Determines tile dimensions
+// output[tileIndex + 6] = flags & 1;  // Bit 0: stored as property (layer/priority?)
+```
+
+| Bit | Mask | Meaning | Effect |
+|-----|------|---------|--------|
+| 0 | 0x01 | Unknown flag | Stored in tile metadata at offset +6 |
+| 1 | 0x02 | Tile size | 0=16×16, 1=8×8 |
+| 2 | 0x04 | Skip flag | If set, tile is not loaded/rendered |
+
+**Observed values:**
+| Value | Bits | Meaning |
+|-------|------|---------|
+| 0 | 000 | 16×16 tile, flag off, render |
+| 1 | 001 | 16×16 tile, flag on, render |
+| 2 | 010 | 8×8 tile, flag off, render |
+
+**Layout:** All 8×8 tiles (value 2) appear at the end, starting at index `count_16x16`.
+This matches the pixel data layout in Asset 300 (16×16 tiles first, then 8×8 tiles).
 
 #### Asset 400 - Palette Container (VERIFIED)
 

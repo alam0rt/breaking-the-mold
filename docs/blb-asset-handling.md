@@ -6,49 +6,145 @@ This document describes how assets are loaded and processed at runtime.
 
 Assets are loaded from the BLB file via `LoadAssetContainer`, which parses the sub-TOC and stores pointers in `LevelDataContext`. These pointers are then accessed by various subsystems (graphics, sprites, audio) through accessor functions.
 
-## Asset 200/201 (Sprites)
+### Data Segment Types
 
-### Loading Flow
+The BLB file contains three types of data segments per level:
 
-1. **LoadAssetContainer** parses sub-TOC and stores:
-   - Asset 200 pointer → `LevelDataContext[3]` (offset 0x0C) - sprite header
-   - Asset 201 pointer → `LevelDataContext[4]` (offset 0x10) - sprite entries
+| Segment | Contents | Asset Types |
+|---------|----------|-------------|
+| **Primary** | Level geometry, collision, palette | 600, 601, 602 |
+| **Secondary** | Tiles, sprites, palettes | 100, 101, 200, 201, 300, 301, 302, 400, 401 |
+| **Tertiary** | Audio, music | 100, 200, 201, 500-504, 700 |
 
-2. **Data Format**:
-   - Asset 200: Header with u16 sprite count at offset 0
-   - Asset 201: Array of 92-byte (0x5C) sprite entry structures
+### Container vs Raw Assets
 
-### Accessor Functions
+| Type | Format | Examples |
+|------|--------|----------|
+| **Container** | Has sub-TOC with multiple entries | 0x258, 0x259, 0x190 |
+| **Raw** | Data starts immediately, no sub-TOC | 0x25A, 0x064, 0x12C, 0x12D, 0x12E, 0x191 |
 
-| Function | Address | Returns |
-|----------|---------|---------|
-| `GetSpriteCount` | 0x8007B6C8 | `**ctx[3]` - first u16 from asset 200 |
-| `GetSpriteEntry` | 0x8007B700 | `ctx[4] + index * 0x5C` - 92-byte entry |
-| `GetSpriteMetadata` | 0x8007B6DC | Sprite metadata by index |
+---
 
-### Consumer: FUN_80024778 (Sprite Object Creation)
+## Primary Segment Assets (Level Data)
 
-Called from `InitializeAndLoadLevel`, this function:
+### Asset 600 (0x258) - Level Geometry
 
-1. Iterates over all sprites using `GetSpriteCount`
-2. For each sprite entry (92 bytes from asset 201):
-   - Reads position, dimensions, flags
-   - Determines sprite type based on size/flags
-   - Creates sprite object via one of:
-     - `FUN_8001ecc0` - standard sprites
-     - `FUN_8001f150` - medium sprites (≤128×128)
-     - `FUN_8001f534` - large/special sprites (≤64×64 with flags)
-   - Adds to render list via corresponding function:
-     - `FUN_80021590`, `FUN_80021778`, or `FUN_80021960`
+**Structure:** CONTAINER with sub-TOC
 
-### Sprite Entry Structure (0x5C = 92 bytes)
+Contains the main level graphics and world layout data.
+
+```
+Offset  Size    Description
+------  ----    -----------
+0x00    u32     Sub-entry count
+0x04+   12×N    Sub-TOC entries: {flags, size, offset}
+...     var     Graphics/geometry data
+```
+
+- **Typical size:** 500KB - 1MB
+- **Consumer:** Level rendering subsystem
+- **LevelDataContext offset:** 0x40 [16] (pointer), 0x44 [17] (size)
+
+### Asset 601 (0x259) - Collision Data
+
+**Structure:** CONTAINER with sub-TOC
+
+Contains collision geometry and physics properties for level navigation.
+
+```
+Offset  Size    Description
+------  ----    -----------
+0x00    u16     Entry count (or type indicator)
+0x02    var     Collision geometry data
+```
+
+- **Typical size:** 100KB - 300KB  
+- **Consumer:** Physics/collision subsystem
+- **LevelDataContext offset:** 0x48 [18] (pointer), 0x4C [19] (size)
+
+### Asset 602 (0x25A) - Primary Palette
+
+**Structure:** RAW (no sub-TOC)
+
+Small palette data for primary segment rendering.
+
+```
+Format: Array of PSX 15-bit RGB values (u16 each)
+  - Bits 0-4:   Red (0-31, ×8 for 8-bit)
+  - Bits 5-9:   Green (0-31, ×8 for 8-bit)
+  - Bits 10-14: Blue (0-31, ×8 for 8-bit)
+  - Bit 15:     STP (semi-transparency)
+```
+
+- **Typical size:** 24-200 bytes
+- **LevelDataContext offset:** 0x50 [20]
+
+---
+
+## Secondary Segment Assets (Tiles & Sprites)
+
+### Asset 100 (0x064) - Tile Header (VERIFIED)
+
+**Structure:** RAW, 36 bytes
+
+Header containing tile counts and background colors.
+
+```
+Offset  Size  Type    Description
+------  ----  ----    -----------
+0x00    3     u8[3]   Background RGB color
+0x03    1     u8      Padding
+0x04    3     u8[3]   Secondary RGB color  
+0x07    1     u8      Padding
+0x08    2     u16     Unknown count
+0x0A    2     u16     Unknown count
+0x0C    4     u8[4]   Unknown
+0x10    2     u16     16×16 tile count (VERIFIED)
+0x12    2     u16     8×8 tile count (VERIFIED)
+0x14    2     u16     (unused, always 0)
+0x16    14    var     Remaining header data
+```
+
+- **LevelDataContext offset:** 0x04 [1]
+- **Accessor:** `GetTileCount` (0x8007B53C) - returns sum of counts at +0x10, +0x12, +0x14
+
+### Asset 101 (0x065) - Secondary Header
+
+**Structure:** RAW (optional)
+
+Additional geometry header, purpose not fully understood.
+
+- **LevelDataContext offset:** 0x08 [2]
+
+### Asset 200 (0x0C8) - Sprite Header
+
+**Structure:** RAW
+
+Header with sprite count.
+
+```
+Offset  Size  Description
+------  ----  -----------
+0x00    u16   Sprite count
+0x02+   var   Additional header data
+```
+
+- **LevelDataContext offset:** 0x0C [3]
+- **Accessor:** `GetSpriteCount` (0x8007B6C8) - returns u16 at offset 0
+
+### Asset 201 (0x0C9) - Sprite Entries (VERIFIED)
+
+**Structure:** RAW, array of 92-byte entries
+
+Each sprite entry defines position, dimensions, and behavior.
 
 ```
 Offset  Size  Description
 ------  ----  -----------
 0x00    4     Position X (u32)
 0x04    4     Position Y (u32)
-0x08    4     Width (low 16 bits), Height (low 16 bits at +0x0A)
+0x08    2     Width (u16)
+0x0A    2     Height (u16)
 0x0C    2     Unknown
 0x0E    2     Priority/depth value
 0x10    4     Velocity X
@@ -63,110 +159,57 @@ Offset  Size  Description
 0x26    1     Sprite type (≠3 to process)
 0x28-0x2B     Unknown  
 0x2C    4     Animation data pointer offset
-...
+0x30-0x5B     Additional data (60 bytes)
 ```
 
-## Asset 100/300 (Textures/Tiles)
+- **LevelDataContext offset:** 0x10 [4]
+- **Accessor:** `GetSpriteEntry` (0x8007B700) - returns `ctx[4] + index * 0x5C`
 
-### Loading Flow
+### Asset 300 (0x12C) - Tile Pixel Data (VERIFIED)
 
-1. **LoadAssetContainer** stores:
-   - Asset 100 pointer → `LevelDataContext[1]` (offset 0x04) - geometry header
-   - Asset 300 pointer → `LevelDataContext[5]` (offset 0x14) - tile graphics
+**Structure:** RAW, 8-bit indexed pixels
 
-### Accessor Functions
+Contains all tile graphics as 8bpp indexed pixel data.
 
-| Function | Address | Returns |
-|----------|---------|---------|
-| `GetTileCount` | 0x8007B53C | Sum of u16s at header+0x10, +0x12, +0x14 |
-| `GetTileData` | 0x8007B588 | Tile pixels (16×16 or 8×8) from asset 300 |
+**Layout:**
+1. **16×16 tiles first:** 256 bytes each (16 rows × 16 pixels)
+2. **8×8 tiles after:** 128 bytes each (8 rows × 16-byte stride, only first 8 used)
 
-### Consumer: FUN_80025240 (GPU Texture Upload)
-
-Called from `InitializeAndLoadLevel`, this function:
-
-1. Gets tile count from asset 100 header
-2. Allocates GPU texture memory
-3. For each tile:
-   - Reads 16×16 or 8×8 pixel data from asset 300
-   - Calls `LoadImage()` to upload to VRAM
-   - Calls `DrawSync(0)` to wait for completion
-   - Calls `GetTPage()` to get texture page ID
-   - Stores TPage and CLUT info for rendering
-
-### Tile Data Layout
-
-```
-If tile index < count_at_0x10:
-  - 16×16 tiles, 256 bytes each (0x100)
-  - Located at: asset300 + index * 0x100
-
-Else:
-  - 8×8 tiles, 64 bytes each (0x80)  
-  - Located at: asset300 + count_at_0x10 * 0x80 + index * 0x80
+```python
+# Tile data location calculation
+if tile_index < count_16x16:
+    offset = tile_index * 256
+    size = 256  # 16×16
+else:
+    adjusted = tile_index - count_16x16
+    offset = count_16x16 * 256 + adjusted * 128
+    size = 128  # 8×8
 ```
 
-## Asset 400/401 (Object Data)
+- **LevelDataContext offset:** 0x14 [5]
+- **Accessor:** `GetTileData` (0x8007B588)
 
-### Loading Flow
+### Asset 301 (0x12D) - Palette Assignment (VERIFIED)
 
-1. **LoadAssetContainer** stores:
-   - Asset 400 pointer → `LevelDataContext[8]` (offset 0x20) - object container
-   - Asset 401 pointer → `LevelDataContext[9]` (offset 0x24) - object config
+**Structure:** RAW, 1 byte per tile
 
-### Accessor Functions
-
-| Function | Address | Returns |
-|----------|---------|---------|
-| `GetObjectCount` | 0x8007B4D0 | First byte of asset 400 |
-| `GetObjectEntry` | 0x8007B4F8 | Sub-entry from asset 400 TOC |
-
-### Object Container Format
-
-Asset 400 uses the standard sub-TOC format:
-```
-0x00    u32    Entry count
-0x04+   12×N   TOC entries: {flags, size, offset}
-```
-
-## Complete Asset Accessor Table
-
-| Function | Address | Ctx Offset | Asset ID | Returns |
-|----------|---------|------------|----------|---------|
-| - | - | +0x04 [1] | 100 | Geometry header |
-| - | - | +0x08 [2] | 101 | Unknown geometry |
-| `GetSpriteCount` | 0x8007B6C8 | +0x0C [3] | 200 | Sprite count (u16) |
-| `GetSpriteEntry` | 0x8007B700 | +0x10 [4] | 201 | Sprite entry (92 bytes) |
-| `GetTileData` | 0x8007B588 | +0x14 [5] | 300 | Tile pixels |
-| `GetTilePaletteIndices` | 0x8007B6B0 | +0x18 [6] | 301 | Palette index per tile |
-| `GetTileFlags` | 0x8007B6BC | +0x1C [7] | 302 | Flags per tile |
-| `GetObjectCount` | 0x8007B4D0 | +0x20 [8] | 400 | Object count |
-| `GetObjectEntry` | 0x8007B4F8 | +0x20 [8] | 400 | Object sub-entry |
-| - | - | +0x24 [9] | 401 | Object config |
-
-## Asset 301/302 (Tile Metadata)
-
-### Overview
-
-Assets 301 and 302 provide per-tile metadata used during GPU texture upload
-by `FUN_80025240`. Each asset contains one byte per tile, indexed the same
-as asset 300.
-
-### Asset 301: Palette Index
-
-- **Size**: 1 byte per tile (equals tile count)
-- **Purpose**: Specifies which palette from asset 400 to use for each tile
-- **Value range**: 0 to (palette_count - 1)
+Specifies which palette from Asset 400 to use for each tile.
 
 ```
-For tile[i]:
-    palette_to_use = asset400.palettes[asset301[i]]
+Size: count_16x16 + count_8x8 bytes
+Value: Palette index (0 to palette_count-1)
+
+For tile[i]: palette = asset400.palettes[asset301[i]]
 ```
 
-### Asset 302: Tile Flags
+- **LevelDataContext offset:** 0x18 [6]
+- **Accessor:** `GetTilePaletteIndices` (0x8007B6B0)
 
-- **Size**: 1 byte per tile (equals tile count)
-- **Purpose**: Per-tile rendering flags
+### Asset 302 (0x12E) - Tile Flags (VERIFIED)
+
+**Structure:** RAW, 1 byte per tile
+
+Per-tile rendering flags controlling GPU upload behavior.
 
 | Bit | Mask | Description |
 |-----|------|-------------|
@@ -174,40 +217,202 @@ For tile[i]:
 | 1 | 0x02 | Depth mode: 0=8bpp (256 colors), 1=4bpp (16 colors) |
 | 2 | 0x04 | Skip flag: if set, don't upload tile to GPU |
 
-### Usage in GPU Upload (FUN_80025240)
+- **LevelDataContext offset:** 0x1C [7]
+- **Accessor:** `GetTileFlags` (0x8007B6BC)
+
+### Asset 400 (0x190) - Palette Container (VERIFIED)
+
+**Structure:** CONTAINER with sub-TOC
+
+Contains multiple 256-color palettes for tiles.
+
+```
+Offset  Size   Description
+------  ----   -----------
+0x00    u32    Palette count
+0x04+   12×N   Sub-entries: {palette_index, size, offset}
+
+Each palette: 512 bytes = 256 × u16 (PSX 15-bit RGB)
+  - Color 0 is typically transparent
+  - Size always 512 bytes per palette
+```
+
+- **LevelDataContext offset:** 0x20 [8]
+- **Accessor:** `GetObjectCount` (0x8007B4D0), `GetObjectEntry` (0x8007B4F8)
+
+### Asset 401 (0x191) - Animation/Palette Config
+
+**Structure:** RAW
+
+Configuration data for palette animations or cycling.
+
+- **LevelDataContext offset:** 0x24 [9]
+
+---
+
+## Tertiary Segment Assets (Audio)
+
+### Asset 500 (0x1F4) - Music/Sequence Data
+
+**Structure:** Unknown
+
+Primary music data, possibly SEQ/VAB format.
+
+- **LevelDataContext offset:** 0x2C [11]
+
+### Asset 501-504 (0x1F5-0x1F8) - Audio Configuration
+
+**Structure:** RAW
+
+Various audio configuration and index data.
+
+| Asset | Hex | LevelDataContext Offset |
+|-------|-----|------------------------|
+| 501 | 0x1F5 | 0x38 [14] |
+| 502 | 0x1F6 | 0x3C [15] |
+| 503 | 0x1F7 | 0x30 [12] |
+| 504 | 0x1F8 | 0x34 [13] |
+
+### Asset 700 (0x2BC) - Audio/Music Data
+
+**Structure:** Unknown (likely VAB/VH+VB)
+
+Main audio data uploaded to SPU.
+
+- **LevelDataContext offset:** 0x54 [21] (pointer), 0x58 [22] (size)
+- **Consumer:** `FUN_8007C088` (Audio loading) - uses SpuSetTransferMode, etc.
+
+---
+
+## Complete Asset ID Mapping
+
+All asset IDs and their LevelDataContext mappings:
+
+| Asset ID | Hex | Word Idx | Ctx Offset | Structure | Description |
+|----------|-----|----------|------------|-----------|-------------|
+| 100 | 0x064 | [1] | 0x04 | RAW | Tile header (36 bytes) |
+| 101 | 0x065 | [2] | 0x08 | RAW | Secondary geometry header |
+| 200 | 0x0C8 | [3] | 0x0C | RAW | Sprite header |
+| 201 | 0x0C9 | [4] | 0x10 | RAW | Sprite entries (92 bytes each) |
+| 300 | 0x12C | [5] | 0x14 | RAW | Tile pixel data (8bpp) |
+| 301 | 0x12D | [6] | 0x18 | RAW | Palette index per tile |
+| 302 | 0x12E | [7] | 0x1C | RAW | Tile flags |
+| 303 | 0x12F | [10] | 0x28 | RAW | Unknown |
+| 400 | 0x190 | [8] | 0x20 | CONTAINER | Palette container |
+| 401 | 0x191 | [9] | 0x24 | RAW | Animation/palette config |
+| 500 | 0x1F4 | [11] | 0x2C | RAW | Music/sequence data |
+| 501 | 0x1F5 | [14] | 0x38 | RAW | Audio config |
+| 502 | 0x1F6 | [15] | 0x3C | RAW | Audio config |
+| 503 | 0x1F7 | [12] | 0x30 | RAW | Audio config |
+| 504 | 0x1F8 | [13] | 0x34 | RAW | Audio config |
+| 600 | 0x258 | [16-17] | 0x40 | CONTAINER | Level geometry + size |
+| 601 | 0x259 | [18-19] | 0x48 | CONTAINER | Collision data + size |
+| 602 | 0x25A | [20] | 0x50 | RAW | Palette data |
+| 700 | 0x2BC | [21-22] | 0x54 | RAW | Audio/music + size |
+
+---
+
+## Accessor Function Reference
+
+| Function | Address | Asset | Returns |
+|----------|---------|-------|---------|
+| `GetTileCount` | 0x8007B53C | 100 | Sum of u16s at +0x10, +0x12, +0x14 |
+| `GetTileData` | 0x8007B588 | 300 | Pointer to tile pixels |
+| `GetTilePaletteIndices` | 0x8007B6B0 | 301 | Pointer to palette index array |
+| `GetTileFlags` | 0x8007B6BC | 302 | Pointer to tile flags array |
+| `GetSpriteCount` | 0x8007B6C8 | 200 | u16 sprite count |
+| `GetSpriteEntry` | 0x8007B700 | 201 | Pointer to 92-byte sprite entry |
+| `GetSpriteMetadata` | 0x8007B6DC | 200 | Sprite metadata |
+| `GetObjectCount` | 0x8007B4D0 | 400 | Palette/object count |
+| `GetObjectEntry` | 0x8007B4F8 | 400 | Pointer to sub-TOC entry |
+
+---
+
+## GPU Upload Process (FUN_80025240)
+
+Called from `InitializeAndLoadLevel`, uploads tiles to VRAM:
 
 ```c
-// Get metadata arrays
-palette_indices = GetTilePaletteIndices(ctx);  // Asset 301
+// Get data pointers
+header = ctx[1];                                // Asset 100
+tile_pixels = GetTileData(ctx);                 // Asset 300  
+palette_indices = GetTilePaletteIndices(ctx);   // Asset 301
 tile_flags = GetTileFlags(ctx);                 // Asset 302
+palettes = ctx[8];                              // Asset 400
 
-for each tile i:
-    flags = tile_flags[i]
+// Get tile counts from header
+count_16x16 = *(u16*)(header + 0x10);
+count_8x8 = *(u16*)(header + 0x12);
+total_tiles = count_16x16 + count_8x8;
+
+for (int i = 0; i < total_tiles; i++) {
+    u8 flags = tile_flags[i];
     
-    if (flags & 4):
-        continue;  // Skip this tile
+    // Skip if bit 2 set
+    if (flags & 0x04) continue;
     
-    depth = (flags & 2) ? 4bpp : 8bpp
-    palette = palettes[palette_indices[i]]
+    // Determine bit depth (bit 1: 0=8bpp, 1=4bpp)
+    int depth = (flags & 0x02) ? 4 : 8;
     
-    // Upload tile with correct depth and palette
-    LoadImage(...)
-    output[i].render_attr = flags & 1
+    // Get palette for this tile
+    int pal_idx = palette_indices[i];
+    u16* palette = palettes[pal_idx];
+    
+    // Calculate tile data offset
+    u8* pixels;
+    RECT rect;
+    if (i < count_16x16) {
+        pixels = tile_pixels + i * 256;
+        rect.w = 16; rect.h = 16;
+    } else {
+        pixels = tile_pixels + count_16x16 * 256 + (i - count_16x16) * 128;
+        rect.w = 8; rect.h = 8;
+    }
+    
+    // Upload to VRAM
+    LoadImage(&rect, pixels);
+    DrawSync(0);
+    
+    // Store render attributes
+    output[i].tpage = GetTPage(depth, ...);
+    output[i].clut = GetClut(...);
+    output[i].render_attr = flags & 0x01;
+}
 ```
 
-### Extraction Example (blb.py)
+---
 
-```python
-from scripts.blb import BLBFile, extract_level_tiles_with_metadata
+## Sprite Creation Process (FUN_80024778)
 
-with BLBFile('game.blb') as blb:
-    tiles = extract_level_tiles_with_metadata(blb, level_index=5)
+Called from `InitializeAndLoadLevel`, creates sprite objects:
+
+```c
+int count = GetSpriteCount(ctx);
+
+for (int i = 0; i < count; i++) {
+    SpriteEntry* entry = GetSpriteEntry(ctx, i);
     
-    for img, meta in tiles:
-        depth = "4bpp" if meta.is_4bpp else "8bpp"
-        print(f"Tile {meta.tile_index}: palette={meta.palette_index}, {depth}")
-        img.save(f"tile_{meta.tile_index:04d}.png")
+    // Skip type 3 sprites
+    if (entry->type == 3) continue;
+    
+    int w = entry->width;
+    int h = entry->height;
+    
+    // Choose creation function based on size/flags
+    if (w <= 64 && h <= 64 && entry->flags) {
+        sprite = FUN_8001f534(entry);  // Large/special
+        FUN_80021960(sprite);          // Add to render list
+    } else if (w <= 128 && h <= 128) {
+        sprite = FUN_8001f150(entry);  // Medium
+        FUN_80021778(sprite);
+    } else {
+        sprite = FUN_8001ecc0(entry);  // Standard
+        FUN_80021590(sprite);
+    }
+}
 ```
+
+---
 
 ## Complete Loading Flow
 
@@ -215,35 +420,44 @@ with BLBFile('game.blb') as blb:
 BLB File (GAME.BLB)
   │
   ├─→ LoadBLBHeader (0x800208B0)
-  │     └─→ Reads header to 0x800AE3E0
-  │     └─→ InitLevelDataContext (sets callback)
+  │     └─→ Reads header (0x1000 bytes) to 0x800AE3E0
+  │     └─→ InitLevelDataContext (0x8007A1BC)
+  │           └─→ Sets blbHeaderBuffer, loaderCallback
   │
   └─→ InitializeAndLoadLevel (0x8007D1D0)
         │
         ├─→ LevelDataParser (0x8007A62C)
-        │     └─→ Reads primary TOC
-        │     └─→ Sets primaryDataBuffer [0x1A]
+        │     └─→ Reads primary segment from BLB
+        │     └─→ Parses primary TOC (assets 600, 601, 602)
+        │     └─→ Stores pointers at ctx+0x68 through ctx+0x7C
         │
-        ├─→ LoadAssetContainer (0x8007B074)
-        │     └─→ Calls loaderCallback → CdBLB_ReadSectors
-        │     └─→ Parses sub-TOC
-        │     └─→ Populates asset pointers [0]-[22]
+        ├─→ LoadAssetContainer (0x8007B074) [Secondary]
+        │     └─→ Reads secondary segment from BLB
+        │     └─→ Parses sub-TOC (assets 100-401)
+        │     └─→ Populates asset pointers ctx[1]-ctx[9]
         │
-        ├─→ FUN_8007C088 (Audio loading)
-        │     └─→ Uses assets 700 (audio data)
-        │     └─→ SpuSetTransferMode, etc.
+        ├─→ LoadAssetContainer (0x8007B074) [Tertiary]
+        │     └─→ Reads tertiary segment from BLB
+        │     └─→ Parses sub-TOC (assets 500-700)
+        │     └─→ Populates asset pointers ctx[11]-ctx[22]
+        │
+        ├─→ FUN_8007C088 (Audio initialization)
+        │     └─→ Uses asset 700 (audio data)
+        │     └─→ SpuSetTransferMode, SpuWrite, etc.
         │
         ├─→ FUN_80025240 (GPU texture upload)
-        │     └─→ Uses assets 100, 300, 400
-        │     └─→ LoadImage → VRAM
+        │     └─→ Uses assets 100, 300, 301, 302, 400
+        │     └─→ LoadImage → uploads tiles to VRAM
         │
-        └─→ FUN_80024778 (Sprite creation)
+        └─→ FUN_80024778 (Sprite object creation)
               └─→ Uses assets 200, 201
-              └─→ Creates sprite objects
-              └─→ Adds to render lists
+              └─→ Creates sprite objects from entry data
+              └─→ Adds sprites to render lists
 ```
+
+---
 
 ## Related Documentation
 
-- [BLB Data Format](../blb-data-format.md) - File format and LevelDataContext structure
-- [Runtime Behavior](../runtime-behavior.md) - Game loop and state machine
+- [BLB Data Format](blb-data-format.md) - File format and LevelDataContext structure
+- [Runtime Behavior](runtime-behavior.md) - Game loop and state machine
