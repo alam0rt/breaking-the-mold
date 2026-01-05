@@ -587,6 +587,49 @@ bitfield TileFlags {
 // Use at specific offset with known size
 
 // =============================================================================
+// BS/MDEC Frame Header (8 bytes)
+// =============================================================================
+// PlayStation Bitstream compressed still image header.
+// Magic 0x3800 identifies BS/MDEC format.
+// Used for loading screens (PIRA, LEGL, etc.) and cut content.
+//
+// To decode: jpsxdec -f <file.bs> -static bs -dim 320x256 -fmt png
+
+// BS frame quality level (higher = more compression, lower quality)
+fn format_bs_quality(u16 quant) {
+    if (quant <= 2) return "High";
+    if (quant <= 4) return "Medium-High";
+    if (quant <= 7) return "Medium";
+    if (quant <= 12) return "Low";
+    return "Very Low";
+};
+
+// Format BS frame info
+fn format_bs_frame(auto f) {
+    u32 data_bytes = f.frame_size_words * 2;
+    return std::format("BS v{}: {} bytes, Q={} ({})", 
+        f.version, data_bytes, f.quant_scale, format_bs_quality(f.quant_scale));
+};
+
+// BS/MDEC version
+enum BSVersion : u16 {
+    Version2 = 0x0002,  // Standard version (STR v2)
+    Version3 = 0x0003   // Alternate version (STR v3)
+};
+
+struct BSFrameHeader {
+    u16 frame_size_words [[name("Size"), comment("Frame data size in 16-bit words (includes header)")]];
+    u16 magic [[name("Magic"), comment("Must be 0x3800 for valid BS frame"), color("FF4040")]];
+    u16 quant_scale [[name("Quant"), comment("Quantization scale (lower = better quality)"), color("40FF40")]];
+    BSVersion version [[name("Version"), comment("BS format version (2 or 3)"), color("4040FF")]];
+} [[name("BS Frame Header"), format("format_bs_frame"), color("FF8080"), static]];
+
+// Validate BS magic
+fn is_valid_bs(auto h) {
+    return h.magic == 0x3800;
+};
+
+// =============================================================================
 // Movie Entry (0x1C = 28 bytes)
 // =============================================================================
 
@@ -1307,6 +1350,95 @@ struct AllLevels {
 // Instantiate the level explorer - placed after header for clean organization
 // This is a "virtual" struct that only contains pointers to other locations
 AllLevels levels @ HEADER_SIZE [[name("Levels"), comment("All level data dynamically parsed")]];
+
+// =============================================================================
+// HIDDEN/UNUSED CONTENT - Unreferenced BS Frames
+// =============================================================================
+// These BS/MDEC compressed images exist in the BLB file but are NOT referenced
+// by any game code. They represent cut or replaced content from development.
+//
+// Discovered via sector coverage analysis (2026-01-06).
+// Total unreferenced: 704 KB (0.9% of file)
+//
+// To decode these images:
+//   nix-shell -p jpsxdec --run "jpsxdec -f <extracted.bs> -static bs -dim 320x256 -fmt png"
+
+// --- Unused Legal/Copyright Screen (Sectors 2-11, offset 0x1000) ---
+// An alternate legal screen that was replaced during development.
+// The game uses the LEGL asset at sector 22 instead.
+BSFrameHeader hidden_legal @ 0x1000 [[name("⚠️ UNUSED: Legal Screen"), 
+    comment("Unreferenced BS frame - alternate legal/copyright screen (replaced)"),
+    color("FF4040")]];
+
+// --- Unused Credits Slideshow (Sectors 26-196, starting at 0xD000) ---
+// A complete 10-frame credits sequence that was CUT from the final game!
+// The container has a header at 0xD000, frames start at 0xD0F4.
+//
+// Frame offsets (from start of file):
+//   Frame 0: 0xD0F4  (25152 bytes, quant=4)
+//   Frame 1: 0x15DB8 (23296 bytes, quant=4)  
+//   Frame 2: 0x1EEF0 (23488 bytes, quant=2)
+//   Frame 3: 0x281FC (21504 bytes, quant=3)
+//   Frame 4: 0x30764 (26112 bytes, quant=3)
+//   Frame 5: 0x39964 (24832 bytes, quant=4)
+//   Frame 6: 0x429A0 (21248 bytes, quant=3)
+//   Frame 7: 0x4A9CC (24576 bytes, quant=2)
+//   Frame 8: 0x52F78 (20928 bytes, quant=3)
+//   Frame 9: 0x5AF44 (22080 bytes, quant=2)
+
+BSFrameHeader hidden_credits_0 @ 0xD0F4 [[name("⚠️ UNUSED: Credits Frame 0"), 
+    comment("Unreferenced BS frame - first slide of cut credits sequence"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_1 @ 0x15DB8 [[name("⚠️ UNUSED: Credits Frame 1"), 
+    comment("Unreferenced BS frame - credits slide 2"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_2 @ 0x1EEF0 [[name("⚠️ UNUSED: Credits Frame 2"), 
+    comment("Unreferenced BS frame - credits slide 3"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_3 @ 0x281FC [[name("⚠️ UNUSED: Credits Frame 3"), 
+    comment("Unreferenced BS frame - credits slide 4"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_4 @ 0x30764 [[name("⚠️ UNUSED: Credits Frame 4"), 
+    comment("Unreferenced BS frame - credits slide 5"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_5 @ 0x39964 [[name("⚠️ UNUSED: Credits Frame 5"), 
+    comment("Unreferenced BS frame - credits slide 6"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_6 @ 0x429A0 [[name("⚠️ UNUSED: Credits Frame 6"), 
+    comment("Unreferenced BS frame - credits slide 7"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_7 @ 0x4A9CC [[name("⚠️ UNUSED: Credits Frame 7"), 
+    comment("Unreferenced BS frame - credits slide 8"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_8 @ 0x52F78 [[name("⚠️ UNUSED: Credits Frame 8"), 
+    comment("Unreferenced BS frame - credits slide 9"),
+    color("FF8040")]];
+BSFrameHeader hidden_credits_9 @ 0x5AF44 [[name("⚠️ UNUSED: Credits Frame 9"), 
+    comment("Unreferenced BS frame - final credits slide"),
+    color("FF8040")]];
+
+// --- Duplicate of Credits (Sectors 36929-37099, offset 0x4820800) ---
+// Byte-for-byte identical to the credits slideshow above.
+// This is likely a build artifact from the disc mastering process.
+BSFrameHeader hidden_credits_duplicate @ 0x48208F4 [[name("⚠️ DUPLICATE: Credits Frame 0 (copy)"), 
+    comment("Duplicate of credits - build artifact at end of file"),
+    color("808080")]];
+
+// =============================================================================
+// REFERENCED BS LOADING SCREENS
+// =============================================================================
+// These are the BS frames that ARE used by the game, for comparison.
+// Referenced via the sector table at offset 0xCD0.
+
+// PIRA - Pirates loading screen (sector 12, offset 0x6000)
+BSFrameHeader pira_loading @ 0x6000 [[name("PIRA Loading Screen"), 
+    comment("Pirates world loading screen (referenced by sector table)"),
+    color("40FF40")]];
+
+// LEGL - Legal screen (sector 22, offset 0xB000)  
+BSFrameHeader legl_loading @ 0xB000 [[name("LEGL Legal Screen"),
+    comment("Legal/copyright screen (referenced by sector table)"),
+    color("40FF40")]];
 
 // =============================================================================
 // ASSET TYPE REFERENCE
