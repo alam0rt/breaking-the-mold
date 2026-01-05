@@ -110,51 +110,32 @@ Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
     0x0C       1  u8      level_index         Level asset index (used for asset loading)
     0x0D       1  u8      level_flag          Level flag (0 or 1, purpose TBD)
     
-    # Tertiary block configuration (0x0E-0x1B)
-    0x0E       2  u16     tert_block_count    Number of active tertiary sub-blocks (1-6)
-    0x10       2  u16     tert_data_off_0     Offset within tertiary block 0 to data
-    0x12       2  u16     tert_data_off_1     Offset within tertiary block 1 to data
-    0x14       2  u16     tert_data_off_2     Offset within tertiary block 2 to data
-    0x16       2  u16     tert_data_off_3     Offset within tertiary block 3 to data
-    0x18       2  u16     tert_data_off_4     Offset within tertiary block 4 to data
-    0x1A       2  u16     tert_data_off_5     Offset within tertiary block 5 to data
+    # Stage count and tertiary data offsets (0x0E-0x1D)
+    0x0E       2  u16     stage_count         Number of stages in this level (1-6)
+    0x10      12  u16[6]  tert_data_offsets   Per-stage tertiary data offsets (value << 5 = size)
     0x1C       2  u16     (padding)           Always 0
     
-    # Secondary data structure (0x1E-0x39)
-    0x1E       2  u16     secondary_offset    Secondary data sector offset
-    0x20       2  u16     sec_sub_off_0       Secondary sub-block 0 sector offset
-    0x22       2  u16     sec_sub_off_1       Secondary sub-block 1 sector offset
-    0x24       2  u16     sec_sub_off_2       Secondary sub-block 2 sector offset
-    0x26       2  u16     sec_sub_off_3       Secondary sub-block 3 sector offset
-    0x28       2  u16     sec_sub_off_4       Secondary sub-block 4 sector offset
+    # Secondary sector locations (0x1E-0x39) - 6 stages as parallel arrays
+    0x1E      12  u16[6]  sec_sector_offsets  Per-stage secondary sector offsets
     0x2A       2  u16     (padding)           Always 0
-    0x2C       2  u16     secondary_count     Secondary data sector count
-    0x2E       2  u16     sec_sub_cnt_0       Secondary sub-block 0 sector count
-    0x30       2  u16     sec_sub_cnt_1       Secondary sub-block 1 sector count
-    0x32       2  u16     sec_sub_cnt_2       Secondary sub-block 2 sector count
-    0x34       2  u16     sec_sub_cnt_3       Secondary sub-block 3 sector count
-    0x36       2  u16     sec_sub_cnt_4       Secondary sub-block 4 sector count
+    0x2C      12  u16[6]  sec_sector_counts   Per-stage secondary sector counts
     0x38       2  u16     (padding)           Always 0
     
-    # Tertiary data structure (0x3A-0x55)
-    0x3A       2  u16     tert_sub_off_0      Tertiary sub-block 0 sector offset
-    0x3C       2  u16     tert_sub_off_1      Tertiary sub-block 1 sector offset
-    0x3E       2  u16     tert_sub_off_2      Tertiary sub-block 2 sector offset
-    0x40       2  u16     tert_sub_off_3      Tertiary sub-block 3 sector offset
-    0x42       2  u16     tert_sub_off_4      Tertiary sub-block 4 sector offset
-    0x44       2  u16     tert_sub_off_5      Tertiary sub-block 5 sector offset
+    # Tertiary sector locations (0x3A-0x55) - 6 stages as parallel arrays
+    0x3A      12  u16[6]  tert_sector_offsets Per-stage tertiary sector offsets
     0x46       2  u16     (padding)           Always 0
-    0x48       2  u16     tert_sub_cnt_0      Tertiary sub-block 0 sector count
-    0x4A       2  u16     tert_sub_cnt_1      Tertiary sub-block 1 sector count
-    0x4C       2  u16     tert_sub_cnt_2      Tertiary sub-block 2 sector count
-    0x4E       2  u16     tert_sub_cnt_3      Tertiary sub-block 3 sector count
-    0x50       2  u16     tert_sub_cnt_4      Tertiary sub-block 4 sector count
-    0x52       2  u16     tert_sub_cnt_5      Tertiary sub-block 5 sector count
+    0x48      12  u16[6]  tert_sector_counts  Per-stage tertiary sector counts
     0x54       2  u16     (padding)           Always 0
     
     # Level strings (0x56-0x6F)
     0x56       5  str     level_id            4-char null-terminated (e.g., "MENU")
     0x5B      21  str     name                Level name, null-terminated
+    
+    Stage Data Organization:
+    -----------------------
+    Each level contains 1-6 stages. The sector arrays are parallel:
+    - Stage i uses: sec_sector_offsets[i], sec_sector_counts[i] for secondary
+    - Stage i uses: tert_sector_offsets[i], tert_sector_counts[i] for tertiary
     
     Data Interleaving Pattern:
     --------------------------
@@ -1324,7 +1305,7 @@ class LevelMetadataEntry:
     offset: int  # Offset of this entry within the header
     raw_data: bytes  # Full 0x70 bytes of entry data
     
-    # Primary level data location
+    # Primary level data location (0x00-0x03)
     sector_offset: int = None  # u16 at +0x00, sector offset in BLB
     sector_count: int = None  # u16 at +0x02, sector count
     
@@ -1332,53 +1313,92 @@ class LevelMetadataEntry:
     primary_buffer_size: int = None  # u32 at +0x04: Total buffer size for level (returned by GetPrimaryBufferSize @ 8007a5cc)
     entry1_offset: int = None  # u32 at +0x08: Offset to Entry[1]/Asset 601 in primary TOC (CONFIRMED)
     
-    # Legacy aliases for compatibility
-    @property
-    def unknown_04(self) -> int:
-        """Legacy alias - use primary_buffer_size instead."""
-        return self.primary_buffer_size & 0xFFFF  # Low 16 bits for compat
-    
-    @property
-    def unknown_06(self) -> int:
-        """Legacy alias - use primary_buffer_size instead."""
-        return (self.primary_buffer_size >> 16) & 0xFFFF  # High 16 bits
-    
-    @property
-    def entry1_offset_lo(self) -> int:
-        """Legacy alias - use entry1_offset instead."""
-        return self.entry1_offset & 0xFFFF  # Low 16 bits
-    
-    @property
-    def unknown_0A(self) -> int:
-        """Legacy alias - use entry1_offset instead."""
-        return (self.entry1_offset >> 16) & 0xFFFF  # High 16 bits
-    
     # Level identification (0x0C-0x0D)
     level_index: int = None  # u8 at +0x0C: Level asset index
     level_flag: int = unknown("+0x0D: u8, 0 or 1, purpose TBD")
     
-    # Tertiary block configuration (0x0E-0x1B)
-    tert_block_count: int = None  # u16 at +0x0E: Number of active tertiary sub-blocks (CONFIRMED)
-    tert_data_offsets: list = None  # 6× u16 at +0x10-0x1A: Offsets within each tert block to specific data
+    # Stage count and tertiary data offsets (0x0E-0x1D)
+    # Stage count (tert_block_count) indicates how many stages this level has (1-6)
+    # tert_data_offsets[i] << 5 gives tertiary data size for stage i (used by GetCurrentTertiaryDataSize)
+    stage_count: int = None  # u16 at +0x0E: Number of stages in this level (1-6)
+    tert_data_offsets: list = None  # 6× u16 at +0x10-0x1A: Per-stage tertiary data offsets
     # +0x1C-0x1D: Padding (always 0)
     
-    # Secondary data location (0x1E-0x39)
-    secondary_offset: int = None  # u16 at +0x1E: Secondary base sector offset
-    sec_sub_offsets: list = None  # 5× u16 at +0x20-0x28: Secondary sub-block sector offsets
+    # Secondary sector locations (0x1E-0x39) - 6 stages as parallel arrays
+    # sec_sector_offsets[i] and sec_sector_counts[i] define stage i's secondary data
+    sec_sector_offsets: list = None  # 6× u16 at +0x1E-0x28: Per-stage secondary sector offsets
     # +0x2A-0x2B: Padding (always 0)
-    secondary_count: int = None  # u16 at +0x2C: Secondary base sector count
-    sec_sub_counts: list = None  # 5× u16 at +0x2E-0x36: Secondary sub-block sector counts
+    sec_sector_counts: list = None  # 6× u16 at +0x2C-0x36: Per-stage secondary sector counts
     # +0x38-0x39: Padding (always 0)
     
-    # Tertiary data location (0x3A-0x55)
-    tert_sub_offsets: list = None  # 6× u16 at +0x3A-0x44: Tertiary sub-block sector offsets
+    # Tertiary sector locations (0x3A-0x55) - 6 stages as parallel arrays
+    tert_sector_offsets: list = None  # 6× u16 at +0x3A-0x44: Per-stage tertiary sector offsets
     # +0x46-0x47: Padding (always 0)
-    tert_sub_counts: list = None  # 6× u16 at +0x48-0x52: Tertiary sub-block sector counts
+    tert_sector_counts: list = None  # 6× u16 at +0x48-0x52: Per-stage tertiary sector counts
     # +0x54-0x55: Padding (always 0)
     
-    # Identification
+    # Identification (0x56-0x6F)
     level_id: str = None  # 5 bytes at +0x56 (4-char null-terminated)
     name: str = None  # 21 bytes at +0x5B (null-terminated)
+    
+    # =========================================================================
+    # Legacy aliases for backward compatibility
+    # =========================================================================
+    
+    @property
+    def tert_block_count(self) -> int:
+        """Legacy alias - use stage_count instead."""
+        return self.stage_count
+    
+    @property
+    def secondary_offset(self) -> int:
+        """Legacy alias - use sec_sector_offsets[0] instead."""
+        return self.sec_sector_offsets[0] if self.sec_sector_offsets else 0
+    
+    @property
+    def sec_sub_offsets(self) -> list:
+        """Legacy alias - use sec_sector_offsets[1:6] instead."""
+        return self.sec_sector_offsets[1:6] if self.sec_sector_offsets else [0, 0, 0, 0, 0]
+    
+    @property
+    def secondary_count(self) -> int:
+        """Legacy alias - use sec_sector_counts[0] instead."""
+        return self.sec_sector_counts[0] if self.sec_sector_counts else 0
+    
+    @property
+    def sec_sub_counts(self) -> list:
+        """Legacy alias - use sec_sector_counts[1:6] instead."""
+        return self.sec_sector_counts[1:6] if self.sec_sector_counts else [0, 0, 0, 0, 0]
+    
+    @property
+    def tert_sub_offsets(self) -> list:
+        """Legacy alias - use tert_sector_offsets instead."""
+        return self.tert_sector_offsets
+    
+    @property
+    def tert_sub_counts(self) -> list:
+        """Legacy alias - use tert_sector_counts instead."""
+        return self.tert_sector_counts
+    
+    @property
+    def unknown_04(self) -> int:
+        """Legacy alias - use primary_buffer_size instead."""
+        return self.primary_buffer_size & 0xFFFF
+    
+    @property
+    def unknown_06(self) -> int:
+        """Legacy alias - use primary_buffer_size instead."""
+        return (self.primary_buffer_size >> 16) & 0xFFFF
+    
+    @property
+    def entry1_offset_lo(self) -> int:
+        """Legacy alias - use entry1_offset instead."""
+        return self.entry1_offset & 0xFFFF
+    
+    @property
+    def unknown_0A(self) -> int:
+        """Legacy alias - use entry1_offset instead."""
+        return (self.entry1_offset >> 16) & 0xFFFF
     
     @property
     def byte_offset(self) -> int:
@@ -1733,23 +1753,21 @@ class BLBHeader:
         level_index = data[0x0C]
         level_flag = data[0x0D]
         
-        # Tertiary block configuration (0x0E-0x1B)
-        tert_block_count = struct.unpack('<H', data[0x0E:0x10])[0]
+        # Stage count and tertiary data offsets (0x0E-0x1D)
+        stage_count = struct.unpack('<H', data[0x0E:0x10])[0]
         tert_data_offsets = [struct.unpack('<H', data[0x10 + i*2:0x12 + i*2])[0] for i in range(6)]
         # 0x1C-0x1D is padding
         
-        # Secondary data location (0x1E-0x39)
-        secondary_offset = struct.unpack('<H', data[0x1E:0x20])[0]
-        sec_sub_offsets = [struct.unpack('<H', data[0x20 + i*2:0x22 + i*2])[0] for i in range(5)]
+        # Secondary sector locations (0x1E-0x39) - 6-element arrays
+        sec_sector_offsets = [struct.unpack('<H', data[0x1E + i*2:0x20 + i*2])[0] for i in range(6)]
         # 0x2A-0x2B is padding
-        secondary_count = struct.unpack('<H', data[0x2C:0x2E])[0]
-        sec_sub_counts = [struct.unpack('<H', data[0x2E + i*2:0x30 + i*2])[0] for i in range(5)]
+        sec_sector_counts = [struct.unpack('<H', data[0x2C + i*2:0x2E + i*2])[0] for i in range(6)]
         # 0x38-0x39 is padding
         
-        # Tertiary data location (0x3A-0x55)
-        tert_sub_offsets = [struct.unpack('<H', data[0x3A + i*2:0x3C + i*2])[0] for i in range(6)]
+        # Tertiary sector locations (0x3A-0x55) - 6-element arrays
+        tert_sector_offsets = [struct.unpack('<H', data[0x3A + i*2:0x3C + i*2])[0] for i in range(6)]
         # 0x46-0x47 is padding
-        tert_sub_counts = [struct.unpack('<H', data[0x48 + i*2:0x4A + i*2])[0] for i in range(6)]
+        tert_sector_counts = [struct.unpack('<H', data[0x48 + i*2:0x4A + i*2])[0] for i in range(6)]
         # 0x54-0x55 is padding
         
         # Identification
@@ -1769,14 +1787,12 @@ class BLBHeader:
             entry1_offset=entry1_offset,
             level_index=level_index,
             level_flag=level_flag,
-            tert_block_count=tert_block_count,
+            stage_count=stage_count,
             tert_data_offsets=tert_data_offsets,
-            secondary_offset=secondary_offset,
-            sec_sub_offsets=sec_sub_offsets,
-            secondary_count=secondary_count,
-            sec_sub_counts=sec_sub_counts,
-            tert_sub_offsets=tert_sub_offsets,
-            tert_sub_counts=tert_sub_counts,
+            sec_sector_offsets=sec_sector_offsets,
+            sec_sector_counts=sec_sector_counts,
+            tert_sector_offsets=tert_sector_offsets,
+            tert_sector_counts=tert_sector_counts,
             level_id=level_id,
             name=name,
         )

@@ -638,23 +638,23 @@ struct LevelEntry {
     u8 level_index [[name("Index"), comment("Level asset index"), color("40FF40")]];
     u8 level_flag [[name("Flag"), comment("Level flag (0 or 1)")]];
     
-    // Tertiary block configuration (0x0E-0x1B)
-    u16 tert_block_count [[name("Tert Blocks"), comment("Active tertiary sub-blocks (1-6)")]];
-    u16 tert_data_off[6] [[name("Tert Offsets"), comment("Offsets within tertiary blocks")]];
+    // Stage count and tertiary data offsets (0x0E-0x1D)
+    // tert_data_off[i] << 5 gives the tertiary data size for stage i (used by GetCurrentTertiaryDataSize)
+    u16 stage_count [[name("Stages"), comment("Number of stages in this level (1-6)")]];
+    u16 tert_data_off[6] [[name("Tert Data Off"), comment("Per-stage tertiary data offsets (value << 5 = size)")]];
     u16 pad_1c [[hidden]];
     
-    // Secondary data structure (0x1E-0x39)
-    u16 secondary_offset [[name("Sec Offset"), comment("Secondary sector offset")]];
-    u16 sec_sub_off[5] [[name("Sec Sub Offs")]];
+    // Secondary sector locations (0x1E-0x39) - 6 stages
+    // Stage 0 uses sec_sector_off[0], stage N uses sec_sector_off[N]
+    u16 sec_sector_off[6] [[name("Sec Sect Off"), comment("Per-stage secondary sector offsets")]];
     u16 pad_2a [[hidden]];
-    u16 secondary_count [[name("Sec Count"), comment("Secondary sector count")]];
-    u16 sec_sub_cnt[5] [[name("Sec Sub Cnts")]];
+    u16 sec_sector_cnt[6] [[name("Sec Sect Cnt"), comment("Per-stage secondary sector counts")]];
     u16 pad_38 [[hidden]];
     
-    // Tertiary data structure (0x3A-0x55)
-    u16 tert_sub_off[6] [[name("Tert Sub Offs")]];
+    // Tertiary sector locations (0x3A-0x55) - 6 stages
+    u16 tert_sector_off[6] [[name("Tert Sect Off"), comment("Per-stage tertiary sector offsets")]];
     u16 pad_46 [[hidden]];
-    u16 tert_sub_cnt[6] [[name("Tert Sub Cnts")]];
+    u16 tert_sector_cnt[6] [[name("Tert Sect Cnt"), comment("Per-stage tertiary sector counts")]];
     u16 pad_54 [[hidden]];
     
     // Level strings (0x56-0x6F)
@@ -1259,9 +1259,9 @@ struct LevelData<auto level_idx> {
     // Get the level entry from header
     u16 _pri_sector = header.levels[level_idx].sector_offset;
     u16 _pri_count = header.levels[level_idx].sector_count;
-    u16 _sec_sector = header.levels[level_idx].secondary_offset;
-    u16 _sec_count = header.levels[level_idx].secondary_count;
-    u16 _tert_block_count = header.levels[level_idx].tert_block_count;
+    u16 _sec_sector = header.levels[level_idx].sec_sector_off[0];
+    u16 _sec_count = header.levels[level_idx].sec_sector_cnt[0];
+    u16 _stage_count = header.levels[level_idx].stage_count;
     
     // Primary Segment
     if (_pri_count > 0) {
@@ -1274,23 +1274,23 @@ struct LevelData<auto level_idx> {
     }
     
     // Tertiary Stages (up to 6) - with full asset parsing
-    if (_tert_block_count >= 1 && header.levels[level_idx].tert_sub_off[0] > 0) {
-        TertiaryStageWithAssets stage0 @ (header.levels[level_idx].tert_sub_off[0] * SECTOR_SIZE) [[name("Stage 0")]];
+    if (_stage_count >= 1 && header.levels[level_idx].tert_sector_off[0] > 0) {
+        TertiaryStageWithAssets stage0 @ (header.levels[level_idx].tert_sector_off[0] * SECTOR_SIZE) [[name("Stage 0")]];
     }
-    if (_tert_block_count >= 2 && header.levels[level_idx].tert_sub_off[1] > 0) {
-        TertiaryStageWithAssets stage1 @ (header.levels[level_idx].tert_sub_off[1] * SECTOR_SIZE) [[name("Stage 1")]];
+    if (_stage_count >= 2 && header.levels[level_idx].tert_sector_off[1] > 0) {
+        TertiaryStageWithAssets stage1 @ (header.levels[level_idx].tert_sector_off[1] * SECTOR_SIZE) [[name("Stage 1")]];
     }
-    if (_tert_block_count >= 3 && header.levels[level_idx].tert_sub_off[2] > 0) {
-        TertiaryStageWithAssets stage2 @ (header.levels[level_idx].tert_sub_off[2] * SECTOR_SIZE) [[name("Stage 2")]];
+    if (_stage_count >= 3 && header.levels[level_idx].tert_sector_off[2] > 0) {
+        TertiaryStageWithAssets stage2 @ (header.levels[level_idx].tert_sector_off[2] * SECTOR_SIZE) [[name("Stage 2")]];
     }
-    if (_tert_block_count >= 4 && header.levels[level_idx].tert_sub_off[3] > 0) {
-        TertiaryStageWithAssets stage3 @ (header.levels[level_idx].tert_sub_off[3] * SECTOR_SIZE) [[name("Stage 3")]];
+    if (_stage_count >= 4 && header.levels[level_idx].tert_sector_off[3] > 0) {
+        TertiaryStageWithAssets stage3 @ (header.levels[level_idx].tert_sector_off[3] * SECTOR_SIZE) [[name("Stage 3")]];
     }
-    if (_tert_block_count >= 5 && header.levels[level_idx].tert_sub_off[4] > 0) {
-        TertiaryStageWithAssets stage4 @ (header.levels[level_idx].tert_sub_off[4] * SECTOR_SIZE) [[name("Stage 4")]];
+    if (_stage_count >= 5 && header.levels[level_idx].tert_sector_off[4] > 0) {
+        TertiaryStageWithAssets stage4 @ (header.levels[level_idx].tert_sector_off[4] * SECTOR_SIZE) [[name("Stage 4")]];
     }
-    if (_tert_block_count >= 6 && header.levels[level_idx].tert_sub_off[5] > 0) {
-        TertiaryStageWithAssets stage5 @ (header.levels[level_idx].tert_sub_off[5] * SECTOR_SIZE) [[name("Stage 5")]];
+    if (_stage_count >= 6 && header.levels[level_idx].tert_sector_off[5] > 0) {
+        TertiaryStageWithAssets stage5 @ (header.levels[level_idx].tert_sector_off[5] * SECTOR_SIZE) [[name("Stage 5")]];
     }
 } [[color("40CCFF")]];
 

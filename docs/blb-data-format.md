@@ -215,23 +215,21 @@ Offset   Size   Description
 0x0C     u8     Level asset index (0-25)
 0x0D     u8     Level flag (0 or 1, purpose TBD)
 
-# Tertiary block configuration (0x0E-0x1B)
-0x0E     u16    Tertiary block count (CONFIRMED - 1-6, matches non-zero tert sub-counts)
-0x10     u16[6] Tertiary data offsets (byte offset within each tert block)
+# Stage count and tertiary data offsets (0x0E-0x1D)
+0x0E     u16    Stage count (1-6, number of stages in this level)
+0x10     u16[6] Tertiary data offsets (tert_data_off[i] << 5 = size for stage i)
 0x1C     u16    Padding (always 0)
 
-# Secondary data structure (0x1E-0x39)
-0x1E     u16    Secondary base sector offset
-0x20     u16[5] Secondary sub-block sector offsets
+# Secondary sector locations (0x1E-0x39) - per-stage arrays
+0x1E     u16[6] Secondary sector offsets (sec_sector_off[i] for stage i)
 0x2A     u16    Padding (always 0)
-0x2C     u16    Secondary base sector count
-0x2E     u16[5] Secondary sub-block sector counts
+0x2C     u16[6] Secondary sector counts (sec_sector_cnt[i] for stage i)
 0x38     u16    Padding (always 0)
 
-# Tertiary data structure (0x3A-0x55)
-0x3A     u16[6] Tertiary sub-block sector offsets
+# Tertiary sector locations (0x3A-0x55) - per-stage arrays
+0x3A     u16[6] Tertiary sector offsets (tert_sector_off[i] for stage i)
 0x46     u16    Padding (always 0)
-0x48     u16[6] Tertiary sub-block sector counts
+0x48     u16[6] Tertiary sector counts (tert_sector_cnt[i] for stage i)
 0x54     u16    Padding (always 0)
 
 # Level strings (0x56-0x6F)
@@ -241,7 +239,7 @@ Offset   Size   Description
 
 ### Field Analysis (0x04-0x0B)
 
-**u32@0x04 - Primary Buffer Size** (VERIFIED 2026-01-11):
+**u32@0x04 - Primary Buffer Size** (VERIFIED 2026-01-06):
 - Returned by `GetPrimaryBufferSize()` at 0x8007a5cc
 - Used in `InitializeAndLoadLevel` for memory allocation:
   ```c
@@ -252,11 +250,24 @@ Offset   Size   Description
 - For special modes (mode 6), returns fixed 0x7d000 (512KB)
 - Values range from ~510KB to ~1.3MB depending on level complexity
 
-**u32@0x08 - Entry[1] Offset** (VERIFIED 2026-01-11):
+**u32@0x08 - Entry[1] Offset** (VERIFIED 2026-01-06):
 - Offset to Asset 601 (collision/secondary TOC pointer) within primary buffer
 - Used to calculate `ctx[0x1b] = primary_buffer + entry1_offset`
 - Matches `Entry[1].offset` in primary TOC for all 26 levels
 - Asset 601 contains the collision data TOC
+
+### Stage Data Organization (VERIFIED 2026-01-06)
+
+Each level contains 1-6 stages. The sector location arrays are **parallel**:
+- Stage `i` uses: `sec_sector_off[i]` + `sec_sector_cnt[i]` for secondary data
+- Stage `i` uses: `tert_sector_off[i]` + `tert_sector_cnt[i]` for tertiary data
+
+Example (Options with 6 stages):
+```
+Stage 0: sec[233, 67 sectors], tert[300, 488 sectors]
+Stage 1: sec[788, 62 sectors], tert[850, 3 sectors]
+...
+```
 
 ### Data Interleaving Pattern
 
