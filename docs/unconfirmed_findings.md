@@ -5,6 +5,90 @@ that have not been fully verified through decompilation or runtime tracing.
 
 ---
 
+## Hidden/Unused Content Discovery (2026-01-06) - VERIFIED ✓
+
+Discovered unreferenced sectors in GAME.BLB containing hidden content that is
+never loaded by the game. Images were successfully decoded using jpsxdec.
+
+### Summary
+
+| Range | Sectors | Offset | Size | Content |
+|-------|---------|--------|------|---------|
+| 1 | 2-11 | 0x1000 | 20 KB | **Unused Legal/Copyright Screen** |
+| 2 | 26-196 | 0xD000 | 342 KB | **Unused Credits Slideshow (10 frames)** |
+| 3 | 36929-37099 | 0x4820800 | 342 KB | **Duplicate of range 2** (build artifact) |
+
+**Total unreferenced: 704 KB (0.9% of file)**
+**File coverage: 99.1%**
+
+### Range 1: Unused Legal/Copyright Screen (Sectors 2-11) ✓ DECODED
+
+- **Format**: BS/MDEC v2 compressed image
+- **Frame size**: 13,216 words (26,432 bytes data)
+- **Quant scale**: 7 (moderate quality)
+- **Dimensions**: 320×256 pixels
+- **Content**: Legal/copyright information screen
+- **Status**: NOT referenced by any game code - completely unused
+
+This appears to be an alternate or earlier version of the legal screen. The game
+uses a different LEGL asset at sector 22 instead. This version may have been
+replaced during development but never removed from the disc.
+
+Header bytes: `A0 33 00 38 07 00 02 00`
+
+### Range 2: Unused Credits Slideshow (Sectors 26-196) ✓ DECODED
+
+Contains 10 individual BS/MDEC compressed frames forming a **complete credits sequence**
+that is never shown in the game!
+
+| Frame | Offset | Words | Bytes | Quant | Content |
+|-------|--------|-------|-------|-------|---------|
+| 0 | 0xD0F4 | 12,576 | 25,152 | 4 | Credits title/intro |
+| 1 | 0x15DB8 | 11,648 | 23,296 | 4 | Credits slide |
+| 2 | 0x1EEF0 | 11,744 | 23,488 | 2 | Credits slide |
+| 3 | 0x281FC | 10,752 | 21,504 | 3 | Credits slide |
+| 4 | 0x30764 | 13,056 | 26,112 | 3 | Credits slide |
+| 5 | 0x39964 | 12,416 | 24,832 | 4 | Credits slide |
+| 6 | 0x429A0 | 10,624 | 21,248 | 3 | Credits slide |
+| 7 | 0x4A9CC | 12,288 | 24,576 | 2 | Credits slide |
+| 8 | 0x52F78 | 10,464 | 20,928 | 3 | Credits slide |
+| 9 | 0x5AF44 | 11,040 | 22,080 | 2 | Credits slide |
+
+**This is cut content!** The game has a different credits implementation that was
+used instead. These slides represent an earlier or alternate credits sequence that
+was never integrated into the final game.
+
+### Range 3: Duplicate Data (Sectors 36929-37099)
+
+- **Content**: BYTE-FOR-BYTE identical to Range 2 (the credits slideshow)
+- **Theory**: Build artifact from disc mastering process
+
+### Decoding Instructions
+
+```bash
+# Extract and decode BS frames using jpsxdec
+nix-shell -p jpsxdec --run "jpsxdec -f <file.bs> -static bs -dim 320x256 -fmt png"
+
+# Example: Extract sector 2-11 (legal screen)
+python3 -c "
+with open('disks/blb/GAME.BLB', 'rb') as f:
+    f.seek(0x1000)
+    open('/tmp/legal.bs', 'wb').write(f.read(20480))
+"
+nix-shell -p jpsxdec --run "jpsxdec -f /tmp/legal.bs -static bs -dim 320x256 -fmt png"
+```
+
+### Significance
+
+This discovery reveals that Skullmonkeys contains **unused developer content**:
+1. An alternate legal screen that was replaced
+2. A complete 10-frame credits slideshow that was cut from the final game
+
+These assets occupy ~700 KB and were likely left in during the mastering process.
+Comparing with the NTSC version could reveal if these were region-specific cuts.
+
+---
+
 ## BLB File Coverage Analysis (2026-01-04)
 
 Run `python3 scripts/blb_asset_coverage.py` for full analysis.
