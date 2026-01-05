@@ -262,7 +262,7 @@ Examples:
 """)
     parser.add_argument('level_index', type=int, nargs='?', default=None,
                         help='Level index (0=MENU, 1=PHRO, 2=SCIE, ...)')
-    parser.add_argument('output_dir', nargs='?', default='extracted_memory/level_renders',
+    parser.add_argument('--output', '-o', default='extracted_memory/level_renders',
                         help='Output directory')
     parser.add_argument('--blb', default='disks/blb/GAME.BLB',
                         help='Path to GAME.BLB file')
@@ -290,7 +290,7 @@ Examples:
             # Render all levels
             total_stages = 0
             for level_idx in range(len(blb.header.level_entries)):
-                stages = render_level(blb, level_idx, args.output_dir)
+                stages = render_level(blb, level_idx, args.output)
                 total_stages += stages
             print(f"\nTotal: Rendered {total_stages} stages across {len(blb.header.level_entries)} levels")
             return
@@ -303,7 +303,7 @@ Examples:
             print(f"Valid range: 0-{len(blb.header.level_entries) - 1}")
             sys.exit(1)
         
-        render_level(blb, level_index, args.output_dir)
+        render_level(blb, level_index, args.output)
 
 
 if __name__ == '__main__':
