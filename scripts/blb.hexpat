@@ -292,63 +292,230 @@ struct LayerEntry {
 // =============================================================================
 // Sprite Structures - Asset 600 (0x258)
 // =============================================================================
+// Sprites use RLE compression with embedded 256-color palettes.
+// Each sprite has: header, animation entries, frame metadata, RLE data, palette.
+
+// PSX 15-bit color with transform to RGBA32 for visualization
+bitfield PSXColorEntry {
+    r : 5;
+    g : 5;
+    b : 5;
+    stp : 1;
+} [[sealed, transform("psx_entry_to_rgba32"), format("format_psx_color_entry")]];
+
+fn psx_entry_to_rgba32(auto c) {
+    // Expand 5-bit to 8-bit with proper rounding
+    u8 r8 = (c.r << 3) | (c.r >> 2);
+    u8 g8 = (c.g << 3) | (c.g >> 2);
+    u8 b8 = (c.b << 3) | (c.b >> 2);
+    return r8 | (g8 << 8) | (b8 << 16) | (0xFF << 24);
+};
+
+fn format_psx_color_entry(auto c) {
+    u8 r8 = c.r << 3;
+    u8 g8 = c.g << 3;
+    u8 b8 = c.b << 3;
+    return std::format("#{:02X}{:02X}{:02X}", r8, g8, b8);
+};
 
 // RLE command for sprite decompression
+// Bit 15: new_line (advance Y, reset X)
+// Bits 14-8: skip_count (transparent pixels)
+// Bits 7-0: copy_count (literal pixels to copy)
 bitfield RLECommand {
     copy_count : 8 [[name("Copy"), comment("Literal pixels to copy")]];
     skip_count : 7 [[name("Skip"), comment("Transparent pixels")]];
-    new_line : 1 [[name("NewLine"), comment("Start new row")]];
-} [[color("FF8080")]];
+    new_line : 1 [[name("NL"), comment("Start new row")]];
+} [[format("format_rle_cmd"), color("FF8080")]];
+
+fn format_rle_cmd(auto cmd) {
+    if (cmd.new_line) {
+        return std::format("NL skip={} copy={}", cmd.skip_count, cmd.copy_count);
+    }
+    return std::format("skip={} copy={}", cmd.skip_count, cmd.copy_count);
+};
 
 // Animation entry (12 bytes)
 struct AnimationEntry {
-    u32 animation_id [[name("Animation ID")]];
-    u16 frame_count [[name("Frame Count")]];
-    u16 frame_offset [[name("Frame Index"), comment("Index into frame metadata array")]];
+    u32 animation_id [[name("Anim ID")]];
+    u16 frame_count [[name("Frames")]];
+    u16 frame_offset [[name("Frame Idx"), comment("Index into frame metadata array")]];
     u16 flags [[name("Flags")]];
     u16 extra [[hidden]];
-} [[name("Animation"), color("CC80FF"), static]];
+} [[format("format_anim_entry"), color("CC80FF"), static]];
+
+fn format_anim_entry(auto e) {
+    return std::format("ID {} ({} frames)", e.animation_id, e.frame_count);
+};
 
 // Frame metadata (36 bytes = 0x24)
 struct SpriteFrameMetadata {
     u16 reserved_00 [[hidden]];
     u16 reserved_02 [[hidden]];
     u16 flags [[name("Flags"), comment("1 or 2")]];
-    s16 render_x [[name("Render X"), comment("Render X offset (signed)")]];
-    s16 render_y [[name("Render Y"), comment("Render Y offset (signed)")]];
-    u16 render_width [[name("Render W")]];
-    u16 render_height [[name("Render H")]];
+    s16 render_x [[name("X")]];
+    s16 render_y [[name("Y")]];
+    u16 render_width [[name("W")]];
+    u16 render_height [[name("H")]];
     u16 unknown_0e [[hidden]];
     u16 reserved_10 [[hidden]];
-    s16 anchor_x [[name("Anchor X"), comment("Signed offset")]];
-    s16 anchor_y [[name("Anchor Y"), comment("Signed offset")]];
+    s16 anchor_x [[name("Anchor X")]];
+    s16 anchor_y [[name("Anchor Y")]];
     u16 clip_width [[name("Clip W")]];
     u16 clip_height [[name("Clip H")]];
     u8 pad_1a[6] [[hidden]];
-    u32 rle_offset [[name("RLE Offset"), comment("Offset to RLE compressed data")]];
-} [[name("Frame"), color("FF80CC"), static]];
+    type::Hex<u32> rle_offset [[name("RLE Off"), comment("Offset to RLE data")]];
+} [[format("format_frame_meta"), color("FF80CC"), static]];
+
+fn format_frame_meta(auto f) {
+    return std::format("{}x{} @ ({},{}) RLE=0x{:X}", f.render_width, f.render_height, f.render_x, f.render_y, f.rle_offset);
+};
 
 // Sprite header (12 bytes)
 struct SpriteHeader {
-    u16 animation_count [[name("Anims"), comment("Number of animation groups")]];
-    u16 frame_meta_offset [[name("Frame Meta"), comment("Offset to frame metadata array")]];
-    u32 rle_offset [[name("RLE Data"), comment("Offset to RLE compressed pixels")]];
-    u32 palette_offset [[name("Palette"), comment("Offset to embedded CLUT")]];
-} [[name("Sprite Header"), color("FF8080"), static]];
+    u16 animation_count [[name("Anims")]];
+    type::Hex<u16> frame_meta_offset [[name("Frame Off")]];
+    type::Hex<u32> rle_offset [[name("RLE Off")]];
+    type::Hex<u32> palette_offset [[name("Pal Off")]];
+} [[format("format_sprite_hdr"), color("FF8080"), static]];
 
-// Sprite Sub-TOC entry - uses generic TOCEntry format
-// (id=sprite_id, size=data_size, offset=data_offset)
+fn format_sprite_hdr(auto h) {
+    return std::format("{} anims, frames@0x{:X}, RLE@0x{:X}, pal@0x{:X}", 
+        h.animation_count, h.frame_meta_offset, h.rle_offset, h.palette_offset);
+};
 
-// Full Sprite Data - includes header, animations, frames, RLE, and palette
-// Use this at (container_offset + sub_toc_entry.data_offset)
-struct SpriteData {
+// PSX 15-bit color for palette visualization
+// Uses inline color display so each entry shows its actual color
+struct PaletteColor {
+    u16 raw [[hidden]];
+    
+    // Extract components
+    u8 _r = (raw & 0x1F) << 3;
+    u8 _g = ((raw >> 5) & 0x1F) << 3;
+    u8 _b = ((raw >> 10) & 0x1F) << 3;
+} [[format("format_pal_color"), sealed, 
+    hex::inline_visualize("color", _r, _g, _b, 255)]];
+
+fn format_pal_color(auto c) {
+    u8 r = (c.raw & 0x1F) << 3;
+    u8 g = ((c.raw >> 5) & 0x1F) << 3;
+    u8 b = ((c.raw >> 10) & 0x1F) << 3;
+    return std::format("#{:02X}{:02X}{:02X}", r, g, b);
+};
+
+// Embedded sprite palette (256 colors = 512 bytes)
+struct SpritePalette {
+    PaletteColor colors[256] [[name("Colors")]];
+} [[name("Palette"), color("FF80FF")]];
+
+// RLE data block with command visualization
+struct RLEDataBlock {
+    u16 command_count [[name("Cmd Count")]];
+    RLECommand commands[command_count] [[name("Commands")]];
+    // Pixel data follows but size is variable (sum of all copy_counts)
+} [[name("RLE Data"), color("FFCC80")]];
+
+// Complete sprite with all components for visualization
+struct SpriteWithPalette<auto sprite_base, auto sprite_size> {
+    // Read header
+    SpriteHeader header @ sprite_base [[name("Header")]];
+    
+    // Read animations (immediately after header)
+    AnimationEntry animations[header.animation_count] @ (sprite_base + 12) [[name("Animations")]];
+    
+    // Calculate total frame count from animations
+    u32 _total_frames = 0;
+    // Note: Would need to sum animation frame counts - using approximation
+    
+    // Frame metadata at frame_meta_offset
+    // For visualization we'll show frames if we can determine count
+    
+    // Show embedded palette
+    SpritePalette palette @ (sprite_base + header.palette_offset) 
+        [[name("Palette"), comment("256-color CLUT")]];
+    
+    // Show RLE data header
+    RLEDataBlock rle_data @ (sprite_base + header.rle_offset)
+        [[name("RLE Data"), hex::visualize("hex_viewer", rle_data)]];
+};
+
+// Sprite Sub-TOC entry with embedded sprite data
+struct SpriteTOCEntry {
+    u32 sprite_id [[name("ID"), comment("Sprite lookup ID")]];
+    u32 size [[name("Size")]];
+    type::Hex<u32> offset [[name("Offset")]];
+} [[format("format_sprite_toc"), color("FF8080"), static]];
+
+fn format_sprite_toc(auto e) {
+    return std::format("Sprite {} ({} bytes @ 0x{:X})", e.sprite_id, e.size, e.offset);
+};
+
+// Individual sprite data block - shown when navigating to sprite offset
+struct SpriteDataFull {
+    u128 _sprite_base = $ [[hidden]];
+    
+    // Header (12 bytes)
     SpriteHeader header [[name("Header")]];
+    
+    // Animations (12 bytes each, immediately after header)
     AnimationEntry animations[header.animation_count] [[name("Animations")]];
-    // Frames start at header.frame_meta_offset from sprite start
-    // Frame count = sum of all animation.frame_count values
-    // RLE data at header.rle_offset
-    // Palette (512 bytes) at header.palette_offset
-} [[name("Sprite Data"), color("FF8080")]];
+    
+    // Calculate approximate frame count (sum of animation frame counts)
+    // We'll read up to 100 frames max for safety
+    u16 _approx_frames = 0;
+    
+    // Frame metadata is at header.frame_meta_offset from sprite start
+    // For now, show first few frames based on first animation
+    if (header.animation_count > 0) {
+        SpriteFrameMetadata frames[animations[0].frame_count] 
+            @ (_sprite_base + header.frame_meta_offset) [[name("Frames (Anim 0)")]];
+    }
+    
+    // Embedded palette at header.palette_offset
+    SpritePalette palette @ (_sprite_base + header.palette_offset) 
+        [[name("Palette"), comment("256-color CLUT embedded in sprite")]];
+    
+    // RLE data header at header.rle_offset
+    RLEDataBlock rle @ (_sprite_base + header.rle_offset)
+        [[name("RLE Commands"), hex::visualize("hex_viewer", rle)]];
+} [[name("Sprite"), color("FF8080")]];
+
+// Sprite container with full parsing of first few sprites
+struct SpriteContainerFull {
+    u128 _container_base = $ [[hidden]];
+    u32 sprite_count [[name("Count")]];
+    SpriteTOCEntry toc[sprite_count] [[name("Sprite TOC")]];
+    
+    // Parse first sprite if available
+    if (sprite_count > 0) {
+        SpriteDataFull sprite_0 @ (_container_base + toc[0].offset) 
+            [[name("Sprite 0")]];
+    }
+    if (sprite_count > 1) {
+        SpriteDataFull sprite_1 @ (_container_base + toc[1].offset) 
+            [[name("Sprite 1")]];
+    }
+    if (sprite_count > 2) {
+        SpriteDataFull sprite_2 @ (_container_base + toc[2].offset) 
+            [[name("Sprite 2")]];
+    }
+    if (sprite_count > 3) {
+        SpriteDataFull sprite_3 @ (_container_base + toc[3].offset) 
+            [[name("Sprite 3")]];
+    }
+    if (sprite_count > 4) {
+        SpriteDataFull sprite_4 @ (_container_base + toc[4].offset) 
+            [[name("Sprite 4")]];
+    }
+    // Additional sprites can be accessed via TOC offsets
+} [[name("Sprite Container"), color("FF8080")]];
+
+// Simple sprite container (just TOC, no deep parsing)
+struct SpriteContainer {
+    u128 _base = $ [[hidden]];
+    u32 sprite_count [[name("Count")]];
+    SpriteTOCEntry sprites[sprite_count] [[name("Sprite TOC")]];
+} [[name("Sprite Container"), color("FF8080")]];
 
 // =============================================================================
 // Tilemap Entry - Asset 200 (0x0C8)
@@ -1055,18 +1222,18 @@ struct TertiaryStageWithAssets {
         LayerEntry layers3[toc[3].size / 92] @ (_base + toc[3].offset) [[name("Layers")]];
     }
     
-    // Search for Asset 600 (Sprite Container)
+    // Search for Asset 600 (Sprite Container) - with full parsing
     if (toc_count > 0 && toc[0].asset_type == 600) {
-        SpriteContainerAsset sprites0 @ (_base + toc[0].offset) [[name("Sprites")]];
+        SpriteContainerFull sprites0 @ (_base + toc[0].offset) [[name("Sprites")]];
     }
     if (toc_count > 1 && toc[1].asset_type == 600) {
-        SpriteContainerAsset sprites1 @ (_base + toc[1].offset) [[name("Sprites")]];
+        SpriteContainerFull sprites1 @ (_base + toc[1].offset) [[name("Sprites")]];
     }
     if (toc_count > 2 && toc[2].asset_type == 600) {
-        SpriteContainerAsset sprites2 @ (_base + toc[2].offset) [[name("Sprites")]];
+        SpriteContainerFull sprites2 @ (_base + toc[2].offset) [[name("Sprites")]];
     }
     if (toc_count > 3 && toc[3].asset_type == 600) {
-        SpriteContainerAsset sprites3 @ (_base + toc[3].offset) [[name("Sprites")]];
+        SpriteContainerFull sprites3 @ (_base + toc[3].offset) [[name("Sprites")]];
     }
 } [[name("Stage"), color("80FFCC")]];
 
