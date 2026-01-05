@@ -1518,4 +1518,112 @@ No MDEC decompression occurs during normal level gameplay - all graphics are til
 
 ---
 
-*Last updated: January 4, 2026*
+## Primary Section Structure Investigation (2026-01-05)
+
+**Status:** PARTIAL - Structure identified but data format unclear
+
+### Primary Section TOC
+
+Each level's primary section starts with a table of contents:
+
+```
+Offset  Size  Description
+------  ----  -----------
+0x00    u32   Asset count (typically 3)
+0x04    12×N  Asset entries (12 bytes each)
+
+Each asset entry:
+  +00   u32   Asset type ID (0x258, 0x259, 0x25A)
+  +04   u32   Offset within primary section
+  +08   u32   Size in bytes
+```
+
+**Example (PHRO level):**
+| Type | Offset | Size | Description |
+|------|--------|------|-------------|
+| 0x258 | 0x7FF50 | 40 | Level metadata |
+| 0x259 | 0x1F120 | 524,152 | Main data blob |
+| 0x25A | 0x94 | 651,416 | Encompasses entire section |
+
+Note: 0x25A encompasses 0x258 and 0x259 - offsets are all relative to primary section start.
+
+### Asset 0x258 - Level Metadata (40 bytes)
+
+```
+Offset  Size  Field        Value (PHRO)  Description
+------  ----  -----        -----------   -----------
+0x00    u16   width        2171          Level width in pixels
+0x02    u16   height       1114          Level height in pixels
+0x04    u16[16] counts     58,26,25...   Unknown (sum=373, possibly layer/entity counts)
+0x24    u16   color1       0x7C1F        PSX 15-bit color (gray)
+0x26    u16   color2       0x7FFF        PSX 15-bit color (white)
+```
+
+The 16 count values (58, 26, 25, 25, 24, 23, 22, 22, 21, 20, 20, 19, 18, 17, 17, 16)
+sum to 373. Purpose unclear - possibly parallax layer depths or entity counts per layer.
+
+### Asset 0x259 - Main Data (524 KB for PHRO)
+
+Contains two distinct regions:
+
+**Region 1 (bytes 0 to ~359,000 = 68% of data):**
+- Byte values mostly in 0xA0-0xD0 range
+- Contains 0x80+ bytes that could be RLE markers
+- Does NOT decode correctly with documented RLE format
+- Purpose unclear - possibly tile indices or compressed graphics
+
+**Region 2 (bytes ~359,000+):**
+Found structured 36-byte records starting around offset 0x57BB8:
+
+```
+Offset  Size  Field       Description
+------  ----  -----       -----------
+0x00    i16   type        Record type (usually 2)
+0x02    i16   x_offset    X position offset (small signed value)
+0x04    i16   y_offset    Y position offset (small signed value)
+0x06    u16   width       Width in pixels (10-60 range)
+0x08    u16   height      Height in pixels (10-70 range)
+0x0A    18B   unknown     Additional fields (flags, more coords?)
+0x1C    u32   data_off    Offset into Region 1
+0x20    u32   padding     Usually zeros
+```
+
+**Observed records (PHRO):**
+| # | Type | Position | Size | Data Offset |
+|---|------|----------|------|-------------|
+| 0 | 2 | (-4, -1) | 22×21 | 0 |
+| 1 | 2 | (-3, -2) | 20×22 | 356 |
+| 2 | 2 | (-3, -2) | 20×20 | 668 |
+| 3 | 2 | (-4, 1) | 21×18 | 976 |
+| 4 | 2 | (-2, 2) | 21×19 | 1288 |
+
+Data offsets increase by ~300-400 bytes, suggesting variable-size sprite data.
+
+### Failed Decoding Attempts
+
+| Attempt | Result |
+|---------|--------|
+| RLE decode (0x80+ = run length) | Produced 21K pixels instead of ~2800 |
+| Render as 8-bit indexed | Noise/static |
+| Render as 4-bit indexed | Still noise |
+| Render as 1-bit bitmap | Noise |
+| Various widths (41, 58, 136, 146) | No recognizable image |
+
+### Hypothesis
+
+The 36-byte records are entity/sprite metadata pointing to compressed sprite data
+in Region 1, but the compression format is NOT the simple RLE documented elsewhere.
+Possible alternatives:
+- Different RLE variant (control word based?)
+- LZ-style compression
+- Raw tile indices requiring a separate tileset
+
+### Investigation Needed
+
+1. Trace how the game reads this data at runtime (PCSX-Redux)
+2. Compare with Secondary section which has known working sprite data
+3. Check if the "77 count" at offset 0x28 (after main TOC) relates to these records
+
+---
+
+*Last updated: January 5, 2026*
