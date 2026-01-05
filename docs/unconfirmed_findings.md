@@ -525,22 +525,31 @@ Container:
 
 ### Sprite Header (24 bytes)
 
+**Status:** DATA-VERIFIED via analysis of 97 sprites across all levels (2026-01-05)
+
 ```
 Offset  Size  Field              Description
 ------  ----  -----              -----------
 0x00    2     magic              Always 1
 0x02    2     header_size        Always 24 (0x18)
 0x04    2     frame_meta_size    Total bytes for all frame metadata
-0x06    2     padding            Usually 0
+0x06    2     padding            Always 0
 0x08    4     pixel_size         Total bytes of RLE pixel data
 0x0C    4     sprite_id          Same as Sub-TOC ID
 0x10    2     frame_count        Number of animation frames
-0x12    2     unknown_12         ?
-0x14    2     unknown_14         ?
+0x12    2     reserved           Always 0 (reserved field)
+0x14    2     animation_mode     Boolean: 0 or 1 (see hypothesis below)
 0x16    2     clut_value         CLUT VRAM position encoding (see below)
 ```
 
 **Bytes per frame:** `frame_meta_size / frame_count` = 36 (0x24) bytes
+
+**animation_mode Hypothesis (offset 0x14):**
+- Value is always 0 or 1 (boolean flag)
+- 67 sprites have animation_mode=1, 30 sprites have animation_mode=0
+- Sprites with mode=1: avg 6.8 frames
+- Sprites with mode=0: avg 8.5 frames
+- Possible meanings: "has_default_animation", "is_looping", or "playback_mode"
 
 ### CLUT Value Encoding (2026-01-04)
 
@@ -641,26 +650,43 @@ b = ((color >> 10) & 0x1F) << 3;
 
 ### Frame Metadata (36 bytes per frame)
 
+**Status:** DATA-VERIFIED via analysis of 708 frames across all levels (2026-01-05)
+
 From `FUN_8007bebc` (frame accessor) and `FUN_8007bc3c` (sprite context init):
 
 ```
 Offset  Size  Field              Description
 ------  ----  -----              -----------
-0x00    ?     unknown_00         
-0x0A    2     width              Frame width in pixels
-0x0C    2     height             Frame height in pixels
-0x0E    ?     unknown_0E         
-0x20    4     pixel_offset       Offset to RLE data for this frame
-0x24    -     (end of frame)
+0x00    4     runtime_ptr        Usually 0 in file, pointer at runtime
+0x04    2     flags              Render flags: 1, 2, or 3
+0x06    2     render_x           Signed X render offset
+0x08    2     render_y           Signed Y render offset
+0x0A    2     render_width       Frame width in pixels
+0x0C    2     render_height      Frame height in pixels
+0x0E    2     offset_adjust_x    Signed X offset adjustment (animation tweak)
+0x10    2     offset_adjust_y    Signed Y offset adjustment (animation tweak)
+0x12    2     anchor_x           Signed anchor X (hotspot)
+0x14    2     anchor_y           Signed anchor Y (hotspot)
+0x16    2     clip_width         Clip rectangle width
+0x18    2     clip_height        Clip rectangle height
+0x1A    2     reserved_1A        Always 0
+0x1C    2     collision_flag     Boolean: 0 or 1 (hitbox active?)
+0x1E    2     reserved_1E        Always 0
+0x20    4     rle_offset         Offset to RLE data for this frame
 ```
 
-The remaining 28 bytes likely contain **exposure sheet data**:
-- X/Y offset (hotspot/origin)
-- Duration (frames to display)
-- Flip flags
-- Palette override
-- Sound trigger
-- Hit/hurt box offsets
+**offset_adjust_x/y Evidence (offsets 0x0E-0x11):**
+These are signed 16-bit values representing per-frame position adjustments:
+```
+PHRO Sp11 Fr3: sz=45x71 offset_adjust=(0,-23) anchor=(-18,-62)  <- Y adjustment
+SCIE Sp2  Fr0: sz=47x62 offset_adjust=(8, 0)  anchor=(-7,-53)   <- X adjustment
+TMPL Sp11 Fr2: sz=45x55 offset_adjust=(-8,0)  anchor=(-19,-39)  <- negative X
+```
+
+**collision_flag Evidence (offset 0x1C):**
+- 671 frames have value 0
+- 37 frames have value 1
+- Likely indicates whether hitbox/collision is active for this frame
 
 ### Sprite Context Structure (20 bytes, runtime)
 
