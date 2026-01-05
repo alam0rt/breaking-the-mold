@@ -661,19 +661,8 @@ struct PaletteContainerAsset {
     u32 palette_count [[name("Count"), comment("Number of palettes")]];
     SubTOCEntry palette_toc[palette_count] [[name("Palette TOC")]];
     
-    // Parse first few palettes inline for visualization
-    if (palette_count > 0 && palette_toc[0].size >= 512) {
-        PSXColor palette0[256] @ (_container_base + palette_toc[0].offset) [[name("Palette 0")]];
-    }
-    if (palette_count > 1 && palette_toc[1].size >= 512) {
-        PSXColor palette1[256] @ (_container_base + palette_toc[1].offset) [[name("Palette 1")]];
-    }
-    if (palette_count > 2 && palette_toc[2].size >= 512) {
-        PSXColor palette2[256] @ (_container_base + palette_toc[2].offset) [[name("Palette 2")]];
-    }
-    if (palette_count > 3 && palette_toc[3].size >= 512) {
-        PSXColor palette3[256] @ (_container_base + palette_toc[3].offset) [[name("Palette 3")]];
-    }
+    // Note: Palettes are 512 bytes each (256 x 16-bit PSX colors)
+    // Access at: container_base + palette_toc[n].offset
 } [[name("Palette Container"), color("FF80FF")]];
 
 // =============================================================================
