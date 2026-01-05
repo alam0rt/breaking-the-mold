@@ -639,29 +639,37 @@ These containers exist in "gaps" between level data - sectors not referenced by 
 level's primary/secondary/tertiary offsets. They were discovered by scanning unreferenced
 sectors and finding valid container TOC signatures.
 
-| Container | File Offset | Size | World |
-|-----------|-------------|------|-------|
-| SCIE_bonus | 0x0098F800 | 256 KB | Science |
-| TMPL_bonus | 0x00EB7000 | 252 KB | Temple |
-| BOIL_bonus | 0x01355000 | 248 KB | Boiler |
-| SNOW_bonus | 0x0173E800 | 245 KB | Snow |
-| FOOD_bonus | 0x01AFB800 | 252 KB | Food |
-| GLID_bonus | 0x01ED8800 | 255 KB | Gliding |
-| CAVE_bonus | 0x02297800 | 254 KB | Cave |
-| WEED_bonus | 0x025AB000 | 254 KB | Weed |
-| EGGS_bonus | 0x02880800 | 253 KB | Eggs |
-| CLOU_bonus | 0x02D1B000 | 252 KB | Clouds |
-| SEVN_bonus | 0x032D7000 | 248 KB | 1970s |
-| SOAR_bonus | 0x0357A800 | 245 KB | Soaring |
-| CRYS_bonus | 0x0397F800 | 244 KB | Crystal |
-| WIZZ_bonus | 0x03E93000 | 250 KB | Wizard |
-| RUNN_bonus | 0x03FFC800 | 249 KB | Runner |
-| KLOG_bonus | 0x044AA800 | 236 KB | Klogg |
-| EVIL_bonus | 0x047DC800 | 654 KB | Evil Engine |
+**UPDATE 2026-01-06:** These are NOT bonus rooms - they are **world completion password screens**.
+Skullmonkeys has no memory card support, so after completing each world, players are shown
+a password screen they can use to return to that point. The final container is the "YOU WIN"
+victory screen.
+
+| Container | File Offset | Size | Content |
+|-----------|-------------|------|---------|
+| Password 1 | 0x00EB7000 | 252 KB | World 1 completion - Gray theme |
+| Password 2 | 0x01355000 | 248 KB | World 2 completion - Gray theme |
+| Password 3 | 0x0173E800 | 245 KB | World 3 completion - Magenta theme |
+| Password 4 | 0x01AFB800 | 252 KB | World 4 completion - Magenta theme |
+| Password 5 | 0x01ED8800 | 255 KB | World 5 completion - Magenta theme |
+| Password 6 | 0x02297800 | 254 KB | World 6 completion - Magenta theme |
+| Password 7 | 0x025AB000 | 254 KB | World 7 completion - Magenta theme |
+| Password 8 | 0x02880800 | 253 KB | World 8 completion - Magenta theme |
+| Password 9 | 0x02D1B000 | 252 KB | World 9 completion - Magenta theme |
+| Password 10 | 0x032D7000 | 248 KB | World 10 completion - Magenta theme |
+| Password 11 | 0x0357A800 | 245 KB | World 11 completion - Magenta theme |
+| Password 12 | 0x0397F800 | 244 KB | World 12 completion - Magenta theme |
+| Password 13 | 0x03E93000 | 250 KB | World 13 completion - Magenta theme |
+| Password 14 | 0x03FFC800 | 249 KB | World 14 completion - Magenta theme |
+| Password 15 | 0x044AA800 | 236 KB | World 15 completion - Magenta theme |
+| YOU WIN | 0x047DC800 | 654 KB | **Final victory screen** - Magenta theme |
+
+**Background colors:**
+- Passwords 1-2: Gray `RGB(122-130, 122-130, 142)` (early worlds)
+- Passwords 3-16: Magenta `RGB(150, 0, 106)` = `#96006A` (main game theme)
 
 ### Container Structure
 
-Each bonus room container has an identical 11-asset structure:
+Each password screen container has an identical 11-asset structure:
 
 | Asset ID | Hex | Size Range | Description |
 |----------|-----|------------|-------------|
@@ -686,12 +694,12 @@ Same format as regular level tiles, verified via Ghidra decompilation of `CopyTi
 - **Tile count**: Stored at Asset 100 offset +0x10 (u16)
 - **Total size**: `tile_count × 256` bytes
 
-Example: SCIE_bonus has 562 tiles × 256 bytes = 143,872 bytes (matches Asset 300 size exactly)
+Example: Password screen 5 has 562 tiles × 256 bytes = 143,872 bytes (matches Asset 300 size exactly)
 
-### Layer Rendering (EXTRACTION-VERIFIED 2026-01-04)
+### Layer Rendering (VERIFIED 2026-01-06)
 
-Bonus room layers can be fully rendered using Assets 200+201+300+301+400.
-All 17 bonus rooms render to 480×256 pixels (30×16 tiles).
+Password screen layers can be fully rendered using Assets 200+201+300+301+400.
+All 16 screens render to 320×256 pixels (20×16 tiles) using tilemap 3 (the largest).
 
 **Asset 200 - Tilemap Container (Sub-TOC format):**
 ```
@@ -738,19 +746,24 @@ Offset  Size   Description
 
 ### Observation: Identical Sprite/Audio Sizes
 
-All 17 bonus rooms have nearly identical Asset 600 and Asset 400 sizes:
+All 16 password screens have nearly identical Asset 600 and Asset 400 sizes:
 - Asset 600 (sprites): 52,368 bytes in all containers
 - Asset 400 (palettes): 2,100 bytes in all containers (4 palettes × 512 bytes + header)
 
-This suggests bonus rooms share common sprite/palette templates with world-specific tile graphics.
+This suggests password screens share common sprite/palette templates with screen-specific tile graphics.
 
-### Loading Mechanism (TBD)
+### Loading Mechanism
 
-How the game references these unreferenced containers is not yet understood:
-- They are NOT in the level metadata table
-- May be loaded via hardcoded sector offsets
-- May be referenced by the in-level bonus room trigger code
-- Requires further investigation of bonus room loading functions
+These password screens are NOT in the level metadata table. They are loaded via a separate
+code path triggered when the player completes a world:
+
+1. World completion triggers password screen display
+2. Game loads the corresponding password container by sector offset
+3. Renders the tilemap showing the password for that world checkpoint
+4. Player can write down password to resume later (no memory card save)
+
+The sector offsets may be stored in a hardcoded table or calculated from world index.
+Further investigation of the world completion code path is needed.
 
 ## Entity Spawn System (DISCOVERED 2026-01-05)
 

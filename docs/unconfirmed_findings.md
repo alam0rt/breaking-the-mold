@@ -105,13 +105,73 @@ Run `python3 scripts/blb_asset_coverage.py` for full analysis.
 | Location | Size | Content |
 |----------|------|---------|
 | Sectors 2-200 | 407 KB | Title screen/menu tile graphics (raw 4bpp) |
-| 12 gap containers | 2.9 MB | Complete asset containers (11 entries each) - likely bonus rooms |
+| 16 gap containers | 3.6 MB | **Stage completion/password screens** (see below) |
 | Small gaps | ~90 KB | Level-specific tile data |
 | End of file | ~2.4 MB | Additional level containers |
 
-The gap containers contain full asset sets (100, 200, 300, 400, 600, 601, 602) but are
-NOT referenced in the level metadata table. These are likely bonus room or secret stage data
-that gets loaded via a different code path.
+---
+
+## Stage Completion Screens Discovery (2026-01-06) - VERIFIED ✓
+
+The 16 "gap containers" between levels are **world completion password screens**.
+Skullmonkeys has no memory card support, so these screens display the password
+needed to return to a specific world.
+
+### All 16 Password/Completion Screens
+
+| # | Offset | BG Color | Content |
+|---|--------|----------|---------|
+| 1 | 0x00EB7000 | Gray (122,122,142) | Password screen - World 1 complete |
+| 2 | 0x01355000 | Gray (130,130,142) | Password screen - World 2 complete |
+| 3 | 0x0173E800 | Magenta (150,0,106) | Password screen - World 3 complete |
+| 4 | 0x01AFB800 | Magenta (150,0,106) | Password screen - World 4 complete |
+| 5 | 0x01ED8800 | Magenta (150,0,106) | Password screen - World 5 complete |
+| 6 | 0x02297800 | Magenta (150,0,106) | Password screen - World 6 complete |
+| 7 | 0x025AB000 | Magenta (150,0,106) | Password screen - World 7 complete |
+| 8 | 0x02880800 | Magenta (150,0,106) | Password screen - World 8 complete |
+| 9 | 0x02D1B000 | Magenta (150,0,106) | Password screen - World 9 complete |
+| 10 | 0x032D7000 | Magenta (150,0,106) | Password screen - World 10 complete |
+| 11 | 0x0357A800 | Magenta (150,0,106) | Password screen - World 11 complete |
+| 12 | 0x0397F800 | Magenta (150,0,106) | Password screen - World 12 complete |
+| 13 | 0x03E93000 | Magenta (150,0,106) | Password screen - World 13 complete |
+| 14 | 0x03FFC800 | Magenta (150,0,106) | Password screen - World 14 complete |
+| 15 | 0x044AA800 | Magenta (150,0,106) | Password screen - World 15 complete |
+| 16 | 0x047DC800 | Magenta (150,0,106) | **"YOU WIN" final completion screen** |
+
+### Container Format
+
+Each container has the standard 11-asset level segment structure:
+- Asset 100: Tile header (36 bytes) - 30×16 level dimensions
+- Asset 200: Tilemap container (5 tilemaps)
+- Asset 201: Layer entries (5 layers)
+- Asset 300: Tile pixels (8bpp, ~540 tiles each)
+- Asset 301: Palette indices per tile
+- Asset 302: Tile size flags
+- Asset 400: Palette container (4 × 256-color palettes)
+- Asset 401: Animation config
+- Asset 600: Tile graphics
+- Asset 601: Collision/grid data
+- Asset 602: Raw palette (1 × 16-color CLUT)
+
+### Rendering
+
+The main background uses **tilemap 3** (320 tiles = 20×16 grid), rendered at 320×256 pixels.
+
+```bash
+# Rendered images saved to:
+ls /tmp/gap_containers/
+# gap_01_FINN_to_BOIL.png through gap_16_EVIL_to_END.png
+```
+
+### Notes
+
+- Gaps 1-2 use gray backgrounds (early game theme)
+- Gaps 3-16 all share magenta `#96006A` (main game theme)
+- Gap 16 is largest (675 tiles) - contains the elaborate "YOU WIN" victory screen
+- These are NOT in the level metadata table - loaded via separate code path
+- Password screen loading likely triggered by world completion event
+
+---
 
 ### Asset Type Coverage (within referenced data)
 
