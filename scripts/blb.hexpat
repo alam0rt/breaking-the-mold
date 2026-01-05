@@ -27,8 +27,15 @@
 #pragma description Skullmonkeys GAME.BLB Archive
 #pragma endian little
 
+// Standard library imports
 import std.mem;
 import std.string;
+import std.core;
+import std.sys;
+
+// Type library imports - better formatting and color display
+import type.base;   // type::Hex<T> for hex-formatted integers
+import type.color;  // type::RGBA5551 for PSX 15-bit colors
 
 // =============================================================================
 // Constants
@@ -62,6 +69,10 @@ fn format_psx_color(auto c) {
     u8 b8 = c.b << 3;
     return std::format("#{:02X}{:02X}{:02X} (STP:{})", r8, g8, b8, c.stp);
 };
+
+// PSX Color type alias - uses type::RGBA for proper color visualization in ImHex
+// PSX uses 15-bit color: 5 bits R, 5 bits G, 5 bits B, 1 bit STP (semi-transparency)
+using PSXColor = type::RGBA5551;
 
 // Format level name with null trimming
 fn format_level_name(auto entry) {
@@ -123,15 +134,11 @@ fn psx_u16_to_rgba32(u16 color16) {
     return r | (g << 8) | (b << 16) | (a << 24);
 };
 
-// PSX 15-bit color (XBGR1555 format) - raw bitfield
-bitfield PSXColor {
-    r : 5 [[comment("Red 0-31, multiply by 8 for 8-bit")]];
-    g : 5 [[comment("Green 0-31")]];
-    b : 5 [[comment("Blue 0-31")]];
-    stp : 1 [[comment("Semi-transparency processing flag")]];
-} [[sealed, transform("psx_color_to_rgba32"), format("format_psx_color"), color("8080FF")]];
+// PSX 15-bit color format: 5-bit R, 5-bit G, 5-bit B, 1-bit STP (semi-transparency)
+// Uses type::RGBA5551 which provides automatic color visualization in ImHex
+// Note: PSXColor alias is defined in the imports section above
 
-// 256-color palette (CLUT) - 512 bytes, transformed to RGBA32 for visualizer
+// 256-color palette (CLUT) - 512 bytes, using standard RGBA5551 type
 struct Palette256 {
     PSXColor colors[256];
 } [[name("CLUT Palette"), color("FF80FF"), comment("256-entry color lookup table (512 bytes)")]];
@@ -185,7 +192,7 @@ struct Palette256Raw {
 struct TOCEntry {
     u32 id [[name("ID"), comment("Asset type or entry index")]];
     u32 size [[name("Size"), comment("Data size in bytes")]];
-    u32 offset [[name("Offset"), comment("Offset from parent start")]];
+    type::Hex<u32> offset [[name("Offset"), comment("Offset from parent start")]];
 } [[static, color("80FFCC")]];
 
 // =============================================================================
@@ -445,7 +452,7 @@ struct SectorEntry {
     u8 unknown_byte [[hidden]];
     char code[5] [[name("Code"), comment("4-char null-terminated ID")]];
     char short_name[4] [[name("Short"), comment("Truncated description")]];
-    u16 sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
+    type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
     u16 sector_count [[name("Count"), comment("Number of sectors")]];
 } [[name("Sector Entry"), format("format_sector_offset"), color("80CCCC"), static]];
 
@@ -455,7 +462,7 @@ struct SectorEntry {
 
 struct LevelEntry {
     // Primary data pointers (0x00-0x0B)
-    u16 sector_offset [[name("Sector"), comment("Primary data sector offset")]];
+    type::Hex<u16> sector_offset [[name("Sector"), comment("Primary data sector offset")]];
     u16 sector_count [[name("Count"), comment("Primary data sector count")]];
     u16 unknown_04 [[hidden]];
     u16 unknown_06 [[name("Unk06"), comment("Unknown count (7-20)")]];
@@ -522,7 +529,8 @@ struct CreditsEntry {
 //   3 = Level - Load and play level from level table at 0x000
 //   4 = SpecialSector4 - Special sector loading (uses sector order at 0xCD0)
 //   5 = SpecialSector5 - Initial sector loading (similar to 4)
-//   6 = EndSpecial - Sequence terminator, exits playback loop
+//   6 = Mode6Sector - Load data from mode6_sectors table at 0xECC (17 entries)
+//                     Accessed as: header + (level_index * 4) + 0xECC
 enum PlaybackMode : u8 {
     Invalid = 0,
     Movie = 1,
@@ -530,8 +538,25 @@ enum PlaybackMode : u8 {
     Level = 3,
     SpecialSector4 = 4,
     SpecialSector5 = 5,
-    EndSpecial = 6
+    Mode6Sector = 6
 };
+
+// =============================================================================
+// Mode 6 Sector Entry (4 bytes)
+// =============================================================================
+
+// Mode 6 sector entries store CD sector location for special playback sequences.
+// Table starts at 0xECC with 17 entries (68 bytes).
+// NOTE: Entry[0] overlaps with sectors[31].sector_offset/sector_count!
+// Game code accesses: header + (index * 4) + 0xECC
+//
+// These entries point to level asset data used during mode 6 playback.
+// Each entry has ~110-132 sectors of data (225-270 KB).
+
+struct Mode6SectorEntry {
+    type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
+    u16 sector_count [[name("Count"), comment("Number of sectors")]];
+} [[static, color("CC80FF")]];
 
 // =============================================================================
 // Playback Sequence Entry
@@ -582,6 +607,7 @@ struct PlaybackSequenceData {
     //   mode=2: index into credits[2] at 0xF10
     //   mode=3: index into levels[26] at 0x000
     //   mode=4/5: index into sectors[32] at 0xCD0
+    //   mode=6: index into mode6_sectors[17] at 0xECC (0-16)
     u8 indices[110] [[name("Indices"), comment("Table index for each step"), color("80FF80")]];
 } [[name("Playback Sequence"), color("CC80CC")]];
 
@@ -592,11 +618,18 @@ struct PlaybackSequenceData {
 struct BLBHeader {
     LevelEntry levels[26] [[name("Levels"), comment("Level metadata (26 entries)"), color("40CCFF")]];
     MovieEntry movies[13] [[name("Movies"), comment("Movie table (13 entries)"), color("FFFF40")]];
-    u8 movie_sector_pad[8] [[hidden]];
+    u8 movie_sector_pad[4] [[hidden]];  // 4-byte gap between movies (0xCCC) and sectors (0xCD0)
     SectorEntry sectors[32] [[name("Sectors"), comment("Sector table (32 entries)"), color("80CCCC")]];
-    u32 unknown_array[16] [[name("Unknown"), comment("Unknown u32 array")]];
+    
+    // Mode 6 sector table: 16 additional entries at 0xED0-0xF0F (64 bytes)
+    // NOTE: Entry[0] is at 0xECC, overlapping with sectors[31].sector_offset/count
+    // The game accesses all 17 entries via: header + (index * 4) + 0xECC
+    // These point to level asset data for mode 6 playback sequences
+    Mode6SectorEntry mode6_sectors[16] [[name("Mode6 Sectors"), 
+        comment("Extra mode 6 entries (entry 0 is in sectors[31])"), color("CC80FF")]];
+    
     CreditsEntry credits[2] [[name("Credits"), comment("Credits entries (only 2 complete)"), color("FFCC80")]];
-    u8 gap_to_counts[9] [[hidden]];
+    u8 gap_to_counts[9] [[hidden]];  // Gap from credits end (0xF28) to counts (0xF31)
     
     u8 level_count [[name("Level Count"), comment("Number of levels (26)"), color("40FF40")]];
     u8 movie_count [[name("Movie Count"), comment("Number of movies (13)"), color("FFFF40")]];
@@ -626,7 +659,7 @@ BLBHeader header @ 0x00 [[name("GAME.BLB Header"), comment("Main archive header"
 struct SegmentTOCEntry {
     u32 asset_type [[name("Type"), comment("Asset type ID"), color("FFCC40")]];
     u32 size [[name("Size"), comment("Asset size in bytes")]];
-    u32 offset [[name("Offset"), comment("Offset from segment start")]];
+    type::Hex<u32> offset [[name("Offset"), comment("Offset from segment start")]];
 } [[static]];
 
 // Format segment TOC entry
@@ -673,7 +706,7 @@ struct PaletteContainerAsset {
 struct TilemapSubEntry {
     u32 layer_id [[name("Layer"), comment("Layer index")]];
     u32 size [[name("Size"), comment("Tilemap data size in bytes")]];
-    u32 offset [[name("Offset"), comment("Offset from container start")]];
+    type::Hex<u32> offset [[name("Offset"), comment("Offset from container start")]];
     
     // Calculate tile count from size (each tile is 2 bytes)
     u32 tile_count = size / 2 [[name("Tiles"), color("80CCFF")]];
@@ -1055,6 +1088,9 @@ struct SecondarySubBlock {
 // Complete Level Data - Primary + Secondary + all Tertiary stages
 // -----------------------------------------------------------------------------
 struct LevelData<auto level_idx> {
+    // Set dynamic display name from level data
+    std::core::set_display_name(this, std::format("{} (Lv{})", header.levels[level_idx].name, level_idx));
+    
     // Get the level entry from header
     u16 _pri_sector = header.levels[level_idx].sector_offset;
     u16 _pri_count = header.levels[level_idx].sector_count;
@@ -1091,7 +1127,7 @@ struct LevelData<auto level_idx> {
     if (_tert_block_count >= 6 && header.levels[level_idx].tert_sub_off[5] > 0) {
         TertiaryStageWithAssets stage5 @ (header.levels[level_idx].tert_sub_off[5] * SECTOR_SIZE) [[name("Stage 5")]];
     }
-};
+} [[color("40CCFF")]];
 
 // -----------------------------------------------------------------------------
 // All Levels Container - uses level_count from header
@@ -1099,32 +1135,32 @@ struct LevelData<auto level_idx> {
 struct AllLevels {
     // Instantiate level data for each level in the header
     // Note: ImHex doesn't support true dynamic loops, so we use conditionals
-    if (header.level_count > 0) LevelData<0> level_00 [[name("Level 00")]];
-    if (header.level_count > 1) LevelData<1> level_01 [[name("Level 01")]];
-    if (header.level_count > 2) LevelData<2> level_02 [[name("Level 02")]];
-    if (header.level_count > 3) LevelData<3> level_03 [[name("Level 03")]];
-    if (header.level_count > 4) LevelData<4> level_04 [[name("Level 04")]];
-    if (header.level_count > 5) LevelData<5> level_05 [[name("Level 05")]];
-    if (header.level_count > 6) LevelData<6> level_06 [[name("Level 06")]];
-    if (header.level_count > 7) LevelData<7> level_07 [[name("Level 07")]];
-    if (header.level_count > 8) LevelData<8> level_08 [[name("Level 08")]];
-    if (header.level_count > 9) LevelData<9> level_09 [[name("Level 09")]];
-    if (header.level_count > 10) LevelData<10> level_10 [[name("Level 10")]];
-    if (header.level_count > 11) LevelData<11> level_11 [[name("Level 11")]];
-    if (header.level_count > 12) LevelData<12> level_12 [[name("Level 12")]];
-    if (header.level_count > 13) LevelData<13> level_13 [[name("Level 13")]];
-    if (header.level_count > 14) LevelData<14> level_14 [[name("Level 14")]];
-    if (header.level_count > 15) LevelData<15> level_15 [[name("Level 15")]];
-    if (header.level_count > 16) LevelData<16> level_16 [[name("Level 16")]];
-    if (header.level_count > 17) LevelData<17> level_17 [[name("Level 17")]];
-    if (header.level_count > 18) LevelData<18> level_18 [[name("Level 18")]];
-    if (header.level_count > 19) LevelData<19> level_19 [[name("Level 19")]];
-    if (header.level_count > 20) LevelData<20> level_20 [[name("Level 20")]];
-    if (header.level_count > 21) LevelData<21> level_21 [[name("Level 21")]];
-    if (header.level_count > 22) LevelData<22> level_22 [[name("Level 22")]];
-    if (header.level_count > 23) LevelData<23> level_23 [[name("Level 23")]];
-    if (header.level_count > 24) LevelData<24> level_24 [[name("Level 24")]];
-    if (header.level_count > 25) LevelData<25> level_25 [[name("Level 25")]];
+    if (header.level_count > 0) LevelData<0> level_00;
+    if (header.level_count > 1) LevelData<1> level_01;
+    if (header.level_count > 2) LevelData<2> level_02;
+    if (header.level_count > 3) LevelData<3> level_03;
+    if (header.level_count > 4) LevelData<4> level_04;
+    if (header.level_count > 5) LevelData<5> level_05;
+    if (header.level_count > 6) LevelData<6> level_06;
+    if (header.level_count > 7) LevelData<7> level_07;
+    if (header.level_count > 8) LevelData<8> level_08;
+    if (header.level_count > 9) LevelData<9> level_09;
+    if (header.level_count > 10) LevelData<10> level_10;
+    if (header.level_count > 11) LevelData<11> level_11;
+    if (header.level_count > 12) LevelData<12> level_12;
+    if (header.level_count > 13) LevelData<13> level_13;
+    if (header.level_count > 14) LevelData<14> level_14;
+    if (header.level_count > 15) LevelData<15> level_15;
+    if (header.level_count > 16) LevelData<16> level_16;
+    if (header.level_count > 17) LevelData<17> level_17;
+    if (header.level_count > 18) LevelData<18> level_18;
+    if (header.level_count > 19) LevelData<19> level_19;
+    if (header.level_count > 20) LevelData<20> level_20;
+    if (header.level_count > 21) LevelData<21> level_21;
+    if (header.level_count > 22) LevelData<22> level_22;
+    if (header.level_count > 23) LevelData<23> level_23;
+    if (header.level_count > 24) LevelData<24> level_24;
+    if (header.level_count > 25) LevelData<25> level_25;
 };
 
 // Instantiate the level explorer - placed after header for clean organization

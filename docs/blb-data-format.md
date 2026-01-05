@@ -43,15 +43,20 @@ Offset   Size   Description
 ------   ----   -----------
 0x000    0xB60  Level Metadata Table (26 entries × 0x70 bytes)
 0xB60    0x16C  Movie Table (13 entries × 0x1C bytes)
-0xCC8    0x008  Padding (zeros, between movie and sector tables)
+0xCC8    0x004  Padding (4 zeros, between movie and sector tables)
 0xCD0    0x200  Sector Table (32 entries × 0x10 bytes, count at 0xF33)
-0xED0    0x040  Unknown u32 array (16 entries, file offsets, purpose TBD)
+0xECC    0x044  Mode 6 Sector Table (17 entries × 4 bytes, overlaps sectors[31])
 0xF10    0x021  Credits Sequence Table (2 complete entries × 0x0C bytes + overlap)
 0xF31    0x001  Level Count (u8, value=26)
 0xF32    0x001  Movie Count (u8, value=13)
 0xF33    0x001  Sector Table Entry Count (u8)
 0xF34    0x0CC  Playback Sequence Data (mode array at 0xF36, index array at 0xF92)
 ```
+
+**Note on Mode 6 Sector Table:** The table starts at 0xECC but entry[0] overlaps with
+`sectors[31].sector_offset` and `sectors[31].sector_count` (the OVER/game-over screen).
+The game accesses entries as: `header + (index * 4) + 0xECC`. Entries 1-16 are stored
+at 0xED0-0xF0F (64 bytes). See "Mode 6 Playback" section below.
 
 ## Movie Table (0xB60-0xCC7)
 
@@ -148,6 +153,50 @@ Offset   Size   Description
 - VLC table base: Passed as param_3 to decoder
 - Compressed frame: param_3 + 0x33800 (offset 211,968 bytes)
 - VRAM output: Y=0 or Y=256 (double-buffered)
+
+## Mode 6 Sector Table (0xECC-0xF0F)
+
+The Mode 6 sector table stores CD sector locations for special playback sequences
+(e.g., inter-level transitions, world intros). It has 17 entries, each 4 bytes:
+
+```
+Offset   Size   Description
+------   ----   -----------
+0x00     u16    Sector offset in BLB (CD sector number)
+0x02     u16    Sector count (typically 109-132 sectors, ~220-270 KB)
+```
+
+**Memory Layout:**
+- Entry[0] at 0xECC-0xECF overlaps with `sectors[31].sector_offset/count` (OVER screen)
+- Entries[1-16] at 0xED0-0xF0F (64 bytes, formerly "unknown_ed0" array)
+
+**Game Code Access (from LevelDataParser at 0x8007A62C):**
+```c
+if (mode == 6) {
+    u32 addr = header_base + (level_index * 4) + 0xECC;
+    u16 sector_offset = *(u16*)(addr + 0);
+    u16 sector_count = *(u16*)(addr + 2);
+}
+```
+
+**Playback Sequence Integration:**
+- Mode array at 0xF36 contains mode values (0-6)
+- Index array at 0xF92 contains level indices for mode 6 lookups
+- When mode=6, the index value (0-16) is used to access the Mode 6 sector table
+
+**Example Mode 6 Entries (PAL GAME.BLB):**
+| Index | Sector | Count | Bytes | Content |
+|------:|-------:|------:|------:|:--------|
+| 0 | 4,895 | 118 | 241,664 | Level asset data (11 tilesets) |
+| 1 | 7,534 | 116 | 237,568 | Level asset data |
+| 2 | 9,898 | 115 | 235,520 | Level asset data |
+| ... | ... | ... | ... | ... |
+| 16 | 36,793 | 132 | 270,336 | Level asset data |
+
+The data at these sectors appears to be level tileset/asset headers with the structure:
+- u32 tileset_count (e.g., 11)
+- u32 unknown (e.g., 100)
+- Additional asset counts and offsets
 
 ## Level Metadata Entry (0x70 bytes)
 
