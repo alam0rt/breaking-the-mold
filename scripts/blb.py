@@ -366,10 +366,77 @@ File Coverage (PAL version):
     
     Extractable data covers ~43% of total file size.
     Remaining ~57% may be padding, unreferenced data, or additional tables.
+
+
+Available Classes and Types:
+============================
+
+    Enums & Flags:
+    --------------
+    AssetID         - IntEnum of all known asset type IDs (0x064=Header, 0x258=Sprites, etc.)
+    TileFlags       - IntFlag for tile properties (SIZE_8X8, SEMI_TRANSPARENT, SKIP)
+    TileFlagBits    - Constants class with same tile flag values
+    SegmentType     - String constants for PRIMARY, SECONDARY, TERTIARY
+
+    Header Classes:
+    ---------------
+    BLBHeader              - Main BLB file header with level table access
+    LevelMetadataEntry     - Single level entry (0x70 bytes) from header
+    MovieEntry             - Single movie entry (0x1C bytes) from header  
+    SectorTableEntry       - Sector/loading screen entry from header
+    CreditsEntry           - Credits sequence entry from header
+    StateData              - Playback sequence state data
+
+    Asset Container Classes:
+    ------------------------
+    SpriteContainer        - Container for sprites from Asset 600 (0x258)
+    TilemapContainer       - Container for tilemaps from Asset 200 (0xC8)
+    PaletteContainer       - Container for palettes from Asset 400 (0x190)
+    TileData               - Combined tile data from Assets 100, 300-302, 400
+
+    Sprite Classes:
+    ---------------
+    Sprite                 - Complete sprite with header, animations, frames
+    SpriteFrameMetadata    - Frame positioning and size metadata (36 bytes)
+    AnimationEntry         - Animation definition (12 bytes)
+    SpriteHeader           - Sprite header with counts and offsets (12 bytes)
+    RLECommand             - Parsed RLE decompression command
+
+    Tile & Layer Classes:
+    ---------------------
+    TileHeader             - Tile header from Asset 100 (36 bytes)
+    Tilemap                - Layer tilemap (array of tile indices)
+    TilemapEntry           - Single tilemap entry (u16 with 11-bit index)
+    LayerEntry             - Layer definition from Asset 201 (92 bytes)
+
+    Color Classes:
+    --------------
+    Palette                - 256-color CLUT from Asset 400
+    PSXColor               - Single 15-bit PSX color (XBGR1555)
+
+    TOC Classes:
+    ------------
+    AssetTOCEntry          - TOC entry with asset_id, size, offset, data
+
+
+Parsing Functions:
+==================
+    parse_container_toc()      - Parse container sub-TOC
+    parse_layer_entries()      - Parse Asset 201 layer entries
+    parse_tilemap_container()  - Parse Asset 200 tilemaps (deprecated, use TilemapContainer)
+    parse_tilemap()            - Parse raw tilemap u16 array
+    get_tile_index()           - Extract 0-based tile index from u16 value
+    parse_palette_rgba()       - Parse PSX CLUT to RGBA tuples
+    parse_palette_container()  - Parse Asset 400 palettes (deprecated, use PaletteContainer)
+    extract_tiles_rgba()       - Extract tiles as PIL Images
+    psx_color_to_rgb()         - Convert 15-bit color to RGB tuple
+    parse_psx_palette()        - Parse CLUT to RGB tuples
+
 """
 
 import struct
 from dataclasses import dataclass, field
+from enum import IntEnum, IntFlag
 from pathlib import Path
 from typing import BinaryIO, Iterator, Optional
 
@@ -435,6 +502,641 @@ STATE_GAME_MODE_OFFSET = 0xF36  # u8: Game mode/state (1=movie, 2=credits, 4-5=l
 STATE_SECONDARY_FLAG_OFFSET = 0xF37  # u8: Secondary state flag
 STATE_UNKNOWN_F91_OFFSET = 0xF91  # u8: Unknown (credits-related?)
 STATE_ASSET_INDEX_OFFSET = 0xF92  # u8: Current asset/movie/entry index for table lookups
+
+
+# =============================================================================
+# Asset ID Constants
+# =============================================================================
+# These constants define the known asset type IDs found in BLB containers.
+# Each segment type (Primary, Secondary, Tertiary) uses different subsets.
+
+class AssetID:
+    """
+    Known asset type IDs in BLB containers.
+    
+    Asset IDs are u32 values that identify the type of data in a TOC entry.
+    Different segments use different subsets of these IDs.
+    """
+    # Secondary Segment - Tile Data (VERIFIED)
+    TILE_HEADER = 100       # 0x064 - Tile counts and level dimensions (36 bytes)
+    TILE_HEADER_101 = 101   # 0x065 - Unknown geometry (12 bytes, sparse)
+    TILEMAP_CONTAINER = 200 # 0x0C8 - Tilemap sub-TOC with layer data
+    LAYER_ENTRIES = 201     # 0x0C9 - Layer definitions (92 bytes each)
+    TILE_PIXELS = 300       # 0x12C - 8bpp indexed pixel data
+    PALETTE_INDICES = 301   # 0x12D - Palette index per tile (1 byte each)
+    TILE_FLAGS = 302        # 0x12E - Tile size/rendering flags (1 byte each)
+    ANIMATED_TILES = 303    # 0x12F - Animated tile lookup table
+    PALETTE_CONTAINER = 400 # 0x190 - Palette sub-TOC with 256-color CLUTs
+    PALETTE_ANIM = 401      # 0x191 - Palette animation data
+    
+    # Primary Segment - Level Geometry (VERIFIED)
+    GEOMETRY = 600          # 0x258 - Level geometry/RLE sprites container
+    COLLISION = 601         # 0x259 - Collision/layout data container
+    LEVEL_PALETTE = 602     # 0x25A - Level palette (15-bit PSX colors)
+    
+    # Tertiary Segment - Audio & Sprites
+    # Note: Asset 100, 200, 201, 302, 401 may also appear in tertiary
+    SPRITE_METADATA = 500   # 0x1F4 - Sprite metadata
+    SPRITE_RLE = 501        # 0x1F5 - Sprite RLE pixel data
+    AUDIO_502 = 502         # 0x1F6 - Audio configuration
+    AUDIO_503 = 503         # 0x1F7 - Audio configuration
+    SPU_SAMPLES = 700       # 0x2BC - SPU audio samples (ADPCM)
+    
+    # Hex equivalents for reference
+    _HEX_MAP = {
+        0x064: 'TILE_HEADER',
+        0x065: 'TILE_HEADER_101',
+        0x0C8: 'TILEMAP_CONTAINER',
+        0x0C9: 'LAYER_ENTRIES',
+        0x12C: 'TILE_PIXELS',
+        0x12D: 'PALETTE_INDICES',
+        0x12E: 'TILE_FLAGS',
+        0x12F: 'ANIMATED_TILES',
+        0x190: 'PALETTE_CONTAINER',
+        0x191: 'PALETTE_ANIM',
+        0x1F4: 'SPRITE_METADATA',
+        0x1F5: 'SPRITE_RLE',
+        0x1F6: 'AUDIO_502',
+        0x1F7: 'AUDIO_503',
+        0x258: 'GEOMETRY',
+        0x259: 'COLLISION',
+        0x25A: 'LEVEL_PALETTE',
+        0x2BC: 'SPU_SAMPLES',
+    }
+    
+    @classmethod
+    def name(cls, asset_id: int) -> str:
+        """Get the name for an asset ID."""
+        return cls._HEX_MAP.get(asset_id, f'UNKNOWN_{asset_id:03X}')
+
+
+class TileFlagBits:
+    """
+    Bit flags for tile rendering properties (Asset 302) - constant class.
+    
+    Verified via Ghidra decompilation of LoadTileDataToVRAM (0x80025240).
+    Use TileFlags IntFlag for actual flag operations.
+    """
+    SEMI_TRANSPARENT = 0x01  # Bit 0: Enable GPU alpha blending
+    SIZE_8X8 = 0x02          # Bit 1: Tile is 8×8 (not 16×16)
+    SKIP = 0x04              # Bit 2: Don't load/render this tile
+
+
+class TileFlags(IntFlag):
+    """
+    IntFlag version of tile rendering properties for flag operations.
+    
+    Verified via Ghidra decompilation of LoadTileDataToVRAM (0x80025240).
+    """
+    NONE = 0x00              # No flags
+    SEMI_TRANSPARENT = 0x01  # Bit 0: Enable GPU alpha blending
+    SIZE_8X8 = 0x02          # Bit 1: Tile is 8×8 (not 16×16)
+    SKIP = 0x04              # Bit 2: Don't load/render this tile
+
+
+class SegmentType:
+    """
+    BLB data segment types.
+    
+    Each level consists of three segments loaded from different sectors.
+    """
+    PRIMARY = 'primary'      # Level geometry, collision, palette
+    SECONDARY = 'secondary'  # Tiles, tilemaps, layer definitions
+    TERTIARY = 'tertiary'    # Sprites, audio, music
+
+
+# =============================================================================
+# Sprite Data Structures
+# =============================================================================
+
+@dataclass
+class SpriteFrameMetadata:
+    """
+    Sprite frame metadata from Asset 600 sprite container.
+    
+    Each frame is 36 bytes (0x24), containing position/size info and RLE offset.
+    Verified via Ghidra analysis of GetFrameMetadata (0x8007bebc).
+    """
+    flags: int              # u16 at +0x04: Frame flags (1 or 2)
+    render_x: int           # s16 at +0x06: Render X offset (signed)
+    render_y: int           # s16 at +0x08: Render Y offset (signed)
+    render_width: int       # u16 at +0x0A: Visible width
+    render_height: int      # u16 at +0x0C: Visible height
+    anchor_x: int           # s16 at +0x12: Anchor X offset (signed)
+    anchor_y: int           # s16 at +0x14: Anchor Y offset (signed)
+    clip_width: int         # u16 at +0x16: Clip width
+    clip_height: int        # u16 at +0x18: Clip height
+    rle_offset: int         # u32 at +0x20: RLE data offset from sprite's RLE base
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "SpriteFrameMetadata":
+        """Parse a 36-byte frame metadata entry."""
+        if len(data) < 36:
+            raise ValueError(f"Frame metadata too short: {len(data)} < 36")
+        
+        return cls(
+            flags=struct.unpack('<H', data[0x04:0x06])[0],
+            render_x=struct.unpack('<h', data[0x06:0x08])[0],  # Signed
+            render_y=struct.unpack('<h', data[0x08:0x0A])[0],  # Signed
+            render_width=struct.unpack('<H', data[0x0A:0x0C])[0],
+            render_height=struct.unpack('<H', data[0x0C:0x0E])[0],
+            anchor_x=struct.unpack('<h', data[0x12:0x14])[0],  # Signed
+            anchor_y=struct.unpack('<h', data[0x14:0x16])[0],  # Signed
+            clip_width=struct.unpack('<H', data[0x16:0x18])[0],
+            clip_height=struct.unpack('<H', data[0x18:0x1A])[0],
+            rle_offset=struct.unpack('<I', data[0x20:0x24])[0],
+            raw_data=data[:36],
+        )
+
+
+@dataclass
+class AnimationEntry:
+    """
+    Animation definition from Asset 600 sprite container.
+    
+    Each animation is 12 bytes, defining a group of frames.
+    Located at sprite offset 0x0C + anim_index × 12.
+    """
+    animation_id: int       # u32 at +0x00: Animation type identifier
+    frame_count: int        # u16 at +0x04: Number of frames
+    frame_offset: int       # u16 at +0x06: Index into frame metadata table
+    flags: int              # u16 at +0x08: Animation properties
+    extra: int              # u16 at +0x0A: Unknown (often 0)
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "AnimationEntry":
+        """Parse a 12-byte animation entry."""
+        if len(data) < 12:
+            raise ValueError(f"Animation entry too short: {len(data)} < 12")
+        
+        return cls(
+            animation_id=struct.unpack('<I', data[0x00:0x04])[0],
+            frame_count=struct.unpack('<H', data[0x04:0x06])[0],
+            frame_offset=struct.unpack('<H', data[0x06:0x08])[0],
+            flags=struct.unpack('<H', data[0x08:0x0A])[0],
+            extra=struct.unpack('<H', data[0x0A:0x0C])[0],
+            raw_data=data[:12],
+        )
+
+
+@dataclass
+class SpriteHeader:
+    """
+    Sprite definition header from Asset 600 container.
+    
+    The first 12 bytes of each sprite define its structure.
+    Verified via Ghidra analysis of InitSpriteContext (0x8007bc3c).
+    """
+    animation_count: int    # u16 at +0x00: Number of animation groups
+    frame_meta_offset: int  # u16 at +0x02: Offset to frame metadata table
+    rle_offset: int         # u32 at +0x04: Offset to RLE pixel data
+    palette_offset: int     # u32 at +0x08: Offset to embedded 256-color palette
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "SpriteHeader":
+        """Parse a 12-byte sprite header."""
+        if len(data) < 12:
+            raise ValueError(f"Sprite header too short: {len(data)} < 12")
+        
+        return cls(
+            animation_count=struct.unpack('<H', data[0x00:0x02])[0],
+            frame_meta_offset=struct.unpack('<H', data[0x02:0x04])[0],
+            rle_offset=struct.unpack('<I', data[0x04:0x08])[0],
+            palette_offset=struct.unpack('<I', data[0x08:0x0C])[0],
+            raw_data=data[:12],
+        )
+
+
+@dataclass
+class Sprite:
+    """
+    Complete sprite definition including header, animations, and frames.
+    
+    Represents a single sprite entry from Asset 600 (primary or tertiary).
+    """
+    sprite_id: int                          # Sprite ID from TOC entry
+    header: SpriteHeader                    # Sprite header (12 bytes)
+    animations: list[AnimationEntry]        # Animation definitions
+    frames: list[SpriteFrameMetadata]       # Frame metadata entries
+    palette: list[tuple] = None             # 256-color RGBA palette
+    raw_data: bytes = None                  # Full sprite data
+    
+    @classmethod
+    def from_bytes(cls, sprite_id: int, data: bytes) -> "Sprite":
+        """Parse a complete sprite from raw data."""
+        header = SpriteHeader.from_bytes(data)
+        
+        # Parse animations (starting at offset 0x0C)
+        animations = []
+        for i in range(header.animation_count):
+            anim_offset = 0x0C + i * 12
+            if anim_offset + 12 > len(data):
+                break
+            animations.append(AnimationEntry.from_bytes(data[anim_offset:anim_offset + 12]))
+        
+        # Parse frame metadata
+        frames = []
+        if animations:
+            # Calculate total frame count from animations
+            max_frame = max(a.frame_offset + a.frame_count for a in animations)
+            for i in range(max_frame):
+                frame_offset = header.frame_meta_offset + i * 36
+                if frame_offset + 36 > len(data):
+                    break
+                frames.append(SpriteFrameMetadata.from_bytes(data[frame_offset:frame_offset + 36]))
+        
+        # Parse embedded palette (512 bytes at palette_offset)
+        palette = None
+        if header.palette_offset + 512 <= len(data):
+            palette_data = data[header.palette_offset:header.palette_offset + 512]
+            palette = parse_palette_rgba(palette_data)
+        
+        return cls(
+            sprite_id=sprite_id,
+            header=header,
+            animations=animations,
+            frames=frames,
+            palette=palette,
+            raw_data=data,
+        )
+    
+    @property
+    def total_frames(self) -> int:
+        """Total number of frames across all animations."""
+        return len(self.frames)
+
+
+@dataclass
+class RLECommand:
+    """
+    RLE command for sprite decompression.
+    
+    Each command is a u16 with the following bit layout:
+    - Bit 15: New line flag (advance to next row)
+    - Bits 14-8: Skip count (transparent pixels)
+    - Bits 7-0: Copy count (literal pixels to copy)
+    """
+    new_line: bool          # Bit 15: Start new row
+    skip_count: int         # Bits 14-8: Transparent pixel count
+    copy_count: int         # Bits 7-0: Literal pixel count
+    
+    @classmethod
+    def from_u16(cls, value: int) -> "RLECommand":
+        """Parse a u16 RLE command."""
+        return cls(
+            new_line=bool(value & 0x8000),
+            skip_count=(value >> 8) & 0x7F,
+            copy_count=value & 0xFF,
+        )
+
+
+@dataclass
+class SpriteTOCEntry:
+    """
+    Sprite entry from Asset 600 sub-TOC.
+    
+    Each entry is 12 bytes:
+    - u32: Sprite ID (hash-like lookup key)
+    - u32: Data size in bytes
+    - u32: Data offset from asset start
+    """
+    sprite_id: int
+    size: int
+    offset: int
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "SpriteTOCEntry":
+        """Parse a 12-byte sprite TOC entry."""
+        if len(data) < 12:
+            raise ValueError(f"Sprite TOC entry too short: {len(data)} < 12")
+        return cls(
+            sprite_id=struct.unpack('<I', data[0:4])[0],
+            size=struct.unpack('<I', data[4:8])[0],
+            offset=struct.unpack('<I', data[8:12])[0],
+        )
+
+
+@dataclass
+class SpriteContainer:
+    """
+    Asset 600 (0x258) sprite container from Primary or Tertiary segments.
+    
+    Contains RLE-encoded sprites with embedded palettes.
+    Verified via Ghidra analysis of FindSpriteInTOC (0x8007b968).
+    
+    Container Structure:
+        0x00    u32     Sprite count (N)
+        0x04    N×12    Sprite header table
+        var             Sprite data blocks
+    """
+    count: int
+    entries: list[SpriteTOCEntry]
+    sprites: dict[int, Sprite] = None  # Keyed by sprite_id
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes, parse_sprites: bool = False) -> "SpriteContainer":
+        """
+        Parse a sprite container.
+        
+        Args:
+            data: Raw asset data
+            parse_sprites: If True, also parse all sprite definitions
+        """
+        if len(data) < 4:
+            return cls(count=0, entries=[], raw_data=data)
+        
+        count = struct.unpack('<I', data[0:4])[0]
+        
+        # Sanity check
+        if count > 1000 or count * 12 + 4 > len(data):
+            return cls(count=0, entries=[], raw_data=data)
+        
+        entries = []
+        for i in range(count):
+            entry_offset = 4 + i * 12
+            entries.append(SpriteTOCEntry.from_bytes(data[entry_offset:entry_offset + 12]))
+        
+        sprites = None
+        if parse_sprites:
+            sprites = {}
+            for entry in entries:
+                if entry.offset + entry.size <= len(data):
+                    sprite_data = data[entry.offset:entry.offset + entry.size]
+                    try:
+                        sprites[entry.sprite_id] = Sprite.from_bytes(entry.sprite_id, sprite_data)
+                    except Exception:
+                        pass  # Skip malformed sprites
+        
+        return cls(count=count, entries=entries, sprites=sprites, raw_data=data)
+    
+    def get_sprite(self, sprite_id: int) -> Optional[Sprite]:
+        """Get a sprite by its ID."""
+        if self.sprites and sprite_id in self.sprites:
+            return self.sprites[sprite_id]
+        
+        # Parse on demand if not pre-parsed
+        for entry in self.entries:
+            if entry.sprite_id == sprite_id:
+                if self.raw_data and entry.offset + entry.size <= len(self.raw_data):
+                    sprite_data = self.raw_data[entry.offset:entry.offset + entry.size]
+                    return Sprite.from_bytes(sprite_id, sprite_data)
+        return None
+    
+    def __len__(self) -> int:
+        return self.count
+    
+    def __iter__(self):
+        return iter(self.entries)
+
+
+@dataclass
+class PSXColor:
+    """
+    PSX 15-bit color (XBGR1555 format).
+    
+    Stored as u16 little-endian:
+    - Bits 0-4: Red (0-31)
+    - Bits 5-9: Green (0-31)
+    - Bits 10-14: Blue (0-31)
+    - Bit 15: STP (semi-transparency processing)
+    """
+    r: int  # Red (0-31, multiply by 8 for 8-bit)
+    g: int  # Green (0-31)
+    b: int  # Blue (0-31)
+    stp: bool  # Semi-transparency flag
+    
+    @classmethod
+    def from_u16(cls, value: int) -> "PSXColor":
+        """Parse a 15-bit PSX color from u16."""
+        return cls(
+            r=value & 0x1F,
+            g=(value >> 5) & 0x1F,
+            b=(value >> 10) & 0x1F,
+            stp=bool(value & 0x8000),
+        )
+    
+    def to_rgb(self) -> tuple:
+        """Convert to 8-bit RGB tuple."""
+        return (self.r * 8, self.g * 8, self.b * 8)
+    
+    def to_rgba(self, transparent_if_zero: bool = True) -> tuple:
+        """
+        Convert to 8-bit RGBA tuple.
+        
+        Args:
+            transparent_if_zero: If True, color 0x0000 is treated as transparent
+        """
+        # More accurate 5-bit to 8-bit conversion
+        r = (self.r * 255) // 31 if self.r else 0
+        g = (self.g * 255) // 31 if self.g else 0
+        b = (self.b * 255) // 31 if self.b else 0
+        
+        # Determine alpha
+        is_black = (self.r == 0 and self.g == 0 and self.b == 0)
+        if transparent_if_zero and is_black and not self.stp:
+            a = 0
+        else:
+            a = 255
+        
+        return (r, g, b, a)
+
+
+@dataclass
+class Palette:
+    """
+    256-color palette (CLUT) from Asset 400 container.
+    
+    Each palette is 512 bytes (256 × u16 PSX colors).
+    Color 0 is typically transparent.
+    """
+    colors: list[PSXColor]
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "Palette":
+        """Parse a 512-byte palette."""
+        colors = []
+        for i in range(min(256, len(data) // 2)):
+            value = struct.unpack('<H', data[i*2:i*2+2])[0]
+            colors.append(PSXColor.from_u16(value))
+        
+        # Pad to 256 if needed
+        while len(colors) < 256:
+            colors.append(PSXColor(0, 0, 0, False))
+        
+        return cls(colors=colors, raw_data=data[:512] if len(data) >= 512 else data)
+    
+    def to_rgba_list(self) -> list[tuple]:
+        """Convert to list of RGBA tuples (for PIL)."""
+        return [c.to_rgba() for c in self.colors]
+    
+    def __getitem__(self, index: int) -> PSXColor:
+        return self.colors[index]
+    
+    def __len__(self) -> int:
+        return len(self.colors)
+
+
+# =============================================================================
+# Tilemap Structures
+# =============================================================================
+
+@dataclass
+class TilemapEntry:
+    """
+    Single tilemap entry (u16 value) from Asset 200.
+    
+    Tile Index Format (16 bits):
+    - Bits 0-10: Tile index (11 bits, 1-based, 0 = transparent)
+    - Bits 11-15: Unused (tiles are not flipped in game)
+    """
+    raw_value: int
+    
+    @property
+    def tile_index(self) -> int:
+        """Get 0-based tile index, or -1 for empty."""
+        idx = self.raw_value & 0x7FF
+        return idx - 1 if idx > 0 else -1
+    
+    @property
+    def is_empty(self) -> bool:
+        """Check if this is an empty/transparent tile."""
+        return (self.raw_value & 0x7FF) == 0
+    
+    @property
+    def is_entity(self) -> bool:
+        """Check if this might be an entity spawn marker (bit 12+ set)."""
+        return (self.raw_value & 0xF800) != 0
+
+
+@dataclass
+class Tilemap:
+    """
+    Layer tilemap data from Asset 200 container.
+    
+    A tilemap is an array of u16 tile indices defining tile placement for one layer.
+    """
+    layer_index: int
+    entries: list[TilemapEntry]
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, layer_index: int, data: bytes) -> "Tilemap":
+        """Parse tilemap data."""
+        entries = []
+        for i in range(len(data) // 2):
+            value = struct.unpack('<H', data[i*2:i*2+2])[0]
+            entries.append(TilemapEntry(value))
+        return cls(layer_index=layer_index, entries=entries, raw_data=data)
+    
+    def get_tile_at(self, x: int, y: int, width: int) -> TilemapEntry:
+        """Get tile entry at grid position."""
+        idx = y * width + x
+        if 0 <= idx < len(self.entries):
+            return self.entries[idx]
+        return TilemapEntry(0)
+    
+    def __len__(self) -> int:
+        return len(self.entries)
+    
+    def __getitem__(self, index: int) -> TilemapEntry:
+        return self.entries[index]
+
+
+@dataclass
+class TilemapContainer:
+    """
+    Container for all layer tilemaps from Asset 200 (0xC8).
+    
+    The container has an internal sub-TOC with one entry per layer.
+    Each tilemap is an array of u16 tile indices for that layer.
+    """
+    tilemaps: list[Tilemap]
+    count: int
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "TilemapContainer":
+        """Parse tilemap container from Asset 200 data."""
+        if len(data) < 4:
+            return cls(tilemaps=[], count=0, raw_data=data)
+        
+        count = struct.unpack('<I', data[0:4])[0]
+        tilemaps = []
+        
+        for i in range(count):
+            entry_offset = 4 + i * 12
+            if entry_offset + 12 > len(data):
+                break
+            
+            # Sub-TOC entry: layer_idx (u32), size (u32), offset (u32)
+            _, size, data_offset = struct.unpack('<III', 
+                data[entry_offset:entry_offset + 12])
+            
+            if data_offset + size <= len(data):
+                tilemap_data = data[data_offset:data_offset + size]
+                tilemaps.append(Tilemap.from_bytes(i, tilemap_data))
+            else:
+                tilemaps.append(Tilemap(layer_index=i, entries=[], raw_data=b''))
+        
+        return cls(tilemaps=tilemaps, count=count, raw_data=data)
+    
+    def __len__(self) -> int:
+        return len(self.tilemaps)
+    
+    def __getitem__(self, index: int) -> Tilemap:
+        return self.tilemaps[index]
+    
+    def __iter__(self):
+        return iter(self.tilemaps)
+
+
+@dataclass
+class PaletteContainer:
+    """
+    Container for all palettes from Asset 400 (0x190).
+    
+    The container has an internal sub-TOC with one entry per palette.
+    Each palette is 512 bytes (256 × 16-bit PSX colors).
+    """
+    palettes: list[Palette]
+    count: int
+    raw_data: bytes = None
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "PaletteContainer":
+        """Parse palette container from Asset 400 data."""
+        entries = parse_container_toc(data)
+        palettes = []
+        
+        for entry in entries:
+            if entry.data and len(entry.data) >= 512:
+                palettes.append(Palette.from_bytes(entry.data))
+            else:
+                # Empty palette
+                palettes.append(Palette(colors=[PSXColor(0, 0, 0, False)] * 256))
+        
+        return cls(palettes=palettes, count=len(palettes), raw_data=data)
+    
+    def __len__(self) -> int:
+        return len(self.palettes)
+    
+    def __getitem__(self, index: int) -> Palette:
+        if 0 <= index < len(self.palettes):
+            return self.palettes[index]
+        # Return grayscale fallback
+        return Palette(colors=[PSXColor(i, i, i, i > 0) for i in range(256)])
+    
+    def __iter__(self):
+        return iter(self.palettes)
+    
+    def to_rgba_lists(self) -> list[list[tuple]]:
+        """Convert all palettes to RGBA tuple lists."""
+        return [p.to_rgba_list() for p in self.palettes]
 
 
 @dataclass
@@ -1345,29 +2047,168 @@ class AssetTOCEntry:
 @dataclass
 class TileHeader:
     """
-    Header structure from asset 100 (geometry header).
+    Tile header from Asset 100 (0x064), 36 bytes.
     
-    Contains tile counts used by FUN_8007B53C to calculate total tiles.
+    Contains level dimensions, tile counts, and background colors.
+    Verified via Ghidra decompilation of CopyTilePixelData (0x8007b588)
+    and GetTotalTileCount (0x8007b53c).
+    
+    Offset  Size  Type   Description
+    ------  ----  ----   -----------
+    0x00    3     u8[3]  Background RGB color
+    0x03    1     u8     Padding
+    0x04    3     u8[3]  Secondary RGB color  
+    0x07    1     u8     Padding
+    0x08    2     u16    Level width in tiles
+    0x0A    2     u16    Level height in tiles
+    0x0C    4     -      Unknown
+    0x10    2     u16    16×16 tile count
+    0x12    2     u16    8×8 tile count (primary)
+    0x14    2     u16    8×8 tile count (secondary, often 0)
+    0x16    6     -      Unknown
+    0x1C    2     u16    Unknown field (read by GetAsset100Field1C)
+    0x1E    2     -      Remaining header data
     """
     raw_data: bytes
-    count_16x16: int  # u16 at offset 0x10: Number of 16×16 tiles
-    count_8x8_a: int  # u16 at offset 0x12: First 8×8 tile count
-    count_8x8_b: int  # u16 at offset 0x14: Second 8×8 tile count
+    bg_r: int = 0           # Background red (0-255)
+    bg_g: int = 0           # Background green
+    bg_b: int = 0           # Background blue
+    secondary_r: int = 0    # Secondary color red
+    secondary_g: int = 0    # Secondary color green
+    secondary_b: int = 0    # Secondary color blue
+    level_width: int = 0    # Level width in tiles
+    level_height: int = 0   # Level height in tiles
+    count_16x16: int = 0    # Number of 16×16 tiles
+    count_8x8_a: int = 0    # Primary 8×8 tile count
+    count_8x8_b: int = 0    # Secondary 8×8 tile count (often 0)
+    field_1c: int = 0       # Unknown field at 0x1C
     
     @property
     def total_tiles(self) -> int:
+        """Total tile count (used by GetTotalTileCount)."""
         return self.count_16x16 + self.count_8x8_a + self.count_8x8_b
+    
+    @property
+    def level_width_pixels(self) -> int:
+        """Level width in pixels."""
+        return self.level_width * 16
+    
+    @property
+    def level_height_pixels(self) -> int:
+        """Level height in pixels."""
+        return self.level_height * 16
+    
+    @property
+    def background_color(self) -> tuple:
+        """Background color as RGB tuple."""
+        return (self.bg_r, self.bg_g, self.bg_b)
+    
+    @property
+    def secondary_color(self) -> tuple:
+        """Secondary color as RGB tuple."""
+        return (self.secondary_r, self.secondary_g, self.secondary_b)
     
     @classmethod
     def from_bytes(cls, data: bytes) -> "TileHeader":
-        if len(data) < 0x16:
-            raise ValueError(f"Header too short: {len(data)} bytes")
+        if len(data) < 0x1E:
+            raise ValueError(f"Header too short: {len(data)} bytes (need 30)")
         
         return cls(
             raw_data=data,
+            bg_r=data[0x00],
+            bg_g=data[0x01],
+            bg_b=data[0x02],
+            secondary_r=data[0x04],
+            secondary_g=data[0x05],
+            secondary_b=data[0x06],
+            level_width=struct.unpack('<H', data[0x08:0x0A])[0],
+            level_height=struct.unpack('<H', data[0x0A:0x0C])[0],
             count_16x16=struct.unpack('<H', data[0x10:0x12])[0],
             count_8x8_a=struct.unpack('<H', data[0x12:0x14])[0],
             count_8x8_b=struct.unpack('<H', data[0x14:0x16])[0],
+            field_1c=struct.unpack('<H', data[0x1C:0x1E])[0] if len(data) >= 0x1E else 0,
+        )
+
+
+@dataclass
+class TileData:
+    """
+    Combined tile data from Secondary segment assets.
+    
+    Combines:
+    - Asset 100 (0x064): TileHeader - tile counts, dimensions, colors
+    - Asset 300 (0x12C): Pixel data - raw 8bpp tile pixels
+    - Asset 301 (0x12D): Palette indices - which palette each tile uses
+    - Asset 302 (0x12E): Flags - tile properties (8x8, transparent, etc.)
+    - Asset 400 (0x190): Palettes - color lookup tables
+    
+    This class provides convenience methods to extract rendered tiles.
+    """
+    header: TileHeader
+    pixel_data: bytes       # Asset 300: raw 8bpp pixels
+    palette_indices: bytes  # Asset 301: palette assignments per tile
+    flags: bytes            # Asset 302: tile flags
+    palettes: PaletteContainer
+    
+    @property
+    def total_tiles(self) -> int:
+        """Total number of tiles."""
+        return self.header.total_tiles
+    
+    @property
+    def count_16x16(self) -> int:
+        """Number of 16×16 tiles."""
+        return self.header.count_16x16
+    
+    @property
+    def count_8x8(self) -> int:
+        """Number of 8×8 tiles."""
+        return self.header.count_8x8_a + self.header.count_8x8_b
+    
+    def get_tile_flags(self, tile_index: int) -> TileFlags:
+        """Get flags for a specific tile."""
+        if 0 <= tile_index < len(self.flags):
+            return TileFlags(self.flags[tile_index])
+        return TileFlags(0)
+    
+    def get_tile_palette_index(self, tile_index: int) -> int:
+        """Get palette index for a specific tile."""
+        if 0 <= tile_index < len(self.palette_indices):
+            return self.palette_indices[tile_index]
+        return 0
+    
+    def is_8x8_tile(self, tile_index: int) -> bool:
+        """Check if tile is 8×8 (vs 16×16)."""
+        flags = self.get_tile_flags(tile_index)
+        return bool(flags & TileFlags.SIZE_8X8)
+    
+    @classmethod
+    def from_assets(cls, assets: dict) -> "TileData":
+        """
+        Create TileData from asset dictionary.
+        
+        Args:
+            assets: Dict with keys AssetID.HEADER, AssetID.TILE_PIXELS, etc.
+                    or numeric keys 0x064, 0x12C, etc.
+        """
+        # Handle both AssetID enum and int keys
+        def get_asset(key):
+            if isinstance(key, AssetID):
+                return assets.get(key) or assets.get(key.value)
+            return assets.get(key)
+        
+        header_data = get_asset(AssetID.HEADER) or b''
+        pixel_data = get_asset(AssetID.TILE_PIXELS) or b''
+        palette_indices = get_asset(AssetID.PALETTE_INDICES) or b''
+        flags = get_asset(AssetID.TILE_FLAGS) or b''
+        palette_data = get_asset(AssetID.PALETTE_CONTAINER) or b''
+        
+        return cls(
+            header=TileHeader.from_bytes(header_data) if len(header_data) >= 0x1E else TileHeader(raw_data=b''),
+            pixel_data=pixel_data,
+            palette_indices=palette_indices,
+            flags=flags,
+            palettes=PaletteContainer.from_bytes(palette_data) if palette_data else PaletteContainer([], 0),
         )
 
 
@@ -1594,20 +2435,63 @@ def extract_level_tiles(blb: "BLBFile", level_index: int, palette_index: int = 0
 
 @dataclass
 class LayerEntry:
-    """Layer definition from Asset 201 (0xC9), 92 bytes each."""
+    """
+    Layer definition from Asset 201 (0xC9), 92 bytes each.
+    
+    Verified via Ghidra analysis and extraction testing.
+    
+    Offset  Size   Type   Description
+    ------  ----   ----   -----------
+    0x00    2      u16    X offset (in tiles)
+    0x02    2      u16    Y offset (in tiles)
+    0x04    2      u16    Layer width (in tiles)
+    0x06    2      u16    Layer height (in tiles)
+    0x08    2      u16    Level width (in tiles, from Asset 100)
+    0x0A    2      u16    Level height (in tiles)
+    0x0C    4      -      Unknown
+    0x10    4      u32    Scroll factor X (0x10000 = 1.0, 0x8000 = 0.5)
+    0x14    4      u32    Scroll factor Y
+    0x18-0x25      -      Unknown
+    0x26    1      u8     Layer type (0=normal, 2=foreground?)
+    0x27-0x2B      -      Unknown
+    0x2C    1      u8     Background R
+    0x2D    1      u8     Background G
+    0x2E    1      u8     Background B
+    0x2F-0x5B      -      Padding/unknown
+    """
     x_offset: int       # X position in tiles
     y_offset: int       # Y position in tiles
     width: int          # Layer width in tiles
     height: int         # Layer height in tiles
     level_width: int    # Level width in tiles (from Asset 100)
     level_height: int   # Level height in tiles
-    scroll_x: int       # X scroll factor (0x8000 = 1.0)
+    scroll_x: int       # X scroll factor (0x10000 = 1.0)
     scroll_y: int       # Y scroll factor
     layer_type: int     # Layer type (0=normal, 2=foreground?)
     bg_r: int           # Background R
     bg_g: int           # Background G
     bg_b: int           # Background B
     raw_data: bytes     # Full 92 bytes for debugging
+    
+    @property
+    def scroll_factor_x(self) -> float:
+        """Get X scroll factor as float (1.0 = same speed as camera)."""
+        return self.scroll_x / 0x10000 if self.scroll_x else 0.0
+    
+    @property
+    def scroll_factor_y(self) -> float:
+        """Get Y scroll factor as float (1.0 = same speed as camera)."""
+        return self.scroll_y / 0x10000 if self.scroll_y else 0.0
+    
+    @property
+    def is_parallax(self) -> bool:
+        """Check if this is a parallax layer (scroll != 1.0)."""
+        return self.scroll_x != 0x10000 or self.scroll_y != 0x10000
+    
+    @property
+    def background_color(self) -> tuple:
+        """Background color as RGB tuple."""
+        return (self.bg_r, self.bg_g, self.bg_b)
     
     @classmethod
     def from_bytes(cls, data: bytes) -> "LayerEntry":
