@@ -634,10 +634,8 @@ Each sub-entry:
 ```
 
 Each tilemap is an array of u16 tile indices:
-- **Bits 0-12**: Tile index (1-based, 0 = transparent)
-- **Bit 13**: Horizontal flip
-- **Bit 14**: Vertical flip
-- **Bit 15**: Unknown
+- **Bits 0-10**: Tile index (11 bits, 1-based, 0 = transparent)
+- **Bits 11-15**: Unknown/unused (no flip flags - tiles are not flipped in game)
 
 **Asset 201 - Layer Entries (92 bytes each, EXTRACTION-VERIFIED):**
 ```
@@ -663,7 +661,6 @@ Offset  Size   Description
 3. For each layer in Asset 201:
    - Get tilemap from Asset 200 sub-TOC
    - Render tiles at (x_offset + x, y_offset + y) positions
-   - Apply horizontal/vertical flip from tile index high bits
 4. Composite layers in order (layer 0 first, then 1, etc.)
 
 ### Observation: Identical Sprite/Audio Sizes
@@ -684,27 +681,38 @@ How the game references these unreferenced containers is not yet understood:
 
 ## Entity Spawn System (DISCOVERED 2026-01-05)
 
-Layers 8-11 in tertiary data contain **entity spawn markers** rather than background tiles.
-This system encodes spawn positions and entity types directly in the tilemap data.
+Layers 8-11 in tertiary data may contain **entity spawn markers** in addition to background tiles.
+These are tiles with indices that exceed the normal tileset range.
 
-### Tile Index Encoding (VERIFIED)
+### Tile Index Encoding (VERIFIED via extract_all_graphics.py)
 
-The u16 tile index in tilemap data uses bit 12 as an entity marker:
+The u16 tile index in tilemap data uses the following bit layout:
 
 ```
 Tile Index Format (16 bits):
 ┌─────────────────────────────────────┐
-│ 15 14 13 12 │ 11-0                  │
-│ FL FL FL EN │ TILE_INDEX            │
+│ 15 14 13 12 11 │ 10-0              │
+│ ?? ?? ?? ?? ?? │ TILE_INDEX        │
 └─────────────────────────────────────┘
 
-FL (bits 13-15): Flip flags (horizontal, vertical, unknown)
-EN (bit 12):     Entity flag
-  0 = Regular tile from secondary tileset (indices 0 to tile_count-1)
-  1 = Entity tile (bits 11-0 index into entity tile atlas)
+TILE_INDEX (bits 0-10): Tile index (11 bits, 0x7FF mask)
+  - 1-based indexing (0 = transparent/empty)
+  - Valid range: 1 to total_tile_count
+Bits 11-15:     Unknown/unused (tiles are not flipped in game)
 ```
 
-**Detection:** If `(tile_index & 0x1FFF) > total_tile_count`, this is an entity tile.
+**Reference implementation:** See `scripts/extract_all_graphics.py` function `extract_layers()`:
+```python
+tile_idx = raw_idx & 0x7FF  # Lower 11 bits = tile index
+```
+
+### Entity Detection
+
+Entity spawn markers are detected by checking if the tile index exceeds the tileset size:
+```python
+if (tile_val & 0x7FF) > total_tile_count:
+    # This is an entity tile, not a regular tileset tile
+```
 
 ### Entity Layer Purpose
 

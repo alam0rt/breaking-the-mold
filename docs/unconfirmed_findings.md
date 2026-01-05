@@ -367,26 +367,22 @@ For PHRO: `1109 * 256 + 540 * 128 = 283,904 + 69,120 = 353,024 bytes` ✅ Matche
 
 ### Tile Index Encoding (Tilemap u16 values)
 
-**UPDATED 2026-01-05: Bit 12 is the ENTITY FLAG, not just a palette bank.**
+**VERIFIED 2026-01-05 via extract_all_graphics.py working implementation.**
 
 For all layers, tile indices use this format:
 
 ```
-Bits 0-12 (0x1FFF): Tile index with entity flag
-  - If bit 12 = 0: Regular tile from secondary tileset (indices 0 to tile_count-1)
-  - If bit 12 = 1: ENTITY TILE (bits 0-11 index into entity tile atlas)
-Bits 13-15:         Flip flags (horizontal, vertical, unknown)
+Bits 0-10 (0x7FF): Tile index (11 bits, 1-based, 0 = transparent)
+Bits 11-15:        Unknown/unused (tiles are not flipped in game)
 ```
 
-**Entity Detection:** If `(tile_index & 0x1FFF) > total_tile_count`, this is an entity tile.
-The entity tile index is `tile_index & 0xFFF` (masking off bit 12).
+**Entity Detection:** If `(tile_val & 0x7FF) > total_tile_count`, this may be an entity tile
+from a separate atlas. Entity tiles appear primarily in layers 8-11.
 
-Example from Layer 9: 
-- Index `0x1050` (4176 decimal) → bit 12 set → entity tile index = 80
-- Index `0x7097` → tile index = `0x097` (151), flip flags = `0x38`
-
-Layers 8-11 contain many tile indices with bit 12 set, forming connected regions
-that represent entity spawn positions. See blb-data-format.md for details.
+**Reference implementation:** `scripts/extract_all_graphics.py`:
+```python
+tile_idx = raw_idx & 0x7FF  # Lower 11 bits = tile index
+```
 
 ---
 
