@@ -1425,6 +1425,117 @@ BSFrameHeader hidden_credits_duplicate @ 0x48208F4 [[name("⚠️ DUPLICATE: Cre
     color("808080")]];
 
 // =============================================================================
+// WORLD COMPLETION PASSWORD SCREENS (VERIFIED 2026-01-06)
+// =============================================================================
+// These 16 containers are WORLD COMPLETION PASSWORD SCREENS.
+// Skullmonkeys has NO memory card support, so after completing each world,
+// players are shown a password screen to return to that checkpoint.
+//
+// Container Format (11 assets each):
+//   Asset 100: Tile Header (36 bytes) - 30×16 level dimensions
+//   Asset 200: Tilemap Container (5 tilemaps)
+//   Asset 201: Layer Entries (5 layers)
+//   Asset 300: Tile Pixels (8bpp, ~540 tiles)
+//   Asset 301: Palette Indices
+//   Asset 302: Tile Size Flags
+//   Asset 400: Palette Container (4 × 256-color)
+//   Asset 401: Animation Config
+//   Asset 600: Tile Graphics (compressed)
+//   Asset 601: Collision Data
+//   Asset 602: Raw Palette (16-color CLUT)
+//
+// Rendering: Use tilemap 3 (320 tiles = 20×16 grid) → 320×256 pixels
+// Background colors:
+//   - Passwords 1-2: Gray RGB(122-130, 122-130, 142)
+//   - Passwords 3-16: Magenta RGB(150, 0, 106) = #96006A
+
+// Password screen container structure - same as segment TOC
+struct PasswordScreenContainer {
+    u32 entry_count [[name("Count"), comment("Number of asset entries (always 11)")]];
+    SegmentTOCEntry entries[entry_count] [[name("Assets")]];
+} [[name("Password Screen"), color("CC66CC")]];
+
+// Password #1 - World 1 Complete (Gray theme)
+PasswordScreenContainer password_screen_01 @ 0x00EB7000 [[name("🔐 Password Screen #1 - World 1"),
+    comment("World 1 completion - Gray theme RGB(122,122,142)"),
+    color("7A7A8E")]];
+
+// Password #2 - World 2 Complete (Gray theme)
+PasswordScreenContainer password_screen_02 @ 0x01355000 [[name("🔐 Password Screen #2 - World 2"),
+    comment("World 2 completion - Gray theme RGB(130,130,142)"),
+    color("82828E")]];
+
+// Password #3 - World 3 Complete (Magenta theme)
+PasswordScreenContainer password_screen_03 @ 0x0173E800 [[name("🔐 Password Screen #3 - World 3"),
+    comment("World 3 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #4 - World 4 Complete (Magenta theme)
+PasswordScreenContainer password_screen_04 @ 0x01AFB800 [[name("🔐 Password Screen #4 - World 4"),
+    comment("World 4 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #5 - World 5 Complete (Magenta theme)
+PasswordScreenContainer password_screen_05 @ 0x01ED8800 [[name("🔐 Password Screen #5 - World 5"),
+    comment("World 5 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #6 - World 6 Complete (Magenta theme)
+PasswordScreenContainer password_screen_06 @ 0x02297800 [[name("🔐 Password Screen #6 - World 6"),
+    comment("World 6 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #7 - World 7 Complete (Magenta theme)
+PasswordScreenContainer password_screen_07 @ 0x025AB000 [[name("🔐 Password Screen #7 - World 7"),
+    comment("World 7 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #8 - World 8 Complete (Magenta theme)
+PasswordScreenContainer password_screen_08 @ 0x02880800 [[name("🔐 Password Screen #8 - World 8"),
+    comment("World 8 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #9 - World 9 Complete (Magenta theme)
+PasswordScreenContainer password_screen_09 @ 0x02D1B000 [[name("🔐 Password Screen #9 - World 9"),
+    comment("World 9 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #10 - World 10 Complete (Magenta theme)
+PasswordScreenContainer password_screen_10 @ 0x032D7000 [[name("🔐 Password Screen #10 - World 10"),
+    comment("World 10 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #11 - World 11 Complete (Magenta theme)
+PasswordScreenContainer password_screen_11 @ 0x0357A800 [[name("🔐 Password Screen #11 - World 11"),
+    comment("World 11 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #12 - World 12 Complete (Magenta theme)
+PasswordScreenContainer password_screen_12 @ 0x0397F800 [[name("🔐 Password Screen #12 - World 12"),
+    comment("World 12 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #13 - World 13 Complete (Magenta theme)
+PasswordScreenContainer password_screen_13 @ 0x03E93000 [[name("🔐 Password Screen #13 - World 13"),
+    comment("World 13 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #14 - World 14 Complete (Magenta theme)
+PasswordScreenContainer password_screen_14 @ 0x03FFC800 [[name("🔐 Password Screen #14 - World 14"),
+    comment("World 14 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #15 - World 15 Complete (Magenta theme)
+PasswordScreenContainer password_screen_15 @ 0x044AA800 [[name("🔐 Password Screen #15 - World 15"),
+    comment("World 15 completion - Magenta theme #96006A"),
+    color("96006A")]];
+
+// Password #16 - "YOU WIN" Final Victory Screen (Magenta theme)
+PasswordScreenContainer password_screen_16 @ 0x047DC800 [[name("🏆 YOU WIN - Victory Screen"),
+    comment("Final victory screen - Largest container (675 tiles) - Magenta theme #96006A"),
+    color("FFD700")]];
+
+// =============================================================================
 // REFERENCED BS LOADING SCREENS
 // =============================================================================
 // These are the BS frames that ARE used by the game, for comparison.
