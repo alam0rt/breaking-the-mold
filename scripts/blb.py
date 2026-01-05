@@ -1588,5 +1588,240 @@ def extract_level_tiles(blb: "BLBFile", level_index: int, palette_index: int = 0
     return tiles
 
 
+# =============================================================================
+# Layer and Tilemap Parsing
+# =============================================================================
+
+@dataclass
+class LayerEntry:
+    """Layer definition from Asset 201 (0xC9), 92 bytes each."""
+    x_offset: int       # X position in tiles
+    y_offset: int       # Y position in tiles
+    width: int          # Layer width in tiles
+    height: int         # Layer height in tiles
+    level_width: int    # Level width in tiles (from Asset 100)
+    level_height: int   # Level height in tiles
+    scroll_x: int       # X scroll factor (0x8000 = 1.0)
+    scroll_y: int       # Y scroll factor
+    layer_type: int     # Layer type (0=normal, 2=foreground?)
+    bg_r: int           # Background R
+    bg_g: int           # Background G
+    bg_b: int           # Background B
+    raw_data: bytes     # Full 92 bytes for debugging
+    
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "LayerEntry":
+        if len(data) < 92:
+            raise ValueError(f"Layer entry too short: {len(data)} bytes")
+        return cls(
+            x_offset=struct.unpack('<H', data[0x00:0x02])[0],
+            y_offset=struct.unpack('<H', data[0x02:0x04])[0],
+            width=struct.unpack('<H', data[0x04:0x06])[0],
+            height=struct.unpack('<H', data[0x06:0x08])[0],
+            level_width=struct.unpack('<H', data[0x08:0x0A])[0],
+            level_height=struct.unpack('<H', data[0x0A:0x0C])[0],
+            scroll_x=struct.unpack('<I', data[0x10:0x14])[0],
+            scroll_y=struct.unpack('<I', data[0x14:0x18])[0],
+            layer_type=data[0x26] if len(data) > 0x26 else 0,
+            bg_r=data[0x2C] if len(data) > 0x2C else 0,
+            bg_g=data[0x2D] if len(data) > 0x2D else 0,
+            bg_b=data[0x2E] if len(data) > 0x2E else 0,
+            raw_data=data[:92],
+        )
+
+
+def parse_layer_entries(asset201_data: bytes) -> list[LayerEntry]:
+    """
+    Parse layer entries from Asset 201 (0xC9).
+    
+    Each layer entry is 92 bytes.
+    """
+    entries = []
+    num_layers = len(asset201_data) // 92
+    
+    for i in range(num_layers):
+        offset = i * 92
+        entry = LayerEntry.from_bytes(asset201_data[offset:offset + 92])
+        entries.append(entry)
+    
+    return entries
+
+
+def parse_tilemap_container(asset200_data: bytes) -> list[bytes]:
+    """
+    Parse tilemap container from Asset 200 (0xC8).
+    
+    Returns list of raw tilemap data (array of u16 tile indices).
+    """
+    if len(asset200_data) < 4:
+        return []
+    
+    count = struct.unpack('<I', asset200_data[0:4])[0]
+    tilemaps = []
+    
+    for i in range(count):
+        entry_offset = 4 + i * 12
+        if entry_offset + 12 > len(asset200_data):
+            break
+        
+        # Sub-TOC entry: layer_idx (u32), size (u32), offset (u32)
+        _, size, data_offset = struct.unpack('<III', 
+            asset200_data[entry_offset:entry_offset + 12])
+        
+        if data_offset + size <= len(asset200_data):
+            tilemaps.append(asset200_data[data_offset:data_offset + size])
+        else:
+            tilemaps.append(b'')
+    
+    return tilemaps
+
+
+def parse_tilemap(tilemap_data: bytes) -> list[int]:
+    """
+    Parse raw tilemap data into list of tile indices.
+    
+    Each tile is a u16 value where bits 0-10 are the tile index (1-based, 0=empty).
+    Bits 11-15 are unused (tiles are not flipped in game).
+    """
+    tiles = []
+    for i in range(len(tilemap_data) // 2):
+        tile_val = struct.unpack('<H', tilemap_data[i*2:i*2+2])[0]
+        tiles.append(tile_val)
+    return tiles
+
+
+def get_tile_index(tile_val: int) -> int:
+    """
+    Extract tile index from tilemap u16 value.
+    
+    Returns 0-based index, or -1 for empty tiles.
+    """
+    idx = tile_val & 0x7FF  # Lower 11 bits, 1-based
+    return idx - 1 if idx > 0 else -1
+
+
+# =============================================================================
+# Palette Parsing with RGBA Support
+# =============================================================================
+
+def parse_palette_rgba(data: bytes, num_colors: int = 256) -> list[tuple]:
+    """
+    Parse a PSX CLUT to RGBA tuples with transparency support.
+    
+    Color 0 is treated as transparent. Other colors are fully opaque.
+    Uses proper 255-scale conversion from 5-bit components.
+    
+    Returns:
+        List of (R, G, B, A) tuples
+    """
+    colors = []
+    max_colors = min(num_colors, len(data) // 2)
+    
+    for i in range(max_colors):
+        color = struct.unpack('<H', data[i*2:i*2+2])[0]
+        r = ((color & 0x1F) * 255) // 31
+        g = (((color >> 5) & 0x1F) * 255) // 31
+        b = (((color >> 10) & 0x1F) * 255) // 31
+        # Color 0 is transparent unless STP bit is set
+        a = 255 if i > 0 or (color & 0x8000) else 0
+        colors.append((r, g, b, a))
+    
+    # Pad to requested size
+    while len(colors) < num_colors:
+        colors.append((0, 0, 0, 0))
+    
+    return colors
+
+
+def parse_palette_container(asset400_data: bytes) -> list[list[tuple]]:
+    """
+    Parse palette container from Asset 400 (0x190).
+    
+    Returns list of RGBA palettes (256 colors each).
+    """
+    entries = parse_container_toc(asset400_data)
+    palettes = []
+    
+    for entry in entries:
+        if entry.data and len(entry.data) >= 512:
+            palettes.append(parse_palette_rgba(entry.data))
+        else:
+            # Fallback to grayscale
+            palettes.append([(i, i, i, 255 if i > 0 else 0) for i in range(256)])
+    
+    return palettes
+
+
+# =============================================================================
+# Tile Extraction with Size Flag Support
+# =============================================================================
+
+def extract_tiles_rgba(pixel_data: bytes, palette_indices: bytes, palettes: list[list[tuple]],
+                       flags_data: bytes, count_16x16: int, count_8x8: int,
+                       scale_8x8: bool = True) -> list["Image"]:
+    """
+    Extract all tiles as RGBA PIL Images with proper size handling.
+    
+    Args:
+        pixel_data: Asset 300 raw pixel data (8bpp)
+        palette_indices: Asset 301 palette assignments (1 byte per tile)
+        palettes: List of RGBA palettes from parse_palette_container()
+        flags_data: Asset 302 tile size flags (1 byte per tile)
+        count_16x16: Number of 16×16 tiles
+        count_8x8: Number of 8×8 tiles
+        scale_8x8: If True, scale 8×8 tiles to 16×16 for consistent grid (default: True)
+        
+    Returns:
+        List of PIL Images (all 16×16 if scale_8x8=True)
+    """
+    from PIL import Image
+    
+    tiles = []
+    total_tiles = count_16x16 + count_8x8
+    
+    for i in range(total_tiles):
+        # Determine tile size from flags or position
+        if flags_data and i < len(flags_data):
+            is_8x8 = (flags_data[i] & 0x02) != 0
+        else:
+            is_8x8 = (i >= count_16x16)
+        
+        # Get palette for this tile
+        pal_idx = palette_indices[i] if i < len(palette_indices) else 0
+        palette = palettes[pal_idx] if pal_idx < len(palettes) else palettes[0] if palettes else [(i, i, i, 255) for i in range(256)]
+        
+        if is_8x8:
+            # 8×8 tiles: 128 bytes each (8 rows × 16-byte stride)
+            tile_offset = count_16x16 * 256 + (i - count_16x16) * 128
+            tile_size = 8
+            stride = 16
+        else:
+            # 16×16 tiles: 256 bytes each
+            tile_offset = i * 256
+            tile_size = 16
+            stride = 16
+        
+        # Create tile image at native size
+        native_img = Image.new('RGBA', (tile_size, tile_size), (0, 0, 0, 0))
+        
+        for y in range(tile_size):
+            for x in range(tile_size):
+                pix_off = tile_offset + y * stride + x
+                if pix_off < len(pixel_data):
+                    color_idx = pixel_data[pix_off]
+                    if color_idx < len(palette):
+                        native_img.putpixel((x, y), palette[color_idx])
+        
+        # Scale 8×8 tiles to 16×16 for consistent grid placement
+        if scale_8x8 and tile_size == 8:
+            tile_img = native_img.resize((16, 16), Image.NEAREST)
+        else:
+            tile_img = native_img
+        
+        tiles.append(tile_img)
+    
+    return tiles
+
+
 if __name__ == "__main__":
     main()

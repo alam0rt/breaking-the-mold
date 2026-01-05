@@ -4,11 +4,13 @@ render_level.py - Render Skullmonkeys level to PNG images
 
 Usage:
     python3 scripts/render_level.py [level_index] [output_dir]
+    python3 scripts/render_level.py --all                      # Render all levels
     
 Examples:
     python3 scripts/render_level.py 1              # PHRO (Skullmonkey Gate)
     python3 scripts/render_level.py 2              # SCIE (Science Center)
     python3 scripts/render_level.py 2 output/scie  # Custom output directory
+    python3 scripts/render_level.py --all          # Render all levels, all stages
     
 Level indices:
     0 = MENU (Options)
@@ -16,6 +18,12 @@ Level indices:
     2 = SCIE (Science Center)
     3 = TMPL (Monkey Shrines)
     ... (see blb.py for full list)
+
+Stage Pairing:
+    Each stage's tertiary block uses tiles from the secondary that PRECEDES it:
+    - Stage 0 uses base secondary
+    - Stage 1 uses stage 0's secondary sub-block
+    - Stage N uses stage (N-1)'s secondary sub-block
 """
 
 import sys
@@ -26,205 +34,71 @@ from pathlib import Path
 # Add scripts directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from blb import BLBFile
+from blb import (
+    BLBFile, 
+    parse_container_toc,
+    parse_palette_container,
+    parse_layer_entries,
+    parse_tilemap_container,
+    parse_tilemap,
+    get_tile_index,
+    extract_tiles_rgba,
+    TileHeader,
+)
 from PIL import Image
 
 
-def parse_toc(data: bytes) -> dict:
-    """Parse a TOC (Table of Contents) from a data segment."""
-    count = struct.unpack_from('<I', data, 0)[0]
-    assets = {}
-    for i in range(count):
-        entry_off = 4 + i * 12
-        asset_id, asset_size, data_offset = struct.unpack_from('<III', data, entry_off)
-        if asset_size > 0 and data_offset + asset_size <= len(data):
-            assets[asset_id] = data[data_offset:data_offset + asset_size]
-    return assets
-
-
-def parse_palettes(palette_container: bytes) -> list:
-    """Parse a palette container (Asset 0x190) into a list of 256-color palettes."""
-    count = struct.unpack_from('<I', palette_container, 0)[0]
-    palettes = []
-    
-    for i in range(count):
-        entry_off = 4 + i * 12
-        pal_idx, pal_size, pal_offset = struct.unpack_from('<III', palette_container, entry_off)
-        pal_data = palette_container[pal_offset:pal_offset + pal_size]
-        
-        palette = []
-        for j in range(256):
-            if j * 2 + 2 <= len(pal_data):
-                color = struct.unpack_from('<H', pal_data, j * 2)[0]
-                r = ((color & 0x1F) * 255) // 31
-                g = (((color >> 5) & 0x1F) * 255) // 31
-                b = (((color >> 10) & 0x1F) * 255) // 31
-                # Color 0 is transparent unless STP bit is set
-                a = 255 if j > 0 or (color & 0x8000) else 0
-                palette.append((r, g, b, a))
-            else:
-                palette.append((0, 0, 0, 0))
-        palettes.append(palette)
-    
-    return palettes
-
-
-def extract_tiles(pixel_data: bytes, pal_indices: list, palettes: list,
-                  count_16x16: int, count_8x8: int) -> list:
-    """Extract tiles as RGBA PIL Images."""
-    tiles = []
-    
-    # Extract 16x16 tiles (256 bytes each)
-    for i in range(count_16x16):
-        tile_offset = i * 256
-        tile_img = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
-        pal_idx = pal_indices[i] if i < len(pal_indices) else 0
-        palette = palettes[pal_idx] if pal_idx < len(palettes) else palettes[0]
-        
-        for y in range(16):
-            for x in range(16):
-                pix_off = tile_offset + y * 16 + x
-                if pix_off < len(pixel_data):
-                    color_idx = pixel_data[pix_off]
-                    tile_img.putpixel((x, y), palette[color_idx])
-        tiles.append(tile_img)
-    
-    # Extract 8x8 tiles (128 bytes each - 8 rows x 16 bytes, only first 8 used)
-    for i in range(count_8x8):
-        tile_offset = count_16x16 * 256 + i * 128
-        tile_img = Image.new('RGBA', (8, 8), (0, 0, 0, 0))
-        pal_idx = pal_indices[count_16x16 + i] if (count_16x16 + i) < len(pal_indices) else 0
-        palette = palettes[pal_idx] if pal_idx < len(palettes) else palettes[0]
-        
-        for y in range(8):
-            for x in range(8):
-                pix_off = tile_offset + y * 16 + x
-                if pix_off < len(pixel_data):
-                    color_idx = pixel_data[pix_off]
-                    tile_img.putpixel((x, y), palette[color_idx])
-        tiles.append(tile_img)
-    
-    return tiles
-
-
-def parse_layer_entries(asset201: bytes) -> list:
-    """Parse layer entries (92 bytes each) from Asset 0xC9."""
-    layers = []
-    num_layers = len(asset201) // 92
-    
-    for i in range(num_layers):
-        off = i * 92
-        layer = {
-            'x_offset': struct.unpack_from('<H', asset201, off + 0x00)[0],
-            'y_offset': struct.unpack_from('<H', asset201, off + 0x02)[0],
-            'width': struct.unpack_from('<H', asset201, off + 0x04)[0],
-            'height': struct.unpack_from('<H', asset201, off + 0x06)[0],
-            'scroll_x': struct.unpack_from('<I', asset201, off + 0x10)[0],
-            'scroll_y': struct.unpack_from('<I', asset201, off + 0x14)[0],
-        }
-        layers.append(layer)
-    
-    return layers
-
-
-def parse_tilemaps(asset200: bytes) -> list:
-    """Parse tilemap data from Asset 0xC8 (sub-TOC format)."""
-    count = struct.unpack_from('<I', asset200, 0)[0]
-    tilemaps = []
-    
-    for i in range(count):
-        entry_off = 4 + i * 12
-        layer_idx, data_size, data_offset = struct.unpack_from('<III', asset200, entry_off)
-        tilemap_data = asset200[data_offset:data_offset + data_size]
-        num_tiles = data_size // 2
-        tilemap = [struct.unpack_from('<H', tilemap_data, j * 2)[0] for j in range(num_tiles)]
-        tilemaps.append(tilemap)
-    
-    return tilemaps
-
-
-def render_level(blb: BLBFile, level_idx: int, output_dir: str, max_width: int = 8192):
+def render_stage(tiles: list, tert_assets: dict, level_id: str, stage_idx: int, 
+                 output_dir: str, max_width: int = 8192) -> Image:
     """
-    Render a level to PNG images.
+    Render a single stage to PNG images.
     
-    Creates:
-        - {level_id}_composite.png: Full level render
-        - {level_id}_overview.png: Scaled-down overview
-        - {level_id}_viewport.png: 2x zoomed viewport of interesting area
+    Args:
+        tiles: List of tile images (from extract_tiles_rgba)
+        tert_assets: Dict of tertiary asset data {asset_id: bytes}
+        level_id: Level ID string (e.g., "PHRO")
+        stage_idx: Stage index within the level
+        output_dir: Output directory path
+        max_width: Maximum canvas width
+        
+    Returns:
+        PIL Image of the rendered stage
     """
-    entry = blb.header.level_entries[level_idx]
-    level_id = entry.level_id
-    
-    print(f"Rendering Level {level_idx}: {entry.name} ({level_id})")
-    
-    f = blb._file
-    
-    # Read secondary data (tiles)
-    f.seek(entry.secondary_byte_offset)
-    sec_data = f.read(entry.secondary_byte_size)
-    sec_assets = parse_toc(sec_data)
-    
-    # Read tertiary block 0 (layers, tilemaps)
-    tert_offset = entry.get_tert_sub_byte_offset(0)
-    tert_size = entry.get_tert_sub_byte_size(0)
-    if tert_size == 0:
-        print("  Error: No tertiary data!")
+    # Parse tertiary assets
+    tert_header_data = tert_assets.get(100)
+    if not tert_header_data or len(tert_header_data) < 12:
         return None
     
-    f.seek(tert_offset)
-    tert_data = f.read(tert_size)
-    tert_assets = parse_toc(tert_data)
+    level_width = struct.unpack_from('<H', tert_header_data, 0x08)[0]
+    level_height = struct.unpack_from('<H', tert_header_data, 0x0A)[0]
+    bg_r, bg_g, bg_b = tert_header_data[0], tert_header_data[1], tert_header_data[2]
     
-    # Validate required assets
-    required_sec = [0x64, 0x12C, 0x12D, 0x190]
-    required_tert = [0x64, 0xC8, 0xC9]
+    # Parse layers and tilemaps
+    layer_data = tert_assets.get(201)
+    tilemap_data = tert_assets.get(200)
     
-    for asset_id in required_sec:
-        if asset_id not in sec_assets:
-            print(f"  Error: Missing secondary asset 0x{asset_id:X}")
-            return None
+    if not layer_data or not tilemap_data:
+        return None
     
-    for asset_id in required_tert:
-        if asset_id not in tert_assets:
-            print(f"  Error: Missing tertiary asset 0x{asset_id:X}")
-            return None
-    
-    # Parse secondary assets
-    sec_asset100 = sec_assets[0x64]
-    count_16x16 = struct.unpack_from('<H', sec_asset100, 0x10)[0]
-    count_8x8 = struct.unpack_from('<H', sec_asset100, 0x12)[0]
-    total_tiles = count_16x16 + count_8x8
-    
-    pixel_data = sec_assets[0x12C]
-    pal_indices = list(sec_assets[0x12D])
-    palettes = parse_palettes(sec_assets[0x190])
-    tiles = extract_tiles(pixel_data, pal_indices, palettes, count_16x16, count_8x8)
-    
-    # Parse tertiary assets
-    tert_asset100 = tert_assets[0x64]
-    level_width = struct.unpack_from('<H', tert_asset100, 0x08)[0]
-    level_height = struct.unpack_from('<H', tert_asset100, 0x0A)[0]
-    bg_r, bg_g, bg_b = tert_asset100[0], tert_asset100[1], tert_asset100[2]
-    
-    layer_entries = parse_layer_entries(tert_assets[0xC9])
-    tilemaps = parse_tilemaps(tert_assets[0xC8])
-    
-    print(f"  Level size: {level_width}x{level_height} tiles ({level_width * 16}x{level_height * 16} pixels)")
-    print(f"  Tiles: {total_tiles} ({count_16x16} 16x16 + {count_8x8} 8x8)")
-    print(f"  Layers: {len(layer_entries)}")
-    print(f"  Background: RGB({bg_r}, {bg_g}, {bg_b})")
+    layer_entries = parse_layer_entries(layer_data)
+    tilemap_data_list = parse_tilemap_container(tilemap_data)
+    tilemaps = [parse_tilemap(tm) for tm in tilemap_data_list]
     
     # Create canvas
     canvas_width = min(level_width * 16, max_width)
     canvas_height = level_height * 16
+    
+    if canvas_width <= 0 or canvas_height <= 0:
+        return None
+    
     canvas = Image.new('RGBA', (canvas_width, canvas_height), (bg_r, bg_g, bg_b, 255))
     
     # Render layers (back to front)
     for layer, tilemap in zip(layer_entries, tilemaps):
-        width = layer['width']
-        height = layer['height']
-        x_offset = layer['x_offset']
-        y_offset = layer['y_offset']
+        width = layer.width
+        height = layer.height
+        x_offset = layer.x_offset
+        y_offset = layer.y_offset
         
         for y in range(height):
             for x in range(width):
@@ -236,9 +110,7 @@ def render_level(blb: BLBFile, level_idx: int, output_dir: str, max_width: int =
                 if tile_val == 0:
                     continue
                 
-                # Extract tile index (lower 11 bits, 1-based, matching extract_all_graphics.py)
-                tile_idx = (tile_val & 0x7FF) - 1
-                # Note: Bits 11-15 are unused (tiles are not flipped in game)
+                tile_idx = get_tile_index(tile_val)
                 
                 if tile_idx < 0 or tile_idx >= len(tiles):
                     continue
@@ -254,37 +126,141 @@ def render_level(blb: BLBFile, level_idx: int, output_dir: str, max_width: int =
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
     
+    # Generate filename with stage suffix if not stage 0
+    suffix = f"_s{stage_idx}" if stage_idx > 0 else ""
+    
     # Save composite
-    composite_path = f'{output_dir}/{level_id}_composite.png'
+    composite_path = f'{output_dir}/{level_id}{suffix}_composite.png'
     canvas.save(composite_path)
-    print(f"  Saved: {composite_path} ({canvas.width}x{canvas.height})")
+    print(f"    Saved: {composite_path} ({canvas.width}x{canvas.height})")
     
     # Save overview (scaled down)
     scale = max(1, canvas.width // 2048)
     thumb = canvas.resize((canvas.width // scale, canvas.height // scale), Image.NEAREST)
-    overview_path = f'{output_dir}/{level_id}_overview.png'
+    overview_path = f'{output_dir}/{level_id}{suffix}_overview.png'
     thumb.save(overview_path)
-    print(f"  Saved: {overview_path} ({thumb.width}x{thumb.height})")
-    
-    # Save viewport (2x zoomed section)
-    viewport_x = min(1000, max(0, canvas.width - 320))
-    viewport_y = min(200, max(0, canvas.height - 240))
-    viewport = canvas.crop((viewport_x, viewport_y, 
-                            min(viewport_x + 320, canvas.width),
-                            min(viewport_y + 240, canvas.height)))
-    viewport_2x = viewport.resize((viewport.width * 2, viewport.height * 2), Image.NEAREST)
-    viewport_path = f'{output_dir}/{level_id}_viewport.png'
-    viewport_2x.save(viewport_path)
-    print(f"  Saved: {viewport_path}")
     
     return canvas
+
+
+def extract_tiles_from_secondary(sec_data: bytes) -> tuple:
+    """
+    Extract tiles from a secondary data block.
+    
+    Returns:
+        (tiles, count_16x16, count_8x8) or (None, 0, 0) on error
+    """
+    sec_entries = parse_container_toc(sec_data)
+    sec_assets = {e.asset_id: e.data for e in sec_entries if e.data}
+    
+    required = [100, 300, 301, 400]
+    if not all(a in sec_assets for a in required):
+        return None, 0, 0
+    
+    tile_header = TileHeader.from_bytes(sec_assets[100])
+    count_16x16 = tile_header.count_16x16
+    count_8x8 = tile_header.count_8x8_a
+    
+    pixel_data = sec_assets[300]
+    pal_indices = sec_assets[301]
+    flags_data = sec_assets.get(302, b'')
+    palettes = parse_palette_container(sec_assets[400])
+    
+    tiles = extract_tiles_rgba(pixel_data, pal_indices, palettes, flags_data,
+                               count_16x16, count_8x8, scale_8x8=True)
+    
+    return tiles, count_16x16, count_8x8
+
+
+def render_level(blb: BLBFile, level_idx: int, output_dir: str, max_width: int = 8192):
+    """
+    Render all stages of a level to PNG images.
+    
+    Creates for each stage:
+        - {level_id}[_sN]_composite.png: Full stage render
+        - {level_id}[_sN]_overview.png: Scaled-down overview
+    """
+    entry = blb.header.level_entries[level_idx]
+    level_id = entry.level_id
+    
+    print(f"Rendering Level {level_idx}: {entry.name} ({level_id})")
+    
+    f = blb._file
+    
+    # Read base secondary data (tiles shared across stages)
+    f.seek(entry.secondary_byte_offset)
+    base_sec_data = f.read(entry.secondary_byte_size)
+    
+    # Build per-stage secondary data mapping
+    # Pattern: Stage 0 uses base, Stage N uses stage (N-1)'s secondary sub-block
+    stage_secondaries = [base_sec_data]
+    for i in range(5):
+        sub_count = entry.sec_sub_counts[i] if entry.sec_sub_counts else 0
+        if sub_count > 0:
+            sub_offset = entry.sec_sub_offsets[i] * 2048  # Sector to byte
+            sub_size = sub_count * 2048
+            f.seek(sub_offset)
+            stage_secondaries.append(f.read(sub_size))
+        else:
+            # Inherit from previous
+            stage_secondaries.append(stage_secondaries[-1] if stage_secondaries else base_sec_data)
+    
+    stages_rendered = 0
+    
+    # Render EACH STAGE (tertiary sub-blocks)
+    for stage_idx in range(6):
+        tert_size = entry.get_tert_sub_byte_size(stage_idx)
+        if tert_size == 0:
+            continue
+        
+        print(f"  Stage {stage_idx}:")
+        
+        # Read tertiary data for this stage
+        f.seek(entry.get_tert_sub_byte_offset(stage_idx))
+        tert_data = f.read(tert_size)
+        tert_entries = parse_container_toc(tert_data)
+        tert_assets = {e.asset_id: e.data for e in tert_entries if e.data}
+        
+        # Validate required tertiary assets
+        if 100 not in tert_assets or 200 not in tert_assets or 201 not in tert_assets:
+            print(f"    Skipping: Missing required tertiary assets")
+            continue
+        
+        # Get secondary for this stage (uses the one before it in sector layout)
+        sec_data = stage_secondaries[stage_idx]
+        
+        # Extract tiles from the appropriate secondary
+        tiles, count_16x16, count_8x8 = extract_tiles_from_secondary(sec_data)
+        if tiles is None:
+            print(f"    Skipping: Failed to extract tiles from secondary")
+            continue
+        
+        total_tiles = count_16x16 + count_8x8
+        print(f"    Tiles: {total_tiles} ({count_16x16} 16x16 + {count_8x8} 8x8)")
+        
+        # Render this stage
+        canvas = render_stage(tiles, tert_assets, level_id, stage_idx, output_dir, max_width)
+        if canvas:
+            stages_rendered += 1
+    
+    print(f"  Rendered {stages_rendered} stage(s)")
+    return stages_rendered
 
 
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Render Skullmonkeys level to PNG')
-    parser.add_argument('level_index', type=int, nargs='?', default=1,
+    parser = argparse.ArgumentParser(
+        description='Render Skullmonkeys level(s) to PNG',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    python3 scripts/render_level.py 1              # PHRO (Skullmonkey Gate)
+    python3 scripts/render_level.py 3              # TMPL (Monkey Shrines), all stages
+    python3 scripts/render_level.py --all          # Render ALL levels
+    python3 scripts/render_level.py --list         # List available levels
+""")
+    parser.add_argument('level_index', type=int, nargs='?', default=None,
                         help='Level index (0=MENU, 1=PHRO, 2=SCIE, ...)')
     parser.add_argument('output_dir', nargs='?', default='extracted_memory/level_renders',
                         help='Output directory')
@@ -292,6 +268,8 @@ def main():
                         help='Path to GAME.BLB file')
     parser.add_argument('--list', action='store_true',
                         help='List all levels and exit')
+    parser.add_argument('--all', action='store_true',
+                        help='Render all levels')
     
     args = parser.parse_args()
     
@@ -304,15 +282,28 @@ def main():
         if args.list:
             print("Available levels:")
             for i, entry in enumerate(blb.header.level_entries):
-                print(f"  {i:2}: {entry.level_id:4} - {entry.name}")
+                tert_count = sum(1 for j in range(6) if entry.get_tert_sub_byte_size(j) > 0)
+                print(f"  {i:2}: {entry.level_id:4} - {entry.name:20} ({tert_count} stages)")
             return
         
-        if args.level_index < 0 or args.level_index >= len(blb.header.level_entries):
-            print(f"Error: Invalid level index {args.level_index}")
+        if args.all:
+            # Render all levels
+            total_stages = 0
+            for level_idx in range(len(blb.header.level_entries)):
+                stages = render_level(blb, level_idx, args.output_dir)
+                total_stages += stages
+            print(f"\nTotal: Rendered {total_stages} stages across {len(blb.header.level_entries)} levels")
+            return
+        
+        # Default to level 1 if no index provided
+        level_index = args.level_index if args.level_index is not None else 1
+        
+        if level_index < 0 or level_index >= len(blb.header.level_entries):
+            print(f"Error: Invalid level index {level_index}")
             print(f"Valid range: 0-{len(blb.header.level_entries) - 1}")
             sys.exit(1)
         
-        render_level(blb, args.level_index, args.output_dir)
+        render_level(blb, level_index, args.output_dir)
 
 
 if __name__ == '__main__':

@@ -447,8 +447,12 @@ Layout in file:
 1. First `count_16x16` tiles (256 bytes each)
 2. Then `count_8x8` tiles (128 bytes each)
 
-**Extraction script:** `scripts/extract_sprites.py` successfully extracts tiles
-using Assets 300+301+302+400 to produce correctly colored PNG images.
+**Rendering Note:** The tilemap uses a consistent 16-pixel grid. When rendering layers,
+8×8 tiles are scaled 2× to 16×16 to fill their grid cell. This is how the game handles
+mixed tile sizes - all tiles occupy a 16×16 space on screen regardless of native size.
+
+**Extraction script:** `scripts/extract_all_graphics.py` extracts tiles using
+Assets 300+301+302+400 to produce correctly colored PNG images.
 
 #### Asset 301 - Palette Assignment (EXTRACTION-VERIFIED)
 
