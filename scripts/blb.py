@@ -108,7 +108,9 @@ Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
     
     # Level identification (0x0C-0x0D)
     0x0C       1  u8      level_index         Level asset index (used for asset loading)
-    0x0D       1  u8      level_flag          Level flag (0 or 1, purpose TBD)
+    0x0D       1  u8      level_flag          Password-selectable flag (1=selectable via password, 0=not)
+                                              8 levels have flag=1: SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
+                                              Used by InitGameState to build password level list
     
     # Stage count and tertiary data offsets (0x0E-0x1D)
     0x0E       2  u16     stage_count         Number of stages in this level (1-6)

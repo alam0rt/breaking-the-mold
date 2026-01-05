@@ -213,7 +213,11 @@ Offset   Size   Description
 
 # Level identification (0x0C-0x0D)
 0x0C     u8     Level asset index (0-25)
-0x0D     u8     Level flag (0 or 1, purpose TBD)
+0x0D     u8     Password-selectable flag (CONFIRMED 2026-01-06)
+                1 = Level can be selected via password system
+                0 = Not directly selectable (bosses, special modes, later worlds)
+                Flag=1 levels: SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED (8 levels)
+                Read by GetLevelFlagByIndex (0x8007aa28), used by InitGameState (0x8007cd34)
 
 # Stage count and tertiary data offsets (0x0E-0x1D)
 0x0E     u16    Stage count (1-6, number of stages in this level)

@@ -1342,26 +1342,47 @@ make lua SCRIPT=scripts/verify_toc_fields.lua
 
 **Hypothesis:** Byte offset to specific asset data within primary blob (palette? collision map? geometry start?). Needs runtime tracing to confirm.
 
-### Field 0x0D: `level_flag` - PARTIALLY UNDERSTOOD
+### Field 0x0D: `level_flag` - CONFIRMED: Password-Selectable Flag
 
 **Values:** 0 or 1 only
 
-**Pattern analysis:**
-| Flag | Levels |
-|------|--------|
-| flag=0, tert=1 | FINN, MEGA, HEAD, GLEN, WIZZ, KLOG (all bosses + special) |
-| flag=0, tert=2 | RUNN |
-| flag=0, tert=3 | PHRO |
-| flag=0, tert=4 | SOAR |
-| flag=0, tert=5 | EGGS, SEVN, CSTL, EVIL |
-| flag=0, tert=6 | SNOW, CLOU, CRYS, MOSS |
-| flag=1, tert=4 | TMPL, FOOD, WEED |
-| flag=1, tert=5 | SCIE, BRG1, CAVE |
-| flag=1, tert=6 | MENU, BOIL, GLID |
+**Purpose (CONFIRMED via Ghidra 2026-01-06):**
+This flag indicates whether a level is "password-selectable" - i.e., can be directly
+jumped to via the password system on the level select screen.
 
-**Key observation:** All bosses have `flag=0` and `tert_block_count=1`.
+**Code Evidence:**
+- `GetLevelFlagByIndex` (0x8007aa28) reads offset 0x0D from LevelEntry
+- `InitGameState` (0x8007cd34) builds a list of selectable levels:
+  ```c
+  for each level where (GetLevelFlagByIndex(ctx, i) != 0 && GetLevelAssetIndex(ctx, i) != 0) {
+      selectableLevels[count++] = levelAssetIndex;  // Max 10 entries
+  }
+  ```
+- The list is stored at GameState+0x171 (10 entries max), count at GameState+0x17b
 
-**Hypothesis:** May indicate level type (boss vs regular) or loading behavior. Needs runtime confirmation.
+**Flag=1 (Selectable) Levels:**
+| Index | ID | Name |
+|-------|-----|------|
+| 0 | MENU | Options (excluded by index!=0 check) |
+| 2 | SCIE | Science Center |
+| 3 | TMPL | Monkey Shrines |
+| 6 | BOIL | Hard Boiler |
+| 8 | FOOD | Skullmonkey Brand Hot Dogs |
+| 10 | BRG1 | Elevated Structure of Ynt |
+| 11 | GLID | Ynt Death Garden |
+| 12 | CAVE | Ynt Mines |
+| 13 | WEED | Ynt Weeds |
+
+**Flag=0 (Non-Selectable) Levels:**
+- PHRO (1) - First gameplay level (forced entry point)
+- Boss levels: MEGA, HEAD, GLEN, WIZZ, KLOG
+- Special modes: FINN, RUNN
+- Later worlds: SNOW, EGGS, CLOU, SEVN, SOAR, CRYS, CSTL, MOSS, EVIL
+
+**Interpretation:**
+The 8 flag=1 levels (excluding MENU) appear to be password destinations.
+PHRO is excluded because it's the natural starting level (no password needed).
+Bosses and special modes are reached through normal gameplay progression.
 
 ### Groupings by (0x06, 0x0A) Pairs
 

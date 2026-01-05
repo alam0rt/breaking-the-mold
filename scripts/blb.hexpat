@@ -219,12 +219,10 @@ struct TileHeader {
     u16 unknown_0e [[hidden]];
     
     // Tile counts (0x10-0x15) - used by GetTotalTileCount
+    // Total = count_16x16 + count_8x8_a + count_8x8_b
     u16 count_16x16 [[name("16x16 Tiles"), comment("Number of 16x16 pixel tiles"), color("80FF80")]];
     u16 count_8x8_a [[name("8x8 Tiles A"), comment("Primary 8x8 tile count"), color("80CCFF")]];
-    u16 count_8x8_b [[name("8x8 Tiles B"), comment("Secondary 8x8 tile count (often 0)")]];
-    
-    // Computed: Total tiles for tilemap indexing
-    u32 _total_tiles = count_16x16 + count_8x8_a + count_8x8_b [[name("Total Tiles"), color("FFFF80")]];
+    u16 count_8x8_b [[name("8x8 Tiles B"), comment("Additional tile count (often 0)")]];
     
     // Unknown region (0x16-0x1B)
     u8 unknown_16[6] [[hidden]];
@@ -282,10 +280,8 @@ struct LayerEntry {
     u8 bg_b [[name("BG B"), color("4040FF")]];
     
     // Padding to 92 bytes (0x2F-0x5B)
+    // Note: Tile count = width × height
     u8 layer_padding[45] [[hidden]];
-    
-    // Computed properties for display
-    u32 _tile_count = width * height [[name("Tile Count"), color("80CCFF")]];
 } [[name("Layer"), color("FFCC80"), static,
     hex::inline_visualize("color", bg_r, bg_g, bg_b, 255)]];
 
@@ -636,7 +632,7 @@ struct LevelEntry {
     
     // Level identification (0x0C-0x0D)
     u8 level_index [[name("Index"), comment("Level asset index"), color("40FF40")]];
-    u8 level_flag [[name("Flag"), comment("Level flag (0 or 1)")]];
+    u8 level_flag [[name("Selectable"), comment("1=password-selectable level, 0=not selectable (bosses, special modes, later worlds)")]];
     
     // Stage count and tertiary data offsets (0x0E-0x1D)
     // tert_data_off[i] << 5 gives the tertiary data size for stage i (used by GetCurrentTertiaryDataSize)
@@ -867,14 +863,12 @@ struct PaletteContainerAsset {
 // TILEMAP CONTAINER - Asset 200 (0x0C8)
 // =============================================================================
 
-// Tilemap sub-entry with computed tile count
+// Tilemap sub-entry (12 bytes, same as TOCEntry)
+// Note: Tile count = size / 2 (each tile is 2 bytes)
 struct TilemapSubEntry {
     u32 layer_id [[name("Layer"), comment("Layer index")]];
-    u32 size [[name("Size"), comment("Tilemap data size in bytes")]];
+    u32 size [[name("Size"), comment("Tilemap data size in bytes (÷2 = tiles)")]];
     type::Hex<u32> offset [[name("Offset"), comment("Offset from container start")]];
-    
-    // Calculate tile count from size (each tile is 2 bytes)
-    u32 tile_count = size / 2 [[name("Tiles"), color("80CCFF")]];
 } [[static, color("FFCC80")]];
 
 // Tilemap data block - array of u16 tile indices
@@ -919,27 +913,9 @@ struct ContainerAssetHeader {
 
 // -----------------------------------------------------------------------------
 // Tile Header - Asset 100 (0x064), 36 bytes
+// Uses the main TileHeader struct defined earlier
 // -----------------------------------------------------------------------------
-struct TileHeaderAsset {
-    u8 bg_r [[name("BG R"), color("FF0000")]];
-    u8 bg_g [[name("BG G"), color("00FF00")]];
-    u8 bg_b [[name("BG B"), color("0000FF")]];
-    u8 pad_03 [[hidden]];
-    u8 secondary_r [[name("Alt R"), color("FF4040")]];
-    u8 secondary_g [[name("Alt G"), color("40FF40")]];
-    u8 secondary_b [[name("Alt B"), color("4040FF")]];
-    u8 pad_07 [[hidden]];
-    u16 level_width [[name("Width"), comment("Level width in tiles")]];
-    u16 level_height [[name("Height"), comment("Level height in tiles")]];
-    u16 unknown_0c [[hidden]];
-    u16 unknown_0e [[hidden]];
-    u16 tile_count_16x16 [[name("16x16 Tiles"), comment("Number of 16x16 pixel tiles"), color("80FF80")]];
-    u16 tile_count_8x8 [[name("8x8 Tiles"), comment("Number of 8x8 pixel tiles"), color("80CCFF")]];
-    u16 tile_count_extra [[name("Extra Tiles"), comment("Additional tile count")]];
-    u8 unknown_16[6] [[hidden]];
-    u16 field_1c [[hidden]];
-    u8 remaining[6] [[hidden]];
-} [[name("Tile Header"), color("80FF80"), static]];
+using TileHeaderAsset = TileHeader;
 
 // =============================================================================
 // LEVEL DATA EXPLORER
