@@ -631,10 +631,8 @@ struct LevelEntry {
     // Primary data pointers (0x00-0x0B)
     type::Hex<u16> sector_offset [[name("Sector"), comment("Primary data sector offset")]];
     u16 sector_count [[name("Count"), comment("Primary data sector count")]];
-    u16 unknown_04 [[hidden]];
-    u16 unknown_06 [[name("Unk06"), comment("Unknown count (7-20)")]];
-    u16 entry1_offset_lo [[name("Entry1 Lo"), comment("Entry[1].offset low 16 bits")]];
-    u16 unknown_0a [[name("Unk0a"), comment("Unknown count (0-16)")]];
+    type::Hex<u32> primary_buffer_size [[name("BufSize"), comment("Total primary buffer size for level (returned by GetPrimaryBufferSize @ 8007a5cc)")]];
+    type::Hex<u32> entry1_offset [[name("Entry1 Off"), comment("Offset to Entry[1] (asset 601/collision) in primary TOC")]];
     
     // Level identification (0x0C-0x0D)
     u8 level_index [[name("Index"), comment("Level asset index"), color("40FF40")]];

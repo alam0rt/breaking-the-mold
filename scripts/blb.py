@@ -103,10 +103,8 @@ Level Metadata Entry (0x70 = 112 bytes, at offset 0x000):
     # Primary data pointers (0x00-0x0B)
     0x00       2  u16     sector_offset       Primary data sector offset in BLB
     0x02       2  u16     sector_count        Primary data sector count
-    0x04       2  u16     unknown_04          Offset into Entry[0] data (purpose TBD)
-    0x06       2  u16     unknown_06          Unknown count (7-20 range, purpose TBD)
-    0x08       2  u16     entry1_offset_lo    Low 16 bits of Entry[1].offset in primary TOC (CONFIRMED)
-    0x0A       2  u16     unknown_0A          Unknown count (0-16 range, purpose TBD)
+    0x04       4  u32     primary_buffer_size Total buffer size for level (returned by GetPrimaryBufferSize @ 8007a5cc)
+    0x08       4  u32     entry1_offset       Offset to Entry[1]/Asset 601 in primary TOC (CONFIRMED)
     
     # Level identification (0x0C-0x0D)
     0x0C       1  u8      level_index         Level asset index (used for asset loading)
@@ -1330,11 +1328,30 @@ class LevelMetadataEntry:
     sector_offset: int = None  # u16 at +0x00, sector offset in BLB
     sector_count: int = None  # u16 at +0x02, sector count
     
-    # Primary data internal pointers (0x04-0x0B)
-    unknown_04: int = unknown("+0x04: u16, offset into Entry[0] data, purpose TBD")
-    unknown_06: int = unknown("+0x06: u16, count (7-20 range), purpose TBD")
-    entry1_offset_lo: int = None  # u16 at +0x08: Low 16 bits of Entry[1].offset in primary TOC (CONFIRMED)
-    unknown_0A: int = unknown("+0x0A: u16, count (0-16 range), purpose TBD")
+    # Primary buffer parameters (0x04-0x0B) - CONFIRMED as u32s
+    primary_buffer_size: int = None  # u32 at +0x04: Total buffer size for level (returned by GetPrimaryBufferSize @ 8007a5cc)
+    entry1_offset: int = None  # u32 at +0x08: Offset to Entry[1]/Asset 601 in primary TOC (CONFIRMED)
+    
+    # Legacy aliases for compatibility
+    @property
+    def unknown_04(self) -> int:
+        """Legacy alias - use primary_buffer_size instead."""
+        return self.primary_buffer_size & 0xFFFF  # Low 16 bits for compat
+    
+    @property
+    def unknown_06(self) -> int:
+        """Legacy alias - use primary_buffer_size instead."""
+        return (self.primary_buffer_size >> 16) & 0xFFFF  # High 16 bits
+    
+    @property
+    def entry1_offset_lo(self) -> int:
+        """Legacy alias - use entry1_offset instead."""
+        return self.entry1_offset & 0xFFFF  # Low 16 bits
+    
+    @property
+    def unknown_0A(self) -> int:
+        """Legacy alias - use entry1_offset instead."""
+        return (self.entry1_offset >> 16) & 0xFFFF  # High 16 bits
     
     # Level identification (0x0C-0x0D)
     level_index: int = None  # u8 at +0x0C: Level asset index
@@ -1708,11 +1725,9 @@ class BLBHeader:
         sector_offset = struct.unpack('<H', data[0x00:0x02])[0]
         sector_count = struct.unpack('<H', data[0x02:0x04])[0]
         
-        # Primary data internal pointers (0x04-0x0B)
-        unknown_04 = struct.unpack('<H', data[0x04:0x06])[0]
-        unknown_06 = struct.unpack('<H', data[0x06:0x08])[0]
-        entry1_offset_lo = struct.unpack('<H', data[0x08:0x0A])[0]
-        unknown_0A = struct.unpack('<H', data[0x0A:0x0C])[0]
+        # Primary buffer parameters (0x04-0x0B) - u32 values
+        primary_buffer_size = struct.unpack('<I', data[0x04:0x08])[0]  # Total buffer size for level
+        entry1_offset = struct.unpack('<I', data[0x08:0x0C])[0]  # Offset to Entry[1]/Asset 601
         
         # Level identification (0x0C-0x0D)
         level_index = data[0x0C]
@@ -1750,10 +1765,8 @@ class BLBHeader:
             raw_data=data,
             sector_offset=sector_offset,
             sector_count=sector_count,
-            unknown_04=unknown_04,
-            unknown_06=unknown_06,
-            entry1_offset_lo=entry1_offset_lo,
-            unknown_0A=unknown_0A,
+            primary_buffer_size=primary_buffer_size,
+            entry1_offset=entry1_offset,
             level_index=level_index,
             level_flag=level_flag,
             tert_block_count=tert_block_count,

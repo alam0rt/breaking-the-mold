@@ -208,10 +208,8 @@ Offset   Size   Description
 # Primary data pointers (0x00-0x0B)
 0x00     u16    Primary sector offset (CONFIRMED)
 0x02     u16    Primary sector count (CONFIRMED)
-0x04     u16    Unknown (large values 776-65240, purpose TBD)
-0x06     u16    Unknown count (7-20 range, purpose TBD)
-0x08     u16    Entry[1].offset low 16 bits (CONFIRMED - 26/26 match with primary TOC)
-0x0A     u16    Unknown count (0-16 range, purpose TBD)
+0x04     u32    Primary buffer size (CONFIRMED - returned by GetPrimaryBufferSize @ 8007a5cc)
+0x08     u32    Entry[1] offset (CONFIRMED - offset to Asset 601/collision in primary TOC)
 
 # Level identification (0x0C-0x0D)
 0x0C     u8     Level asset index (0-25)
@@ -241,17 +239,24 @@ Offset   Size   Description
 0x5B     char[21] Level name (null-terminated, e.g., "Options Menu")
 ```
 
-### Unknown Fields Analysis
+### Field Analysis (0x04-0x0B)
 
-**Fields 0x04, 0x06, 0x0A** remain unidentified. Observations:
-- Levels with identical (0x06, 0x0A) pairs often share the first few worlds:
-  - (14, 7): PHRO, SCIE, TMPL (first 3 gameplay levels)
-  - But other groupings span unrelated worlds
-- Values do NOT correlate with:
-  - Movie indices (only 13 movies, v0A goes to 16)
-  - Stage counts within worlds
-  - Direct tileset/theme sharing
-- Possibly related to asset loading parameters or memory layout
+**u32@0x04 - Primary Buffer Size** (VERIFIED 2026-01-11):
+- Returned by `GetPrimaryBufferSize()` at 0x8007a5cc
+- Used in `InitializeAndLoadLevel` for memory allocation:
+  ```c
+  bufferSize = GetPrimaryBufferSize(ctx);
+  tertiarySize = GetCurrentTertiaryDataSize(ctx);
+  remaining = bufferSize - ALIGN16(tertiarySize);
+  ```
+- For special modes (mode 6), returns fixed 0x7d000 (512KB)
+- Values range from ~510KB to ~1.3MB depending on level complexity
+
+**u32@0x08 - Entry[1] Offset** (VERIFIED 2026-01-11):
+- Offset to Asset 601 (collision/secondary TOC pointer) within primary buffer
+- Used to calculate `ctx[0x1b] = primary_buffer + entry1_offset`
+- Matches `Entry[1].offset` in primary TOC for all 26 levels
+- Asset 601 contains the collision data TOC
 
 ### Data Interleaving Pattern
 
