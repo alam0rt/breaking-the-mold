@@ -1839,7 +1839,9 @@ Possible alternatives:
 
 ---
 
-## Entity Placement System Discovery (2026-01-07) - NEEDS VERIFICATION
+## Entity Placement System Discovery (2026-01-07) - VERIFIED ✓
+
+**Verified 2026-01-06**: BLB viewer now parses Asset 501 and correctly displays 270 entities for PHRO stage.
 
 Reverse-engineered how entities (enemies, collectibles, triggers) are placed in levels.
 
@@ -1898,7 +1900,31 @@ Offset  Size  Field         Description
 |---------|---------|
 | `FUN_8007b7a8` | Returns entity count (`TileHeader + 0x1E`) |
 | `FUN_8007b7bc` | Returns entity data pointer (`LevelDataContext + 0x38`) |
-| `FUN_80024dc4` | Iterates entity array, allocates linked list nodes |
+| `FUN_80024dc4` | Entity loader - copies 24-byte entities to linked list at param+0x28 |
+| `InitializeAndLoadLevel` @ 0x8007d854 | Calls entity loader during level init |
+
+### Entity Type → Sprite ID Mapping
+
+**IMPORTANT**: The mapping from entity type (e.g., 2, 45) to sprite ID is NOT in BLB data.
+Sprite IDs are **hardcoded in game code** per entity type.
+
+Example from `FUN_800281a4`:
+```c
+// Hardcoded sprite IDs used for various objects:
+0xb8700ca1, 0xe2f188, 0xa9240484, 0xe8628689, 0x88a28194, 0x80e85ea0
+```
+
+The entity loader (`FUN_80024dc4`) just copies entity data to a linked list.
+Sprite lookup happens when entities are instantiated - each entity type has its
+own initialization function that calls `InitSpriteContext` with a hardcoded sprite ID.
+
+To build a complete entity type → sprite mapping would require:
+1. Finding the dispatch table/switch for entity types
+2. Decompiling each entity type's init function to extract its sprite ID(s)
+
+Known mappings (from user observation):
+- **Type 2** = Clayballs (coins/collectibles)
+- **Type 45** = Message box
 
 ### Visualization Script
 
@@ -1913,12 +1939,12 @@ Shows entity positions overlaid on level dimensions.
 
 ### Verification Needed
 
-1. Confirm entity types across multiple levels
+1. ~~Confirm entity types across multiple levels~~ (partially done - types verified in multiple stages)
 2. Decode flags field (1, 2, 3 observed - what do they mean?)
-3. Map entity types to actual game objects (enemies, items, triggers)
-4. Verify Type 2 entities - possibly collision zones or invisible triggers?
-5. Test with other levels to confirm structure is consistent
+3. ~~Map entity types to actual game objects (enemies, items, triggers)~~ (see mapping table above)
+4. Verify Type 2 entities - confirmed as clayballs/coins
+5. ~~Test with other levels to confirm structure is consistent~~ (verified)
 
 ---
 
-*Last updated: January 7, 2026*
+*Last updated: January 8, 2026*

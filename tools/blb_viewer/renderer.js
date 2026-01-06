@@ -30,9 +30,12 @@ const RendererState = {
   
   // Display options
   showEntities: true,
+  showEntityDebug: true, // Show entity bounding boxes and type labels
   showGrid: false,
   showMinimap: false,
-  showSprites: true, // New: render sprites at entity positions
+  showSprites: true, // Render sprites at entity positions
+  animateSprites: false, // Animate sprite frames
+  spriteFrameIndex: 0, // Current animation frame index (global for now)
   
   // 90s mode options
   mode90s: false,
@@ -42,7 +45,7 @@ const RendererState = {
   // Layer visibility (true = visible, index by layer index)
   layerVisibility: [],
   
-  // Sprite cache (spriteId -> decoded frame ImageData)
+  // Sprite cache (spriteId_animIdx_frameIdx -> decoded frame ImageData)
   spriteCache: new Map(),
   
   // Cached stage data
@@ -142,12 +145,11 @@ function renderStage(stageData, options = {}) {
     data[i + 3] = 255;
   }
   
-  // Entity markers list
-  const entityMarkers = [];
+  // Total tile count for tile rendering
   const totalTiles = GameEngine.getTotalTileCount(tileHeader);
   
   console.log(`[RENDER] Total tiles: ${totalTiles} (16x16: ${tileHeader.count16x16}, 8x8: ${tileHeader.count8x8}, extra: ${tileHeader.countExtra})`);
-  
+
   // Render layers back-to-front
   for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
     const layer = layers[layerIdx];
@@ -214,26 +216,6 @@ function renderStage(stageData, options = {}) {
         
         // Skip tiles completely outside viewport
         if (screenX + 16 <= 0 || screenX >= viewWidth || screenY + 16 <= 0 || screenY >= viewHeight) {
-          // Still collect entity markers even if off-screen
-          if (tileIdx >= totalTiles) {
-            entityMarkers.push({
-              x: screenX,
-              y: screenY,
-              entityId: tileIdx - totalTiles,
-              layer: layerIdx,
-            });
-          }
-          continue;
-        }
-        
-        // Check if entity marker
-        if (tileIdx >= totalTiles) {
-          entityMarkers.push({
-            x: screenX,
-            y: screenY,
-            entityId: tileIdx - totalTiles,
-            layer: layerIdx,
-          });
           continue;
         }
         
@@ -287,34 +269,54 @@ function renderStage(stageData, options = {}) {
   // Put image data to canvas
   ctx.putImageData(imageData, 0, 0);
   
+  // Get entities from Asset 501 (proper entity placement data)
+  const entities = stageData.entities || [];
+  
   // Debug: log sprite and entity info
   if (stageData.sprites) {
-    console.log(`[RENDER] Sprites: ${stageData.sprites.count}, Entities: ${entityMarkers.length}, showSprites: ${RendererState.showSprites}`);
+    console.log(`[RENDER] Sprites: ${stageData.sprites.count}, Entities: ${entities.length}, showSprites: ${RendererState.showSprites}`);
+    if (entities.length > 0 && entities.length < 20) {
+      console.log(`[RENDER] Entities:`, entities.map(e => `type=${e.type} @(${e.xCenter},${e.yCenter}) ${e.width}x${e.height}`).join(', '));
+    }
   }
   
   // Render sprites at entity positions (or as gallery if no entities)
   let spriteCount = 0;
   if (RendererState.showSprites && stageData.sprites && stageData.sprites.count > 0 && stageData.spriteContainerData) {
-    if (entityMarkers.length > 0) {
-      spriteCount = renderSpritesAtEntities(ctx, stageData, entityMarkers, viewWidth, viewHeight);
+    if (entities.length > 0) {
+      spriteCount = renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight);
     } else {
-      // No entity markers - render sprites as a gallery for debugging
+      // No entities - render sprites as a gallery for debugging
       spriteCount = renderSpriteGallery(ctx, stageData, viewWidth, viewHeight);
     }
   }
   
-  // Draw entity markers on top (if sprites not shown, or as debug overlay)
-  if (RendererState.showEntities && entityMarkers.length > 0) {
+  // Draw entity bounding boxes on top (debug overlay)
+  if (RendererState.showEntities && entities.length > 0) {
     ctx.strokeStyle = '#ff0';
     ctx.lineWidth = 1;
     ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
     ctx.font = '8px monospace';
     
-    for (const marker of entityMarkers) {
-      ctx.fillRect(marker.x, marker.y, 16, 16);
-      ctx.strokeRect(marker.x + 0.5, marker.y + 0.5, 15, 15);
+    for (const entity of entities) {
+      // Calculate screen position (apply camera offset in 90s mode)
+      let screenX = entity.x1;
+      let screenY = entity.y1;
+      const width = entity.width || 16;
+      const height = entity.height || 16;
+      
+      if (RendererState.mode90s) {
+        screenX -= RendererState.cameraX;
+        screenY -= RendererState.cameraY;
+      }
+      
+      // Draw bounding box
+      ctx.fillRect(screenX, screenY, width, height);
+      ctx.strokeRect(screenX + 0.5, screenY + 0.5, width - 1, height - 1);
+      
+      // Draw type ID
       ctx.fillStyle = '#ff0';
-      ctx.fillText(marker.entityId.toString(16), marker.x + 2, marker.y + 12);
+      ctx.fillText(`${entity.type}`, screenX + 2, screenY + 10);
       ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
     }
   }
@@ -353,7 +355,7 @@ function renderStage(stageData, options = {}) {
     totalTiles,
     layerCount: layers.length,
     paletteCount: palettes.length,
-    entityCount: entityMarkers.length,
+    entityCount: entities.length,
     spriteCount: stageData.sprites ? stageData.sprites.count : 0,
     spritesRendered: spriteCount,
     cameraX: RendererState.cameraX,
@@ -367,75 +369,128 @@ function renderStage(stageData, options = {}) {
 
 /**
  * Render sprites at entity marker positions
- * For now, we render the first sprite's first frame at each unique entity position
  * 
- * Returns: number of sprites rendered
+ * NOTE: Entity type → sprite ID mapping is NOT stored in BLB data.
+ * It's hardcoded in game code per entity type. We show entities with
+ * bounding boxes and type labels. Sprite rendering is best-effort.
+ * 
+ * Returns: number of entities rendered
  */
-function renderSpritesAtEntities(ctx, stageData, entityMarkers, viewWidth, viewHeight) {
+function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight) {
   const { sprites, spriteContainerData } = stageData;
-  if (!sprites || sprites.count === 0 || !spriteContainerData) {
-    console.log(`[SPRITES] No sprites to render: sprites=${!!sprites}, count=${sprites?.count}, data=${!!spriteContainerData}`);
-    return 0;
-  }
   
-  console.log(`[SPRITES] Rendering: ${sprites.count} sprites available, ${entityMarkers.length} entity markers`);
+  console.log(`[SPRITES] Rendering: ${sprites?.count || 0} sprites available, ${entities.length} entities`);
   
-  // Group entity markers by unique positions (deduplicate overlapping markers)
-  const uniquePositions = new Map();
-  for (const marker of entityMarkers) {
-    const key = `${marker.x},${marker.y}`;
-    if (!uniquePositions.has(key)) {
-      uniquePositions.set(key, marker);
-    }
-  }
+  // Get animation frame index for TWOS timing
+  const globalFrameIdx = RendererState.spriteFrameIndex;
   
-  console.log(`[SPRITES] Unique positions: ${uniquePositions.size}`);
-  
-  // For each sprite, get or create cached frame 0
   let renderedCount = 0;
-  const spriteList = sprites.sprites;
+  const spriteList = sprites?.sprites || [];
   
-  // Render sprites at their entity positions
-  // Entity ID to sprite mapping is complex - for now render all available sprites
-  // scattered across entity positions to show they work
+  // Known entity type → name mapping (from user observations)
+  const ENTITY_TYPE_NAMES = {
+    2: 'Clay', // Clayballs (coins)
+    3: 'Trg?', // Trigger?
+    8: 'Item', // Collectible?
+    10: 'Obj', // Large object
+    24: 'Spc', // Special trigger
+    25: 'Enm1', // Enemy type 1
+    27: 'Enm2', // Enemy type 2
+    28: 'Plat', // Moving platform
+    42: '???', 
+    45: 'Msg', // Message box
+    48: 'Plat2', // Moving platform 2
+  };
   
-  let spriteIdx = 0;
-  for (const [key, marker] of uniquePositions) {
-    // Cycle through available sprites
-    const spriteEntry = spriteList[spriteIdx % spriteList.length];
-    if (!spriteEntry) continue;
+  for (let i = 0; i < entities.length; i++) {
+    const entity = entities[i];
     
-    // Get cached or decode sprite frame
-    const cacheKey = `${spriteEntry.id}_0_0`; // spriteId_animIdx_frameIdx
-    let frameData = RendererState.spriteCache.get(cacheKey);
+    // Calculate render position
+    let renderX = entity.xCenter;
+    let renderY = entity.yCenter;
+    let bboxX = entity.x1;
+    let bboxY = entity.y1;
     
-    if (!frameData) {
-      // Decode sprite frame on demand
-      frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, 0);
-      if (frameData) {
-        // Create ImageData from decoded pixels
-        const imgData = createSpriteImageData(frameData);
-        frameData.imageData = imgData;
-        RendererState.spriteCache.set(cacheKey, frameData);
-      }
+    // Apply camera offset in 90s mode
+    if (RendererState.mode90s) {
+      renderX -= RendererState.cameraX;
+      renderY -= RendererState.cameraY;
+      bboxX -= RendererState.cameraX;
+      bboxY -= RendererState.cameraY;
     }
     
-    if (frameData && frameData.imageData) {
-      // Calculate render position using anchor offsets
-      const renderX = marker.x + (frameData.meta.renderX || 0);
-      const renderY = marker.y + (frameData.meta.renderY || 0);
-      
-      // Skip if completely outside viewport
-      if (renderX + frameData.width > 0 && renderX < viewWidth &&
-          renderY + frameData.height > 0 && renderY < viewHeight) {
+    // Skip if completely outside viewport
+    const bboxW = entity.width || (entity.x2 - entity.x1);
+    const bboxH = entity.height || (entity.y2 - entity.y1);
+    
+    if (bboxX + bboxW < 0 || bboxX > viewWidth ||
+        bboxY + bboxH < 0 || bboxY > viewHeight) {
+      continue;
+    }
+    
+    // Try to render a sprite if available (cycling through - not correct mapping)
+    if (spriteList.length > 0 && spriteContainerData) {
+      const spriteEntry = spriteList[i % spriteList.length];
+      if (spriteEntry) {
+        // Get frame count from cache
+        let frameCount = 1;
+        const headerCacheKey = `header_${spriteEntry.id}`;
+        let cachedInfo = RendererState.spriteCache.get(headerCacheKey);
         
-        // Draw the sprite using putImageData or drawImage
-        drawSpriteFrame(ctx, frameData, renderX, renderY, viewWidth, viewHeight);
-        renderedCount++;
+        if (!cachedInfo) {
+          const firstFrame = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, 0);
+          if (firstFrame && firstFrame.animation) {
+            frameCount = firstFrame.animation.frameCount || 1;
+            cachedInfo = { frameCount };
+            RendererState.spriteCache.set(headerCacheKey, cachedInfo);
+          }
+        } else {
+          frameCount = cachedInfo.frameCount || 1;
+        }
+        
+        const currentFrame = globalFrameIdx % frameCount;
+        const cacheKey = `${spriteEntry.id}_0_${currentFrame}`;
+        let frameData = RendererState.spriteCache.get(cacheKey);
+        
+        if (!frameData) {
+          frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, currentFrame);
+          if (frameData) {
+            const imgData = createSpriteImageData(frameData);
+            frameData.imageData = imgData;
+            RendererState.spriteCache.set(cacheKey, frameData);
+          }
+        }
+        
+        if (frameData && frameData.imageData) {
+          const sprRenderX = renderX + (frameData.meta.renderX || 0);
+          const sprRenderY = renderY + (frameData.meta.renderY || 0);
+          drawSpriteFrame(ctx, frameData, sprRenderX, sprRenderY, viewWidth, viewHeight);
+        }
       }
     }
     
-    spriteIdx++;
+    // Draw entity bounding box and type label if debug enabled
+    if (RendererState.showEntityDebug) {
+      const typeName = ENTITY_TYPE_NAMES[entity.type] || `T${entity.type}`;
+      
+      // Draw bounding box
+      ctx.strokeStyle = 'rgba(255, 255, 0, 0.7)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bboxX, bboxY, bboxW, bboxH);
+      
+      // Draw center point
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+      ctx.beginPath();
+      ctx.arc(renderX, renderY, 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Draw type label
+      ctx.font = '8px monospace';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillText(typeName, bboxX + 1, bboxY + 8);
+    }
+    
+    renderedCount++;
   }
   
   return renderedCount;
@@ -449,7 +504,7 @@ function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
   const { sprites, spriteContainerData } = stageData;
   if (!sprites || sprites.count === 0 || !spriteContainerData) return 0;
   
-  console.log(`[SPRITES] Rendering gallery of ${sprites.count} sprites`);
+  const globalFrameIdx = RendererState.spriteFrameIndex || 0;
   
   const spriteList = sprites.sprites;
   let renderedCount = 0;
@@ -462,19 +517,28 @@ function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
     const spriteEntry = spriteList[i];
     if (!spriteEntry) continue;
     
+    // Get sprite header to find frame count
+    const header = GameEngine.parseSpriteHeader(spriteContainerData, spriteEntry.offset);
+    if (!header) continue;
+    
+    // Get animations to find total frames in first animation
+    const animations = GameEngine.parseSpriteAnimations(spriteContainerData, spriteEntry.offset, header.animationCount);
+    const anim = animations[0];
+    const frameCount = anim ? anim.frameCount : 1;
+    
+    // Calculate which frame to show (loop within this sprite's frame count)
+    const frameIdx = globalFrameIdx % frameCount;
+    
     // Get cached or decode sprite frame
-    const cacheKey = `${spriteEntry.id}_0_0`;
+    const cacheKey = `${spriteEntry.id}_0_${frameIdx}`;
     let frameData = RendererState.spriteCache.get(cacheKey);
     
     if (!frameData) {
-      frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, 0);
+      frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, frameIdx);
       if (frameData) {
         const imgData = createSpriteImageData(frameData);
         frameData.imageData = imgData;
         RendererState.spriteCache.set(cacheKey, frameData);
-        console.log(`[SPRITES] Decoded sprite ${i}: ${frameData.width}x${frameData.height}`);
-      } else {
-        console.log(`[SPRITES] Failed to decode sprite ${i}`);
       }
     }
     

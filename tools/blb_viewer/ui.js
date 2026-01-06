@@ -15,6 +15,11 @@ const UIState = {
   levels: [],
   selectedLevel: null,
   selectedStage: null,
+  // View mode: 'stage' or 'sprite'
+  viewMode: 'stage',
+  // Currently selected sprite (for sprite preview mode)
+  selectedSprite: null,
+  selectedSpriteStageData: null,
 };
 
 // ============================================================================
@@ -55,6 +60,8 @@ function initDOM() {
     layersContainer: document.getElementById('layers-container'),
     // Sprites panel
     optShowSprites: document.getElementById('opt-show-sprites'),
+    optAnimateSprites: document.getElementById('opt-animate-sprites'),
+    optEntityDebug: document.getElementById('opt-entity-debug'),
     spriteCount: document.getElementById('sprite-count'),
     // Status
     statusMsg: document.getElementById('status-msg'),
@@ -280,7 +287,19 @@ function updateLayersPanel(stageData) {
 // Render Helpers
 // ============================================================================
 
+// Animation state
+let animationFrameId = null;
+let animationTickCount = 0;
+const ANIMATION_TICK_RATE = 12; // Advance frame every 12 ticks (TWOS at ~60fps = ~200ms)
+
 function rerender() {
+  // Check view mode - render sprite preview or stage
+  if (UIState.viewMode === 'sprite' && UIState.selectedSprite && UIState.selectedSpriteStageData) {
+    renderSingleSprite(UIState.selectedSpriteStageData, UIState.selectedSprite);
+    return;
+  }
+  
+  // Stage view mode
   if (!BLBRenderer.state.cachedStage) return;
   
   const info = BLBRenderer.renderStage(BLBRenderer.state.cachedStage, {
@@ -299,6 +318,48 @@ function rerender() {
     updateRenderInfo(info);
     updateMinimapViewportIndicator();
   }
+}
+
+/**
+ * Start sprite animation loop
+ * Runs at ~60fps, advances sprite frame every ANIMATION_TICK_RATE ticks (TWOS timing)
+ */
+function startSpriteAnimation() {
+  if (animationFrameId !== null) return; // Already running
+  
+  console.log('[SPRITES] Starting animation loop');
+  animationTickCount = 0;
+  
+  function animationLoop() {
+    animationTickCount++;
+    
+    // Advance sprite frame index every ANIMATION_TICK_RATE ticks
+    if (animationTickCount >= ANIMATION_TICK_RATE) {
+      animationTickCount = 0;
+      BLBRenderer.state.spriteFrameIndex = (BLBRenderer.state.spriteFrameIndex || 0) + 1;
+      rerender();
+    }
+    
+    if (BLBRenderer.state.animateSprites) {
+      animationFrameId = requestAnimationFrame(animationLoop);
+    }
+  }
+  
+  animationFrameId = requestAnimationFrame(animationLoop);
+}
+
+/**
+ * Stop sprite animation loop
+ */
+function stopSpriteAnimation() {
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+    console.log('[SPRITES] Stopped animation loop');
+  }
+  // Reset to frame 0
+  BLBRenderer.state.spriteFrameIndex = 0;
+  rerender();
 }
 
 function updateRenderInfo(info) {
@@ -337,11 +398,23 @@ function updateMinimapViewportIndicator() {
 
 /**
  * Render a single sprite centered in the canvas for preview
+ * Uses current animation frame index when animating
  */
 function renderSingleSprite(stageData, sprite) {
   if (!stageData.spriteContainerData) return;
   
-  const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, 0);
+  // Get sprite info to determine frame count
+  const header = GameEngine.parseSpriteHeader(stageData.spriteContainerData, sprite.offset);
+  if (!header) return;
+  
+  const animations = GameEngine.parseSpriteAnimations(stageData.spriteContainerData, sprite.offset, header.animationCount);
+  const anim = animations[0];
+  const frameCount = anim ? anim.frameCount : 1;
+  
+  // Use animated frame index (loops within sprite's frame count)
+  const frameIdx = (BLBRenderer.state.spriteFrameIndex || 0) % frameCount;
+  
+  const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, frameIdx);
   if (!frameData) return;
   
   const { pixels, palette, width, height } = frameData;
@@ -601,6 +674,11 @@ function handleTreeSelection(data) {
     console.log('Tertiary sectors: ' + level.stages.slice(0, level.stageCount).map((s, i) => `[${i}]=${s.tertSectorOff}`).join(', '));
     
   } else if (data.type === 'stage') {
+    // Reset view mode to stage
+    UIState.viewMode = 'stage';
+    UIState.selectedSprite = null;
+    UIState.selectedSpriteStageData = null;
+    
     setStatus(`Loading stage ${data.stageIndex} of ${data.level.levelId}...`);
     dom.renderTitle.textContent = `${data.level.levelId} - Stage ${data.stageIndex}`;
     UIState.selectedLevel = data.level;
@@ -650,6 +728,11 @@ function handleTreeSelection(data) {
   } else if (data.type === 'layer') {
     // Layer selected - show layer details in info panel
     const { level, stageIndex, layerIndex, layer, stageData } = data;
+    
+    // Reset view mode to stage
+    UIState.viewMode = 'stage';
+    UIState.selectedSprite = null;
+    UIState.selectedSpriteStageData = null;
     
     setStatus(`Layer ${layerIndex} of ${level.levelId} Stage ${stageIndex}`);
     dom.renderTitle.textContent = `${level.levelId} - Stage ${stageIndex} - Layer ${layerIndex}`;
@@ -713,20 +796,32 @@ function handleTreeSelection(data) {
     // Sprite selected - show sprite preview and details
     const { level, stageIndex, spriteIndex, sprite, stageData } = data;
     
+    // Set view mode to sprite preview
+    UIState.viewMode = 'sprite';
+    UIState.selectedSprite = sprite;
+    UIState.selectedSpriteStageData = stageData;
+    
     setStatus(`Sprite ${spriteIndex} of ${level.levelId} Stage ${stageIndex}`);
     dom.renderTitle.textContent = `${level.levelId} - Stage ${stageIndex} - Sprite ${spriteIndex}`;
+    
+    // Get sprite header for animation info
+    const header = GameEngine.parseSpriteHeader(stageData.spriteContainerData, sprite.offset);
+    const animations = header ? GameEngine.parseSpriteAnimations(stageData.spriteContainerData, sprite.offset, header.animationCount) : [];
     
     // Try to decode the sprite
     let frameInfo = '';
     if (stageData.spriteContainerData) {
       const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, 0);
       if (frameData) {
+        const anim = animations[0];
+        const frameCount = anim ? anim.frameCount : 1;
         frameInfo = `
       <strong>Frame 0:</strong><br>
       &nbsp; Size: ${frameData.width}×${frameData.height} px<br>
       &nbsp; Render: (${frameData.meta.renderX}, ${frameData.meta.renderY})<br>
       &nbsp; Anchor: (${frameData.meta.anchorX}, ${frameData.meta.anchorY})<br>
-      <strong>Animations:</strong> ${frameData.header.animationCount}<br>
+      <strong>Animations:</strong> ${header ? header.animationCount : 0}<br>
+      <strong>Frames:</strong> ${frameCount}<br>
         `;
         
         // Render just this sprite in the canvas
@@ -896,6 +991,28 @@ function setupEventHandlers() {
     dom.optShowSprites.addEventListener('change', (e) => {
       BLBRenderer.state.showSprites = e.target.checked;
       console.log(`[SPRITES] Show sprites: ${e.target.checked}`);
+      rerender();
+    });
+  }
+
+  // Sprite animation toggle
+  if (dom.optAnimateSprites) {
+    dom.optAnimateSprites.addEventListener('change', (e) => {
+      BLBRenderer.state.animateSprites = e.target.checked;
+      console.log(`[SPRITES] Animate sprites: ${e.target.checked}`);
+      if (e.target.checked) {
+        startSpriteAnimation();
+      } else {
+        stopSpriteAnimation();
+      }
+    });
+  }
+
+  // Entity debug toggle
+  if (dom.optEntityDebug) {
+    dom.optEntityDebug.addEventListener('change', (e) => {
+      BLBRenderer.state.showEntityDebug = e.target.checked;
+      console.log(`[ENTITIES] Show debug: ${e.target.checked}`);
       rerender();
     });
   }

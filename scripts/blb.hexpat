@@ -321,7 +321,7 @@ struct Palette256Raw {
 //
 // TERTIARY SEGMENT - Audio & Sprites:
 //   500 (0x1F4) SPRITE_METADATA  - Sprite metadata
-//   501 (0x1F5) SPRITE_RLE       - Sprite RLE pixel data
+//   501 (0x1F5) ENTITIES         - Entity placement data (24-byte structures)
 //   502 (0x1F6) AUDIO_502        - Audio configuration
 //   503 (0x1F7) AUDIO_503        - Audio configuration
 //   700 (0x2BC) SPU_SAMPLES      - SPU audio samples (ADPCM)

@@ -22,6 +22,8 @@ const ASSET_TYPE = {
   PALETTE_IDX: 301,       // Per-tile palette index
   TILE_FLAGS: 302,        // Per-tile flags (size, transparency, skip)
   PALETTES: 400,          // Container of 256-color palettes
+  SPRITE_METADATA: 500,   // Sprite metadata
+  ENTITIES: 501,          // Entity placement data (24-byte structures)
   SPRITES: 600,           // Sprite/entity graphics
   COLLISION: 601,         // Collision data
 };
@@ -83,6 +85,69 @@ function parseTileHeader(assetData) {
  */
 function getTotalTileCount(tileHeader) {
   return tileHeader.count16x16 + tileHeader.count8x8 + tileHeader.countExtra;
+}
+
+// ============================================================================
+// Entity System (Asset 501)
+// ============================================================================
+
+/**
+ * Parse entity placement data (Asset 501)
+ * 
+ * Structure (24 bytes per entity):
+ *   0x00: u16 x1          - Bounding box min X (pixels)
+ *   0x02: u16 y1          - Bounding box min Y (pixels)
+ *   0x04: u16 x2          - Bounding box max X (pixels)
+ *   0x06: u16 y2          - Bounding box max Y (pixels)
+ *   0x08: u16 x_center    - Entity center X (pixels)
+ *   0x0A: u16 y_center    - Entity center Y (pixels)
+ *   0x0C: u32 padding     - Always 0
+ *   0x10: u16 padding2    - Always 0
+ *   0x12: u16 entity_type - Type ID
+ *   0x14: u32 flags       - Flags (1, 2, 3 observed)
+ * 
+ * @param {Uint8Array} entityData - Raw entity data from Asset 501
+ * @returns {Array} Array of entity objects
+ */
+function parseEntities(entityData) {
+  if (!entityData || entityData.length < 24) {
+    return [];
+  }
+  
+  const view = new DataView(entityData.buffer, entityData.byteOffset);
+  const entitySize = 24;
+  const count = Math.floor(entityData.length / entitySize);
+  const entities = [];
+  
+  for (let i = 0; i < count; i++) {
+    const offset = i * entitySize;
+    
+    const x1 = view.getUint16(offset + 0x00, true);
+    const y1 = view.getUint16(offset + 0x02, true);
+    const x2 = view.getUint16(offset + 0x04, true);
+    const y2 = view.getUint16(offset + 0x06, true);
+    const xCenter = view.getUint16(offset + 0x08, true);
+    const yCenter = view.getUint16(offset + 0x0A, true);
+    const entityType = view.getUint16(offset + 0x12, true);
+    const flags = view.getUint32(offset + 0x14, true);
+    
+    // Skip entries that look like padding/invalid
+    if (x1 === 0 && y1 === 0 && x2 === 0 && y2 === 0) {
+      continue;
+    }
+    
+    entities.push({
+      index: i,
+      x1, y1, x2, y2,
+      xCenter, yCenter,
+      width: x2 - x1,
+      height: y2 - y1,
+      type: entityType,
+      flags,
+    });
+  }
+  
+  return entities;
 }
 
 // ============================================================================
@@ -364,6 +429,15 @@ function loadStage(fileData, level, stageIndex) {
     ? parseSpriteContainer(tertiary[ASSET_TYPE.SPRITES].data)
     : { count: 0, sprites: [] };
   
+  // Parse entities from tertiary Asset 501
+  const entities = tertiary[ASSET_TYPE.ENTITIES]
+    ? parseEntities(tertiary[ASSET_TYPE.ENTITIES].data)
+    : [];
+  
+  // Debug: log what assets are in tertiary
+  console.log('[ENGINE] Tertiary asset IDs:', Object.keys(tertiary).map(Number).sort((a,b) => a-b));
+  console.log('[ENGINE] Entities parsed:', entities.length);
+  
   return {
     level,
     stageIndex,
@@ -375,6 +449,7 @@ function loadStage(fileData, level, stageIndex) {
     layers,
     tilemaps,
     sprites,
+    entities,
     // Keep raw sprite container data for on-demand frame decoding
     spriteContainerData: tertiary[ASSET_TYPE.SPRITES]?.data || null,
   };
