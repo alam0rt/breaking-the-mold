@@ -23,16 +23,21 @@ It provides structured definitions for all known data types and is kept synchron
 
 **Reading BLB data:**
 ```bash
+# FIRSTLY
 # Render BLB structure as JSON for querying/verification
 imhex --pl format --pattern scripts/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb_parsed.json
 
 # Then query with standard tools
 grep -A20 '"stage1"' /tmp/blb_parsed.json
 jq '.levels.level_00.primary' /tmp/blb_parsed.json
+
+# IF YOU WANT TO INSPECT RAW DATA
+nix-shell -p xxd --run "xxd disks/blb/GAME.BLB ..."
 ```
 
 **Workflow for discoveries:**
 1. When discovering something new via Ghidra or binary analysis, **immediately confirm with the developer and update `scripts/blb.hexpat`**
+    - Confirmed functions and types should be updated using the Ghidra MCP tool if available
 2. Update `docs/blb-data-format.md` to document the finding with verification notes
 3. Re-run the ImHex format command to verify the template parses correctly
 4. Unverified observations go in `docs/unconfirmed_findings.md` until proven
