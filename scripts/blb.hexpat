@@ -361,11 +361,15 @@ struct TileHeader {
     u8 secondary_b [[name("Alt B"), color("4040FF"), comment("Secondary color blue")]];
     u8 pad_07 [[hidden]];
     
-    // Level dimensions (0x08-0x0F)
+    // Level dimensions (0x08-0x0B)
     u16 level_width [[name("Level W"), comment("Level width in tiles")]];
     u16 level_height [[name("Level H"), comment("Level height in tiles")]];
-    u16 unknown_0c [[hidden]];
-    u16 unknown_0e [[hidden]];
+    
+    // Spawn position (0x0C-0x0F) - VERIFIED via Ghidra
+    // Read by FUN_8007b458, converted to pixels and stored at GameState+0x116/0x118
+    // spawn_x_pixels = spawn_x * 16 + 8, spawn_y_pixels = spawn_y * 16 + 15
+    u16 spawn_x [[name("Spawn X"), comment("Player spawn X position in tiles"), color("FFCC00")]];
+    u16 spawn_y [[name("Spawn Y"), comment("Player spawn Y position in tiles"), color("FFCC00")]];
     
     // Tile counts (0x10-0x15) - used by GetTotalTileCount
     // Total = count_16x16 + count_8x8_a + count_8x8_b
@@ -376,9 +380,18 @@ struct TileHeader {
     // Unknown region (0x16-0x1B)
     u8 unknown_16[6] [[hidden]];
     
-    // Field 0x1C (read by GetAsset100Field1C)
-    u16 field_1c [[name("Field 1C"), comment("Unknown field read by GetAsset100Field1C")]];
-    u8 remaining[6] [[hidden]];
+    // Field 0x1C: Unknown purpose
+    // - Read by GetAsset100Field1C (0x8007b7c8), stored at GameState+0x78
+    // - Called only from FUN_80024778 during level init
+    // - No reader found for GameState+0x78 - may be unused/legacy
+    // - Pattern: Boss levels=0, scrolling levels have values near or exceeding height
+    u16 field_1c [[name("Field 1C"), comment("Unknown - stored at GameState+0x78 but no reader found")]];
+    
+    // Field 0x1E: Purpose unclear
+    u16 field_1e [[name("Field 1E"), comment("Unknown")]];
+    
+    // Remaining bytes
+    u8 remaining[4] [[hidden]];
 } [[name("Tile Header"), color("80FF80"), static]];
 
 // =============================================================================
@@ -909,24 +922,26 @@ struct LevelEntry {
 // Credits Sequence Entry (0x0C = 12 bytes)
 // =============================================================================
 
-// Credits table at 0xF10, accessed when playback mode == 2
-// Only 2 complete entries fit before count fields at 0xF31
+// Credits table at 0xF10 (PAL) / 0xEF4 (JP), accessed when playback mode == 2
+// Only 2 entries fit before count fields at 0xF31 (PAL) / 0xF15 (JP)
 //
-// Entry[0] at 0xF10: Empty code, points to credits container at sector 26
-// Entry[1] at 0xF1C: "CRD1", points to duplicate credits at sector 36929
+// PAL Layout:
+//   Entry[0] at 0xF10: code='', sector=26, count=171 → Credits at 0xD000 (20 BS frames)
+//   Entry[1] at 0xF1C: code='CRD1', sector=36929, count=171 → Duplicate at 0x4820800
 //
-// The credits container has 20 interlaced BS frames (10 pairs for CRT display).
-// The duplicate at end of file is for CD seek optimization during end-game.
+// JP Layout:
+//   Entry[0] at 0xEF4: code='', sector=38343, count=182 → Credits at 0x4AE3800 (21 BS frames)
+//   Entry[1] at 0xF00: code='CRD2', sector=0, count=0 → No duplicate
 //
-// Sector calculation: credits_sector = param_b + level_count
-// Example: Entry[0] param_b=0, 0+26=sector 26 (0xD000)
-//          Entry[1] param_b=36903, 36903+26=sector 36929 (0x4820800)
+// The credits container has interlaced BS frames (pairs for CRT display).
+// PAL has credits early + duplicate at end (CD seek optimization).
+// JP has credits only at end of file.
 
 struct CreditsEntry {
-    char code[4] [[name("Code"), comment("4-char ID: '', 'CRD1'"), color("FFCC40")]];
-    u8 reserved[4] [[hidden]];
-    u16 param_a [[name("Param A"), comment("Unknown parameter")]];
-    u16 param_b [[name("Param B"), comment("Base sector offset (add level_count for actual sector)")]];
+    char code[4] [[name("Code"), comment("4-char ID: '', 'CRD1', 'CRD2'"), color("FFCC40")]];
+    u8 pad[4] [[hidden]];  // Always 0x00000000
+    u16 sector_offset [[name("Sector"), comment("Sector number where credits container starts")]];
+    u16 sector_count [[name("Count"), comment("Number of sectors for credits data")]];
 } [[name("Credits"), color("FFCC80"), static]];
 
 // =============================================================================

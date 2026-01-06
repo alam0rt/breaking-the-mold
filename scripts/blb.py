@@ -1700,7 +1700,418 @@ class BLBHeader:
             0x07: char[5] code (4-char null-terminated)
             0x0C: char[4] short_name
         
-        Detection: In PAL, byte[3] is uppercase A-Z (code start), byte[7] is 0x00.
+        Detection: In PAL, byte[3] is uppercase A-Z (code         # Preprocessor
+        
+        The preprocessor works in a similar fashion to the one found in
+        C/C++. All lines that start with a `#` symbol are treated as preprocessor
+        directives and get evaluated before the syntax of the rest of the program gets
+        analyzed.
+        
+        ### `#define`
+        
+        ```cpp
+        #define MY_CONSTANT 1337
+        ```
+        
+        This directive causes a
+        find-and-replace to be performed. In the example above, the label `MY_CONSTANT`
+        will be replaced with `1337` throughout the entire program without doing any
+        sort of lexical analysis. This means the directive will be replaced even within
+        strings. Additionally, if multiple defines are used, later find-and-replaces can
+        modify expressions that got altered by previous ones.
+        
+        ###
+        `#include`
+        
+        ```cpp
+        #include <mylibrary.hexpat>
+        ```
+        
+        This directive allows inclusion of other files into
+        the current program. The content of the specified file gets copied directly
+        into the current file. See [importing
+        modules](importing-modules.md#include-directive) for more info.
+        
+        ### `#ifdef`, `#ifndef`, `#endif`
+        
+        ```cpp
+        #ifdef
+        SOME_DEFINE
+            u32 value @ 0x00;
+        #endif
+        ```
+        
+        These preprocessor instructions can check if
+        a given define has been defined already. `#ifdef` includes all the content
+        between it and its closing `#endif` instruction if the define given to it exists.
+        `#ifndef` works the same as `#ifdef` but includes all its content if the given
+        define does not exist.
+        
+        ### `#error`
+        
+        ```cpp
+        #error "Something went
+        wrong!"
+        ```
+        
+        Throws a error during the preprocessing phase if reached. This is mostly helpful in
+        combination with `#ifdef` and `#ifndef` to check on certain conditions.
+        
+        ###
+        `#pragma`
+        
+        ```cpp
+        #pragma endian big
+        ```
+        
+        Pragmas are hints to the runtime to tell
+        it how it should treat certain things.
+        
+        The following pragmas are
+        available:
+        
+        #### `endian`
+        
+        **Possible values:** `big`, `little`, `native` **Default:**
+        `native`
+        
+        This pragma overwrites the default endianness of all variables declared in
+        the file.
+        
+        #### `MIME`
+        
+        **Possible values:** Any MIME Type string **Default:**
+        `Unspecified`
+        
+        This pragma specifies the MIME type of files that can be
+        interpreted by this pattern. This is useful for automatically loading relevant patterns
+        when a file is opened. The MIME type of the loaded file will be matched against
+        the MIME type specified here and if it matches, a popup will appear asking if this
+        pattern should get loaded.
+        
+        #### `magic`
+        
+        **Possible values:** A byte pattern
+        in the form of `[ AA BB ?? D? ] @ 0x00`
+        
+        This pragma specifies a binary pattern
+        that is used to check the loaded data in order to determine if this pattern can
+        be used to parse this data.
+        
+        The pattern consists of two parts. The first one is
+        a list of hexadecimal values where ? denotes a wildcard. This list is checked in
+        order against the data, nibbles that are marked as wildcards are ignored and
+        not compared. The second part is the hexadecimal value after the @ symbol which is
+        interpreted as an address where to look for that pattern in the data.
+        
+        ####
+        `base_address`
+        
+        **Possible values:** Any integer value **Default:** `0x00`
+        
+        This
+        pragma automatically adjusts the base address of the currently loaded file. This
+        is useful for patterns that depend on a file being loaded at a certain address in
+        memory.
+        
+        #### `eval_depth`
+        
+        **Possible values:** Any integer value **Default:**
+        `32`
+        
+        This pragma sets the evaluation depth of recursive functions and types.
+        To prevent the runtime from crashing when evaluating infinitely deep recursive
+        types, execution will stop prematurely if it detects recursion that is too deep.
+        This pragma can adjust the maximum depth allowed.
+        
+        #### `array_limit`
+        
+        **Possible
+        values:** Any integer value **Default:** `0x1000`
+        
+        This pragma sets the maximum
+        number of entries allowed in an array. To prevent the runtime using up a lot of
+        memory when creating huge arrays, execution will stop prematurely if an array
+        with too many entries is evaluated. This pragma can adjust the maximum number of
+        entries allowed.
+        
+        #### `pattern_limit`
+        
+        **Possible values:** Any integer value
+        **Default:** `0x2000`
+        
+        This pragma sets the maximum number of patterns allowed to
+        be created. To prevent the runtime using up a lot of memory when creating a lot
+        of patterns, execution will stop prematurely if too many patterns exist
+        simultaneously. This is similar to the `array_limit` pragma but catches smaller, nested
+        arrays as well.
+        
+        #### `once`
+        
+        This pragma takes no value and simply marks the
+        current file to only be includable once. This means if the file is being included
+        multiple times, for example when it’s being included explicitly first and later
+        on again inside of another included file, it will only be included the first
+        time.
+        
+        This is mainly useful to prevent functions, types and variables that are
+        defined in that file, from being defined multiple times.
+        
+        The `import` statement
+        and `#include` directive each keep a separate list of files marked with `#pragma
+        once`. That means that a set of headers using one system for importing should
+        stick to it. See [Importing Modules](importing-modules.md) for more info.
+        
+        ####
+        `bitfield_order`
+        
+        **Possible values:** `right_to_left`, `left_to_right`
+        **Default:** `right_to_left`
+        
+        This pragma overrides the default bitfield bit order. It
+        works the same as the `[[left_to_right]]` and `[[right_to_left]]` attributes but is
+        automatically applied to all created bitfields.
+        
+        #### `debug`
+        
+        This pragma
+        enables the debug mode in the evaluator. This causes the following things to
+        happen:
+        
+        * Any scope push and pop will be logged to the console
+        * Any memory access
+        will be logged to the console
+        * Any creation and assignment of variables will be
+        logged to the console
+        * Any function call and their parameters will be logged to
+        the console
+        * If an error occurs, the patterns that were already placed in memory
+        will not be deleted
+        
+        #### `author`
+        
+        **Possible values:** Any string value
+        **Default:** `Unspecified`
+        
+        This pragma specifies the pattern author shown in the
+        [Content Store](../../imhex/misc/content-store.md). If you need to specify multiple
+        authors, use only one `#pragma author`.
+        
+        #### `description`
+        
+        **Possible
+        values:** Any string value **Default:** `Unspecified`
+        
+        This pragma specifies the
+        description shown for the pattern in the [Content
+        Store](../../imhex/misc/content-store.md).
+                 # Preprocessor
+        
+        The preprocessor works in a similar fashion to the one found in
+        C/C++. All lines that start with a `#` symbol are treated as preprocessor
+        directives and get evaluated before the syntax of the rest of the program gets
+        analyzed.
+        
+        ### `#define`
+        
+        ```cpp
+        #define MY_CONSTANT 1337
+        ```
+        
+        This directive causes a
+        find-and-replace to be performed. In the example above, the label `MY_CONSTANT`
+        will be replaced with `1337` throughout the entire program without doing any
+        sort of lexical analysis. This means the directive will be replaced even within
+        strings. Additionally, if multiple defines are used, later find-and-replaces can
+        modify expressions that got altered by previous ones.
+        
+        ###
+        `#include`
+        
+        ```cpp
+        #include <mylibrary.hexpat>
+        ```
+        
+        This directive allows inclusion of other files into
+        the current program. The content of the specified file gets copied directly
+        into the current file. See [importing
+        modules](importing-modules.md#include-directive) for more info.
+        
+        ### `#ifdef`, `#ifndef`, `#endif`
+        
+        ```cpp
+        #ifdef
+        SOME_DEFINE
+            u32 value @ 0x00;
+        #endif
+        ```
+        
+        These preprocessor instructions can check if
+        a given define has been defined already. `#ifdef` includes all the content
+        between it and its closing `#endif` instruction if the define given to it exists.
+        `#ifndef` works the same as `#ifdef` but includes all its content if the given
+        define does not exist.
+        
+        ### `#error`
+        
+        ```cpp
+        #error "Something went
+        wrong!"
+        ```
+        
+        Throws a error during the preprocessing phase if reached. This is mostly helpful in
+        combination with `#ifdef` and `#ifndef` to check on certain conditions.
+        
+        ###
+        `#pragma`
+        
+        ```cpp
+        #pragma endian big
+        ```
+        
+        Pragmas are hints to the runtime to tell
+        it how it should treat certain things.
+        
+        The following pragmas are
+        available:
+        
+        #### `endian`
+        
+        **Possible values:** `big`, `little`, `native` **Default:**
+        `native`
+        
+        This pragma overwrites the default endianness of all variables declared in
+        the file.
+        
+        #### `MIME`
+        
+        **Possible values:** Any MIME Type string **Default:**
+        `Unspecified`
+        
+        This pragma specifies the MIME type of files that can be
+        interpreted by this pattern. This is useful for automatically loading relevant patterns
+        when a file is opened. The MIME type of the loaded file will be matched against
+        the MIME type specified here and if it matches, a popup will appear asking if this
+        pattern should get loaded.
+        
+        #### `magic`
+        
+        **Possible values:** A byte pattern
+        in the form of `[ AA BB ?? D? ] @ 0x00`
+        
+        This pragma specifies a binary pattern
+        that is used to check the loaded data in order to determine if this pattern can
+        be used to parse this data.
+        
+        The pattern consists of two parts. The first one is
+        a list of hexadecimal values where ? denotes a wildcard. This list is checked in
+        order against the data, nibbles that are marked as wildcards are ignored and
+        not compared. The second part is the hexadecimal value after the @ symbol which is
+        interpreted as an address where to look for that pattern in the data.
+        
+        ####
+        `base_address`
+        
+        **Possible values:** Any integer value **Default:** `0x00`
+        
+        This
+        pragma automatically adjusts the base address of the currently loaded file. This
+        is useful for patterns that depend on a file being loaded at a certain address in
+        memory.
+        
+        #### `eval_depth`
+        
+        **Possible values:** Any integer value **Default:**
+        `32`
+        
+        This pragma sets the evaluation depth of recursive functions and types.
+        To prevent the runtime from crashing when evaluating infinitely deep recursive
+        types, execution will stop prematurely if it detects recursion that is too deep.
+        This pragma can adjust the maximum depth allowed.
+        
+        #### `array_limit`
+        
+        **Possible
+        values:** Any integer value **Default:** `0x1000`
+        
+        This pragma sets the maximum
+        number of entries allowed in an array. To prevent the runtime using up a lot of
+        memory when creating huge arrays, execution will stop prematurely if an array
+        with too many entries is evaluated. This pragma can adjust the maximum number of
+        entries allowed.
+        
+        #### `pattern_limit`
+        
+        **Possible values:** Any integer value
+        **Default:** `0x2000`
+        
+        This pragma sets the maximum number of patterns allowed to
+        be created. To prevent the runtime using up a lot of memory when creating a lot
+        of patterns, execution will stop prematurely if too many patterns exist
+        simultaneously. This is similar to the `array_limit` pragma but catches smaller, nested
+        arrays as well.
+        
+        #### `once`
+        
+        This pragma takes no value and simply marks the
+        current file to only be includable once. This means if the file is being included
+        multiple times, for example when it’s being included explicitly first and later
+        on again inside of another included file, it will only be included the first
+        time.
+        
+        This is mainly useful to prevent functions, types and variables that are
+        defined in that file, from being defined multiple times.
+        
+        The `import` statement
+        and `#include` directive each keep a separate list of files marked with `#pragma
+        once`. That means that a set of headers using one system for importing should
+        stick to it. See [Importing Modules](importing-modules.md) for more info.
+        
+        ####
+        `bitfield_order`
+        
+        **Possible values:** `right_to_left`, `left_to_right`
+        **Default:** `right_to_left`
+        
+        This pragma overrides the default bitfield bit order. It
+        works the same as the `[[left_to_right]]` and `[[right_to_left]]` attributes but is
+        automatically applied to all created bitfields.
+        
+        #### `debug`
+        
+        This pragma
+        enables the debug mode in the evaluator. This causes the following things to
+        happen:
+        
+        * Any scope push and pop will be logged to the console
+        * Any memory access
+        will be logged to the console
+        * Any creation and assignment of variables will be
+        logged to the console
+        * Any function call and their parameters will be logged to
+        the console
+        * If an error occurs, the patterns that were already placed in memory
+        will not be deleted
+        
+        #### `author`
+        
+        **Possible values:** Any string value
+        **Default:** `Unspecified`
+        
+        This pragma specifies the pattern author shown in the
+        [Content Store](../../imhex/misc/content-store.md). If you need to specify multiple
+        authors, use only one `#pragma author`.
+        
+        #### `description`
+        
+        **Possible
+        values:** Any string value **Default:** `Unspecified`
+        
+        This pragma specifies the
+        description shown for the pattern in the [Content
+        Store](../../imhex/misc/content-store.md).
+         start), byte[7] is 0x00.
+
                    In JP, byte[3] is 0x00 (count low byte), byte[7] is uppercase A-Z.
         """
         # Detect layout by checking where the code starts
@@ -2080,9 +2491,9 @@ class TileHeader:
     """
     Tile header from Asset 100 (0x064), 36 bytes.
     
-    Contains level dimensions, tile counts, and background colors.
-    Verified via Ghidra decompilation of CopyTilePixelData (0x8007b588)
-    and GetTotalTileCount (0x8007b53c).
+    Contains level dimensions, tile counts, spawn position, and background colors.
+    Verified via Ghidra decompilation of CopyTilePixelData (0x8007b588),
+    GetTotalTileCount (0x8007b53c), and FUN_8007b458 (spawn position).
     
     Offset  Size  Type   Description
     ------  ----  ----   -----------
@@ -2092,13 +2503,15 @@ class TileHeader:
     0x07    1     u8     Padding
     0x08    2     u16    Level width in tiles
     0x0A    2     u16    Level height in tiles
-    0x0C    4     -      Unknown
+    0x0C    2     u16    Spawn X position in tiles (VERIFIED - read by FUN_8007b458)
+    0x0E    2     u16    Spawn Y position in tiles (VERIFIED - read by FUN_8007b458)
     0x10    2     u16    16×16 tile count
     0x12    2     u16    8×8 tile count (primary)
     0x14    2     u16    8×8 tile count (secondary, often 0)
     0x16    6     -      Unknown
-    0x1C    2     u16    Unknown field (read by GetAsset100Field1C)
-    0x1E    2     -      Remaining header data
+    0x1C    2     u16    Unknown (stored at GameState+0x78 by GetAsset100Field1C,
+                         but no reader found - possibly legacy/unused)
+    0x1E    2     u16    Unknown
     """
     raw_data: bytes
     bg_r: int = 0           # Background red (0-255)
@@ -2109,10 +2522,13 @@ class TileHeader:
     secondary_b: int = 0    # Secondary color blue
     level_width: int = 0    # Level width in tiles
     level_height: int = 0   # Level height in tiles
+    spawn_x: int = 0        # Spawn X position in tiles (VERIFIED)
+    spawn_y: int = 0        # Spawn Y position in tiles (VERIFIED)
     count_16x16: int = 0    # Number of 16×16 tiles
     count_8x8_a: int = 0    # Primary 8×8 tile count
     count_8x8_b: int = 0    # Secondary 8×8 tile count (often 0)
-    field_1c: int = 0       # Unknown field at 0x1C
+    field_1c: int = 0       # Unknown (stored at GameState+0x78, no reader found)
+    field_1e: int = 0       # Unknown
     
     @property
     def total_tiles(self) -> int:
@@ -2154,10 +2570,13 @@ class TileHeader:
             secondary_b=data[0x06],
             level_width=struct.unpack('<H', data[0x08:0x0A])[0],
             level_height=struct.unpack('<H', data[0x0A:0x0C])[0],
+            spawn_x=struct.unpack('<H', data[0x0C:0x0E])[0],
+            spawn_y=struct.unpack('<H', data[0x0E:0x10])[0],
             count_16x16=struct.unpack('<H', data[0x10:0x12])[0],
             count_8x8_a=struct.unpack('<H', data[0x12:0x14])[0],
             count_8x8_b=struct.unpack('<H', data[0x14:0x16])[0],
             field_1c=struct.unpack('<H', data[0x1C:0x1E])[0] if len(data) >= 0x1E else 0,
+            field_1e=struct.unpack('<H', data[0x1E:0x20])[0] if len(data) >= 0x20 else 0,
         )
 
 
