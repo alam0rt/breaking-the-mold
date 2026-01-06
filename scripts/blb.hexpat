@@ -1,52 +1,81 @@
 // GAME.BLB Pattern File for Skullmonkeys PSX
-// Skullmonkeys (PAL: SLES-01090, NTSC: SLUS-00601)
+// Skullmonkeys (PAL: SLES-01090/91/92, NTSC-US: SLUS-00601, JP: SLPS-01501)
 //
 // The BLB file is the main game archive containing all levels, assets,
 // and resources. The first 0x1000 bytes (4096) contain the header.
+//
+// This template auto-detects PAL/NTSC vs JP layout variants (see 0xCD0 detection).
 //
 // =============================================================================
 // FILE STRUCTURE OVERVIEW
 // =============================================================================
 // 
 // FILE COVERAGE (SLES-01090 / 76,021,760 bytes / 72.50 MB):
-//   - Header:           0x0000 - 0x8000  (32 KB)
-//   - Level Data:       26 levels with primary/secondary/tertiary segments
-//   - Sector Table:     32 entries at 0xCD0 (BS loading screens)
-//   - Password Screens: 17 containers scattered between levels
-//   - Coverage:         ~97% referenced, ~3% sector-alignment padding
+//   - Header:             0x0000 - 0x0FFF  (4 KB)
+//   - Hidden Legal:       0x1000 - 0x5FFF  (sectors 2-11, unreferenced BS frame)
+//   - Title/Legal:        0x6000 - 0xCFFF  (sectors 12-25)
+//   - Credits Container:  0xD000 - 0x627FF (sectors 26-196, 20 interlaced BS frames)
+//   - Level Data:         26 levels with primary/secondary/tertiary segments
+//   - Sector Table:       32 entries at 0xCD0 (PAL) / 0xCB0 (JP)
+//   - Password Screens:   17 containers (referenced via table at 0xECC)
+//   - Duplicate Credits:  0x4820800 - 0x4875FFF (sectors 36929-37099, exact copy)
+//   - Game Over/End:      0x4876000 - 0x487FFFF (sectors 37100-37119)
+//   - Coverage:           100% (all sectors accounted for)
 //
-// UNREFERENCED GAPS (~2.1 MB total):
-//   These are sector-alignment padding between referenced regions.
-//   Example gaps: 0x0000D000-0x00062800 (342 KB), ~90 KB gaps after each
-//   password screen for sector alignment.
+// SECTOR COVERAGE SUMMARY:
+//   Sectors 0-1:      Header (padded to 2 sectors)
+//   Sectors 2-11:     Hidden legal BS frame (unreferenced, likely replaced content)
+//   Sectors 12-25:    Boot sequence (title, legal screens)
+//   Sectors 26-196:   Credits container #1 (20 interlaced BS frames for CRT display)
+//   Sectors 197-36928: Level data, loading screens, password screens
+//   Sectors 36929-37099: Credits container #2 (duplicate for CD seek optimization)
+//   Sectors 37100-37119: Game over screens and final padding
 //
 // =============================================================================
-// SECTOR TABLE (32 ENTRIES AT OFFSET 0xCD0)
+// SECTOR TABLE (32 ENTRIES - PAL: 0xCD0, JP: 0xCB0)
 // =============================================================================
 // The sector table maps to BS (bitstream/MDEC) images for loading screens.
-// Each entry is 16 bytes: level_index(u8), flags(u8), code(u16), 
-//                         short_name(4 chars), sector_offset(u32), sector_count(u32)
+// Each entry is 16 bytes with different field order for PAL vs JP.
 //
-// Entry Mapping:
-//   [0]     Title Screen         Sector 12    (0x6000)
-//   [1]     Legal Screen         Sector 22    (0xB000)
-//   [2-27]  Level Loading        sectors[i+2] → level[i] loading screen
-//   [28]    End Loading          Sector 36925 (0x481E800)
-//   [29]    Game Over            Sector 37100 (0x4876000)
-//   [30]    Game Over (Alt)      Sector 37110 (0x487B000)
-//   [31]    Password Container   Sector 4895  (0x98F800) - Contains password_screen_00
+// PAL/NTSC-US (at 0xCD0):
+//   [0]  PIRA Title       [1]  LEGL Legal       [2]  CRED Credits <-- BUG TRIGGER
+//   [3]  MENU             [4-28] Level loading screens
+//   [29] Game Over        [30] Game Over Alt   [31] Password Screen
+//
+// JP (at 0xCB0) - Credits moved to fix intro bug (see TCRF):
+//   [0]  PIRA Title       [1]  LEGL Legal       [2]  MENU (CRED removed)
+//   [3-27] Level loading screens
+//   [28] CRED Credits     [29] OVER Game Over  [30] OVER Alt
+//
+// The CRED entry at index 2 in PAL was triggering a bug where credits would
+// play between intro movies. JP fixed this by splicing the two intro movies
+// into one and moving CRED to index 28. (Source: TCRF regional differences)
 //
 // =============================================================================
-// PASSWORD SCREENS (17 CONTAINERS)
+// PASSWORD SCREEN TABLE (17 ENTRIES AT OFFSET 0xECC)
 // =============================================================================
+// Referenced by playback mode 6. Game code accesses: header + (index * 4) + 0xECC
+// 
+// IMPORTANT: Entry[0] overlaps with sectors[31].sector_offset/sector_count!
+// This is why sectors[31] points to password screen #0 at sector 4895.
+//
 // Each password screen is a TOC container with 11 assets (except #16 with 12):
-//   Asset 0: Tilemap (30×16 = 480 tiles → 320×256 rendering)
-//   Assets 1-10: Various graphics (digits, letters, decorations)
+//   Asset 100: Tile Header (30×16 dimensions)
+//   Asset 200: Tilemap Container (5 tilemaps)
+//   Asset 201: Layer Entries (5 layers)
+//   Asset 300: Tile Pixels (8bpp indexed)
+//   Asset 301: Palette Indices
+//   Asset 302: Tile Size Flags
+//   Asset 400: Palette Container (4 × 256-color)
+//   Asset 401: Animation Config
+//   Asset 600: Tile Graphics (compressed)
+//   Asset 601: Collision Data
+//   Asset 602: Raw Palette (16-color CLUT)
 //
-// Password screens appear in gaps AFTER their corresponding level:
-//   #0:  0x0098F800 (Unused? - inside SectorEntry[31])
-//   #1:  0x00EB7000 (World 1)  ... #15: 0x044AA800 (World 15)
-//   #16: 0x047DC800 (Victory "YOU WIN" - 12 assets)
+// Password screens appear after their corresponding level/world:
+//   Entry[0]:  0x0098F800 (Sector 4895) - Referenced via sectors[31] overlap
+//   Entry[1]:  0x00EB7000 (World 1) ... Entry[15]: 0x044AA800 (World 15)
+//   Entry[16]: 0x047DC800 (Victory "YOU WIN" - 12 assets)
 //
 // =============================================================================
 // RENDERING PIPELINE (from render_level.py)
@@ -88,6 +117,37 @@ import type.color;  // type::RGBA5551 for PSX 15-bit colors
 
 #define SECTOR_SIZE 2048
 #define HEADER_SIZE 4096
+
+// =============================================================================
+// Region/Layout Detection
+// =============================================================================
+// Two layout variants exist for sector table entries:
+//   PAL/NTSC-US: code at byte[3], sector offset/count at bytes[12-15]
+//   JP (SLPS):   sector offset/count at bytes[0-3], code at byte[7]
+//
+// CRITICAL: Sector table starts at DIFFERENT offsets!
+//   PAL/NTSC: Sector table at 0xCD0 (code access via base 0xCCC)
+//   JP:       Sector table at 0xCB0 (code access via base 0xCB0)
+//
+// The 32-byte (2 entry) shift is due to:
+//   - JP removed CRED from index 2 (credits bug fix)
+//   - JP has 12 movies vs PAL's 13 (intro spliced into 1 movie)
+//
+// Detection: At PAL offset 0xCD0, check if byte[3] is A-Z (code field).
+//            JP will have a different pattern at 0xCD0 (it's entry[2], not [0]).
+
+fn is_jp_layout() {
+    // Read byte[3] of PAL's first sector entry location (0xCD0)
+    // PAL: byte[3] is A-Z (65-90) - start of code field
+    // JP: 0xCD0 is entry[2], so byte[3] would be 0x00 or different
+    u8 byte3 = std::mem::read_unsigned(0xCD3, 1);
+    return !(byte3 >= 65 && byte3 <= 90);
+};
+
+bool g_is_jp = is_jp_layout();
+
+// Sector table base address (differs by region)
+u32 SECTOR_TABLE_OFFSET = g_is_jp ? 0xCB0 : 0xCD0;
 
 // =============================================================================
 // Formatting Functions
@@ -687,22 +747,36 @@ struct MovieEntry {
 } [[name("Movie"), format("format_movie"), color("FFFF40"), static]];
 
 // =============================================================================
-// Sector Table Entry (0x10 = 16 bytes) - Located at offset 0xCD0
+// Sector Table Entry (0x10 = 16 bytes) - PAL: 0xCD0, JP: 0xCB0
 // =============================================================================
-// The sector table at 0xCD0 contains 32 entries that point to BS/MDEC frames:
+// The sector table contains 32 entries pointing to BS/MDEC loading screen frames.
 //
-// INDEX | PURPOSE              | DESCRIPTION
-// ------|----------------------|------------------------------------------
-//   0   | Title Screen         | Dreamworks/Skullmonkeys logo (sector 12)
-//   1   | Legal Screen         | Copyright text (sector 22)
-// 2-27  | Loading Screens      | sectors[i+2] → level[i] loading screen
-//  28   | End Loading          | Loading screen for credits/end sequence
-//  29   | Game Over 1          | Game Over screen
-//  30   | Game Over 2          | Game Over screen (alternate)
-//  31   | Password Screen      | Mystery password container reference
+// PAL/NTSC-US (table at 0xCD0):
+//   [0]  PIRA Title Screen    [1]  LEGL Legal Screen    [2]  CRED Credits
+//   [3]  MENU Options         [4-28] Level loading screens
+//   [29] EVIL (end loading)   [30] OVER Game Over       [31] OVER Alt / Password
 //
-// The BS frame is located at: sectors[i].sector_offset * 2048
-// For level loading screens: level[i].sector_offset - sectors[i+2].sector_offset ≈ 9 sectors
+// JP (table at 0xCB0, 32 bytes earlier):
+//   [0]  PIRA Title           [1]  LEGL Legal           [2]  MENU (no CRED!)
+//   [3-27] Level loading      [28] CRED Credits (moved) [29] OVER Game Over
+//   [30] OVER Alt
+//
+// JP BUG FIX: In PAL, CRED at index 2 caused credits to trigger between the
+// two intro movies. JP fixed this by splicing intro into 1 movie and moving
+// CRED to index 28. (Source: https://tcrf.net/Skullmonkeys)
+//
+// LAYOUT VARIANTS (same 16-byte size, different field order):
+// 
+// PAL/NTSC-US Layout:           JP Layout (SLPS-01501):
+//   0x00: u8  level_index         0x00: u16 sector_offset
+//   0x01: u8  entry_flags         0x02: u16 sector_count
+//   0x02: u8  unknown_byte        0x04: u8  level_index
+//   0x03: char[5] code            0x05: u8  entry_flags
+//   0x08: char[4] short_name      0x06: u8  unknown_byte
+//   0x0C: u16 sector_offset       0x07: char[5] code
+//   0x0E: u16 sector_count        0x0C: char[4] short_name
+//
+// Detection: At 0xCD0, PAL byte[3] is A-Z (code). JP byte[3] is 0x00 (part of MENU).
 
 // Entry type flags
 enum SectorEntryFlags : u8 {
@@ -711,7 +785,8 @@ enum SectorEntryFlags : u8 {
     Special = 0x05          // Special loading screen
 };
 
-struct SectorEntry {
+// PAL/NTSC-US Layout (code at byte 3, offset/count at end)
+struct SectorEntryPAL {
     u8 level_index [[name("Level"), comment("Level index (0-25)")]];
     SectorEntryFlags entry_flags [[name("Type"), color("FF8040")]];
     u8 unknown_byte [[hidden]];
@@ -719,7 +794,33 @@ struct SectorEntry {
     char short_name[4] [[name("Short"), comment("Truncated description")]];
     type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
     u16 sector_count [[name("Count"), comment("Number of sectors")]];
-} [[name("Sector Entry"), format("format_sector_offset"), color("80CCCC"), static]];
+} [[name("Sector Entry (PAL)"), format("format_sector_offset"), color("80CCCC"), static]];
+
+// JP Layout (offset/count at front, code at byte 7)
+struct SectorEntryJP {
+    type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
+    u16 sector_count [[name("Count"), comment("Number of sectors")]];
+    u8 level_index [[name("Level"), comment("Level index (0-25)")]];
+    SectorEntryFlags entry_flags [[name("Type"), color("FF8040")]];
+    u8 unknown_byte [[hidden]];
+    char code[5] [[name("Code"), comment("4-char null-terminated ID")]];
+    char short_name[4] [[name("Short"), comment("Truncated description")]];
+} [[name("Sector Entry (JP)"), format("format_sector_jp"), color("80CCCC"), static]];
+
+// Format for JP layout (sector is at different offset in struct)
+fn format_sector_jp(auto entry) {
+    u32 file_offset = entry.sector_offset * SECTOR_SIZE;
+    return std::format("Sector {} (0x{:06X})", entry.sector_offset, file_offset);
+};
+
+// Auto-detecting wrapper that selects the correct layout
+struct SectorEntry {
+    if (g_is_jp) {
+        SectorEntryJP entry [[inline]];
+    } else {
+        SectorEntryPAL entry [[inline]];
+    }
+} [[name("Sector Entry"), color("80CCCC"), static]];
 
 // =============================================================================
 // Level Metadata Entry (0x70 = 112 bytes)
@@ -766,16 +867,22 @@ struct LevelEntry {
 
 // Credits table at 0xF10, accessed when playback mode == 2
 // Only 2 complete entries fit before count fields at 0xF31
-// Entry 2 (CRD2) at 0xF28 overlaps with counts - its params are garbage
 //
-// Sector calculation: CRED.sector_offset = param_b + level_count
-// Example: 171 + 26 = 197 = CRED sector entry
+// Entry[0] at 0xF10: Empty code, points to credits container at sector 26
+// Entry[1] at 0xF1C: "CRD1", points to duplicate credits at sector 36929
+//
+// The credits container has 20 interlaced BS frames (10 pairs for CRT display).
+// The duplicate at end of file is for CD seek optimization during end-game.
+//
+// Sector calculation: credits_sector = param_b + level_count
+// Example: Entry[0] param_b=0, 0+26=sector 26 (0xD000)
+//          Entry[1] param_b=36903, 36903+26=sector 36929 (0x4820800)
 
 struct CreditsEntry {
-    char code[4] [[name("Code"), comment("4-char ID: '', 'CRD1', 'CRD2'"), color("FFCC40")]];
+    char code[4] [[name("Code"), comment("4-char ID: '', 'CRD1'"), color("FFCC40")]];
     u8 reserved[4] [[hidden]];
-    u16 param_a [[name("Param A"), comment("Entry 0: level_count; CRD1/2: counter")]];
-    u16 param_b [[name("Param B"), comment("Base sector offset (e.g., 171)")]];
+    u16 param_a [[name("Param A"), comment("Unknown parameter")]];
+    u16 param_b [[name("Param B"), comment("Base sector offset (add level_count for actual sector)")]];
 } [[name("Credits"), color("FFCC80"), static]];
 
 // =============================================================================
@@ -792,8 +899,8 @@ struct CreditsEntry {
 //   3 = Level - Load and play level from level table at 0x000
 //   4 = SpecialSector4 - Special sector loading (uses sector order at 0xCD0)
 //   5 = SpecialSector5 - Initial sector loading (similar to 4)
-//   6 = Mode6Sector - Load data from mode6_sectors table at 0xECC (17 entries)
-//                     Accessed as: header + (level_index * 4) + 0xECC
+//   6 = PasswordScreen - Load password screen from table at 0xECC (17 entries)
+//                        Accessed as: header + (level_index * 4) + 0xECC
 enum PlaybackMode : u8 {
     Invalid = 0,
     Movie = 1,
@@ -801,22 +908,25 @@ enum PlaybackMode : u8 {
     Level = 3,
     SpecialSector4 = 4,
     SpecialSector5 = 5,
-    Mode6Sector = 6
+    PasswordScreen = 6
 };
 
 // =============================================================================
-// Mode 6 Sector Entry (4 bytes)
+// PASSWORD SCREEN TABLE (17 ENTRIES AT OFFSET 0xECC)
 // =============================================================================
-
-// Mode 6 sector entries store CD sector location for special playback sequences.
-// Table starts at 0xECC with 17 entries (68 bytes).
-// NOTE: Entry[0] overlaps with sectors[31].sector_offset/sector_count!
-// Game code accesses: header + (index * 4) + 0xECC
+// Password screen sector entries are accessed via: header + (index * 4) + 0xECC
+// 
+// IMPORTANT: Entry[0] overlaps with sectors[31].sector_offset/sector_count!
+// The game code calculates: base + index*4 + 0xECC, so:
+//   - Entry[0] at 0x0ECC = sectors[31] offset/count fields (4895, 130)
+//   - Entry[1] at 0x0ED0 = first dedicated password entry
+//   - Entry[16] at 0x0F0C = last password entry (Victory screen)
 //
-// These entries point to level asset data used during mode 6 playback.
-// Each entry has ~110-132 sectors of data (225-270 KB).
+// These 17 containers are WORLD COMPLETION PASSWORD SCREENS.
+// Each has 11 assets (except Victory with 12): tile header, tilemaps, layers,
+// pixels, palettes, etc. for rendering the password display.
 
-struct Mode6SectorEntry {
+struct PasswordScreenEntry {
     type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
     u16 sector_count [[name("Count"), comment("Number of sectors")]];
 } [[static, color("CC80FF")]];
@@ -870,26 +980,31 @@ struct PlaybackSequenceData {
     //   mode=2: index into credits[2] at 0xF10
     //   mode=3: index into levels[26] at 0x000
     //   mode=4/5: index into sectors[32] at 0xCD0
-    //   mode=6: index into mode6_sectors[17] at 0xECC (0-16)
+    //   mode=6: index into password_screens[17] at 0xECC (0-16)
     u8 indices[110] [[name("Indices"), comment("Table index for each step"), color("80FF80")]];
 } [[name("Playback Sequence"), color("CC80CC")]];
 
 // =============================================================================
 // BLB Header (0x1000 = 4096 bytes)
 // =============================================================================
+// NOTE: This layout is for PAL/NTSC-US versions. JP version has different offsets:
+//   - JP movies: 12 entries (intro spliced into 1 movie)
+//   - JP sector table: starts at 0xCB0 (32 bytes earlier than PAL's 0xCD0)
+//   - JP removed CRED from sector index 2 (credits bug fix)
+// The current struct layout may not parse JP files correctly at all offsets.
 
 struct BLBHeader {
     LevelEntry levels[26] [[name("Levels"), comment("Level metadata (26 entries)"), color("40CCFF")]];
-    MovieEntry movies[13] [[name("Movies"), comment("Movie table (13 entries)"), color("FFFF40")]];
-    u8 movie_sector_pad[4] [[hidden]];  // 4-byte gap between movies (0xCCC) and sectors (0xCD0)
-    SectorEntry sectors[32] [[name("Sectors"), comment("Sector table (32 entries)"), color("80CCCC")]];
+    MovieEntry movies[13] [[name("Movies"), comment("Movie table (13 PAL, 12 JP)"), color("FFFF40")]];
+    u8 movie_sector_pad[4] [[hidden]];  // 4-byte gap between movies (0xCCC) and sectors (0xCD0) for PAL
+    SectorEntry sectors[32] [[name("Sectors"), comment("Sector table (PAL: 0xCD0, JP: 0xCB0)"), color("80CCCC")]];
     
-    // Mode 6 sector table: 16 additional entries at 0xED0-0xF0F (64 bytes)
+    // Password Screen table: 16 additional entries at 0xED0-0xF0F (64 bytes)
     // NOTE: Entry[0] is at 0xECC, overlapping with sectors[31].sector_offset/count
     // The game accesses all 17 entries via: header + (index * 4) + 0xECC
-    // These point to level asset data for mode 6 playback sequences
-    Mode6SectorEntry mode6_sectors[16] [[name("Mode6 Sectors"), 
-        comment("Extra mode 6 entries (entry 0 is in sectors[31])"), color("CC80FF")]];
+    // These point to world completion password screen containers
+    PasswordScreenEntry password_screens[16] [[name("Password Screens"), 
+        comment("Password entries 1-16 (entry 0 is in sectors[31])"), color("CC80FF")]];
     
     CreditsEntry credits[2] [[name("Credits"), comment("Credits entries (only 2 complete)"), color("FFCC80")]];
     u8 gap_to_counts[9] [[hidden]];  // Gap from credits end (0xF28) to counts (0xF31)
@@ -1411,15 +1526,12 @@ struct AllLevels {
 AllLevels levels @ HEADER_SIZE [[name("Levels"), comment("All level data dynamically parsed")]];
 
 // =============================================================================
-// HIDDEN/UNUSED CONTENT - Unreferenced BS Frames
+// HIDDEN/UNUSED CONTENT - Unreferenced BS Frame
 // =============================================================================
-// These BS/MDEC compressed images exist in the BLB file but are NOT referenced
-// by any game code. They represent cut or replaced content from development.
+// This BS/MDEC compressed image exists in the BLB file but is NOT referenced
+// by any game code. It represents cut or replaced content from development.
 //
-// Discovered via sector coverage analysis (2026-01-06).
-// Total unreferenced: 704 KB (0.9% of file)
-//
-// To decode these images:
+// To decode:
 //   nix-shell -p jpsxdec --run "jpsxdec -f <extracted.bs> -static bs -dim 320x256 -fmt png"
 
 // --- Unused Legal/Copyright Screen (Sectors 2-11, offset 0x1000) ---
@@ -1429,58 +1541,65 @@ BSFrameHeader hidden_legal @ 0x1000 [[name("⚠️ UNUSED: Legal Screen"),
     comment("Unreferenced BS frame - alternate legal/copyright screen (replaced)"),
     color("FF4040")]];
 
-// --- Unused Credits Slideshow (Sectors 26-196, starting at 0xD000) ---
-// A complete 10-frame credits sequence that was CUT from the final game!
-// The container has a header at 0xD000, frames start at 0xD0F4.
+// =============================================================================
+// CREDITS CONTAINER (Sectors 26-196, offset 0xD000)
+// =============================================================================
+// Referenced by: header.credits[1] at 0xF10 (param_b=171, 171+26=sector 197 end)
+// Container TOC at 0xD000: u32 count=20, then 20 × {u32 id, u32 size, u32 offset}
+//
+// The 20 entries are 10 PAIRS of interlaced BS frames for CRT display:
+//   - Even indices (0,2,4...): Odd scanlines (top field)
+//   - Odd indices (1,3,5...): Even scanlines (bottom field)
+// This is standard PSX interlaced video: display alternating fields at 60Hz
+// to create 30fps full-frame credits slideshow on CRT televisions.
 //
 // Frame offsets (from start of file):
-//   Frame 0: 0xD0F4  (25152 bytes, quant=4)
-//   Frame 1: 0x15DB8 (23296 bytes, quant=4)  
-//   Frame 2: 0x1EEF0 (23488 bytes, quant=2)
-//   Frame 3: 0x281FC (21504 bytes, quant=3)
-//   Frame 4: 0x30764 (26112 bytes, quant=3)
-//   Frame 5: 0x39964 (24832 bytes, quant=4)
-//   Frame 6: 0x429A0 (21248 bytes, quant=3)
-//   Frame 7: 0x4A9CC (24576 bytes, quant=2)
-//   Frame 8: 0x52F78 (20928 bytes, quant=3)
-//   Frame 9: 0x5AF44 (22080 bytes, quant=2)
+//   Frame 0/1:  0xD0F4/0x15DB8  (Pair 0 - Title)
+//   Frame 2/3:  0x1EEF0/0x281FC (Pair 1)
+//   Frame 4/5:  0x30764/0x39964 (Pair 2)
+//   Frame 6/7:  0x429A0/0x4A9CC (Pair 3)
+//   Frame 8/9:  0x52F78/0x5AF44 (Pair 4)
+//   ...etc for 10 pairs total
 
-BSFrameHeader hidden_credits_0 @ 0xD0F4 [[name("⚠️ UNUSED: Credits Frame 0"), 
-    comment("Unreferenced BS frame - first slide of cut credits sequence"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_1 @ 0x15DB8 [[name("⚠️ UNUSED: Credits Frame 1"), 
-    comment("Unreferenced BS frame - credits slide 2"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_2 @ 0x1EEF0 [[name("⚠️ UNUSED: Credits Frame 2"), 
-    comment("Unreferenced BS frame - credits slide 3"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_3 @ 0x281FC [[name("⚠️ UNUSED: Credits Frame 3"), 
-    comment("Unreferenced BS frame - credits slide 4"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_4 @ 0x30764 [[name("⚠️ UNUSED: Credits Frame 4"), 
-    comment("Unreferenced BS frame - credits slide 5"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_5 @ 0x39964 [[name("⚠️ UNUSED: Credits Frame 5"), 
-    comment("Unreferenced BS frame - credits slide 6"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_6 @ 0x429A0 [[name("⚠️ UNUSED: Credits Frame 6"), 
-    comment("Unreferenced BS frame - credits slide 7"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_7 @ 0x4A9CC [[name("⚠️ UNUSED: Credits Frame 7"), 
-    comment("Unreferenced BS frame - credits slide 8"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_8 @ 0x52F78 [[name("⚠️ UNUSED: Credits Frame 8"), 
-    comment("Unreferenced BS frame - credits slide 9"),
-    color("FF8040")]];
-BSFrameHeader hidden_credits_9 @ 0x5AF44 [[name("⚠️ UNUSED: Credits Frame 9"), 
-    comment("Unreferenced BS frame - final credits slide"),
-    color("FF8040")]];
+BSFrameHeader credits_frame_00 @ 0xD0F4 [[name("🎬 Credits Frame 0 (Odd lines)"), 
+    comment("Credits pair 0 - odd scanlines for interlaced display"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_01 @ 0x15DB8 [[name("🎬 Credits Frame 1 (Even lines)"), 
+    comment("Credits pair 0 - even scanlines for interlaced display"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_02 @ 0x1EEF0 [[name("🎬 Credits Frame 2 (Odd lines)"), 
+    comment("Credits pair 1 - odd scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_03 @ 0x281FC [[name("🎬 Credits Frame 3 (Even lines)"), 
+    comment("Credits pair 1 - even scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_04 @ 0x30764 [[name("🎬 Credits Frame 4 (Odd lines)"), 
+    comment("Credits pair 2 - odd scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_05 @ 0x39964 [[name("🎬 Credits Frame 5 (Even lines)"), 
+    comment("Credits pair 2 - even scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_06 @ 0x429A0 [[name("🎬 Credits Frame 6 (Odd lines)"), 
+    comment("Credits pair 3 - odd scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_07 @ 0x4A9CC [[name("🎬 Credits Frame 7 (Even lines)"), 
+    comment("Credits pair 3 - even scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_08 @ 0x52F78 [[name("🎬 Credits Frame 8 (Odd lines)"), 
+    comment("Credits pair 4 - odd scanlines"),
+    color("FFCC40")]];
+BSFrameHeader credits_frame_09 @ 0x5AF44 [[name("🎬 Credits Frame 9 (Even lines)"), 
+    comment("Credits pair 4 - final credits frame"),
+    color("FFCC40")]];
 
-// --- Duplicate of Credits (Sectors 36929-37099, offset 0x4820800) ---
-// Byte-for-byte identical to the credits slideshow above.
-// This is likely a build artifact from the disc mastering process.
-BSFrameHeader hidden_credits_duplicate @ 0x48208F4 [[name("⚠️ DUPLICATE: Credits Frame 0 (copy)"), 
-    comment("Duplicate of credits - build artifact at end of file"),
+// =============================================================================
+// DUPLICATE CREDITS CONTAINER (Sectors 36929-37099, offset 0x4820800)
+// =============================================================================
+// Byte-for-byte identical to the credits container at 0xD000.
+// This is a CD seek optimization: placing the same data near the end of the
+// disc allows the laser to stay in position during end-game sequences.
+BSFrameHeader credits_duplicate_frame_00 @ 0x48208F4 [[name("🎬 Credits Frame 0 (Duplicate)"), 
+    comment("Duplicate credits at end of file for CD seek optimization"),
     color("808080")]];
 
 // =============================================================================
@@ -1614,11 +1733,11 @@ struct PasswordScreenContainer {
     SegmentTOCEntry entries[entry_count] [[name("Assets")]];
 } [[name("Password Screen"), color("CC66CC")]];
 
-// Password #0 - Mystery Container (After TMPL level)
-// This container was originally at 0x0098F800 and was discovered during coverage analysis.
-// It has the same structure as other password screens (11 assets, 30×16 tiles).
-PasswordScreenContainer password_screen_00 @ 0x0098F800 [[name("🔐 Password Screen #0 - (Unused?)"),
-    comment("Mystery container after TMPL - same format as password screens, Magenta theme"),
+// Password #0 - Referenced via sectors[31] overlap at 0xECC
+// Entry[0] of password_screens overlaps with sectors[31].sector_offset/count
+// This container has the same structure as other password screens (11 assets, 30×16 tiles).
+PasswordScreenContainer password_screen_00 @ 0x0098F800 [[name("🔐 Password Screen #0"),
+    comment("Referenced via sectors[31] overlap - same format as password screens"),
     color("96006A")]];
 
 // Password #1 - World 1 Complete (Gray theme)

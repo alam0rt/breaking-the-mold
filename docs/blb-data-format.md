@@ -36,8 +36,9 @@ Each level in the game consists of three data segments loaded from GAME.BLB:
 
 ## BLB Header Reference
 
-The BLB header (first 0x1000 bytes) contains metadata for all levels:
+The BLB header (first 0x1000 bytes) contains metadata for all levels.
 
+**PAL/NTSC-US Header Layout:**
 ```
 Offset   Size   Description
 ------   ----   -----------
@@ -52,6 +53,13 @@ Offset   Size   Description
 0xF33    0x001  Sector Table Entry Count (u8)
 0xF34    0x0CC  Playback Sequence Data (mode array at 0xF36, index array at 0xF92)
 ```
+
+**JP Version Differences (SLPS-01501):**
+The JP version has different offsets due to a credits bug fix (see [TCRF](https://tcrf.net/Skullmonkeys)):
+- **Sector table at 0xCB0** (32 bytes earlier than PAL's 0xCD0)
+- **12 movies** vs PAL's 13 (intro spliced into 1 movie file)
+- **CRED moved from index 2 to index 28** - avoids triggering credits between intro movies
+- **Different field order** in sector table entries (offset/count at start, not end)
 
 **Note on Mode 6 Sector Table:** The table starts at 0xECC but entry[0] overlaps with
 `sectors[31].sector_offset` and `sectors[31].sector_count` (the OVER/game-over screen).

@@ -1385,13 +1385,35 @@ Offset  Size  Field
 
 ### JP Content Differences
 
-| Version | Levels | Movies | Sector Entries | Credits Table |
-|---------|--------|--------|----------------|---------------|
-| PAL/NTSC | 26 | 13 | 32 | Valid (2 entries) |
-| JP Demo (papx-90053) | 6 | 1 | 4 | Invalid (garbage) |
-| JP Full (slps-01501) | 6 | 1 | 4 | Invalid (garbage) |
+**CORRECTED:** Previous analysis incorrectly showed JP Full as having only 6 levels.
+The correct values (verified via Ghidra and hex analysis):
 
-JP versions appear to be a subset of the full game with only 6 playable levels.
+| Version | Levels | Movies | Sector Entries | Credits Table | Sector Table Offset |
+|---------|--------|--------|----------------|---------------|---------------------|
+| PAL/NTSC | 26 | 13 | 32 | Valid (2 entries) | 0xCD0 |
+| JP Demo (papx-90053) | 6 | 1 | 4 | Invalid (garbage) | 0xCB0 |
+| JP Full (slps-01501) | 26 | 12 | 32 | Valid | 0xCB0 |
+
+**Key JP Differences:**
+1. **Sector table at 0xCB0** (32 bytes earlier than PAL's 0xCD0)
+2. **12 movies** vs PAL's 13 (intro spliced into 1 movie)
+3. **CRED moved from index 2 to index 28** - fixes credits bug
+
+**Credits Bug Fix (from TCRF):**
+In PAL, the intro is split between two movie files (INT1, INT2). A bug causes
+credits to inadvertently trigger between the movies because CRED is at sector
+index 2. JP fixed this by:
+- Splicing the intro into a single movie file
+- Moving CRED from index 2 to index 28 (after EVIL)
+- All sector table entries after index 1 are shifted
+
+**Offset Shift Analysis (JP vs PAL):**
+| Access Point | PAL | JP | Difference |
+|--------------|-----|-----|------------|
+| Sector table base | 0xCD0 | 0xCB0 | -0x20 (-32 bytes) |
+| sector_offset access | 0xCCC | 0xCB0 | -0x1C (-28 bytes) |
+| level_count | 0xF31 | 0xF15 | -0x1C (-28 bytes) |
+| movie_count | 0xF32 | 0xF16 | -0x1C (-28 bytes) |
 
 ---
 
