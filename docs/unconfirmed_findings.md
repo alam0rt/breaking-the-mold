@@ -875,8 +875,8 @@ These are set by `FUN_8007bb00` during level loading.
 
 The animation sequence data (exposure sheet) may be split across:
 - **Asset 401** (SEC/TERT): Palette animation config
-- **Asset 500** (TERT): Unknown container - possibly animation sequences
-- **Asset 501** (TERT): VRAM texture coordinates
+- **Asset 500** (TERT): Tile attribute/collision map (see Asset 500 section below)
+- **Asset 501** (TERT): Entity placement data (24-byte structures)
 - **Asset 502** (TERT): VRAM rectangles
 - **Asset 503** (TERT): Animation frame offsets - **likely ToolX sequence data**
 
@@ -1152,7 +1152,7 @@ Word   Offset  Description                           Source / Accessor
 [7]    0x1C    Asset 302 pointer (size flags)        GetTileSizeFlags
 [8]    0x20    Asset 400 pointer (palette container) GetPaletteDataPtr
 [9]    0x24    Asset 401 pointer (palette anim)      GetPaletteAnimData
-[11]   0x2C    Asset 500 pointer (animated tiles)    GetAnimatedTileData
+[11]   0x2C    Asset 500 pointer (tile attribute map)   GetAnimatedTileData ← misnamed
 [15]   0x3C    Asset 501 pointer                     FUN_8007b7dc
 ```
 
@@ -1994,4 +1994,162 @@ Shows entity positions overlaid on level dimensions.
 
 ---
 
-*Last updated: January 8, 2026*
+## Asset 500 - TILE ATTRIBUTE MAP (2026-01-09) ✓ VERIFIED
+
+**Status:** STRUCTURE-VERIFIED - Asset 500 is a 2D tile attribute/collision map, NOT animation data.
+
+### Structure
+
+Asset 500 contains a per-tile attribute map where each byte represents properties for one tile:
+
+```
+Offset  Size               Field         Description
+------  ----               -----         -----------
+0x00    4                  unknown       Always 0 (padding?)
+0x04    2                  level_width   Level width in tiles
+0x06    2                  level_height  Level height in tiles
+0x08    width * height     tile_data     One byte per tile (row-major order)
+```
+
+**Size verification (SCIE level):**
+- Header: 8 bytes
+- Level dimensions: 535 × 43 = 23,005 tiles
+- Total size: 23,013 bytes ✓ (matches actual asset size)
+
+### Tile Attribute Values
+
+| Value | Hex  | Occurrence | Hypothesized Meaning |
+|-------|------|------------|---------------------|
+| 0     | 0x00 | Most tiles | Empty/passable |
+| 2     | 0x02 | Runs       | Solid/collision |
+| 18    | 0x12 | Rare       | Unknown trigger |
+| 23    | 0x17 | Single     | Special tile type |
+| 33    | 0x21 | Single     | Special tile type |
+| 34    | 0x22 | Single     | Special tile type |
+| 83    | 0x53 | Scattered  | Checkpoint/save point? |
+| 101   | 0x65 | Clusters   | Entity spawn zone/trigger |
+
+### Pattern Observations
+
+1. **0x65 (101) values** appear in repeating patterns (groups of 7), often at row boundaries
+2. **0x02 values** appear in long runs, likely marking collision geometry
+3. **0x53 values** appear periodically, possibly marking save points
+4. **Entity positions correlate** - entities often land on tiles with value 0x02 or 0x65
+
+### Connection to Entity System
+
+Entity positions from Asset 501 map to this grid:
+- `tile_x = entity.x_center // 16`
+- `tile_y = entity.y_center // 16`
+- `tile_index = tile_y * level_width + tile_x`
+
+Most entities land on tiles with non-zero values, suggesting this map
+controls where entities can spawn or defines collision boundaries.
+
+---
+
+## Entity Variant Field Discovery (2026-01-09)
+
+**Status:** DISCOVERED - Entity structure offset 0x0C contains a variant/subtype field
+
+### Updated Entity Structure (24 bytes)
+
+```
+Offset  Size  Field         Description
+------  ----  -----         -----------
+0x00    2     x1            Bounding box min X (pixels)
+0x02    2     y1            Bounding box min Y (pixels)
+0x04    2     x2            Bounding box max X (pixels)
+0x06    2     y2            Bounding box max Y (pixels)
+0x08    2     x_center      Entity center X (pixels)
+0x0A    2     y_center      Entity center Y (pixels)
+0x0C    2     variant       Animation frame / subtype selector ← NEW
+0x0E    2     padding1      Always 0
+0x10    2     padding2      Always 0
+0x12    2     entity_type   Type ID (2, 8, 25, 45, etc.)
+0x14    2     layer         Render layer (1, 2, or 3)
+0x16    2     padding3      Always 0
+```
+
+### Variant Values by Entity Type
+
+| Entity Type | Variant Range | Notes |
+|-------------|---------------|-------|
+| 2 (clayballs) | 0, 3, 4, 5, 6, 7, 8 | Animation frame cycle? |
+| 3 | 0 | Single variant |
+| 8 | 0 | Single variant |
+| 10 | 0 | Single variant |
+| 24 | 0 | Single variant |
+| 25 (enemy) | 0 | Single variant |
+| 27 (enemy) | 0 | Single variant |
+| 28 | 1, 2 | Direction/state? |
+| 42 | 2, 3 | Subtype selection |
+| 45 (message) | 0, 1, 2, 12, 13, 14 | Message ID |
+| 48 | 1, 2 | Direction/state? |
+
+**Significance:** The variant field may determine:
+- Which sprite frame to use
+- Animation starting point
+- Subtype/behavior within entity type
+- Message content for type 45
+
+---
+
+## Sprite ID Lookup Chain (2026-01-09)
+
+**Status:** CODE-TRACED - Complete sprite lookup chain documented from Ghidra
+
+### Function Call Chain
+
+```
+FUN_8001cdac(context, priority, sprite_id)
+    │
+    └─► InitSpriteContext(context+0x78, sprite_id) @ 0x8007bc3c
+            │
+            └─► LookupSpriteById(sprite_id) @ 0x8007bb10
+                    │
+                    ├─► FindSpriteInTOC(DAT_800a6064, sprite_id) @ 0x8007b968
+                    │   (Searches primary sprite table - tertiary container)
+                    │
+                    └─► Fallback: Search DAT_800a6060
+                        (Secondary sprite table)
+```
+
+### FindSpriteInTOC Algorithm
+
+```c
+// Searches TOC at context+0x70 and context+0x40
+// Each TOC entry is 12 bytes (3 uint32):
+//   [0] = count (at base)
+//   [1] = sprite_id (32-bit hash)
+//   [2] = offset to sprite data
+// Returns: base + offset when sprite_id matches
+```
+
+### Sprite IDs are 32-bit Identifiers
+
+Sprite IDs in Asset 600 TOC and game code are 32-bit hash-like values:
+- `0x09406D8A` - Common sprite (appears in all levels)
+- `0x400C989D`, `0x400C991D` - Related sprites
+- `0x5A89815F`, `0x5AB9815F`, `0x5AD9815F` - Family of sprites
+- `0x21842018` - Player sprite (hardcoded in FUN_8001fcf0)
+- `0xe2f188` - UI/menu element (heavily reused)
+
+### Conclusion: Entity→Sprite Mapping is in Code
+
+The mapping from entity type (2, 8, 25, etc.) to sprite ID (0x09406D8A, etc.)
+is **hardcoded in game code**, not stored in BLB data.
+
+To build a mapping table for the BLB viewer:
+1. Trace each entity type's spawn dispatcher in Ghidra
+2. Extract the sprite ID constant passed to InitSpriteContext
+3. Create a static lookup table: `entity_type → sprite_id`
+
+**Known mappings:**
+- Type 2 = Clayballs → sprite ID TBD
+- Type 45 = Message box → sprite ID TBD
+- Player → `0x21842018`
+
+---
+
+*Last updated: January 9, 2026*
