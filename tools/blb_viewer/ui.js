@@ -51,6 +51,11 @@ function initDOM() {
     minimapContainer: document.getElementById('minimap-container'),
     minimapCanvas: document.getElementById('minimap-canvas'),
     minimapViewport: document.getElementById('minimap-viewport'),
+    // Layers panel
+    layersContainer: document.getElementById('layers-container'),
+    // Sprites panel
+    optShowSprites: document.getElementById('opt-show-sprites'),
+    spriteCount: document.getElementById('sprite-count'),
     // Status
     statusMsg: document.getElementById('status-msg'),
     statusFile: document.getElementById('status-file'),
@@ -205,6 +210,73 @@ function showLoading(show, msg = 'Loading...') {
 }
 
 // ============================================================================
+// Layer Panel
+// ============================================================================
+
+/**
+ * Update the layers panel with checkboxes for each layer
+ */
+function updateLayersPanel(stageData) {
+  if (!dom.layersContainer) return;
+  
+  // Clear existing
+  dom.layersContainer.innerHTML = '';
+  
+  if (!stageData || !stageData.layers || stageData.layers.length === 0) {
+    dom.layersContainer.innerHTML = '<span style="color: #808080;">No layers</span>';
+    return;
+  }
+  
+  const { layers } = stageData;
+  
+  // Initialize visibility array (all visible by default)
+  BLBRenderer.state.layerVisibility = layers.map(() => true);
+  
+  // Create checkbox for each layer
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
+    const isVisible = GameEngine.isLayerVisible(layer);
+    
+    const label = document.createElement('label');
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '4px';
+    label.style.marginRight = '8px';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = isVisible;
+    checkbox.disabled = !isVisible; // Can't toggle layers that are hidden by game logic
+    checkbox.dataset.layerIndex = i;
+    
+    // Build label text with layer info
+    const scrollX = layer.scrollX.toFixed(2);
+    const scrollInfo = layer.scrollX < 0.5 ? 'bg' : 'fg';
+    const labelText = `L${i} (${layer.width}×${layer.height}, ${scrollInfo})`;
+    
+    checkbox.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.dataset.layerIndex, 10);
+      BLBRenderer.state.layerVisibility[idx] = e.target.checked;
+      
+      // Log layer info to console
+      const l = layers[idx];
+      const scrollDesc = l.scrollX < 0.5 ? 'background' : 'foreground';
+      console.log(`[LAYER] Layer ${idx}: ${e.target.checked ? 'VISIBLE' : 'HIDDEN'}`);
+      console.log(`  Size: ${l.width}×${l.height} tiles (${l.width * 16}×${l.height * 16} px)`);
+      console.log(`  Offset: (${l.xOffset}, ${l.yOffset})`);
+      console.log(`  Scroll: X=${l.scrollX.toFixed(3)}, Y=${l.scrollY.toFixed(3)} (${scrollDesc})`);
+      console.log(`  Type: ${l.layerType}, RenderParam: 0x${l.renderParam.toString(16).toUpperCase()}`);
+      
+      rerender();
+    });
+    
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(labelText));
+    dom.layersContainer.appendChild(label);
+  }
+}
+
+// ============================================================================
 // Render Helpers
 // ============================================================================
 
@@ -239,9 +311,14 @@ function updateRenderInfo(info) {
     Layers: ${info.layerCount}<br>
     Tiles: ${info.totalTiles}<br>
     Palettes: ${info.paletteCount}<br>
-    Entities: ${info.entityCount}${BLBRenderer.state.mode90s ? '<br>Camera: ' + info.cameraX + ',' + info.cameraY : ''}
+    Entities: ${info.entityCount}${info.spriteCount !== undefined ? '<br>Sprites: ' + info.spritesRendered + '/' + info.spriteCount : ''}${BLBRenderer.state.mode90s ? '<br>Camera: ' + info.cameraX + ',' + info.cameraY : ''}
   `;
   dom.infoPanel.classList.add('visible');
+  
+  // Update sprite count display
+  if (dom.spriteCount && info.spriteCount !== undefined) {
+    dom.spriteCount.textContent = `(${info.spritesRendered}/${info.spriteCount} rendered)`;
+  }
   
   // Update camera slider range
   const limits = BLBRenderer.getCameraLimits();
@@ -258,12 +335,100 @@ function updateMinimapViewportIndicator() {
   }
 }
 
+/**
+ * Render a single sprite centered in the canvas for preview
+ */
+function renderSingleSprite(stageData, sprite) {
+  if (!stageData.spriteContainerData) return;
+  
+  const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, 0);
+  if (!frameData) return;
+  
+  const { pixels, palette, width, height } = frameData;
+  
+  // Get canvas and context
+  const canvas = dom.canvas;
+  const ctx = canvas.getContext('2d');
+  
+  // Set canvas size to fit sprite with padding
+  const padding = 20;
+  const displayWidth = Math.max(width + padding * 2, 100);
+  const displayHeight = Math.max(height + padding * 2, 100);
+  
+  canvas.width = displayWidth;
+  canvas.height = displayHeight;
+  canvas.style.width = `${displayWidth * 2}px`;
+  canvas.style.height = `${displayHeight * 2}px`;
+  
+  // Clear with checkerboard pattern for transparency
+  ctx.fillStyle = '#404040';
+  ctx.fillRect(0, 0, displayWidth, displayHeight);
+  ctx.fillStyle = '#505050';
+  for (let y = 0; y < displayHeight; y += 8) {
+    for (let x = 0; x < displayWidth; x += 8) {
+      if ((x + y) % 16 === 0) {
+        ctx.fillRect(x, y, 8, 8);
+      }
+    }
+  }
+  
+  // Create ImageData for the sprite
+  const imageData = ctx.createImageData(width, height);
+  const data = imageData.data;
+  
+  for (let i = 0; i < pixels.length; i++) {
+    const colorIdx = pixels[i];
+    const color = palette[colorIdx] || [0, 0, 0, 0];
+    
+    const offset = i * 4;
+    data[offset] = color[0];
+    data[offset + 1] = color[1];
+    data[offset + 2] = color[2];
+    data[offset + 3] = color[3];
+  }
+  
+  // Draw sprite centered
+  const offsetX = Math.floor((displayWidth - width) / 2);
+  const offsetY = Math.floor((displayHeight - height) / 2);
+  
+  // Use a temporary canvas to draw with transparency
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.putImageData(imageData, 0, 0);
+  
+  ctx.drawImage(tempCanvas, offsetX, offsetY);
+  
+  console.log(`[SPRITE] Rendered sprite: ${width}×${height} at (${offsetX}, ${offsetY})`);
+}
+
 // ============================================================================
 // Tree View
 // ============================================================================
 
+// Cache for loaded stage data (to avoid reloading when expanding tree)
+const stageDataCache = new Map();
+
+function getStageKey(level, stageIndex) {
+  return `${level.levelId}:${stageIndex}`;
+}
+
+function getCachedStageData(level, stageIndex) {
+  const key = getStageKey(level, stageIndex);
+  if (stageDataCache.has(key)) {
+    return stageDataCache.get(key);
+  }
+  const stageData = GameEngine.loadStage(UIState.fileData, level, stageIndex);
+  if (stageData) {
+    stageDataCache.set(key, stageData);
+  }
+  return stageData;
+}
+
 function buildTreeView() {
   dom.treeContainer.innerHTML = '';
+  stageDataCache.clear(); // Clear cache when building new tree
   
   if (UIState.levels.length === 0) {
     dom.treeContainer.innerHTML = '<div style="color: #808080; padding: 20px; text-align: center;">No levels found</div>';
@@ -283,6 +448,9 @@ function buildTreeView() {
         label: `Stage ${i}`,
         icon: '🎮',
         data: { type: 'stage', level, stageIndex: i },
+        expanded: false,
+        // Lazy load children - will be populated on expand
+        lazyChildren: () => getLayerChildren(level, i),
       })),
     })),
   });
@@ -290,17 +458,63 @@ function buildTreeView() {
   dom.treeContainer.appendChild(rootNode);
 }
 
-function createTreeNode({ label, icon, data, expanded = false, children = [] }) {
+/**
+ * Get layer and sprite children for a stage (called lazily when stage is expanded)
+ */
+function getLayerChildren(level, stageIndex) {
+  const stageData = getCachedStageData(level, stageIndex);
+  if (!stageData || !stageData.layers) {
+    return [{ label: '(no data)', icon: '⚠️' }];
+  }
+  
+  const children = [];
+  
+  // Add layers
+  for (let i = 0; i < stageData.layers.length; i++) {
+    const layer = stageData.layers[i];
+    const scrollDesc = layer.scrollX < 0.5 ? 'bg' : 'fg';
+    const visible = GameEngine.isLayerVisible(layer);
+    const visIcon = visible ? '' : ' 👁️‍🗨️';
+    
+    children.push({
+      label: `Layer ${i} (${layer.width}×${layer.height}, ${scrollDesc})${visIcon}`,
+      icon: '📄',
+      data: { type: 'layer', level, stageIndex, layerIndex: i, layer, stageData },
+    });
+  }
+  
+  // Add sprites if available
+  if (stageData.sprites && stageData.sprites.count > 0) {
+    const spriteList = stageData.sprites.sprites || [];
+    children.push({
+      label: `Sprites (${stageData.sprites.count})`,
+      icon: '🎭',
+      expanded: false,
+      children: spriteList.slice(0, 50).map((sprite, i) => ({
+        label: `Sprite ${i} (ID: ${sprite.id}, ${sprite.size} bytes)`,
+        icon: '👾',
+        data: { type: 'sprite', level, stageIndex, spriteIndex: i, sprite, stageData },
+      })),
+    });
+  }
+  
+  return children;
+}
+
+function createTreeNode({ label, icon, data, expanded = false, children = [], lazyChildren = null }) {
   const node = document.createElement('div');
   node.className = 'tree-node';
   
   const content = document.createElement('div');
   content.className = 'tree-node-content';
   
+  // Determine if this node has or can have children
+  const hasChildren = children.length > 0 || lazyChildren !== null;
+  
   // Toggle button
   const toggle = document.createElement('span');
   toggle.className = 'tree-toggle';
-  toggle.textContent = children.length > 0 ? (expanded ? '−' : '+') : ' ';
+  toggle.textContent = hasChildren ? (expanded ? '−' : '+') : ' ';
   content.appendChild(toggle);
   
   // Icon
@@ -317,21 +531,35 @@ function createTreeNode({ label, icon, data, expanded = false, children = [] }) 
   
   node.appendChild(content);
   
-  // Children container
-  if (children.length > 0) {
-    const childContainer = document.createElement('div');
+  // Children container (create even for lazy nodes)
+  let childContainer = null;
+  let lazyLoaded = false;
+  
+  if (hasChildren) {
+    childContainer = document.createElement('div');
     childContainer.className = `tree-children${expanded ? '' : ' collapsed'}`;
     
+    // Add existing children
     for (const child of children) {
       childContainer.appendChild(createTreeNode(child));
     }
     
     node.appendChild(childContainer);
     
-    // Toggle click
+    // Toggle click - handles both regular and lazy children
     toggle.addEventListener('click', (e) => {
       e.stopPropagation();
       const isCollapsed = childContainer.classList.contains('collapsed');
+      
+      // Lazy load children on first expand
+      if (isCollapsed && lazyChildren && !lazyLoaded) {
+        lazyLoaded = true;
+        const lazyNodes = lazyChildren();
+        for (const child of lazyNodes) {
+          childContainer.appendChild(createTreeNode(child));
+        }
+      }
+      
       childContainer.classList.toggle('collapsed');
       toggle.textContent = isCollapsed ? '−' : '+';
     });
@@ -360,6 +588,9 @@ function handleTreeSelection(data) {
     UIState.selectedLevel = data.level;
     UIState.selectedStage = null;
     
+    // Clear layers panel when level is selected
+    updateLayersPanel(null);
+    
     // Log level info
     const level = data.level;
     const primaryFileOff = level.sectorOffset * BLB.SECTOR_SIZE;
@@ -383,6 +614,9 @@ function handleTreeSelection(data) {
     // Load and render stage
     const stageData = GameEngine.loadStage(UIState.fileData, data.level, data.stageIndex);
     if (stageData) {
+      // Update layer panel with new stage layers
+      updateLayersPanel(stageData);
+      
       const info = BLBRenderer.renderStage(stageData, {
         zoom: parseInt(dom.zoomLevel.value, 10),
         showEntities: dom.showEntities.checked,
@@ -398,10 +632,124 @@ function handleTreeSelection(data) {
         updateMinimapViewportIndicator();
       }
       
+      // Log layer summary
+      console.info(`🎮 Stage ${data.stageIndex}: ${stageData.layers.length} layers`);
+      for (let i = 0; i < stageData.layers.length; i++) {
+        const l = stageData.layers[i];
+        const scrollDesc = l.scrollX < 0.5 ? 'background' : 'foreground';
+        const visible = GameEngine.isLayerVisible(l);
+        console.log(`  [${i}] ${l.width}×${l.height} scroll=${l.scrollX.toFixed(2)} (${scrollDesc}) ${visible ? '' : '[hidden]'}`);
+      }
+      
       setStatus(`Rendered stage ${data.stageIndex}`);
     } else {
+      updateLayersPanel(null);
       setStatus(`Failed to load stage ${data.stageIndex}`);
     }
+    
+  } else if (data.type === 'layer') {
+    // Layer selected - show layer details in info panel
+    const { level, stageIndex, layerIndex, layer, stageData } = data;
+    
+    setStatus(`Layer ${layerIndex} of ${level.levelId} Stage ${stageIndex}`);
+    dom.renderTitle.textContent = `${level.levelId} - Stage ${stageIndex} - Layer ${layerIndex}`;
+    
+    // If this stage isn't rendered yet, render it
+    if (UIState.selectedLevel !== level || UIState.selectedStage !== stageIndex) {
+      UIState.selectedLevel = level;
+      UIState.selectedStage = stageIndex;
+      
+      BLBRenderer.setCamera(0, 0);
+      dom.cameraX.value = 0;
+      dom.cameraXVal.textContent = '0';
+      
+      updateLayersPanel(stageData);
+      
+      BLBRenderer.renderStage(stageData, {
+        zoom: parseInt(dom.zoomLevel.value, 10),
+        showEntities: dom.showEntities.checked,
+        showGrid: dom.showGrid.checked,
+        showMinimap: dom.showMinimap.checked,
+        mode90s: dom.mode90s.checked,
+        staticBg: dom.optStaticBg.checked,
+        mouseFollow: dom.optMouseFollow.checked,
+      });
+    }
+    
+    // Display layer properties in info panel
+    const scrollDesc = layer.scrollX < 0.5 ? 'background' : 'foreground';
+    const visible = GameEngine.isLayerVisible(layer);
+    
+    dom.infoPanel.innerHTML = `
+      <strong>Layer ${layerIndex}</strong><br>
+      <hr style="margin: 4px 0; border: none; border-top: 1px solid #808080;">
+      <strong>Dimensions:</strong><br>
+      &nbsp; Size: ${layer.width}×${layer.height} tiles<br>
+      &nbsp; Pixels: ${layer.width * 16}×${layer.height * 16} px<br>
+      &nbsp; Level: ${layer.levelWidth}×${layer.levelHeight}<br>
+      <strong>Position:</strong><br>
+      &nbsp; Offset: (${layer.xOffset}, ${layer.yOffset})<br>
+      <strong>Scrolling:</strong><br>
+      &nbsp; X: ${layer.scrollX.toFixed(4)} (${scrollDesc})<br>
+      &nbsp; Y: ${layer.scrollY.toFixed(4)}<br>
+      <strong>Rendering:</strong><br>
+      &nbsp; Type: ${layer.layerType}<br>
+      &nbsp; Param: 0x${layer.renderParam.toString(16).toUpperCase()}<br>
+      &nbsp; Visible: ${visible ? 'Yes' : 'No (skipRender)'}<br>
+      <strong>Background:</strong><br>
+      &nbsp; RGB(${layer.bgColor[0]}, ${layer.bgColor[1]}, ${layer.bgColor[2]})
+    `;
+    dom.infoPanel.classList.add('visible');
+    
+    // Log to console
+    console.info(`📄 Layer ${layerIndex} of ${level.levelId} Stage ${stageIndex}`);
+    console.log(`  Size: ${layer.width}×${layer.height} tiles (${layer.width * 16}×${layer.height * 16} px)`);
+    console.log(`  Offset: (${layer.xOffset}, ${layer.yOffset})`);
+    console.log(`  Scroll: X=${layer.scrollX.toFixed(4)}, Y=${layer.scrollY.toFixed(4)} (${scrollDesc})`);
+    console.log(`  Type: ${layer.layerType}, RenderParam: 0x${layer.renderParam.toString(16).toUpperCase()}`);
+    console.log(`  Visible: ${visible}, BgColor: RGB(${layer.bgColor.join(', ')})`);
+    
+  } else if (data.type === 'sprite') {
+    // Sprite selected - show sprite preview and details
+    const { level, stageIndex, spriteIndex, sprite, stageData } = data;
+    
+    setStatus(`Sprite ${spriteIndex} of ${level.levelId} Stage ${stageIndex}`);
+    dom.renderTitle.textContent = `${level.levelId} - Stage ${stageIndex} - Sprite ${spriteIndex}`;
+    
+    // Try to decode the sprite
+    let frameInfo = '';
+    if (stageData.spriteContainerData) {
+      const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, 0);
+      if (frameData) {
+        frameInfo = `
+      <strong>Frame 0:</strong><br>
+      &nbsp; Size: ${frameData.width}×${frameData.height} px<br>
+      &nbsp; Render: (${frameData.meta.renderX}, ${frameData.meta.renderY})<br>
+      &nbsp; Anchor: (${frameData.meta.anchorX}, ${frameData.meta.anchorY})<br>
+      <strong>Animations:</strong> ${frameData.header.animationCount}<br>
+        `;
+        
+        // Render just this sprite in the canvas
+        renderSingleSprite(stageData, sprite);
+      } else {
+        frameInfo = '<span style="color: #ff8080;">Failed to decode sprite</span><br>';
+      }
+    }
+    
+    dom.infoPanel.innerHTML = `
+      <strong>👾 Sprite ${spriteIndex}</strong><br>
+      <hr style="margin: 4px 0; border: none; border-top: 1px solid #808080;">
+      <strong>Container:</strong><br>
+      &nbsp; ID: ${sprite.id}<br>
+      &nbsp; Size: ${sprite.size} bytes<br>
+      &nbsp; Offset: 0x${sprite.offset.toString(16).toUpperCase()}<br>
+      ${frameInfo}
+    `;
+    dom.infoPanel.classList.add('visible');
+    
+    // Log to console
+    console.info(`👾 Sprite ${spriteIndex} of ${level.levelId} Stage ${stageIndex}`);
+    console.log(`  ID: ${sprite.id}, Size: ${sprite.size} bytes, Offset: 0x${sprite.offset.toString(16)}`);
   }
 }
 
@@ -543,6 +891,15 @@ function setupEventHandlers() {
     dom.cameraX.disabled = e.target.checked;
   });
 
+  // Sprites toggle
+  if (dom.optShowSprites) {
+    dom.optShowSprites.addEventListener('change', (e) => {
+      BLBRenderer.state.showSprites = e.target.checked;
+      console.log(`[SPRITES] Show sprites: ${e.target.checked}`);
+      rerender();
+    });
+  }
+
   // Mouse tracking for camera - RTS style (works in 90s mode)
   dom.renderContainer.addEventListener('mousemove', (e) => {
     if (!dom.optMouseFollow.checked || !BLBRenderer.state.cachedStage) return;
@@ -675,6 +1032,7 @@ const BLBUI = {
   setStatus,
   showLoading,
   rerender,
+  updateLayersPanel,
   
   // File handling
   loadBLBFile,

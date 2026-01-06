@@ -179,6 +179,23 @@ fieldset.win-group legend input[type="checkbox"] {
   font-size: 11px;
 }
 
+#layers-container {
+  max-height: 60px;
+  overflow-y: auto;
+}
+
+#layers-container label {
+  cursor: pointer;
+}
+
+#layers-container label:hover {
+  background: rgba(10, 36, 106, 0.1);
+}
+
+#layers-container input[type="checkbox"]:disabled + * {
+  opacity: 0.5;
+}
+
 .sub-option {
   margin-left: 16px;
 }

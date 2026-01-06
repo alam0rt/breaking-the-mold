@@ -32,11 +32,18 @@ const RendererState = {
   showEntities: true,
   showGrid: false,
   showMinimap: false,
+  showSprites: true, // New: render sprites at entity positions
   
   // 90s mode options
   mode90s: false,
   staticBg: false,
   mouseFollow: false,
+  
+  // Layer visibility (true = visible, index by layer index)
+  layerVisibility: [],
+  
+  // Sprite cache (spriteId -> decoded frame ImageData)
+  spriteCache: new Map(),
   
   // Cached stage data
   cachedStage: null,
@@ -65,6 +72,11 @@ function renderStage(stageData, options = {}) {
   if (!stageData || !stageData.tileHeader) {
     console.warn('No stage data to render');
     return null;
+  }
+  
+  // Clear sprite cache if loading a different stage
+  if (RendererState.cachedStage !== stageData) {
+    RendererState.spriteCache.clear();
   }
   
   // Update state from options
@@ -134,12 +146,17 @@ function renderStage(stageData, options = {}) {
   const entityMarkers = [];
   const totalTiles = GameEngine.getTotalTileCount(tileHeader);
   
+  console.log(`[RENDER] Total tiles: ${totalTiles} (16x16: ${tileHeader.count16x16}, 8x8: ${tileHeader.count8x8}, extra: ${tileHeader.countExtra})`);
+  
   // Render layers back-to-front
   for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
     const layer = layers[layerIdx];
     
     // Skip non-renderable layers
     if (!GameEngine.isLayerVisible(layer)) continue;
+    
+    // Skip user-hidden layers
+    if (RendererState.layerVisibility[layerIdx] === false) continue;
     
     // Get tilemap for this layer
     const tilemap = tilemaps[layerIdx];
@@ -163,9 +180,14 @@ function renderStage(stageData, options = {}) {
         if (tileDataIdx + 2 > tilemapData.length) continue;
         
         const rawIdx = tilemapView.getUint16(tileDataIdx, true);
-        const tileIdx = rawIdx & 0x7FF;
+        const tileIdx = rawIdx & 0x0FFF; // Lower 12 bits for tile index (upper 4 bits are color tint)
         
         if (tileIdx === 0) continue;
+        
+        // Debug: log high tile indices to understand entity marker range
+        if (layerIdx === 0 && ty === 0 && tx < 5) {
+          console.log(`[TILE] Layer ${layerIdx} tile (${tx},${ty}): raw=0x${rawIdx.toString(16)}, idx=${tileIdx}, totalTiles=${totalTiles}`);
+        }
         
         // Calculate world position (including layer offset)
         const worldX = layerOffsetX + tx * 16;
@@ -193,11 +215,11 @@ function renderStage(stageData, options = {}) {
         // Skip tiles completely outside viewport
         if (screenX + 16 <= 0 || screenX >= viewWidth || screenY + 16 <= 0 || screenY >= viewHeight) {
           // Still collect entity markers even if off-screen
-          if (tileIdx > totalTiles) {
+          if (tileIdx >= totalTiles) {
             entityMarkers.push({
               x: screenX,
               y: screenY,
-              entityId: tileIdx,
+              entityId: tileIdx - totalTiles,
               layer: layerIdx,
             });
           }
@@ -205,11 +227,11 @@ function renderStage(stageData, options = {}) {
         }
         
         // Check if entity marker
-        if (tileIdx > totalTiles) {
+        if (tileIdx >= totalTiles) {
           entityMarkers.push({
             x: screenX,
             y: screenY,
-            entityId: tileIdx,
+            entityId: tileIdx - totalTiles,
             layer: layerIdx,
           });
           continue;
@@ -265,7 +287,23 @@ function renderStage(stageData, options = {}) {
   // Put image data to canvas
   ctx.putImageData(imageData, 0, 0);
   
-  // Draw entity markers on top
+  // Debug: log sprite and entity info
+  if (stageData.sprites) {
+    console.log(`[RENDER] Sprites: ${stageData.sprites.count}, Entities: ${entityMarkers.length}, showSprites: ${RendererState.showSprites}`);
+  }
+  
+  // Render sprites at entity positions (or as gallery if no entities)
+  let spriteCount = 0;
+  if (RendererState.showSprites && stageData.sprites && stageData.sprites.count > 0 && stageData.spriteContainerData) {
+    if (entityMarkers.length > 0) {
+      spriteCount = renderSpritesAtEntities(ctx, stageData, entityMarkers, viewWidth, viewHeight);
+    } else {
+      // No entity markers - render sprites as a gallery for debugging
+      spriteCount = renderSpriteGallery(ctx, stageData, viewWidth, viewHeight);
+    }
+  }
+  
+  // Draw entity markers on top (if sprites not shown, or as debug overlay)
   if (RendererState.showEntities && entityMarkers.length > 0) {
     ctx.strokeStyle = '#ff0';
     ctx.lineWidth = 1;
@@ -316,9 +354,205 @@ function renderStage(stageData, options = {}) {
     layerCount: layers.length,
     paletteCount: palettes.length,
     entityCount: entityMarkers.length,
+    spriteCount: stageData.sprites ? stageData.sprites.count : 0,
+    spritesRendered: spriteCount,
     cameraX: RendererState.cameraX,
     cameraY: RendererState.cameraY,
   };
+}
+
+// ============================================================================
+// Sprite Rendering
+// ============================================================================
+
+/**
+ * Render sprites at entity marker positions
+ * For now, we render the first sprite's first frame at each unique entity position
+ * 
+ * Returns: number of sprites rendered
+ */
+function renderSpritesAtEntities(ctx, stageData, entityMarkers, viewWidth, viewHeight) {
+  const { sprites, spriteContainerData } = stageData;
+  if (!sprites || sprites.count === 0 || !spriteContainerData) {
+    console.log(`[SPRITES] No sprites to render: sprites=${!!sprites}, count=${sprites?.count}, data=${!!spriteContainerData}`);
+    return 0;
+  }
+  
+  console.log(`[SPRITES] Rendering: ${sprites.count} sprites available, ${entityMarkers.length} entity markers`);
+  
+  // Group entity markers by unique positions (deduplicate overlapping markers)
+  const uniquePositions = new Map();
+  for (const marker of entityMarkers) {
+    const key = `${marker.x},${marker.y}`;
+    if (!uniquePositions.has(key)) {
+      uniquePositions.set(key, marker);
+    }
+  }
+  
+  console.log(`[SPRITES] Unique positions: ${uniquePositions.size}`);
+  
+  // For each sprite, get or create cached frame 0
+  let renderedCount = 0;
+  const spriteList = sprites.sprites;
+  
+  // Render sprites at their entity positions
+  // Entity ID to sprite mapping is complex - for now render all available sprites
+  // scattered across entity positions to show they work
+  
+  let spriteIdx = 0;
+  for (const [key, marker] of uniquePositions) {
+    // Cycle through available sprites
+    const spriteEntry = spriteList[spriteIdx % spriteList.length];
+    if (!spriteEntry) continue;
+    
+    // Get cached or decode sprite frame
+    const cacheKey = `${spriteEntry.id}_0_0`; // spriteId_animIdx_frameIdx
+    let frameData = RendererState.spriteCache.get(cacheKey);
+    
+    if (!frameData) {
+      // Decode sprite frame on demand
+      frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, 0);
+      if (frameData) {
+        // Create ImageData from decoded pixels
+        const imgData = createSpriteImageData(frameData);
+        frameData.imageData = imgData;
+        RendererState.spriteCache.set(cacheKey, frameData);
+      }
+    }
+    
+    if (frameData && frameData.imageData) {
+      // Calculate render position using anchor offsets
+      const renderX = marker.x + (frameData.meta.renderX || 0);
+      const renderY = marker.y + (frameData.meta.renderY || 0);
+      
+      // Skip if completely outside viewport
+      if (renderX + frameData.width > 0 && renderX < viewWidth &&
+          renderY + frameData.height > 0 && renderY < viewHeight) {
+        
+        // Draw the sprite using putImageData or drawImage
+        drawSpriteFrame(ctx, frameData, renderX, renderY, viewWidth, viewHeight);
+        renderedCount++;
+      }
+    }
+    
+    spriteIdx++;
+  }
+  
+  return renderedCount;
+}
+
+/**
+ * Render sprites in a gallery layout for debugging
+ * Used when no entity markers are found (e.g., MENU levels)
+ */
+function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
+  const { sprites, spriteContainerData } = stageData;
+  if (!sprites || sprites.count === 0 || !spriteContainerData) return 0;
+  
+  console.log(`[SPRITES] Rendering gallery of ${sprites.count} sprites`);
+  
+  const spriteList = sprites.sprites;
+  let renderedCount = 0;
+  let x = 10;
+  let y = 10;
+  let rowHeight = 0;
+  const padding = 5;
+  
+  for (let i = 0; i < Math.min(spriteList.length, 50); i++) { // Limit to 50 sprites
+    const spriteEntry = spriteList[i];
+    if (!spriteEntry) continue;
+    
+    // Get cached or decode sprite frame
+    const cacheKey = `${spriteEntry.id}_0_0`;
+    let frameData = RendererState.spriteCache.get(cacheKey);
+    
+    if (!frameData) {
+      frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, 0);
+      if (frameData) {
+        const imgData = createSpriteImageData(frameData);
+        frameData.imageData = imgData;
+        RendererState.spriteCache.set(cacheKey, frameData);
+        console.log(`[SPRITES] Decoded sprite ${i}: ${frameData.width}x${frameData.height}`);
+      } else {
+        console.log(`[SPRITES] Failed to decode sprite ${i}`);
+      }
+    }
+    
+    if (frameData && frameData.imageData) {
+      // Check if sprite fits on current row
+      if (x + frameData.width > viewWidth - 10) {
+        x = 10;
+        y += rowHeight + padding;
+        rowHeight = 0;
+      }
+      
+      // Skip if sprite would be off-screen
+      if (y + frameData.height > viewHeight - 10) break;
+      
+      drawSpriteFrame(ctx, frameData, x, y, viewWidth, viewHeight);
+      renderedCount++;
+      
+      x += frameData.width + padding;
+      rowHeight = Math.max(rowHeight, frameData.height);
+    }
+  }
+  
+  return renderedCount;
+}
+
+/**
+ * Create ImageData from decoded sprite frame pixels and palette
+ */
+function createSpriteImageData(frameData) {
+  const { pixels, palette, width, height } = frameData;
+  
+  // Create a temporary canvas to hold the sprite
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext('2d');
+  const imageData = tempCtx.createImageData(width, height);
+  const data = imageData.data;
+  
+  for (let i = 0; i < pixels.length; i++) {
+    const colorIdx = pixels[i];
+    const color = palette[colorIdx] || [0, 0, 0, 0];
+    
+    const offset = i * 4;
+    data[offset] = color[0];
+    data[offset + 1] = color[1];
+    data[offset + 2] = color[2];
+    data[offset + 3] = color[3];
+  }
+  
+  // Put to temp canvas to get ImageBitmap for faster drawing
+  tempCtx.putImageData(imageData, 0, 0);
+  
+  return {
+    canvas: tempCanvas,
+    imageData,
+    width,
+    height,
+  };
+}
+
+/**
+ * Draw a sprite frame to the main canvas
+ */
+function drawSpriteFrame(ctx, frameData, x, y, viewWidth, viewHeight) {
+  if (!frameData.imageData) return;
+  
+  // Use drawImage from the cached canvas (supports transparency properly)
+  if (frameData.imageData.canvas) {
+    ctx.drawImage(frameData.imageData.canvas, Math.floor(x), Math.floor(y));
+  }
+}
+
+/**
+ * Clear sprite cache (call when loading new stage)
+ */
+function clearSpriteCache() {
+  RendererState.spriteCache.clear();
 }
 
 // ============================================================================
@@ -492,6 +726,7 @@ const BLBRenderer = {
   
   // Rendering
   renderStage,
+  clearSpriteCache,
   updateMinimap,
   getMinimapViewport,
   

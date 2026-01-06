@@ -359,6 +359,11 @@ function loadStage(fileData, level, stageIndex) {
     ? parseTilemaps(tertiary[ASSET_TYPE.TILEMAP].data)
     : [];
   
+  // Parse sprites from tertiary Asset 600
+  const sprites = tertiary[ASSET_TYPE.SPRITES]
+    ? parseSpriteContainer(tertiary[ASSET_TYPE.SPRITES].data)
+    : { count: 0, sprites: [] };
+  
   return {
     level,
     stageIndex,
@@ -369,6 +374,233 @@ function loadStage(fileData, level, stageIndex) {
     palettes,
     layers,
     tilemaps,
+    sprites,
+    // Keep raw sprite container data for on-demand frame decoding
+    spriteContainerData: tertiary[ASSET_TYPE.SPRITES]?.data || null,
+  };
+}
+
+// ============================================================================
+// Sprite System (Asset 600 from Tertiary)
+// ============================================================================
+
+/**
+ * Parse sprite container TOC
+ * Returns { count, sprites: [{ id, size, offset }] }
+ */
+function parseSpriteContainer(containerData) {
+  if (!containerData || containerData.length < 4) {
+    return { count: 0, sprites: [] };
+  }
+  
+  const view = new DataView(containerData.buffer, containerData.byteOffset);
+  const count = view.getUint32(0, true);
+  
+  // Sanity check
+  if (count > 1000 || count * 12 + 4 > containerData.length) {
+    return { count: 0, sprites: [] };
+  }
+  
+  const sprites = [];
+  for (let i = 0; i < count; i++) {
+    const entryOffset = 4 + i * 12;
+    const id = view.getUint32(entryOffset, true);
+    const size = view.getUint32(entryOffset + 4, true);
+    const offset = view.getUint32(entryOffset + 8, true);
+    
+    if (offset + 12 <= containerData.length) {
+      sprites.push({ index: i, id, size, offset });
+    }
+  }
+  
+  return { count, sprites };
+}
+
+/**
+ * Parse a sprite's header (12 bytes at sprite offset)
+ */
+function parseSpriteHeader(containerData, spriteOffset) {
+  if (!containerData || spriteOffset + 12 > containerData.length) {
+    return null;
+  }
+  
+  const view = new DataView(containerData.buffer, containerData.byteOffset + spriteOffset);
+  
+  return {
+    animationCount: view.getUint16(0, true),
+    frameMetaOffset: view.getUint16(2, true),
+    rleDataOffset: view.getUint32(4, true),
+    paletteOffset: view.getUint32(8, true),
+  };
+}
+
+/**
+ * Parse animation entries for a sprite
+ */
+function parseSpriteAnimations(containerData, spriteOffset, animationCount) {
+  const animations = [];
+  const animBase = spriteOffset + 12; // Animations start after 12-byte header
+  
+  for (let i = 0; i < animationCount; i++) {
+    const off = animBase + i * 12;
+    if (off + 12 > containerData.length) break;
+    
+    const view = new DataView(containerData.buffer, containerData.byteOffset + off);
+    animations.push({
+      animationId: view.getUint32(0, true),
+      frameCount: view.getUint16(4, true),
+      frameOffset: view.getUint16(6, true), // Index into frame metadata array
+      flags: view.getUint16(8, true),
+      extra: view.getUint16(10, true),
+    });
+  }
+  
+  return animations;
+}
+
+/**
+ * Parse frame metadata (36 bytes per frame)
+ */
+function parseSpriteFrameMetadata(containerData, spriteOffset, frameMetaOffset, frameIndex) {
+  const frameOff = spriteOffset + frameMetaOffset + frameIndex * 36;
+  if (frameOff + 36 > containerData.length) return null;
+  
+  const view = new DataView(containerData.buffer, containerData.byteOffset + frameOff);
+  
+  return {
+    flags: view.getUint16(4, true),
+    renderX: view.getInt16(6, true),  // Signed
+    renderY: view.getInt16(8, true),  // Signed
+    renderWidth: view.getUint16(10, true),
+    renderHeight: view.getUint16(12, true),
+    anchorX: view.getInt16(18, true), // Signed
+    anchorY: view.getInt16(20, true), // Signed
+    clipWidth: view.getUint16(22, true),
+    clipHeight: view.getUint16(24, true),
+    rleOffset: view.getUint32(32, true), // Offset from sprite's rleDataOffset
+  };
+}
+
+/**
+ * Parse embedded sprite palette (256 colors, 512 bytes)
+ */
+function parseSpritePalette(containerData, spriteOffset, paletteOffset) {
+  const palOff = spriteOffset + paletteOffset;
+  if (palOff + 512 > containerData.length) return null;
+  
+  const view = new DataView(containerData.buffer, containerData.byteOffset + palOff);
+  const palette = [];
+  
+  for (let i = 0; i < 256; i++) {
+    const color = view.getUint16(i * 2, true);
+    if (i === 0) {
+      palette.push([0, 0, 0, 0]); // Index 0 is transparent
+    } else {
+      const r = (color & 0x1F) * 8;
+      const g = ((color >> 5) & 0x1F) * 8;
+      const b = ((color >> 10) & 0x1F) * 8;
+      palette.push([r, g, b, 255]);
+    }
+  }
+  
+  return palette;
+}
+
+/**
+ * Decode RLE-encoded sprite frame to pixel array
+ * 
+ * RLE Command format (u16):
+ *   Bit 15:    New line (advance Y, reset X)
+ *   Bits 14-8: Skip count (transparent pixels)
+ *   Bits 7-0:  Copy count (literal pixels)
+ */
+function decodeRLEFrame(containerData, spriteOffset, rleDataOffset, frameRLEOffset, width, height) {
+  const rleStart = spriteOffset + rleDataOffset + frameRLEOffset;
+  if (rleStart + 2 > containerData.length) {
+    return new Uint8Array(width * height);
+  }
+  
+  const view = new DataView(containerData.buffer, containerData.byteOffset + rleStart);
+  const cmdCount = view.getUint16(0, true);
+  
+  if (cmdCount === 0 || cmdCount > 10000) {
+    return new Uint8Array(width * height);
+  }
+  
+  const pixels = new Uint8Array(width * height);
+  let x = 0, y = 0, pixelIdx = 0;
+  const pixelDataStart = rleStart + 2 + cmdCount * 2;
+  
+  for (let i = 0; i < cmdCount; i++) {
+    const cmdOffset = 2 + i * 2;
+    if (rleStart + cmdOffset + 2 > containerData.length) break;
+    
+    const cmd = view.getUint16(cmdOffset, true);
+    const newLine = (cmd & 0x8000) !== 0;
+    const skip = (cmd >> 8) & 0x7F;
+    const copyCount = cmd & 0xFF;
+    
+    if (newLine) {
+      y++;
+      x = 0;
+    }
+    
+    x += skip;
+    
+    for (let j = 0; j < copyCount; j++) {
+      if (y < height && x < width) {
+        const srcIdx = pixelDataStart + pixelIdx - containerData.byteOffset;
+        if (srcIdx >= 0 && srcIdx < containerData.length) {
+          pixels[y * width + x] = containerData[srcIdx];
+        }
+      }
+      pixelIdx++;
+      x++;
+    }
+  }
+  
+  return pixels;
+}
+
+/**
+ * Get a decoded sprite frame with pixels and palette
+ * Returns { pixels: Uint8Array, palette: RGBA[], width, height, meta }
+ */
+function getSpriteFrame(containerData, spriteEntry, animIndex = 0, frameIndex = 0) {
+  const header = parseSpriteHeader(containerData, spriteEntry.offset);
+  if (!header) return null;
+  
+  const animations = parseSpriteAnimations(containerData, spriteEntry.offset, header.animationCount);
+  if (animIndex >= animations.length) animIndex = 0;
+  
+  const anim = animations[animIndex];
+  if (!anim || frameIndex >= anim.frameCount) frameIndex = 0;
+  
+  // Frame metadata index is anim.frameOffset + frameIndex
+  const frameMetaIndex = anim.frameOffset + frameIndex;
+  const meta = parseSpriteFrameMetadata(containerData, spriteEntry.offset, header.frameMetaOffset, frameMetaIndex);
+  if (!meta || meta.renderWidth === 0 || meta.renderHeight === 0) return null;
+  
+  const palette = parseSpritePalette(containerData, spriteEntry.offset, header.paletteOffset);
+  if (!palette) return null;
+  
+  const pixels = decodeRLEFrame(
+    containerData,
+    spriteEntry.offset,
+    header.rleDataOffset,
+    meta.rleOffset,
+    meta.renderWidth,
+    meta.renderHeight
+  );
+  
+  return {
+    pixels,
+    palette,
+    width: meta.renderWidth,
+    height: meta.renderHeight,
+    meta,
+    header,
+    animation: anim,
   };
 }
 
@@ -399,6 +631,15 @@ const GameEngine = {
   // Tilemap access
   parseTilemaps,
   getTilemapEntry,
+  
+  // Sprite system
+  parseSpriteContainer,
+  parseSpriteHeader,
+  parseSpriteAnimations,
+  parseSpriteFrameMetadata,
+  parseSpritePalette,
+  decodeRLEFrame,
+  getSpriteFrame,
   
   // High-level loading
   loadStage,
