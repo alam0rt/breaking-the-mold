@@ -1839,4 +1839,86 @@ Possible alternatives:
 
 ---
 
-*Last updated: January 5, 2026*
+## Entity Placement System Discovery (2026-01-07) - NEEDS VERIFICATION
+
+Reverse-engineered how entities (enemies, collectibles, triggers) are placed in levels.
+
+### Key Memory Locations (PAL / SLES-01090)
+
+| Address | Description |
+|---------|-------------|
+| `TileHeader + 0x1E` | Entity count (u16) |
+| `LevelDataContext + 0x38` | Pointer to entity data array |
+
+### Asset 501 (0x1F5) is Entity Data, NOT Sprite RLE
+
+The existing documentation incorrectly labels Asset 501 as "SPRITE_RLE".
+Asset 501 actually contains **entity placement data** - an array of 24-byte structures.
+
+In `LoadAssetContainer` (Ghidra), Asset 501 sets:
+```c
+pLevelDataCtx[0xe] = asset_data_ptr;  // offset 0x38 = entity array pointer
+```
+
+### Entity Structure (24 bytes / 0x18)
+
+```
+Offset  Size  Field         Description
+0x00    u16   x1            Bounding box min X (pixels)
+0x02    u16   y1            Bounding box min Y (pixels)
+0x04    u16   x2            Bounding box max X (pixels)
+0x06    u16   y2            Bounding box max Y (pixels)
+0x08    u16   x_center      Entity center X (pixels)
+0x0A    u16   y_center      Entity center Y (pixels)
+0x0C    u32   padding       Always 0
+0x10    u16   padding2      Always 0
+0x12    u16   entity_type   Type ID (see table below)
+0x14    u32   flags         Flags (observed values: 1, 2, 3)
+```
+
+### Entity Types Found (SCIE Level - 211 Entities)
+
+| Type | Count | Avg Size | Notes |
+|------|-------|----------|-------|
+| 2 | 144 | 37×36 | Most common - unknown purpose |
+| 3 | 5 | 16×16 | Triggers/switches? |
+| 8 | 19 | 16×16 | Collectibles? |
+| 10 | 4 | 72×84 | Large objects |
+| 24 | 1 | 16×16 | Special trigger? |
+| 25 | 8 | 160×80 | **ENEMIES** (user verified) |
+| 27 | 8 | 256×80 | **ENEMIES** (user verified) |
+| 28 | 12 | 352×128 | Moving platforms? |
+| 42 | 2 | 16×16 | Unknown |
+| 45 | 6 | 160×96 | Unknown |
+| 48 | 2 | 352×128 | Moving platforms? |
+
+### Related Functions (Ghidra)
+
+| Address | Purpose |
+|---------|---------|
+| `FUN_8007b7a8` | Returns entity count (`TileHeader + 0x1E`) |
+| `FUN_8007b7bc` | Returns entity data pointer (`LevelDataContext + 0x38`) |
+| `FUN_80024dc4` | Iterates entity array, allocates linked list nodes |
+
+### Visualization Script
+
+Created `scripts/dump_entity_map.py` to render ASCII map of entity placement.
+Shows entity positions overlaid on level dimensions.
+
+### Runtime Verification (SCIE Level)
+
+- Entity count: 211 (from `0x8009DCC8 + 0x1E` = TileHeader+0x1E)
+- Entity data: `0x8014C704` (from LevelDataContext+0x38)
+- Level size: 535×45 tiles (8560×720 pixels)
+
+### Verification Needed
+
+1. Confirm entity types across multiple levels
+2. Decode flags field (1, 2, 3 observed - what do they mean?)
+3. Map entity types to actual game objects (enemies, items, triggers)
+4. Verify Type 2 entities - possibly collision zones or invisible triggers?
+5. Test with other levels to confirm structure is consistent
+
+---
+
+*Last updated: January 7, 2026*
