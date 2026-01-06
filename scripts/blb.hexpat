@@ -149,6 +149,50 @@ bool g_is_jp = is_jp_layout();
 // Sector table base address (differs by region)
 u32 SECTOR_TABLE_OFFSET = g_is_jp ? 0xCB0 : 0xCD0;
 
+// Count offsets differ by region (JP is -0x1C from PAL)
+// PAL: 0xF31/F32/F33, JP: 0xF15/F16/F17
+u8 g_level_count = std::mem::read_unsigned(g_is_jp ? 0xF15 : 0xF31, 1);
+u8 g_movie_count = std::mem::read_unsigned(g_is_jp ? 0xF16 : 0xF32, 1);
+u8 g_sector_count = std::mem::read_unsigned(g_is_jp ? 0xF17 : 0xF33, 1);
+
+// =============================================================================
+// Level Entry Access Functions
+// =============================================================================
+// LevelEntry is 0x70 (112) bytes at offset 0x00 in header
+// Layout is identical for PAL and JP, so we read directly from memory
+
+fn get_level_sector_offset(u8 idx) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x00, 2);
+};
+
+fn get_level_sector_count(u8 idx) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x02, 2);
+};
+
+fn get_level_stage_count(u8 idx) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x0E, 2);
+};
+
+fn get_level_sec_sector_off(u8 idx, u8 stage) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x1E + stage * 2, 2);
+};
+
+fn get_level_sec_sector_cnt(u8 idx, u8 stage) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x2C + stage * 2, 2);
+};
+
+fn get_level_tert_sector_off(u8 idx, u8 stage) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x3A + stage * 2, 2);
+};
+
+fn get_level_tert_sector_cnt(u8 idx, u8 stage) {
+    return std::mem::read_unsigned(idx * 0x70 + 0x48 + stage * 2, 2);
+};
+
+fn get_level_name(u8 idx) {
+    return std::mem::read_string(idx * 0x70 + 0x5B, 21);
+};
+
 // =============================================================================
 // Formatting Functions
 // =============================================================================
@@ -966,7 +1010,7 @@ struct PlaybackSequenceEntry {
 //   "CRD2" - Credits 2 terminator
 //   "END2" - Ending 2, conditionally skipped
 
-struct PlaybackSequenceData {
+struct PlaybackSequenceDataPAL {
     u8 unknown_00[2] [[hidden]];
     
     // Mode array: 92 entries starting at 0xF36
@@ -984,25 +1028,31 @@ struct PlaybackSequenceData {
     u8 indices[110] [[name("Indices"), comment("Table index for each step"), color("80FF80")]];
 } [[name("Playback Sequence"), color("CC80CC")]];
 
-// =============================================================================
-// BLB Header (0x1000 = 4096 bytes)
-// =============================================================================
-// NOTE: This layout is for PAL/NTSC-US versions. JP version has different offsets:
-//   - JP movies: 12 entries (intro spliced into 1 movie)
-//   - JP sector table: starts at 0xCB0 (32 bytes earlier than PAL's 0xCD0)
-//   - JP removed CRED from sector index 2 (credits bug fix)
-// The current struct layout may not parse JP files correctly at all offsets.
+// JP version has shifted offsets (everything -0x1C from PAL)
+struct PlaybackSequenceDataJP {
+    u8 unknown_00[2] [[hidden]];
+    
+    // Mode array: 92 entries starting at 0xF1A (PAL 0xF36 - 0x1C)
+    PlaybackMode modes[92] [[name("Modes"), comment("Playback mode for each step"), color("FF8080")]];
+    
+    // Index array: 110 entries starting at 0xF76 (PAL 0xF92 - 0x1C)  
+    u8 indices[110] [[name("Indices"), comment("Table index for each step"), color("80FF80")]];
+} [[name("Playback Sequence"), color("CC80CC")]];
 
-struct BLBHeader {
+// =============================================================================
+// BLB Header - PAL/NTSC-US Layout (0x1000 = 4096 bytes)
+// =============================================================================
+// Layout: levels[26] @ 0x000, movies[13] @ 0xB60, pad[4] @ 0xCCC, sectors[32] @ 0xCD0
+//         password[16] @ 0xED0, credits[2] @ 0xF10, counts @ 0xF31, playback @ 0xF34
+
+struct BLBHeaderPAL {
     LevelEntry levels[26] [[name("Levels"), comment("Level metadata (26 entries)"), color("40CCFF")]];
-    MovieEntry movies[13] [[name("Movies"), comment("Movie table (13 PAL, 12 JP)"), color("FFFF40")]];
-    u8 movie_sector_pad[4] [[hidden]];  // 4-byte gap between movies (0xCCC) and sectors (0xCD0) for PAL
-    SectorEntry sectors[32] [[name("Sectors"), comment("Sector table (PAL: 0xCD0, JP: 0xCB0)"), color("80CCCC")]];
+    MovieEntry movies[13] [[name("Movies"), comment("Movie table (13 entries)"), color("FFFF40")]];
+    u8 movie_sector_pad[4] [[hidden]];  // 4-byte gap between movies (0xCCC) and sectors (0xCD0)
+    SectorEntryPAL sectors[32] [[name("Sectors"), comment("Sector table (32 entries) @ 0xCD0"), color("80CCCC")]];
     
     // Password Screen table: 16 additional entries at 0xED0-0xF0F (64 bytes)
     // NOTE: Entry[0] is at 0xECC, overlapping with sectors[31].sector_offset/count
-    // The game accesses all 17 entries via: header + (index * 4) + 0xECC
-    // These point to world completion password screen containers
     PasswordScreenEntry password_screens[16] [[name("Password Screens"), 
         comment("Password entries 1-16 (entry 0 is in sectors[31])"), color("CC80FF")]];
     
@@ -1011,11 +1061,57 @@ struct BLBHeader {
     
     u8 level_count [[name("Level Count"), comment("Number of levels (26)"), color("40FF40")]];
     u8 movie_count [[name("Movie Count"), comment("Number of movies (13)"), color("FFFF40")]];
-    u8 sector_entry_count [[name("Sector Count"), comment("Sector table entries"), color("80CCCC")]];
+    u8 sector_entry_count [[name("Sector Count"), comment("Sector table entries (32)"), color("80CCCC")]];
     
     // Playback sequence state machine (0xF34-0xFFF)
-    PlaybackSequenceData playback [[name("Playback"), comment("Sequence mode/index arrays"), color("CC80CC")]];
-} [[name("BLB Header"), comment("Skullmonkeys game archive header (4096 bytes)"), single_color]];
+    PlaybackSequenceDataPAL playback [[name("Playback"), comment("Sequence mode/index arrays"), color("CC80CC")]];
+} [[name("BLB Header (PAL)"), comment("PAL/NTSC-US layout"), single_color]];
+
+// =============================================================================
+// BLB Header - JP Layout (0x1000 = 4096 bytes)
+// =============================================================================
+// Layout: levels[26] @ 0x000, movies[12] @ 0xB60, sectors[31] @ 0xCB0 (no gap!)
+//         password[16] @ 0xEB0, credits[2] @ 0xEF4, counts @ 0xF15, playback @ 0xF18
+//
+// JP differences:
+//   - 12 movies (intro spliced into 1)
+//   - 31 sector entries (CRED moved from index 2 to index 28)
+//   - No padding between movies and sectors
+//   - All offsets after movies shifted by -0x20 (32 bytes = 1 fewer movie + no pad)
+//   - Count fields shifted by -0x1C (28 bytes)
+
+struct BLBHeaderJP {
+    LevelEntry levels[26] [[name("Levels"), comment("Level metadata (26 entries)"), color("40CCFF")]];
+    MovieEntry movies[12] [[name("Movies"), comment("Movie table (12 entries - intro spliced)"), color("FFFF40")]];
+    // No padding - sectors start immediately after movies at 0xCB0
+    SectorEntryJP sectors[31] [[name("Sectors"), comment("Sector table (31 entries) @ 0xCB0"), color("80CCCC")]];
+    
+    // Password Screen table: 16 entries at 0xEB0-0xEEF (shifted by -0x20)
+    PasswordScreenEntry password_screens[16] [[name("Password Screens"), 
+        comment("Password entries 1-16"), color("CC80FF")]];
+    
+    CreditsEntry credits[2] [[name("Credits"), comment("Credits entries"), color("FFCC80")]];
+    u8 gap_to_counts[9] [[hidden]];  // Gap from credits end (0xF0C) to counts (0xF15)
+    
+    u8 level_count [[name("Level Count"), comment("Number of levels (26)"), color("40FF40")]];
+    u8 movie_count [[name("Movie Count"), comment("Number of movies (12)"), color("FFFF40")]];
+    u8 sector_entry_count [[name("Sector Count"), comment("Sector table entries (31)"), color("80CCCC")]];
+    
+    // Playback sequence state machine (0xF18-0xFFF) - shifted by -0x1C
+    PlaybackSequenceDataJP playback [[name("Playback"), comment("Sequence mode/index arrays"), color("CC80CC")]];
+} [[name("BLB Header (JP)"), comment("Japanese version layout"), single_color]];
+
+// =============================================================================
+// Auto-detecting BLB Header wrapper
+// =============================================================================
+
+struct BLBHeader {
+    if (g_is_jp) {
+        BLBHeaderJP header [[inline]];
+    } else {
+        BLBHeaderPAL header [[inline]];
+    }
+} [[name("BLB Header"), single_color]];
 
 // =============================================================================
 // Apply BLB Header at file start
@@ -1446,15 +1542,15 @@ struct SecondarySubBlock {
 // Complete Level Data - Primary + Secondary + all Tertiary stages
 // -----------------------------------------------------------------------------
 struct LevelData<auto level_idx> {
-    // Set dynamic display name from level data
-    std::core::set_display_name(this, std::format("{} (Lv{})", header.levels[level_idx].name, level_idx));
+    // Set dynamic display name from level data using helper function
+    std::core::set_display_name(this, std::format("{} (Lv{})", get_level_name(level_idx), level_idx));
     
-    // Get the level entry from header
-    u16 _pri_sector = header.levels[level_idx].sector_offset;
-    u16 _pri_count = header.levels[level_idx].sector_count;
-    u16 _sec_sector = header.levels[level_idx].sec_sector_off[0];
-    u16 _sec_count = header.levels[level_idx].sec_sector_cnt[0];
-    u16 _stage_count = header.levels[level_idx].stage_count;
+    // Get the level entry data using helper functions
+    u16 _pri_sector = get_level_sector_offset(level_idx);
+    u16 _pri_count = get_level_sector_count(level_idx);
+    u16 _sec_sector = get_level_sec_sector_off(level_idx, 0);
+    u16 _sec_count = get_level_sec_sector_cnt(level_idx, 0);
+    u16 _stage_count = get_level_stage_count(level_idx);
     
     // Primary Segment
     if (_pri_count > 0) {
@@ -1467,58 +1563,65 @@ struct LevelData<auto level_idx> {
     }
     
     // Tertiary Stages (up to 6) - with full asset parsing
-    if (_stage_count >= 1 && header.levels[level_idx].tert_sector_off[0] > 0) {
-        TertiaryStageWithAssets stage0 @ (header.levels[level_idx].tert_sector_off[0] * SECTOR_SIZE) [[name("Stage 0")]];
+    u16 _tert0 = get_level_tert_sector_off(level_idx, 0);
+    u16 _tert1 = get_level_tert_sector_off(level_idx, 1);
+    u16 _tert2 = get_level_tert_sector_off(level_idx, 2);
+    u16 _tert3 = get_level_tert_sector_off(level_idx, 3);
+    u16 _tert4 = get_level_tert_sector_off(level_idx, 4);
+    u16 _tert5 = get_level_tert_sector_off(level_idx, 5);
+    
+    if (_stage_count >= 1 && _tert0 > 0) {
+        TertiaryStageWithAssets stage0 @ (_tert0 * SECTOR_SIZE) [[name("Stage 0")]];
     }
-    if (_stage_count >= 2 && header.levels[level_idx].tert_sector_off[1] > 0) {
-        TertiaryStageWithAssets stage1 @ (header.levels[level_idx].tert_sector_off[1] * SECTOR_SIZE) [[name("Stage 1")]];
+    if (_stage_count >= 2 && _tert1 > 0) {
+        TertiaryStageWithAssets stage1 @ (_tert1 * SECTOR_SIZE) [[name("Stage 1")]];
     }
-    if (_stage_count >= 3 && header.levels[level_idx].tert_sector_off[2] > 0) {
-        TertiaryStageWithAssets stage2 @ (header.levels[level_idx].tert_sector_off[2] * SECTOR_SIZE) [[name("Stage 2")]];
+    if (_stage_count >= 3 && _tert2 > 0) {
+        TertiaryStageWithAssets stage2 @ (_tert2 * SECTOR_SIZE) [[name("Stage 2")]];
     }
-    if (_stage_count >= 4 && header.levels[level_idx].tert_sector_off[3] > 0) {
-        TertiaryStageWithAssets stage3 @ (header.levels[level_idx].tert_sector_off[3] * SECTOR_SIZE) [[name("Stage 3")]];
+    if (_stage_count >= 4 && _tert3 > 0) {
+        TertiaryStageWithAssets stage3 @ (_tert3 * SECTOR_SIZE) [[name("Stage 3")]];
     }
-    if (_stage_count >= 5 && header.levels[level_idx].tert_sector_off[4] > 0) {
-        TertiaryStageWithAssets stage4 @ (header.levels[level_idx].tert_sector_off[4] * SECTOR_SIZE) [[name("Stage 4")]];
+    if (_stage_count >= 5 && _tert4 > 0) {
+        TertiaryStageWithAssets stage4 @ (_tert4 * SECTOR_SIZE) [[name("Stage 4")]];
     }
-    if (_stage_count >= 6 && header.levels[level_idx].tert_sector_off[5] > 0) {
-        TertiaryStageWithAssets stage5 @ (header.levels[level_idx].tert_sector_off[5] * SECTOR_SIZE) [[name("Stage 5")]];
+    if (_stage_count >= 6 && _tert5 > 0) {
+        TertiaryStageWithAssets stage5 @ (_tert5 * SECTOR_SIZE) [[name("Stage 5")]];
     }
 } [[color("40CCFF")]];
 
 // -----------------------------------------------------------------------------
-// All Levels Container - uses level_count from header
+// All Levels Container - uses g_level_count global
 // -----------------------------------------------------------------------------
 struct AllLevels {
     // Instantiate level data for each level in the header
     // Note: ImHex doesn't support true dynamic loops, so we use conditionals
-    if (header.level_count > 0) LevelData<0> level_00;
-    if (header.level_count > 1) LevelData<1> level_01;
-    if (header.level_count > 2) LevelData<2> level_02;
-    if (header.level_count > 3) LevelData<3> level_03;
-    if (header.level_count > 4) LevelData<4> level_04;
-    if (header.level_count > 5) LevelData<5> level_05;
-    if (header.level_count > 6) LevelData<6> level_06;
-    if (header.level_count > 7) LevelData<7> level_07;
-    if (header.level_count > 8) LevelData<8> level_08;
-    if (header.level_count > 9) LevelData<9> level_09;
-    if (header.level_count > 10) LevelData<10> level_10;
-    if (header.level_count > 11) LevelData<11> level_11;
-    if (header.level_count > 12) LevelData<12> level_12;
-    if (header.level_count > 13) LevelData<13> level_13;
-    if (header.level_count > 14) LevelData<14> level_14;
-    if (header.level_count > 15) LevelData<15> level_15;
-    if (header.level_count > 16) LevelData<16> level_16;
-    if (header.level_count > 17) LevelData<17> level_17;
-    if (header.level_count > 18) LevelData<18> level_18;
-    if (header.level_count > 19) LevelData<19> level_19;
-    if (header.level_count > 20) LevelData<20> level_20;
-    if (header.level_count > 21) LevelData<21> level_21;
-    if (header.level_count > 22) LevelData<22> level_22;
-    if (header.level_count > 23) LevelData<23> level_23;
-    if (header.level_count > 24) LevelData<24> level_24;
-    if (header.level_count > 25) LevelData<25> level_25;
+    if (g_level_count > 0) LevelData<0> level_00;
+    if (g_level_count > 1) LevelData<1> level_01;
+    if (g_level_count > 2) LevelData<2> level_02;
+    if (g_level_count > 3) LevelData<3> level_03;
+    if (g_level_count > 4) LevelData<4> level_04;
+    if (g_level_count > 5) LevelData<5> level_05;
+    if (g_level_count > 6) LevelData<6> level_06;
+    if (g_level_count > 7) LevelData<7> level_07;
+    if (g_level_count > 8) LevelData<8> level_08;
+    if (g_level_count > 9) LevelData<9> level_09;
+    if (g_level_count > 10) LevelData<10> level_10;
+    if (g_level_count > 11) LevelData<11> level_11;
+    if (g_level_count > 12) LevelData<12> level_12;
+    if (g_level_count > 13) LevelData<13> level_13;
+    if (g_level_count > 14) LevelData<14> level_14;
+    if (g_level_count > 15) LevelData<15> level_15;
+    if (g_level_count > 16) LevelData<16> level_16;
+    if (g_level_count > 17) LevelData<17> level_17;
+    if (g_level_count > 18) LevelData<18> level_18;
+    if (g_level_count > 19) LevelData<19> level_19;
+    if (g_level_count > 20) LevelData<20> level_20;
+    if (g_level_count > 21) LevelData<21> level_21;
+    if (g_level_count > 22) LevelData<22> level_22;
+    if (g_level_count > 23) LevelData<23> level_23;
+    if (g_level_count > 24) LevelData<24> level_24;
+    if (g_level_count > 25) LevelData<25> level_25;
 };
 
 // Instantiate the level explorer - placed after header for clean organization
@@ -1526,420 +1629,14 @@ struct AllLevels {
 AllLevels levels @ HEADER_SIZE [[name("Levels"), comment("All level data dynamically parsed")]];
 
 // =============================================================================
-// HIDDEN/UNUSED CONTENT - Unreferenced BS Frame
+// PASSWORD SCREEN CONTAINER
 // =============================================================================
-// This BS/MDEC compressed image exists in the BLB file but is NOT referenced
-// by any game code. It represents cut or replaced content from development.
-//
-// To decode:
-//   nix-shell -p jpsxdec --run "jpsxdec -f <extracted.bs> -static bs -dim 320x256 -fmt png"
-
-// --- Unused Legal/Copyright Screen (Sectors 2-11, offset 0x1000) ---
-// An alternate legal screen that was replaced during development.
-// The game uses the LEGL asset at sector 22 instead.
-BSFrameHeader hidden_legal @ 0x1000 [[name("⚠️ UNUSED: Legal Screen"), 
-    comment("Unreferenced BS frame - alternate legal/copyright screen (replaced)"),
-    color("FF4040")]];
-
-// =============================================================================
-// CREDITS CONTAINER (Sectors 26-196, offset 0xD000)
-// =============================================================================
-// Referenced by: header.credits[1] at 0xF10 (param_b=171, 171+26=sector 197 end)
-// Container TOC at 0xD000: u32 count=20, then 20 × {u32 id, u32 size, u32 offset}
-//
-// The 20 entries are 10 PAIRS of interlaced BS frames for CRT display:
-//   - Even indices (0,2,4...): Odd scanlines (top field)
-//   - Odd indices (1,3,5...): Even scanlines (bottom field)
-// This is standard PSX interlaced video: display alternating fields at 60Hz
-// to create 30fps full-frame credits slideshow on CRT televisions.
-//
-// Frame offsets (from start of file):
-//   Frame 0/1:  0xD0F4/0x15DB8  (Pair 0 - Title)
-//   Frame 2/3:  0x1EEF0/0x281FC (Pair 1)
-//   Frame 4/5:  0x30764/0x39964 (Pair 2)
-//   Frame 6/7:  0x429A0/0x4A9CC (Pair 3)
-//   Frame 8/9:  0x52F78/0x5AF44 (Pair 4)
-//   ...etc for 10 pairs total
-
-BSFrameHeader credits_frame_00 @ 0xD0F4 [[name("🎬 Credits Frame 0 (Odd lines)"), 
-    comment("Credits pair 0 - odd scanlines for interlaced display"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_01 @ 0x15DB8 [[name("🎬 Credits Frame 1 (Even lines)"), 
-    comment("Credits pair 0 - even scanlines for interlaced display"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_02 @ 0x1EEF0 [[name("🎬 Credits Frame 2 (Odd lines)"), 
-    comment("Credits pair 1 - odd scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_03 @ 0x281FC [[name("🎬 Credits Frame 3 (Even lines)"), 
-    comment("Credits pair 1 - even scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_04 @ 0x30764 [[name("🎬 Credits Frame 4 (Odd lines)"), 
-    comment("Credits pair 2 - odd scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_05 @ 0x39964 [[name("🎬 Credits Frame 5 (Even lines)"), 
-    comment("Credits pair 2 - even scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_06 @ 0x429A0 [[name("🎬 Credits Frame 6 (Odd lines)"), 
-    comment("Credits pair 3 - odd scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_07 @ 0x4A9CC [[name("🎬 Credits Frame 7 (Even lines)"), 
-    comment("Credits pair 3 - even scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_08 @ 0x52F78 [[name("🎬 Credits Frame 8 (Odd lines)"), 
-    comment("Credits pair 4 - odd scanlines"),
-    color("FFCC40")]];
-BSFrameHeader credits_frame_09 @ 0x5AF44 [[name("🎬 Credits Frame 9 (Even lines)"), 
-    comment("Credits pair 4 - final credits frame"),
-    color("FFCC40")]];
-
-// =============================================================================
-// DUPLICATE CREDITS CONTAINER (Sectors 36929-37099, offset 0x4820800)
-// =============================================================================
-// Byte-for-byte identical to the credits container at 0xD000.
-// This is a CD seek optimization: placing the same data near the end of the
-// disc allows the laser to stay in position during end-game sequences.
-BSFrameHeader credits_duplicate_frame_00 @ 0x48208F4 [[name("🎬 Credits Frame 0 (Duplicate)"), 
-    comment("Duplicate credits at end of file for CD seek optimization"),
-    color("808080")]];
-
-// =============================================================================
-// LEVEL LOADING SCREENS (VERIFIED 2026-01-06)
-// =============================================================================
-// Each level has a BS/MDEC loading screen referenced via the sector table.
-//
-// SECTOR TABLE MAPPING:
-//   header.sectors[0]  → Title Screen (Dreamworks logo)
-//   header.sectors[1]  → Legal Screen (copyright text)
-//   header.sectors[i+2] → Level[i] loading screen (for i = 0..25)
-//   header.sectors[28] → End sequence loading screen
-//   header.sectors[29] → Game Over screen
-//   header.sectors[30] → Game Over screen (alternate)
-//   header.sectors[31] → Mystery password screen reference
-//
-// BS Frame Location: header.sectors[n].sector_offset * 2048
-// Delta: level[i].sector_offset - sectors[i+2].sector_offset ≈ 9 sectors
-//
-// The individual instances below are generated from the sector table for
-// quick navigation in ImHex.
-
-BSFrameHeader loading_MENU @ 0x00062800 [[name("🔄 Loading: MENU"),
-    comment("Loading screen before MENU (sector 197, level at 201)"),
-    color("4080FF")]];
-BSFrameHeader loading_PHRO @ 0x0040C800 [[name("🔄 Loading: PHRO (Skullmonkey Gate)"),
-    comment("Loading screen before PHRO (sector 2073, level at 2083)"),
-    color("4080FF")]];
-BSFrameHeader loading_SCIE @ 0x00643000 [[name("🔄 Loading: SCIE (Science Center)"),
-    comment("Loading screen before SCIE (sector 3206, level at 3215)"),
-    color("4080FF")]];
-BSFrameHeader loading_MONK @ 0x009CA800 [[name("🔄 Loading: MONK (Monkey Shrines)"),
-    comment("Loading screen before MONK (sector 5013, level at 5023)"),
-    color("4080FF")]];
-BSFrameHeader loading_FINN @ 0x00CC7000 [[name("🔄 Loading: FINN (Swimming)"),
-    comment("Loading screen before FINN (sector 6542, level at 6551)"),
-    color("4080FF")]];
-BSFrameHeader loading_MEGA @ 0x00D6C800 [[name("🔄 Loading: MEGA (Shriney Guard Boss)"),
-    comment("Loading screen before MEGA (sector 6873, level at 6882)"),
-    color("4080FF")]];
-BSFrameHeader loading_BOIL @ 0x00EF1000 [[name("🔄 Loading: BOIL (Boilerroom)"),
-    comment("Loading screen before BOIL (sector 7650, level at 7660)"),
-    color("4080FF")]];
-BSFrameHeader loading_SNOW @ 0x0138E800 [[name("🔄 Loading: SNOW"),
-    comment("Loading screen before SNOW (sector 10013, level at 10022)"),
-    color("4080FF")]];
-BSFrameHeader loading_FOOD @ 0x01777800 [[name("🔄 Loading: FOOD"),
-    comment("Loading screen before FOOD (sector 12015, level at 12024)"),
-    color("4080FF")]];
-BSFrameHeader loading_HEAD @ 0x01997800 [[name("🔄 Loading: HEAD (Joe-Head-Joe Boss)"),
-    comment("Loading screen before HEAD (sector 13103, level at 13113)"),
-    color("4080FF")]];
-BSFrameHeader loading_BRG1 @ 0x01B35000 [[name("🔄 Loading: BRG1 (Bridge)"),
-    comment("Loading screen before BRG1 (sector 13930, level at 13940)"),
-    color("4080FF")]];
-BSFrameHeader loading_GLID @ 0x01F13800 [[name("🔄 Loading: GLID (Gliding)"),
-    comment("Loading screen before GLID (sector 15911, level at 15920)"),
-    color("4080FF")]];
-BSFrameHeader loading_CAVE @ 0x022D2800 [[name("🔄 Loading: CAVE"),
-    comment("Loading screen before CAVE (sector 17829, level at 17838)"),
-    color("4080FF")]];
-BSFrameHeader loading_WEED @ 0x025E5800 [[name("🔄 Loading: WEED"),
-    comment("Loading screen before WEED (sector 19403, level at 19413)"),
-    color("4080FF")]];
-BSFrameHeader loading_EGGS @ 0x028BA800 [[name("🔄 Loading: EGGS"),
-    comment("Loading screen before EGGS (sector 20853, level at 20863)"),
-    color("4080FF")]];
-BSFrameHeader loading_GLEN @ 0x02C2C000 [[name("🔄 Loading: GLEN (Glenn Yntis Boss)"),
-    comment("Loading screen before GLEN (sector 22616, level at 22625)"),
-    color("4080FF")]];
-BSFrameHeader loading_CLOU @ 0x02D55000 [[name("🔄 Loading: CLOU (Clouds)"),
-    comment("Loading screen before CLOU (sector 23210, level at 23220)"),
-    color("4080FF")]];
-BSFrameHeader loading_SEVN @ 0x03114800 [[name("🔄 Loading: SEVN (1970s Bonus)"),
-    comment("Loading screen before SEVN (sector 25129, level at 25139)"),
-    color("4080FF")]];
-BSFrameHeader loading_SOAR @ 0x03310800 [[name("🔄 Loading: SOAR (Soaring)"),
-    comment("Loading screen before SOAR (sector 26145, level at 26154)"),
-    color("4080FF")]];
-BSFrameHeader loading_CRYS @ 0x035B3800 [[name("🔄 Loading: CRYS (Crystal)"),
-    comment("Loading screen before CRYS (sector 27495, level at 27504)"),
-    color("4080FF")]];
-BSFrameHeader loading_CSTL @ 0x039B8800 [[name("🔄 Loading: CSTL (Castle)"),
-    comment("Loading screen before CSTL (sector 29553, level at 29562)"),
-    color("4080FF")]];
-BSFrameHeader loading_WIZZ @ 0x03D36800 [[name("🔄 Loading: WIZZ (Monkey Mage Boss)"),
-    comment("Loading screen before WIZZ (sector 31341, level at 31350)"),
-    color("4080FF")]];
-BSFrameHeader loading_RUNN @ 0x03ECC800 [[name("🔄 Loading: RUNN (Runner)"),
-    comment("Loading screen before RUNN (sector 32153, level at 32163)"),
-    color("4080FF")]];
-BSFrameHeader loading_MOSS @ 0x04036000 [[name("🔄 Loading: MOSS"),
-    comment("Loading screen before MOSS (sector 32876, level at 32886)"),
-    color("4080FF")]];
-BSFrameHeader loading_KLOG @ 0x043E0800 [[name("🔄 Loading: KLOG (Klogg Boss)"),
-    comment("Loading screen before KLOG (sector 34753, level at 34763)"),
-    color("4080FF")]];
-BSFrameHeader loading_EVIL @ 0x044E1000 [[name("🔄 Loading: EVIL (Evil Engine)"),
-    comment("Loading screen before EVIL (sector 35266, level at 35275)"),
-    color("4080FF")]];
-
-// =============================================================================
-// WORLD COMPLETION PASSWORD SCREENS (VERIFIED 2026-01-06)
-// =============================================================================
-// These 17 containers are WORLD COMPLETION PASSWORD SCREENS.
-// Skullmonkeys has NO memory card support, so after completing each world,
-// players are shown a password screen to return to that checkpoint.
-//
-// Container Format (11 assets each):
-//   Asset 100: Tile Header (36 bytes) - 30×16 level dimensions
-//   Asset 200: Tilemap Container (5 tilemaps)
-//   Asset 201: Layer Entries (5 layers)
-//   Asset 300: Tile Pixels (8bpp, ~540 tiles)
-//   Asset 301: Palette Indices
-//   Asset 302: Tile Size Flags
-//   Asset 400: Palette Container (4 × 256-color)
-//   Asset 401: Animation Config
-//   Asset 600: Tile Graphics (compressed)
-//   Asset 601: Collision Data
-//   Asset 602: Raw Palette (16-color CLUT)
-//
-// Rendering: Use tilemap 3 (320 tiles = 20×16 grid) → 320×256 pixels
-// Background colors:
-//   - Passwords 1-2: Gray RGB(122-130, 122-130, 142)
-//   - Passwords 3-16: Magenta RGB(150, 0, 106) = #96006A
-
 // Password screen container structure - same as segment TOC
 // Most have 11 assets, but Victory screen (#16) has 12
 struct PasswordScreenContainer {
     u32 entry_count [[name("Count"), comment("Number of asset entries (11 for passwords, 12 for victory)")]];
     SegmentTOCEntry entries[entry_count] [[name("Assets")]];
 } [[name("Password Screen"), color("CC66CC")]];
-
-// Password #0 - Referenced via sectors[31] overlap at 0xECC
-// Entry[0] of password_screens overlaps with sectors[31].sector_offset/count
-// This container has the same structure as other password screens (11 assets, 30×16 tiles).
-PasswordScreenContainer password_screen_00 @ 0x0098F800 [[name("🔐 Password Screen #0"),
-    comment("Referenced via sectors[31] overlap - same format as password screens"),
-    color("96006A")]];
-
-// Password #1 - World 1 Complete (Gray theme)
-PasswordScreenContainer password_screen_01 @ 0x00EB7000 [[name("🔐 Password Screen #1 - World 1"),
-    comment("World 1 completion - Gray theme RGB(122,122,142)"),
-    color("7A7A8E")]];
-
-// Password #2 - World 2 Complete (Gray theme)
-PasswordScreenContainer password_screen_02 @ 0x01355000 [[name("🔐 Password Screen #2 - World 2"),
-    comment("World 2 completion - Gray theme RGB(130,130,142)"),
-    color("82828E")]];
-
-// Password #3 - World 3 Complete (Magenta theme)
-PasswordScreenContainer password_screen_03 @ 0x0173E800 [[name("🔐 Password Screen #3 - World 3"),
-    comment("World 3 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #4 - World 4 Complete (Magenta theme)
-PasswordScreenContainer password_screen_04 @ 0x01AFB800 [[name("🔐 Password Screen #4 - World 4"),
-    comment("World 4 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #5 - World 5 Complete (Magenta theme)
-PasswordScreenContainer password_screen_05 @ 0x01ED8800 [[name("🔐 Password Screen #5 - World 5"),
-    comment("World 5 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #6 - World 6 Complete (Magenta theme)
-PasswordScreenContainer password_screen_06 @ 0x02297800 [[name("🔐 Password Screen #6 - World 6"),
-    comment("World 6 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #7 - World 7 Complete (Magenta theme)
-PasswordScreenContainer password_screen_07 @ 0x025AB000 [[name("🔐 Password Screen #7 - World 7"),
-    comment("World 7 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #8 - World 8 Complete (Magenta theme)
-PasswordScreenContainer password_screen_08 @ 0x02880800 [[name("🔐 Password Screen #8 - World 8"),
-    comment("World 8 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #9 - World 9 Complete (Magenta theme)
-PasswordScreenContainer password_screen_09 @ 0x02D1B000 [[name("🔐 Password Screen #9 - World 9"),
-    comment("World 9 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #10 - World 10 Complete (Magenta theme)
-PasswordScreenContainer password_screen_10 @ 0x032D7000 [[name("🔐 Password Screen #10 - World 10"),
-    comment("World 10 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #11 - World 11 Complete (Magenta theme)
-PasswordScreenContainer password_screen_11 @ 0x0357A800 [[name("🔐 Password Screen #11 - World 11"),
-    comment("World 11 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #12 - World 12 Complete (Magenta theme)
-PasswordScreenContainer password_screen_12 @ 0x0397F800 [[name("🔐 Password Screen #12 - World 12"),
-    comment("World 12 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #13 - World 13 Complete (Magenta theme)
-PasswordScreenContainer password_screen_13 @ 0x03E93000 [[name("🔐 Password Screen #13 - World 13"),
-    comment("World 13 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #14 - World 14 Complete (Magenta theme)
-PasswordScreenContainer password_screen_14 @ 0x03FFC800 [[name("🔐 Password Screen #14 - World 14"),
-    comment("World 14 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #15 - World 15 Complete (Magenta theme)
-PasswordScreenContainer password_screen_15 @ 0x044AA800 [[name("🔐 Password Screen #15 - World 15"),
-    comment("World 15 completion - Magenta theme #96006A"),
-    color("96006A")]];
-
-// Password #16 - "YOU WIN" Final Victory Screen (Magenta theme)
-PasswordScreenContainer password_screen_16 @ 0x047DC800 [[name("🏆 YOU WIN - Victory Screen"),
-    comment("Final victory screen - Largest container (675 tiles) - Magenta theme #96006A"),
-    color("FFD700")]];
-
-// =============================================================================
-// TITLE AND LEGAL SCREENS (BOOT SEQUENCE)
-// =============================================================================
-// BOOT SEQUENCE SCREENS (SECTOR TABLE ENTRIES 0-1)
-// =============================================================================
-// These BS frames display during game boot before any gameplay.
-// Referenced via: header.sectors[0] and header.sectors[1]
-
-// Sector 12 - Skullmonkeys title card with Dreamworks copyright
-// Access: header.sectors[0].sector_offset * 2048 = 0x6000
-BSFrameHeader title_screen @ 0x6000 [[name("🎮 Title Screen"),
-    comment("Skullmonkeys title card with Dreamworks copyright - sectors[0]"),
-    color("FFD700")]];
-
-// Sector 22 - Legal/copyright information screen  
-// Access: header.sectors[1].sector_offset * 2048 = 0xB000
-BSFrameHeader legal_screen @ 0xB000 [[name("📜 Legal/Copyright Screen"),
-    comment("Legal/copyright text screen - sectors[1]"),
-    color("40FF40")]];
-
-// =============================================================================
-// GAME OVER AND END SCREENS (SECTOR TABLE ENTRIES 28-30)
-// =============================================================================
-// These BS frames are referenced in the sector table at indices 28-30.
-// Access: header.sectors[28..30].sector_offset * 2048
-
-// Sector 36925 - End sequence loading screen
-// Access: header.sectors[28].sector_offset * 2048 = 0x481E800
-BSFrameHeader end_loading_screen @ 0x0481E800 [[name("🔄 End Loading Screen"),
-    comment("End sequence loading screen - sectors[28]"),
-    color("4080FF")]];
-
-// Sector 37100 - Game Over screen
-// Access: header.sectors[29].sector_offset * 2048 = 0x4876000
-BSFrameHeader game_over_screen_1 @ 0x04876000 [[name("💀 Game Over Screen"),
-    comment("Game Over screen - sectors[29]"),
-    color("FF4040")]];
-
-// Sector 37110 - Game Over screen (alternate/duplicate)
-// Access: header.sectors[30].sector_offset * 2048 = 0x487B000
-BSFrameHeader game_over_screen_2 @ 0x0487B000 [[name("💀 Game Over Screen (Alt)"),
-    comment("Game Over screen alternate - sectors[30]"),
-    color("FF4040")]];
-
-// =============================================================================
-// MYSTERY PASSWORD SCREEN (SECTOR TABLE ENTRY 31)
-// =============================================================================
-// Sector table entry 31 points to sector 4895 (0x98F800), which is a password
-// screen container. This is the same as password_screen_00 defined above.
-// Access: header.sectors[31].sector_offset * 2048 = 0x98F800
-
-// =============================================================================
-// ASSET TYPE REFERENCE
-// =============================================================================
-// Decimal (Hex) | Name              | Size/Structure       | Segment
-// ------------- | ----------------- | -------------------- | --------
-//  100 (0x064)  | Tile Header       | 36 bytes             | Secondary
-//  200 (0x0C8)  | Tilemap Container | Sub-TOC + layers     | Tertiary  
-//  201 (0x0C9)  | Layer Entries     | 92 bytes each        | Tertiary
-//  300 (0x12C)  | Tile Pixels       | Variable (indexed)   | Secondary
-//  301 (0x12D)  | Palette Indices   | Variable             | Secondary
-//  302 (0x12E)  | Tile Flags        | 1 byte per tile      | Secondary
-//  400 (0x190)  | Palette Container | Sub-TOC + CLUTs      | Secondary
-//  500 (0x1F4)  | Audio Data        | Variable             | Tertiary
-//  501 (0x1F5)  | Audio Sequence    | Variable             | Tertiary
-//  502 (0x1F6)  | Audio Bank        | Variable             | Tertiary
-//  503 (0x1F7)  | Audio Instrument  | Variable             | Tertiary
-//  600 (0x258)  | Sprite Container  | Sub-TOC + sprites    | Tertiary
-//  601 (0x259)  | Collision Data    | Sub-TOC + data       | Primary
-//  602 (0x25A)  | Warp/Enemy Data   | Variable             | Primary
-//  605 (0x25D)  | Special Objects   | Variable             | Tertiary
-//
-// Sub-TOC Format (used by Container assets):
-//   u32 count
-//   Entry[count]: { u32 id, u32 size, u32 offset }
-//
-// Sprite Data Format (at container_offset + entry.offset):
-//   SpriteHeader (12 bytes):
-//     u16 animation_count
-//     u16 frame_meta_offset    // Offset to frame array from sprite start
-//     u32 rle_data_offset      // Offset to RLE pixels
-//     u32 palette_offset       // Offset to 256-color CLUT (512 bytes)
-//   AnimationEntry[animation_count] (12 bytes each):
-//     u32 animation_id
-//     u16 frame_count
-//     u16 frame_index          // First frame in frame array
-//     u16 flags
-//     u16 extra
-//   SpriteFrameMetadata[total_frames] (36 bytes each):
-//     See struct definition above
-
-// =============================================================================
-// MANUAL TILE/SPRITE VISUALIZER
-// =============================================================================
-// To visualize a specific tile or sprite, uncomment and adjust the addresses below.
-// You can find addresses by browsing Levels -> LevelN -> Secondary -> Tile Pixels
-// and Palettes.
-//
-// Example: To visualize tiles from Level 1 (PHRO):
-//   1. Find the palette container offset in Secondary segment TOC
-//   2. Find the tile pixels offset in Secondary segment TOC
-//   3. Set PALETTE_ADDR to palette container + first palette offset
-//   4. Set TILES_ADDR to tile pixels asset offset
-//   5. Set TILE_COUNT based on tile header's tile count
-
-// Uncomment to enable manual tile visualization:
-// #define PALETTE_ADDR 0x123456    // Offset to 256-color palette
-// #define TILES_ADDR 0x234567      // Offset to tile pixel data
-// #define TILE_COUNT 100           // Number of 16x16 tiles to show
-// #define TILES_PER_ROW 16         // Tiles per row in the atlas
-
-// Manual palette (for testing - replace with actual address)
-// PSXColor test_palette[256] @ PALETTE_ADDR [[name("Test Palette")]];
-
-// Manual tile atlas visualization
-// struct TileAtlas {
-//     u8 pixels[256 * TILE_COUNT];
-// } [[name("Tile Atlas"), 
-//     hex::visualize("bitmap", pixels, 16 * TILES_PER_ROW, (TILE_COUNT / TILES_PER_ROW) * 16, test_palette)]];
-// TileAtlas tile_atlas @ TILES_ADDR;
 
 // =============================================================================
 // USAGE TIPS
@@ -1953,3 +1650,36 @@ BSFrameHeader game_over_screen_2 @ 0x0487B000 [[name("💀 Game Over Screen (Alt
 //    - Find palette address from Secondary/Palettes
 //    - Find tile pixel data address from Secondary/Tile Pixels
 //    - Use the TileSheet16x16 template with those addresses
+//
+// =============================================================================
+// PAL-SPECIFIC OFFSETS (for reference only - not instantiated)
+// =============================================================================
+// These offsets are valid for PAL version (SLES-01090) only.
+// JP version has different sector offsets due to spliced intro movie.
+//
+// Loading Screens (BS frames before each level):
+//   MENU: 0x00062800, PHRO: 0x0040C800, SCIE: 0x00643000, MONK: 0x009CA800
+//   FINN: 0x00CC7000, MEGA: 0x00D6C800, BOIL: 0x00EF1000, SNOW: 0x0138E800
+//   FOOD: 0x01777800, HEAD: 0x01997800, GLID: 0x01F13800, CAVE: 0x022D2800
+//   WEED: 0x025E5800, EGGS: 0x028BA800, GLEN: 0x02C2C000, CLOU: 0x02D55000
+//   SEVN: 0x03114800, SOAR: 0x03310800, CRYS: 0x035B3800, CSTL: 0x039B8800
+//   WIZZ: 0x03D36800, RUNN: 0x03ECC800, MOSS: 0x04036000, KLOG: 0x043E0800
+//   EVIL: 0x044E1000
+//
+// Password Screens (world completion):
+//   #0: 0x0098F800, #1: 0x00EB7000, #2: 0x01355000, #3: 0x0173E800
+//   #4: 0x01AFB800, #5: 0x01ED8800, #6: 0x02297800, #7: 0x025AB000
+//   #8: 0x02880800, #9: 0x02D1B000, #10: 0x032D7000, #11: 0x0357A800
+//   #12: 0x0397F800, #13: 0x03E93000, #14: 0x03FFC800, #15: 0x044AA800
+//   #16 (Victory): 0x047DC800
+//
+// Boot Sequence:
+//   Title Screen (Dreamworks): 0x6000 (sector 12)
+//   Legal Screen: 0xB000 (sector 22)
+//   Credits Container: 0xD000 (sectors 26-196)
+//
+// End Screens:
+//   End Loading: 0x0481E800, Game Over: 0x04876000, Game Over Alt: 0x0487B000
+//
+// Unused Content:
+//   Hidden Legal Screen: 0x1000 (sectors 2-11, unreferenced)
