@@ -642,8 +642,22 @@ struct MovieEntry {
 } [[name("Movie"), format("format_movie"), color("FFFF40"), static]];
 
 // =============================================================================
-// Sector Table Entry (0x10 = 16 bytes)
+// Sector Table Entry (0x10 = 16 bytes) - Located at offset 0xCD0
 // =============================================================================
+// The sector table at 0xCD0 contains 32 entries that point to BS/MDEC frames:
+//
+// INDEX | PURPOSE              | DESCRIPTION
+// ------|----------------------|------------------------------------------
+//   0   | Title Screen         | Dreamworks/Skullmonkeys logo (sector 12)
+//   1   | Legal Screen         | Copyright text (sector 22)
+// 2-27  | Loading Screens      | sectors[i+2] → level[i] loading screen
+//  28   | End Loading          | Loading screen for credits/end sequence
+//  29   | Game Over 1          | Game Over screen
+//  30   | Game Over 2          | Game Over screen (alternate)
+//  31   | Password Screen      | Mystery password container reference
+//
+// The BS frame is located at: sectors[i].sector_offset * 2048
+// For level loading screens: level[i].sector_offset - sectors[i+2].sector_offset ≈ 9 sectors
 
 // Entry type flags
 enum SectorEntryFlags : u8 {
@@ -1427,9 +1441,22 @@ BSFrameHeader hidden_credits_duplicate @ 0x48208F4 [[name("⚠️ DUPLICATE: Cre
 // =============================================================================
 // LEVEL LOADING SCREENS (VERIFIED 2026-01-06)
 // =============================================================================
-// Each level has a BS/MDEC loading screen placed ~9 sectors before it.
-// This allows efficient disc streaming - the loading screen displays while
-// the disc head moves to the level data.
+// Each level has a BS/MDEC loading screen referenced via the sector table.
+//
+// SECTOR TABLE MAPPING:
+//   header.sectors[0]  → Title Screen (Dreamworks logo)
+//   header.sectors[1]  → Legal Screen (copyright text)
+//   header.sectors[i+2] → Level[i] loading screen (for i = 0..25)
+//   header.sectors[28] → End sequence loading screen
+//   header.sectors[29] → Game Over screen
+//   header.sectors[30] → Game Over screen (alternate)
+//   header.sectors[31] → Mystery password screen reference
+//
+// BS Frame Location: header.sectors[n].sector_offset * 2048
+// Delta: level[i].sector_offset - sectors[i+2].sector_offset ≈ 9 sectors
+//
+// The individual instances below are generated from the sector table for
+// quick navigation in ImHex.
 
 BSFrameHeader loading_MENU @ 0x00062800 [[name("🔄 Loading: MENU"),
     comment("Loading screen before MENU (sector 197, level at 201)"),
@@ -1631,17 +1658,53 @@ PasswordScreenContainer password_screen_16 @ 0x047DC800 [[name("🏆 YOU WIN - V
 // =============================================================================
 // TITLE AND LEGAL SCREENS (BOOT SEQUENCE)
 // =============================================================================
+// BOOT SEQUENCE SCREENS (SECTOR TABLE ENTRIES 0-1)
+// =============================================================================
 // These BS frames display during game boot before any gameplay.
+// Referenced via: header.sectors[0] and header.sectors[1]
 
 // Sector 12 - Skullmonkeys title card with Dreamworks copyright
+// Access: header.sectors[0].sector_offset * 2048 = 0x6000
 BSFrameHeader title_screen @ 0x6000 [[name("🎮 Title Screen"),
-    comment("Skullmonkeys title card with Dreamworks copyright - sector 12"),
+    comment("Skullmonkeys title card with Dreamworks copyright - sectors[0]"),
     color("FFD700")]];
 
-// Sector 22 - Legal/copyright information screen
+// Sector 22 - Legal/copyright information screen  
+// Access: header.sectors[1].sector_offset * 2048 = 0xB000
 BSFrameHeader legal_screen @ 0xB000 [[name("📜 Legal/Copyright Screen"),
-    comment("Legal/copyright text screen - sector 22"),
+    comment("Legal/copyright text screen - sectors[1]"),
     color("40FF40")]];
+
+// =============================================================================
+// GAME OVER AND END SCREENS (SECTOR TABLE ENTRIES 28-30)
+// =============================================================================
+// These BS frames are referenced in the sector table at indices 28-30.
+// Access: header.sectors[28..30].sector_offset * 2048
+
+// Sector 36925 - End sequence loading screen
+// Access: header.sectors[28].sector_offset * 2048 = 0x481E800
+BSFrameHeader end_loading_screen @ 0x0481E800 [[name("🔄 End Loading Screen"),
+    comment("End sequence loading screen - sectors[28]"),
+    color("4080FF")]];
+
+// Sector 37100 - Game Over screen
+// Access: header.sectors[29].sector_offset * 2048 = 0x4876000
+BSFrameHeader game_over_screen_1 @ 0x04876000 [[name("💀 Game Over Screen"),
+    comment("Game Over screen - sectors[29]"),
+    color("FF4040")]];
+
+// Sector 37110 - Game Over screen (alternate/duplicate)
+// Access: header.sectors[30].sector_offset * 2048 = 0x487B000
+BSFrameHeader game_over_screen_2 @ 0x0487B000 [[name("💀 Game Over Screen (Alt)"),
+    comment("Game Over screen alternate - sectors[30]"),
+    color("FF4040")]];
+
+// =============================================================================
+// MYSTERY PASSWORD SCREEN (SECTOR TABLE ENTRY 31)
+// =============================================================================
+// Sector table entry 31 points to sector 4895 (0x98F800), which is a password
+// screen container. This is the same as password_screen_00 defined above.
+// Access: header.sectors[31].sector_offset * 2048 = 0x98F800
 
 // =============================================================================
 // ASSET TYPE REFERENCE
