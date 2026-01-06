@@ -1425,9 +1425,95 @@ BSFrameHeader hidden_credits_duplicate @ 0x48208F4 [[name("⚠️ DUPLICATE: Cre
     color("808080")]];
 
 // =============================================================================
+// LEVEL LOADING SCREENS (VERIFIED 2026-01-06)
+// =============================================================================
+// Each level has a BS/MDEC loading screen placed ~9 sectors before it.
+// This allows efficient disc streaming - the loading screen displays while
+// the disc head moves to the level data.
+
+BSFrameHeader loading_MENU @ 0x00062800 [[name("🔄 Loading: MENU"),
+    comment("Loading screen before MENU (sector 197, level at 201)"),
+    color("4080FF")]];
+BSFrameHeader loading_PHRO @ 0x0040C800 [[name("🔄 Loading: PHRO (Skullmonkey Gate)"),
+    comment("Loading screen before PHRO (sector 2073, level at 2083)"),
+    color("4080FF")]];
+BSFrameHeader loading_SCIE @ 0x00643000 [[name("🔄 Loading: SCIE (Science Center)"),
+    comment("Loading screen before SCIE (sector 3206, level at 3215)"),
+    color("4080FF")]];
+BSFrameHeader loading_MONK @ 0x009CA800 [[name("🔄 Loading: MONK (Monkey Shrines)"),
+    comment("Loading screen before MONK (sector 5013, level at 5023)"),
+    color("4080FF")]];
+BSFrameHeader loading_FINN @ 0x00CC7000 [[name("🔄 Loading: FINN (Swimming)"),
+    comment("Loading screen before FINN (sector 6542, level at 6551)"),
+    color("4080FF")]];
+BSFrameHeader loading_MEGA @ 0x00D6C800 [[name("🔄 Loading: MEGA (Shriney Guard Boss)"),
+    comment("Loading screen before MEGA (sector 6873, level at 6882)"),
+    color("4080FF")]];
+BSFrameHeader loading_BOIL @ 0x00EF1000 [[name("🔄 Loading: BOIL (Boilerroom)"),
+    comment("Loading screen before BOIL (sector 7650, level at 7660)"),
+    color("4080FF")]];
+BSFrameHeader loading_SNOW @ 0x0138E800 [[name("🔄 Loading: SNOW"),
+    comment("Loading screen before SNOW (sector 10013, level at 10022)"),
+    color("4080FF")]];
+BSFrameHeader loading_FOOD @ 0x01777800 [[name("🔄 Loading: FOOD"),
+    comment("Loading screen before FOOD (sector 12015, level at 12024)"),
+    color("4080FF")]];
+BSFrameHeader loading_HEAD @ 0x01997800 [[name("🔄 Loading: HEAD (Joe-Head-Joe Boss)"),
+    comment("Loading screen before HEAD (sector 13103, level at 13113)"),
+    color("4080FF")]];
+BSFrameHeader loading_BRG1 @ 0x01B35000 [[name("🔄 Loading: BRG1 (Bridge)"),
+    comment("Loading screen before BRG1 (sector 13930, level at 13940)"),
+    color("4080FF")]];
+BSFrameHeader loading_GLID @ 0x01F13800 [[name("🔄 Loading: GLID (Gliding)"),
+    comment("Loading screen before GLID (sector 15911, level at 15920)"),
+    color("4080FF")]];
+BSFrameHeader loading_CAVE @ 0x022D2800 [[name("🔄 Loading: CAVE"),
+    comment("Loading screen before CAVE (sector 17829, level at 17838)"),
+    color("4080FF")]];
+BSFrameHeader loading_WEED @ 0x025E5800 [[name("🔄 Loading: WEED"),
+    comment("Loading screen before WEED (sector 19403, level at 19413)"),
+    color("4080FF")]];
+BSFrameHeader loading_EGGS @ 0x028BA800 [[name("🔄 Loading: EGGS"),
+    comment("Loading screen before EGGS (sector 20853, level at 20863)"),
+    color("4080FF")]];
+BSFrameHeader loading_GLEN @ 0x02C2C000 [[name("🔄 Loading: GLEN (Glenn Yntis Boss)"),
+    comment("Loading screen before GLEN (sector 22616, level at 22625)"),
+    color("4080FF")]];
+BSFrameHeader loading_CLOU @ 0x02D55000 [[name("🔄 Loading: CLOU (Clouds)"),
+    comment("Loading screen before CLOU (sector 23210, level at 23220)"),
+    color("4080FF")]];
+BSFrameHeader loading_SEVN @ 0x03114800 [[name("🔄 Loading: SEVN (1970s Bonus)"),
+    comment("Loading screen before SEVN (sector 25129, level at 25139)"),
+    color("4080FF")]];
+BSFrameHeader loading_SOAR @ 0x03310800 [[name("🔄 Loading: SOAR (Soaring)"),
+    comment("Loading screen before SOAR (sector 26145, level at 26154)"),
+    color("4080FF")]];
+BSFrameHeader loading_CRYS @ 0x035B3800 [[name("🔄 Loading: CRYS (Crystal)"),
+    comment("Loading screen before CRYS (sector 27495, level at 27504)"),
+    color("4080FF")]];
+BSFrameHeader loading_CSTL @ 0x039B8800 [[name("🔄 Loading: CSTL (Castle)"),
+    comment("Loading screen before CSTL (sector 29553, level at 29562)"),
+    color("4080FF")]];
+BSFrameHeader loading_WIZZ @ 0x03D36800 [[name("🔄 Loading: WIZZ (Monkey Mage Boss)"),
+    comment("Loading screen before WIZZ (sector 31341, level at 31350)"),
+    color("4080FF")]];
+BSFrameHeader loading_RUNN @ 0x03ECC800 [[name("🔄 Loading: RUNN (Runner)"),
+    comment("Loading screen before RUNN (sector 32153, level at 32163)"),
+    color("4080FF")]];
+BSFrameHeader loading_MOSS @ 0x04036000 [[name("🔄 Loading: MOSS"),
+    comment("Loading screen before MOSS (sector 32876, level at 32886)"),
+    color("4080FF")]];
+BSFrameHeader loading_KLOG @ 0x043E0800 [[name("🔄 Loading: KLOG (Klogg Boss)"),
+    comment("Loading screen before KLOG (sector 34753, level at 34763)"),
+    color("4080FF")]];
+BSFrameHeader loading_EVIL @ 0x044E1000 [[name("🔄 Loading: EVIL (Evil Engine)"),
+    comment("Loading screen before EVIL (sector 35266, level at 35275)"),
+    color("4080FF")]];
+
+// =============================================================================
 // WORLD COMPLETION PASSWORD SCREENS (VERIFIED 2026-01-06)
 // =============================================================================
-// These 16 containers are WORLD COMPLETION PASSWORD SCREENS.
+// These 17 containers are WORLD COMPLETION PASSWORD SCREENS.
 // Skullmonkeys has NO memory card support, so after completing each world,
 // players are shown a password screen to return to that checkpoint.
 //
@@ -1454,6 +1540,13 @@ struct PasswordScreenContainer {
     u32 entry_count [[name("Count"), comment("Number of asset entries (always 11)")]];
     SegmentTOCEntry entries[entry_count] [[name("Assets")]];
 } [[name("Password Screen"), color("CC66CC")]];
+
+// Password #0 - Mystery Container (After TMPL level)
+// This container was originally at 0x0098F800 and was discovered during coverage analysis.
+// It has the same structure as other password screens (11 assets, 30×16 tiles).
+PasswordScreenContainer password_screen_00 @ 0x0098F800 [[name("🔐 Password Screen #0 - (Unused?)"),
+    comment("Mystery container after TMPL - same format as password screens, Magenta theme"),
+    color("96006A")]];
 
 // Password #1 - World 1 Complete (Gray theme)
 PasswordScreenContainer password_screen_01 @ 0x00EB7000 [[name("🔐 Password Screen #1 - World 1"),
@@ -1536,19 +1629,18 @@ PasswordScreenContainer password_screen_16 @ 0x047DC800 [[name("🏆 YOU WIN - V
     color("FFD700")]];
 
 // =============================================================================
-// REFERENCED BS LOADING SCREENS
+// TITLE AND LEGAL SCREENS (BOOT SEQUENCE)
 // =============================================================================
-// These are the BS frames that ARE used by the game, for comparison.
-// Referenced via the sector table at offset 0xCD0.
+// These BS frames display during game boot before any gameplay.
 
-// PIRA - Pirates loading screen (sector 12, offset 0x6000)
-BSFrameHeader pira_loading @ 0x6000 [[name("PIRA Loading Screen"), 
-    comment("Pirates world loading screen (referenced by sector table)"),
-    color("40FF40")]];
+// Sector 12 - Skullmonkeys title card with Dreamworks copyright
+BSFrameHeader title_screen @ 0x6000 [[name("🎮 Title Screen"),
+    comment("Skullmonkeys title card with Dreamworks copyright - sector 12"),
+    color("FFD700")]];
 
-// LEGL - Legal screen (sector 22, offset 0xB000)  
-BSFrameHeader legl_loading @ 0xB000 [[name("LEGL Legal Screen"),
-    comment("Legal/copyright screen (referenced by sector table)"),
+// Sector 22 - Legal/copyright information screen
+BSFrameHeader legal_screen @ 0xB000 [[name("📜 Legal/Copyright Screen"),
+    comment("Legal/copyright text screen - sector 22"),
     color("40FF40")]];
 
 // =============================================================================
