@@ -1908,21 +1908,68 @@ Offset  Size  Field         Description
 **IMPORTANT**: The mapping from entity type (e.g., 2, 45) to sprite ID is NOT in BLB data.
 Sprite IDs are **hardcoded in game code** per entity type.
 
-Example from `FUN_800281a4`:
-```c
-// Hardcoded sprite IDs used for various objects:
-0xb8700ca1, 0xe2f188, 0xa9240484, 0xe8628689, 0x88a28194, 0x80e85ea0
+**Evidence:**
+- Examined `InitializeAndLoadLevel` @ 0x8007d1d0 - calls entity loader but no sprite assignments
+- Examined entity loader `FUN_80024dc4` - only copies 24-byte entity structures to linked list
+- Examined `FUN_8001fcf0` (player init) - hardcoded sprite ID `0x21842018`
+- Found 6 functions calling `InitSpriteContext` @ 0x8007bc3c - these are object initialization functions
+- Discovered `FUN_800281a4` @ 0x800281a4 - initializes multiple objects with sprite IDs
+
+**Sprite Initialization Function Discovered:**
+
+The key sprite init function is **FUN_8001c720** (takes sprite ID as 2nd parameter).
+
+**Known Sprite ID Mappings from FUN_800281a4:**
+```
+Sprite ID    Sprite Index  Usage Pattern
+-----------  ------------  -------------
+0xb8700ca1   0x18         Single object initialization
+0xe2f188     0x25, 0x31, 0x92, 0x9e, 0xff, 0x10b  (Heavy reuse - UI/menu?)
+0xa9240484   0x118, 0xe   Used twice
+0xe8628689   0x98         Single use
+0x88a28194   0x60         Loop, 3 instances
+0x80e85ea0   0xd0         Loop, 3 instances
+0x9158a0f6   0x18         Player related?
+0x902c0002   0x118        Reused index
+0x21842018   (player)     Hardcoded in FUN_8001fcf0
 ```
 
-The entity loader (`FUN_80024dc4`) just copies entity data to a linked list.
-Sprite lookup happens when entities are instantiated - each entity type has its
-own initialization function that calls `InitSpriteContext` with a hardcoded sprite ID.
+**Entity Spawning Architecture (PARTIAL):**
 
-To build a complete entity type → sprite mapping would require:
-1. Finding the dispatch table/switch for entity types
-2. Decompiling each entity type's init function to extract its sprite ID(s)
+The entity system operates in two stages:
 
-Known mappings (from user observation):
+1. **Load Time** (FOUND):
+   - `FUN_80024dc4` @ 0x80024dc4 copies Asset 501 entity data
+   - Builds linked list at `GameState+0x28` (static entity definitions)
+   - Called once by `InitializeAndLoadLevel`
+   - Only 1 xref confirms this runs at level load, not runtime
+
+2. **Runtime Spawning** (NOT YET FOUND):
+   - Dispatcher runs continuously in game loop
+   - Reads entity definitions from list at `GameState+0x28`
+   - Checks spawn conditions (distance from player, visibility, already-spawned flag)
+   - Switches on entity type field (u16 @ offset 0x12 in 24-byte struct)
+   - Calls appropriate init function (e.g., FUN_8001c720) with sprite ID
+   - Adds spawned object to active list at `GameState+0x1c`
+
+**Active Object vs Entity Lists:**
+- `GameState+0x1c` = Active objects (spawned, updated every frame by FUN_80020e1c)
+- `GameState+0x28` = Entity definitions (static, loaded once at level start)
+
+**Missing Link - Spawn Dispatcher Characteristics:**
+- Likely uses function pointers (state machine handlers)
+- Probably has switch statement on entity type with 20+ cases
+- Integrated with visibility/culling system
+- May be distributed across multiple functions
+
+**Next Steps to Find Spawn Dispatcher:**
+1. Use dataflow analysis on reads from `GameState+0x28` (entity definition list)
+2. Search for switch statements with many cases in 0x80020000-0x80030000 range
+3. Examine state handler functions pointed to by main loop @ 0x800828b0
+4. Set runtime breakpoints on entity list reads using PCSX-Redux MCP
+5. Look for functions that read offset 0x12 (entity type field)
+
+Known mappings from user observation:
 - **Type 2** = Clayballs (coins/collectibles)
 - **Type 45** = Message box
 
