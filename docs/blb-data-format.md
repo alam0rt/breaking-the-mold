@@ -108,18 +108,37 @@ Offset   Size   Description
 ------   ----   -----------
 0x00     u8     Level index (0-25 when entry_flags=0x00)
 0x01     u8     Entry flags (0x00=level, 0x03=game over, 0x05=special loading)
-0x02     u8     Unknown byte (0x0A for loading screens, 0x63 for game over)
+0x02     u8     display_timeout - Max display time in seconds (VERIFIED)
 0x03     char[5] Code (4-char null-terminated, e.g., "PIRA", "MENU")
 0x08     char[4] Short name (truncated description)
 0x0C     u16    Sector offset in BLB
 0x0E     u16    Sector count
 ```
 
+**Display Timing Fields (VERIFIED via Ghidra):**
+
+For loading/splash screens (entry_flags 0x03 or 0x05), two fields control display timing:
+- `entry_flags` (0x01): **Minimum display time** in seconds before player can skip
+- `display_timeout` (0x02): **Maximum display time** (timeout) in seconds
+
+The values are multiplied by 60 (VSync rate) to get frame counts in `DisplayLoadingScreen` (0x800399a8).
+
+**Special case when display_timeout = 99 (0x63):**
+- Enables "Game Over" mode with different button handling
+- X button returns 0 (retry), Start returns 1 (continue to menu)
+- Used for game over screens to allow restart/continue choice
+
+**Observed values:**
+| display_timeout | Meaning |
+|-----------------|---------|
+| 0x00 | No display (skip immediately, used for normal levels) |
+| 0x0A (10) | 10 seconds timeout (loading screens, any button skips) |
+| 0x63 (99) | 99 seconds + special Game Over button handling |
+
 **Entry type patterns (PAL version):**
 - `entry_flags=0x00`: Level loading screens (level_index = 0-25)
 - `entry_flags=0x05`: Special loading screens (PIRA=pirates intro, LEGL=legal)
-- `entry_flags=0x03`: Game over screens (unknown_byte=0x63)
-- `entry_flags=0x00, level_index=0x35`: Credits screen
+- `entry_flags=0x03`: Game over screens (display_timeout=0x63)
 
 ### Loading Screen MDEC Frame Format (VERIFIED)
 

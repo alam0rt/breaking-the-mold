@@ -843,10 +843,13 @@ enum SectorEntryFlags : u8 {
 };
 
 // PAL/NTSC-US Layout (code at byte 3, offset/count at end)
+// For loading/splash screens (entry_flags 0x03 or 0x05):
+//   entry_flags = minimum display time in seconds (before skip allowed)
+//   display_timeout = maximum display time in seconds (99 = special Game Over mode)
 struct SectorEntryPAL {
     u8 level_index [[name("Level"), comment("Level index (0-25)")]];
-    SectorEntryFlags entry_flags [[name("Type"), color("FF8040")]];
-    u8 unknown_byte [[hidden]];
+    SectorEntryFlags entry_flags [[name("Type"), color("FF8040"), comment("Entry type AND min display time (seconds) for screens")]];
+    u8 display_timeout [[name("Timeout"), comment("Max display time (seconds). 0=no display, 99=Game Over mode")]];
     char code[5] [[name("Code"), comment("4-char null-terminated ID")]];
     char short_name[4] [[name("Short"), comment("Truncated description")]];
     type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
@@ -854,12 +857,13 @@ struct SectorEntryPAL {
 } [[name("Sector Entry (PAL)"), format("format_sector_offset"), color("80CCCC"), static]];
 
 // JP Layout (offset/count at front, code at byte 7)
+// Same timing fields as PAL layout
 struct SectorEntryJP {
     type::Hex<u16> sector_offset [[name("Sector"), comment("Sector offset in BLB")]];
     u16 sector_count [[name("Count"), comment("Number of sectors")]];
     u8 level_index [[name("Level"), comment("Level index (0-25)")]];
-    SectorEntryFlags entry_flags [[name("Type"), color("FF8040")]];
-    u8 unknown_byte [[hidden]];
+    SectorEntryFlags entry_flags [[name("Type"), color("FF8040"), comment("Entry type AND min display time (seconds) for screens")]];
+    u8 display_timeout [[name("Timeout"), comment("Max display time (seconds). 0=no display, 99=Game Over mode")]];
     char code[5] [[name("Code"), comment("4-char null-terminated ID")]];
     char short_name[4] [[name("Short"), comment("Truncated description")]];
 } [[name("Sector Entry (JP)"), format("format_sector_jp"), color("80CCCC"), static]];
