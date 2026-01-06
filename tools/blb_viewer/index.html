@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skullmonkeys BLB Viewer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+  <!-- Title Bar -->
+  <div id="titlebar" class="border-raised">
+    <span class="icon">🎮</span>
+    <span>Skullmonkeys BLB Stage Viewer</span>
+  </div>
+
+  <!-- Toolbar -->
+  <div id="toolbar" class="border-raised">
+    <div class="toolbar-group">
+      <button id="btn-open">📂 Open BLB...</button>
+      <input type="file" id="file-input" accept=".blb,.BLB" style="display: none;">
+    </div>
+    <div class="toolbar-group">
+      <label>Zoom:</label>
+      <select id="zoom-level" disabled>
+        <option value="1">1×</option>
+        <option value="2" selected>2×</option>
+        <option value="3">3×</option>
+        <option value="4">4×</option>
+      </select>
+    </div>
+    <div class="toolbar-group">
+      <label>Camera X:</label>
+      <input type="range" id="camera-x" min="0" max="1000" value="0" disabled style="width: 100px;">
+      <span id="camera-x-val">0</span>
+    </div>
+    <div class="toolbar-group">
+      <button id="btn-console">📋 Console</button>
+    </div>
+  </div>
+
+  <!-- Options Panel -->
+  <div id="options-panel">
+    <!-- Display Options -->
+    <fieldset class="win-group">
+      <legend>Display</legend>
+      <div class="options-row">
+        <label><input type="checkbox" id="show-entities" checked disabled> Entities</label>
+        <label><input type="checkbox" id="show-grid" disabled> Grid</label>
+        <label><input type="checkbox" id="show-minimap" disabled> Minimap</label>
+        <label><input type="checkbox" id="opt-debug"> Debug</label>
+      </div>
+    </fieldset>
+
+    <!-- 90s Mode Group -->
+    <fieldset class="win-group">
+      <legend><input type="checkbox" id="mode-90s" disabled> 90s Mode</legend>
+      <div class="options-row">
+        <label><input type="checkbox" id="opt-static-bg" disabled> Static Background</label>
+        <label><input type="checkbox" id="opt-mouse-follow" disabled> Mouse Follow</label>
+      </div>
+    </fieldset>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main">
+    <!-- Tree Panel -->
+    <div id="tree-panel">
+      <div id="tree-header">📁 BLB Contents</div>
+      <div id="tree-container">
+        <div id="tree-placeholder" style="color: #808080; padding: 20px; text-align: center;">
+          Open a BLB file to view contents
+        </div>
+      </div>
+    </div>
+
+    <!-- Render Panel -->
+    <div id="render-panel">
+      <div id="render-header">
+        <span id="render-title">No stage selected</span>
+        <span id="render-size"></span>
+      </div>
+      <div id="render-container">
+        <canvas id="render-canvas"></canvas>
+        <div id="info-panel"></div>
+        <!-- Minimap -->
+        <div id="minimap-container">
+          <div id="minimap-header">MAP</div>
+          <div id="minimap-inner">
+            <canvas id="minimap-canvas" width="160" height="80"></canvas>
+            <div id="minimap-viewport"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div id="statusbar">
+    <div class="status-section" id="status-msg">Ready</div>
+    <div class="status-section" id="status-file">No file loaded</div>
+    <div class="status-section" id="status-size">-</div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading">
+  <div id="loading-content">
+    <div>Loading...</div>
+    <div id="loading-progress"></div>
+  </div>
+</div>
+
+<!-- Console Panel -->
+<div id="console-panel">
+  <div id="console-header">
+    <span id="console-header-title">📋 Console</span>
+    <div id="console-header-actions">
+      <button id="btn-console-clear">Clear</button>
+      <button id="btn-console-close">✕</button>
+    </div>
+  </div>
+  <div id="console-content"></div>
+</div>
+
+<!-- Scripts - order matters: BLB parser first, then engine, then renderer, then UI -->
+<script src="blb.js"></script>
+<script src="engine.js"></script>
+<script src="renderer.js"></script>
+<script src="ui.js"></script>
+
+</body>
+</html>

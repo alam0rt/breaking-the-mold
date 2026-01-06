@@ -1,0 +1,699 @@
+/**
+ * Skullmonkeys BLB Viewer UI
+ * 
+ * Handles DOM interactions, event handlers, tree view, console logging, and state management.
+ * Depends on BLB for file parsing, GameEngine for stage loading, and BLBRenderer for canvas rendering.
+ */
+
+// ============================================================================
+// UI State
+// ============================================================================
+
+const UIState = {
+  file: null,
+  fileData: null,
+  levels: [],
+  selectedLevel: null,
+  selectedStage: null,
+};
+
+// ============================================================================
+// DOM References
+// ============================================================================
+
+let dom = {};
+
+function initDOM() {
+  dom = {
+    fileInput: document.getElementById('file-input'),
+    btnOpen: document.getElementById('btn-open'),
+    btnConsole: document.getElementById('btn-console'),
+    cameraX: document.getElementById('camera-x'),
+    cameraXVal: document.getElementById('camera-x-val'),
+    zoomLevel: document.getElementById('zoom-level'),
+    // Display options
+    showEntities: document.getElementById('show-entities'),
+    showGrid: document.getElementById('show-grid'),
+    showMinimap: document.getElementById('show-minimap'),
+    optDebug: document.getElementById('opt-debug'),
+    // 90s mode options
+    mode90s: document.getElementById('mode-90s'),
+    optStaticBg: document.getElementById('opt-static-bg'),
+    optMouseFollow: document.getElementById('opt-mouse-follow'),
+    // Panels
+    treeContainer: document.getElementById('tree-container'),
+    renderTitle: document.getElementById('render-title'),
+    renderSize: document.getElementById('render-size'),
+    renderContainer: document.getElementById('render-container'),
+    canvas: document.getElementById('render-canvas'),
+    infoPanel: document.getElementById('info-panel'),
+    // Minimap
+    minimapContainer: document.getElementById('minimap-container'),
+    minimapCanvas: document.getElementById('minimap-canvas'),
+    minimapViewport: document.getElementById('minimap-viewport'),
+    // Status
+    statusMsg: document.getElementById('status-msg'),
+    statusFile: document.getElementById('status-file'),
+    statusSize: document.getElementById('status-size'),
+    loading: document.getElementById('loading'),
+    loadingProgress: document.getElementById('loading-progress'),
+    consolePanel: document.getElementById('console-panel'),
+    consoleContent: document.getElementById('console-content'),
+    btnConsoleClear: document.getElementById('btn-console-clear'),
+    btnConsoleClose: document.getElementById('btn-console-close'),
+  };
+}
+
+// ============================================================================
+// Console Logger
+// ============================================================================
+
+const consoleLogger = {
+  entries: [],
+  maxEntries: 500,
+  
+  formatTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+  },
+  
+  addEntry(type, args) {
+    const msg = args.map(arg => {
+      if (typeof arg === 'object') {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    }).join(' ');
+    
+    this.entries.push({ type, time: this.formatTime(), msg });
+    
+    if (this.entries.length > this.maxEntries) {
+      this.entries.shift();
+    }
+    
+    this.render();
+  },
+  
+  render() {
+    if (!dom.consoleContent) return;
+    dom.consoleContent.innerHTML = this.entries.map(e => 
+      `<div class="console-entry ${e.type}"><span class="console-time">[${e.time}]</span><span class="console-msg">${this.escapeHtml(e.msg)}</span></div>`
+    ).join('');
+    dom.consoleContent.scrollTop = dom.consoleContent.scrollHeight;
+  },
+  
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  },
+  
+  clear() {
+    this.entries = [];
+    this.render();
+  },
+  
+  toggle() {
+    dom.consolePanel.classList.toggle('visible');
+  },
+  
+  show() {
+    dom.consolePanel.classList.add('visible');
+  },
+  
+  hide() {
+    dom.consolePanel.classList.remove('visible');
+  }
+};
+
+// ============================================================================
+// Console Interception
+// ============================================================================
+
+function setupConsoleInterception() {
+  const originalConsole = {
+    log: console.log.bind(console),
+    info: console.info.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console),
+  };
+
+  console.log = (...args) => {
+    originalConsole.log(...args);
+    consoleLogger.addEntry('log', args);
+  };
+
+  console.info = (...args) => {
+    originalConsole.info(...args);
+    consoleLogger.addEntry('info', args);
+  };
+
+  console.warn = (...args) => {
+    originalConsole.warn(...args);
+    consoleLogger.addEntry('warn', args);
+  };
+
+  console.error = (...args) => {
+    originalConsole.error(...args);
+    consoleLogger.addEntry('error', args);
+  };
+
+  // Catch unhandled errors
+  window.addEventListener('error', (e) => {
+    consoleLogger.addEntry('error', [`Uncaught Error: ${e.message} at ${e.filename}:${e.lineno}:${e.colno}`]);
+    consoleLogger.show();
+  });
+
+  window.addEventListener('unhandledrejection', (e) => {
+    consoleLogger.addEntry('error', [`Unhandled Promise Rejection: ${e.reason}`]);
+    consoleLogger.show();
+  });
+}
+
+// Log current options state (when debug is enabled)
+function logOptions(trigger) {
+  if (!dom.optDebug || !dom.optDebug.checked) return;
+  
+  const opts = {
+    showEntities: dom.showEntities.checked,
+    showGrid: dom.showGrid.checked,
+    showMinimap: dom.showMinimap.checked,
+    mode90s: dom.mode90s.checked,
+    staticBg: dom.optStaticBg.checked,
+    mouseFollow: dom.optMouseFollow.checked,
+    debug: dom.optDebug.checked,
+  };
+  
+  console.log(`[OPT] ${trigger}:`, opts);
+}
+
+// ============================================================================
+// Status Helpers
+// ============================================================================
+
+function setStatus(msg) {
+  dom.statusMsg.textContent = msg;
+}
+
+function showLoading(show, msg = 'Loading...') {
+  dom.loading.classList.toggle('visible', show);
+  dom.loadingProgress.textContent = msg;
+}
+
+// ============================================================================
+// Render Helpers
+// ============================================================================
+
+function rerender() {
+  if (!BLBRenderer.state.cachedStage) return;
+  
+  const info = BLBRenderer.renderStage(BLBRenderer.state.cachedStage, {
+    cameraX: BLBRenderer.state.cameraX,
+    cameraY: BLBRenderer.state.cameraY,
+    zoom: parseInt(dom.zoomLevel.value, 10),
+    showEntities: dom.showEntities.checked,
+    showGrid: dom.showGrid.checked,
+    showMinimap: dom.showMinimap.checked,
+    mode90s: dom.mode90s.checked,
+    staticBg: dom.optStaticBg.checked,
+    mouseFollow: dom.optMouseFollow.checked,
+  });
+  
+  if (info) {
+    updateRenderInfo(info);
+    updateMinimapViewportIndicator();
+  }
+}
+
+function updateRenderInfo(info) {
+  const sizeInfo = BLBRenderer.state.mode90s 
+    ? `${info.viewWidth}×${info.viewHeight} (PSX) / Level: ${info.levelWidth}×${info.levelHeight}`
+    : `${info.viewWidth}×${info.viewHeight}`;
+  dom.renderSize.textContent = sizeInfo;
+  
+  dom.infoPanel.innerHTML = `
+    Layers: ${info.layerCount}<br>
+    Tiles: ${info.totalTiles}<br>
+    Palettes: ${info.paletteCount}<br>
+    Entities: ${info.entityCount}${BLBRenderer.state.mode90s ? '<br>Camera: ' + info.cameraX + ',' + info.cameraY : ''}
+  `;
+  dom.infoPanel.classList.add('visible');
+  
+  // Update camera slider range
+  const limits = BLBRenderer.getCameraLimits();
+  dom.cameraX.max = limits.maxX;
+}
+
+function updateMinimapViewportIndicator() {
+  const vp = BLBRenderer.getMinimapViewport();
+  if (vp) {
+    dom.minimapViewport.style.left = `${vp.x}px`;
+    dom.minimapViewport.style.top = `${vp.y}px`;
+    dom.minimapViewport.style.width = `${vp.width}px`;
+    dom.minimapViewport.style.height = `${vp.height}px`;
+  }
+}
+
+// ============================================================================
+// Tree View
+// ============================================================================
+
+function buildTreeView() {
+  dom.treeContainer.innerHTML = '';
+  
+  if (UIState.levels.length === 0) {
+    dom.treeContainer.innerHTML = '<div style="color: #808080; padding: 20px; text-align: center;">No levels found</div>';
+    return;
+  }
+  
+  const rootNode = createTreeNode({
+    label: UIState.file.name,
+    icon: '📁',
+    expanded: true,
+    children: UIState.levels.map(level => ({
+      label: `${level.levelId} - ${level.levelName}`,
+      icon: '📂',
+      data: { type: 'level', level },
+      expanded: false,
+      children: Array.from({ length: level.stageCount }, (_, i) => ({
+        label: `Stage ${i}`,
+        icon: '🎮',
+        data: { type: 'stage', level, stageIndex: i },
+      })),
+    })),
+  });
+  
+  dom.treeContainer.appendChild(rootNode);
+}
+
+function createTreeNode({ label, icon, data, expanded = false, children = [] }) {
+  const node = document.createElement('div');
+  node.className = 'tree-node';
+  
+  const content = document.createElement('div');
+  content.className = 'tree-node-content';
+  
+  // Toggle button
+  const toggle = document.createElement('span');
+  toggle.className = 'tree-toggle';
+  toggle.textContent = children.length > 0 ? (expanded ? '−' : '+') : ' ';
+  content.appendChild(toggle);
+  
+  // Icon
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'tree-icon';
+  iconSpan.textContent = icon;
+  content.appendChild(iconSpan);
+  
+  // Label
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'tree-label';
+  labelSpan.textContent = label;
+  content.appendChild(labelSpan);
+  
+  node.appendChild(content);
+  
+  // Children container
+  if (children.length > 0) {
+    const childContainer = document.createElement('div');
+    childContainer.className = `tree-children${expanded ? '' : ' collapsed'}`;
+    
+    for (const child of children) {
+      childContainer.appendChild(createTreeNode(child));
+    }
+    
+    node.appendChild(childContainer);
+    
+    // Toggle click
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isCollapsed = childContainer.classList.contains('collapsed');
+      childContainer.classList.toggle('collapsed');
+      toggle.textContent = isCollapsed ? '−' : '+';
+    });
+  }
+  
+  // Content click
+  content.addEventListener('click', () => {
+    // Deselect all
+    document.querySelectorAll('.tree-node-content.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    content.classList.add('selected');
+    
+    if (data) {
+      handleTreeSelection(data);
+    }
+  });
+  
+  return node;
+}
+
+function handleTreeSelection(data) {
+  if (data.type === 'level') {
+    setStatus(`Selected level: ${data.level.levelId}`);
+    dom.renderTitle.textContent = `${data.level.levelId} - ${data.level.levelName}`;
+    UIState.selectedLevel = data.level;
+    UIState.selectedStage = null;
+    
+    // Log level info
+    const level = data.level;
+    const primaryFileOff = level.sectorOffset * BLB.SECTOR_SIZE;
+    console.info(`📂 Level: ${level.levelId} - ${level.levelName}`);
+    console.log(`Primary segment: sector ${level.sectorOffset} (file offset: 0x${primaryFileOff.toString(16).toUpperCase()})`);
+    console.log(`Stages: ${level.stageCount}`);
+    console.log('Secondary sectors: ' + level.stages.slice(0, level.stageCount).map((s, i) => `[${i}]=${s.secSectorOff}`).join(', '));
+    console.log('Tertiary sectors: ' + level.stages.slice(0, level.stageCount).map((s, i) => `[${i}]=${s.tertSectorOff}`).join(', '));
+    
+  } else if (data.type === 'stage') {
+    setStatus(`Loading stage ${data.stageIndex} of ${data.level.levelId}...`);
+    dom.renderTitle.textContent = `${data.level.levelId} - Stage ${data.stageIndex}`;
+    UIState.selectedLevel = data.level;
+    UIState.selectedStage = data.stageIndex;
+    
+    // Reset camera position for new stage
+    BLBRenderer.setCamera(0, 0);
+    dom.cameraX.value = 0;
+    dom.cameraXVal.textContent = '0';
+    
+    // Load and render stage
+    const stageData = GameEngine.loadStage(UIState.fileData, data.level, data.stageIndex);
+    if (stageData) {
+      const info = BLBRenderer.renderStage(stageData, {
+        zoom: parseInt(dom.zoomLevel.value, 10),
+        showEntities: dom.showEntities.checked,
+        showGrid: dom.showGrid.checked,
+        showMinimap: dom.showMinimap.checked,
+        mode90s: dom.mode90s.checked,
+        staticBg: dom.optStaticBg.checked,
+        mouseFollow: dom.optMouseFollow.checked,
+      });
+      
+      if (info) {
+        updateRenderInfo(info);
+        updateMinimapViewportIndicator();
+      }
+      
+      setStatus(`Rendered stage ${data.stageIndex}`);
+    } else {
+      setStatus(`Failed to load stage ${data.stageIndex}`);
+    }
+  }
+}
+
+// ============================================================================
+// File Loading
+// ============================================================================
+
+async function loadBLBFile(file) {
+  showLoading(true, `Loading ${file.name}...`);
+  
+  try {
+    console.info(`📂 Reading file: ${file.name}`);
+    const startTime = performance.now();
+    
+    const buffer = await file.arrayBuffer();
+    UIState.file = file;
+    UIState.fileData = buffer;
+    
+    const readTime = (performance.now() - startTime).toFixed(1);
+    console.log(`File loaded: ${BLB.formatSize(buffer.byteLength)} in ${readTime}ms`);
+    
+    // Parse header
+    console.info('Parsing BLB header...');
+    const { levels } = BLB.parseHeader(buffer);
+    UIState.levels = levels;
+    
+    // Log level summary
+    console.log(`Found ${levels.length} levels:`);
+    for (const level of levels) {
+      console.log(`  [${level.index}] ${level.levelId} - "${level.levelName}" (${level.stageCount} stages)`);
+    }
+    
+    // Update UI
+    dom.statusFile.textContent = file.name;
+    dom.statusSize.textContent = BLB.formatSize(buffer.byteLength);
+    
+    // Enable controls
+    dom.cameraX.disabled = false;
+    dom.zoomLevel.disabled = false;
+    dom.showEntities.disabled = false;
+    dom.showGrid.disabled = false;
+    dom.showMinimap.disabled = false;
+    dom.mode90s.disabled = false;
+    
+    // Build tree
+    buildTreeView();
+    
+    setStatus(`Loaded ${levels.length} levels from ${file.name}`);
+    
+    // Auto-select first playable stage if available
+    const scieLevel = levels.find(l => l.levelId === 'SCIE');
+    if (scieLevel && scieLevel.stageCount > 1) {
+      handleTreeSelection({ type: 'stage', level: scieLevel, stageIndex: 1 });
+    }
+  } catch (error) {
+    console.error('Failed to load BLB:', error);
+    setStatus(`Error: ${error.message}`);
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ============================================================================
+// Event Handlers Setup
+// ============================================================================
+
+function setupEventHandlers() {
+  // File open button
+  dom.btnOpen.addEventListener('click', () => {
+    dom.fileInput.click();
+  });
+
+  dom.fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      loadBLBFile(file);
+    }
+  });
+
+  // Camera slider
+  dom.cameraX.addEventListener('input', (e) => {
+    const camera = BLBRenderer.setCamera(parseInt(e.target.value, 10), BLBRenderer.state.cameraY);
+    dom.cameraXVal.textContent = camera.x;
+    rerender();
+  });
+
+  // Zoom
+  dom.zoomLevel.addEventListener('change', () => {
+    rerender();
+  });
+
+  // Display options
+  dom.showEntities.addEventListener('change', () => {
+    logOptions('showEntities');
+    rerender();
+  });
+  dom.showGrid.addEventListener('change', () => {
+    logOptions('showGrid');
+    rerender();
+  });
+  
+  dom.showMinimap.addEventListener('change', (e) => {
+    logOptions('showMinimap');
+    dom.minimapContainer.classList.toggle('visible', e.target.checked);
+    rerender();
+  });
+
+  // 90s Mode group toggle
+  dom.mode90s.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    
+    // Toggle render container class for centering
+    dom.renderContainer.classList.toggle('mode-90s', enabled);
+    
+    // Enable/disable sub-options
+    dom.optStaticBg.disabled = !enabled;
+    dom.optMouseFollow.disabled = !enabled;
+    
+    // When 90s mode is toggled on, auto-enable sub-options
+    if (enabled) {
+      dom.optStaticBg.checked = true;
+      dom.optMouseFollow.checked = true;
+      dom.cameraX.disabled = true;
+    } else {
+      dom.cameraX.disabled = false;
+    }
+    
+    logOptions('mode90s');
+    rerender();
+  });
+
+  dom.optStaticBg.addEventListener('change', () => {
+    logOptions('staticBg');
+    rerender();
+  });
+  
+  dom.optMouseFollow.addEventListener('change', (e) => {
+    logOptions('mouseFollow');
+    dom.cameraX.disabled = e.target.checked;
+  });
+
+  // Mouse tracking for camera - RTS style (works in 90s mode)
+  dom.renderContainer.addEventListener('mousemove', (e) => {
+    if (!dom.optMouseFollow.checked || !BLBRenderer.state.cachedStage) return;
+    if (!dom.mode90s.checked) return; // Only in 90s mode
+    
+    // Get canvas bounds (canvas is centered in container in 90s mode)
+    const canvasRect = dom.canvas.getBoundingClientRect();
+    const mouseX = e.clientX - canvasRect.left;
+    const mouseY = e.clientY - canvasRect.top;
+    const canvasWidth = canvasRect.width;
+    const canvasHeight = canvasRect.height;
+    
+    // Only track if mouse is over the canvas
+    if (mouseX < 0 || mouseX > canvasWidth || mouseY < 0 || mouseY > canvasHeight) return;
+    
+    const limits = BLBRenderer.getCameraLimits();
+    
+    // Direct linear mapping: mouse position on canvas maps to camera position
+    const ratioX = Math.max(0, Math.min(1, mouseX / canvasWidth));
+    const ratioY = Math.max(0, Math.min(1, mouseY / canvasHeight));
+    
+    const newCameraX = Math.floor(ratioX * limits.maxX);
+    const newCameraY = Math.floor(ratioY * limits.maxY);
+    
+    if (newCameraX !== BLBRenderer.state.cameraX || newCameraY !== BLBRenderer.state.cameraY) {
+      BLBRenderer.setCamera(newCameraX, newCameraY);
+      dom.cameraX.value = newCameraX;
+      dom.cameraXVal.textContent = newCameraX;
+      rerender();
+    }
+  });
+
+  // Arrow key camera control (works in both modes)
+  document.addEventListener('keydown', (e) => {
+    const debug = dom.optDebug && dom.optDebug.checked;
+    
+    if (debug) {
+      console.log(`[KEY] key=${e.key} target=${e.target.tagName} cachedStage=${!!BLBRenderer.state.cachedStage}`);
+    }
+    
+    if (!BLBRenderer.state.cachedStage) {
+      if (debug) console.log('[KEY] No cachedStage, ignoring');
+      return;
+    }
+    
+    // Don't capture if user is in an input field
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+      if (debug) console.log('[KEY] In input field, ignoring');
+      return;
+    }
+    
+    const SCROLL_SPEED = 16;
+    let dx = 0, dy = 0;
+    
+    switch (e.key) {
+      case 'ArrowLeft': dx = -SCROLL_SPEED; break;
+      case 'ArrowRight': dx = SCROLL_SPEED; break;
+      case 'ArrowUp': dy = -SCROLL_SPEED; break;
+      case 'ArrowDown': dy = SCROLL_SPEED; break;
+      default: return;
+    }
+    
+    e.preventDefault();
+    
+    if (debug) {
+      console.log(`[KEY] Moving camera dx=${dx} dy=${dy} from (${BLBRenderer.state.cameraX}, ${BLBRenderer.state.cameraY})`);
+    }
+    
+    const camera = BLBRenderer.moveCamera(dx, dy);
+    
+    if (debug) {
+      console.log(`[KEY] Camera now at (${camera.x}, ${camera.y})`);
+    }
+    
+    dom.cameraX.value = camera.x;
+    dom.cameraXVal.textContent = camera.x;
+    rerender();
+  });
+
+  // Drag and drop
+  document.body.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  document.body.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.toLowerCase().endsWith('.blb')) {
+      loadBLBFile(file);
+    }
+  });
+
+  // Console panel
+  dom.btnConsole.addEventListener('click', () => consoleLogger.toggle());
+  dom.btnConsoleClear.addEventListener('click', () => consoleLogger.clear());
+  dom.btnConsoleClose.addEventListener('click', () => consoleLogger.hide());
+}
+
+// ============================================================================
+// Initialization
+// ============================================================================
+
+function initUI() {
+  initDOM();
+  setupConsoleInterception();
+  
+  // Initialize renderer with canvas elements
+  BLBRenderer.initRenderer(dom.canvas, dom.minimapCanvas);
+  
+  setupEventHandlers();
+  
+  setStatus('Ready - Open a BLB file or drag and drop');
+  console.info('BLB Viewer initialized');
+}
+
+// ============================================================================
+// Exports
+// ============================================================================
+
+const BLBUI = {
+  state: UIState,
+  dom,
+  consoleLogger,
+  
+  // Initialization
+  initUI,
+  
+  // Helpers
+  setStatus,
+  showLoading,
+  rerender,
+  
+  // File handling
+  loadBLBFile,
+  
+  // Tree view
+  buildTreeView,
+  handleTreeSelection,
+};
+
+// Make available globally for non-module usage
+if (typeof window !== 'undefined') {
+  window.BLBUI = BLBUI;
+}
+
+// Auto-initialize when DOM is ready
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initUI);
+  } else {
+    initUI();
+  }
+}
