@@ -420,21 +420,46 @@ struct LayerEntry {
     u16 level_width [[name("Level W"), comment("Level width in tiles (from Asset 100)")]];
     u16 level_height [[name("Level H"), comment("Level height in tiles")]];
     
-    // Unknown region (0x0C-0x0F)
-    u8 unknown_0c[4] [[hidden]];
+    // Render parameter (0x0C-0x0F) - passed to layer render functions
+    // Low u16 passed as (short) to FUN_8001ecc0/FUN_8001f150/FUN_8001f534
+    u32 render_param [[name("Render Param"), comment("Passed to layer render functions")]];
     
     // Scroll factors (0x10-0x17) - 0x10000 = 1.0, 0x8000 = 0.5
     u32 scroll_x [[name("Scroll X"), format("format_parallax"), comment("X parallax (1.0 = camera, 0.5 = parallax)")]];
     u32 scroll_y [[name("Scroll Y"), format("format_parallax"), comment("Y parallax factor")]];
     
-    // Unknown region (0x18-0x25)
-    u8 unknown_18[14] [[hidden]];
+    // Stored at render context +0x30/+0x32 (0x18-0x1B)
+    u16 render_field_30 [[name("Render 0x30"), comment("Stored at renderCtx+0x30")]];
+    u16 render_field_32 [[name("Render 0x32"), comment("Stored at renderCtx+0x32")]];
+    
+    // Stored at render context +0x3A/+0x3B (0x1C-0x1D)
+    u8 render_field_3a [[name("Render 0x3A"), comment("Stored at renderCtx+0x3A")]];
+    u8 render_field_3b [[name("Render 0x3B"), comment("Stored at renderCtx+0x3B")]];
+    
+    // Scroll enable flags (0x1E-0x21) - VERIFIED via Ghidra
+    // Set corresponding GameState flags when non-zero
+    u8 scroll_left_enable [[name("Scroll L"), comment("If !=0, set GameState+0x59 (enable scroll left)")]];
+    u8 scroll_right_enable [[name("Scroll R"), comment("If !=0, set GameState+0x5B (enable scroll right)")]];
+    u8 scroll_up_enable [[name("Scroll U"), comment("If !=0, set GameState+0x58 (enable scroll up)")]];
+    u8 scroll_down_enable [[name("Scroll D"), comment("If !=0, set GameState+0x5A (enable scroll down)")]];
+    
+    // Render mode selection (0x22-0x25) - VERIFIED via Ghidra
+    // Used to select which render function is called
+    u16 render_mode_h [[name("Render Mode H"), comment("If !=0, affects render path (uVar15)")]];
+    u16 render_mode_v [[name("Render Mode V"), comment("If !=0, affects render path (uVar17)")]];
     
     // Layer type (0x26)
-    u8 layer_type [[name("Type"), comment("Layer type (0=normal, 2=foreground?)")]];
+    u8 layer_type [[name("Type"), comment("Layer type (0=normal, 3=skip render)")]];
     
-    // Unknown region (0x27-0x2B)
-    u8 unknown_27[5] [[hidden]];
+    // Padding (0x27)
+    u8 pad_27 [[hidden]];
+    
+    // Render skip flag (0x28-0x29) - VERIFIED via Ghidra
+    // If layer_type != 3 AND this == 0, layer is rendered
+    u16 skip_render [[name("Skip Render"), comment("If !=0 (and type!=3), skip this layer")]];
+    
+    // Unknown (0x2A-0x2B)
+    u16 unknown_2a [[hidden]];
     
     // Background color (0x2C-0x2E) - used when layer has no tiles
     u8 bg_r [[name("BG R"), color("FF4040")]];
@@ -442,7 +467,6 @@ struct LayerEntry {
     u8 bg_b [[name("BG B"), color("4040FF")]];
     
     // Padding to 92 bytes (0x2F-0x5B)
-    // Note: Tile count = width × height
     u8 layer_padding[45] [[hidden]];
 } [[name("Layer"), color("FFCC80"), static,
     hex::inline_visualize("color", bg_r, bg_g, bg_b, 255)]];
