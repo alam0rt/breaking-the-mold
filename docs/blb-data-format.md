@@ -797,26 +797,40 @@ Further investigation of the world completion code path is needed.
 Layers 8-11 in tertiary data may contain **entity spawn markers** in addition to background tiles.
 These are tiles with indices that exceed the normal tileset range.
 
-### Tile Index Encoding (VERIFIED via extract_all_graphics.py)
+### Tile Index Encoding (UPDATED 2026-01-06)
 
 The u16 tile index in tilemap data uses the following bit layout:
 
 ```
-Tile Index Format (16 bits):
+Tilemap Entry Format (16 bits):
 ┌─────────────────────────────────────┐
-│ 15 14 13 12 11 │ 10-0              │
-│ ?? ?? ?? ?? ?? │ TILE_INDEX        │
+│ 15 14 13 12 │ 11-0                 │
+│ COLOR_TINT  │ TILE_INDEX           │
 └─────────────────────────────────────┘
 
-TILE_INDEX (bits 0-10): Tile index (11 bits, 0x7FF mask)
-  - 1-based indexing (0 = transparent/empty)
-  - Valid range: 1 to total_tile_count
-Bits 11-15:     Unknown/unused (tiles are not flipped in game)
+TILE_INDEX (bits 0-11): Tile index (12 bits, 0xFFF mask)
+  - 0 = transparent/empty tile
+  - 1+ = tile index (1-based)
+  - Values > tile_count may be entity spawn markers
+
+COLOR_TINT (bits 12-15): Color tint selector (4 bits, 0-15)
+  - Indexes into layer's color_tints[16] table at LayerEntry+0x2C
+  - Each entry is 3 bytes (RGB)
+  - Used to tint/recolor tiles without needing duplicate graphics
+  - Entry 0 is typically white (255,255,255) for no tinting
+```
+
+**DISCOVERED via Ghidra analysis of FUN_80017540:**
+```c
+// Tile rendering extracts color tint from upper 4 bits
+puVar12 = (u_char*)(color_table_base + (tilemap_entry >> 12) * 3);
+// Sets sprite RGB to: (puVar12[0], puVar12[1], puVar12[2])
 ```
 
 **Reference implementation:** See `scripts/extract_all_graphics.py` function `extract_layers()`:
 ```python
-tile_idx = raw_idx & 0x7FF  # Lower 11 bits = tile index
+tile_idx = raw_idx & 0xFFF  # Lower 12 bits = tile index
+color_idx = (raw_idx >> 12) & 0xF  # Upper 4 bits = color tint selector
 ```
 
 ### Entity Detection

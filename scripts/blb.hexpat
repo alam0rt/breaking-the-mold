@@ -395,6 +395,17 @@ struct TileHeader {
 } [[name("Tile Header"), color("80FF80"), static]];
 
 // =============================================================================
+// Color Tint Entry - RGB triplet for layer color tinting
+// =============================================================================
+// Used in LayerEntry color_tints[16] array at offset 0x2C
+// Tilemap entries use upper 4 bits (12-15) to select which color to use
+struct ColorTintEntry {
+    u8 r [[name("R"), color("FF4040")]];
+    u8 g [[name("G"), color("40FF40")]];
+    u8 b [[name("B"), color("4040FF")]];
+} [[static]];
+
+// =============================================================================
 // Layer Entry - Asset 201 (0x0C9) - 92 bytes
 // =============================================================================
 // Verified via Ghidra analysis and extraction testing.
@@ -461,15 +472,23 @@ struct LayerEntry {
     // Unknown (0x2A-0x2B)
     u16 unknown_2a [[hidden]];
     
-    // Background color (0x2C-0x2E) - used when layer has no tiles
-    u8 bg_r [[name("BG R"), color("FF4040")]];
-    u8 bg_g [[name("BG G"), color("40FF40")]];
-    u8 bg_b [[name("BG B"), color("4040FF")]];
+    // ==========================================================================
+    // Color Tint Table (0x2C-0x5B) - 16 RGB entries, 48 bytes
+    // ==========================================================================
+    // DISCOVERED 2026-01-06: Tilemap u16 entries use upper 4 bits (12-15) as color selector
+    // The tile render function (FUN_80017540) reads: (tilemap >> 12) * 3 + color_table
+    // This allows 16 different tint colors per tile, selected by tilemap bits 12-15
+    //
+    // Entry 0 at 0x2C is the "default" color (previously misidentified as bg_r/g/b)
+    // Entry 1-15 provide additional tinting options for the layer
+    //
+    // Tilemap encoding (16 bits):
+    //   Bits 0-11:  Tile index (0 = transparent, 1-4095 = tile index)
+    //   Bits 12-15: Color tint selector (0-15, indexes into this table)
     
-    // Padding to 92 bytes (0x2F-0x5B)
-    u8 layer_padding[45] [[hidden]];
-} [[name("Layer"), color("FFCC80"), static,
-    hex::inline_visualize("color", bg_r, bg_g, bg_b, 255)]];
+    ColorTintEntry color_tints[16] [[name("Color Tints"), comment("16 RGB tint colors, selected by tilemap bits 12-15")]];
+    
+} [[name("Layer"), color("FFCC80"), static]];
 
 // =============================================================================
 // Sprite Structures - Asset 600 (0x258)

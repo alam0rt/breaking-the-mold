@@ -16,18 +16,42 @@ Also see `docs/decompilation-guide.md` for detailed steps.
 
 ## BLB File Format
 
-The `scripts/blb.py` library can parse and dump BLB asset files and is the current "source of truth" for the BLB format.
-Use it to write small scripts to dump or verify data structures at runtime.
+### Source of Truth: ImHex Template
 
-See `docs/blb-data-format.md` for details on the BLB asset file format.
-Note that `docs/unconfirmed_findings.md` is a place to document unverified observations.
+The **ImHex pattern file** (`scripts/blb.hexpat`) is the authoritative source of truth for the BLB format.
+It provides structured definitions for all known data types and is kept synchronized with discoveries.
 
-To verify findings, provide the developer with methods to trace or dump data at runtime.
+**Reading BLB data:**
+```bash
+# Render BLB structure as JSON for querying/verification
+imhex --pl format --pattern scripts/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb_parsed.json
+
+# Then query with standard tools
+grep -A20 '"stage1"' /tmp/blb_parsed.json
+jq '.levels.level_00.primary' /tmp/blb_parsed.json
+```
+
+**Workflow for discoveries:**
+1. When discovering something new via Ghidra or binary analysis, **immediately update `scripts/blb.hexpat`**
+2. Update `docs/blb-data-format.md` to document the finding with verification notes
+3. Re-run the ImHex format command to verify the template parses correctly
+4. Unverified observations go in `docs/unconfirmed_findings.md` until proven
+
+### Supporting Files
+
+- `tools/blb_viewer/` - Web-based BLB viewer using the hexpat format (contains blb.js and engine.js which are a javascript implementation of the BLB format and the Skullmonkeys game engine resptectively)
+- `scripts/blb.py` - Python library for programmatic BLB parsing (kept in sync with hexpat)
+- `docs/blb-data-format.md` - Human-readable documentation of the format
+- `docs/unconfirmed_findings.md` - Unverified observations awaiting proof
+
+### Verification Requirements
+
+To verify findings, provide the developer with methods to trace or dump data at runtime:
 - By creating a Lua script for PCSX-Redux and sharing it with instructions to verify
 - By tracing the source files and assembly to find relevant code paths
 
 - All verified findings can be moved to `docs/blb-data-format.md` (you must get approval first)
-- All verified finidngs should have a proof which works for all BLB files (under `disks/blb/`)
+- All verified findings should have a proof which works for all BLB files (under `disks/blb/`)
 
 ## Key Addresses
 - RAM base: 0x80010000
