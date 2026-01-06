@@ -4,8 +4,53 @@
 // The BLB file is the main game archive containing all levels, assets,
 // and resources. The first 0x1000 bytes (4096) contain the header.
 //
-// RENDERING PIPELINE (from render_level.py):
-// ============================================
+// =============================================================================
+// FILE STRUCTURE OVERVIEW
+// =============================================================================
+// 
+// FILE COVERAGE (SLES-01090 / 76,021,760 bytes / 72.50 MB):
+//   - Header:           0x0000 - 0x8000  (32 KB)
+//   - Level Data:       26 levels with primary/secondary/tertiary segments
+//   - Sector Table:     32 entries at 0xCD0 (BS loading screens)
+//   - Password Screens: 17 containers scattered between levels
+//   - Coverage:         ~97% referenced, ~3% sector-alignment padding
+//
+// UNREFERENCED GAPS (~2.1 MB total):
+//   These are sector-alignment padding between referenced regions.
+//   Example gaps: 0x0000D000-0x00062800 (342 KB), ~90 KB gaps after each
+//   password screen for sector alignment.
+//
+// =============================================================================
+// SECTOR TABLE (32 ENTRIES AT OFFSET 0xCD0)
+// =============================================================================
+// The sector table maps to BS (bitstream/MDEC) images for loading screens.
+// Each entry is 16 bytes: level_index(u8), flags(u8), code(u16), 
+//                         short_name(4 chars), sector_offset(u32), sector_count(u32)
+//
+// Entry Mapping:
+//   [0]     Title Screen         Sector 12    (0x6000)
+//   [1]     Legal Screen         Sector 22    (0xB000)
+//   [2-27]  Level Loading        sectors[i+2] → level[i] loading screen
+//   [28]    End Loading          Sector 36925 (0x481E800)
+//   [29]    Game Over            Sector 37100 (0x4876000)
+//   [30]    Game Over (Alt)      Sector 37110 (0x487B000)
+//   [31]    Password Container   Sector 4895  (0x98F800) - Contains password_screen_00
+//
+// =============================================================================
+// PASSWORD SCREENS (17 CONTAINERS)
+// =============================================================================
+// Each password screen is a TOC container with 11 assets (except #16 with 12):
+//   Asset 0: Tilemap (30×16 = 480 tiles → 320×256 rendering)
+//   Assets 1-10: Various graphics (digits, letters, decorations)
+//
+// Password screens appear in gaps AFTER their corresponding level:
+//   #0:  0x0098F800 (Unused? - inside SectorEntry[31])
+//   #1:  0x00EB7000 (World 1)  ... #15: 0x044AA800 (World 15)
+//   #16: 0x047DC800 (Victory "YOU WIN" - 12 assets)
+//
+// =============================================================================
+// RENDERING PIPELINE (from render_level.py)
+// =============================================================================
 // 1. Each level has PRIMARY, SECONDARY, and TERTIARY segments
 // 2. SECONDARY contains: Tile Header (100), Tile Pixels (300), Palette Indices (301),
 //    Tile Flags (302), Palette Container (400)
@@ -1563,8 +1608,9 @@ BSFrameHeader loading_EVIL @ 0x044E1000 [[name("🔄 Loading: EVIL (Evil Engine)
 //   - Passwords 3-16: Magenta RGB(150, 0, 106) = #96006A
 
 // Password screen container structure - same as segment TOC
+// Most have 11 assets, but Victory screen (#16) has 12
 struct PasswordScreenContainer {
-    u32 entry_count [[name("Count"), comment("Number of asset entries (always 11)")]];
+    u32 entry_count [[name("Count"), comment("Number of asset entries (11 for passwords, 12 for victory)")]];
     SegmentTOCEntry entries[entry_count] [[name("Assets")]];
 } [[name("Password Screen"), color("CC66CC")]];
 
