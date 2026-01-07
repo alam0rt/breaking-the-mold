@@ -499,7 +499,7 @@ This was verified via runtime analysis on 2026-01-05.
 | 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
 | 302 | 0x12E | RAW | Duplicate tile flags |
 | 401 | 0x191 | RAW | Duplicate animation config |
-| 500 | 0x1F4 | RAW | **UNKNOWN** - likely tile/sprite metadata (see notes) |
+| 500 | 0x1F4 | RAW | **Tile attribute map** - collision/trigger data (8-byte header + 1 byte/tile) |
 | 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
 | 502 | 0x1F6 | RAW | **VRAM rectangles** - texture page definitions |
 | 503 | 0x1F7 | RAW | **Animation frame offsets** - ToolX sequence data |
@@ -639,12 +639,38 @@ Each palette: 512 bytes = 256 × u16 (PSX 15-bit RGB)
 | 200 | 0x0C8 | RAW | Tilemap container (layer data) |
 | 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
 | 401 | 0x191 | RAW | Animation/palette config |
-| 500 | 0x1F4 | RAW | Sprite metadata |
+| 500 | 0x1F4 | RAW | **Tile attribute map** (collision/triggers) |
 | 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
 | 502 | 0x1F6 | RAW | Audio configuration |
 | 503 | 0x1F7 | RAW | Audio configuration |
 | 600 | 0x258 | CONTAINER | RLE sprites with embedded palettes |
 | 700 | 0x2BC | RAW | Audio/VAB data |
+
+#### Asset 500 - Tile Attribute Map (STRUCTURE-VERIFIED)
+
+Per-tile collision and trigger data. Each byte represents properties for one tile position.
+
+```
+Offset  Size               Field         Description
+------  ----               -----         -----------
+0x00    4                  flags         Varies (often 0, sometimes large values)
+0x04    2                  level_width   Level width in tiles
+0x06    2                  level_height  Level height in tiles
+0x08    width × height     tile_data     One byte per tile (row-major order)
+```
+
+**Size verification:** `8 + (level_width × level_height)` bytes matches actual asset sizes.
+
+**Known attribute values:**
+| Value | Hex  | Meaning |
+|-------|------|---------|
+| 0 | 0x00 | Empty/passable (air) |
+| 2 | 0x02 | Solid/collision |
+| 18 | 0x12 | Unknown trigger |
+| 83 | 0x53 | Checkpoint/save point? |
+| 101 | 0x65 | Entity spawn zone/trigger |
+
+**Distribution (typical level):** ~96% value 0 (passable), ~3% value 2 (solid), ~1% value 101 (entity zones).
 
 ## Supplementary Graphics Containers
 

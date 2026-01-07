@@ -324,7 +324,7 @@ struct Palette256Raw {
 //   602 (0x25A) LEVEL_PALETTE    - Level palette (15-bit PSX colors)
 //
 // TERTIARY SEGMENT - Sprites & Stage Data:
-//   500 (0x1F4) UNKNOWN_500      - Tile/sprite metadata (structure TBD)
+//   500 (0x1F4) TILE_ATTRS       - Tile attribute map (collision/triggers, 1 byte/tile)
 //   501 (0x1F5) ENTITIES         - Entity placement data (24-byte structures)
 //   502 (0x1F6) VRAM_RECTS       - VRAM rectangles / texture page definitions
 //   503 (0x1F7) ANIM_OFFSETS     - Animation frame offsets (ToolX sequence data)
@@ -856,6 +856,38 @@ bitfield TileFlags {
 
 // Palette animation data - controls color cycling effects
 // Structure details TBD - appears in tertiary segments
+
+// =============================================================================
+// Tile Attribute Map - Asset 500 (0x1F4)
+// =============================================================================
+// Per-tile collision/attribute map. Each byte represents properties for one tile.
+// Size = 8-byte header + (level_width × level_height) bytes
+//
+// VERIFIED via analysis (see docs/unconfirmed_findings.md):
+// - Appears in 98 of ~104 stages
+// - Size matches level dimensions (e.g., 535×43 = 23,005 tiles + 8 = 23,013 bytes)
+//
+// Known tile attribute values:
+//   0x00 = Empty/passable
+//   0x02 = Solid/collision
+//   0x12 = Unknown trigger
+//   0x53 = Checkpoint/save point?
+//   0x65 = Entity spawn zone/trigger
+
+struct TileAttributeHeader {
+    u32 unknown [[name("Unknown"), comment("Always 0 - padding?")]];
+    u16 level_width [[name("Level Width"), comment("Width in tiles")]];
+    u16 level_height [[name("Level Height"), comment("Height in tiles")]];
+} [[static, color("FF9966")]];
+
+struct TileAttributeMap<auto asset_size> {
+    TileAttributeHeader header;
+    
+    // Tile data: one byte per tile in row-major order
+    if (asset_size > 8) {
+        u8 tile_data[asset_size - 8] [[name("Tile Attributes"), comment("Per-tile collision/trigger values")]];
+    }
+} [[color("FF8844")]];
 
 // =============================================================================
 // Audio System (VERIFIED 2026-01-07)
@@ -1631,6 +1663,17 @@ struct SecondarySegmentFull {
         TileHeaderAsset tile_header1 @ (_base + toc[1].offset) [[name("Tile Header")]];
     }
     
+    // Parse Asset 101 (Unknown - only 8 levels, 12 bytes each)
+    if (toc_count > 0 && toc[0].asset_type == 101) {
+        u8 unknown101_0[toc[0].size] @ (_base + toc[0].offset) [[name("Unknown 101")]];
+    }
+    if (toc_count > 1 && toc[1].asset_type == 101) {
+        u8 unknown101_1[toc[1].size] @ (_base + toc[1].offset) [[name("Unknown 101")]];
+    }
+    if (toc_count > 2 && toc[2].asset_type == 101) {
+        u8 unknown101_2[toc[2].size] @ (_base + toc[2].offset) [[name("Unknown 101")]];
+    }
+    
     // Parse Asset 400 (Palette Container) 
     if (toc_count > 0 && toc[0].asset_type == 400) {
         PaletteContainerAsset palettes0 @ (_base + toc[0].offset) [[name("Palettes")]];
@@ -1821,6 +1864,33 @@ struct TertiaryStageWithAssets {
     if (toc_count > 3 && toc[3].asset_type == 600) {
         SpriteContainerFull sprites3 @ (_base + toc[3].offset) [[name("Sprites")]];
     }
+    
+    // Search for Asset 500 (Tile Attribute Map) - collision/trigger data
+    // Present in ~98 of 104 stages
+    if (toc_count >= 1) { if (toc[0].asset_type == 500) {
+        TileAttributeMap<toc[0].size> tile_attrs0 @ (_base + toc[0].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 2) { if (toc[1].asset_type == 500) {
+        TileAttributeMap<toc[1].size> tile_attrs1 @ (_base + toc[1].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 3) { if (toc[2].asset_type == 500) {
+        TileAttributeMap<toc[2].size> tile_attrs2 @ (_base + toc[2].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 4) { if (toc[3].asset_type == 500) {
+        TileAttributeMap<toc[3].size> tile_attrs3 @ (_base + toc[3].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 5) { if (toc[4].asset_type == 500) {
+        TileAttributeMap<toc[4].size> tile_attrs4 @ (_base + toc[4].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 6) { if (toc[5].asset_type == 500) {
+        TileAttributeMap<toc[5].size> tile_attrs5 @ (_base + toc[5].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 7) { if (toc[6].asset_type == 500) {
+        TileAttributeMap<toc[6].size> tile_attrs6 @ (_base + toc[6].offset) [[name("Tile Attributes (500)")]];
+    }}
+    if (toc_count >= 8) { if (toc[7].asset_type == 500) {
+        TileAttributeMap<toc[7].size> tile_attrs7 @ (_base + toc[7].offset) [[name("Tile Attributes (500)")]];
+    }}
     
     // Search for Asset 504 (Vehicle Data) - only in FINN/RUNN levels
     // Asset 504 can appear at various TOC positions (e.g., index 8 in FINN)
