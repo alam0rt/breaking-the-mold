@@ -202,7 +202,103 @@ ls /tmp/gap_containers/
 | 501 | varies | all levels | **VERIFIED: Entity placement data (24-byte structs)** |
 | 502/503 | varies | varies | Audio/animation metadata |
 | 201/301/302 | 94 KB | 104 | Possibly tile/layer metadata |
+| 504 | varies | 2 levels | **Vehicle level data (FINN, RUNN only)** - see below |
 | 700 | 3 KB | 9 | Small entries, purpose unclear |
+
+---
+
+## Asset 504 Analysis (2026-01-07) - UNCONFIRMED
+
+Asset 504 appears **only in vehicle/driving levels**:
+- **FINN** (Level 4) - Submarine level: 4992 bytes
+- **RUNN** (Level 22) - Auto-runner level: 64 bytes
+
+### Distribution
+
+Only 2 of 26 levels contain Asset 504. Both are "vehicle" levels where Klaymen
+pilots a vehicle rather than walking/jumping.
+
+### Structure Hypothesis
+
+**Header (8 bytes):**
+```c
+struct Asset504Header {
+    u32 entry_count;   // FINN=149, RUNN=106 (but RUNN only has 2 entries?)
+    u32 flags;         // FINN=16, RUNN=1 (possibly entry size or type indicator)
+};
+```
+
+**Entries appear to be 32 bytes each (paired 16-byte sub-entries):**
+
+```c
+// Sub-entry A: Bounding box / zone definition
+struct Asset504ZoneEntry {
+    s16 x1, y1;        // Top-left corner
+    s16 x2, y2;        // Bottom-right corner
+    s16 center_x;      // Center point X (or 0)
+    s16 center_y;      // Center point Y (or flag)
+    u16 type_flags1;   // 0x0000 = standard zone, 0x8000 = collectible/marker
+    u16 type_flags2;   // 1 = zone type A, 2 = zone type B
+};
+
+// Sub-entry B: Associated data
+struct Asset504DataEntry {
+    u16 flags;         // 0, 1351 (0x547), or 1601 (0x641)
+    u16 index;         // Sometimes 0 or 1
+    u16 ref_id;        // 251 (0xFB), 1351 (0x547), or 0
+    u16 reserved1;     // Usually 0
+    u16 delay;         // Frame count? Range 5-149
+    u16 reserved2;     // Usually 0
+    u16 next_x;        // Next waypoint X or entry index
+    u16 next_y;        // Next waypoint Y
+};
+```
+
+### Entry Type Analysis (FINN)
+
+| Type | Count | Description |
+|------|-------|-------------|
+| (0, 1) | 77 | Standard zones with bounding boxes |
+| (0, 2) | 2 | Special zones (endpoints?) |
+| (0x8000, 0) | 76 | Collectibles/markers with ref=251 |
+
+### Observations
+
+1. **Type 0x8000 entries** (76 total in FINN):
+   - All have `ref_id = 251` (0xFB)
+   - Positions form a path through the level (sorted by Y coordinate)
+   - Delay values range 5-15 (likely spawn/appear timing)
+   - These are probably **collectible clay pods** placed along the path
+
+2. **Type (0, 1) entries** (77 total in FINN):
+   - Most have `ref_id = 0`, two have `ref_id = 1351`
+   - Entries with ref=1351 have large `next_x/next_y` values (actual coordinates)
+   - Entries with ref=0 have small `next_x` values (possibly entry indices?)
+   - These define the **track/path boundaries** the vehicle follows
+
+3. **Type (0, 2) entries** (2 in FINN):
+   - Have `flags = 1601` (0x641)
+   - Likely **start/end points** or checkpoints
+
+4. **Position ranges** (FINN collectibles):
+   - X: 208 to 1616 pixels
+   - Y: 112 to 448 pixels
+   - Matches expected submarine level dimensions
+
+### RUNN Discrepancy
+
+RUNN has `entry_count = 106` in the header but only 64 bytes of data (2 entries).
+This suggests:
+- The count field may mean something different
+- RUNN may use a different format variant
+- Or there's a size/offset issue in parsing
+
+### Verification Needed
+
+1. Trace code that reads Asset 504 in Ghidra
+2. Run FINN level and breakpoint on memory reads from 504 data
+3. Confirm if Type 0x8000 entries are indeed collectibles
+4. Verify the linking between entries (next_x/next_y interpretation)
 
 ---
 

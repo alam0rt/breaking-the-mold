@@ -328,6 +328,7 @@ struct Palette256Raw {
 //   501 (0x1F5) ENTITIES         - Entity placement data (24-byte structures)
 //   502 (0x1F6) VRAM_RECTS       - VRAM rectangles / texture page definitions
 //   503 (0x1F7) ANIM_OFFSETS     - Animation frame offsets (ToolX sequence data)
+//   504 (0x1F8) VEHICLE_DATA     - Vehicle level waypoints (FINN/RUNN only)
 //   600 (0x258) SPRITE_CONTAINER - RLE sprites with embedded palettes
 //   700 (0x2BC) SPU_SAMPLES      - Additional SPU audio samples (ADPCM)
 //
@@ -911,6 +912,68 @@ struct AudioVolumeEntry {
 // =============================================================================
 // Same format as Asset 601 but stored per-stage in tertiary segment.
 // Typically smaller (e.g., 300 bytes for SCIE stage 0).
+
+// =============================================================================
+// Asset 504 (0x1F8) - Vehicle Level Data (UNCONFIRMED)
+// =============================================================================
+// Only appears in vehicle/driving levels:
+//   - FINN (Level 4): Submarine level, 4992 bytes (155 entries)
+//   - RUNN (Level 22): Auto-runner level, 64 bytes (2 entries)
+//
+// Structure appears to be 32-byte paired entries with bounding boxes,
+// likely defining collectible positions and path waypoints for vehicle gameplay.
+//
+// Entry types (based on type_flags1):
+//   0x0000 = Zone trigger (path boundaries)
+//   0x8000 = Collectible marker (e.g., clay pods)
+//
+// Common reference values:
+//   251 (0xFB) = Collectible type
+//   1351 (0x547) = Zone link reference
+//   1601 (0x641) = Start/end marker
+
+struct VehicleZoneEntry {
+    // Bounding box in pixels (0x00-0x07)
+    s16 x1 [[name("X1"), comment("Zone min X (pixels)")]];
+    s16 y1 [[name("Y1"), comment("Zone min Y (pixels)")]];
+    s16 x2 [[name("X2"), comment("Zone max X (pixels)")]];
+    s16 y2 [[name("Y2"), comment("Zone max Y (pixels)")]];
+    
+    // Center point (0x08-0x0B)
+    s16 center_x [[name("Center X"), comment("Zone center X, or 0 for linked zones")]];
+    s16 center_y [[name("Center Y"), comment("Zone center Y, or type indicator")]];
+    
+    // Type flags (0x0C-0x0F)
+    u16 type_flags1 [[name("Type1"), comment("0x0000=zone, 0x8000=collectible")]];
+    u16 type_flags2 [[name("Type2"), comment("1=zone type A, 2=zone type B")]];
+} [[static, color("FFCC80")]];
+
+struct VehicleDataEntry {
+    // Flags and references (0x00-0x07)
+    u16 flags [[name("Flags"), comment("0, 1351, or 1601")]];
+    u16 index [[name("Index"), comment("Usually 0 or 1")]];
+    u16 ref_id [[name("Ref ID"), comment("251=collectible, 1351=zone link, 0=waypoint")]];
+    u16 reserved1 [[name("Reserved")]];
+    
+    // Timing and next waypoint (0x08-0x0F)
+    u16 delay [[name("Delay"), comment("Frame count (5-149 range)")]];
+    u16 reserved2 [[name("Reserved")]];
+    u16 next_x [[name("Next X"), comment("Next waypoint X or entry index")]];
+    u16 next_y [[name("Next Y"), comment("Next waypoint Y")]];
+} [[static, color("80CCFF")]];
+
+struct VehiclePairedEntry {
+    VehicleZoneEntry zone [[name("Zone")]];
+    VehicleDataEntry data [[name("Data")]];
+} [[static, color("FFFFCC")]];
+
+// Asset 504 with size template parameter for calculating entry count
+struct Asset504VehicleData<auto asset_size> {
+    u32 entry_count [[name("Entry Count"), comment("Raw count field (may not match actual entries)")]];
+    u32 flags [[name("Flags"), comment("FINN=16, RUNN=1")]];
+    // Calculate actual entries from asset size: (size - 8 byte header) / 32 bytes per entry
+    VehiclePairedEntry entries[(asset_size - 8) / 32] [[name("Entries")]];
+} [[name("Vehicle Data"), color("FFCC80")]];
 
 // =============================================================================
 // Level Palette - Asset 602 (0x25A) in PRIMARY
@@ -1713,6 +1776,39 @@ struct TertiaryStageWithAssets {
     if (toc_count > 3 && toc[3].asset_type == 600) {
         SpriteContainerFull sprites3 @ (_base + toc[3].offset) [[name("Sprites")]];
     }
+    
+    // Search for Asset 504 (Vehicle Data) - only in FINN/RUNN levels
+    // Asset 504 can appear at various TOC positions (e.g., index 8 in FINN)
+    if (toc_count >= 1) { if (toc[0].asset_type == 504) {
+        Asset504VehicleData<toc[0].size> vehicle0 @ (_base + toc[0].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 2) { if (toc[1].asset_type == 504) {
+        Asset504VehicleData<toc[1].size> vehicle1 @ (_base + toc[1].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 3) { if (toc[2].asset_type == 504) {
+        Asset504VehicleData<toc[2].size> vehicle2 @ (_base + toc[2].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 4) { if (toc[3].asset_type == 504) {
+        Asset504VehicleData<toc[3].size> vehicle3 @ (_base + toc[3].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 5) { if (toc[4].asset_type == 504) {
+        Asset504VehicleData<toc[4].size> vehicle4 @ (_base + toc[4].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 6) { if (toc[5].asset_type == 504) {
+        Asset504VehicleData<toc[5].size> vehicle5 @ (_base + toc[5].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 7) { if (toc[6].asset_type == 504) {
+        Asset504VehicleData<toc[6].size> vehicle6 @ (_base + toc[6].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 8) { if (toc[7].asset_type == 504) {
+        Asset504VehicleData<toc[7].size> vehicle7 @ (_base + toc[7].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 9) { if (toc[8].asset_type == 504) {
+        Asset504VehicleData<toc[8].size> vehicle8 @ (_base + toc[8].offset) [[name("Vehicle Data (504)")]];
+    }}
+    if (toc_count >= 10) { if (toc[9].asset_type == 504) {
+        Asset504VehicleData<toc[9].size> vehicle9 @ (_base + toc[9].offset) [[name("Vehicle Data (504)")]];
+    }}
 } [[name("Stage"), color("80FFCC")]];
 
 // Simple tertiary stage - just TOC (for fallback)
