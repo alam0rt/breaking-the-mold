@@ -908,10 +908,38 @@ struct AudioVolumeEntry {
 //   0x1333, 0x0010 - ~30% volume, slight pan offset
 
 // =============================================================================
-// Tertiary Asset 700 - Additional SPU Samples
+// Tertiary Asset 700 - Unknown Audio-Related Data
 // =============================================================================
-// Same format as Asset 601 but stored per-stage in tertiary segment.
-// Typically smaller (e.g., 300 bytes for SCIE stage 0).
+// Only appears in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
+// Stored at LevelDataContext offset 0x54 (pointer) and 0x58 (size).
+//
+// VERIFIED:
+// - Uses standard Asset 601-style container header (count=1, entry with ID/size/offset)
+// - Data starts at offset 0x10 within the asset
+// - Sizes range from 208-496 bytes
+//
+// UNCONFIRMED (see docs/unconfirmed_findings.md for analysis):
+// - Data content structure is unknown
+// - May be sound event sequences, music selection, or unused data
+// - No code found that reads this data after LoadAssetContainer stores it
+
+struct Asset700Header {
+    u16 entry_count [[name("Entry Count"), comment("Always 1")]];
+    u16 reserved [[name("Reserved"), comment("Always 0")]];
+    u32 entry_id [[name("Entry ID"), comment("Varies per level")]];
+    u32 data_size [[name("Data Size"), comment("Size of data after header")]];
+    u32 data_offset [[name("Data Offset"), comment("Always 0x10")]];
+} [[static, color("FF6666")]];
+
+struct Asset700Data<auto asset_size> {
+    Asset700Header header;
+    
+    // Raw data - structure unknown
+    // See docs/unconfirmed_findings.md for analysis attempts
+    if (asset_size > 16) {
+        u8 raw_data[asset_size - 16] [[name("Raw Data"), comment("Unknown structure - see unconfirmed_findings.md")]];
+    }
+} [[color("FF4444")]];
 
 // =============================================================================
 // Asset 504 (0x1F8) - Vehicle Level Data (UNCONFIRMED)
@@ -1808,6 +1836,45 @@ struct TertiaryStageWithAssets {
     }}
     if (toc_count >= 10) { if (toc[9].asset_type == 504) {
         Asset504VehicleData<toc[9].size> vehicle9 @ (_base + toc[9].offset) [[name("Vehicle Data (504)")]];
+    }}
+    
+    // Asset 700 - Additional Audio Data (under investigation)
+    // Only in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
+    if (toc_count >= 1) { if (toc[0].asset_type == 700) {
+        Asset700Data<toc[0].size> audio700_0 @ (_base + toc[0].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 2) { if (toc[1].asset_type == 700) {
+        Asset700Data<toc[1].size> audio700_1 @ (_base + toc[1].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 3) { if (toc[2].asset_type == 700) {
+        Asset700Data<toc[2].size> audio700_2 @ (_base + toc[2].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 4) { if (toc[3].asset_type == 700) {
+        Asset700Data<toc[3].size> audio700_3 @ (_base + toc[3].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 5) { if (toc[4].asset_type == 700) {
+        Asset700Data<toc[4].size> audio700_4 @ (_base + toc[4].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 6) { if (toc[5].asset_type == 700) {
+        Asset700Data<toc[5].size> audio700_5 @ (_base + toc[5].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 7) { if (toc[6].asset_type == 700) {
+        Asset700Data<toc[6].size> audio700_6 @ (_base + toc[6].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 8) { if (toc[7].asset_type == 700) {
+        Asset700Data<toc[7].size> audio700_7 @ (_base + toc[7].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 9) { if (toc[8].asset_type == 700) {
+        Asset700Data<toc[8].size> audio700_8 @ (_base + toc[8].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 10) { if (toc[9].asset_type == 700) {
+        Asset700Data<toc[9].size> audio700_9 @ (_base + toc[9].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 11) { if (toc[10].asset_type == 700) {
+        Asset700Data<toc[10].size> audio700_10 @ (_base + toc[10].offset) [[name("Audio Data (700)")]];
+    }}
+    if (toc_count >= 12) { if (toc[11].asset_type == 700) {
+        Asset700Data<toc[11].size> audio700_11 @ (_base + toc[11].offset) [[name("Audio Data (700)")]];
     }}
 } [[name("Stage"), color("80FFCC")]];
 
