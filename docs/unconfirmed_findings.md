@@ -199,7 +199,8 @@ ls /tmp/gap_containers/
 
 | ID | Size | Occurrences | Notes |
 |----|------|-------------|-------|
-| 501/502/503 | 117 KB | 69 | Possibly audio/animation metadata |
+| 501 | varies | all levels | **VERIFIED: Entity placement data (24-byte structs)** |
+| 502/503 | varies | varies | Audio/animation metadata |
 | 201/301/302 | 94 KB | 104 | Possibly tile/layer metadata |
 | 700 | 3 KB | 9 | Small entries, purpose unclear |
 
@@ -2128,6 +2129,7 @@ FUN_8001cdac(context, priority, sprite_id)
 
 ### Sprite IDs are 32-bit Identifiers
 
+
 Sprite IDs in Asset 600 TOC and game code are 32-bit hash-like values:
 - `0x09406D8A` - Common sprite (appears in all levels)
 - `0x400C989D`, `0x400C991D` - Related sprites
@@ -2135,10 +2137,27 @@ Sprite IDs in Asset 600 TOC and game code are 32-bit hash-like values:
 - `0x21842018` - Player sprite (hardcoded in FUN_8001fcf0)
 - `0xe2f188` - UI/menu element (heavily reused)
 
-### Conclusion: Entity→Sprite Mapping is in Code
+### Conclusion: Entity→Sprite Mapping is in Code - ✓ VERIFIED
+
+**Status:** VERIFIED via Ghidra decompilation (2026-01-07)
 
 The mapping from entity type (2, 8, 25, etc.) to sprite ID (0x09406D8A, etc.)
 is **hardcoded in game code**, not stored in BLB data.
+
+**Verification evidence:**
+1. `FUN_8001fcf0` (player init) uses hardcoded sprite ID `0x21842018`
+2. `FUN_800281a4` initializes multiple objects with hardcoded sprite IDs:
+   - `0xb8700ca1`, `0xe2f188`, `0xa9240484`, `0xe8628689`
+   - `0x88a28194`, `0x80e85ea0`, `0x9158a0f6`, `0x902c0002`
+3. Sprite lookup chain confirmed:
+   - `InitSpriteContext` @ 0x8007bc3c
+   - `LookupSpriteById` @ 0x8007bb10
+   - `FindSpriteInTOC` @ 0x8007b968
+
+**Template updated:** `scripts/blb.hexpat` now includes:
+- Entity structure (24 bytes) for Asset 501
+- Sprite ID lookup chain documentation
+- Known sprite ID mappings
 
 To build a mapping table for the BLB viewer:
 1. Trace each entity type's spawn dispatcher in Ghidra
@@ -2152,4 +2171,5 @@ To build a mapping table for the BLB viewer:
 
 ---
 
-*Last updated: January 9, 2026*
+*Last updated: January 7, 2026*
+

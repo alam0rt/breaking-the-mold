@@ -34,6 +34,7 @@ const RendererState = {
   showGrid: false,
   showMinimap: false,
   showSprites: true, // Render sprites at entity positions
+  showPlayer: true, // Show player sprite at spawn point
   animateSprites: false, // Animate sprite frames
   spriteFrameIndex: 0, // Current animation frame index (global for now)
   
@@ -282,20 +283,24 @@ function renderStage(stageData, options = {}) {
   
   // Render sprites at entity positions (or as gallery if no entities)
   let spriteCount = 0;
-  if (RendererState.showSprites && stageData.sprites && stageData.sprites.count > 0 && stageData.spriteContainerData) {
+  let playerRendered = false;
+  if (RendererState.showSprites && stageData.sprites && stageData.sprites.count > 0 && 
+      (stageData.spriteContainerData || stageData.sharedSpriteContainerData)) {
     if (entities.length > 0) {
       spriteCount = renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight);
     } else {
       // No entities - render sprites as a gallery for debugging
       spriteCount = renderSpriteGallery(ctx, stageData, viewWidth, viewHeight);
     }
+    
+    // Render player sprite at spawn point
+    if (RendererState.showPlayer) {
+      playerRendered = renderPlayerAtSpawn(ctx, stageData, viewWidth, viewHeight);
+    }
   }
   
   // Draw entity bounding boxes on top (debug overlay)
   if (RendererState.showEntities && entities.length > 0) {
-    ctx.strokeStyle = '#ff0';
-    ctx.lineWidth = 1;
-    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
     ctx.font = '8px monospace';
     
     for (const entity of entities) {
@@ -310,14 +315,43 @@ function renderStage(stageData, options = {}) {
         screenY -= RendererState.cameraY;
       }
       
+      // Get entity type info for color
+      const typeInfo = GameEngine.ENTITY_TYPES[entity.type];
+      let boxColor = 'rgba(255, 255, 0, 0.5)'; // Default yellow
+      let strokeColor = '#ff0';
+      
+      if (typeInfo) {
+        if (typeInfo.invisible) {
+          // Triggers are transparent/dashed
+          boxColor = 'rgba(128, 128, 128, 0.2)';
+          strokeColor = '#888';
+        } else if (typeInfo.color) {
+          // Use entity type color
+          strokeColor = typeInfo.color;
+          boxColor = typeInfo.color.replace(')', ', 0.3)').replace('rgb', 'rgba').replace('##', '#');
+          // Handle hex colors
+          if (strokeColor.startsWith('#')) {
+            const hex = strokeColor.slice(1);
+            const r = parseInt(hex.substr(0, 2) || hex.substr(0, 1).repeat(2), 16);
+            const g = parseInt(hex.substr(2, 2) || hex.substr(1, 1).repeat(2), 16);
+            const b = parseInt(hex.substr(4, 2) || hex.substr(2, 1).repeat(2), 16);
+            boxColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+          }
+        }
+      }
+      
       // Draw bounding box
+      ctx.fillStyle = boxColor;
       ctx.fillRect(screenX, screenY, width, height);
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 1;
       ctx.strokeRect(screenX + 0.5, screenY + 0.5, width - 1, height - 1);
       
-      // Draw type ID
-      ctx.fillStyle = '#ff0';
-      ctx.fillText(`${entity.type}`, screenX + 2, screenY + 10);
-      ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+      // Draw type ID and name
+      ctx.fillStyle = strokeColor;
+      const typeName = entity.typeName || `T${entity.type}`;
+      ctx.fillText(`${typeName}`, screenX + 2, screenY + 10);
+      ctx.fillStyle = boxColor;
     }
   }
   
@@ -370,36 +404,58 @@ function renderStage(stageData, options = {}) {
 /**
  * Render sprites at entity marker positions
  * 
- * NOTE: Entity type → sprite ID mapping is NOT stored in BLB data.
- * It's hardcoded in game code per entity type. We show entities with
- * bounding boxes and type labels. Sprite rendering is best-effort.
+ * SPRITE ID LOOKUP (VERIFIED via Ghidra 2026-01-07):
+ * Entity type → sprite ID mapping is HARDCODED in game code, not in BLB data.
  * 
- * Returns: number of entities rendered
+ * The game's sprite lookup chain:
+ *   InitSpriteContext @ 0x8007bc3c → LookupSpriteById @ 0x8007bb10
+ *     → FindSpriteInTOC @ 0x8007b968 (searches Asset 600 TOC)
+ * 
+ * Known hardcoded sprite IDs:
+ *   0x21842018 - Player sprite
+ *   0xb8700ca1, 0xe2f188, 0xa9240484, 0xe8628689, 0x88a28194, etc.
+ * 
+ * Since we don't have the complete entity→sprite mapping, we:
+ * 1. Show entity bounding boxes and type labels (with variant info)
+ * 2. Color-code entities by render layer (green=1, yellow=2, red=3)
+ * 3. Attempt best-effort sprite rendering by cycling through available sprites
+ * 
+ * To implement proper entity sprites, we'd need to trace each entity type's
+ * spawn dispatcher in game code and extract the sprite ID constants.
+ * 
+ * @returns {number} Number of entities rendered
  */
 function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight) {
-  const { sprites, spriteContainerData } = stageData;
+  const { sprites, spriteContainerData, sharedSpriteContainerData } = stageData;
   
-  console.log(`[SPRITES] Rendering: ${sprites?.count || 0} sprites available, ${entities.length} entities`);
+  // Log available sprites (once per stage load)
+  if (sprites?.sprites && !RendererState.spriteCache.has('logged_sprites')) {
+    console.log(`[SPRITES] Available sprites: ${sprites.sprites.length}`);
+    sprites.sprites.forEach((s, i) => {
+      console.log(`  [${i}] id=0x${s.id.toString(16).padStart(8, '0')}`);
+    });
+    RendererState.spriteCache.set('logged_sprites', true);
+  }
   
   // Get animation frame index for TWOS timing
   const globalFrameIdx = RendererState.spriteFrameIndex;
   
   let renderedCount = 0;
-  const spriteList = sprites?.sprites || [];
   
-  // Known entity type → name mapping (from user observations)
-  const ENTITY_TYPE_NAMES = {
-    2: 'Clay', // Clayballs (coins)
-    3: 'Trg?', // Trigger?
-    8: 'Item', // Collectible?
-    10: 'Obj', // Large object
-    24: 'Spc', // Special trigger
-    25: 'Enm1', // Enemy type 1
-    27: 'Enm2', // Enemy type 2
-    28: 'Plat', // Moving platform
+  // Entity types now come with name from engine.js ENTITY_TYPES
+  // We use entity.typeName if available, otherwise fall back to legacy map
+  const ENTITY_TYPE_NAMES_LEGACY = {
+    2: 'Clay',   // Clayballs (coins) - variant=animation frame
+    3: 'Trg',    // Trigger
+    8: 'Item',   // Collectible
+    10: 'Obj',   // Large object
+    24: 'Spc',   // Special trigger
+    25: 'Enm1',  // Enemy type 1
+    27: 'Enm2',  // Enemy type 2
+    28: 'Plat',  // Moving platform - variant=direction
     42: '???', 
-    45: 'Msg', // Message box
-    48: 'Plat2', // Moving platform 2
+    45: 'Msg',   // Message box - variant=message ID
+    48: 'Plat2', // Moving platform 2 - variant=direction
   };
   
   for (let i = 0; i < entities.length; i++) {
@@ -428,17 +484,30 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
       continue;
     }
     
-    // Try to render a sprite if available (cycling through - not correct mapping)
-    if (spriteList.length > 0 && spriteContainerData) {
-      const spriteEntry = spriteList[i % spriteList.length];
+    // Get sprite for this entity using the engine's lookup system
+    // This uses entity type mapping with fallback to variant-based lookup
+    if (sprites && sprites.sprites && sprites.sprites.length > 0 && (spriteContainerData || sharedSpriteContainerData)) {
+      const spriteEntry = GameEngine.getSpriteForEntity(sprites, entity);
       if (spriteEntry) {
+        // Determine which container to use based on isShared flag
+        const containerData = spriteEntry.isShared ? sharedSpriteContainerData : spriteContainerData;
+        if (!containerData) continue;
+        
+        // Log sprite selection (once per type)
+        const typeLogKey = `logged_type_${entity.type}`;
+        if (!RendererState.spriteCache.has(typeLogKey)) {
+          const source = spriteEntry.isShared ? 'shared' : 'stage';
+          console.log(`[SPRITES] Entity type ${entity.type} → sprite #${spriteEntry.index} (id=0x${spriteEntry.id.toString(16)}, ${source})`);
+          RendererState.spriteCache.set(typeLogKey, true);
+        }
+        
         // Get frame count from cache
         let frameCount = 1;
         const headerCacheKey = `header_${spriteEntry.id}`;
         let cachedInfo = RendererState.spriteCache.get(headerCacheKey);
         
         if (!cachedInfo) {
-          const firstFrame = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, 0);
+          const firstFrame = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, 0);
           if (firstFrame && firstFrame.animation) {
             frameCount = firstFrame.animation.frameCount || 1;
             cachedInfo = { frameCount };
@@ -448,12 +517,21 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
           frameCount = cachedInfo.frameCount || 1;
         }
         
-        const currentFrame = globalFrameIdx % frameCount;
+        // Use entity variant as animation frame if it's a collectible
+        let currentFrame = globalFrameIdx % frameCount;
+        if (entity.type === 2) {
+          // Clayballs: animate through frames, starting from variant
+          currentFrame = (globalFrameIdx + (entity.variant || 0)) % frameCount;
+        } else if (entity.type === 8 && entity.variant < frameCount) {
+          // Items: variant selects specific frame (static)
+          currentFrame = entity.variant % frameCount;
+        }
+        
         const cacheKey = `${spriteEntry.id}_0_${currentFrame}`;
         let frameData = RendererState.spriteCache.get(cacheKey);
         
         if (!frameData) {
-          frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, currentFrame);
+          frameData = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, currentFrame);
           if (frameData) {
             const imgData = createSpriteImageData(frameData);
             frameData.imageData = imgData;
@@ -471,10 +549,19 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
     
     // Draw entity bounding box and type label if debug enabled
     if (RendererState.showEntityDebug) {
-      const typeName = ENTITY_TYPE_NAMES[entity.type] || `T${entity.type}`;
+      // Use typeName from entity (set by engine.js) or fall back to legacy map
+      const typeName = entity.typeName || ENTITY_TYPE_NAMES_LEGACY[entity.type] || `T${entity.type}`;
+      
+      // Color by layer (1=green, 2=yellow, 3=red)
+      const layerColors = {
+        1: 'rgba(0, 255, 0, 0.7)',
+        2: 'rgba(255, 255, 0, 0.7)',
+        3: 'rgba(255, 100, 100, 0.7)',
+      };
+      const boxColor = layerColors[entity.layer] || 'rgba(255, 255, 0, 0.7)';
       
       // Draw bounding box
-      ctx.strokeStyle = 'rgba(255, 255, 0, 0.7)';
+      ctx.strokeStyle = boxColor;
       ctx.lineWidth = 1;
       ctx.strokeRect(bboxX, bboxY, bboxW, bboxH);
       
@@ -484,10 +571,11 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
       ctx.arc(renderX, renderY, 2, 0, Math.PI * 2);
       ctx.fill();
       
-      // Draw type label
+      // Draw type label with variant info if non-zero
       ctx.font = '8px monospace';
       ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillText(typeName, bboxX + 1, bboxY + 8);
+      const variantStr = entity.variant ? `:${entity.variant}` : '';
+      ctx.fillText(`${typeName}${variantStr}`, bboxX + 1, bboxY + 8);
     }
     
     renderedCount++;
@@ -501,8 +589,8 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
  * Used when no entity markers are found (e.g., MENU levels)
  */
 function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
-  const { sprites, spriteContainerData } = stageData;
-  if (!sprites || sprites.count === 0 || !spriteContainerData) return 0;
+  const { sprites, spriteContainerData, sharedSpriteContainerData } = stageData;
+  if (!sprites || sprites.count === 0 || (!spriteContainerData && !sharedSpriteContainerData)) return 0;
   
   const globalFrameIdx = RendererState.spriteFrameIndex || 0;
   
@@ -517,12 +605,16 @@ function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
     const spriteEntry = spriteList[i];
     if (!spriteEntry) continue;
     
+    // Determine which container to use based on isShared flag
+    const containerData = spriteEntry.isShared ? sharedSpriteContainerData : spriteContainerData;
+    if (!containerData) continue;
+    
     // Get sprite header to find frame count
-    const header = GameEngine.parseSpriteHeader(spriteContainerData, spriteEntry.offset);
+    const header = GameEngine.parseSpriteHeader(containerData, spriteEntry.offset);
     if (!header) continue;
     
     // Get animations to find total frames in first animation
-    const animations = GameEngine.parseSpriteAnimations(spriteContainerData, spriteEntry.offset, header.animationCount);
+    const animations = GameEngine.parseSpriteAnimations(containerData, spriteEntry.offset, header.animationCount);
     const anim = animations[0];
     const frameCount = anim ? anim.frameCount : 1;
     
@@ -534,7 +626,7 @@ function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
     let frameData = RendererState.spriteCache.get(cacheKey);
     
     if (!frameData) {
-      frameData = GameEngine.getSpriteFrame(spriteContainerData, spriteEntry, 0, frameIdx);
+      frameData = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, frameIdx);
       if (frameData) {
         const imgData = createSpriteImageData(frameData);
         frameData.imageData = imgData;
@@ -562,6 +654,118 @@ function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
   }
   
   return renderedCount;
+}
+
+/**
+ * Render the player sprite at the spawn point
+ * 
+ * The player sprite ID (0x21842018) is hardcoded in InitPlayerEntity (FUN_8001fcf0).
+ * The spawn point comes from the tile header (Asset 100).
+ * 
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {Object} stageData - Stage data with sprites, tileHeader
+ * @param {number} viewWidth - View width in pixels
+ * @param {number} viewHeight - View height in pixels
+ * @returns {boolean} True if player was rendered
+ */
+function renderPlayerAtSpawn(ctx, stageData, viewWidth, viewHeight) {
+  const { sprites, spriteContainerData, sharedSpriteContainerData, tileHeader } = stageData;
+  if (!sprites || !tileHeader) return false;
+  // Need at least one container
+  if (!spriteContainerData && !sharedSpriteContainerData) return false;
+  
+  // Get spawn position from tile header
+  const spawnX = tileHeader.spawnX;
+  const spawnY = tileHeader.spawnY;
+  
+  // Skip if spawn is at 0,0 (likely invalid or menu)
+  if (spawnX === 0 && spawnY === 0) return false;
+  
+  // Look up player sprite by ID
+  const playerSpriteId = GameEngine.PLAYER_SPRITE_ID;
+  const playerSprite = GameEngine.findSpriteById(sprites, playerSpriteId);
+  
+  // Log what sprites are available for debugging
+  if (!playerSprite) {
+    console.log(`[PLAYER] Player sprite 0x${playerSpriteId.toString(16)} not found in ${sprites.sprites.length} sprites`);
+    console.log(`[PLAYER] Available sprite IDs:`, sprites.sprites.slice(0, 10).map(s => `0x${s.id.toString(16)}`).join(', '));
+    
+    // Draw placeholder at spawn point
+    let renderX = spawnX;
+    let renderY = spawnY;
+    
+    if (RendererState.mode90s) {
+      renderX -= RendererState.cameraX;
+      renderY -= RendererState.cameraY;
+    }
+    
+    // Draw spawn point marker with "P" for player
+    ctx.strokeStyle = '#0f0';
+    ctx.lineWidth = 2;
+    ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+    ctx.beginPath();
+    ctx.arc(renderX, renderY, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.fillStyle = '#0f0';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('P', renderX, renderY + 4);
+    ctx.textAlign = 'left';
+    
+    return false;
+  }
+  
+  console.log(`[PLAYER] Found player sprite at offset ${playerSprite.offset} (shared: ${playerSprite.isShared})`);
+  
+  // Select correct container based on whether sprite is shared (primary) or stage (tertiary)
+  const containerToUse = playerSprite.isShared ? sharedSpriteContainerData : spriteContainerData;
+  if (!containerToUse) {
+    console.log(`[PLAYER] No container available for ${playerSprite.isShared ? 'shared' : 'stage'} sprite`);
+    return false;
+  }
+  
+  // Get animation frame
+  const globalFrameIdx = RendererState.spriteFrameIndex || 0;
+  
+  // Get frame count from header
+  const header = GameEngine.parseSpriteHeader(containerToUse, playerSprite.offset);
+  if (!header) return false;
+  
+  const animations = GameEngine.parseSpriteAnimations(containerToUse, playerSprite.offset, header.animationCount);
+  const anim = animations[0];
+  const frameCount = anim ? anim.frameCount : 1;
+  const frameIdx = globalFrameIdx % frameCount;
+  
+  // Get or cache frame data
+  const cacheKey = `player_${playerSprite.isShared ? 's' : 'e'}_${frameIdx}`;
+  let frameData = RendererState.spriteCache.get(cacheKey);
+  
+  if (!frameData) {
+    frameData = GameEngine.getSpriteFrame(containerToUse, playerSprite, 0, frameIdx);
+    if (frameData) {
+      const imgData = createSpriteImageData(frameData);
+      frameData.imageData = imgData;
+      RendererState.spriteCache.set(cacheKey, frameData);
+    }
+  }
+  
+  if (!frameData || !frameData.imageData) return false;
+  
+  // Calculate render position (spawn point with offset from sprite metadata)
+  let renderX = spawnX + (frameData.meta.renderX || 0);
+  let renderY = spawnY + (frameData.meta.renderY || 0);
+  
+  if (RendererState.mode90s) {
+    renderX -= RendererState.cameraX;
+    renderY -= RendererState.cameraY;
+  }
+  
+  // Draw the player sprite
+  drawSpriteFrame(ctx, frameData, renderX, renderY, viewWidth, viewHeight);
+  
+  return true;
 }
 
 /**

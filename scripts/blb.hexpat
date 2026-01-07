@@ -395,6 +395,88 @@ struct TileHeader {
 } [[name("Tile Header"), color("80FF80"), static]];
 
 // =============================================================================
+// Entity Structure - Asset 501 (0x1F5) - 24 bytes each
+// =============================================================================
+// VERIFIED via Ghidra (FUN_80024dc4 entity loader, FUN_8007b7a8 entity count)
+//
+// Entities are placed objects in the level (collectibles, enemies, triggers, etc.)
+// Entity data is stored as an array of 24-byte structures in Asset 501.
+// Entity count is at TileHeader + 0x1E (field_1e above).
+//
+// IMPORTANT: Entity Type → Sprite ID mapping is HARDCODED IN GAME CODE, not in BLB data.
+// See "Sprite ID Lookup Chain" section below for details.
+//
+// Known entity types from observation:
+//   Type 2  = Clayballs (coins/collectibles)
+//   Type 45 = Message box
+//   Type 25, 27 = Enemies
+//   Type 28, 48 = Directional objects
+
+struct Entity {
+    // Bounding box in pixels (0x00-0x07)
+    u16 x1 [[name("X1"), comment("Bounding box min X (pixels)"), color("FFCC80")]];
+    u16 y1 [[name("Y1"), comment("Bounding box min Y (pixels)"), color("FFCC80")]];
+    u16 x2 [[name("X2"), comment("Bounding box max X (pixels)"), color("FFCC80")]];
+    u16 y2 [[name("Y2"), comment("Bounding box max Y (pixels)"), color("FFCC80")]];
+    
+    // Entity center position (0x08-0x0B)
+    u16 x_center [[name("Center X"), comment("Entity center X (pixels)"), color("FF8080")]];
+    u16 y_center [[name("Center Y"), comment("Entity center Y (pixels)"), color("FF8080")]];
+    
+    // Variant/subtype selector (0x0C-0x0D)
+    // For Type 2 (clayballs): animation frame cycle (0,3,4,5,6,7,8)
+    // For Type 45 (message): message ID (0,1,2,12,13,14)
+    // For Type 28,48: direction/state (1,2)
+    u16 variant [[name("Variant"), comment("Animation frame or subtype selector"), color("80CCFF")]];
+    
+    // Padding (0x0E-0x11) - always zero
+    u16 padding1 [[hidden]];
+    u16 padding2 [[hidden]];
+    
+    // Entity type ID (0x12-0x13)
+    // This determines which sprite to use - but the sprite ID is looked up in code,
+    // not stored in BLB data. See sprite lookup chain documentation.
+    u16 entity_type [[name("Type"), comment("Entity type ID (2=clayball, 45=message, etc)"), color("FF80FF")]];
+    
+    // Render layer (0x14-0x15)
+    u16 layer [[name("Layer"), comment("Render layer (1, 2, or 3)"), color("80FF80")]];
+    
+    // Padding (0x16-0x17) - always zero
+    u16 padding3 [[hidden]];
+} [[static, color("FFCC80")]];
+
+fn format_entity(auto e) {
+    return std::format("Type {} @ ({},{}) variant={}", e.entity_type, e.x_center, e.y_center, e.variant);
+};
+
+// =============================================================================
+// Sprite ID Lookup Chain - VERIFIED via Ghidra (2026-01-09)
+// =============================================================================
+// Entity type → sprite ID mapping is HARDCODED in game code, not in BLB.
+//
+// Lookup chain:
+//   FUN_8001cdac(context, priority, sprite_id)
+//     └─► InitSpriteContext(context+0x78, sprite_id) @ 0x8007bc3c
+//           └─► LookupSpriteById(sprite_id) @ 0x8007bb10
+//                 ├─► FindSpriteInTOC(DAT_800a6064, sprite_id) @ 0x8007b968
+//                 │   (Searches tertiary container's sprite TOC at context+0x70)
+//                 └─► Fallback: Search DAT_800a6060 (secondary sprite table)
+//
+// Sprite IDs are 32-bit hash-like values in Asset 600 TOC:
+//   0x21842018 - Player sprite (hardcoded in FUN_8001fcf0)
+//   0xb8700ca1 - Common UI element
+//   0xe2f188   - Menu/UI (heavily reused across multiple sprite indices)
+//   0xa9240484 - Used for indices 0x118, 0xe
+//   0xe8628689 - Single use at index 0x98
+//   0x88a28194 - Loop objects at index 0x60
+//   0x80e85ea0 - Loop objects at index 0xd0
+//   0x9158a0f6 - Player-related at index 0x18
+//   0x902c0002 - Used at index 0x118
+//
+// To render entities in a BLB viewer, you must build a static lookup table
+// by tracing each entity type's spawn dispatcher in the game code.
+
+// =============================================================================
 // Color Tint Entry - RGB triplet for layer color tinting
 // =============================================================================
 // Used in LayerEntry color_tints[16] array at offset 0x2C

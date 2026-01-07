@@ -60,6 +60,7 @@ function initDOM() {
     layersContainer: document.getElementById('layers-container'),
     // Sprites panel
     optShowSprites: document.getElementById('opt-show-sprites'),
+    optShowPlayer: document.getElementById('opt-show-player'),
     optAnimateSprites: document.getElementById('opt-animate-sprites'),
     optEntityDebug: document.getElementById('opt-entity-debug'),
     spriteCount: document.getElementById('sprite-count'),
@@ -401,20 +402,28 @@ function updateMinimapViewportIndicator() {
  * Uses current animation frame index when animating
  */
 function renderSingleSprite(stageData, sprite) {
-  if (!stageData.spriteContainerData) return;
+  // Get the correct container data based on whether sprite is shared or stage-specific
+  const containerData = sprite.isShared 
+    ? stageData.sharedSpriteContainerData 
+    : stageData.spriteContainerData;
+  
+  if (!containerData) {
+    console.warn('[SPRITE] No container data for sprite');
+    return;
+  }
   
   // Get sprite info to determine frame count
-  const header = GameEngine.parseSpriteHeader(stageData.spriteContainerData, sprite.offset);
+  const header = GameEngine.parseSpriteHeader(containerData, sprite.offset);
   if (!header) return;
   
-  const animations = GameEngine.parseSpriteAnimations(stageData.spriteContainerData, sprite.offset, header.animationCount);
+  const animations = GameEngine.parseSpriteAnimations(containerData, sprite.offset, header.animationCount);
   const anim = animations[0];
   const frameCount = anim ? anim.frameCount : 1;
   
   // Use animated frame index (loops within sprite's frame count)
   const frameIdx = (BLBRenderer.state.spriteFrameIndex || 0) % frameCount;
   
-  const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, frameIdx);
+  const frameData = GameEngine.getSpriteFrame(containerData, sprite, 0, frameIdx);
   if (!frameData) return;
   
   const { pixels, palette, width, height } = frameData;
@@ -473,7 +482,8 @@ function renderSingleSprite(stageData, sprite) {
   
   ctx.drawImage(tempCanvas, offsetX, offsetY);
   
-  console.log(`[SPRITE] Rendered sprite: ${width}×${height} at (${offsetX}, ${offsetY})`);
+  const sourceLabel = sprite.isShared ? 'shared' : 'stage';
+  console.log(`[SPRITE] Rendered ${sourceLabel} sprite: ${width}×${height} at (${offsetX}, ${offsetY})`);
 }
 
 // ============================================================================
@@ -559,15 +569,31 @@ function getLayerChildren(level, stageIndex) {
   // Add sprites if available
   if (stageData.sprites && stageData.sprites.count > 0) {
     const spriteList = stageData.sprites.sprites || [];
+    const stageCount = stageData.sprites.stageCount || 0;
+    const sharedCount = stageData.sprites.sharedCount || 0;
+    
+    // Create sprite entries with shared indicator
+    const spriteChildren = spriteList.slice(0, 100).map((sprite, i) => {
+      const isShared = sprite.isShared === true;
+      const sharedTag = isShared ? ' [geometry]' : '';
+      const icon = isShared ? '🏔️' : '👾';  // Mountain for background geometry, alien for entity sprites
+      return {
+        label: `Sprite ${sprite.index} (ID: 0x${sprite.id.toString(16).toUpperCase()}, ${sprite.size} B)${sharedTag}`,
+        icon: icon,
+        data: { type: 'sprite', level, stageIndex, spriteIndex: i, sprite, stageData },
+      };
+    });
+    
+    // Show count breakdown in parent label
+    const countLabel = sharedCount > 0 
+      ? `Sprites (${stageCount} entity + ${sharedCount} geometry)`
+      : `Sprites (${stageData.sprites.count})`;
+    
     children.push({
-      label: `Sprites (${stageData.sprites.count})`,
+      label: countLabel,
       icon: '🎭',
       expanded: false,
-      children: spriteList.slice(0, 50).map((sprite, i) => ({
-        label: `Sprite ${i} (ID: ${sprite.id}, ${sprite.size} bytes)`,
-        icon: '👾',
-        data: { type: 'sprite', level, stageIndex, spriteIndex: i, sprite, stageData },
-      })),
+      children: spriteChildren,
     });
   }
   
@@ -801,17 +827,27 @@ function handleTreeSelection(data) {
     UIState.selectedSprite = sprite;
     UIState.selectedSpriteStageData = stageData;
     
-    setStatus(`Sprite ${spriteIndex} of ${level.levelId} Stage ${stageIndex}`);
-    dom.renderTitle.textContent = `${level.levelId} - Stage ${stageIndex} - Sprite ${spriteIndex}`;
+    const sharedTag = sprite.isShared ? ' [geometry]' : '';
+    setStatus(`Sprite ${spriteIndex}${sharedTag} of ${level.levelId} Stage ${stageIndex}`);
+    dom.renderTitle.textContent = `${level.levelId} - Stage ${stageIndex} - Sprite ${spriteIndex}${sharedTag}`;
+    
+    // Get the correct container data (stage or shared)
+    const containerData = sprite.isShared 
+      ? stageData.sharedSpriteContainerData 
+      : stageData.spriteContainerData;
     
     // Get sprite header for animation info
-    const header = GameEngine.parseSpriteHeader(stageData.spriteContainerData, sprite.offset);
-    const animations = header ? GameEngine.parseSpriteAnimations(stageData.spriteContainerData, sprite.offset, header.animationCount) : [];
+    const header = containerData 
+      ? GameEngine.parseSpriteHeader(containerData, sprite.offset) 
+      : null;
+    const animations = header 
+      ? GameEngine.parseSpriteAnimations(containerData, sprite.offset, header.animationCount) 
+      : [];
     
     // Try to decode the sprite
     let frameInfo = '';
-    if (stageData.spriteContainerData) {
-      const frameData = GameEngine.getSpriteFrame(stageData.spriteContainerData, sprite, 0, 0);
+    if (containerData) {
+      const frameData = GameEngine.getSpriteFrame(containerData, sprite, 0, 0);
       if (frameData) {
         const anim = animations[0];
         const frameCount = anim ? anim.frameCount : 1;
@@ -831,11 +867,17 @@ function handleTreeSelection(data) {
       }
     }
     
+    // Show source indicator
+    const sourceInfo = sprite.isShared 
+      ? '<span style="color: #8080ff;">🏔️ Level Geometry (Primary segment)</span>'
+      : '<span style="color: #80ff80;">👾 Entity Sprite (Tertiary segment)</span>';
+    
     dom.infoPanel.innerHTML = `
-      <strong>👾 Sprite ${spriteIndex}</strong><br>
+      <strong>👾 Sprite ${sprite.index}</strong><br>
+      ${sourceInfo}<br>
       <hr style="margin: 4px 0; border: none; border-top: 1px solid #808080;">
       <strong>Container:</strong><br>
-      &nbsp; ID: ${sprite.id}<br>
+      &nbsp; ID: 0x${sprite.id.toString(16).toUpperCase()}<br>
       &nbsp; Size: ${sprite.size} bytes<br>
       &nbsp; Offset: 0x${sprite.offset.toString(16).toUpperCase()}<br>
       ${frameInfo}
@@ -843,8 +885,9 @@ function handleTreeSelection(data) {
     dom.infoPanel.classList.add('visible');
     
     // Log to console
-    console.info(`👾 Sprite ${spriteIndex} of ${level.levelId} Stage ${stageIndex}`);
-    console.log(`  ID: ${sprite.id}, Size: ${sprite.size} bytes, Offset: 0x${sprite.offset.toString(16)}`);
+    console.info(`👾 Sprite ${sprite.index}${sharedTag} of ${level.levelId} Stage ${stageIndex}`);
+    console.log(`  ID: 0x${sprite.id.toString(16)}, Size: ${sprite.size} bytes, Offset: 0x${sprite.offset.toString(16)}`);
+    console.log(`  Source: ${sprite.isShared ? 'Primary (level geometry)' : 'Tertiary (entity sprite)'}`);
   }
 }
 
@@ -1013,6 +1056,15 @@ function setupEventHandlers() {
     dom.optEntityDebug.addEventListener('change', (e) => {
       BLBRenderer.state.showEntityDebug = e.target.checked;
       console.log(`[ENTITIES] Show debug: ${e.target.checked}`);
+      rerender();
+    });
+  }
+
+  // Player toggle
+  if (dom.optShowPlayer) {
+    dom.optShowPlayer.addEventListener('change', (e) => {
+      BLBRenderer.state.showPlayer = e.target.checked;
+      console.log(`[PLAYER] Show player: ${e.target.checked}`);
       rerender();
     });
   }

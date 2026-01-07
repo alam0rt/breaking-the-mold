@@ -279,9 +279,18 @@ function parseSubTOC(containerData) {
 
 /**
  * Load all raw assets for a specific stage
- * Returns secondary and tertiary TOCs ready for game engine processing
+ * Returns primary, secondary and tertiary TOCs ready for game engine processing
+ * 
+ * Primary segment contains level-wide assets (shared across all stages):
+ *   - Asset 600 (0x258): Level geometry/world data (background graphics)
+ *   - Asset 601 (0x259): Collision/layout data
+ *   - Asset 602 (0x25A): Palette/color data
+ * 
+ * Secondary segment contains tileset data
+ * Tertiary segment contains stage-specific sprites (Asset 600)
  */
 function loadStageAssets(fileData, level, stageIndex) {
+  const primaryData = getPrimarySegment(fileData, level);
   const secondaryData = getSecondarySegment(fileData, level, stageIndex);
   const tertiaryData = getTertiarySegment(fileData, level, stageIndex);
   
@@ -292,6 +301,7 @@ function loadStageAssets(fileData, level, stageIndex) {
   return {
     level,
     stageIndex,
+    primary: primaryData ? parseTOC(primaryData) : {},
     secondary: parseTOC(secondaryData),
     tertiary: parseTOC(tertiaryData),
   };

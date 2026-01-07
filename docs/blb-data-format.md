@@ -19,9 +19,9 @@ Each "world" theme contains multiple stages (Stage 01, 02-A, 02-B, 03, etc.) plu
 ## Data Segment Overview
 
 Each level in the game consists of three data segments loaded from GAME.BLB:
-- **Primary**: Level geometry, collision, and palette data
-- **Secondary**: Sprites and animations
-- **Tertiary**: Audio and music (optional for some levels)
+- **Primary**: Level geometry, collision, and palette data (Asset 600/601/602)
+- **Secondary**: Tile graphics, palettes, and tile metadata (Asset 100/200/201/300/301/302/400/401)
+- **Tertiary**: Stage-specific sprites (Asset 600), entities (Asset 501), layers (Asset 201), and audio (Asset 500/502/503/700)
 
 ### Verified Level Sizes (via PCSX-Redux MCP, PAL / SLES-01090)
 
@@ -499,8 +499,8 @@ This was verified via runtime analysis on 2026-01-05.
 | 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
 | 302 | 0x12E | RAW | Duplicate tile flags |
 | 401 | 0x191 | RAW | Duplicate animation config |
-| 500 | 0x1F4 | RAW | Music/sequence data |
-| 501 | 0x1F5 | RAW | Audio configuration |
+| 500 | 0x1F4 | RAW | Sprite metadata |
+| 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
 | 502 | 0x1F6 | RAW | Audio configuration |
 | 503 | 0x1F7 | RAW | Audio configuration |
 | 600 | 0x258 | CONTAINER | **RLE sprites with embedded palettes** |
@@ -632,15 +632,19 @@ Each palette: 512 bytes = 256 × u16 (PSX 15-bit RGB)
 
 **Extraction verified**: Tiles extracted with correct palette assignments match expected game graphics.
 
-### Tertiary Data (Audio)
+### Tertiary Data (Entities, Sprites, Audio)
 | Type | Hex | Structure | Description |
 |------|-----|-----------|-------------|
-| 100 | 0x064 | RAW | Entry headers |
-| 200 | 0x0C8 | RAW | Sound effect data |
-| 201 | 0x0C9 | RAW | Sound headers/index |
-| 401 | 0x191 | RAW | Audio configuration |
-| 500 | 0x1F4 | Music/sequence data |
-| 501 | 0x1F5 | Music configuration |
+| 100 | 0x064 | RAW | Duplicate tile header |
+| 200 | 0x0C8 | RAW | Tilemap container (layer data) |
+| 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
+| 401 | 0x191 | RAW | Animation/palette config |
+| 500 | 0x1F4 | RAW | Sprite metadata |
+| 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
+| 502 | 0x1F6 | RAW | Audio configuration |
+| 503 | 0x1F7 | RAW | Audio configuration |
+| 600 | 0x258 | CONTAINER | RLE sprites with embedded palettes |
+| 700 | 0x2BC | RAW | Audio/VAB data |
 
 ## Supplementary Graphics Containers
 
@@ -1230,7 +1234,7 @@ Offset  WIdx  Size  Type    Field                   Description
 0x2C    [11]  4     ptr     asset500                ID 500: Unknown asset pointer (0x1F4)
 0x30    [12]  4     ptr     asset503                ID 503: Unknown asset pointer (0x1F7)
 0x34    [13]  4     ptr     asset504                ID 504: Unknown asset pointer (0x1F8)
-0x38    [14]  4     ptr     asset501                ID 501: Unknown asset pointer (0x1F5)
+0x38    [14]  4     ptr     asset501                ID 501: **Entity placement data** (0x1F5)
 0x3C    [15]  4     ptr     asset502                ID 502: Unknown asset pointer (0x1F6)
 0x40    [16]  4     ptr     assetLevel600           ID 600: Level geometry pointer (0x258)
 0x44    [17]  4     u32     assetLevel600Size       Size of level geometry in bytes
@@ -1301,10 +1305,13 @@ The sub-TOC contains entries with asset IDs that map to specific context offsets
 | 400 | 0x190 | [8] | paletteContainer | Palette container (256-color palettes) |
 | 401 | 0x191 | [9] | paletteAnimData | Palette animation data (4 bytes per palette) |
 | 500 | 0x1F4 | [11] | spriteMetadata | Sprite metadata |
-| 501 | 0x1F5 | [14] | spriteRLEData | Sprite RLE pixel data |
-| 600 | 0x258 | [16-17] | spuAudioData + size | SPU audio samples (ADPCM) |
-| 601 | 0x259 | [18-19] | spuAudioData2 + size | SPU audio samples (secondary container) |
-| 602 | 0x25A | [20] | spuAudioConfig | SPU volume/pan per sample (4 bytes: u16 vol, u16 pan) |
+| 501 | 0x1F5 | [14] | entityData | **Entity placement data (24-byte structs)** |
+| 502 | 0x1F6 | [15] | audioConfig | Audio configuration |
+| 503 | 0x1F7 | [12] | audioConfig2 | Audio configuration (secondary) |
+| 600 | 0x258 | [16-17] | levelGeometry + size | Level geometry/sprites (Primary) or RLE sprites (Tertiary) |
+| 601 | 0x259 | [18-19] | collisionData + size | Collision data |
+| 602 | 0x25A | [20] | paletteData | Palette data |
+| 700 | 0x2BC | [21-22] | spuAudioData + size | SPU audio samples (ADPCM) |
 
 #### Loader Callback Chain
 

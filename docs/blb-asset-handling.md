@@ -14,10 +14,13 @@ The BLB file contains three types of data segments per level:
 |---------|----------|-------------|
 | **Primary** | Level geometry, collision, palette | 600 (geometry), 601, 602 |
 | **Secondary** | Tiles, tile metadata, palettes | 100, 300, 301, 302, 400, 401, 601, 602 |
-| **Tertiary** | Sprites, layers, audio | 100, 200, 201, 302, 401, 500-504, 600 (sprites), 700 |
+| **Tertiary** | Sprites, entities, layers, audio | 100, 200, 201, 302, 401, 500, **501 (entities)**, 502-503, 600 (sprites), 700 |
 
 **Note:** Asset 600 appears in BOTH primary (level geometry) and tertiary (RLE sprites).
 Same asset ID, different purposes. Verified via runtime analysis of SCIE level.
+
+**Note:** Asset 501 contains entity placement data (24-byte structures per entity).
+Entity types 2=clayball, 8=item, 25/27=enemies, 45=message box, etc.
 
 ### Container vs Raw Assets
 
@@ -253,28 +256,60 @@ Configuration data for palette animations or cycling.
 
 ---
 
-## Tertiary Segment Assets (Audio)
+## Tertiary Segment Assets (Entities, Sprites, Audio)
 
-### Asset 500 (0x1F4) - Music/Sequence Data
-
-**Structure:** Unknown
-
-Primary music data, possibly SEQ/VAB format.
-
-- **LevelDataContext offset:** 0x2C [11]
-
-### Asset 501-504 (0x1F5-0x1F8) - Audio Configuration
+### Asset 500 (0x1F4) - Sprite Metadata
 
 **Structure:** RAW
 
-Various audio configuration and index data.
+Sprite metadata referenced by entity system.
+
+- **LevelDataContext offset:** 0x2C [11]
+
+### Asset 501 (0x1F5) - Entity Placement Data (VERIFIED)
+
+**Structure:** RAW, array of 24-byte entity structures
+
+Entity placement data for collectibles, enemies, triggers, and other placed objects.
+Verified via Ghidra analysis of entity loader (FUN_80024dc4) and entity count accessor (FUN_8007b7a8).
+
+```
+Entity Structure (24 bytes):
+Offset  Size  Type   Description
+------  ----  ----   -----------
+0x00    2     u16    x1 - Bounding box min X (pixels)
+0x02    2     u16    y1 - Bounding box min Y (pixels)
+0x04    2     u16    x2 - Bounding box max X (pixels)
+0x06    2     u16    y2 - Bounding box max Y (pixels)
+0x08    2     u16    x_center - Entity center X (pixels)
+0x0A    2     u16    y_center - Entity center Y (pixels)
+0x0C    2     u16    variant - Animation frame or subtype selector
+0x0E    4     u32    padding1 - Always 0
+0x12    2     u16    entity_type - Type ID (2=clayball, 45=message, etc)
+0x14    2     u16    layer - Render layer (1, 2, or 3)
+0x16    2     u16    padding2 - Always 0
+```
+
+**Known entity types:**
+- Type 2 = Clayballs (coins/collectibles)
+- Type 8 = Unknown (small objects)
+- Type 25, 27 = Enemies
+- Type 45 = Message box
+
+**IMPORTANT:** Entity type → sprite ID mapping is HARDCODED in game code, not in BLB data.
+
+- **LevelDataContext offset:** 0x38 [14]
+
+### Asset 502-503 (0x1F6-0x1F7) - Audio Configuration
+
+**Structure:** RAW
+
+Audio configuration and index data.
 
 | Asset | Hex | LevelDataContext Offset |
 |-------|-----|------------------------|
-| 501 | 0x1F5 | 0x38 [14] |
 | 502 | 0x1F6 | 0x3C [15] |
 | 503 | 0x1F7 | 0x30 [12] |
-| 504 | 0x1F8 | 0x34 [13] |
 
 ### Asset 700 (0x2BC) - Audio/Music Data
 
@@ -303,8 +338,8 @@ All asset IDs and their LevelDataContext mappings:
 | 303 | 0x12F | [10] | 0x28 | RAW | Unknown |
 | 400 | 0x190 | [8] | 0x20 | CONTAINER | Palette container |
 | 401 | 0x191 | [9] | 0x24 | RAW | Animation/palette config |
-| 500 | 0x1F4 | [11] | 0x2C | RAW | Music/sequence data |
-| 501 | 0x1F5 | [14] | 0x38 | RAW | Audio config |
+| 500 | 0x1F4 | [11] | 0x2C | RAW | Sprite metadata |
+| 501 | 0x1F5 | [14] | 0x38 | RAW | **Entity placement (24-byte structs)** |
 | 502 | 0x1F6 | [15] | 0x3C | RAW | Audio config |
 | 503 | 0x1F7 | [12] | 0x30 | RAW | Audio config |
 | 504 | 0x1F8 | [13] | 0x34 | RAW | Audio config |
