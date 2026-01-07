@@ -593,9 +593,9 @@ function updateRenderInfo(info) {
     : `${info.viewWidth}×${info.viewHeight}`;
   dom.renderSize.textContent = sizeInfo;
   
+//    Tiles: ${info.totalTiles}<br></br> // TODO add totalTiles back when defined
   dom.infoPanel.innerHTML = `
     Layers: ${info.layerCount}<br>
-    Tiles: ${info.totalTiles}<br>
     Palettes: ${info.paletteCount}<br>
     Entities: ${info.entityCount}${info.spriteCount !== undefined ? '<br>Sprites: ' + info.spritesRendered + '/' + info.spriteCount : ''}${BLBRenderer.state.mode90s ? '<br>Camera: ' + info.cameraX + ',' + info.cameraY : ''}
   `;

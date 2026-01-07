@@ -9,9 +9,8 @@
 // Constants
 // ============================================================================
 
-// Tilemap entry bit layout (matches engine.js - see docs/blb-data-format.md)
+// TILE_INDEX_MASK is defined in engine.js (loaded before renderer.js)
 // Bits 0-11: tile index (12 bits), Bits 12-15: color tint selector
-const TILE_INDEX_MASK = 0xFFF;
 
 // Minimap constants
 const MINIMAP_MAX_WIDTH = 160;
@@ -67,9 +66,97 @@ const RendererState = {
   // Sprite cache (spriteId_animIdx_frameIdx -> decoded frame ImageData)
   spriteCache: new Map(),
   
+  // Tile cache (tileIndex -> {canvas, hasTransparency})
+  // Pre-rendered 16x16 tiles for fast blitting
+  tileCache: new Map(),
+  tileCacheStageId: null, // Track which stage the cache is for
+  
   // Cached stage data
   cachedStage: null,
 };
+
+// ============================================================================
+// Tile Cache - Pre-render tiles for fast blitting
+// ============================================================================
+
+/**
+ * Get or create a cached 16x16 tile canvas
+ * @param {number} tileIdx - Tile index
+ * @param {object} stageData - Stage data containing tile assets
+ * @returns {object|null} {canvas, hasTransparency} or null if empty/entity
+ */
+function getCachedTile(tileIdx, stageData) {
+  if (tileIdx === 0) return null;
+  
+  // Check cache
+  const cached = RendererState.tileCache.get(tileIdx);
+  if (cached !== undefined) return cached;
+  
+  // Get tile data from engine
+  const { tileHeader, pixelData, flagsData, paletteIndices, palettes } = stageData;
+  const tile = GameEngine.getTile(tileIdx, tileHeader, pixelData, flagsData, paletteIndices, palettes);
+  
+  if (!tile || tile.type === 'entity') {
+    RendererState.tileCache.set(tileIdx, null);
+    return null;
+  }
+  
+  // Create 16x16 canvas for this tile
+  const tileCanvas = document.createElement('canvas');
+  tileCanvas.width = 16;
+  tileCanvas.height = 16;
+  const tileCtx = tileCanvas.getContext('2d');
+  const imageData = tileCtx.createImageData(16, 16);
+  const data = imageData.data;
+  
+  const tileSize = tile.size;
+  const scale = 16 / tileSize;
+  let hasTransparency = false;
+  
+  // Render tile pixels to the cached canvas
+  for (let py = 0; py < tileSize; py++) {
+    for (let px = 0; px < tileSize; px++) {
+      const colorIdx = tile.pixels[py][px];
+      
+      if (colorIdx === 0) {
+        hasTransparency = true;
+        continue; // Transparent pixel
+      }
+      
+      const color = tile.palette[colorIdx] || [255, 0, 255, 255];
+      const alpha = tile.isSemiTransparent ? 128 : (color[3] !== undefined ? color[3] : 255);
+      
+      if (alpha < 255) hasTransparency = true;
+      
+      // Scale pixel to 16x16
+      for (let dy = 0; dy < scale; dy++) {
+        for (let dx = 0; dx < scale; dx++) {
+          const ix = px * scale + dx;
+          const iy = py * scale + dy;
+          const offset = (iy * 16 + ix) * 4;
+          data[offset] = color[0];
+          data[offset + 1] = color[1];
+          data[offset + 2] = color[2];
+          data[offset + 3] = alpha;
+        }
+      }
+    }
+  }
+  
+  tileCtx.putImageData(imageData, 0, 0);
+  
+  const result = { canvas: tileCanvas, hasTransparency };
+  RendererState.tileCache.set(tileIdx, result);
+  return result;
+}
+
+/**
+ * Clear tile cache (call when loading new stage)
+ */
+function clearTileCache() {
+  RendererState.tileCache.clear();
+  RendererState.tileCacheStageId = null;
+}
 
 // ============================================================================
 // Initialization
@@ -77,7 +164,7 @@ const RendererState = {
 
 function initRenderer(canvas, minimapCanvas) {
   RendererState.canvas = canvas;
-  RendererState.ctx = canvas.getContext('2d');
+  RendererState.ctx = canvas.getContext('2d', { alpha: false });
   RendererState.minimapCanvas = minimapCanvas;
   RendererState.minimapCtx = minimapCanvas.getContext('2d');
 }
@@ -95,6 +182,13 @@ function renderStage(stageData, options = {}) {
   // Clear sprite cache if loading a different stage
   if (RendererState.cachedStage !== stageData) {
     RendererState.spriteCache.clear();
+    clearTileCache();
+  }
+  
+  // Ensure tile cache is for this stage
+  if (RendererState.tileCacheStageId !== stageData) {
+    clearTileCache();
+    RendererState.tileCacheStageId = stageData;
   }
   
   // Update state from options
@@ -148,24 +242,8 @@ function renderStage(stageData, options = {}) {
   ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
   ctx.fillRect(0, 0, viewWidth, viewHeight);
   
-  // Create ImageData for pixel manipulation
-  const imageData = ctx.createImageData(viewWidth, viewHeight);
-  const data = imageData.data;
-  
-  // Pre-fill with background
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = bgR;
-    data[i + 1] = bgG;
-    data[i + 2] = bgB;
-    data[i + 3] = 255;
-  }
-  
-  // Total tile count for tile rendering
-  const totalTiles = GameEngine.getTotalTileCount(tileHeader);
-  
-  console.log(`[RENDER] Total tiles: ${totalTiles} (16x16: ${tileHeader.count16x16}, 8x8: ${tileHeader.count8x8}, extra: ${tileHeader.countExtra})`);
-
-  // Render layers back-to-front
+  // Render layers back-to-front using cached tile canvases
+  // This is much faster than per-pixel manipulation
   for (let layerIdx = 0; layerIdx < layers.length; layerIdx++) {
     const layer = layers[layerIdx];
     
@@ -190,21 +268,33 @@ function renderStage(stageData, options = {}) {
     const scrollFactorX = layer.scrollX;
     const scrollFactorY = layer.scrollY;
     
-    // Render tiles
-    for (let ty = 0; ty < layer.height; ty++) {
-      for (let tx = 0; tx < layer.width; tx++) {
+    // Pre-calculate camera offsets for this layer (avoid recalculating per-tile)
+    const cameraOffsetX = RendererState.mode90s ? Math.floor(RendererState.cameraX * scrollFactorX) : 0;
+    const cameraOffsetY = RendererState.mode90s ? Math.floor(RendererState.cameraY * scrollFactorY) : 0;
+    const useStaticBg = RendererState.mode90s && RendererState.staticBg && scrollFactorX < 0.5;
+    
+    // Calculate visible tile range to avoid iterating over off-screen tiles
+    let startTX = 0, endTX = layer.width;
+    let startTY = 0, endTY = layer.height;
+    
+    if (RendererState.mode90s && !useStaticBg) {
+      // Only render tiles that could be visible
+      startTX = Math.max(0, Math.floor((cameraOffsetX - layerOffsetX - 16) / 16));
+      endTX = Math.min(layer.width, Math.ceil((cameraOffsetX + viewWidth - layerOffsetX + 16) / 16));
+      startTY = Math.max(0, Math.floor((cameraOffsetY - layerOffsetY - 16) / 16));
+      endTY = Math.min(layer.height, Math.ceil((cameraOffsetY + viewHeight - layerOffsetY + 16) / 16));
+    }
+    
+    // Render visible tiles
+    for (let ty = startTY; ty < endTY; ty++) {
+      for (let tx = startTX; tx < endTX; tx++) {
         const tileDataIdx = (ty * layer.width + tx) * 2;
         if (tileDataIdx + 2 > tilemapData.length) continue;
         
         const rawIdx = tilemapView.getUint16(tileDataIdx, true);
-        const tileIdx = rawIdx & TILE_INDEX_MASK; // Lower 12 bits for tile index
+        const tileIdx = rawIdx & TILE_INDEX_MASK;
         
         if (tileIdx === 0) continue;
-        
-        // Debug: log high tile indices to understand entity marker range
-        if (layerIdx === 0 && ty === 0 && tx < 5) {
-          console.log(`[TILE] Layer ${layerIdx} tile (${tx},${ty}): raw=0x${rawIdx.toString(16)}, idx=${tileIdx}, totalTiles=${totalTiles}`);
-        }
         
         // Calculate world position (including layer offset)
         const worldX = layerOffsetX + tx * 16;
@@ -212,88 +302,35 @@ function renderStage(stageData, options = {}) {
         
         // Calculate screen position
         let screenX, screenY;
-        if (RendererState.mode90s) {
-          if (RendererState.staticBg && scrollFactorX < 0.5) {
-            // Static background - tile to fill viewport
-            screenX = worldX % viewWidth;
-            if (screenX < 0) screenX += viewWidth;
-            screenY = worldY;
-          } else {
-            // Normal parallax
-            screenX = worldX - Math.floor(RendererState.cameraX * scrollFactorX);
-            screenY = worldY - Math.floor(RendererState.cameraY * scrollFactorY);
-          }
+        if (useStaticBg) {
+          screenX = worldX % viewWidth;
+          if (screenX < 0) screenX += viewWidth;
+          screenY = worldY;
+        } else if (RendererState.mode90s) {
+          screenX = worldX - cameraOffsetX;
+          screenY = worldY - cameraOffsetY;
         } else {
-          // In full view mode, just show everything at world position
           screenX = worldX;
           screenY = worldY;
         }
         
-        // Skip tiles completely outside viewport
+        // Skip tiles completely outside viewport (redundant with range calc but cheap check)
         if (screenX + 16 <= 0 || screenX >= viewWidth || screenY + 16 <= 0 || screenY >= viewHeight) {
           continue;
         }
         
-        // Get tile pixels
-        const tile = GameEngine.getTile(
-          tileIdx, tileHeader, pixelData, flagsData, paletteIndices, palettes
-        );
+        // Get cached tile canvas (pre-rendered 16x16)
+        const cachedTile = getCachedTile(tileIdx, stageData);
+        if (!cachedTile) continue;
         
-        if (!tile || tile.type === 'entity') continue;
-        
-        const tileSize = tile.size;
-        const scale = 16 / tileSize;
-        
-        // Render tile pixels
-        for (let py = 0; py < tileSize; py++) {
-          for (let px = 0; px < tileSize; px++) {
-            const colorIdx = tile.pixels[py][px];
-            if (colorIdx === 0) continue;
-            
-            const color = tile.palette[colorIdx] || [255, 0, 255, 255];
-            const alpha = tile.isSemiTransparent ? 128 : color[3];
-            
-            for (let dy = 0; dy < scale; dy++) {
-              for (let dx = 0; dx < scale; dx++) {
-                const ix = screenX + px * scale + dx;
-                const iy = screenY + py * scale + dy;
-                
-                if (ix < 0 || ix >= viewWidth || iy < 0 || iy >= viewHeight) continue;
-                
-                const pixelOffset = (iy * viewWidth + ix) * 4;
-                
-                if (alpha === 255) {
-                  data[pixelOffset] = color[0];
-                  data[pixelOffset + 1] = color[1];
-                  data[pixelOffset + 2] = color[2];
-                  data[pixelOffset + 3] = 255;
-                } else if (alpha > 0) {
-                  const a = alpha / 255;
-                  data[pixelOffset] = Math.round(data[pixelOffset] * (1 - a) + color[0] * a);
-                  data[pixelOffset + 1] = Math.round(data[pixelOffset + 1] * (1 - a) + color[1] * a);
-                  data[pixelOffset + 2] = Math.round(data[pixelOffset + 2] * (1 - a) + color[2] * a);
-                }
-              }
-            }
-          }
-        }
+        // Draw cached tile using fast canvas blit
+        ctx.drawImage(cachedTile.canvas, screenX, screenY);
       }
     }
   }
   
-  // Put image data to canvas
-  ctx.putImageData(imageData, 0, 0);
-  
   // Get entities from Asset 501 (proper entity placement data)
   const entities = stageData.entities || [];
-  
-  // Debug: log sprite and entity info
-  if (stageData.sprites) {
-    console.log(`[RENDER] Sprites: ${stageData.sprites.count}, Entities: ${entities.length}, showSprites: ${RendererState.showSprites}`);
-    if (entities.length > 0 && entities.length < 20) {
-      console.log(`[RENDER] Entities:`, entities.map(e => `type=${e.type} @(${e.xCenter},${e.yCenter}) ${e.width}x${e.height}`).join(', '));
-    }
-  }
   
   // Render sprites at entity positions (or as gallery if no entities)
   let spriteCount = 0;
@@ -405,7 +442,7 @@ function renderStage(stageData, options = {}) {
     viewHeight,
     levelWidth,
     levelHeight,
-    totalTiles,
+    // totalTiles, // not defined
     layerCount: layers.length,
     paletteCount: palettes.length,
     entityCount: entities.length,
@@ -1071,6 +1108,7 @@ const BLBRenderer = {
   // Rendering
   renderStage,
   clearSpriteCache,
+  clearTileCache,
   updateMinimap,
   getMinimapViewport,
   
@@ -1080,7 +1118,6 @@ const BLBRenderer = {
   getCameraLimits,
   
   // Constants
-  TILE_INDEX_MASK,
   MINIMAP_MAX_WIDTH,
   MINIMAP_MAX_HEIGHT,
   ANIMATION_TICK_RATE,
