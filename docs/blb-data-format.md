@@ -487,10 +487,10 @@ This was verified via runtime analysis on 2026-01-05.
 | 302 | 0x12E | RAW | Tile size/rendering flags (1 byte/tile) |
 | 400 | 0x190 | CONTAINER | Palette container (256-color palettes) |
 | 401 | 0x191 | RAW | Animation/palette configuration |
-| 601 | 0x259 | CONTAINER | Secondary collision/layout data |
-| 602 | 0x25A | RAW | Secondary palette |
+| 601 | 0x259 | CONTAINER | **Audio sample bank** - SPU ADPCM samples + TOC |
+| 602 | 0x25A | RAW | **Audio volume/pan table** - per-sample settings |
 
-### Tertiary Segment Assets (Sprites, Layers, Audio) - VERIFIED 2026-01-05
+### Tertiary Segment Assets (Sprites, Layers, Audio) - VERIFIED 2026-01-07
 
 | Type | Hex | Structure | Description |
 |------|-----|-----------|-------------|
@@ -499,12 +499,12 @@ This was verified via runtime analysis on 2026-01-05.
 | 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
 | 302 | 0x12E | RAW | Duplicate tile flags |
 | 401 | 0x191 | RAW | Duplicate animation config |
-| 500 | 0x1F4 | RAW | Sprite metadata |
+| 500 | 0x1F4 | RAW | **UNKNOWN** - likely tile/sprite metadata (see notes) |
 | 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
-| 502 | 0x1F6 | RAW | Audio configuration |
-| 503 | 0x1F7 | RAW | Audio configuration |
+| 502 | 0x1F6 | RAW | **VRAM rectangles** - texture page definitions |
+| 503 | 0x1F7 | RAW | **Animation frame offsets** - ToolX sequence data |
 | 600 | 0x258 | CONTAINER | **RLE sprites with embedded palettes** |
-| 700 | 0x2BC | RAW | Audio/VAB data |
+| 700 | 0x2BC | RAW | **SPU audio samples** (ADPCM) with metadata |
 
 #### Asset 100 - Tile Header (36 bytes, CODE-VERIFIED)
 
@@ -920,6 +920,125 @@ The entity regions likely correspond to **static level objects** (platforms, dec
 hazards) that use sprite graphics but don't animate or have complex runtime behavior.
 True animated enemies and interactive objects may be spawned via a separate mechanism 
 (likely in the collision/physics data Asset 0x259 or code-driven spawn tables).
+
+## Audio System (VERIFIED 2026-01-07)
+
+The game's audio system uses the PSX SPU (Sound Processing Unit) with ADPCM-encoded samples.
+Audio data is distributed across **Secondary** and **Tertiary** segments.
+
+### Audio Asset Distribution
+
+| Segment | Asset ID | Contents |
+|---------|----------|----------|
+| **Secondary** | 601 (0x259) | Audio sample bank - ADPCM samples with TOC |
+| **Secondary** | 602 (0x25A) | Volume/pan table - per-sample settings |
+| **Tertiary** | 500 (0x1F4) | Unknown (possibly tile/sprite metadata) |
+| **Tertiary** | 501 (0x1F5) | Entity data (not audio) |
+| **Tertiary** | 502 (0x1F6) | VRAM rectangles (texture pages) |
+| **Tertiary** | 503 (0x1F7) | Animation frame offsets |
+| **Tertiary** | 700 (0x2BC) | Additional SPU samples (ADPCM) |
+
+**Note:** Earlier documentation incorrectly stated audio was in tertiary Assets 500-503.
+The primary audio samples are in **Secondary Asset 601**, with additional samples in
+Tertiary Asset 700.
+
+### Secondary Asset 601 - Audio Sample Bank (CODE-VERIFIED)
+
+Contains audio samples for SPU upload. Verified via `UploadAudioToSPU` (0x8007c088).
+
+```
+Offset  Size   Description
+------  ----   -----------
+0x00    u16    Sample count
+0x02    u16    Reserved (always 0)
+0x04    12×N   Sample entries (N = sample_count)
+0x04+12×N ...  ADPCM audio data
+
+Sample Entry (12 bytes):
+  0x00  u32    Sample ID (hash/identifier)
+  0x04  u32    Sample size in SPU RAM (bytes)
+  0x08  u32    Offset within audio data block
+```
+
+**Example (SCIE Stage 0, 13 samples):**
+| Index | Size | SPU Offset | Notes |
+|------:|-----:|-----------:|:------|
+| 0 | 4,432 | 0xA0 | First sample |
+| 1 | 3,296 | 0x11F0 | |
+| 2 | 5,296 | 0x1ED0 | |
+| ... | ... | ... | |
+| 12 | 6,160 | 0xD1A0 | Last sample |
+
+**SPU Upload Process:**
+1. SPU transfer starts at base address 0x1010 (after system reserved area)
+2. Each upload block is tracked in a table at `DAT_8009cfa8` (12-byte entries)
+3. Sample table at `DAT_8009cc60` maps sample IDs to SPU addresses
+
+### Secondary Asset 602 - Volume/Pan Table (CODE-VERIFIED)
+
+Per-sample volume and pan settings, passed to `UploadAudioToSPU` as second parameter.
+
+```
+For each sample (4 bytes):
+  0x00  u16    Volume (0-0x3FFF, where 0x3FFF = max)
+  0x02  u16    Pan (0 = center, non-zero = offset)
+```
+
+**Example values:**
+- `0x3FFF, 0x0000` - Full volume, centered
+- `0x2000, 0x0000` - Half volume, centered
+- `0x1333, 0x0010` - ~30% volume, slight pan offset
+
+If Asset 602 is NULL, default values are used:
+- Volume: 0x3FFF (maximum)
+- Pan: 0x0000 (center)
+
+### Tertiary Asset 700 - Additional SPU Samples
+
+Additional audio samples in the same format as Asset 601, but stored per-stage
+in the tertiary segment. Typically smaller (e.g., 300 bytes for SCIE stage 0).
+
+### Audio Loading Flow (CODE-VERIFIED)
+
+From `InitializeAndLoadLevel` (0x8007d1d0):
+
+```c
+// After loading secondary segment:
+audioSamples = GetAsset601Ptr(ctx);    // Secondary Asset 601
+volumePanTable = GetAsset602Ptr(ctx);  // Secondary Asset 602
+audioSize = GetAsset601Size(ctx);
+UploadAudioToSPU(audioSamples, volumePanTable, audioSize);
+```
+
+### Key Audio Functions
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `UploadAudioToSPU` | 0x8007c088 | Upload samples to SPU RAM |
+| `GetAsset601Ptr` | 0x8007ba78 | Get audio sample bank pointer |
+| `GetAsset601Size` | 0x8007ba50 | Get audio bank size |
+| `GetAsset602Ptr` | 0x8007baa0 | Get volume/pan table pointer |
+
+### LevelDataContext Audio Offsets
+
+| ctx Offset | Purpose | Set By |
+|------------|---------|--------|
+| +0x2C (ctx[0xB]) | Asset 500 ptr | LoadAssetContainer |
+| +0x30 (ctx[0xC]) | Asset 503 ptr | LoadAssetContainer |
+| +0x34 (ctx[0xD]) | Asset 504 ptr | LoadAssetContainer |
+| +0x38 (ctx[0xE]) | Asset 501 ptr | LoadAssetContainer |
+| +0x3C (ctx[0xF]) | Asset 502 ptr | LoadAssetContainer |
+| +0x48 (ctx[0x12]) | Asset 601 ptr (secondary) | LoadAssetContainer |
+| +0x4C (ctx[0x13]) | Asset 601 size | LoadAssetContainer |
+| +0x50 (ctx[0x14]) | Asset 602 ptr | LoadAssetContainer |
+| +0x54 (ctx[0x15]) | Asset 700 ptr | LoadAssetContainer |
+| +0x58 (ctx[0x16]) | Asset 700 size | LoadAssetContainer |
+| +0x74 (ctx[0x1D]) | Asset 601 ptr (primary) | LevelDataParser |
+| +0x78 (ctx[0x1E]) | Asset 601 size (primary) | LevelDataParser |
+| +0x7C (ctx[0x1F]) | Asset 602 ptr (primary) | LevelDataParser |
+
+**Note:** GetAsset601Ptr/GetAsset602Ptr check `ctx[1]` to select between primary
+(offsets 0x74-0x7C) and secondary (offsets 0x48-0x50) audio sources.
 
 ## Tertiary Asset 600 - Sprite Container (DETAILED 2026-01-05)
 

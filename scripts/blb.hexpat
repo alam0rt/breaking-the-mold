@@ -314,17 +314,22 @@ struct Palette256Raw {
 //   400 (0x190) PALETTE_CONTAINER - Palette sub-TOC with 256-color CLUTs
 //   401 (0x191) PALETTE_ANIM     - Palette animation data
 //
+// SECONDARY SEGMENT - Audio & Tiles:
+//   601 (0x259) AUDIO_SAMPLES    - SPU audio sample bank (ADPCM + TOC)
+//   602 (0x25A) AUDIO_SETTINGS   - Per-sample volume/pan table
+//
 // PRIMARY SEGMENT - Level Geometry:
 //   600 (0x258) GEOMETRY         - Level geometry/RLE sprites container
 //   601 (0x259) COLLISION        - Collision/layout data container
 //   602 (0x25A) LEVEL_PALETTE    - Level palette (15-bit PSX colors)
 //
-// TERTIARY SEGMENT - Audio & Sprites:
-//   500 (0x1F4) SPRITE_METADATA  - Sprite metadata
+// TERTIARY SEGMENT - Sprites & Stage Data:
+//   500 (0x1F4) UNKNOWN_500      - Tile/sprite metadata (structure TBD)
 //   501 (0x1F5) ENTITIES         - Entity placement data (24-byte structures)
-//   502 (0x1F6) AUDIO_502        - Audio configuration
-//   503 (0x1F7) AUDIO_503        - Audio configuration
-//   700 (0x2BC) SPU_SAMPLES      - SPU audio samples (ADPCM)
+//   502 (0x1F6) VRAM_RECTS       - VRAM rectangles / texture page definitions
+//   503 (0x1F7) ANIM_OFFSETS     - Animation frame offsets (ToolX sequence data)
+//   600 (0x258) SPRITE_CONTAINER - RLE sprites with embedded palettes
+//   700 (0x2BC) SPU_SAMPLES      - Additional SPU audio samples (ADPCM)
 //
 // Note: Assets 100, 200, 201, 302, 401 may also appear in tertiary segments
 
@@ -852,21 +857,63 @@ bitfield TileFlags {
 // Structure details TBD - appears in tertiary segments
 
 // =============================================================================
-// Audio Assets - Assets 502/503 (0x1F6/0x1F7)
+// Audio System (VERIFIED 2026-01-07)
 // =============================================================================
-
-// Audio configuration structures
-// Used by SPU/sound system - structure details TBD
+// Audio is loaded from Secondary Assets 601/602 and Tertiary Asset 700.
+// The game uses PSX SPU with ADPCM-encoded samples.
+//
+// Loading flow (from InitializeAndLoadLevel @ 0x8007d1d0):
+//   1. Load secondary segment containing Assets 601 + 602
+//   2. Call UploadAudioToSPU(asset601_ptr, asset602_ptr, asset601_size)
+//   3. Samples are transferred to SPU RAM starting at 0x1010
+//
+// Key functions:
+//   UploadAudioToSPU @ 0x8007c088 - Uploads samples to SPU RAM
+//   GetAsset601Ptr   @ 0x8007ba78 - Returns audio sample bank pointer
+//   GetAsset602Ptr   @ 0x8007baa0 - Returns volume/pan table pointer
 
 // =============================================================================
-// SPU Samples - Asset 700 (0x2BC)
+// Secondary Asset 601 - Audio Sample Bank (CODE-VERIFIED)
 // =============================================================================
+// Contains audio samples for SPU upload. Verified via UploadAudioToSPU.
+// Format:
+//   u16 sample_count
+//   u16 reserved (always 0)
+//   AudioSampleEntry[sample_count]
+//   ADPCM audio data...
 
-// SPU audio samples in ADPCM format
-// Raw compressed audio data for PlayStation sound chip
+struct AudioSampleEntry {
+    u32 sample_id [[name("Sample ID"), comment("Hash/identifier for this sample")]];
+    u32 sample_size [[name("SPU Size"), comment("Size in SPU RAM (bytes)")]];
+    u32 data_offset [[name("Data Offset"), comment("Offset within audio data block")]];
+} [[static, color("80FF80")]];
+
+// Example: SCIE Stage 0 has 13 samples (sizes: 4432, 3296, 5296, 3984, 11072...)
 
 // =============================================================================
-// Level Palette - Asset 602 (0x25A)
+// Secondary Asset 602 - Volume/Pan Table (CODE-VERIFIED)
+// =============================================================================
+// Per-sample volume and pan settings. One entry per sample in Asset 601.
+// If Asset 602 is NULL, defaults are used: volume=0x3FFF, pan=0.
+
+struct AudioVolumeEntry {
+    u16 volume [[name("Volume"), comment("0-0x3FFF, where 0x3FFF = maximum")]];
+    u16 pan [[name("Pan"), comment("0 = center, non-zero = offset")]];
+} [[static, color("80FFFF")]];
+
+// Common values:
+//   0x3FFF, 0x0000 - Full volume, centered
+//   0x2000, 0x0000 - Half volume, centered
+//   0x1333, 0x0010 - ~30% volume, slight pan offset
+
+// =============================================================================
+// Tertiary Asset 700 - Additional SPU Samples
+// =============================================================================
+// Same format as Asset 601 but stored per-stage in tertiary segment.
+// Typically smaller (e.g., 300 bytes for SCIE stage 0).
+
+// =============================================================================
+// Level Palette - Asset 602 (0x25A) in PRIMARY
 // =============================================================================
 
 // Level palette in Primary segment (different from tile palettes)

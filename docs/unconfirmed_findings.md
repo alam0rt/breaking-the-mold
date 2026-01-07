@@ -1163,75 +1163,37 @@ buffers, accessed via the base pointer stored in the context.
 
 ---
 
-## Secondary Asset 601 - AUDIO SAMPLES (2026-01-04)
+## Secondary Asset 601 - AUDIO SAMPLES (2026-01-04) ✓ VERIFIED & DOCUMENTED
 
-**Status:** VERIFIED - Asset 601 contains audio samples uploaded to SPU RAM
+**Status:** ✓ VERIFIED AND MOVED TO blb-data-format.md (2026-01-07)
 
-### Discovery
+This section has been verified and fully documented. See:
+- `docs/blb-data-format.md` → "Audio System (VERIFIED 2026-01-07)" section
+- `scripts/blb.hexpat` → AudioSampleEntry and AudioVolumeEntry structs
 
-By tracing `GetAsset601Ptr` (0x8007ba78) through Ghidra, found that Asset 601 data 
-is passed to `UploadAudioToSPU` (0x8007c088) which calls:
-- `SpuSetTransferMode(0)`
-- `SpuSetTransferStartAddr(addr)`
-- `SpuRead(data, size)`
-- `SpuIsTransferCompleted(1)`
+### Summary of Verified Findings
 
-This confirms Asset 601 contains **audio sample data** (likely ADPCM format for PSX SPU).
+1. **Secondary Asset 601**: Audio sample bank with TOC
+   - Format: `u16 count, u16 reserved, Entry[count] × 12 bytes, ADPCM data...`
+   - Entry: `u32 sample_id, u32 spu_size, u32 data_offset`
+   - Example: SCIE Stage 0 has 13 samples
 
-### Key Code
+2. **Secondary Asset 602**: Volume/pan table (4 bytes per sample)
+   - Format: `u16 volume (0-0x3FFF), u16 pan (0 = center)`
+   - Default if NULL: volume=0x3FFF, pan=0
 
-From `InitializeAndLoadLevel` (0x8007d1d0):
-```c
-uVar9 = GetAsset601Ptr(pLevelDataCtx);    // Audio samples
-uVar10 = GetAsset602Ptr(pLevelDataCtx);   // Audio metadata (0x3FFF = all channels?)
-uVar11 = GetAsset601Size(pLevelDataCtx);  // Size in bytes
-UploadAudioToSPU(uVar9, uVar10, uVar11);
-```
+3. **Tertiary Asset 700**: Additional SPU samples (same format as 601)
 
-### Key Findings
+4. **Key functions verified in Ghidra:**
+   - `UploadAudioToSPU` @ 0x8007c088
+   - `GetAsset601Ptr` @ 0x8007ba78
+   - `GetAsset602Ptr` @ 0x8007baa0
 
-1. **Location**: Asset 601 is in **secondary** containers only (not tertiary).
-   - This explains why it uses different IDs than Asset 600 sprites.
-
-2. **Distribution**:
-   - Levels with 601: MENU(21), LEGL(19), SEVN(19), CLOU(15), CSTL(14), etc.
-   - Levels WITHOUT 601: PHRO, SCIE, BOIL, CAVE, SOAR, WIZZ (silent levels?)
-
-3. **Container Structure**: Same TOC format as other assets:
-   ```
-   u32  entry_count      // Number of audio samples
-   [entry_count x 12 bytes]:
-       u32  sample_id    // Unique hash ID
-       u32  data_size    // Entry size in bytes
-       u32  data_offset  // Offset from container start
-   ```
-
-4. **Entry Internal Structure** (each audio sample):
-   ```
-   Offset  Size  Description
-   0x00    16    Zero padding (SPU alignment?)
-   0x10    4     Frame count? (seen: 72, 19, 57, 20)
-   0x14    var   Audio sample data (ADPCM encoded)
-   ```
-
-5. **Asset 602**: Contains audio metadata/parameters (2-byte entries per sample).
-   Default value 0x3FFF may mean "all channels" or "full volume".
-
-### Functions
-
-| Function | Address | Purpose |
-|----------|---------|---------|
-| `GetAsset601Ptr` | 0x8007ba78 | Returns pointer to audio samples |
-| `GetAsset601Size` | 0x8007ba50 | Returns size of audio data |
-| `GetAsset602Ptr` | 0x8007baa0 | Returns pointer to audio metadata |
-| `UploadAudioToSPU` | 0x8007c088 | Uploads samples to SPU RAM |
-
-### Updated Asset Naming
-
-Previous documentation incorrectly labeled 601 as "collision data". The correct mapping:
-- Asset 600 (0x258): RLE sprite pixel data (in tertiary sub-blocks)
-- Asset 601 (0x259): Audio samples for SPU (in secondary container)
-- Asset 602 (0x25A): Audio metadata/parameters (in secondary container)
+5. **Correction**: Tertiary Assets 500-503 are NOT primarily audio:
+   - Asset 500: Unknown (tile/sprite metadata?)
+   - Asset 501: Entity placement data
+   - Asset 502: VRAM rectangles
+   - Asset 503: Animation frame offsets
 
 ---
 
