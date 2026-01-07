@@ -1662,6 +1662,23 @@ struct SecondarySegmentFull {
         TileFlags tile_flags4[toc[4].size] @ (_base + toc[4].offset) [[name("Tile Flags")]];
     }
     
+    // Parse Asset 301 (Palette Indices) - 1 byte per tile (palette index from Asset 400)
+    if (toc_count > 0 && toc[0].asset_type == 301) {
+        u8 palette_indices0[toc[0].size] @ (_base + toc[0].offset) [[name("Palette Indices")]];
+    }
+    if (toc_count > 1 && toc[1].asset_type == 301) {
+        u8 palette_indices1[toc[1].size] @ (_base + toc[1].offset) [[name("Palette Indices")]];
+    }
+    if (toc_count > 2 && toc[2].asset_type == 301) {
+        u8 palette_indices2[toc[2].size] @ (_base + toc[2].offset) [[name("Palette Indices")]];
+    }
+    if (toc_count > 3 && toc[3].asset_type == 301) {
+        u8 palette_indices3[toc[3].size] @ (_base + toc[3].offset) [[name("Palette Indices")]];
+    }
+    if (toc_count > 4 && toc[4].asset_type == 301) {
+        u8 palette_indices4[toc[4].size] @ (_base + toc[4].offset) [[name("Palette Indices")]];
+    }
+    
     // Parse Asset 300 (Tile Pixels) - raw 8bpp indexed pixel data
     // 16x16 tiles = 256 bytes each, 8x8 tiles = 64 bytes each
     if (toc_count > 0 && toc[0].asset_type == 300) {
