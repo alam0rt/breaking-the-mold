@@ -993,10 +993,22 @@ If Asset 602 is NULL, default values are used:
 - Volume: 0x3FFF (maximum)
 - Pan: 0x0000 (center)
 
-### Tertiary Asset 700 - Additional SPU Samples
+### Tertiary Asset 700 - Additional Audio Data (UNDER INVESTIGATION)
 
-Additional audio samples in the same format as Asset 601, but stored per-stage
-in the tertiary segment. Typically smaller (e.g., 300 bytes for SCIE stage 0).
+⚠️ **Note**: Despite earlier documentation, Asset 700 may NOT be standard ADPCM samples.
+
+**Observations:**
+- Header format matches 601 (count=1, entry with ID/size/offset)
+- However, data content has invalid ADPCM filter values (filter=15, valid is 0-4)
+- `GetAsset601Ptr` reads from ctx+0x48/0x74, NOT ctx+0x54 where Asset 700 is stored
+- Only appears in 9 of 26 levels (MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED)
+
+**Possible interpretations:**
+1. Music track selection + sound event sequence data
+2. Level-specific audio configuration
+3. Unused/legacy data (stored but never read)
+
+See `docs/unconfirmed_findings.md` for detailed analysis.
 
 ### Audio Loading Flow (CODE-VERIFIED)
 

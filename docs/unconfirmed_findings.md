@@ -210,8 +210,24 @@ ls /tmp/gap_containers/
 ## Asset 504 Analysis (2026-01-07) - UNCONFIRMED
 
 Asset 504 appears **only in vehicle/driving levels**:
-- **FINN** (Level 4) - Submarine level: 4992 bytes
-- **RUNN** (Level 22) - Auto-runner level: 64 bytes
+- **FINN** (Level 4) - Submarine level: 4992 bytes (155 paired entries)
+- **RUNN** (Level 22) - Auto-runner level: 64 bytes (2 paired entries)
+
+### ImHex Template Support
+
+Asset 504 is now parseable via the ImHex template (`scripts/blb.hexpat`).
+
+```bash
+# Regenerate cached JSON (takes ~2 minutes)
+imhex --pl format --pattern scripts/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb_parsed.json
+
+# Count collectibles in FINN (type_flags1 == 0x8000)
+jq '[.. | objects | select(.vehicle9?) | .vehicle9.entries[] | select(.zone.type_flags1 == 32768)] | length' /tmp/blb_parsed.json
+# Returns: 76
+
+# Show first entry
+jq '.. | objects | select(.vehicle9?) | .vehicle9.entries[0]' /tmp/blb_parsed.json
+```
 
 ### Distribution
 
@@ -299,6 +315,71 @@ This suggests:
 2. Run FINN level and breakpoint on memory reads from 504 data
 3. Confirm if Type 0x8000 entries are indeed collectibles
 4. Verify the linking between entries (next_x/next_y interpretation)
+
+---
+
+## Asset 700 Analysis (2026-01-07) - UNCONFIRMED
+
+Asset 700 appears in **9 of 26 levels**, all in the tertiary segment (stage 5):
+- MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
+
+### Structure Analysis
+
+**Header format** (similar to Asset 601 but different content):
+```
+Offset  Size  Type   Description
+------  ----  ----   -----------
+0x00    2     u16    Entry count (always 1)
+0x02    2     u16    Reserved (always 0)
+0x04    4     u32    Entry ID (varies per level, not simple sample ID)
+0x08    4     u32    Data size (total bytes after header)
+0x0C    4     u32    Data offset (always 0x10)
+0x10    var   data   Actual content (192-480 bytes)
+```
+
+**Data pattern at offset 0x10:**
+| Level | Size | First u16 | Pattern |
+|-------|------|-----------|---------|
+| SCIE  | 300  | 0x46 (70) | 00 00, 00 00, 35 00... |
+| TMPL  | 320  | 0x4B (75) | FF 42, 00 80, 18 00... |
+| BOIL  | 496  | 0x77 (119)| 00 00, 00 00, 23 00... |
+| FOOD  | 332  | 0x4E (78) | 00 00, 00 00, 23 00... |
+| BRG1  | 356  | 0x54 (84) | 00 00, 00 00, 21 00... |
+| GLID  | 208  | 0x2F (47) | FF 42, 00 80, 76 00... |
+| CAVE  | 224  | 0x33 (51) | 00 00, 00 00, 4A 00... |
+| WEED  | 360  | 0x55 (85) | 00 00, 00 00, 48 00... |
+
+**Data content analysis:**
+- First u16 ranges from 47-119 (could be track/sequence ID)
+- Following data consists of 2-byte pairs with high bytes 0x00, 0x80, 0xC0 (±0x20)
+- Pattern resembles event/command sequences, not raw ADPCM audio
+
+### Key Observations
+
+1. **NOT passed to UploadAudioToSPU**: Despite docs claiming it's "same format as 601",
+   `GetAsset601Ptr` reads from ctx+0x48/0x74, NOT ctx+0x54 where Asset 700 is stored.
+
+2. **Invalid ADPCM**: First "block" at 0x10 has filter=15 which is invalid for PSX SPU
+   (valid range: 0-4). This suggests the data is NOT standard ADPCM.
+
+3. **Entry IDs are suspicious**: Values like 0x0101820A, 0x1847C001, 0x5024100C don't
+   look like sample identifier hashes used elsewhere in the audio system.
+
+### Hypothesis: Music/Sound Sequence Data
+
+The first u16 at offset 0x10 could be a **music track selection** for the level,
+with the remaining data being **sound event sequences** (timing data for ambient
+sounds, music cues, or level-specific audio triggers).
+
+Alternative: The data may be **unused/legacy** - stored by LoadAssetContainer
+but never actually read by any runtime code.
+
+### Verification Needed
+
+1. Search for code that reads ctx[0x15] (offset 0x54) after LoadAssetContainer
+2. Check if any function besides UploadAudioToSPU handles audio loading
+3. Run game with breakpoint on ctx+0x54 reads to see if/when it's accessed
+4. Compare first u16 values (47-119) against XA/music track indices
 
 ---
 
@@ -1278,7 +1359,10 @@ This section has been verified and fully documented. See:
    - Format: `u16 volume (0-0x3FFF), u16 pan (0 = center)`
    - Default if NULL: volume=0x3FFF, pan=0
 
-3. **Tertiary Asset 700**: Additional SPU samples (same format as 601)
+3. **Tertiary Asset 700**: ⚠️ See "Asset 700 Analysis" section above
+   - Header format similar to 601, but content is NOT ADPCM audio
+   - First u16 at data offset may be music/track ID (range 47-119)
+   - NOT passed to UploadAudioToSPU (uses different ctx offset)
 
 4. **Key functions verified in Ghidra:**
    - `UploadAudioToSPU` @ 0x8007c088
