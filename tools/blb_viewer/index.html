@@ -46,8 +46,8 @@
     <fieldset class="win-group">
       <legend>Display</legend>
       <div class="options-row">
-        <label><input type="checkbox" id="show-entities" checked disabled> Entities</label>
         <label><input type="checkbox" id="show-grid" disabled> Grid</label>
+        <label><input type="checkbox" id="show-collision" disabled> Collision</label>
         <label><input type="checkbox" id="show-minimap" disabled> Minimap</label>
         <label><input type="checkbox" id="opt-debug"> Debug</label>
       </div>
@@ -112,6 +112,21 @@
             <div id="minimap-viewport"></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Entities Panel -->
+    <div id="entities-panel">
+      <div id="entities-header">👾 Entities <span id="entities-count"></span></div>
+      <div id="entities-toolbar">
+        <input type="text" id="entities-filter" placeholder="Filter...">
+        <select id="entities-group">
+          <option value="type">By Type</option>
+          <option value="instance">All Instances</option>
+        </select>
+      </div>
+      <div id="entities-list">
+        <div class="entities-empty">No stage loaded</div>
       </div>
     </div>
   </div>

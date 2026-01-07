@@ -6,6 +6,22 @@
  */
 
 // ============================================================================
+// Constants
+// ============================================================================
+
+// Tilemap entry bit layout (matches engine.js - see docs/blb-data-format.md)
+// Bits 0-11: tile index (12 bits), Bits 12-15: color tint selector
+const TILE_INDEX_MASK = 0xFFF;
+
+// Minimap constants
+const MINIMAP_MAX_WIDTH = 160;
+const MINIMAP_MAX_HEIGHT = 80;
+
+// Animation timing: TWOS = 2 frames per animation step on PSX (30fps NTSC)
+// At 60fps browser, we advance every 12 ticks ≈ 200ms per frame
+const ANIMATION_TICK_RATE = 12;
+
+// ============================================================================
 // Renderer State
 // ============================================================================
 
@@ -20,9 +36,10 @@ const RendererState = {
   cameraY: 0,
   zoom: 2,
   
-  // PSX dimensions
+  // PSX display dimensions (PAL: 320×256, NTSC: 320×240)
+  // The game targets PAL by default (SLES-01090)
   psxWidth: 320,
-  psxHeight: 256, // PAL
+  psxHeight: 256,
   
   // Level dimensions (calculated from layers)
   levelWidth: 0,
@@ -37,6 +54,7 @@ const RendererState = {
   showPlayer: true, // Show player sprite at spawn point
   animateSprites: false, // Animate sprite frames
   spriteFrameIndex: 0, // Current animation frame index (global for now)
+  showCollision: false, // Show collision/tile attribute overlay
   
   // 90s mode options
   mode90s: false,
@@ -52,10 +70,6 @@ const RendererState = {
   // Cached stage data
   cachedStage: null,
 };
-
-// Minimap constants
-const MINIMAP_MAX_WIDTH = 160;
-const MINIMAP_MAX_HEIGHT = 80;
 
 // ============================================================================
 // Initialization
@@ -183,7 +197,7 @@ function renderStage(stageData, options = {}) {
         if (tileDataIdx + 2 > tilemapData.length) continue;
         
         const rawIdx = tilemapView.getUint16(tileDataIdx, true);
-        const tileIdx = rawIdx & 0x0FFF; // Lower 12 bits for tile index (upper 4 bits are color tint)
+        const tileIdx = rawIdx & TILE_INDEX_MASK; // Lower 12 bits for tile index
         
         if (tileIdx === 0) continue;
         
@@ -299,6 +313,11 @@ function renderStage(stageData, options = {}) {
     }
   }
   
+  // Draw collision/tile attribute overlay
+  if (RendererState.showCollision && stageData.tileAttrs) {
+    renderCollisionOverlay(ctx, stageData.tileAttrs, viewWidth, viewHeight);
+  }
+  
   // Draw entity bounding boxes on top (debug overlay)
   if (RendererState.showEntities && entities.length > 0) {
     ctx.font = '8px monospace';
@@ -398,6 +417,71 @@ function renderStage(stageData, options = {}) {
 }
 
 // ============================================================================
+// Collision/Tile Attribute Overlay
+// ============================================================================
+
+/**
+ * Render tile attribute overlay (collision map from Asset 500)
+ * 
+ * Colors:
+ *   Red (0x02): Solid/collision
+ *   Yellow (0x65/101): Entity spawn zone
+ *   Green (0x53/83): Checkpoint
+ *   Blue: Other non-zero values
+ */
+function renderCollisionOverlay(ctx, tileAttrs, viewWidth, viewHeight) {
+  if (!tileAttrs || !tileAttrs.data) return;
+  
+  const { width, height, data } = tileAttrs;
+  
+  // Iterate over visible tiles
+  for (let ty = 0; ty < height; ty++) {
+    for (let tx = 0; tx < width; tx++) {
+      const attr = data[ty * width + tx];
+      
+      // Skip passable tiles (most common)
+      if (attr === 0) continue;
+      
+      // Calculate screen position
+      let screenX = tx * 16;
+      let screenY = ty * 16;
+      
+      // Apply camera offset in 90s mode
+      if (RendererState.mode90s) {
+        screenX -= RendererState.cameraX;
+        screenY -= RendererState.cameraY;
+        
+        // Skip tiles outside viewport
+        if (screenX + 16 < 0 || screenY + 16 < 0 || 
+            screenX >= viewWidth || screenY >= viewHeight) {
+          continue;
+        }
+      }
+      
+      // Choose color based on attribute value
+      let fillColor;
+      switch (attr) {
+        case 2:   // Solid/collision
+          fillColor = 'rgba(255, 0, 0, 0.4)';
+          break;
+        case 101: // Entity spawn zone (0x65)
+          fillColor = 'rgba(255, 255, 0, 0.4)';
+          break;
+        case 83:  // Checkpoint (0x53)
+          fillColor = 'rgba(0, 255, 0, 0.4)';
+          break;
+        default:  // Other values
+          fillColor = 'rgba(0, 128, 255, 0.4)';
+          break;
+      }
+      
+      ctx.fillStyle = fillColor;
+      ctx.fillRect(screenX, screenY, 16, 16);
+    }
+  }
+}
+
+// ============================================================================
 // Sprite Rendering
 // ============================================================================
 
@@ -441,22 +525,6 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
   const globalFrameIdx = RendererState.spriteFrameIndex;
   
   let renderedCount = 0;
-  
-  // Entity types now come with name from engine.js ENTITY_TYPES
-  // We use entity.typeName if available, otherwise fall back to legacy map
-  const ENTITY_TYPE_NAMES_LEGACY = {
-    2: 'Clay',   // Clayballs (coins) - variant=animation frame
-    3: 'Trg',    // Trigger
-    8: 'Item',   // Collectible
-    10: 'Obj',   // Large object
-    24: 'Spc',   // Special trigger
-    25: 'Enm1',  // Enemy type 1
-    27: 'Enm2',  // Enemy type 2
-    28: 'Plat',  // Moving platform - variant=direction
-    42: '???', 
-    45: 'Msg',   // Message box - variant=message ID
-    48: 'Plat2', // Moving platform 2 - variant=direction
-  };
   
   for (let i = 0; i < entities.length; i++) {
     const entity = entities[i];
@@ -531,11 +599,15 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
         let frameData = RendererState.spriteCache.get(cacheKey);
         
         if (!frameData) {
-          frameData = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, currentFrame);
-          if (frameData) {
-            const imgData = createSpriteImageData(frameData);
-            frameData.imageData = imgData;
-            RendererState.spriteCache.set(cacheKey, frameData);
+          try {
+            frameData = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, currentFrame);
+            if (frameData) {
+              const imgData = createSpriteImageData(frameData);
+              frameData.imageData = imgData;
+              RendererState.spriteCache.set(cacheKey, frameData);
+            }
+          } catch (err) {
+            console.warn(`[SPRITES] Failed to decode entity sprite 0x${spriteEntry.id.toString(16)}:`, err.message);
           }
         }
         
@@ -549,8 +621,8 @@ function renderSpritesAtEntities(ctx, stageData, entities, viewWidth, viewHeight
     
     // Draw entity bounding box and type label if debug enabled
     if (RendererState.showEntityDebug) {
-      // Use typeName from entity (set by engine.js) or fall back to legacy map
-      const typeName = entity.typeName || ENTITY_TYPE_NAMES_LEGACY[entity.type] || `T${entity.type}`;
+      // Use typeShortName from entity (set by engine.js parseEntities)
+      const typeName = entity.typeShortName || `T${entity.type}`;
       
       // Color by layer (1=green, 2=yellow, 3=red)
       const layerColors = {
@@ -626,11 +698,15 @@ function renderSpriteGallery(ctx, stageData, viewWidth, viewHeight) {
     let frameData = RendererState.spriteCache.get(cacheKey);
     
     if (!frameData) {
-      frameData = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, frameIdx);
-      if (frameData) {
-        const imgData = createSpriteImageData(frameData);
-        frameData.imageData = imgData;
-        RendererState.spriteCache.set(cacheKey, frameData);
+      try {
+        frameData = GameEngine.getSpriteFrame(containerData, spriteEntry, 0, frameIdx);
+        if (frameData) {
+          const imgData = createSpriteImageData(frameData);
+          frameData.imageData = imgData;
+          RendererState.spriteCache.set(cacheKey, frameData);
+        }
+      } catch (err) {
+        console.warn(`[SPRITES] Failed to decode sprite 0x${spriteEntry.id.toString(16)} frame ${frameIdx}:`, err.message);
       }
     }
     
@@ -884,7 +960,7 @@ function updateMinimap(stageData) {
         if (tileDataIdx + 2 > tilemapData.length) continue;
         
         const rawIdx = tilemapView.getUint16(tileDataIdx, true);
-        const tileIdx = rawIdx & 0x7FF;
+        const tileIdx = rawIdx & TILE_INDEX_MASK;
         
         if (tileIdx === 0) continue;
         
@@ -920,7 +996,7 @@ function updateMinimap(stageData) {
         if (tileDataIdx + 2 > tilemapData.length) continue;
         
         const rawIdx = tilemapView.getUint16(tileDataIdx, true);
-        const tileIdx = rawIdx & 0x7FF;
+        const tileIdx = rawIdx & TILE_INDEX_MASK;
         
         if (tileIdx > totalTiles) {
           const x = Math.floor((layer.xOffset + tx) * scale);
@@ -1004,8 +1080,10 @@ const BLBRenderer = {
   getCameraLimits,
   
   // Constants
+  TILE_INDEX_MASK,
   MINIMAP_MAX_WIDTH,
   MINIMAP_MAX_HEIGHT,
+  ANIMATION_TICK_RATE,
 };
 
 // Make available globally for non-module usage

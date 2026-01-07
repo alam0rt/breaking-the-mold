@@ -22,11 +22,25 @@ const ASSET_TYPE = {
   PALETTE_IDX: 301,       // Per-tile palette index
   TILE_FLAGS: 302,        // Per-tile flags (size, transparency, skip)
   PALETTES: 400,          // Container of 256-color palettes
-  SPRITE_METADATA: 500,   // Sprite metadata
+  TILE_ATTRS: 500,        // Tile attribute map (collision/triggers)
   ENTITIES: 501,          // Entity placement data (24-byte structures)
   SPRITES: 600,           // Sprite/entity graphics
   COLLISION: 601,         // Collision data
 };
+
+// Tile attribute values (Asset 500)
+const TILE_ATTR = {
+  PASSABLE: 0,      // Empty/air
+  SOLID: 2,         // Collision
+  TRIGGER_18: 18,   // Unknown trigger
+  CHECKPOINT: 83,   // Checkpoint/save point (0x53)
+  ENTITY_ZONE: 101, // Entity spawn zone (0x65)
+};
+
+// Tilemap entry bitmask constants (verified via docs/blb-data-format.md)
+// Tilemap entries are 16-bit values: bits 0-11 = tile index, bits 12-15 = color tint
+const TILE_INDEX_MASK = 0xFFF;  // 12 bits for tile index (0 = transparent, 1+ = tile)
+const COLOR_TINT_SHIFT = 12;   // Upper 4 bits select color tint from layer's palette
 
 // ============================================================================
 // PSX Color Conversion
@@ -146,33 +160,33 @@ function getEntitySpriteId(entityType) {
 const ENTITY_TYPES = {
   // Collectibles (use variant to select animation frame)
   // Sprite ID loaded from config.js ENTITY_SPRITE_MAP
-  2: { name: 'Clayball', desc: 'Collectible coin', useVariant: true },
-  8: { name: 'Item', desc: 'Collectible item', spriteId: 0xc34aa22, useVariant: true },
+  2: { name: 'Clayball', shortName: 'Clay', desc: 'Collectible coin', useVariant: true },
+  8: { name: 'Item', shortName: 'Item', desc: 'Collectible item', spriteId: 0xc34aa22, useVariant: true },
   
   // Triggers (invisible at runtime, but show bounds in viewer)
-  3: { name: 'Trigger', desc: 'Level trigger', invisible: true },
-  24: { name: 'Special', desc: 'Special trigger', invisible: true },
+  3: { name: 'Trigger', shortName: 'Trg', desc: 'Level trigger', invisible: true },
+  24: { name: 'Special', shortName: 'Spc', desc: 'Special trigger', invisible: true },
   
   // Enemies (from FUN_8006dd98, FUN_80073338)
-  25: { name: 'Enemy1', desc: 'Enemy type 1', spriteId: 0x1e1000b3, color: '#f00' },
-  27: { name: 'Enemy2', desc: 'Enemy type 2', spriteId: 0x182d840c, color: '#f00' },
+  25: { name: 'Enemy1', shortName: 'Enm1', desc: 'Enemy type 1', spriteId: 0x1e1000b3, color: '#f00' },
+  27: { name: 'Enemy2', shortName: 'Enm2', desc: 'Enemy type 2', spriteId: 0x182d840c, color: '#f00' },
   
   // Objects
-  10: { name: 'Object', desc: 'Large object' },
-  28: { name: 'Platform', desc: 'Moving platform', color: '#88f' },
-  48: { name: 'Platform2', desc: 'Moving platform 2', color: '#88f' },
+  10: { name: 'Object', shortName: 'Obj', desc: 'Large object' },
+  28: { name: 'Platform', shortName: 'Plat', desc: 'Moving platform', color: '#88f' },
+  48: { name: 'Platform2', shortName: 'Plat2', desc: 'Moving platform 2', color: '#88f' },
   
   // Interactive
-  42: { name: 'Portal', desc: 'Portal/warp point', spriteId: 0xb01c25f0, color: '#f0f' },
-  45: { name: 'Message', desc: 'Message/save box', spriteId: 0xa89d0ad0, color: '#0ff' },
+  42: { name: 'Portal', shortName: 'Port', desc: 'Portal/warp point', spriteId: 0xb01c25f0, color: '#f0f' },
+  45: { name: 'Message', shortName: 'Msg', desc: 'Message/save box', spriteId: 0xa89d0ad0, color: '#0ff' },
   
   // Boss/NPC entities (from FUN_80047fb8, FUN_80058310)
-  50: { name: 'Boss', desc: 'Boss entity', spriteId: 0x181c3854, color: '#f80' },
-  51: { name: 'BossPart', desc: 'Boss sub-entity', spriteId: 0x8818a018, color: '#f80' },
+  50: { name: 'Boss', shortName: 'Boss', desc: 'Boss entity', spriteId: 0x181c3854, color: '#f80' },
+  51: { name: 'BossPart', shortName: 'BPrt', desc: 'Boss sub-entity', spriteId: 0x8818a018, color: '#f80' },
   
   // Effects (from FUN_80034bb8, FUN_80037ae0)
-  60: { name: 'Particle', desc: 'Particle effect', spriteId: 0x168254b5 },
-  61: { name: 'Sparkle', desc: 'Sparkle effect', spriteId: 0x6a351094 },
+  60: { name: 'Particle', shortName: 'Prtc', desc: 'Particle effect', spriteId: 0x168254b5 },
+  61: { name: 'Sparkle', shortName: 'Sprk', desc: 'Sparkle effect', spriteId: 0x6a351094 },
 };
 
 // Player sprite ID (hardcoded in FUN_8001fcf0 / InitPlayerEntity)
@@ -181,6 +195,10 @@ const PLAYER_SPRITE_ID = 0x21842018;
 /**
  * Known sprite IDs from game code (extracted via Ghidra analysis 2025-01-07)
  * These are hardcoded in various init functions throughout the game code.
+ * 
+ * NOTE: This lookup table is exported for DOCUMENTATION/REFERENCE only.
+ * For actual entity→sprite mapping, use config.js ENTITY_SPRITE_MAP.
+ * For detailed sprite info with call sites, see docs/sprite_ids_detailed.json.
  * 
  * Sprite lookup chain:
  *   InitSpriteContext (0x8007bc3c) → LookupSpriteById (0x8007bb10) → FindSpriteInTOC (0x8007b968)
@@ -345,8 +363,8 @@ function parseEntities(entityData) {
       continue;
     }
     
-    // Get entity type info
-    const typeInfo = ENTITY_TYPES[entityType] || { name: `Type${entityType}`, desc: 'Unknown' };
+    // Get entity type info from ENTITY_TYPES lookup
+    const typeInfo = ENTITY_TYPES[entityType] || { name: `Type${entityType}`, shortName: `T${entityType}`, desc: 'Unknown' };
     
     entities.push({
       index: i,
@@ -356,6 +374,7 @@ function parseEntities(entityData) {
       height: y2 - y1,
       type: entityType,
       typeName: typeInfo.name,
+      typeShortName: typeInfo.shortName || typeInfo.name,
       typeDesc: typeInfo.desc,
       variant,
       layer,
@@ -567,6 +586,57 @@ function isLayerVisible(layer) {
 }
 
 // ============================================================================
+// Tile Attribute Map (Asset 500) - Collision/Triggers
+// ============================================================================
+
+/**
+ * Parse tile attribute map (Asset 500)
+ * 
+ * Structure:
+ *   0x00: u32 flags      - Unknown (often 0)
+ *   0x04: u16 width      - Map width in tiles
+ *   0x06: u16 height     - Map height in tiles
+ *   0x08: u8[] data      - One byte per tile (row-major)
+ * 
+ * @param {Uint8Array} assetData - Raw Asset 500 data
+ * @returns {object|null} Parsed tile attribute map
+ */
+function parseTileAttributes(assetData) {
+  if (!assetData || assetData.length < 8) return null;
+  
+  const view = new DataView(assetData.buffer, assetData.byteOffset);
+  const flags = view.getUint32(0, true);
+  const width = view.getUint16(4, true);
+  const height = view.getUint16(6, true);
+  
+  // Validate size: header (8) + width * height should match
+  const expectedSize = 8 + (width * height);
+  if (assetData.length < expectedSize) {
+    console.warn(`[ENGINE] Tile attrs size mismatch: expected ${expectedSize}, got ${assetData.length}`);
+  }
+  
+  // Extract tile data
+  const data = new Uint8Array(assetData.buffer, assetData.byteOffset + 8, width * height);
+  
+  return {
+    flags,
+    width,
+    height,
+    data,
+  };
+}
+
+/**
+ * Get tile attribute at (x, y) position
+ */
+function getTileAttribute(tileAttrs, x, y) {
+  if (!tileAttrs || x < 0 || y < 0 || x >= tileAttrs.width || y >= tileAttrs.height) {
+    return TILE_ATTR.PASSABLE;
+  }
+  return tileAttrs.data[y * tileAttrs.width + x];
+}
+
+// ============================================================================
 // Tilemap Access
 // ============================================================================
 
@@ -580,7 +650,8 @@ function parseTilemaps(tilemapContainerData) {
 
 /**
  * Read a tile index from a tilemap at given tile coordinates
- * Returns the 11-bit tile index (lower bits of u16)
+ * Returns the 12-bit tile index (bits 0-11 of u16 tilemap entry)
+ * See TILE_INDEX_MASK constant for bit layout documentation.
  */
 function getTilemapEntry(tilemapData, x, y, layerWidth) {
   const idx = (y * layerWidth + x) * 2;
@@ -589,8 +660,8 @@ function getTilemapEntry(tilemapData, x, y, layerWidth) {
   const view = new DataView(tilemapData.buffer, tilemapData.byteOffset);
   const raw = view.getUint16(idx, true);
   
-  // Lower 11 bits are tile index, upper bits are flags
-  return raw & 0x7FF;
+  // Lower 12 bits are tile index, upper 4 bits are color tint selector
+  return raw & TILE_INDEX_MASK;
 }
 
 // ============================================================================
@@ -669,12 +740,20 @@ function loadStage(fileData, level, stageIndex) {
     ? parseEntities(tertiary[ASSET_TYPE.ENTITIES].data)
     : [];
   
+  // Parse tile attributes from tertiary Asset 500 (collision/triggers)
+  const tileAttrs = tertiary[ASSET_TYPE.TILE_ATTRS]
+    ? parseTileAttributes(tertiary[ASSET_TYPE.TILE_ATTRS].data)
+    : null;
+  
   // Debug: log what assets are in each segment
   console.log('[ENGINE] Primary asset IDs:', Object.keys(primary).map(Number).sort((a,b) => a-b));
   console.log('[ENGINE] Tertiary asset IDs:', Object.keys(tertiary).map(Number).sort((a,b) => a-b));
   console.log('[ENGINE] Stage sprites:', stageSprites.count, 'IDs:', stageSprites.sprites.slice(0, 5).map(s => `0x${s.id.toString(16)}`));
   console.log('[ENGINE] Shared sprites:', sharedSprites.count, 'IDs:', sharedSprites.sprites.slice(0, 5).map(s => `0x${s.id.toString(16)}`));
   console.log('[ENGINE] Entities parsed:', entities.length);
+  if (tileAttrs) {
+    console.log('[ENGINE] Tile attrs:', tileAttrs.width, 'x', tileAttrs.height, '=', tileAttrs.width * tileAttrs.height, 'tiles');
+  }
   
   // Check if clayball sprite ID is in the container
   const clayballId = 0x09406d8a;
@@ -693,6 +772,7 @@ function loadStage(fileData, level, stageIndex) {
     tilemaps,
     sprites,
     entities,
+    tileAttrs,
     // Keep raw sprite container data for on-demand frame decoding
     spriteContainerData: tertiary[ASSET_TYPE.SPRITES]?.data || null,
     sharedSpriteContainerData: primary?.[ASSET_TYPE.SPRITES]?.data || null,

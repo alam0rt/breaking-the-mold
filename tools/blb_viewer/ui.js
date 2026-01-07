@@ -37,8 +37,8 @@ function initDOM() {
     cameraXVal: document.getElementById('camera-x-val'),
     zoomLevel: document.getElementById('zoom-level'),
     // Display options
-    showEntities: document.getElementById('show-entities'),
     showGrid: document.getElementById('show-grid'),
+    showCollision: document.getElementById('show-collision'),
     showMinimap: document.getElementById('show-minimap'),
     optDebug: document.getElementById('opt-debug'),
     // 90s mode options
@@ -74,6 +74,12 @@ function initDOM() {
     consoleContent: document.getElementById('console-content'),
     btnConsoleClear: document.getElementById('btn-console-clear'),
     btnConsoleClose: document.getElementById('btn-console-close'),
+    // Entities panel
+    entitiesPanel: document.getElementById('entities-panel'),
+    entitiesList: document.getElementById('entities-list'),
+    entitiesCount: document.getElementById('entities-count'),
+    entitiesFilter: document.getElementById('entities-filter'),
+    entitiesGroup: document.getElementById('entities-group'),
   };
 }
 
@@ -187,13 +193,231 @@ function setupConsoleInterception() {
   });
 }
 
+// ============================================================================
+// Entities Panel
+// ============================================================================
+
+const entitiesPanel = {
+  entities: [],        // Current stage entities
+  filteredEntities: [], // After filter applied
+  groupMode: 'type',   // 'type' or 'instance'
+  filterText: '',
+  selectedIndex: -1,   // Selected entity/type index in current view
+  
+  update(entities) {
+    this.entities = entities || [];
+    this.selectedIndex = -1;
+    this.applyFilter();
+  },
+  
+  applyFilter() {
+    const filter = this.filterText.toLowerCase();
+    
+    if (!filter) {
+      this.filteredEntities = this.entities;
+    } else {
+      this.filteredEntities = this.entities.filter(e => 
+        e.typeName.toLowerCase().includes(filter) ||
+        e.typeDesc.toLowerCase().includes(filter) ||
+        e.type.toString().includes(filter)
+      );
+    }
+    
+    this.render();
+  },
+  
+  render() {
+    if (!dom.entitiesList) return;
+    
+    if (this.filteredEntities.length === 0) {
+      const msg = this.entities.length === 0 ? 'No entities in stage' : 'No matches';
+      dom.entitiesList.innerHTML = `<div class="entities-empty">${msg}</div>`;
+      dom.entitiesCount.textContent = '0 entities';
+      return;
+    }
+    
+    if (this.groupMode === 'type') {
+      this.renderByType();
+    } else {
+      this.renderAllInstances();
+    }
+  },
+  
+  renderByType() {
+    // Group entities by type and count them
+    const typeMap = new Map();
+    for (const entity of this.filteredEntities) {
+      const key = entity.type;
+      if (!typeMap.has(key)) {
+        typeMap.set(key, {
+          type: entity.type,
+          typeName: entity.typeName,
+          typeDesc: entity.typeDesc,
+          count: 0,
+          entities: [],
+        });
+      }
+      const group = typeMap.get(key);
+      group.count++;
+      group.entities.push(entity);
+    }
+    
+    // Sort by type number
+    const uniqueTypes = Array.from(typeMap.values()).sort((a, b) => a.type - b.type);
+    
+    // Build HTML - clicking snaps to first entity of that type
+    const html = uniqueTypes.map((t, idx) => {
+      const icon = this.getEntityIcon(t.type, t.typeName);
+      const selected = idx === this.selectedIndex ? ' selected' : '';
+      // Store first entity position for snap
+      const first = t.entities[0];
+      return `
+        <div class="entity-row${selected}" data-index="${idx}" data-type="${t.type}" data-x="${first.xCenter}" data-y="${first.yCenter}" title="${t.typeDesc}\nType ID: ${t.type}\nClick to snap to first instance">
+          <div class="entity-icon">${icon}</div>
+          <div class="entity-info">
+            <div class="entity-name">${t.typeName}</div>
+            <div class="entity-desc">${t.typeDesc}</div>
+          </div>
+          <div class="entity-count">×${t.count}</div>
+        </div>
+      `;
+    }).join('');
+    
+    dom.entitiesList.innerHTML = html;
+    dom.entitiesCount.textContent = `${this.filteredEntities.length} (${uniqueTypes.length} types)`;
+    
+    // Add click handlers
+    this.attachClickHandlers();
+  },
+  
+  renderAllInstances() {
+    // Sort by position (left to right, top to bottom)
+    const sorted = [...this.filteredEntities].sort((a, b) => {
+      if (a.yCenter !== b.yCenter) return a.yCenter - b.yCenter;
+      return a.xCenter - b.xCenter;
+    });
+    
+    const html = sorted.map((e, idx) => {
+      const icon = this.getEntityIcon(e.type, e.typeName);
+      const selected = idx === this.selectedIndex ? ' selected' : '';
+      return `
+        <div class="entity-row${selected}" data-index="${idx}" data-entity-idx="${e.index}" data-x="${e.xCenter}" data-y="${e.yCenter}" title="${e.typeDesc}\nType ID: ${e.type}\nPos: ${e.xCenter}, ${e.yCenter}\nClick to snap">
+          <div class="entity-icon">${icon}</div>
+          <div class="entity-info">
+            <div class="entity-name">${e.typeName}</div>
+            <div class="entity-desc">${e.xCenter}, ${e.yCenter}</div>
+          </div>
+          <div class="entity-count">#${e.index}</div>
+        </div>
+      `;
+    }).join('');
+    
+    dom.entitiesList.innerHTML = html;
+    dom.entitiesCount.textContent = `${sorted.length} instances`;
+    
+    // Add click handlers
+    this.attachClickHandlers();
+  },
+  
+  attachClickHandlers() {
+    const rows = dom.entitiesList.querySelectorAll('.entity-row');
+    rows.forEach(row => {
+      row.addEventListener('click', () => {
+        const x = parseInt(row.dataset.x, 10);
+        const y = parseInt(row.dataset.y, 10);
+        const idx = parseInt(row.dataset.index, 10);
+        
+        // Update selection
+        this.selectedIndex = idx;
+        rows.forEach(r => r.classList.remove('selected'));
+        row.classList.add('selected');
+        
+        // Snap camera to entity
+        this.snapToPosition(x, y);
+      });
+    });
+  },
+  
+  snapToPosition(x, y) {
+    // Calculate camera position to center the entity in view
+    const viewWidth = BLBRenderer.state.mode90s ? BLBRenderer.state.psxWidth : BLBRenderer.state.levelWidth;
+    const viewHeight = BLBRenderer.state.mode90s ? BLBRenderer.state.psxHeight : BLBRenderer.state.levelHeight;
+    
+    // In 90s mode, we control the camera. Otherwise scroll to position
+    if (BLBRenderer.state.mode90s) {
+      // Center entity in viewport
+      const halfWidth = Math.floor(viewWidth / 2);
+      const halfHeight = Math.floor(viewHeight / 2);
+      
+      let newX = x - halfWidth;
+      let newY = y - halfHeight;
+      
+      // Clamp to valid range
+      const limits = BLBRenderer.getCameraLimits();
+      newX = Math.max(0, Math.min(newX, limits.maxX));
+      newY = Math.max(0, Math.min(newY, limits.maxY));
+      
+      BLBRenderer.setCamera(newX, newY);
+      dom.cameraX.value = newX;
+      dom.cameraXVal.textContent = newX;
+      rerender();
+      
+      console.log(`📍 Snapped to (${x}, ${y}) - Camera: (${newX}, ${newY})`);
+    } else {
+      // In full view mode, scroll the container to the entity position
+      const zoom = parseInt(dom.zoomLevel.value, 10);
+      const scrollX = (x * zoom) - (dom.renderContainer.clientWidth / 2);
+      const scrollY = (y * zoom) - (dom.renderContainer.clientHeight / 2);
+      
+      dom.renderContainer.scrollTo({
+        left: Math.max(0, scrollX),
+        top: Math.max(0, scrollY),
+        behavior: 'smooth'
+      });
+      
+      console.log(`📍 Scrolled to (${x}, ${y})`);
+    }
+  },
+  
+  getEntityIcon(type, name) {
+    // Return emoji icons based on entity type name
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('klaymen') || lowerName.includes('player')) return '🧍';
+    if (lowerName.includes('swirl') || lowerName.includes('collect')) return '🌀';
+    if (lowerName.includes('bird') || lowerName.includes('yellow')) return '🐦';
+    if (lowerName.includes('checkpoint')) return '🚩';
+    if (lowerName.includes('spike') || lowerName.includes('hazard')) return '⚠️';
+    if (lowerName.includes('enemy') || lowerName.includes('monster')) return '👾';
+    if (lowerName.includes('platform') || lowerName.includes('moving')) return '⬛';
+    if (lowerName.includes('portal') || lowerName.includes('exit')) return '🚪';
+    if (lowerName.includes('ring') || lowerName.includes('hoop')) return '⭕';
+    if (lowerName.includes('button') || lowerName.includes('switch')) return '🔘';
+    if (lowerName.includes('door')) return '🚪';
+    if (lowerName.includes('key')) return '🔑';
+    if (lowerName.includes('spring') || lowerName.includes('bounce')) return '🔄';
+    if (lowerName.includes('water')) return '💧';
+    if (lowerName.includes('fire') || lowerName.includes('flame')) return '🔥';
+    // Default to type number as fallback
+    return type.toString(16).toUpperCase().padStart(2, '0');
+  },
+  
+  clear() {
+    this.entities = [];
+    this.filteredEntities = [];
+    this.selectedIndex = -1;
+    if (!dom.entitiesList) return;
+    dom.entitiesList.innerHTML = '<div class="entities-empty">No stage loaded</div>';
+    dom.entitiesCount.textContent = '0 entities';
+  }
+};
+
 // Log current options state (when debug is enabled)
 function logOptions(trigger) {
   if (!dom.optDebug || !dom.optDebug.checked) return;
   
   const opts = {
-    showEntities: dom.showEntities.checked,
     showGrid: dom.showGrid.checked,
+    showCollision: dom.showCollision.checked,
     showMinimap: dom.showMinimap.checked,
     mode90s: dom.mode90s.checked,
     staticBg: dom.optStaticBg.checked,
@@ -288,10 +512,9 @@ function updateLayersPanel(stageData) {
 // Render Helpers
 // ============================================================================
 
-// Animation state
+// Animation state (timing constant from BLBRenderer.ANIMATION_TICK_RATE)
 let animationFrameId = null;
 let animationTickCount = 0;
-const ANIMATION_TICK_RATE = 12; // Advance frame every 12 ticks (TWOS at ~60fps = ~200ms)
 
 function rerender() {
   // Check view mode - render sprite preview or stage
@@ -307,8 +530,8 @@ function rerender() {
     cameraX: BLBRenderer.state.cameraX,
     cameraY: BLBRenderer.state.cameraY,
     zoom: parseInt(dom.zoomLevel.value, 10),
-    showEntities: dom.showEntities.checked,
     showGrid: dom.showGrid.checked,
+    showCollision: dom.showCollision.checked,
     showMinimap: dom.showMinimap.checked,
     mode90s: dom.mode90s.checked,
     staticBg: dom.optStaticBg.checked,
@@ -323,19 +546,20 @@ function rerender() {
 
 /**
  * Start sprite animation loop
- * Runs at ~60fps, advances sprite frame every ANIMATION_TICK_RATE ticks (TWOS timing)
+ * Runs at ~60fps, advances sprite frame every N ticks (TWOS timing)
  */
 function startSpriteAnimation() {
   if (animationFrameId !== null) return; // Already running
   
   console.log('[SPRITES] Starting animation loop');
   animationTickCount = 0;
+  const tickRate = BLBRenderer.ANIMATION_TICK_RATE;
   
   function animationLoop() {
     animationTickCount++;
     
-    // Advance sprite frame index every ANIMATION_TICK_RATE ticks
-    if (animationTickCount >= ANIMATION_TICK_RATE) {
+    // Advance sprite frame index every tickRate ticks
+    if (animationTickCount >= tickRate) {
       animationTickCount = 0;
       BLBRenderer.state.spriteFrameIndex = (BLBRenderer.state.spriteFrameIndex || 0) + 1;
       rerender();
@@ -721,10 +945,13 @@ function handleTreeSelection(data) {
       // Update layer panel with new stage layers
       updateLayersPanel(stageData);
       
+      // Update entities panel with stage entities
+      entitiesPanel.update(stageData.entities);
+      
       const info = BLBRenderer.renderStage(stageData, {
         zoom: parseInt(dom.zoomLevel.value, 10),
-        showEntities: dom.showEntities.checked,
         showGrid: dom.showGrid.checked,
+        showCollision: dom.showCollision.checked,
         showMinimap: dom.showMinimap.checked,
         mode90s: dom.mode90s.checked,
         staticBg: dom.optStaticBg.checked,
@@ -748,6 +975,7 @@ function handleTreeSelection(data) {
       setStatus(`Rendered stage ${data.stageIndex}`);
     } else {
       updateLayersPanel(null);
+      entitiesPanel.clear();
       setStatus(`Failed to load stage ${data.stageIndex}`);
     }
     
@@ -776,8 +1004,8 @@ function handleTreeSelection(data) {
       
       BLBRenderer.renderStage(stageData, {
         zoom: parseInt(dom.zoomLevel.value, 10),
-        showEntities: dom.showEntities.checked,
         showGrid: dom.showGrid.checked,
+        showCollision: dom.showCollision.checked,
         showMinimap: dom.showMinimap.checked,
         mode90s: dom.mode90s.checked,
         staticBg: dom.optStaticBg.checked,
@@ -927,8 +1155,8 @@ async function loadBLBFile(file) {
     // Enable controls
     dom.cameraX.disabled = false;
     dom.zoomLevel.disabled = false;
-    dom.showEntities.disabled = false;
     dom.showGrid.disabled = false;
+    dom.showCollision.disabled = false;
     dom.showMinimap.disabled = false;
     dom.mode90s.disabled = false;
     
@@ -980,12 +1208,12 @@ function setupEventHandlers() {
   });
 
   // Display options
-  dom.showEntities.addEventListener('change', () => {
-    logOptions('showEntities');
-    rerender();
-  });
   dom.showGrid.addEventListener('change', () => {
     logOptions('showGrid');
+    rerender();
+  });
+  dom.showCollision.addEventListener('change', () => {
+    logOptions('showCollision');
     rerender();
   });
   
@@ -1166,6 +1394,19 @@ function setupEventHandlers() {
   dom.btnConsole.addEventListener('click', () => consoleLogger.toggle());
   dom.btnConsoleClear.addEventListener('click', () => consoleLogger.clear());
   dom.btnConsoleClose.addEventListener('click', () => consoleLogger.hide());
+  
+  // Entities filter and group controls
+  dom.entitiesFilter.addEventListener('input', (e) => {
+    entitiesPanel.filterText = e.target.value;
+    entitiesPanel.selectedIndex = -1;
+    entitiesPanel.applyFilter();
+  });
+  
+  dom.entitiesGroup.addEventListener('change', (e) => {
+    entitiesPanel.groupMode = e.target.value;
+    entitiesPanel.selectedIndex = -1;
+    entitiesPanel.render();
+  });
 }
 
 // ============================================================================

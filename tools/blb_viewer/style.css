@@ -602,6 +602,137 @@ input[type="checkbox"] {
 }
 
 /* ============================================================================
+   Entities Panel - Matches Tree Panel styling
+   ============================================================================ */
+
+#entities-panel {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  background: var(--win-input-bg);
+  border: 2px solid;
+  border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+}
+
+#entities-header {
+  padding: 4px 6px;
+  background: var(--win-bg);
+  border-bottom: 1px solid var(--win-border-dark);
+  font-weight: bold;
+}
+
+#entities-count {
+  font-weight: normal;
+  font-size: 10px;
+  color: #606060;
+}
+
+#entities-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--win-bg);
+  border-bottom: 1px solid var(--win-border-dark);
+}
+
+#entities-toolbar input,
+#entities-toolbar select {
+  font-family: var(--font-system);
+  font-size: 11px;
+  padding: 1px 3px;
+  border: 2px solid;
+  border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+  background: var(--win-input-bg);
+}
+
+#entities-toolbar input {
+  flex: 1;
+  min-width: 60px;
+}
+
+#entities-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.entities-empty {
+  color: #808080;
+  padding: 8px;
+  text-align: center;
+  font-style: italic;
+}
+
+.entity-row {
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+  cursor: pointer;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.entity-row:hover {
+  background: #e8e8e8;
+}
+
+.entity-row.selected {
+  background: var(--win-highlight);
+  color: var(--win-highlight-text);
+}
+
+.entity-row.selected .entity-desc {
+  color: #d0e8ff;
+}
+
+.entity-row.selected .entity-count {
+  background: #005a9e;
+  border-color: #004080 #0078d7 #0078d7 #004080;
+  color: white;
+}
+
+.entity-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.entity-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.entity-name {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entity-desc {
+  font-size: 9px;
+  color: #606060;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entity-count {
+  background: #c0c0c0;
+  border: 1px solid;
+  border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+  padding: 1px 4px;
+  font-size: 9px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
    90s Mode Viewport Wrapper
    ============================================================================ */
 
