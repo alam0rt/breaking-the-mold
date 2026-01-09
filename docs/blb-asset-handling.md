@@ -20,7 +20,7 @@ The BLB file contains three types of data segments per level:
 Same asset ID, different purposes. Verified via runtime analysis of SCIE level.
 
 **Note:** Asset 501 contains entity placement data (24-byte structures per entity).
-Entity types 2=clayball, 8=item, 25/27=enemies, 45=message box, etc.
+Entity types: 2=clayball, 3=ammo, 8=item, 24=special ammo, 25/27=enemies, 45=message box, etc.
 
 ### Container vs Raw Assets
 
@@ -277,7 +277,7 @@ Sprite metadata referenced by entity system.
 
 **Structure:** RAW, array of 24-byte entity structures
 
-Entity placement data for collectibles, enemies, triggers, and other placed objects.
+Entity placement data for collectibles, ammo, enemies, and other placed objects.
 Verified via Ghidra analysis of entity loader (FUN_80024dc4) and entity count accessor (FUN_8007b7a8).
 
 ```
@@ -292,15 +292,18 @@ Offset  Size  Type   Description
 0x0A    2     u16    y_center - Entity center Y (pixels)
 0x0C    2     u16    variant - Animation frame or subtype selector
 0x0E    4     u32    padding1 - Always 0
-0x12    2     u16    entity_type - Type ID (2=clayball, 45=message, etc)
+0x12    2     u16    entity_type - Type ID (2=clayball, 3=ammo, etc)
 0x14    2     u16    layer - Render layer (1, 2, or 3)
 0x16    2     u16    padding2 - Always 0
 ```
 
-**Known entity types:**
-- Type 2 = Clayballs (coins/collectibles)
-- Type 8 = Unknown (small objects)
+**Known entity types (verified 2026-01-10):**
+- Type 2 = Clayballs (collectible coins) - 5727 total
+- Type 3 = Ammo pickup (bullets for player weapon) - 308 total  
+- Type 8 = Item pickup - 144 total
+- Type 24 = Special ammo pickup - 227 total
 - Type 25, 27 = Enemies
+- Type 28, 48 = Moving platforms
 - Type 45 = Message box
 
 **IMPORTANT:** Entity type → sprite ID mapping is HARDCODED in game code, not in BLB data.

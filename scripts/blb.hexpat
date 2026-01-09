@@ -69,7 +69,7 @@
 //   Asset 400: Palette Container (4 × 256-color)
 //   Asset 401: Animation Config
 //   Asset 600: Tile Graphics (compressed)
-//   Asset 601: Collision Data
+//   Asset 601: Audio Sample Bank (SPU ADPCM)
 //   Asset 602: Raw Palette (16-color CLUT)
 //
 // Password screens appear after their corresponding level/world:
@@ -320,7 +320,7 @@ struct Palette256Raw {
 //
 // PRIMARY SEGMENT - Level Geometry:
 //   600 (0x258) GEOMETRY         - Level geometry/RLE sprites container
-//   601 (0x259) COLLISION        - Collision/layout data container
+//   601 (0x259) AUDIO_SAMPLES    - SPU audio sample bank (same as secondary)
 //   602 (0x25A) LEVEL_PALETTE    - Level palette (15-bit PSX colors)
 //
 // TERTIARY SEGMENT - Sprites & Stage Data:
@@ -405,18 +405,21 @@ struct TileHeader {
 // =============================================================================
 // VERIFIED via Ghidra (FUN_80024dc4 entity loader, FUN_8007b7a8 entity count)
 //
-// Entities are placed objects in the level (collectibles, enemies, triggers, etc.)
+// Entities are placed objects in the level (collectibles, enemies, ammo, etc.)
 // Entity data is stored as an array of 24-byte structures in Asset 501.
 // Entity count is at TileHeader + 0x1E (field_1e above).
 //
 // IMPORTANT: Entity Type → Sprite ID mapping is HARDCODED IN GAME CODE, not in BLB data.
 // See "Sprite ID Lookup Chain" section below for details.
 //
-// Known entity types from observation:
-//   Type 2  = Clayballs (coins/collectibles)
-//   Type 45 = Message box
+// Known entity types (verified 2026-01-10):
+//   Type 2  = Clayballs (coins/collectibles) - 5727 total
+//   Type 3  = Ammo pickup (bullets for player weapon) - 308 total
+//   Type 8  = Item pickup - 144 total
+//   Type 24 = Special ammo pickup - 227 total
 //   Type 25, 27 = Enemies
-//   Type 28, 48 = Directional objects
+//   Type 28, 48 = Moving platforms / directional objects
+//   Type 45 = Message box
 
 struct Entity {
     // Bounding box in pixels (0x00-0x07)
@@ -442,9 +445,12 @@ struct Entity {
     // Entity type ID (0x12-0x13)
     // This determines which sprite to use - but the sprite ID is looked up in code,
     // not stored in BLB data. See sprite lookup chain documentation.
-    u16 entity_type [[name("Type"), comment("Entity type ID (2=clayball, 45=message, etc)"), color("FF80FF")]];
+    // Known types: 2=clayball, 3=ammo, 8=item, 24=special ammo, 25/27=enemy, 45=message
+    u16 entity_type [[name("Type"), comment("Entity type ID (2=clayball, 3=ammo, 24=special ammo, 45=message, etc)"), color("FF80FF")]];
     
     // Render layer (0x14-0x15)
+    // Normal values: 1, 2, or 3
+    // NOTE: Some entities have unusual layer values (e.g., 17667) - possibly corrupted or special flags
     u16 layer [[name("Layer"), comment("Render layer (1, 2, or 3)"), color("80FF80")]];
     
     // Padding (0x16-0x17) - always zero
@@ -1638,16 +1644,8 @@ struct PrimarySegmentFull {
         SpriteContainerAsset sprites1 @ (_base + toc[1].offset) [[name("Sprites")]];
     }
     
-    // Parse Asset 601 (Collision Container)
-    if (toc_count > 0 && toc[0].asset_type == 601) {
-        CollisionContainerAsset collision0 @ (_base + toc[0].offset) [[name("Collision")]];
-    }
-    if (toc_count > 1 && toc[1].asset_type == 601) {
-        CollisionContainerAsset collision1 @ (_base + toc[1].offset) [[name("Collision")]];
-    }
-    if (toc_count > 2 && toc[2].asset_type == 601) {
-        CollisionContainerAsset collision2 @ (_base + toc[2].offset) [[name("Collision")]];
-    }
+    // Note: Asset 601 in Primary segment is Audio Sample Bank (SPU ADPCM data)
+    // Not parsed here - raw audio data without structured header
 } [[name("Primary Segment"), color("40CCFF")]];
 
 // -----------------------------------------------------------------------------
@@ -1896,6 +1894,33 @@ struct TertiaryStageWithAssets {
     }}
     if (toc_count >= 8) { if (toc[7].asset_type == 500) {
         TileAttributeMap<toc[7].size> tile_attrs7 @ (_base + toc[7].offset) [[name("Tile Attributes (500)")]];
+    }}
+    
+    // Search for Asset 501 (Entity Placement Data) - 24-byte entity structures
+    // Entity types: 2=Clayball, 3=Ammo, 8=Item, 24=AmmoSpecial, 25/27=Enemy, 45=Message, etc.
+    if (toc_count >= 1) { if (toc[0].asset_type == 501) {
+        Entity entities0[toc[0].size / 24] @ (_base + toc[0].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 2) { if (toc[1].asset_type == 501) {
+        Entity entities1[toc[1].size / 24] @ (_base + toc[1].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 3) { if (toc[2].asset_type == 501) {
+        Entity entities2[toc[2].size / 24] @ (_base + toc[2].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 4) { if (toc[3].asset_type == 501) {
+        Entity entities3[toc[3].size / 24] @ (_base + toc[3].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 5) { if (toc[4].asset_type == 501) {
+        Entity entities4[toc[4].size / 24] @ (_base + toc[4].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 6) { if (toc[5].asset_type == 501) {
+        Entity entities5[toc[5].size / 24] @ (_base + toc[5].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 7) { if (toc[6].asset_type == 501) {
+        Entity entities6[toc[6].size / 24] @ (_base + toc[6].offset) [[name("Entities (501)")]];
+    }}
+    if (toc_count >= 8) { if (toc[7].asset_type == 501) {
+        Entity entities7[toc[7].size / 24] @ (_base + toc[7].offset) [[name("Entities (501)")]];
     }}
     
     // Search for Asset 504 (Vehicle Data) - only in FINN/RUNN levels

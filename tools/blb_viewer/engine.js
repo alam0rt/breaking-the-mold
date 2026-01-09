@@ -163,9 +163,9 @@ const ENTITY_TYPES = {
   2: { name: 'Clayball', shortName: 'Clay', desc: 'Collectible coin', useVariant: true },
   8: { name: 'Item', shortName: 'Item', desc: 'Collectible item', spriteId: 0xc34aa22, useVariant: true },
   
-  // Triggers (invisible at runtime, but show bounds in viewer)
-  3: { name: 'Trigger', shortName: 'Trg', desc: 'Level trigger', invisible: true },
-  24: { name: 'Special', shortName: 'Spc', desc: 'Special trigger', invisible: true },
+  // Ammo pickups (consumable bullets for player weapon)
+  3: { name: 'Ammo', shortName: 'Ammo', desc: 'Bullet pickup (standard)', color: '#ff0' },
+  24: { name: 'AmmoSpecial', shortName: 'Ammo+', desc: 'Bullet pickup (special)', color: '#fa0' },
   
   // Enemies (from FUN_8006dd98, FUN_80073338)
   25: { name: 'Enemy1', shortName: 'Enm1', desc: 'Enemy type 1', spriteId: 0x1e1000b3, color: '#f00' },

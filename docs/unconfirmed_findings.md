@@ -2025,21 +2025,22 @@ Offset  Size  Field         Description
 0x14    u32   flags         Flags (observed values: 1, 2, 3)
 ```
 
-### Entity Types Found (SCIE Level - 211 Entities)
+### Entity Types Found (Full Game - 10,000+ Entities)
 
-| Type | Count | Avg Size | Notes |
-|------|-------|----------|-------|
-| 2 | 144 | 37×36 | Most common - unknown purpose |
-| 3 | 5 | 16×16 | Triggers/switches? |
-| 8 | 19 | 16×16 | Collectibles? |
-| 10 | 4 | 72×84 | Large objects |
-| 24 | 1 | 16×16 | Special trigger? |
-| 25 | 8 | 160×80 | **ENEMIES** (user verified) |
-| 27 | 8 | 256×80 | **ENEMIES** (user verified) |
-| 28 | 12 | 352×128 | Moving platforms? |
-| 42 | 2 | 16×16 | Unknown |
-| 45 | 6 | 160×96 | Unknown |
-| 48 | 2 | 352×128 | Moving platforms? |
+| Type | Count | Size | Notes |
+|------|-------|------|-------|
+| 2 | 5727 | 16×16 | **Clayballs** (collectible coins) |
+| 3 | 308 | 16×16 | **Ammo pickup** (bullets for player weapon) |
+| 8 | 144 | 16×16 | **Item pickup** |
+| 24 | 227 | 16×16 | **Special ammo pickup** |
+| 25 | 152 | 160×80 | **ENEMIES** (user verified) |
+| 27 | 60 | 256×80 | **ENEMIES** (user verified) |
+| 28 | 99 | 352×128 | Moving platforms |
+| 48 | 297 | 352×128 | Moving platforms |
+| 45 | - | 160×96 | Message box |
+| 42 | 113 | 16×16 | Portal/warp point |
+
+*Entity counts extracted from full GAME.BLB via ImHex (2026-01-10)*
 
 ### Related Functions (Ghidra)
 
@@ -2317,5 +2318,78 @@ To build a mapping table for the BLB viewer:
 
 ---
 
-*Last updated: January 7, 2026*
+## Entity Dispatch Investigation (2026-01-10) - NO CENTRAL TABLE FOUND
+
+**Status:** INVESTIGATED - No single dispatch table exists; dispatch is distributed
+
+### Investigation Summary
+
+Exhaustive search for entity dispatch table yielded these findings:
+
+1. **Entity Definition Structure (24 bytes at GameState+0x28 list):**
+   ```
+   Offset 0x00-0x0B: Bounding box/position (12 bytes) 
+   Offset 0x0C-0x0F: Unknown value (4 bytes)
+   Offset 0x10-0x11: Unknown (2 bytes) - always 00 00
+   Offset 0x12-0x13: Entity TYPE (u16) - values 5, 7, 8 observed at runtime
+   Offset 0x14-0x15: Flags (2 bytes) - values 02, 03 observed
+   Offset 0x16-0x17: Spawn status flag (can be cleared by FUN_8007eed8)
+   ```
+
+2. **Runtime Memory Verification (PAL):**
+   - GameState @ 0x8009dc40
+   - GameState+0x1c = 0x801a4c04 (active entity list head)
+   - GameState+0x28 = 0x8017d2c4 (entity definitions list head)
+   - Entity types 5, 7, 8 confirmed in live memory
+
+3. **No Central Dispatch Table Found:**
+   - Searched 0x80020000-0x80030000 for switch statements
+   - Traced 178 callers of `FUN_800213a8` (AddEntityToActiveList)
+   - No function reads entity type and dispatches to different init functions
+   
+4. **Dispatch is Distributed by Category:**
+   | Category | Spawner Function | How Init is Selected |
+   |----------|-----------------|---------------------|
+   | Player | FUN_80024f34 | Direct call to InitPlayerEntity |
+   | Menu/UI | FUN_800281a4, FUN_80078200 | Hardcoded sprite IDs |
+   | HUD items | FUN_8002b22c | Hardcoded sprite IDs |
+   | Boss | (via 0x80081020) | Direct call to InitBossEntity |
+   | Child entities | Various update funcs | Parent spawns with hardcoded ID |
+
+5. **FUN_8007eed8 Checks Entity Types (but doesn't dispatch):**
+   - Checks types 8, 32 (0x20) in active list (GameState+0x1c)
+   - Checks types 28-29, 57-59 in definition list (GameState+0x28)
+   - Only sets/clears flags, doesn't call init functions
+
+### Hypothesis: Stage Entities Use Different Mechanism
+
+**Observation:** The entity types (5, 7, 8) seen in the definition list don't match
+the pattern of menu/player spawning (which use sprite IDs directly).
+
+**Possible mechanisms for stage entity dispatch:**
+1. Entity type → sprite ID mapping stored in BLB Asset 501 itself
+2. Entity type embedded in tilemap layer data (layers 8-11)
+3. A runtime lookup function that maps type to sprite ID
+4. Each level has level-specific spawn code
+
+### Key Functions to Investigate Further
+
+| Address | Function | Role |
+|---------|----------|------|
+| 0x80024dc4 | FUN_80024dc4 | Loads entity defs from Asset 501 → GameState+0x28 |
+| 0x8007b7a8 | FUN_8007b7a8 | Gets entity count from level data |
+| 0x8007b7bc | FUN_8007b7bc | Gets entity data pointer (GameState+0x84+0x38) |
+| 0x800250c8 | FUN_800250c8 | Adds pre-init entities to active list |
+| 0x80024468 | FUN_80024468 | Iterates def list, removes entities with flag 0x16 bit 2 |
+
+### Next Steps
+
+1. **Examine Asset 501 raw structure** - does it contain sprite IDs?
+2. **Check if entity type IS a sprite index** into some table
+3. **Trace FUN_8007b7a8/FUN_8007b7bc** - how is entity data interpreted?
+4. **Runtime breakpoint** on entity def reads during gameplay
+
+---
+
+*Last updated: January 10, 2026*
 

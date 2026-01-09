@@ -152,13 +152,77 @@ Available disk images for testing:
 
 Known runtime addresses (verified via MCP for PAL version SLES-01090):
 - BLB header: `0x800AE3E0` (loaded after game starts)
-- LevelDataContext: `0x8009DCC4` (level loading state, see docs/blb-data-format.md)
+- GameState: `0x8009DC40` (main game state structure)
+- LevelDataContext: `0x8009DCC4` (GameState + 0x84, level loading state)
 - Level count: `0x800AF311` (offset 0xF31 in header, value=26)
 - Movie count: `0x800AF312` (offset 0xF32 in header, value=13)
 - Game mode: `0x800AF316` (offset 0xF36, 3=level, 6=special)
 - Level index: `0x800AF372` (offset 0xF92, current level being loaded)
 - g_GameBLBFile: `0x8009B4B4` (CdlFILE structure)
 - g_GameBLBSector: `0x800A59F0` (starting sector, typically 0x146=326)
+
+**LevelDataContext Offsets (from 0x8009DCC4):**
+- `+0x1C`: Active entity linked list head
+- `+0x28`: Entity definition list (loaded from Asset 501)
+- `+0x2C`: Entity data pointer (Asset 500) → typically `0x8014xxxx`
+- `+0x38`: Secondary entity pointer
+
+### Finding Level/Entity Data in RAM
+
+**Entity Structure (24 bytes):**
+```
+Offset  Type    Field
+0x00    u16     x1 (left)
+0x02    u16     y1 (top)
+0x04    u16     x2 (right)
+0x06    u16     y2 (bottom)
+0x08    u16     x_center
+0x0A    u16     y_center
+0x0C    u16     variant
+0x0E    4 bytes padding (zeros)
+0x12    u16     entity_type
+0x14    u16     layer
+0x16    2 bytes padding
+```
+
+**Searching for Entities by Position:**
+Level data is loaded into RAM around `0x80140000` - `0x802FFFFF`. To find a specific entity:
+
+```python
+import subprocess, struct
+
+# Read RAM chunk (adjust size as needed)
+result = subprocess.run(
+    ['curl', '-s', 'http://localhost:8080/api/v1/cpu/ram/raw?address=0x80140000&size=2097152'],
+    capture_output=True
+)
+data = result.stdout
+
+# Search for entity by center position (e.g., x=8080, y=352)
+target_x = struct.pack('<H', 8080)  # little-endian u16
+target_y = struct.pack('<H', 352)
+
+for i in range(len(data) - 24):
+    if data[i+8:i+10] == target_x and data[i+10:i+12] == target_y:
+        entity = struct.unpack('<HHHHHHHHHHHH', data[i:i+24])
+        x1, y1, x2, y2, x_center, y_center = entity[0:6]
+        entity_type, layer = entity[9], entity[10]
+        if x1 < x2 and y1 < y2:  # sanity check
+            print(f"Found at 0x{0x80140000+i:08X}: type={entity_type}, layer={layer}")
+```
+
+**Tips for RAM Inspection:**
+- Entity data often exists in TWO places: raw loaded data AND active/processed copy
+- The entity_type may change between copies (e.g., type 24 → type 7) due to runtime processing
+- Use large RAM reads (1-2MB starting at `0x80140000`) rather than many small reads
+- Search by x_center/y_center bytes at offset +8/+10 in the 24-byte struct
+- Pixel position = tile position × 16 (e.g., tile 505 = pixel 8080)
+
+**Key Entity Functions in Ghidra:**
+- `EntityTickLoop` (0x80020e1c): Iterates active entities, calls update functions
+- `FUN_80024dc4`: Loads 24-byte entity defs from Asset 501 into linked list
+- `FUN_800250c8`: Adds pre-init entities to active list
+- `InitEntity_*` functions: Type-specific entity initialization
 
 ## More Info
 The developer has Ghidra installed, so they can use the provided script to generate the initial splat configuration from the binary.
