@@ -150,8 +150,8 @@ Each container has the standard 11-asset level segment structure:
 - Asset 400: Palette container (4 × 256-color palettes)
 - Asset 401: Animation config
 - Asset 600: Tile graphics
-- Asset 601: Collision/grid data
-- Asset 602: Raw palette (1 × 16-color CLUT)
+- Asset 601: Audio sample bank (SPU ADPCM)
+- Asset 602: Raw palette (1 × 16-color CLUT) / Audio volume-pan
 
 ### Rendering
 
@@ -747,7 +747,7 @@ Layers are likely rendered back-to-front based on priority field in Asset 201:
 4. Main level layers (9-11) - entity spawn markers (platforms, objects, hazards)
 5. Foreground layer (12)
 
-### Entity vs Collision Layers (UPDATED 2026-01-05)
+### Entity vs Collision Layers (UPDATED 2026-01-10)
 
 Previous hypothesis about layers 9-11 being "collision layers" was incorrect.
 
@@ -755,13 +755,17 @@ Previous hypothesis about layers 9-11 being "collision layers" was incorrect.
 - Layers 8-11 contain **entity spawn data** encoded as tile indices with bit 12 set
 - Entity tiles reference graphics from tertiary Asset 600 sprite data
 - Each connected region of entity tiles = one entity instance
-- True collision data is likely in **Primary Asset 601 (0x259)**, not in tilemaps
+
+**Collision Data Location (CORRECTED 2026-01-10):**
+- **Asset 601 (0x259) is AUDIO**, not collision (code-verified via `UploadAudioToSPU`)
+- **Asset 500 (0x1F4)** is the **Tile Attribute Map** containing per-tile collision flags
+  - Format: 8-byte header (u32 unknown, u16 width, u16 height) + 1 byte per tile
+  - Known values: 0x00=passable, 0x02=solid, 0x12/0x53/0x65=triggers
 
 The distinction is:
 - **Tilemaps (layers)**: Visual rendering + entity spawn positions
-- **Asset 601**: Collision geometry and physics boundaries
-
-**Investigation needed:** Decode Asset 601 collision format to understand actual collision detection.
+- **Asset 500**: Per-tile collision/attribute flags (tile-based collision)
+- **Asset 601**: Audio sample bank for SPU (NOT collision)
 
 ---
 
@@ -1238,8 +1242,8 @@ This flag is preserved but its rendering effect is unknown.
 | 502 | 0x1F6 | TERT | RAW | ⚠️ VRAM rectangles |
 | 503 | 0x1F7 | TERT | CONTAINER | ⚠️ Animation frame offsets |
 | 600 | 0x258 | PRIM, TERT | CONTAINER | ✅ RLE sprite container |
-| 601 | 0x259 | PRIM, SEC | CONTAINER | ⚠️ Collision data |
-| 602 | 0x25A | PRIM, SEC | RAW | ✅ Palette (15-bit RGB) |
+| 601 | 0x259 | PRIM, SEC | CONTAINER | ✅ Audio sample bank (CODE-VERIFIED via UploadAudioToSPU) |
+| 602 | 0x25A | PRIM, SEC | RAW | ✅ Palette (15-bit RGB) / Audio volume-pan table |
 | 700 | 0x2BC | TERT | RAW | ❓ Audio (9 levels only) |
 
 Legend: ✅ Fully documented, ⚠️ Partially understood, ❓ Unknown

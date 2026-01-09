@@ -389,9 +389,9 @@ Each level's tertiary container has a **different set of sprite IDs**:
 | 0x3C | ptr | unknown_502 | Asset 502 pointer |
 | 0x40 | ptr | **secondary_sprite_toc** | Asset 600 secondary pointer |
 | 0x44 | u32 | secondary_sprite_size | Asset 600 secondary size |
-| 0x48 | ptr | collision_data | Asset 601 pointer |
-| 0x4C | u32 | collision_size | Asset 601 size |
-| 0x50 | ptr | unknown_602 | Asset 602 pointer |
+| 0x48 | ptr | audio_sample_bank | Asset 601 pointer (SPU ADPCM samples) |
+| 0x4C | u32 | audio_sample_size | Asset 601 size |
+| 0x50 | ptr | audio_volume_pan | Asset 602 pointer (volume/pan table) |
 | 0x54 | ptr | unknown_700 | Asset 700 pointer |
 | 0x58 | u32 | unknown_700_size | Asset 700 size |
 | 0x5C | ptr | **blb_header** | BLB header pointer (0x800AE3E0) |

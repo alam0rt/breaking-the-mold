@@ -333,6 +333,7 @@ fieldset.win-group legend input[type="checkbox"] {
 /* Render Panel */
 #render-panel {
   flex: 1;
+  min-width: 0; /* Prevent flex item from overflowing */
   display: flex;
   flex-direction: column;
   background: var(--win-bg);
@@ -607,11 +608,16 @@ input[type="checkbox"] {
 
 #entities-panel {
   width: 220px;
-  display: flex;
+  flex-shrink: 0;
+  display: none;
   flex-direction: column;
   background: var(--win-input-bg);
   border: 2px solid;
   border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+}
+
+#entities-panel.visible {
+  display: flex;
 }
 
 #entities-header {

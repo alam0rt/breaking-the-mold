@@ -474,8 +474,12 @@ This was verified via runtime analysis on 2026-01-05.
 | Type | Hex | Structure | Description | Typical Size |
 |------|-----|-----------|-------------|--------------|
 | 600 | 0x258 | CONTAINER | Level geometry/world data | 500KB-1MB |
-| 601 | 0x259 | CONTAINER | Collision/layout data | 100-300KB |
+| 601 | 0x259 | CONTAINER | **Audio sample bank** (same format as Secondary 601) | 30-150KB |
 | 602 | 0x25A | RAW | Palette/color data (15-bit PSX) | 24-200 bytes |
+
+**Note:** Asset 601 in PRIMARY segment uses the same audio sample format as Secondary 601.
+The `GetAsset601Ptr` function selects between primary (ctx+0x74) and secondary (ctx+0x48)
+based on mode flag at ctx+0x04. See Audio System section below for details.
 
 ### Secondary Segment Assets (Tiles) - VERIFIED
 

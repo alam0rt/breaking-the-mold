@@ -40,6 +40,7 @@ function initDOM() {
     showGrid: document.getElementById('show-grid'),
     showCollision: document.getElementById('show-collision'),
     showMinimap: document.getElementById('show-minimap'),
+    showEntitiesPanel: document.getElementById('show-entities-panel'),
     optDebug: document.getElementById('opt-debug'),
     // 90s mode options
     mode90s: document.getElementById('mode-90s'),
@@ -1158,6 +1159,7 @@ async function loadBLBFile(file) {
     dom.showGrid.disabled = false;
     dom.showCollision.disabled = false;
     dom.showMinimap.disabled = false;
+    dom.showEntitiesPanel.disabled = false;
     dom.mode90s.disabled = false;
     
     // Build tree
@@ -1221,6 +1223,12 @@ function setupEventHandlers() {
     logOptions('showMinimap');
     dom.minimapContainer.classList.toggle('visible', e.target.checked);
     rerender();
+  });
+
+  // Entities panel toggle
+  dom.showEntitiesPanel.addEventListener('change', (e) => {
+    logOptions('showEntitiesPanel');
+    dom.entitiesPanel.classList.toggle('visible', e.target.checked);
   });
 
   // 90s Mode group toggle

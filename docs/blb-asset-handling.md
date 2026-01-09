@@ -51,21 +51,28 @@ Offset  Size    Description
 - **Consumer:** Level rendering subsystem
 - **LevelDataContext offset:** 0x40 [16] (pointer), 0x44 [17] (size)
 
-### Asset 601 (0x259) - Collision Data
+### Asset 601 (0x259) - Audio Sample Bank (CODE-VERIFIED)
 
-**Structure:** CONTAINER with sub-TOC
+**Structure:** CONTAINER with sample entries
 
-Contains collision geometry and physics properties for level navigation.
+Contains SPU ADPCM audio samples for sound effects. Verified via `UploadAudioToSPU` @ 0x8007c088.
 
 ```
 Offset  Size    Description
 ------  ----    -----------
-0x00    u16     Entry count (or type indicator)
-0x02    var     Collision geometry data
+0x00    u16     Sample count
+0x02    u16     Reserved (always 0)
+0x04    12×N    Sample entries (AudioSampleEntry)
+        var     ADPCM audio data
+
+AudioSampleEntry (12 bytes each):
+  0x00  u32     Sample ID (hash identifier)
+  0x04  u32     SPU size (bytes in SPU RAM)
+  0x08  u32     Data offset (within audio data block)
 ```
 
-- **Typical size:** 100KB - 300KB  
-- **Consumer:** Physics/collision subsystem
+- **Typical size:** 30KB - 150KB (varies by stage audio needs)
+- **Consumer:** `UploadAudioToSPU` - transfers to SPU RAM at 0x1010+
 - **LevelDataContext offset:** 0x48 [18] (pointer), 0x4C [19] (size)
 
 ### Asset 602 (0x25A) - Primary Palette

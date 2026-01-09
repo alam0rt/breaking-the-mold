@@ -1522,13 +1522,19 @@ struct SpriteContainerAsset {
 } [[name("Sprite Container"), color("FF8080")]];
 
 // =============================================================================
-// COLLISION CONTAINER - Asset 601 (0x259) 
+// AUDIO SAMPLE BANK - Asset 601 (0x259) - CODE-VERIFIED
 // =============================================================================
+// Contains SPU ADPCM audio samples. Verified via UploadAudioToSPU @ 0x8007c088.
+// Format: u16 count, u16 reserved, AudioSampleEntry[count], ADPCM data...
+// See AudioSampleEntry struct in Audio System section above for entry format.
+// NOTE: Primary segment also has Asset 601 type ID but with different content.
 
-struct CollisionContainerAsset {
-    u32 entry_count [[name("Count"), comment("Number of collision entries")]];
-    SubTOCEntry collision_toc[entry_count] [[name("Collision TOC")]];
-} [[name("Collision Container"), color("8080FF")]];
+struct AudioSampleBankAsset {
+    u16 sample_count [[name("Sample Count"), comment("Number of audio samples")]];
+    u16 reserved [[name("Reserved"), comment("Always 0")]];
+    AudioSampleEntry samples[sample_count] [[name("Sample Entries")]];
+    // Followed by ADPCM audio data (size = total_size - 4 - sample_count * 12)
+} [[name("Audio Sample Bank"), color("80FF80")]];
 
 // -----------------------------------------------------------------------------
 // Container Asset Header - for assets with sub-TOC (0x258, 0x259, 0x190)
