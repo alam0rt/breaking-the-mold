@@ -222,7 +222,35 @@ for i in range(len(data) - 24):
 - `EntityTickLoop` (0x80020e1c): Iterates active entities, calls update functions
 - `FUN_80024dc4`: Loads 24-byte entity defs from Asset 501 into linked list
 - `FUN_800250c8`: Adds pre-init entities to active list
-- `InitEntity_*` functions: Type-specific entity initialization
+- `InitEntity_*` functions: Type-specific entity initialization (91 functions, hardcoded sprite IDs)
+
+### Asset Type → LevelDataContext Mapping (Verified via Ghidra)
+
+The `LoadAssetContainer` function (0x8007b074) maps asset types to context array indices:
+
+| Asset ID | Hex   | Context Index | Name              | Notes |
+|----------|-------|---------------|-------------------|-------|
+| 100      | 0x64  | ctx[1]        | TileHeader        | 36 bytes, BG color, spawn, tile counts |
+| 101      | 0x65  | ctx[2]        | Unknown           | 12 bytes, sparse (8 levels only) |
+| 200      | 0xC8  | ctx[3]        | TilemapContainer  | Sub-TOC with layer data |
+| 201      | 0xC9  | ctx[4]        | LayerEntries      | 92 bytes per layer |
+| 300      | 0x12C | ctx[5]        | TilePixels        | 8bpp indexed |
+| 301      | 0x12D | ctx[6]        | PaletteIndices    | 1 byte per tile |
+| 302      | 0x12E | ctx[7]        | TileFlags         | Semi-trans, size, skip |
+| 303      | 0x12F | ctx[10]       | AnimatedTiles     | Tile animation lookup |
+| 400      | 0x190 | ctx[8]        | PaletteContainer  | Sub-TOC of 256-color CLUTs |
+| 401      | 0x191 | ctx[9]        | PaletteAnim       | Palette animation data |
+| 500      | 0x1F4 | ctx[11]       | TileAttributes    | Collision map (1 byte/tile) |
+| 501      | 0x1F5 | ctx[14]       | Entities          | 24-byte structures |
+| 502      | 0x1F6 | ctx[15]       | VRAMRects         | Texture page definitions |
+| 503      | 0x1F7 | ctx[12]       | AnimOffsets       | ToolX sequence data |
+| 504      | 0x1F8 | ctx[13]       | VehicleData       | FINN/RUNN levels only |
+| 600      | 0x258 | ctx[16,17]    | Sprites+size      | RLE sprites (tertiary) or geometry (primary) |
+| 601      | 0x259 | ctx[18,19]    | Audio+size        | SPU ADPCM samples |
+| 602      | 0x25A | ctx[20]       | Palette           | 15-bit PSX colors |
+| 700      | 0x2BC | ctx[21,22]    | SPUSamples+size   | Additional audio (9 levels) |
+
+**Asset ID Pattern:** Base-100 numbering by category (100s=tiles, 200s=maps, 300s=graphics, 400s=palettes, 500s=tertiary, 600s=containers, 700s=audio).
 
 ## More Info
 The developer has Ghidra installed, so they can use the provided script to generate the initial splat configuration from the binary.

@@ -1382,28 +1382,28 @@ Offset  WIdx  Size  Type    Field                   Description
 ------  ----  ----  ----    -----                   -----------
 # Asset Pointers (populated by LoadAssetContainer from sub-TOC)
 0x00    [0]   4     int     subBlockFlag            Set to subBlockIndex or 1, indicates loaded sub-block
-0x04    [1]   4     ptr     assetGeometry100        ID 100: Geometry/tiles pointer
-0x08    [2]   4     ptr     assetGeometry101        ID 101: Unknown geometry pointer
-0x0C    [3]   4     ptr     assetSprite200          ID 200: Sprites pointer
-0x10    [4]   4     ptr     assetSprite201          ID 201: Animations pointer (0xC9)
-0x14    [5]   4     ptr     asset300                ID 300: Unknown asset pointer
-0x18    [6]   4     ptr     asset301                ID 301: Unknown asset pointer (0x12D)
-0x1C    [7]   4     ptr     asset302                ID 302: Unknown asset pointer (0x12E)
-0x20    [8]   4     ptr     assetObject400          ID 400: Object data pointer
-0x24    [9]   4     ptr     assetObject401          ID 401: Object data pointer (0x191)
-0x28    [10]  4     ptr     asset303                ID 303: Unknown asset pointer (0x12F)
-0x2C    [11]  4     ptr     asset500                ID 500: Unknown asset pointer (0x1F4)
-0x30    [12]  4     ptr     asset503                ID 503: Unknown asset pointer (0x1F7)
-0x34    [13]  4     ptr     asset504                ID 504: Unknown asset pointer (0x1F8)
-0x38    [14]  4     ptr     asset501                ID 501: **Entity placement data** (0x1F5)
-0x3C    [15]  4     ptr     asset502                ID 502: Unknown asset pointer (0x1F6)
-0x40    [16]  4     ptr     assetLevel600           ID 600: Level geometry pointer (0x258)
-0x44    [17]  4     u32     assetLevel600Size       Size of level geometry in bytes
-0x48    [18]  4     ptr     assetAudio601           ID 601: Audio samples pointer (0x259) - uploaded to SPU
-0x4C    [19]  4     u32     assetAudio601Size       Size of audio sample data in bytes
-0x50    [20]  4     ptr     assetAudioMeta602       ID 602: Audio metadata pointer (0x25A)
-0x54    [21]  4     ptr     assetAudio700           ID 700: Audio/music pointer (0x2BC)
-0x58    [22]  4     u32     assetAudio700Size       Size of audio data in bytes
+0x04    [1]   4     ptr     tileHeader              ID 100: Tile header (36 bytes)
+0x08    [2]   4     ptr     unknown101              ID 101: Unknown (sparse, 8 levels only)
+0x0C    [3]   4     ptr     tilemapContainer        ID 200: Tilemap sub-TOC
+0x10    [4]   4     ptr     layerEntries            ID 201: Layer entries (92 bytes each)
+0x14    [5]   4     ptr     tilePixels              ID 300: Tile pixel data (8bpp)
+0x18    [6]   4     ptr     paletteIndices          ID 301: Palette index per tile
+0x1C    [7]   4     ptr     tileSizeFlags           ID 302: Per-tile flags
+0x20    [8]   4     ptr     paletteContainer        ID 400: Palette sub-TOC
+0x24    [9]   4     ptr     paletteAnimData         ID 401: Palette animation data
+0x28    [10]  4     ptr     animatedTileData        ID 303: Animated tile lookup
+0x2C    [11]  4     ptr     tileAttributes          ID 500: Tile collision attributes
+0x30    [12]  4     ptr     animOffsets             ID 503: ToolX animation offsets
+0x34    [13]  4     ptr     vehicleData             ID 504: Vehicle data (FINN/RUNN only)
+0x38    [14]  4     ptr     entityData              ID 501: **Entity placement data** (24-byte structs)
+0x3C    [15]  4     ptr     vramRects               ID 502: VRAM texture page rects
+0x40    [16]  4     ptr     levelGeometry           ID 600: Level geometry pointer
+0x44    [17]  4     u32     levelGeometrySize       Size of level geometry in bytes
+0x48    [18]  4     ptr     audioSamples            ID 601: Audio samples pointer - uploaded to SPU
+0x4C    [19]  4     u32     audioSamplesSize        Size of audio sample data in bytes
+0x50    [20]  4     ptr     paletteData             ID 602: Palette data (15-bit colors)
+0x54    [21]  4     ptr     spuAudioData            ID 700: Additional SPU audio data
+0x58    [22]  4     u32     spuAudioDataSize        Size of SPU audio data in bytes
 
 # Context State (set by InitLevelDataContext and LevelDataParser)
 0x5C    [23]  4     ptr     blbHeaderBuffer         Pointer to BLB header (→ 0x800AE3E0)
@@ -1455,24 +1455,25 @@ The sub-TOC contains entries with asset IDs that map to specific context offsets
 
 | Asset ID | Hex | Word Index | Field Name | Description |
 |----------|-----|------------|------------|-------------|
-| 100 | 0x64 | [1] | tileHeader | Tile header (36 bytes, tile counts at +0x10/0x12/0x14) |
-| 101 | 0x65 | [2] | unknown101 | Unknown (12 bytes, sparse: {1-4, 0-1, 0}) - only 8 levels |
+| 100 | 0x64 | [1] | tileHeader | Tile header (36 bytes, BG color, spawn, tile counts) |
+| 101 | 0x65 | [2] | unknown101 | Unknown (12 bytes, sparse: only 8 levels have this) |
 | 200 | 0xC8 | [3] | tilemapContainer | Tilemap sub-TOC (layer count + data offsets) |
-| 201 | 0xC9 | [4] | layerEntries | Layer definition entries (92 bytes each) |
+| 201 | 0xC9 | [4] | layerEntries | Layer definition entries (92 bytes per layer) |
 | 300 | 0x12C | [5] | tilePixels | Tile pixel data (8bpp indexed) |
 | 301 | 0x12D | [6] | paletteIndices | Palette index per tile (1 byte each) |
 | 302 | 0x12E | [7] | tileSizeFlags | Per-tile flags: bit0=semi-trans, bit1=8x8, bit2=skip |
 | 303 | 0x12F | [10] | animatedTileData | Animated tile lookup table |
-| 400 | 0x190 | [8] | paletteContainer | Palette container (256-color palettes) |
-| 401 | 0x191 | [9] | paletteAnimData | Palette animation data (4 bytes per palette) |
-| 500 | 0x1F4 | [11] | spriteMetadata | Sprite metadata |
+| 400 | 0x190 | [8] | paletteContainer | Palette sub-TOC of 256-color CLUTs |
+| 401 | 0x191 | [9] | paletteAnimData | Palette animation data |
+| 500 | 0x1F4 | [11] | tileAttributes | Tile collision attribute map (1 byte/tile) |
 | 501 | 0x1F5 | [14] | entityData | **Entity placement data (24-byte structs)** |
-| 502 | 0x1F6 | [15] | audioConfig | Audio configuration |
-| 503 | 0x1F7 | [12] | audioConfig2 | Audio configuration (secondary) |
-| 600 | 0x258 | [16-17] | levelGeometry + size | Level geometry/sprites (Primary) or RLE sprites (Tertiary) |
-| 601 | 0x259 | [18-19] | collisionData + size | Collision data |
-| 602 | 0x25A | [20] | paletteData | Palette data |
-| 700 | 0x2BC | [21-22] | spuAudioData + size | SPU audio samples (ADPCM) |
+| 502 | 0x1F6 | [15] | vramRects | VRAM texture page definitions |
+| 503 | 0x1F7 | [12] | animOffsets | ToolX animation sequence data |
+| 504 | 0x1F8 | [13] | vehicleData | Vehicle data (FINN/RUNN levels only) |
+| 600 | 0x258 | [16-17] | levelGeometry + size | Level geometry (Primary) or RLE sprites (Tertiary) |
+| 601 | 0x259 | [18-19] | audioSamples + size | SPU ADPCM audio samples |
+| 602 | 0x25A | [20] | paletteData | 15-bit PSX color palette data |
+| 700 | 0x2BC | [21-22] | spuAudioData + size | Additional SPU samples (9 levels only) |
 
 #### Loader Callback Chain
 

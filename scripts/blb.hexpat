@@ -1440,6 +1440,65 @@ struct BLBHeader {
 BLBHeader header @ 0x00 [[name("GAME.BLB Header"), comment("Main archive header")]];
 
 // =============================================================================
+// EXTRACTABLE HEADER CONTAINERS
+// =============================================================================
+// These structures expose header tables (sectors, credits, password_screens) with
+// a TOC-like interface so extraction tools can discover them generically.
+// 
+// The extraction script looks for any dict with:
+//   - "_base" field (segment/container offset)
+//   - "toc" array with entries having: asset_type, size, offset, asset_name
+//
+// Header containers use virtual asset types 1000+ to distinguish from level assets:
+//   1000 = BS loading screen (from sectors table)
+//   1001 = BS credits frame (from credits table) 
+//   1002 = BS password screen (from password_screens table)
+//   1003 = BS unreferenced (known cut content)
+
+// Virtual TOC entry for header extractables
+struct HeaderTOCEntry {
+    u32 asset_type [[export]];
+    u32 size [[export]];
+    type::Hex<u32> offset [[export]];  // Absolute byte offset in file
+    str asset_name [[export]];
+};
+
+// Build a virtual TOC for sectors table
+fn build_sectors_toc() {
+    // This would need ImHex scripting to iterate - for now we rely on
+    // the extraction script reading the sectors array directly
+};
+
+// =============================================================================
+// ASSET TYPE NAME LOOKUP (for extraction tools)
+// =============================================================================
+// This function returns a human-readable name for each asset type ID.
+// Used by SegmentTOCEntry to include asset_name in JSON export.
+
+fn get_asset_name(u32 id) {
+    if (id == 100) return "tile_header";
+    if (id == 101) return "unknown_101";
+    if (id == 200) return "tilemap_container";
+    if (id == 201) return "layer_entries";
+    if (id == 300) return "tile_pixels";
+    if (id == 301) return "palette_indices";
+    if (id == 302) return "tile_flags";
+    if (id == 303) return "animated_tiles";
+    if (id == 400) return "palette_container";
+    if (id == 401) return "palette_anim";
+    if (id == 500) return "tile_attributes";
+    if (id == 501) return "entities";
+    if (id == 502) return "vram_rects";
+    if (id == 503) return "anim_offsets";
+    if (id == 504) return "vehicle_data";
+    if (id == 600) return "geometry_or_sprites";
+    if (id == 601) return "audio_samples";
+    if (id == 602) return "palette_data";
+    if (id == 700) return "spu_audio";
+    return "unknown";
+};
+
+// =============================================================================
 // LEVEL DATA STRUCTURES
 // =============================================================================
 // The following structures parse the actual level content stored at sector offsets.
@@ -1449,12 +1508,14 @@ BLBHeader header @ 0x00 [[name("GAME.BLB Header"), comment("Main archive header"
 // Segment TOC Entry - Alias of generic TOCEntry for segments
 // -----------------------------------------------------------------------------
 // For segments: id = asset_type (100, 200, 300, 400, 600, etc.)
+// The absolute_offset is computed when placed inside a segment struct.
 
 struct SegmentTOCEntry {
     u32 asset_type [[name("Type"), comment("Asset type ID"), color("FFCC40")]];
     u32 size [[name("Size"), comment("Asset size in bytes")]];
     type::Hex<u32> offset [[name("Offset"), comment("Offset from segment start")]];
-} [[static]];
+    str asset_name = get_asset_name(asset_type) [[export, name("Name")]];
+};
 
 // Format segment TOC entry
 fn format_toc_entry(auto e) {
@@ -1629,8 +1690,8 @@ struct SpriteAsset {
 // Primary Segment - Full Parse
 // -----------------------------------------------------------------------------
 struct PrimarySegmentFull {
-    // Remember base for offset calculations
-    u128 _base = $;
+    // Remember base for offset calculations - export for extraction tools
+    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
     
     // TOC
     u32 toc_count [[name("Asset Count")]];
@@ -1652,8 +1713,8 @@ struct PrimarySegmentFull {
 // Secondary Segment - Full Parse with Tiles
 // -----------------------------------------------------------------------------
 struct SecondarySegmentFull {
-    // Remember base for offset calculations
-    u128 _base = $;
+    // Remember base for offset calculations - export for extraction tools
+    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
     
     // TOC
     u32 toc_count [[name("Asset Count")]];
@@ -1752,6 +1813,9 @@ struct SecondarySegmentFull {
 // Tertiary Segment - Full Parse with Sprites/Layers
 // -----------------------------------------------------------------------------
 struct TertiarySegmentFull {
+    // Remember base for offset calculations - export for extraction tools
+    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
+    
     // TOC
     u32 toc_count [[name("Asset Count")]];
     SegmentTOCEntry toc[toc_count] [[name("Asset TOC")]];
@@ -1812,8 +1876,8 @@ struct TilemapContainerFull {
 
 // Tertiary stage that parses tilemaps and layers inline
 struct TertiaryStageWithAssets {
-    // Remember our base address
-    u128 _base = $;
+    // Remember base for offset calculations - export for extraction tools
+    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
     
     // TOC at segment start
     u32 toc_count [[name("Asset Count")]];
@@ -1998,6 +2062,9 @@ struct TertiaryStageWithAssets {
 
 // Simple tertiary stage - just TOC (for fallback)
 struct TertiaryStage {
+    // Remember base for offset calculations - export for extraction tools
+    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
+    
     u32 toc_count [[name("Asset Count")]];
     SegmentTOCEntry toc[toc_count] [[name("Asset TOC")]];
 } [[name("Stage"), color("80FFCC")]];
@@ -2020,18 +2087,45 @@ struct LevelData<auto level_idx> {
     // Get the level entry data using helper functions
     u16 _pri_sector = get_level_sector_offset(level_idx);
     u16 _pri_count = get_level_sector_count(level_idx);
-    u16 _sec_sector = get_level_sec_sector_off(level_idx, 0);
-    u16 _sec_count = get_level_sec_sector_cnt(level_idx, 0);
     u16 _stage_count = get_level_stage_count(level_idx);
+    
+    // Secondary sector offsets (one per stage)
+    u16 _sec0_sector = get_level_sec_sector_off(level_idx, 0);
+    u16 _sec0_count = get_level_sec_sector_cnt(level_idx, 0);
+    u16 _sec1_sector = get_level_sec_sector_off(level_idx, 1);
+    u16 _sec1_count = get_level_sec_sector_cnt(level_idx, 1);
+    u16 _sec2_sector = get_level_sec_sector_off(level_idx, 2);
+    u16 _sec2_count = get_level_sec_sector_cnt(level_idx, 2);
+    u16 _sec3_sector = get_level_sec_sector_off(level_idx, 3);
+    u16 _sec3_count = get_level_sec_sector_cnt(level_idx, 3);
+    u16 _sec4_sector = get_level_sec_sector_off(level_idx, 4);
+    u16 _sec4_count = get_level_sec_sector_cnt(level_idx, 4);
+    u16 _sec5_sector = get_level_sec_sector_off(level_idx, 5);
+    u16 _sec5_count = get_level_sec_sector_cnt(level_idx, 5);
     
     // Primary Segment
     if (_pri_count > 0) {
         PrimarySegmentFull primary @ (_pri_sector * SECTOR_SIZE) [[name("Primary")]];
     }
     
-    // Secondary Segment (base)
-    if (_sec_count > 0) {
-        SecondarySegmentFull secondary @ (_sec_sector * SECTOR_SIZE) [[name("Secondary")]];
+    // Secondary Segments (one per stage - contains shared tile/palette data)
+    if (_sec0_count > 0 && _sec0_sector > 0) {
+        SecondarySegmentFull secondary @ (_sec0_sector * SECTOR_SIZE) [[name("Secondary (Stage 0)")]];
+    }
+    if (_sec1_count > 0 && _sec1_sector > 0) {
+        SecondarySegmentFull secondary1 @ (_sec1_sector * SECTOR_SIZE) [[name("Secondary (Stage 1)")]];
+    }
+    if (_sec2_count > 0 && _sec2_sector > 0) {
+        SecondarySegmentFull secondary2 @ (_sec2_sector * SECTOR_SIZE) [[name("Secondary (Stage 2)")]];
+    }
+    if (_sec3_count > 0 && _sec3_sector > 0) {
+        SecondarySegmentFull secondary3 @ (_sec3_sector * SECTOR_SIZE) [[name("Secondary (Stage 3)")]];
+    }
+    if (_sec4_count > 0 && _sec4_sector > 0) {
+        SecondarySegmentFull secondary4 @ (_sec4_sector * SECTOR_SIZE) [[name("Secondary (Stage 4)")]];
+    }
+    if (_sec5_count > 0 && _sec5_sector > 0) {
+        SecondarySegmentFull secondary5 @ (_sec5_sector * SECTOR_SIZE) [[name("Secondary (Stage 5)")]];
     }
     
     // Tertiary Stages (up to 6) - with full asset parsing
