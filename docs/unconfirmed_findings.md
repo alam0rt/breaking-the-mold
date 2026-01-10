@@ -5,6 +5,64 @@ that have not been fully verified through decompilation or runtime tracing.
 
 ---
 
+## Asset Pattern Discoveries (2026-01-10) - VERIFIED ✓
+
+Analysis of extracted BLB assets revealed several new patterns:
+
+### Asset 602: Per-Sample Audio Settings - CONFIRMED ✓
+
+**Pattern**: Size = Asset 601 sample_count × 4 bytes
+**Verification**: 91/91 secondary segments match exactly
+
+Structure (4 bytes per sample):
+```
+Offset  Size  Field
+0x00    u16   volume_left   (0-16383, where 16383 = max)
+0x02    u16   volume_right  (usually 0, sometimes contains flags)
+```
+
+Common values:
+- 16383 (0x3FFF) = Maximum volume
+- 8192 (0x2000) = 50% volume
+- 4915 = ~30% volume
+
+### Asset 101: Segment Variant Flag (12 bytes)
+
+**Pattern**: Always 12 bytes, first byte contains value 1-4, rest zeros
+**Distribution**: value=2 (42 occurrences), value=4 (10), value=3 (2), value=1 (2)
+**Theory**: Secondary segment count or tile set variant identifier
+
+### Asset 502: VRAM Rectangles (16-byte entries)
+
+Structure:
+```
+Offset  Size  Field
+0x00    u16   x1 (left edge in pixels)
+0x02    u16   y1 (top edge in pixels)
+0x04    u16   x2 (right edge in pixels)
+0x06    u16   y2 (bottom edge in pixels)
+0x08    u16   rect_type (usually 2, sometimes 4 or 21)
+0x0A    6     padding (zeros)
+```
+
+Uses: Screen regions for triggers, texture page boundaries, collision zones
+
+### Asset 504: Vehicle Path Data (FINN/RUNN only)
+
+**Pattern**: 64-byte entries containing path waypoints
+- FINN: 78 entries (4992 bytes) - complex rail path
+- RUNN: 1 entry (64 bytes) - simple path
+
+Contains bounding boxes and a recurring 0xFB flag value.
+
+### Tilemap Tile Index 0: Empty Tile
+
+Tile index 0 is used as a transparent/empty placeholder tile.
+It is NOT counted in TileHeader tile totals, which explains why:
+  unique_tiles_used = total_tiles_defined + 1
+
+---
+
 ## Hidden/Unused Content Discovery (2026-01-06) - VERIFIED ✓
 
 Discovered unreferenced sectors in GAME.BLB containing hidden content that is
