@@ -49,12 +49,12 @@ def handle_anim_offsets(data: bytes, asset_info, output_dir: Path, context: dict
         else:
             section_size = len(data) - data_offset
         
-        # Parse frame data as pairs of u16
+        # Parse frame data as pairs of s16 (signed - negative values are offsets)
         frames = []
         if data_offset < len(data):
             for j in range(0, min(section_size, data_size), 4):
                 if data_offset + j + 4 <= len(data):
-                    x, y = struct.unpack_from('<HH', data, data_offset + j)
+                    x, y = struct.unpack_from('<hh', data, data_offset + j)  # signed!
                     frames.append({"x": x, "y": y})
         
         anim = {
