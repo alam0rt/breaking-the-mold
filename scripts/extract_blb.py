@@ -433,7 +433,7 @@ def discover_segment_assets(
     """
     assets = []
     
-    # Get segment base offset (required)
+    # Get segment base offset (required) - ImHex exports as '_base'
     if '_base' not in segment_data:
         return assets  # Not a segment with extractable assets
     
@@ -689,13 +689,19 @@ def extract_header_metadata(data: dict, output_dir: Path) -> int:
     
     # Sector table (loading screens)
     for i, sector in enumerate(header.get('sectors', [])):
+        sector_offset = sector.get('sector_offset', 0)
+        if isinstance(sector_offset, str):
+            sector_offset = int(sector_offset, 16) if sector_offset.startswith('0x') else int(sector_offset)
+        sector_count = sector.get('sector_count', 0)
+        if isinstance(sector_count, str):
+            sector_count = int(sector_count, 16) if sector_count.startswith('0x') else int(sector_count)
         metadata["sectors"].append({
             "index": i,
             "code": decode_string(sector.get('code', '')),
-            "sector_offset": sector.get('sector_offset', 0),
-            "sector_count": sector.get('sector_count', 0),
-            "absolute_offset": sector.get('sector_offset', 0) * SECTOR_SIZE,
-            "size": sector.get('sector_count', 0) * SECTOR_SIZE,
+            "sector_offset": sector_offset,
+            "sector_count": sector_count,
+            "absolute_offset": sector_offset * SECTOR_SIZE,
+            "size": sector_count * SECTOR_SIZE,
         })
     
     # Credits table
@@ -703,13 +709,16 @@ def extract_header_metadata(data: dict, output_dir: Path) -> int:
         sector_offset = credit.get('sector_offset', 0)
         if isinstance(sector_offset, str):
             sector_offset = int(sector_offset, 16) if sector_offset.startswith('0x') else int(sector_offset)
+        sector_count = credit.get('sector_count', 0)
+        if isinstance(sector_count, str):
+            sector_count = int(sector_count, 16) if sector_count.startswith('0x') else int(sector_count)
         metadata["credits"].append({
             "index": i,
             "code": decode_string(credit.get('code', '')),
             "sector_offset": sector_offset,
-            "sector_count": credit.get('sector_count', 0),
+            "sector_count": sector_count,
             "absolute_offset": sector_offset * SECTOR_SIZE,
-            "size": credit.get('sector_count', 0) * SECTOR_SIZE,
+            "size": sector_count * SECTOR_SIZE,
         })
     
     # Password screens
@@ -717,12 +726,15 @@ def extract_header_metadata(data: dict, output_dir: Path) -> int:
         sector_offset = ps.get('sector_offset', 0)
         if isinstance(sector_offset, str):
             sector_offset = int(sector_offset, 16) if sector_offset.startswith('0x') else int(sector_offset)
+        sector_count = ps.get('sector_count', 0)
+        if isinstance(sector_count, str):
+            sector_count = int(sector_count, 16) if sector_count.startswith('0x') else int(sector_count)
         metadata["password_screens"].append({
             "index": i,
             "sector_offset": sector_offset,
-            "sector_count": ps.get('sector_count', 0),
+            "sector_count": sector_count,
             "absolute_offset": sector_offset * SECTOR_SIZE,
-            "size": ps.get('sector_count', 0) * SECTOR_SIZE,
+            "size": sector_count * SECTOR_SIZE,
         })
     
     # Write header metadata
