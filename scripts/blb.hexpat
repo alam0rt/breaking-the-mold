@@ -354,16 +354,28 @@ struct TOCEntry {
 // =============================================================================
 // Verified via Ghidra decompilation of CopyTilePixelData (0x8007b588)
 // and GetTotalTileCount (0x8007b53c).
+//
+// Color fields verified via Ghidra (2026-01-10):
+// - LoadBGColorFromTileHeader (0x80024678) reads bytes 0-2 → GameState+0x131/132/133
+// - LoadSecondaryColorFromTileHeader (0x800246d0) reads bytes 4-6 → GameState+0x127/128/129
+// - GetTileHeaderPtr (0x8007b4b8) returns ctx[1] (TileHeader pointer)
+// - GetSecondaryColorPtr (0x8007b4c4) returns TileHeader + 4
 
 struct TileHeader {
-    // Background and secondary colors (0x00-0x07)
+    // Background color (0x00-0x03) - VERIFIED via Ghidra
+    // Read by LoadBGColorFromTileHeader, stored at GameState+0x131/132/133
+    // Most levels have (0,0,0) black; some have actual colors for distance fog
     u8 bg_r [[name("BG R"), color("FF0000"), comment("Background red 0-255")]];
     u8 bg_g [[name("BG G"), color("00FF00"), comment("Background green")]];
     u8 bg_b [[name("BG B"), color("0000FF"), comment("Background blue")]];
     u8 pad_03 [[hidden]];
-    u8 secondary_r [[name("Alt R"), color("FF4040"), comment("Secondary color red")]];
-    u8 secondary_g [[name("Alt G"), color("40FF40"), comment("Secondary color green")]];
-    u8 secondary_b [[name("Alt B"), color("4040FF"), comment("Secondary color blue")]];
+    
+    // Secondary/fog color (0x04-0x07) - VERIFIED via Ghidra
+    // Read by LoadSecondaryColorFromTileHeader, stored at GameState+0x127/128/129
+    // Most levels use gray (64,64,64); BOIL/SCIE/CAVE/CLOU have colored fog
+    u8 secondary_r [[name("Fog R"), color("FF4040"), comment("Fog/secondary red")]];
+    u8 secondary_g [[name("Fog G"), color("40FF40"), comment("Fog/secondary green")]];
+    u8 secondary_b [[name("Fog B"), color("4040FF"), comment("Fog/secondary blue")]];
     u8 pad_07 [[hidden]];
     
     // Level dimensions (0x08-0x0B)
@@ -387,9 +399,15 @@ struct TileHeader {
     // - Always 0 for non-vehicle levels
     u16 vehicle_waypoint_count [[name("Vehicle Waypoints"), comment("Asset 504 waypoint count (FINN/RUNN only)"), color("AAFFAA")]];
     
-    // Field 0x18: Level Flags (TENTATIVE 2026-01-11)
-    // - Bitfield: bit 3 (0x08) in 7 levels, bit 6 (0x40) in 8 levels
-    // - Values observed: 0, 8, 64, 72 - likely level behavior flags
+    // Field 0x18: Level Flags (TENTATIVE 2026-01-10)
+    // Bitfield controlling level behavior. Observed bit patterns:
+    //   Bit 1 (0x0002): FINN, SEVN - special gameplay modes (matches special_level_id=99)
+    //   Bit 2 (0x0004): FINN only
+    //   Bit 3 (0x0008): EGGS, FOOD, GLID, HEAD, MEGA, TMPL, WEED - 7 levels
+    //   Bit 4 (0x0010): RUNN only - runner vehicle stage
+    //   Bit 6 (0x0040): FOOD, GLEN, HEAD, MEGA, MENU, RUNN, TMPL, WIZZ - 8 levels (boss/special?)
+    //   Bits 7-15: Various unique level flags (EVIL=0x80, GLEN=0x100, etc.)
+    // Common values: 0x0000 (15 levels), 0x0008 (4), 0x0048 (3), 0x0006 (FINN)
     u16 level_flags [[name("Level Flags"), comment("Level behavior bitfield"), color("CCCCCC")]];
     
     // Field 0x1A: Special Level ID (TENTATIVE 2026-01-11)

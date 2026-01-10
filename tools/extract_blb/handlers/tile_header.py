@@ -5,29 +5,36 @@ Extracts tile header metadata containing level dimensions, spawn position,
 background colors, and tile counts.
 
 TileHeader structure (36 bytes, verified via Ghidra):
-  Offset  Size  Field
-  0x00    u8    bg_r (background red)
-  0x01    u8    bg_g (background green)
-  0x02    u8    bg_b (background blue)
+  Offset  Size  Field                   Ghidra Function
+  0x00    u8    bg_r                    LoadBGColorFromTileHeader (0x80024678)
+  0x01    u8    bg_g                    LoadBGColorFromTileHeader
+  0x02    u8    bg_b                    LoadBGColorFromTileHeader
   0x03    u8    padding
-  0x04    u8    secondary_r (alt color red)
-  0x05    u8    secondary_g (alt color green)
-  0x06    u8    secondary_b (alt color blue)
+  0x04    u8    secondary_r             LoadSecondaryColorFromTileHeader (0x800246d0)
+  0x05    u8    secondary_g             LoadSecondaryColorFromTileHeader
+  0x06    u8    secondary_b             LoadSecondaryColorFromTileHeader
   0x07    u8    padding
-  0x08    u16   level_width (in tiles)
-  0x0A    u16   level_height (in tiles)
-  0x0C    u16   spawn_x (in tiles)
-  0x0E    u16   spawn_y (in tiles)
-  0x10    u16   count_16x16 (16x16 pixel tiles)
-  0x12    u16   count_8x8_a (primary 8x8 tiles)
-  0x14    u16   count_8x8_b (additional tiles)
-  0x16    u16   vehicle_waypoint_count (504 entries, FINN/RUNN)
-  0x18    u16   level_flags (bitfield)
-  0x1A    u16   special_level_id (99 = FINN/SEVN)
-  0x1C    u16   vram_rect_count (number of 502 VRAM rectangle entries)
-  0x1E    u16   entity_count (number of 501 entity entries)
-  0x20    u16   field_20 (unknown, values 1-6)
+  0x08    u16   level_width             GetLevelDimensions (0x8007b434)
+  0x0A    u16   level_height            GetLevelDimensions
+  0x0C    u16   spawn_x                 GetSpawnPosition (0x8007b458)
+  0x0E    u16   spawn_y                 GetSpawnPosition
+  0x10    u16   count_16x16             GetTotalTileCount (0x8007b53c)
+  0x12    u16   count_8x8_a             GetTotalTileCount
+  0x14    u16   count_8x8_b             GetTotalTileCount
+  0x16    u16   vehicle_waypoint_count  (Matches Asset 504 count, FINN/RUNN only)
+  0x18    u16   level_flags             (Bitfield, see below)
+  0x1A    u16   special_level_id        (99 = FINN/SEVN special modes)
+  0x1C    u16   vram_rect_count         GetAsset100Field1C (0x8007b7c8)
+  0x1E    u16   entity_count            FUN_8007b7a8
+  0x20    u16   field_20                (Unknown, values 1-6)
   0x22    u16   padding
+
+Level flags bitfield (0x18):
+  Bit 1 (0x0002): FINN, SEVN - special gameplay modes
+  Bit 2 (0x0004): FINN only
+  Bit 3 (0x0008): EGGS, FOOD, GLID, HEAD, MEGA, TMPL, WEED
+  Bit 4 (0x0010): RUNN only (vehicle runner stage)
+  Bit 6 (0x0040): FOOD, GLEN, HEAD, MEGA, MENU, RUNN, TMPL, WIZZ
 """
 
 from pathlib import Path
