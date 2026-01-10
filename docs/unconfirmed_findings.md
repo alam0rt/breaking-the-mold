@@ -117,9 +117,24 @@ Both in stage segments, 93 of 94 locations shared:
 - **502.count = 100.field_1c** (TileHeader stores VRAM rect count) ✓
 - **501.size/24 = 100.field_1e** (TileHeader stores entity count) ✓
 
-### TileHeader Unknown Fields Now Identified:
+### TileHeader Unknown Fields Now Identified (Updated 2026-01-11):
+
+**Verified Fields:**
+- **field_16 (0x16)** = Vehicle waypoint count (matches Asset 504 entry count)
+  - FINN = 78 waypoints, RUNN = 1 waypoint, all others = 0
 - **field_1c (0x1C)** = VRAM rectangle count (matches Asset 502)
 - **field_1e (0x1E)** = Entity count (matches Asset 501 size / 24)
+
+**Tentative Fields (Patterns observed but meaning unclear):**
+- **field_18 (0x18)** = Level flags bitfield
+  - Bit 3 (0x08): EGGS, FOOD, GLID, HEAD, MEGA, TMPL, WEED
+  - Bit 6 (0x40): FOOD, GLEN, HEAD, MEGA, MENU, RUNN, TMPL, WIZZ
+  - Values: 0, 8, 64, 72 observed
+- **field_1a (0x1A)** = Special level ID
+  - Value 99 only in FINN and SEVN (vehicle/special mode levels)
+  - Value 0 in all other levels
+- **field_20 (0x20)** = Unknown (values 1-6 observed)
+  - Possibly world index or music theme
 
 ---
 
@@ -212,28 +227,6 @@ This discovery reveals that Skullmonkeys contains **unused developer content**:
 
 These assets occupy ~700 KB and were likely left in during the mastering process.
 Comparing with the NTSC version could reveal if these were region-specific cuts.
-
----
-
-## BLB File Coverage Analysis (2026-01-04)
-
-Run `python3 scripts/blb_asset_coverage.py` for full analysis.
-
-### File-Level Coverage
-
-| Category | Size | % of File | Description |
-|----------|------|-----------|-------------|
-| Referenced Data | 67.4 MB | 93.0% | Data pointed to by level metadata table |
-| Unreferenced Data | 5.1 MB | 7.0% | Gaps between/after levels |
-
-### Unreferenced Regions Breakdown
-
-| Location | Size | Content |
-|----------|------|---------|
-| Sectors 2-200 | 407 KB | Title screen/menu tile graphics (raw 4bpp) |
-| 16 gap containers | 3.6 MB | **Stage completion/password screens** (see below) |
-| Small gaps | ~90 KB | Level-specific tile data |
-| End of file | ~2.4 MB | Additional level containers |
 
 ---
 

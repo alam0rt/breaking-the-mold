@@ -300,7 +300,6 @@ struct Palette256Raw {
 // =============================================================================
 // Asset ID Reference
 // =============================================================================
-// Known asset type IDs in BLB containers (matches blb.py AssetID class):
 //
 // SECONDARY SEGMENT - Tile Data:
 //   100 (0x064) TILE_HEADER      - Tile counts and level dimensions (36 bytes)
@@ -383,8 +382,20 @@ struct TileHeader {
     u16 count_8x8_a [[name("8x8 Tiles A"), comment("Primary 8x8 tile count"), color("80CCFF")]];
     u16 count_8x8_b [[name("8x8 Tiles B"), comment("Additional tile count (often 0)")]];
     
-    // Unknown region (0x16-0x1B)
-    u8 unknown_16[6] [[hidden]];
+    // Field 0x16: Vehicle Waypoint Count (VERIFIED 2026-01-11)
+    // - Matches Asset 504 entry count exactly for FINN (78) and RUNN (1)
+    // - Always 0 for non-vehicle levels
+    u16 vehicle_waypoint_count [[name("Vehicle Waypoints"), comment("Asset 504 waypoint count (FINN/RUNN only)"), color("AAFFAA")]];
+    
+    // Field 0x18: Level Flags (TENTATIVE 2026-01-11)
+    // - Bitfield: bit 3 (0x08) in 7 levels, bit 6 (0x40) in 8 levels
+    // - Values observed: 0, 8, 64, 72 - likely level behavior flags
+    u16 level_flags [[name("Level Flags"), comment("Level behavior bitfield"), color("CCCCCC")]];
+    
+    // Field 0x1A: Special Level ID (TENTATIVE 2026-01-11)
+    // - Value 99 only in FINN and SEVN levels (special mode levels)
+    // - Value 0 in all other levels
+    u16 special_level_id [[name("Special Level ID"), comment("99 = special mode (FINN/SEVN)"), color("CCCCCC")]];
     
     // Field 0x1C: VRAM Rectangle Count (VERIFIED 2026-01-10)
     // - Read by GetAsset100Field1C (0x8007b7c8), stored at GameState+0x78
@@ -397,8 +408,12 @@ struct TileHeader {
     // - Read by FUN_8007b7a8 to get entity count for level loading
     u16 entity_count [[name("Entity Count"), comment("Number of entities in Asset 501"), color("FF8080")]];
     
-    // Remaining bytes
-    u8 remaining[4] [[hidden]];
+    // Field 0x20: Unknown (values 1-6 observed)
+    // - Possibly related to world index or music theme
+    u16 field_20 [[name("Field 0x20"), comment("Unknown - values 1-6"), color("888888")]];
+    
+    // Remaining padding
+    u8 remaining[2] [[hidden]];
 } [[name("Tile Header"), color("80FF80"), static]];
 
 // =============================================================================
@@ -504,7 +519,6 @@ struct ColorTintEntry {
 // Layer Entry - Asset 201 (0x0C9) - 92 bytes
 // =============================================================================
 // Verified via Ghidra analysis and extraction testing.
-// NOTE: Field offsets match blb.py LayerEntry class
 //
 // Rendering: Each layer has its own tilemap from Asset 200. Layers are rendered
 // back-to-front. The tilemap is width*height u16 values, placed at (x_offset, y_offset).

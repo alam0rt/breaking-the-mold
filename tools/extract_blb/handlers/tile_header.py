@@ -21,10 +21,13 @@ TileHeader structure (36 bytes, verified via Ghidra):
   0x10    u16   count_16x16 (16x16 pixel tiles)
   0x12    u16   count_8x8_a (primary 8x8 tiles)
   0x14    u16   count_8x8_b (additional tiles)
-  0x16    6 bytes unknown
+  0x16    u16   vehicle_waypoint_count (504 entries, FINN/RUNN)
+  0x18    u16   level_flags (bitfield)
+  0x1A    u16   special_level_id (99 = FINN/SEVN)
   0x1C    u16   vram_rect_count (number of 502 VRAM rectangle entries)
   0x1E    u16   entity_count (number of 501 entity entries)
-  0x20    4 bytes remaining
+  0x20    u16   field_20 (unknown, values 1-6)
+  0x22    u16   padding
 """
 
 from pathlib import Path
@@ -44,7 +47,9 @@ def parse_tile_header(data: bytes) -> dict:
     level_w, level_h = struct.unpack_from('<HH', data, 8)
     spawn_x, spawn_y = struct.unpack_from('<HH', data, 12)
     count_16x16, count_8x8_a, count_8x8_b = struct.unpack_from('<HHH', data, 16)
+    vehicle_waypoint_count, level_flags, special_level_id = struct.unpack_from('<HHH', data, 22)
     vram_rect_count, entity_count = struct.unpack_from('<HH', data, 28)
+    field_20, = struct.unpack_from('<H', data, 32)
     
     total_tiles = count_16x16 + count_8x8_a + count_8x8_b
     
@@ -76,9 +81,17 @@ def parse_tile_header(data: bytes) -> dict:
             "count_8x8_b": count_8x8_b,
             "total": total_tiles,
         },
+        "level_metadata": {
+            "vehicle_waypoint_count": vehicle_waypoint_count,  # Matches 504.count (FINN/RUNN)
+            "level_flags": level_flags,                         # Bitfield (bits 3 and 6 observed)
+            "special_level_id": special_level_id,               # 99 = FINN/SEVN
+        },
         "related_counts": {
             "vram_rect_count": vram_rect_count,  # Matches 502.count
             "entity_count": entity_count,         # Matches 501.count
+        },
+        "unknown": {
+            "field_20": field_20,  # Values 1-6 observed
         },
         "raw_size": len(data),
     }

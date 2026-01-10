@@ -531,13 +531,17 @@ Offset  Size  Type   Description
 0x10    2     u16    16×16 tile count (CODE-VERIFIED: CopyTilePixelData uses for data offset)
 0x12    2     u16    8×8 tile count (CODE-VERIFIED: summed in GetTotalTileCount)
 0x14    2     u16    Additional tile count (summed in GetTotalTileCount with 0x10, 0x12)
-0x16    6     var    Unknown/reserved
+0x16    2     u16    Vehicle Waypoint Count (VERIFIED: matches Asset 504 entries for FINN/RUNN)
+0x18    2     u16    Level Flags bitfield (TENTATIVE: bit 3 and bit 6 observed)
+0x1A    2     u16    Special Level ID (TENTATIVE: 99 = FINN/SEVN special levels)
 0x1C    2     u16    VRAM Rect Count (VERIFIED: matches Asset 502 entry count exactly)
 0x1E    2     u16    Entity Count (VERIFIED: matches Asset 501 size / 24 exactly)
-0x20    4     var    Remaining header data
+0x20    2     u16    Field 0x20 (values 1-6 observed, purpose unknown)
+0x22    2     u16    Padding
 ```
 
 **Cross-Asset Relationships (VERIFIED 2026-01-10):**
+- `header[0x16]` = number of 64-byte waypoints in Asset 504 (FINN=78, RUNN=1)
 - `header[0x1C]` = number of VRAM rectangles in Asset 502 (all levels match)
 - `header[0x1E]` = number of 24-byte entities in Asset 501 (all levels match)
 - Asset 302 (tile_flags) size = total_tiles (one flag byte per tile)
@@ -1194,8 +1198,6 @@ Based on decompiled code in `LevelDataParser.c` and **verified via PCSX-Redux MC
 - `src/LevelDataParser.c`: Main parsing logic
 - `src/LoadBLBHeader.c`: Header loading
 - `src/BLBHeaderAccessors.c`: Accessor functions for header fields
-- `scripts/blb.py`: Python parsing library
-- `scripts/extract_blb.py`: Extraction tool
 
 ## Primary.bin Internal Structure (PARTIALLY DECODED 2026-01-04)
 
