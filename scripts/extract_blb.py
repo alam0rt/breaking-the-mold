@@ -547,6 +547,193 @@ def discover_toc_coverage(data: dict) -> list[CoverageRegion]:
     return coverage
 
 
+def extract_segment_metadata(data: dict, output_dir: Path) -> int:
+    """
+    Extract segment metadata (TOC, headers) as JSON files.
+    
+    For each segment (primary, secondary, stage0, etc.), creates a .json file
+    containing the parsed structure: TOC entries, stage headers, and other
+    metadata from the ImHex template.
+    
+    Args:
+        data: Parsed ImHex JSON output
+        output_dir: Base output directory
+        
+    Returns:
+        Number of metadata files created
+    """
+    count = 0
+    header = data.get('header', {})
+    levels = data.get('levels', {})
+    
+    for level_key in sorted(levels.keys(), key=lambda x: int(x.replace('level_', '')) if x.startswith('level_') else 999):
+        level_index = int(level_key.replace('level_', '')) if level_key.startswith('level_') else -1
+        level_code = get_level_code(header, level_index) if level_index >= 0 else level_key
+        level_data = levels[level_key]
+        
+        # Iterate over all segments in this level
+        for segment_name, segment_data in level_data.items():
+            if not isinstance(segment_data, dict):
+                continue
+            
+            # Check if this looks like a segment (has toc and _base)
+            if 'toc' not in segment_data or '_base' not in segment_data:
+                continue
+            
+            # Build metadata structure
+            segment_offset = parse_hex_offset(segment_data['_base'])
+            toc = segment_data.get('toc', [])
+            
+            metadata = {
+                "level": level_code,
+                "level_index": level_index,
+                "segment": segment_name,
+                "segment_offset": segment_offset,
+                "segment_offset_hex": f"0x{segment_offset:X}",
+                "toc_count": segment_data.get('toc_count', len(toc)),
+                "toc": [],
+            }
+            
+            # Process TOC entries
+            for entry in toc:
+                toc_entry = {
+                    "asset_type": entry.get('asset_type'),
+                    "asset_name": get_asset_name(entry),
+                    "size": entry.get('size', 0),
+                    "offset": parse_hex_offset(entry.get('offset', '0')),
+                    "offset_hex": entry.get('offset', '0x0'),
+                }
+                # Calculate absolute offset
+                toc_entry["absolute_offset"] = segment_offset + toc_entry["offset"]
+                toc_entry["absolute_offset_hex"] = f"0x{toc_entry['absolute_offset']:X}"
+                metadata["toc"].append(toc_entry)
+            
+            # Include stage header if present (for stage segments)
+            if 'stage_header' in segment_data:
+                sh = segment_data['stage_header']
+                metadata["stage_header"] = {
+                    "bg_color": {
+                        "r": sh.get('bg_r', 0),
+                        "g": sh.get('bg_g', 0),
+                        "b": sh.get('bg_b', 0),
+                    },
+                    "secondary_color": {
+                        "r": sh.get('secondary_r', 0),
+                        "g": sh.get('secondary_g', 0),
+                        "b": sh.get('secondary_b', 0),
+                    },
+                    "level_width": sh.get('level_width', 0),
+                    "level_height": sh.get('level_height', 0),
+                    "spawn_x": sh.get('spawn_x', 0),
+                    "spawn_y": sh.get('spawn_y', 0),
+                    "count_16x16": sh.get('count_16x16', 0),
+                    "count_8x8_a": sh.get('count_8x8_a', 0),
+                    "count_8x8_b": sh.get('count_8x8_b', 0),
+                    "field_1c": sh.get('field_1c', 0),
+                    "field_1e": sh.get('field_1e', 0),
+                }
+            
+            # Write metadata JSON
+            level_dir = output_dir / level_code
+            level_dir.mkdir(parents=True, exist_ok=True)
+            metadata_path = level_dir / f"{segment_name}.json"
+            metadata_path.write_text(json.dumps(metadata, indent=2))
+            count += 1
+    
+    # Also extract header-level metadata
+    header_metadata = extract_header_metadata(data, output_dir)
+    count += header_metadata
+    
+    return count
+
+
+def extract_header_metadata(data: dict, output_dir: Path) -> int:
+    """
+    Extract BLB header metadata as JSON.
+    
+    Creates header.json with level table, sector table, credits, etc.
+    
+    Returns:
+        Number of metadata files created
+    """
+    header = data.get('header', {}).get('header', {})
+    if not header:
+        return 0
+    
+    # Build header metadata
+    metadata = {
+        "magic": header.get('magic', ''),
+        "version": header.get('version', 0),
+        "level_count": header.get('level_count', 0),
+        "movie_count": header.get('movie_count', 0),
+        "levels": [],
+        "sectors": [],
+        "credits": [],
+        "password_screens": [],
+    }
+    
+    # Level table
+    for i, level in enumerate(header.get('levels', [])):
+        level_entry = {
+            "index": i,
+            "level_id": decode_string(level.get('level_id', '')),
+            "sector_offset": level.get('sector_offset', 0),
+            "unknown_02": level.get('unknown_02', 0),
+        }
+        # Add stage offsets if present
+        for stage_idx in range(8):
+            key = f'tert_sector_off_{stage_idx}'
+            if key in level:
+                level_entry[key] = level[key]
+        metadata["levels"].append(level_entry)
+    
+    # Sector table (loading screens)
+    for i, sector in enumerate(header.get('sectors', [])):
+        metadata["sectors"].append({
+            "index": i,
+            "code": decode_string(sector.get('code', '')),
+            "sector_offset": sector.get('sector_offset', 0),
+            "sector_count": sector.get('sector_count', 0),
+            "absolute_offset": sector.get('sector_offset', 0) * SECTOR_SIZE,
+            "size": sector.get('sector_count', 0) * SECTOR_SIZE,
+        })
+    
+    # Credits table
+    for i, credit in enumerate(header.get('credits', [])):
+        sector_offset = credit.get('sector_offset', 0)
+        if isinstance(sector_offset, str):
+            sector_offset = int(sector_offset, 16) if sector_offset.startswith('0x') else int(sector_offset)
+        metadata["credits"].append({
+            "index": i,
+            "code": decode_string(credit.get('code', '')),
+            "sector_offset": sector_offset,
+            "sector_count": credit.get('sector_count', 0),
+            "absolute_offset": sector_offset * SECTOR_SIZE,
+            "size": credit.get('sector_count', 0) * SECTOR_SIZE,
+        })
+    
+    # Password screens
+    for i, ps in enumerate(header.get('password_screens', [])):
+        sector_offset = ps.get('sector_offset', 0)
+        if isinstance(sector_offset, str):
+            sector_offset = int(sector_offset, 16) if sector_offset.startswith('0x') else int(sector_offset)
+        metadata["password_screens"].append({
+            "index": i,
+            "sector_offset": sector_offset,
+            "sector_count": ps.get('sector_count', 0),
+            "absolute_offset": sector_offset * SECTOR_SIZE,
+            "size": ps.get('sector_count', 0) * SECTOR_SIZE,
+        })
+    
+    # Write header metadata
+    header_dir = output_dir / "header"
+    header_dir.mkdir(parents=True, exist_ok=True)
+    metadata_path = header_dir / "blb_header.json"
+    metadata_path.write_text(json.dumps(metadata, indent=2))
+    
+    return 1
+
+
 def discover_header_assets(data: dict) -> list[AssetInfo]:
     """
     Discover header-level assets (loading screens, credits, password screens).
@@ -989,6 +1176,11 @@ def main():
     toc_coverage = discover_toc_coverage(data)
     all_coverage.extend(toc_coverage)
     print(f"  Found {len(toc_coverage)} TOC regions")
+    
+    # Extract segment metadata as JSON
+    print("Extracting segment metadata...")
+    metadata_count = extract_segment_metadata(data, args.output)
+    print(f"  Created {metadata_count} metadata files")
     
     # Extract header data (loading screens)
     print("Extracting header data...")
