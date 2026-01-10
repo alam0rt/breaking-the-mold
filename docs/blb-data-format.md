@@ -499,20 +499,23 @@ based on mode flag at ctx+0x04. See Audio System section below for details.
 | Type | Hex | Structure | Description |
 |------|-----|-----------|-------------|
 | 100 | 0x064 | RAW | Duplicate tile header |
+| 101 | 0x065 | RAW | **Segment variant flag** (12 bytes, values 1-4) |
 | 200 | 0x0C8 | RAW | Tilemap container header (layer count) |
 | 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
-| 302 | 0x12E | RAW | Duplicate tile flags |
-| 401 | 0x191 | RAW | Duplicate animation config |
+| 302 | 0x12E | RAW | Duplicate tile flags (size = total_tiles) |
+| 401 | 0x191 | RAW | **Palette animation config** (4 bytes per palette) |
 | 500 | 0x1F4 | RAW | **Tile attribute map** - collision/trigger data (8-byte header + 1 byte/tile) |
-| 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
-| 502 | 0x1F6 | RAW | **VRAM rectangles** - texture page definitions |
-| 503 | 0x1F7 | RAW | **Animation frame offsets** - ToolX sequence data |
+| 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures, count in header[0x1E]) |
+| 502 | 0x1F6 | RAW | **VRAM rectangles** (16-byte entries, count in header[0x1C]) |
+| 503 | 0x1F7 | RAW | **Animation offset table** - ToolX sequence data (TOC + frame data) |
+| 504 | 0x1F8 | RAW | **Vehicle path data** (64-byte waypoints, FINN/RUNN only) |
 | 600 | 0x258 | CONTAINER | **RLE sprites with embedded palettes** |
 | 700 | 0x2BC | RAW | **SPU audio samples** (ADPCM) with metadata |
 
 #### Asset 100 - Tile Header (36 bytes, CODE-VERIFIED)
 
 Verified via Ghidra decompilation of `CopyTilePixelData` (0x8007b588) and `GetTotalTileCount` (0x8007b53c).
+Fields 0x1C and 0x1E verified via extraction analysis (2026-01-10).
 
 ```
 Offset  Size  Type   Description
@@ -523,15 +526,22 @@ Offset  Size  Type   Description
 0x07    1     u8     Padding
 0x08    2     u16    Level width in tiles (*16 for pixels, see GetLevelDimensions)
 0x0A    2     u16    Level height in tiles (*16 for pixels, see GetLevelDimensions)
-0x0C    2     u16    Unknown (not accessed in analyzed functions)
-0x0E    2     u16    Unknown (not accessed in analyzed functions)
+0x0C    2     u16    Spawn X position in tiles (VERIFIED: spawn_x * 16 + 8 for pixels)
+0x0E    2     u16    Spawn Y position in tiles (VERIFIED: spawn_y * 16 + 15 for pixels)
 0x10    2     u16    16×16 tile count (CODE-VERIFIED: CopyTilePixelData uses for data offset)
 0x12    2     u16    8×8 tile count (CODE-VERIFIED: summed in GetTotalTileCount)
 0x14    2     u16    Additional tile count (summed in GetTotalTileCount with 0x10, 0x12)
-0x16    6     var    Unknown
-0x1C    2     u16    Unknown (read by GetAsset100Field1C)
-0x1E    4     var    Remaining header data
+0x16    6     var    Unknown/reserved
+0x1C    2     u16    VRAM Rect Count (VERIFIED: matches Asset 502 entry count exactly)
+0x1E    2     u16    Entity Count (VERIFIED: matches Asset 501 size / 24 exactly)
+0x20    4     var    Remaining header data
 ```
+
+**Cross-Asset Relationships (VERIFIED 2026-01-10):**
+- `header[0x1C]` = number of VRAM rectangles in Asset 502 (all levels match)
+- `header[0x1E]` = number of 24-byte entities in Asset 501 (all levels match)
+- Asset 302 (tile_flags) size = total_tiles (one flag byte per tile)
+- Asset 401 size = palette_count × 4 (animation config per palette)
 
 **Code reference:** `GetTotalTileCount` (0x8007b53c) computes total tiles as:
 `*(u16*)(asset100 + 0x10) + *(u16*)(asset100 + 0x12) + *(u16*)(asset100 + 0x14)`

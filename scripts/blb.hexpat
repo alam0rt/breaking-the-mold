@@ -386,15 +386,16 @@ struct TileHeader {
     // Unknown region (0x16-0x1B)
     u8 unknown_16[6] [[hidden]];
     
-    // Field 0x1C: Unknown purpose
+    // Field 0x1C: VRAM Rectangle Count (VERIFIED 2026-01-10)
     // - Read by GetAsset100Field1C (0x8007b7c8), stored at GameState+0x78
-    // - Called only from FUN_80024778 during level init
-    // - No reader found for GameState+0x78 - may be unused/legacy
-    // - Pattern: Boss levels=0, scrolling levels have values near or exceeding height
-    u16 field_1c [[name("Field 1C"), comment("Unknown - stored at GameState+0x78 but no reader found")]];
+    // - Matches Asset 502 (vram_rects) entry count exactly for all levels
+    // - Boss levels=0 (no VRAM rects), scrolling levels have values 1-300+
+    u16 vram_rect_count [[name("VRAM Rect Count"), comment("Number of VRAM rectangles (Asset 502 entries)"), color("FFAA00")]];
     
-    // Field 0x1E: Purpose unclear
-    u16 field_1e [[name("Field 1E"), comment("Unknown")]];
+    // Field 0x1E: Entity Count (VERIFIED 2026-01-10)
+    // - Matches Asset 501 (entities) byte size / 24 exactly for all levels
+    // - Read by FUN_8007b7a8 to get entity count for level loading
+    u16 entity_count [[name("Entity Count"), comment("Number of entities in Asset 501"), color("FF8080")]];
     
     // Remaining bytes
     u8 remaining[4] [[hidden]];
@@ -407,7 +408,7 @@ struct TileHeader {
 //
 // Entities are placed objects in the level (collectibles, enemies, ammo, etc.)
 // Entity data is stored as an array of 24-byte structures in Asset 501.
-// Entity count is at TileHeader + 0x1E (field_1e above).
+// Entity count is at TileHeader + 0x1E (entity_count field, verified 2026-01-10).
 //
 // IMPORTANT: Entity Type → Sprite ID mapping is HARDCODED IN GAME CODE, not in BLB data.
 // See "Sprite ID Lookup Chain" section below for details.

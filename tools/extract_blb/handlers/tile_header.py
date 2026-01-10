@@ -22,8 +22,8 @@ TileHeader structure (36 bytes, verified via Ghidra):
   0x12    u16   count_8x8_a (primary 8x8 tiles)
   0x14    u16   count_8x8_b (additional tiles)
   0x16    6 bytes unknown
-  0x1C    u16   field_1c (unknown, stored at GameState+0x78)
-  0x1E    u16   field_1e (possibly entity count)
+  0x1C    u16   vram_rect_count (number of 502 VRAM rectangle entries)
+  0x1E    u16   entity_count (number of 501 entity entries)
   0x20    4 bytes remaining
 """
 
@@ -44,7 +44,7 @@ def parse_tile_header(data: bytes) -> dict:
     level_w, level_h = struct.unpack_from('<HH', data, 8)
     spawn_x, spawn_y = struct.unpack_from('<HH', data, 12)
     count_16x16, count_8x8_a, count_8x8_b = struct.unpack_from('<HHH', data, 16)
-    field_1c, field_1e = struct.unpack_from('<HH', data, 28)
+    vram_rect_count, entity_count = struct.unpack_from('<HH', data, 28)
     
     total_tiles = count_16x16 + count_8x8_a + count_8x8_b
     
@@ -76,9 +76,9 @@ def parse_tile_header(data: bytes) -> dict:
             "count_8x8_b": count_8x8_b,
             "total": total_tiles,
         },
-        "unknown_fields": {
-            "field_1c": field_1c,
-            "field_1e": field_1e,
+        "related_counts": {
+            "vram_rect_count": vram_rect_count,  # Matches 502.count
+            "entity_count": entity_count,         # Matches 501.count
         },
         "raw_size": len(data),
     }

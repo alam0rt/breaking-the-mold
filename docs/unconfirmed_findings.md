@@ -51,13 +51,16 @@ Common patterns:
 - (1, 216, 253, 2) - Cycle last 40 colors at medium speed
 - (1, 17, 253, 1) - Skip first 17 colors, cycle rest
 
-### Asset 101: Segment Variant Flag (12 bytes)
+### Asset 101: Segment Variant Flag (12 bytes) - NEEDS VERIFICATION
 
-**Pattern**: Always 12 bytes, first byte contains value 1-4, rest zeros
+**Pattern**: Always 12 bytes, first u32 contains value 1-4, rest zeros
 **Distribution**: value=2 (42 occurrences), value=4 (10), value=3 (2), value=1 (2)
 **Theory**: Secondary segment count or tile set variant identifier
+**Status**: Handler implemented, but meaning of variant values unclear
 
-### Asset 502: VRAM Rectangles (16-byte entries)
+### Asset 502: VRAM Rectangles (16-byte entries) - CONFIRMED ✓
+
+**Relationship**: Count matches TileHeader.field_1c (offset 0x1C) exactly for all levels
 
 Structure:
 ```
@@ -72,15 +75,55 @@ Offset  Size  Field
 
 Uses: Screen regions for triggers, texture page boundaries, collision zones
 
-### Asset 504: Vehicle Path Data (FINN/RUNN only)
+### Asset 503: Animation Offset Table (ToolX sequence data) - CONFIRMED ✓
+
+Structure:
+- u32 count (number of animation entries)
+- TOC entries (12 bytes each): index(u32), data_size(u32), data_offset(u32)
+- Variable-length frame data sections follow TOC
+
+Each animation contains frame offset pairs for sprite animation sequences.
+
+### Asset 504: Vehicle Path Data (FINN/RUNN only) - CONFIRMED ✓
 
 **Pattern**: 64-byte entries containing path waypoints
 - FINN: 78 entries (4992 bytes) - complex rail path
 - RUNN: 1 entry (64 bytes) - simple path
 
-Contains bounding boxes and a recurring 0xFB flag value.
+Contains bounding boxes and navigation waypoint data.
 
-### Tilemap Tile Index 0: Empty Tile
+---
+
+## Cross-Asset Relationships (VERIFIED 2026-01-10)
+
+Analysis of assets with matching occurrence counts revealed structural relationships:
+
+### Group 1: 208 assets (100, 302, 401)
+All three appear in every stage location:
+- **302.size = 100.total_tiles** (1 byte of flags per tile) ✓
+- **401.size = 400.palette_count × 4** (4 bytes per palette for animation config) ✓
+
+### Group 2: 117 assets (601, 602)
+Audio-related, always appear together:
+- **602.size = 601.sample_count × 4** (4 bytes per audio sample for volume settings) ✓
+
+### Group 3: 104 assets (200, 201, 300, 301, 400, 501)
+Core level data, split between segment types:
+- **stage segments**: 200 (tilemaps), 201 (layers), 501 (entities)
+- **secondary segments**: 300 (tile pixels), 301 (palette indices), 400 (palettes)
+
+### Group 4: 94 assets (502, 503)
+Both in stage segments, 93 of 94 locations shared:
+- **502.count = 100.field_1c** (TileHeader stores VRAM rect count) ✓
+- **501.size/24 = 100.field_1e** (TileHeader stores entity count) ✓
+
+### TileHeader Unknown Fields Now Identified:
+- **field_1c (0x1C)** = VRAM rectangle count (matches Asset 502)
+- **field_1e (0x1E)** = Entity count (matches Asset 501 size / 24)
+
+---
+
+## Tilemap Tile Index 0: Empty Tile
 
 Tile index 0 is used as a transparent/empty placeholder tile.
 It is NOT counted in TileHeader tile totals, which explains why:
