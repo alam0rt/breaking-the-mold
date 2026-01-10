@@ -18,15 +18,16 @@ from . import register_handler
 
 
 @register_handler(504)
-def handle_vehicle_data(asset_type: int, data: bytes, output_dir: Path, level_name: str, stage_num: int, ctx: dict) -> dict:
+def handle_vehicle_data(data: bytes, asset_info, output_dir: Path, context: dict) -> list[Path]:
     """Extract asset 504 - vehicle path/waypoint data."""
+    output_dir.mkdir(parents=True, exist_ok=True)
     ENTRY_SIZE = 64
     
     if len(data) % ENTRY_SIZE != 0:
-        return {
-            "status": "error",
-            "error": f"Size {len(data)} not divisible by {ENTRY_SIZE}"
-        }
+        # Fall back to binary dump
+        bin_path = output_dir / "504_vehicle_data.bin"
+        bin_path.write_bytes(data)
+        return [bin_path]
     
     count = len(data) // ENTRY_SIZE
     waypoints = []
@@ -59,20 +60,17 @@ def handle_vehicle_data(asset_type: int, data: bytes, output_dir: Path, level_na
         waypoints.append(waypoint)
     
     result = {
+        "asset_type": 504,
         "count": count,
         "entry_size": ENTRY_SIZE,
-        "level": level_name,
+        "level": asset_info.level,
+        "segment": asset_info.segment,
         "waypoints": waypoints
     }
     
     # Save as JSON
-    json_path = output_dir / f"{asset_type:03d}_vehicle_data.json"
+    json_path = output_dir / "504_vehicle_data.json"
     with open(json_path, 'w') as f:
         json.dump(result, f, indent=2)
     
-    return {
-        "status": "handled",
-        "files": [str(json_path)],
-        "waypoint_count": count,
-        "description": f"{count} vehicle waypoints"
-    }
+    return [json_path]

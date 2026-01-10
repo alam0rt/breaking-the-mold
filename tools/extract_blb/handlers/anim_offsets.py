@@ -18,23 +18,23 @@ from . import register_handler
 
 
 @register_handler(503)
-def handle_anim_offsets(asset_type: int, data: bytes, output_dir: Path, level_name: str, stage_num: int, ctx: dict) -> dict:
+def handle_anim_offsets(data: bytes, asset_info, output_dir: Path, context: dict) -> list[Path]:
     """Extract asset 503 - animation offset table."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
     if len(data) < 4:
-        return {
-            "status": "error",
-            "error": f"Data too small ({len(data)} bytes)"
-        }
+        bin_path = output_dir / "503_anim_offsets.bin"
+        bin_path.write_bytes(data)
+        return [bin_path]
     
     count = struct.unpack_from('<I', data, 0)[0]
     
     # Validate TOC fits
     toc_size = 4 + count * 12
     if len(data) < toc_size:
-        return {
-            "status": "error",
-            "error": f"TOC truncated: need {toc_size} bytes, have {len(data)}"
-        }
+        bin_path = output_dir / "503_anim_offsets.bin"
+        bin_path.write_bytes(data)
+        return [bin_path]
     
     animations = []
     
@@ -68,19 +68,17 @@ def handle_anim_offsets(asset_type: int, data: bytes, output_dir: Path, level_na
         animations.append(anim)
     
     result = {
+        "asset_type": 503,
         "count": count,
         "toc_end_offset": toc_size,
+        "level": asset_info.level,
+        "segment": asset_info.segment,
         "animations": animations
     }
     
     # Save as JSON
-    json_path = output_dir / f"{asset_type:03d}_anim_offsets.json"
+    json_path = output_dir / "503_anim_offsets.json"
     with open(json_path, 'w') as f:
         json.dump(result, f, indent=2)
     
-    return {
-        "status": "handled",
-        "files": [str(json_path)],
-        "animation_count": count,
-        "description": f"{count} animation sequences"
-    }
+    return [json_path]
