@@ -26,6 +26,31 @@ Common values:
 - 8192 (0x2000) = 50% volume
 - 4915 = ~30% volume
 
+### Asset 401: Per-Palette Animation Config - CONFIRMED ✓
+
+**Pattern**: Size = Asset 400 palette_count × 4 bytes
+**Verification**: 104/104 secondary segments match exactly
+
+Structure (4 bytes per palette):
+```
+Offset  Size  Field
+0x00    u8    enabled (0=static, 1=animate)
+0x01    u8    start_index (first color to cycle)
+0x02    u8    end_index (last color to cycle)
+0x03    u8    speed (animation rate, higher=faster)
+```
+
+This implements classic palette color cycling animation. When enabled,
+colors from start_index to end_index rotate each frame. Used for:
+- Flowing water/lava effects
+- Glowing/pulsing objects
+- Animated backgrounds
+
+Common patterns:
+- (1, 2, 253, 1) - Cycle almost full palette slowly
+- (1, 216, 253, 2) - Cycle last 40 colors at medium speed
+- (1, 17, 253, 1) - Skip first 17 colors, cycle rest
+
 ### Asset 101: Segment Variant Flag (12 bytes)
 
 **Pattern**: Always 12 bytes, first byte contains value 1-4, rest zeros
