@@ -113,3 +113,4 @@ def register_all_handlers():
     from . import palettes
     from . import tile_attributes
     from . import palette_indices
+    from . import palette_anim
