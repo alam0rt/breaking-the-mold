@@ -246,23 +246,57 @@ def save_gif(
             pil_frames[0].save(png_path, 'PNG')
             return True
         
-        # Convert to palette mode for GIF (required)
-        # Use first frame to create palette, then apply to all
+        # Convert RGBA frames to palette mode for GIF
+        # Use a quantization approach that preserves transparency properly
         gif_frames = []
-        for frame in pil_frames:
-            # Convert RGBA to P (palette) mode with transparency
-            # First convert to RGB with alpha mask
-            alpha = frame.split()[3]
-            # Create a version with transparency as a specific color
-            rgb_frame = Image.new('RGB', frame.size, (255, 0, 255))  # magenta bg
-            rgb_frame.paste(frame, mask=alpha)
-            # Convert to palette mode
-            p_frame = rgb_frame.convert('P', palette=Image.ADAPTIVE, colors=255)
-            # Set transparency for magenta pixels
-            p_frame.info['transparency'] = p_frame.getpixel((0, 0)) if alpha.getpixel((0, 0)) == 0 else 255
-            gif_frames.append(p_frame)
         
-        # Save animated GIF
+        for frame in pil_frames:
+            # Get alpha channel
+            alpha = frame.split()[3]
+            
+            # Convert to RGB, using a unique color for transparent pixels
+            # We'll use index 0 for transparency in the final palette
+            rgb_frame = Image.new('RGB', frame.size, (0, 0, 0))
+            
+            # Paste the RGB portion where alpha > 0
+            rgb_data = frame.convert('RGB')
+            
+            # Create mask from alpha (pixels with alpha > 128 are opaque)
+            mask = alpha.point(lambda x: 255 if x > 128 else 0)
+            rgb_frame.paste(rgb_data, mask=mask)
+            
+            # Quantize to 255 colors, reserving index 0 for transparency
+            # Use MEDIANCUT for better color preservation
+            p_frame = rgb_frame.quantize(colors=255, method=Image.Quantize.MEDIANCUT)
+            
+            # Now we need to set transparent pixels to a specific index
+            # Get the palette and add a transparent color at the end
+            palette = p_frame.getpalette()
+            
+            # Create a new image with transparency support
+            # Map transparent pixels (where alpha was 0) to index 255
+            p_data = list(p_frame.getdata())
+            alpha_data = list(alpha.getdata())
+            
+            new_data = []
+            for i, (p_val, a_val) in enumerate(zip(p_data, alpha_data)):
+                if a_val < 128:  # Transparent
+                    new_data.append(255)
+                else:
+                    new_data.append(p_val)
+            
+            # Create new palette image
+            result = Image.new('P', frame.size)
+            result.putdata(new_data)
+            
+            # Set palette - copy existing and set index 255 to magenta (for debugging)
+            new_palette = palette[:] + [0] * (768 - len(palette))
+            new_palette[255*3:255*3+3] = [255, 0, 255]  # Magenta for transparent
+            result.putpalette(new_palette)
+            
+            gif_frames.append(result)
+        
+        # Save animated GIF with transparency on index 255
         gif_frames[0].save(
             path,
             format='GIF',
@@ -270,7 +304,7 @@ def save_gif(
             append_images=gif_frames[1:],
             duration=frame_delay_ms,
             loop=0 if loop else 1,
-            transparency=0,
+            transparency=255,
             disposal=2,  # Clear frame before drawing next
         )
         return True
