@@ -45,7 +45,7 @@ nix-shell -p xxd --run "xxd disks/blb/GAME.BLB ..."
 ### Supporting Files
 
 - `tools/blb_viewer/` - Web-based BLB viewer using the hexpat format (contains blb.js and engine.js which are a javascript implementation of the BLB format and the Skullmonkeys game engine resptectively)
-- `scripts/blb.py` - Python library for programmatic BLB parsing (kept in sync with hexpat)
+- `tools/extract_blb/` - Python tool to extract raw assets from BLB files using the hexpat format
 - `docs/blb-data-format.md` - Human-readable documentation of the format
 - `docs/unconfirmed_findings.md` - Unverified observations awaiting proof
 
