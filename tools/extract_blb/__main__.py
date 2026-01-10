@@ -262,72 +262,13 @@ def compute_coverage_gaps(
     return gaps, overlaps, coverage_pct, padding_bytes, unknown_data_bytes, unique_bytes
 
 # ============================================================================
-# Handler Registry
+# Handler Registry - Import from handlers module
 # ============================================================================
 
-# Registry of handlers: asset_type -> handler_function
-_handlers: dict[int, Callable] = {}
+from .handlers import register_handler, get_handler, default_handler, register_all_handlers
 
-def register_handler(asset_type: int):
-    """Decorator to register a handler for an asset type."""
-    def decorator(func: Callable):
-        _handlers[asset_type] = func
-        return func
-    return decorator
-
-def get_handler(asset_type: int) -> tuple[Callable, str]:
-    """Get handler for asset type. Returns (handler, handler_name)."""
-    if asset_type in _handlers:
-        return _handlers[asset_type], _handlers[asset_type].__name__
-    return default_handler, "default"
-
-# ============================================================================
-# Default Handler
-# ============================================================================
-
-def default_handler(
-    data: bytes,
-    asset_info: AssetInfo,
-    output_dir: Path,
-    context: dict
-) -> list[Path]:
-    """
-    Default handler - saves raw bytes as .bin file with manifest.
-    
-    Args:
-        data: Raw asset bytes
-        asset_info: Metadata about the asset
-        output_dir: Directory to write output
-        context: Additional context (other assets, etc.)
-    
-    Returns:
-        List of output file paths created
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Use asset_name from hexpat (already in asset_info)
-    asset_name = asset_info.asset_name
-    bin_path = output_dir / f"{asset_info.asset_type:03d}_{asset_name}.bin"
-    manifest_path = output_dir / f"{asset_info.asset_type:03d}_{asset_name}.json"
-    
-    # Write binary data
-    bin_path.write_bytes(data)
-    
-    # Write manifest
-    manifest = {
-        "asset_type": asset_info.asset_type,
-        "asset_name": asset_name,
-        "size": asset_info.size,
-        "offset_in_segment": hex(asset_info.offset_in_segment),
-        "segment_offset": hex(asset_info.segment_offset),
-        "absolute_offset": hex(asset_info.absolute_offset),
-        "level": asset_info.level,
-        "segment": asset_info.segment,
-        "toc_index": asset_info.toc_index,
-    }
-    manifest_path.write_text(json.dumps(manifest, indent=2))
-    
-    return [bin_path, manifest_path]
+# Register all available handlers
+register_all_handlers()
 
 # ============================================================================
 # JSON Parsing Helpers
