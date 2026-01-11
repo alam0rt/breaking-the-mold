@@ -664,11 +664,12 @@ fn format_rle_cmd(auto cmd) {
 };
 
 // Animation entry (12 bytes)
+// VERIFIED via Ghidra FUN_8001d748: flags bit 0 triggers frame callback
 struct AnimationEntry {
     u32 animation_id [[name("Anim ID")]];
     u16 frame_count [[name("Frames")]];
     u16 frame_offset [[name("Frame Idx"), comment("Index into frame metadata array")]];
-    u16 flags [[name("Flags")]];
+    u16 flags [[name("Flags"), comment("Bit 0: has_frame_callback (triggers FUN_8001c4a4)")]];
     u16 extra [[hidden]];
 } [[format("format_anim_entry"), color("CC80FF"), static]];
 
@@ -677,20 +678,21 @@ fn format_anim_entry(auto e) {
 };
 
 // Frame metadata (36 bytes = 0x24)
+// VERIFIED via Ghidra: DecodeRLESprite (0x80010068), FUN_8001d748, GetFrameMetadata (0x8007bebc)
 struct SpriteFrameMetadata {
-    u16 reserved_00 [[hidden]];
+    u16 callback_id [[name("Callback"), comment("0=none, triggers FUN_8001c4a4 for SFX/particles")]];
     u16 reserved_02 [[hidden]];
-    u16 flags [[name("Flags"), comment("1 or 2")]];
+    u16 flip_flags [[name("Flip"), comment("0=normal, non-zero=horizontal mirror (verified in DecodeRLESprite)")]];
     s16 render_x [[name("X")]];
     s16 render_y [[name("Y")]];
     u16 render_width [[name("W")]];
     u16 render_height [[name("H")]];
-    u16 unknown_0e [[hidden]];
+    u16 frame_delay [[name("Delay"), comment("Per-frame timing (verified: copied to entity+0xE6)")]];
     u16 reserved_10 [[hidden]];
-    s16 anchor_x [[name("Anchor X")]];
-    s16 anchor_y [[name("Anchor Y")]];
-    u16 clip_width [[name("Clip W")]];
-    u16 clip_height [[name("Clip H")]];
+    s16 hitbox_x [[name("Hit X"), comment("Hitbox offset (verified in FUN_8001d748)")]];
+    s16 hitbox_y [[name("Hit Y")]];
+    u16 hitbox_width [[name("Hit W")]];
+    u16 hitbox_height [[name("Hit H")]];
     u8 pad_1a[6] [[hidden]];
     type::Hex<u32> rle_offset [[name("RLE Off"), comment("Offset to RLE data")]];
 } [[format("format_frame_meta"), color("FF80CC"), static]];

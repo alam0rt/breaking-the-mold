@@ -1258,29 +1258,45 @@ Offset  Size    Type    Description
 0x00    4       u32     Animation ID (identifies animation type)
 0x04    2       u16     Frame count (number of frames in animation)
 0x06    2       u16     Frame data offset (index into frame metadata)
-0x08    2       u16     Flags (animation properties)
+0x08    2       u16     Flags (animation properties, see below)
 0x0A    2       u16     Extra (unknown, often 0)
+
+Animation Flags (VERIFIED via Ghidra FUN_8001d748):
+  Bit 0 (0x0001): Has frame callback - triggers FUN_8001c4a4 on frame change
+                  Used for sound effects, particle spawns, etc.
+  Note: Loop behavior is controlled by game code, not these flags.
 ```
 
 **Frame Metadata (36 bytes = 0x24 per frame):**
 ```
 Offset  Size    Type    Description
 ------  ----    ----    -----------
-0x00    2       u16     Unknown (always 0)
-0x02    2       u16     Unknown (always 0)
-0x04    2       u16     Flags (1 or 2)
+0x00    2       u16     Callback ID (0 = no callback, triggers FUN_8001c4a4)
+0x02    2       u16     Reserved (always 0)
+0x04    2       u16     Flip flags (0=normal, non-zero=horizontal mirror)
 0x06    2       s16     Render X offset (signed, for sprite positioning)
 0x08    2       s16     Render Y offset (signed)
 0x0A    2       u16     Render width (sprite visible width)
 0x0C    2       u16     Render height (sprite visible height)
-0x0E    2       u16     Unknown (0-10)
-0x10    2       u16     Unknown (always 0)
-0x12    2       s16     Anchor X offset (signed)
-0x14    2       s16     Anchor Y offset (signed)
-0x16    2       u16     Clip width
-0x18    2       u16     Clip height
+0x0E    2       u16     Frame delay (timing value, used for animation speed)
+0x10    2       u16     Reserved (always 0)
+0x12    2       s16     Hitbox X offset (signed)
+0x14    2       s16     Hitbox Y offset (signed)
+0x16    2       u16     Hitbox width
+0x18    2       u16     Hitbox height
 0x1A    6       bytes   Padding (always 0)
 0x20    4       u32     RLE data offset (from sprite's RLE base)
+
+Frame Flip Flags (VERIFIED via Ghidra DecodeRLESprite 0x80010068):
+  The flip flag at offset 0x04 controls RLE decode direction:
+  - 0: Normal left-to-right decode (puVar13 = puVar13 + skip)
+  - Non-zero: Mirrored right-to-left decode (puVar13 = puVar13 - skip)
+  This allows sprites to be horizontally flipped without storing duplicate data.
+
+Frame Delay (VERIFIED via Ghidra FUN_8001d748):
+  Offset 0x0E is copied to entity+0xE6 and used for animation timing.
+  Value 0 indicates static frame (no automatic advance).
+  Non-zero values control per-frame display duration.
 ```
 
 **Key Ghidra Functions:**

@@ -3,20 +3,36 @@ Sprite Container Handler (Asset Type 600)
 
 Extracts sprite containers to:
 1. Raw bytes (.bin) via default handler
-2. Animated GIFs for multi-frame animations
-3. Static PNGs for single-frame animations
+2. Animated GIFs for multi-frame animations with per-frame timing
+3. Static PNGs for single-frame sprites
+4. Indexed PNG sequences for sprite sheets (fonts, numbers, variants)
 
 Sprite Format:
 - Container TOC: count (u32), then sprite_id/size/offset entries (12 bytes each)
 - Each sprite has:
   - Header (12 bytes): anim_count, frame_meta_offset, rle_offset, palette_offset
   - Animations (12 bytes each): anim_id, frame_count, frame_offset, flags
-  - Frame metadata (36 bytes each): dimensions, anchors, rle_offset
+  - Frame metadata (36 bytes each): callback_id, flip_flags, dimensions, hitbox, frame_delay, rle_offset
   - Palette (512 bytes): 256 PSX 15-bit colors
   - RLE data: compressed pixel indices
 
-Animation Flags:
-- Bit 0 (0x0001): Loop animation
+Animation Flags (VERIFIED via Ghidra FUN_8001d748):
+- Bit 0 (0x0001): has_frame_callback - triggers FUN_8001c4a4 for SFX/particles
+- Note: Loop behavior is controlled by game code, not these flags
+
+Frame Metadata Fields (VERIFIED via Ghidra):
+- flip_flags (0x04): 0=normal, non-zero=horizontal mirror for RLE decode
+- frame_delay (0x0E): Per-frame timing value (copied to entity+0xE6)
+  - 0 = static frame (indexed sprite sheet - e.g., digit fonts, variant icons)
+  - Non-zero = animated frame with timing
+
+Sprite Sheet Detection:
+When frame_delay=0 for ALL frames, the sprite is an indexed sprite sheet where
+each frame is selected by index at runtime (not animated). Examples:
+- Number fonts: frame[0]=0, frame[1]=1, ..., frame[9]=9
+- Collectible variants: frame[0]=coin, frame[1]=gem, frame[2]=key
+- Directional sprites: frame[0]=left, frame[1]=right, frame[2]=up, frame[3]=down
+These are saved as individual PNGs: sprite_XXXX_animYY_fZZ.png
 """
 
 import json
@@ -57,38 +73,40 @@ def parse_frame_metadata(data: bytes, offset: int) -> dict:
     """
     Parse 36-byte frame metadata.
     
+    VERIFIED via Ghidra: DecodeRLESprite (0x80010068), FUN_8001d748, GetFrameMetadata (0x8007bebc)
+    
     Offset  Size  Type   Field
-    0x00    2     u16    field_00 (unknown)
-    0x02    2     u16    field_02 (unknown)
-    0x04    2     u16    flags
+    0x00    2     u16    callback_id (0=none, triggers FUN_8001c4a4 for SFX/particles)
+    0x02    2     u16    reserved (always 0)
+    0x04    2     u16    flip_flags (0=normal, non-zero=horizontal mirror)
     0x06    2     s16    render_x (signed offset from anchor)
     0x08    2     s16    render_y (signed offset from anchor)
     0x0A    2     u16    render_width
     0x0C    2     u16    render_height
-    0x0E    2     u16    field_0e (unknown)
-    0x10    2     u16    field_10 (unknown)
-    0x12    2     s16    anchor_x (signed)
-    0x14    2     s16    anchor_y (signed)
-    0x16    2     u16    clip_width
-    0x18    2     u16    clip_height
+    0x0E    2     u16    frame_delay (per-frame timing, copied to entity+0xE6)
+    0x10    2     u16    reserved (always 0)
+    0x12    2     s16    hitbox_x (signed)
+    0x14    2     s16    hitbox_y (signed)
+    0x16    2     u16    hitbox_width
+    0x18    2     u16    hitbox_height
     0x1A    6     -      padding
     0x20    4     u32    rle_offset
     """
     fields = struct.unpack_from('<HHHhhHHHHhhHH6xI', data, offset)
     return {
-        'field_00': fields[0],
-        'field_02': fields[1],
-        'flags': fields[2],
-        'render_x': fields[3],      # signed s16
-        'render_y': fields[4],      # signed s16
+        'callback_id': fields[0],      # Triggers FUN_8001c4a4 for sound/particle effects
+        'reserved_02': fields[1],
+        'flip_flags': fields[2],       # 0=normal, non-zero=horizontal mirror in RLE decode
+        'render_x': fields[3],         # signed s16
+        'render_y': fields[4],         # signed s16
         'render_width': fields[5],
         'render_height': fields[6],
-        'field_0e': fields[7],
-        'field_10': fields[8],
-        'anchor_x': fields[9],      # signed s16
-        'anchor_y': fields[10],     # signed s16
-        'clip_width': fields[11],
-        'clip_height': fields[12],
+        'frame_delay': fields[7],      # Per-frame timing value (0=static/sprite sheet)
+        'reserved_10': fields[8],
+        'hitbox_x': fields[9],         # signed s16
+        'hitbox_y': fields[10],        # signed s16
+        'hitbox_width': fields[11],
+        'hitbox_height': fields[12],
         'rle_offset': fields[13],
     }
 
@@ -390,11 +408,14 @@ def sprite_container_handler(
             if anim['frame_count'] == 0:
                 continue
             
-            # Determine if animation loops (flag bit 0)
-            loops = bool(anim['flags'] & 0x0001)
+            # Animation flags (VERIFIED via Ghidra FUN_8001d748):
+            # Bit 0 (0x0001): has_frame_callback - triggers FUN_8001c4a4 for SFX/particles
+            # Note: This is NOT a loop flag - loops are controlled by game code
+            has_callback = bool(anim['flags'] & 0x0001)
             
-            # Extract ALL frames for this animation
+            # Extract ALL frames for this animation, collecting timing info
             frames = []
+            frame_delays = []  # Per-frame timing from frame_delay field
             frame_meta_base = sprite_offset + header['frame_meta_offset']
             
             for frame_idx in range(anim['frame_count']):
@@ -427,34 +448,69 @@ def sprite_container_handler(
                         frame['render_x'],  # signed offset
                         frame['render_y'],  # signed offset
                     ))
+                    # Collect per-frame timing (VERIFIED: frame_delay at offset 0x0E)
+                    frame_delays.append(frame['frame_delay'])
                 except Exception:
                     continue
             
             if not frames:
                 continue
             
+            # Determine if this is a true animation or sprite sheet based on frame_delay
+            # (VERIFIED via Ghidra: frame_delay=0 means static/variant, non-zero means timed animation)
+            has_timing = any(d > 0 for d in frame_delays)
+            
+            # Calculate average frame delay for GIF timing
+            # PSX runs at 50Hz (PAL) / 60Hz (NTSC), so frame_delay is in ticks
+            # Convert to milliseconds: assume PAL 50Hz = 20ms per tick
+            if has_timing:
+                avg_delay = sum(d for d in frame_delays if d > 0) / max(1, sum(1 for d in frame_delays if d > 0))
+                frame_delay_ms = max(20, int(avg_delay * 20))  # 20ms per tick at 50Hz
+            else:
+                frame_delay_ms = DEFAULT_FRAME_DELAY_MS
+            
             # Save animation
             anim_info = {
                 'animation_id': anim['animation_id'],
                 'frame_count': len(frames),
-                'loops': loops,
+                'has_callback': has_callback,
+                'has_timing': has_timing,
+                'frame_delay_ms': frame_delay_ms,
             }
             
             if len(frames) == 1:
-                # Single frame - save as PNG
+                # Single frame - always save as PNG
                 pixels, width, height, _, _ = frames[0]
                 png_path = sprites_dir / f"sprite_{sprite_id:04d}_anim{anim_idx:02d}.png"
                 if save_png(pixels, width, height, png_path):
                     output_files.append(png_path)
                     pngs_created += 1
                     anim_info['file'] = png_path.name
+                    anim_info['format'] = 'png'
+                    anim_info['type'] = 'static'
+            elif not has_timing:
+                # Multiple frames but no timing - indexed sprite sheet
+                # Used for: number fonts (0-9), variant icons, directional sprites
+                # Each frame is selected by index at runtime, not animated
+                # Save as individual PNGs for each frame index
+                for frame_idx, (pixels, width, height, _, _) in enumerate(frames):
+                    png_path = sprites_dir / f"sprite_{sprite_id:04d}_anim{anim_idx:02d}_f{frame_idx:02d}.png"
+                    if save_png(pixels, width, height, png_path):
+                        output_files.append(png_path)
+                        pngs_created += 1
+                anim_info['file'] = f"sprite_{sprite_id:04d}_anim{anim_idx:02d}_f*.png"
+                anim_info['format'] = 'indexed_pngs'
+                anim_info['type'] = 'sprite_sheet'
+                anim_info['indices'] = list(range(len(frames)))
             else:
-                # Multiple frames - save as animated GIF
+                # Multiple frames with timing - save as animated GIF
                 gif_path = sprites_dir / f"sprite_{sprite_id:04d}_anim{anim_idx:02d}.gif"
-                if save_gif(frames, gif_path, loop=loops):
+                if save_gif(frames, gif_path, frame_delay_ms=frame_delay_ms, loop=True):
                     output_files.append(gif_path)
                     gifs_created += 1
                     anim_info['file'] = gif_path.name
+                    anim_info['format'] = 'gif'
+                    anim_info['type'] = 'animation'
             
             sprite_info['animations'].append(anim_info)
         
