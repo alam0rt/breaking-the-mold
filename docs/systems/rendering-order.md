@@ -37,8 +37,8 @@ Offset  Size  Type    Field           Description
 0x10    4     u32     scroll_x        Parallax factor X (0x10000 = 1.0)
 0x14    4     u32     scroll_y        Parallax factor Y
 ...
-0x26    1     u8      layer_type      0=normal, 3=skip render
-0x28    2     u16     skip_render     If !=0, skip this layer
+0x26    1     u8      layer_type      0=normal, 3=skip render # NOT VERIFIED
+0x28    2     u16     skip_render     If !=0, skip this layer #  NOT VERIFIED
 0x2C    48    u8[48]  color_tints     16 RGB entries for tile tinting
 ```
 

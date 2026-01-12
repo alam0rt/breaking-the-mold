@@ -178,10 +178,13 @@ void EntityTickLoop(GameState* state) {
 | `EntityTickLoop` | 0x80020e1c | Main update loop |
 | `LoadEntitiesFromAsset501` | 0x80024dc4 | Load entity defs |
 | `GetEntityCount` | 0x8007b7a8 | Entity count accessor |
-| `FUN_800213a8` | 0x800213a8 | Add to entity list |
-| `FUN_80021190` | 0x80021190 | Add to update queue |
+| `AddEntityToSortedRenderList` | 0x800213a8 | Sorted render list insertion |
+| `AllocateFromHeap` | 0x800143f0 | Entity memory allocation |
 | `InitPlayerEntity` | 0x8001fcf0 | Player setup |
 | `InitBossEntity` | 0x80047fb8 | Boss setup |
+| `SpawnPlayerAndEntities` | 0x8007df38 | Player creation dispatcher |
+| `CreatePlayerEntity` | 0x800596a4 | Default player creation |
+| `CreateCameraEntity` | 0x80044f7c | Camera entity creation |
 
 ## LevelDataContext Entity Offsets
 
@@ -202,6 +205,7 @@ To add a new entity type → sprite mapping, you must:
 
 ## Related Documentation
 
+- [Game Loop](game-loop.md) - Main loop and player creation
 - [Sprites](sprites.md) - Sprite data format
 - [Rendering Order](rendering-order.md) - Entity z_order
 - [Asset Types](../blb/asset-types.md) - Asset 501 details

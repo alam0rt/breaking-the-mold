@@ -185,20 +185,9 @@ BLB File
 | `CdBLB_ReadSectors` | 0x80038ba0 | Low-level CD read |
 | `InitLevelDataContext` | 0x8007a1bc | Init context struct |
 
-## Debugging Tips
-
-When debugging with PCSX-Redux:
-
-1. **Always pause first** for consistent snapshots
-2. **Check headerOffset** (ctx+0x60) for current operation
-3. **Check asset259Size** to identify loaded level:
-   - MENU: 11,420 bytes
-   - SCIE: 126,256 bytes
-   - TMPL: 188,288 bytes
-4. **Resume after** inspection
-
 ## Related Documentation
 
+- [Game Loop](game-loop.md) - Main loop and player creation
 - [BLB Header](../blb/header.md) - Header structure
 - [Level Metadata](../blb/level-metadata.md) - Per-level entries
 - [LevelDataContext](../reference/level-data-context.md) - Context structure

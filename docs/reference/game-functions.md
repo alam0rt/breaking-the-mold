@@ -109,7 +109,43 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x800828B0 | main | Main game loop |
+| 0x8007CD34 | InitGameState | One-time game initialization |
 | 0x80020E80 | RenderEntities | Draw entities |
+| 0x8008150C | RemapEntityTypesForLevel | Entity type translation table |
+| 0x80081E84 | ClearSaveSlotFlags | Reset save slot state |
+| 0x8007CA9C | StartCDAudioForLevel | Initialize CD audio for level |
+
+## Player Creation
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8007DF38 | SpawnPlayerAndEntities | Player dispatch based on level flags |
+| 0x8007B47C | GetLevelFlags | Read level type flags from header |
+| 0x800596A4 | CreatePlayerEntity | Default platforming player |
+| 0x8006EDB8 | CreateGlidePlayerEntity | GLID level player |
+| 0x80070D68 | CreateSoarPlayerEntity | SOAR level player |
+| 0x80073934 | CreateRunnPlayerEntity | RUNN level player |
+| 0x80074100 | CreateFinnPlayerEntity | FINN level player |
+| 0x80078200 | CreateBossPlayerEntity | Boss fight player |
+| 0x80044F7C | CreateCameraEntity | Camera entity creation |
+| 0x8007A33C | SetSequenceIndexByMode | Init playback sequence |
+
+## Tile Header Accessors
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8007B3F0 | GetCurrentStageIndex | Current stage index |
+| 0x8007B490 | GetTileHeaderField08 | Header field at +0x08 |
+| 0x8007B4A4 | GetTileHeaderField1A | Header field at +0x1A |
+| 0x8007B910 | GetTileHeaderField16 | Header field at +0x16 |
+| 0x8007B924 | GetVehicleDataPtr | Asset 504 pointer (FINN/RUNN) |
+
+## Memory Management
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x800143F0 | AllocateFromHeap | Block-based heap allocator |
+| 0x800213A8 | AddEntityToSortedRenderList | Sorted render list insertion |
 
 ## Global Variables
 
