@@ -158,6 +158,14 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x800145A4 | FreeFromHeap | Free allocated memory |
 | 0x800213A8 | AddEntityToSortedRenderList | Sorted render list insertion |
 
+## Player Callbacks
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8005B414 | PlayerTickCallback | Main player per-frame update |
+| 0x80077940 | MenuTickCallback | Menu entity per-frame update |
+| 0x800589E8 | InitHaloPowerup | Create halo effect entity |
+
 ## Game Mode
 
 | Address | Name | Purpose |
@@ -169,11 +177,32 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | Address | Name | Description |
 |---------|------|-------------|
 | 0x800AE3E0 | blbHeaderBuffer | BLB header in RAM |
-| 0x8009DCC4 | LevelDataContext | Level loading state |
+| 0x8009DC40 | g_GameStateBase | Main game state structure |
+| 0x8009DCC4 | LevelDataContext | Level loading state (GameState+0x84) |
 | 0x8009B4B4 | g_GameBLBFile | CdlFILE for GAME.BLB |
 | 0x800A59F0 | g_GameBLBSector | BLB starting sector (0x146) |
 | 0x800A6060 | g_pSecondarySpriteBank | Secondary sprites |
 | 0x800A6064 | g_pLevelDataContext | Context pointer |
+| 0x8009C174 | DAT_8009c174 | Player sprite lookup table |
+
+## GameState Offsets
+
+| Offset | Type | Purpose |
+|--------|------|---------|
+| +0x30 | ptr | Player entity pointer |
+| +0x84 | struct | LevelDataContext base |
+| +0x116 | u16 | Spawn X position (pixels) |
+| +0x118 | u16 | Spawn Y position (pixels) |
+| +0x11C | u32 | Scale factor (0x8000/0xC000/0x10000) |
+| +0x124/5/6 | u8[3] | Player RGB color |
+| +0x140 | ptr | Checkpoint/HUD data pointer |
+| +0x14C | ptr | HUD entity pointer |
+| +0x161 | u8 | Respawn/continue flag |
+| +0x16C | ptr | Glide/scrolling buffer |
+| +0x170 | u8 | Level has player flag |
+| +0x171-17A | u8[10] | Password-selectable level list |
+| +0x17B | u8 | Password level count |
+| +0x198-19B | u8[4] | Respawn state data |
 
 ## Level Metadata Accessors
 
@@ -184,5 +213,7 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 
 ## Related Documentation
 
+- [Game Loop](../systems/game-loop.md) - Main loop and player creation
 - [LevelDataContext](level-data-context.md) - Context structure
 - [PAL/JP Comparison](pal-jp-comparison.md) - Address differences
+
