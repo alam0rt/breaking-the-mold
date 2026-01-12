@@ -244,9 +244,13 @@ Used during level transitions.
 | 0x8007b47c | `GetLevelFlags` | Read level type flags |
 | 0x80020e1c | `EntityTickLoop` | Per-frame entity updates |
 | 0x800143f0 | `AllocateFromHeap` | Memory allocation |
+| 0x800145a4 | `FreeFromHeap` | Memory deallocation |
 | 0x800213a8 | `AddEntityToSortedRenderList` | Render list management |
+| 0x80020f68 | `AddToZOrderList` | Z-sorted list insertion |
+| 0x8002107c | `AddToXPositionList` | X-sorted list insertion |
 | 0x800596a4 | `CreatePlayerEntity` | Default player creation |
 | 0x80044f7c | `CreateCameraEntity` | Camera entity creation |
+| 0x8007c36c | `SetGameMode` | Set game mode (0-6) |
 
 ### Mode-Specific Player Creators
 
@@ -257,6 +261,16 @@ Used during level transitions.
 | 0x80073934 | `CreateRunnPlayerEntity` | RUNN levels |
 | 0x80074100 | `CreateFinnPlayerEntity` | FINN levels |
 | 0x80078200 | `CreateBossPlayerEntity` | Boss fights |
+
+### Animation System
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8001cb88 | `EntityUpdateCallback` | Default entity tick handler |
+| 0x8001d290 | `TickEntityAnimation` | Animation frame countdown |
+| 0x8001d554 | `ApplyPendingSpriteState` | Apply pending changes (flags +0xE0) |
+| 0x8001d748 | `UpdateSpriteFrameData` | Update frame dimensions/bbox |
+| 0x8001eaac | `EntitySetState` | State machine transitions |
 
 ## Related Documentation
 

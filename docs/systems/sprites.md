@@ -91,20 +91,64 @@ Located at `sprite_start + rle_offset + frame.rle_offset`:
 ```
 0x00    u16     Command count
 0x02+   u16×N   RLE commands
+        ...     Pixel data (8bpp indexed)
 
 Command format (u16):
-  Bit 15:    New line flag (advance to next row)
-  Bits 14-8: Skip count (transparent pixels)
-  Bits 7-0:  Copy count (literal pixels)
+  Bit 15 (0x8000):    New line flag (advance to next row)
+  Bits 8-14 (0x7F00): Skip count >> 8 (transparent pixels)
+  Bits 0-7 (0xFF):    Copy count (literal pixels to copy)
+```
 
-Pixel data follows commands as 8bpp indexed values.
+### RLE Decoder (`DecodeRLESprite` @ 0x80010068)
+
+The decoder processes commands sequentially:
+
+```c
+for (i = 0; i < command_count; i++) {
+    u16 cmd = commands[i];
+    
+    // Check for new line
+    if (cmd & 0x8000) {
+        line_count--;
+        if (line_count < 0) return;  // Early exit
+        dst = row_start + stride;
+        row_start = dst;
+    }
+    
+    // Skip transparent pixels
+    dst += (cmd & 0x7F00) >> 8;
+    
+    // Copy literal pixels
+    u8 copy_count = cmd & 0xFF;
+    memcpy(dst, src, copy_count);
+    src += copy_count;
+    dst += copy_count;
+}
 ```
 
 ### Horizontal Flip
 
-When flip flag is non-zero, the RLE decoder reverses direction:
-- Normal: `puVar13 = puVar13 + skip`
-- Mirrored: `puVar13 = puVar13 - skip`
+When flip flag is non-zero (`param_2[5] != 0`), the RLE decoder reverses direction:
+- Normal: `dst += skip_count`  and `dst += 1` per pixel
+- Mirrored: `dst -= skip_count` and `dst -= 1` per pixel
+
+The pixels are copied in reverse order for mirroring:
+```c
+// Mirrored 8-byte copy (reversed)
+dst[-7] = src[7];
+dst[-6] = src[6];
+dst[-5] = src[5];
+// ... etc
+```
+
+### Optimized Copy Loops
+
+The decoder uses unrolled loops for performance:
+- **8-byte loop**: Copies 8 pixels at a time
+- **4-byte loop**: Copies 4 pixels at a time  
+- **1-byte loop**: Copies remaining pixels
+
+This optimization is typical for MIPS CPUs where memory bandwidth matters.
 
 ## Sprite Lookup Chain
 

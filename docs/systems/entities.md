@@ -70,53 +70,82 @@ Based on Ghidra decompilation:
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
 | 0x00 | 4 | state_high | State machine upper word |
-| 0x04 | 4 | callback_main | Main update callback |
-| 0x08 | 4 | state2_high | Secondary state |
+| 0x04 | 4 | callback_main | Main update callback (EntityUpdateCallback) |
+| 0x08 | 2 | x_position | X position (for spatial sorting) |
+| 0x0A | 2 | y_position | Y position |
 | 0x0C | 4 | callback2 | Secondary callback |
+| 0x10 | 2 | z_order | Render depth (for z-sorting) |
 | 0x18 | 4 | vtable | Method pointer table |
-| 0x24 | 4 | callback3 | Tertiary callback |
-| 0x28 | 4 | callback4 | |
-| 0x2C | 4 | callback5 | |
-| 0x30 | 4 | callback6 | |
-| 0x34 | 4 | sprite_ptr | Pointer to sprite/POLY |
-| 0x68 | 2 | x_pos | X position |
-| 0x6A | 2 | y_pos | Y position |
+| 0x1C | 4 | z_list_head | Z-order sorted list head |
+| 0x20 | 4 | x_list_head | X-position sorted list head |
+| 0x34 | 4 | poly_ptr | Pointer to GPU primitive (POLY_*) |
+| 0x38-0x47 | 16 | bbox | Bounding box (copied from frame metadata) |
+| 0x68 | 2 | x_pos | X position (render) |
+| 0x6A | 2 | y_pos | Y position (render) |
+| 0x76 | 1 | sprite_dirty | Frame data needs update |
+| 0x77 | 1 | state_dirty | State needs processing |
+| 0x78 | 4 | sprite_data_ptr | Pointer to sprite frame data |
+| 0xA0 | 4 | state_param1 | State machine parameter 1 |
+| 0xA2 | 2 | state_index | Current state index |
+| 0xA4 | 4 | state_param2 | State machine parameter 2 |
+| 0xA8-0xAC | 8 | pending_state | Pending state transition |
+| 0xB4 | 4 | frame_x_scale | X scale (fixed-point) |
+| 0xB8 | 4 | frame_y_scale | Y scale (fixed-point) |
+| 0xDA | 2 | current_frame | Current animation frame index |
+| 0xDE | 2 | target_frame | Target animation frame index |
+| 0xE0 | 2 | pending_flags | Pending state change flags (bitmask) |
+| 0xE6 | 2 | frame_width | Current frame width |
+| 0xE8 | 2 | frame_height | Current frame height |
+| 0xEC | 2 | frame_countdown | Animation frame timer |
+| 0xF0-0xF2 | 3 | rgb_current | Current RGB modulation |
+| 0xF3-0xF5 | 3 | rgb_pending | Pending RGB values |
 | 0xF6 | 1 | visibility | Rendering flag |
-| 0xF7 | 1 | load_flag | Sprite load method |
+| 0xF7 | 1 | sprite_type | Sprite lookup type flag |
+| 0xF8 | 1 | frame_loaded | Frame data loaded flag |
+| 0xFE | 1 | scale_mode | Double-size flag |
 | 0x100+ | ... | Extended | Entity-specific data |
 
 ## Entity Lifecycle
 
 ```
 1. ALLOCATION
-   FUN_800143f0(blbHeaderBuffer, size, 1, 0)
-   └── Allocates from BLB buffer
+   AllocateFromHeap(blbHeaderBuffer, size, 1, 0) @ 0x800143f0
+   └── Allocates from BLB buffer (16-byte aligned blocks)
 
 2. INITIALIZATION
-   InitEntitySprite(entity, sprite_id, z_order, x, y, flags)
-   ├── FUN_8001a0c8() - Zero/init struct
-   ├── FUN_8007bbc0() - GPU/render state
-   ├── FUN_8001954c() - Animation state
-   ├── FUN_8001c980() - Entity setup
-   ├── FUN_8001cdac/d024() - Load sprite
-   └── FUN_8001d080() - Finalize
+   InitEntityWithSprite(entity, sprite_id, z_order, x, y, flags) @ 0x8001c868
+   ├── InitEntityStruct(entity, 0x44C) @ 0x8001a0c8 - Zero/init struct
+   ├── FUN_8007bbc0() - GPU/render state setup
+   ├── FUN_8001954c() - Animation state init
+   ├── FUN_8001c980() - Entity core setup
+   ├── FUN_8001cea4() - Load sprite data
+   └── FUN_8001d080() - Finalize setup
 
 3. CALLBACK ASSIGNMENT
-   entity[1] = update_callback;
+   entity[1] = EntityUpdateCallback;  // Default @ 0x8001cb88
    entity[3] = secondary_callback;
    entity[10] = collision_callback?
    entity[12] = destroy_callback?
 
 4. REGISTRATION
-   FUN_800213a8(GameState, entity) - Add to list
-   FUN_80021190(GameState, entity) - Add to queue
+   AddEntityToSortedRenderList(GameState, entity) @ 0x800213a8 - Z-order list
+   AddToZOrderList(GameState, entity) @ 0x80020f68 - Z-sorted at +0x1C
+   AddToXPositionList(GameState, entity) @ 0x8002107c - X-sorted at +0x20
 
 5. TICK LOOP
    EntityTickLoop (0x80020e1c)
-   └── Iterates entities, calls entity[1] callback
+   └── For each entity:
+       └── EntityUpdateCallback (entity[1])
+           ├── TickEntityAnimation() @ 0x8001d290
+           ├── ApplyPendingSpriteState() @ 0x8001d554
+           └── UpdateSpriteFrameData() @ 0x8001d748
 
-6. DESTRUCTION
-   (Not yet fully analyzed)
+6. STATE TRANSITIONS
+   EntitySetState(entity, param1, param2) @ 0x8001eaac
+   └── Dispatches to state-specific callbacks
+
+7. DESTRUCTION
+   FreeFromHeap(blbHeaderBuffer, ptr, size, flags) @ 0x800145a4
 ```
 
 ## Entity Init Functions
@@ -172,19 +201,59 @@ void EntityTickLoop(GameState* state) {
 
 ## Key Functions
 
+### Core Entity Functions
+
 | Function | Address | Purpose |
 |----------|---------|---------|
+| `InitEntityStruct` | 0x8001a0c8 | Zero and init 0x44C byte structure |
+| `InitEntityWithSprite` | 0x8001c868 | Full entity+sprite initialization |
 | `InitEntitySprite` | 0x8001c720 | Core entity sprite init |
 | `EntityTickLoop` | 0x80020e1c | Main update loop |
+| `EntityUpdateCallback` | 0x8001cb88 | Default entity tick callback |
+| `EntitySetState` | 0x8001eaac | State machine transitions |
+
+### Animation System
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `TickEntityAnimation` | 0x8001d290 | Animation frame tick handler |
+| `ApplyPendingSpriteState` | 0x8001d554 | Apply pending sprite changes |
+| `UpdateSpriteFrameData` | 0x8001d748 | Update frame dimensions/offsets |
+
+### Entity Lists
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `AddEntityToSortedRenderList` | 0x800213a8 | Sorted render list insertion |
+| `AddToZOrderList` | 0x80020f68 | Z-order sorted list (+0x1C) |
+| `AddToXPositionList` | 0x8002107c | X-position sorted list (+0x20) |
+| `AddPreInitEntitiesToList` | 0x800250c8 | Pre-init entities from palette data |
+
+### Memory Management
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `AllocateFromHeap` | 0x800143f0 | Block-based heap allocator |
+| `FreeFromHeap` | 0x800145a4 | Free allocated memory |
+
+### Entity Loading
+
+| Function | Address | Purpose |
+|----------|---------|---------|
 | `LoadEntitiesFromAsset501` | 0x80024dc4 | Load entity defs |
 | `GetEntityCount` | 0x8007b7a8 | Entity count accessor |
-| `AddEntityToSortedRenderList` | 0x800213a8 | Sorted render list insertion |
-| `AllocateFromHeap` | 0x800143f0 | Entity memory allocation |
-| `InitPlayerEntity` | 0x8001fcf0 | Player setup |
-| `InitBossEntity` | 0x80047fb8 | Boss setup |
+| `GetEntityDataPtr` | 0x8007b7bc | Asset 501 data pointer |
+
+### Player/Boss Creation
+
+| Function | Address | Purpose |
+|----------|---------|---------|
 | `SpawnPlayerAndEntities` | 0x8007df38 | Player creation dispatcher |
 | `CreatePlayerEntity` | 0x800596a4 | Default player creation |
 | `CreateCameraEntity` | 0x80044f7c | Camera entity creation |
+| `InitPlayerEntity` | 0x8001fcf0 | Player setup |
+| `InitBossEntity` | 0x80047fb8 | Boss setup |
+| `InitPlayerSpriteAvailability` | 0x80059a70 | Check 7 player sprites |
 
 ## LevelDataContext Entity Offsets
 

@@ -68,13 +68,23 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 
 | Address | Name | Purpose |
 |---------|------|---------|
+| 0x8001A0C8 | InitEntityStruct | Zero and init 0x44C entity struct |
 | 0x8001C720 | InitEntitySprite | Core entity sprite init |
+| 0x8001C868 | InitEntityWithSprite | Full entity+sprite wrapper |
+| 0x8001CB88 | EntityUpdateCallback | Default entity tick callback |
+| 0x8001D290 | TickEntityAnimation | Animation frame tick handler |
+| 0x8001D554 | ApplyPendingSpriteState | Apply pending sprite changes |
+| 0x8001D748 | UpdateSpriteFrameData | Update frame dimensions |
+| 0x8001EAAC | EntitySetState | State machine transitions |
 | 0x8001FCFC | InitPlayerEntity | Player setup |
-| 0x80047FB8 | InitBossEntity | Boss setup |
 | 0x80020E1C | EntityTickLoop | Main entity update loop |
-| 0x80024DC4 | LoadEntitiesFromAsset501 | Load entity defs |
-| 0x800213A8 | AddEntityToList | Register entity |
+| 0x80020F68 | AddToZOrderList | Z-order sorted list (+0x1C) |
+| 0x8002107C | AddToXPositionList | X-position sorted list (+0x20) |
+| 0x800213A8 | AddEntityToSortedRenderList | Register entity |
 | 0x80021190 | AddEntityToQueue | Add to update queue |
+| 0x80024DC4 | LoadEntitiesFromAsset501 | Load entity defs |
+| 0x800250C8 | AddPreInitEntitiesToList | Pre-init entities |
+| 0x80047FB8 | InitBossEntity | Boss setup |
 
 ## Layer Initialization
 
@@ -145,7 +155,14 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x800143F0 | AllocateFromHeap | Block-based heap allocator |
+| 0x800145A4 | FreeFromHeap | Free allocated memory |
 | 0x800213A8 | AddEntityToSortedRenderList | Sorted render list insertion |
+
+## Game Mode
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8007C36C | SetGameMode | Set game mode (0-6) |
 
 ## Global Variables
 
