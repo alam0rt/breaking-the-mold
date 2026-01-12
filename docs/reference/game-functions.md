@@ -72,12 +72,30 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8001C720 | InitEntitySprite | Core entity sprite init |
 | 0x8001C868 | InitEntityWithSprite | Full entity+sprite wrapper |
 | 0x8001CB88 | EntityUpdateCallback | Default entity tick callback |
+| 0x8001D0C0 | FUN_8001d0c0 | Set sprite frame index |
+| 0x8001D218 | FUN_8001d218 | Set sprite visibility |
 | 0x8001D290 | TickEntityAnimation | Animation frame tick handler |
 | 0x8001D554 | ApplyPendingSpriteState | Apply pending sprite changes |
 | 0x8001D748 | UpdateSpriteFrameData | Update frame dimensions |
 | 0x8001EAAC | EntitySetState | State machine transitions |
 | 0x8001FCFC | InitPlayerEntity | Player setup |
 | 0x80020E1C | EntityTickLoop | Main entity update loop |
+
+## Menu System
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80076928 | InitMenuEntity | Menu entity initialization |
+| 0x80076BA0 | InitMenuStage1 | Main menu setup (4 buttons, Klaymen) |
+| 0x80077068 | InitMenuStage2 | Password entry setup |
+| 0x800771C4 | InitMenuStage3 | Options/color picker setup |
+| 0x800773FC | InitMenuStage4 | Load game setup (3 slots) |
+| 0x80077940 | MenuTickCallback | Menu per-frame update |
+| 0x80077AF0 | MenuInputHandler | Menu input processing |
+| 0x800778EC | SetMenuBackgroundColor | Set BG from color index |
+| 0x800754CC | AttachMenuCursor | Create cursor for button |
+| 0x80075FF4 | InitPasswordDisplay | 12-digit password entity |
+| 0x8007C388 | FUN_8007c388 | Play sound effect |
 | 0x80020F68 | AddToZOrderList | Z-order sorted list (+0x1C) |
 | 0x8002107C | AddToXPositionList | X-position sorted list (+0x20) |
 | 0x800213A8 | AddEntityToSortedRenderList | Register entity |

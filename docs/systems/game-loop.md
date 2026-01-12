@@ -268,38 +268,294 @@ int CreatePlayerEntity(void* buffer, void* inputController,
 Creates the menu "player" entity for menu-type levels:
 
 ```c
-int InitMenuEntity(void* buffer, void* inputController, 
-                   void* levelList, byte levelCount) {
+Entity* InitMenuEntity(void* buffer, void* inputController, 
+                       void* levelList, byte levelCount) {
     Entity* entity = (Entity*)buffer;
     
     // Initialize with menu sprite at position (0,0)
     InitEntitySprite(entity, 0xb8700ca1, 1000, 0, 0, 1);
     
-    // Set main callback (menu tick handler)
-    entity[1] = LAB_80077940;  // Menu tick callback
+    // Set method table pointer
+    entity[6] = &DAT_80011e94;  // Menu entity method table
+    
+    // Clear global/state variables
+    DAT_800a6045 = 0;           // Menu global flag
+    entity[0x13a] = 0;          // Timer/counter
+    entity[0x4b] = 0;           // Child entity count
+    entity[0x12d] = 0;          // Current menu item index
+    entity[4] = 1000;           // Z-order
+    
+    // Store parameters
+    entity[0x40] = inputController;  // Input state pointer
+    entity[0x4d] = levelList;        // Password level list
+    entity[0x4e] = levelCount;       // Password level count
+    
+    // Set state machine and tick callback
+    entity[0] = 0xFFFF0000;
+    entity[1] = &MenuTickCallback;  // @ 0x80077940
+    
+    // Set background color from color table
+    FUN_800778ec(entity);  // Reads DAT_800a6042 * 3 for RGB
     
     // Dispatch to stage-specific init based on current stage
-    switch (GetCurrentStageIndex()) {
-        case 2:  FUN_80077068(entity, levelList, levelCount); break;
-        case 3:  FUN_800771c4(entity, levelList, levelCount); break;
-        case 4:  FUN_800773fc(entity, levelList, levelCount); break;
+    byte stage = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    if (stage > 4) stage = 1;  // Clamp to valid range
+    
+    switch (stage) {
+        case 2:  InitMenuStage2(entity); break;  // Password entry
+        case 3:  InitMenuStage3(entity); break;  // Options/settings
+        case 4:  InitMenuStage4(entity); break;  // Load game
         case 1:
-        default: FUN_80076ba0(entity, levelList, levelCount); break;
+        default: InitMenuStage1(entity); break;  // Main menu
     }
     
-    return (int)entity;
+    // Trigger initial menu item callback if items exist
+    if (entity[0x4b] != 0) {
+        int itemIdx = entity[0x12d];
+        Entity* menuItem = entity[0x41 + itemIdx];
+        (*menuItem->callback)(menuItem);  // Highlight first item
+    }
+    
+    return entity;
 }
 ```
 
-**Menu entity size**: 0x140 bytes (smaller than player's 0x1B4)
+**Menu entity size**: 0x140 bytes (320 bytes)
 
 **Menu sprite ID**: 0xb8700ca1 (menu UI frame)
 
-**Menu stages:**
-- Stage 1: Default menu (FUN_80076ba0)
-- Stage 2: Secondary menu (FUN_80077068) 
-- Stage 3: Tertiary menu (FUN_800771c4)
-- Stage 4: Quaternary menu (FUN_800773fc)
+### Menu Entity Offsets
+
+| Offset | Type | Purpose |
+|--------|------|---------|
+| 0x04 | u16 | Z-order (1000) |
+| 0x06 | ptr | Method table (DAT_80011e94) |
+| 0x40 | ptr | Input controller (g_pPlayer1Input) |
+| 0x4b | u8 | Child entity count |
+| 0x4d | ptr | Password level list (GameState+0x171) |
+| 0x4e | u8 | Password level count (max 10) |
+| 0x78 | struct | Sprite context (InitSpriteContext) |
+| 0x100 | ptr | First input state reference |
+| 0x104-0x11C | ptr[7] | Child menu item entity pointers |
+| 0x12d | u8 | Current selected menu item index |
+| 0x12e-0x130 | u8[3] | Stage 4 selection indices |
+| 0x131 | u8 | Input repeat counter (auto-repeat) |
+| 0x13a | u16 | Timer/animation counter |
+
+### Menu Stages
+
+| Stage | Init Function | Purpose | Key Features |
+|-------|--------------|---------|--------------|
+| 1 | FUN_80076ba0 | Main Menu | Title, 4 menu buttons, Klaymen animation |
+| 2 | FUN_80077068 | Password Entry | 12-digit password input, cursor |
+| 3 | FUN_800771c4 | Options | Color picker, back button |
+| 4 | FUN_800773fc | Load Game | 3 save slots, back button |
+
+### Stage 1 - Main Menu (FUN_80076ba0)
+
+Creates the title screen with animated elements:
+
+```c
+void InitMenuStage1(Entity* menuEntity) {
+    // Background decorations (5 sprites)
+    InitEntitySprite(alloc, 0x68c01218, 2000, 0xa0, 0xa8, 0);  // BG1
+    InitEntitySprite(alloc, 0x3080840d, 2000, 0xa0, 0xa8, 0);  // BG2
+    InitEntitySprite(alloc, 0x3080820d, 2000, 0xa0, 0xa8, 0);  // BG3
+    InitEntitySprite(alloc, 0x30808e0d, 2000, 0xa0, 0xa8, 0);  // BG4
+    InitEntitySprite(alloc, 0x38a0c119, 2000, 0xa0, 0xa8, 0);  // BG5
+    
+    // Klaymen animation entity (from DAT_8009cbdc sprite table)
+    InitEntityWithSprite(alloc, &DAT_8009cbdc, 2000, 0xa0, 0xa8);
+    EntitySetState(entity, DAT_800a6050);
+    
+    // 4 menu buttons at positions from DAT_8009cb0c table
+    // Sprite ID: 0x10094096 (menu button)
+    for (i = 0; i < 4; i++) {
+        short x = DAT_8009cb0c[i * 3];
+        short y = DAT_8009cb0e[i * 3];
+        byte type = DAT_8009cb10[i * 6];
+        
+        InitEntitySprite(alloc, 0x10094096, 1000, x, y, 0);
+        FUN_800754cc(entity);  // Attach cursor sprite
+        menuEntity[0x104 + menuEntity[0x4b]++] = entity;
+    }
+    
+    // Optional bonus entity (if sprite 0x40b18011 exists)
+    // Klaymen head bonus animation
+}
+```
+
+**Main Menu Sprite IDs:**
+| ID | Purpose |
+|----|---------|
+| 0x68c01218 | Background layer 1 |
+| 0x3080840d | Background layer 2 |
+| 0x3080820d | Background layer 3 |
+| 0x30808e0d | Background layer 4 |
+| 0x38a0c119 | Background layer 5 |
+| 0x10094096 | Menu button (reused for all buttons) |
+| 0x40b18011 | Bonus head animation (optional) |
+
+### Stage 2 - Password Entry (FUN_80077068)
+
+```c
+void InitMenuStage2(Entity* menuEntity) {
+    // Password display entity (0x144 bytes)
+    FUN_80075ff4(alloc, 0x24, 0x69, &DAT_8009cb00, &DAT_800a6041);
+    // Creates 12 character slots using sprite 0xec95689b
+    // Position highlight using sprite 0x3099991b
+    
+    // Back button
+    InitEntitySprite(alloc, 0x10094096, 1000, 0x20, 0x85, 0);
+    menuEntity[0x12d] = 1;  // Default to back button
+}
+```
+
+### Stage 3 - Options (FUN_800771c4)
+
+```c
+void InitMenuStage3(Entity* menuEntity) {
+    // Color picker entity (0x110 bytes)
+    InitEntitySprite(alloc, 0x10094096, 1000, 0x5f, 0x9b, 0);
+    // Uses sprite 0x81100030 for color preview
+    // Links to DAT_800a6042 for color index
+    
+    // Back button
+    InitEntitySprite(alloc, 0x10094096, 1000, 0x59, 0xb7, 0);
+    menuEntity[0x12d] = 1;
+}
+```
+
+### Stage 4 - Load Game (FUN_800773fc)
+
+```c
+void InitMenuStage4(Entity* menuEntity) {
+    // Restore save indices from globals
+    menuEntity[0x12e] = DAT_800a607f;  // Slot 1 selection
+    menuEntity[0x12f] = DAT_800a6080;  // Slot 2 selection
+    menuEntity[0x130] = DAT_800a607e - 1;  // Slot 3 selection
+    
+    // 3 save slot selectors
+    for (i = 0; i < 3; i++) {
+        InitEntitySprite(alloc, 0x10094096, 1000, x[i], y[i], 0);
+        // Uses sprite 0xe289c059 for slot preview
+        // Each references menuEntity+0x12e/f/130 for state
+    }
+    
+    // Back button
+    InitEntitySprite(alloc, 0x10094096, 1000, 0x29, 0xa2, 0);
+    menuEntity[0x12d] = 3;  // Default to back
+}
+```
+
+### Menu Tick Callback (@ 0x80077940)
+
+The menu tick callback handles input and updates:
+
+```c
+void MenuTickCallback(Entity* menuEntity) {
+    byte stageIdx = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    if (stageIdx > 4) stageIdx = 1;
+    
+    // Get current input state
+    InputState* input = menuEntity[0x100];
+    
+    // Check if any child items exist
+    if (menuEntity[0x4b] == 0) return;
+    
+    // Update current menu item (calls FUN_80077af0)
+    FUN_80077af0(menuEntity);
+}
+```
+
+### Menu Input Handler (FUN_80077af0)
+
+Processes controller input for menu navigation:
+
+```c
+void MenuInputHandler(Entity* menuEntity) {
+    if (menuEntity[0x4b] == 0) return;  // No items
+    
+    InputState* input = menuEntity[0x100];
+    u16 buttons = input[1];  // Current frame buttons
+    u16 held = input[0];     // Held buttons
+    
+    // D-pad Down (0x4000) - next item
+    if (buttons & 0x4000) {
+        byte idx = menuEntity[0x12d];
+        if (idx == menuEntity[0x4b] - 1) {
+            idx = 0;  // Wrap to first
+        } else {
+            idx++;
+        }
+        menuEntity[0x12d] = idx;
+        PlaySound(0x646c2cc0, 0xa0, 0);  // Menu move SFX
+    }
+    
+    // D-pad Up (0x1000) - previous item
+    if (buttons & 0x1000) {
+        byte idx = menuEntity[0x12d];
+        if (idx == 0) {
+            idx = menuEntity[0x4b] - 1;  // Wrap to last
+        } else {
+            idx--;
+        }
+        menuEntity[0x12d] = idx;
+        PlaySound(0x646c2cc0, 0xa0, 0);
+    }
+    
+    // Cross/Circle (0x8000) - select item
+    if (buttons & 0x8000) {
+        Entity* item = menuEntity[0x104 + menuEntity[0x12d]];
+        (*item->selectCallback)(item);
+    }
+    
+    // D-pad Left/Right (0x2000/0x8000) - adjust value
+    // With auto-repeat after 10 frames
+    if ((held & 0x2000) && ++menuEntity[0x131] > 10) {
+        (*item->adjustCallback)(item, direction);
+        menuEntity[0x131] = 0;
+    }
+    
+    // Button mapping for specific actions (0-7)
+    // 0x80=1, 0x20=3, 0x40=0, 0x04=4, 0x01=5, 0x08=6, 0x02=7
+}
+```
+
+### Menu Background Color (FUN_800778ec)
+
+Sets background color based on global color index:
+
+```c
+void SetMenuBackgroundColor(void) {
+    int idx = DAT_800a6042 * 3;  // Color index * 3 (RGB triplet)
+    g_DefaultBGColorB = DAT_8009cbac[idx + 0];
+    g_DefaultBGColorR = DAT_8009cbac[idx + 1];
+    g_DefaultBGColorG = DAT_8009cbac[idx + 2];
+}
+```
+
+The color table at DAT_8009cbac contains multiple RGB presets that can be cycled in the options menu.
+
+### Menu Cursor Entity (FUN_800754cc)
+
+Creates and attaches a cursor sprite to a menu button:
+
+```c
+void AttachMenuCursor(Entity* button) {
+    Entity* cursor = AllocateFromHeap(0x100);
+    
+    // Position cursor relative to button (+0x6a, +0x0e)
+    short x = button[0x68] + 0x6a;
+    short y = button[0x6a] + 0x0e;
+    
+    InitEntityWithSprite(cursor, &DAT_8009cbe8, 2000, x, y);
+    cursor[0x18] = &DAT_8001208c;  // Cursor method table
+    
+    button[0x100] = cursor;  // Store cursor reference
+    button[0x104] = 0;       // Cursor state
+}
+```
 
 ### Player Entity Sizes by Type
 
