@@ -743,12 +743,21 @@ Offset  Size  Type   Description
 0x16    2     u16    Padding (always zero)
 ```
 
-**Layer Field (offset 0x14) - DISCOVERED 2026-01-11:**
-- Lower byte (bits 0-7): Actual render layer (1, 2, or 3)
-- Upper byte (bits 8-15): Render flags or z-order modifiers
+**Layer Field (offset 0x14) - PARTIALLY VERIFIED 2026-01-12:**
+- Lower byte (bits 0-7): Collision/logic layer grouping (1, 2, or 3)
+- Upper byte (bits 8-15): Render flags (purpose unverified)
 - Most entities use simple values (1, 2, 3)
 - CSTL level uses extended values like 0xF301 (layer 1 + 0xF3 flags)
 - Entity types 9 and 81 observed with extended layer values
+
+**IMPORTANT:** Entity render z-order is NOT determined by this layer field!
+Entity z_order is HARDCODED per entity type in InitEntitySprite calls:
+- Player: z_order = 10000
+- UI/HUD: z_order = 10000
+- Particles: z_order = 959
+- General entities: z_order ≈ 1000
+
+See `/docs/rendering-order.md` for full priority system documentation.
 
 **Known Entity Types (verified via extraction):**
 | Type | Name | Description |
@@ -877,13 +886,27 @@ Offset  Size   Description
 0x06    u16    Layer height (in tiles)
 0x08    u16    Level width (in tiles, from Asset 100)
 0x0A    u16    Level height (in tiles)
-0x10    u32    Scroll factor X (0x8000 = 1.0)
+0x0C    u32    Render param - LOW 16 BITS = priority (signed short)
+0x10    u32    Scroll factor X (0x10000 = 1.0, 0x8000 = 0.5)
 0x14    u32    Scroll factor Y
-0x26    u8     Layer type (0=normal, 2=foreground?)
-0x2C    u8     Background R
-0x2D    u8     Background G
-0x2E    u8     Background B
+0x26    u8     Layer type (0=normal, 3=skip render)
+0x28    u16    Skip render flag (!=0 means skip)
+0x2C    u8[48] Color tints (16 RGB entries for tile tinting)
 ```
+
+**Priority System (VERIFIED 2026-01-12 via Ghidra):**
+
+The render_param field at offset 0x0C contains the **layer priority** in its low 16 bits.
+Lower values render behind higher values. Entities share the same priority space.
+
+| Priority Range | Content |
+|----------------|---------|
+| 150-800 | Background/parallax layers |
+| 900-1100 | Main gameplay layers, most entities |
+| 1200-1500 | Foreground layers |
+| 10000 | Player entity, UI/HUD |
+
+See `/docs/rendering-order.md` for complete rendering system documentation.
 
 **Rendering process:**
 1. Parse Asset 100 for level dimensions (offset +0x08, +0x0A) and tile count (+0x10)
@@ -891,7 +914,7 @@ Offset  Size   Description
 3. For each layer in Asset 201:
    - Get tilemap from Asset 200 sub-TOC
    - Render tiles at (x_offset + x, y_offset + y) positions
-4. Composite layers in order (layer 0 first, then 1, etc.)
+4. Layers are sorted by priority into render lists (lower priority = further back)
 
 ### Observation: Identical Sprite/Audio Sizes
 

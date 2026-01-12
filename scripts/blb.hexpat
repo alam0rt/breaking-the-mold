@@ -567,9 +567,14 @@ struct LayerEntry {
     u16 level_width [[name("Level W"), comment("Level width in tiles (from Asset 100)")]];
     u16 level_height [[name("Level H"), comment("Level height in tiles")]];
     
-    // Render parameter (0x0C-0x0F) - passed to layer render functions
-    // Low u16 passed as (short) to FUN_8001ecc0/FUN_8001f150/FUN_8001f534
-    u32 render_param [[name("Render Param"), comment("Passed to layer render functions")]];
+    // Render parameter (0x0C-0x0F) - VERIFIED 2026-01-12 via Ghidra
+    // Low 16 bits = priority (signed short, lower = further back)
+    // Used for z-ordering in render lists. Typical values:
+    //   150-800: Background/parallax layers
+    //   900-1100: Main gameplay layers
+    //   1200-1500: Foreground layers
+    // Entity z_order values share this space (player=10000, particles=959)
+    u32 render_param [[name("Render Param"), comment("Low 16 bits = priority for z-ordering")]];
     
     // Scroll factors (0x10-0x17) - 0x10000 = 1.0, 0x8000 = 0.5
     u32 scroll_x [[name("Scroll X"), format("format_parallax"), comment("X parallax (1.0 = camera, 0.5 = parallax)")]];

@@ -151,7 +151,7 @@ Both in stage segments, 93 of 94 locations shared:
 
 ---
 
-## Entity Layer Field Discovery (2026-01-11) - NEW
+## Entity Layer Field Discovery (2026-01-11) - PARTIALLY VERIFIED
 
 The Entity structure's layer field (offset 0x14) is NOT just a simple layer index.
 
@@ -172,8 +172,18 @@ The Entity structure's layer field (offset 0x14) is NOT just a simple layer inde
 
 **Affected entity types:** Type 9 and Type 81 primarily use extended layer values.
 
-**Status:** Needs Ghidra verification to understand what the upper byte flags control
-(possibly depth sorting, transparency, or special rendering modes).
+**VERIFIED 2026-01-12:** Entity z_order is HARDCODED per entity type in InitEntitySprite calls.
+The layer field from Asset 501 is used for collision/logic grouping, NOT for render z-ordering.
+Entity z_order values observed:
+- Player: 10000
+- UI/HUD: 10000
+- Particles: 959
+- General entities: ~1000-1001
+
+The upper byte flags purpose remains UNVERIFIED. May affect transparency, visibility, or
+special rendering modes but does NOT directly set z_order.
+
+See `/docs/rendering-order.md` for full analysis.
 
 ---
 
