@@ -956,9 +956,18 @@ bitfield TileFlags {
 //   0x12 = Unknown trigger
 //   0x53 = Checkpoint/save point?
 //   0x65 = Entity spawn zone/trigger
+//
+// Header fields (offset +0x00 to +0x07):
+//   The first 4 bytes contain TWO u16 values (not a single u32):
+//   - unknown_lo (0x00): Values 0-21 observed, purpose unknown
+//   - unknown_hi (0x02): Values 0-21 observed, purpose unknown
+//   These are NOT padding - 69/98 stages have non-zero values.
+//   No clear correlation with level dimensions, spawn position, or indices found.
+//   MENU levels (level_00) lack Asset 500 entirely.
 
 struct TileAttributeHeader {
-    u32 unknown [[name("Unknown"), comment("Always 0 - padding?")]];
+    u16 unknown_lo [[name("Unknown Lo"), comment("Range 0-21, purpose unverified")]];
+    u16 unknown_hi [[name("Unknown Hi"), comment("Range 0-21, purpose unverified")]];
     u16 level_width [[name("Level Width"), comment("Width in tiles")]];
     u16 level_height [[name("Level Height"), comment("Height in tiles")]];
 } [[static, color("FF9966")]];

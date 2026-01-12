@@ -12,7 +12,7 @@ struct LevelDataContext {
     // Asset Pointers (populated by LoadAssetContainer)
     /* 0x00 */ int      subBlockFlag;         // Set to stageIndex or 1
     /* 0x04 */ void*    tileHeader;           // Asset 100 (36 bytes)
-    /* 0x08 */ void*    unknown101;           // Asset 101 (optional)
+    /* 0x08 */ void*    vramSlotConfig;       // Asset 101 (12 bytes: bank_a_count, bank_b_count, reserved)
     /* 0x0C */ void*    tilemapContainer;     // Asset 200
     /* 0x10 */ void*    layerEntries;         // Asset 201 (92 bytes each)
     /* 0x14 */ void*    tilePixels;           // Asset 300 (8bpp)

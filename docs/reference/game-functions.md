@@ -163,10 +163,17 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x8007B3F0 | GetCurrentStageIndex | Current stage index |
-| 0x8007B490 | GetTileHeaderField08 | Header field at +0x08 |
+| 0x8007B3FC | GetAsset101Entry | VRAM slot config (bank_a/b counts) |
+| 0x8007B490 | GetTileHeaderWorldIndex | World index at +0x20 (was misnamed GetTileHeaderField08) |
 | 0x8007B4A4 | GetTileHeaderField1A | Header field at +0x1A |
 | 0x8007B910 | GetTileHeaderField16 | Header field at +0x16 |
 | 0x8007B924 | GetVehicleDataPtr | Asset 504 pointer (FINN/RUNN) |
+
+## VRAM/Texture Management
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80013B1C | InitVRAMSlotTable | Configures texture page slots from Asset 101 |
 
 ## Memory Management
 

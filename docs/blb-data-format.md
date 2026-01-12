@@ -515,7 +515,7 @@ based on mode flag at ctx+0x04. See Audio System section below for details.
 | Type | Hex | Structure | Description |
 |------|-----|-----------|-------------|
 | 100 | 0x064 | RAW | Duplicate tile header |
-| 101 | 0x065 | RAW | **Segment variant flag** (12 bytes, values 1-4) |
+| 101 | 0x065 | RAW | **VRAM slot config** (12 bytes: bank_a_count, bank_b_count, reserved) |
 | 200 | 0x0C8 | RAW | Tilemap container header (layer count) |
 | 201 | 0x0C9 | RAW | Layer entries (92 bytes each) |
 | 302 | 0x12E | RAW | Duplicate tile flags (size = total_tiles) |
@@ -720,11 +720,17 @@ Per-tile collision and trigger data. Each byte represents properties for one til
 ```
 Offset  Size               Field         Description
 ------  ----               -----         -----------
-0x00    4                  flags         Varies (often 0, sometimes large values)
+0x00    2                  unknown_lo    Values 0-21 observed, purpose unverified
+0x02    2                  unknown_hi    Values 0-21 observed, purpose unverified  
 0x04    2                  level_width   Level width in tiles
 0x06    2                  level_height  Level height in tiles
 0x08    width × height     tile_data     One byte per tile (row-major order)
 ```
+
+**Header field notes (2026-01-13):**
+- The first 4 bytes are NOT padding - 69/98 stages have non-zero values
+- Values show no clear correlation with dimensions, spawn position, or level index
+- MENU level (level_00) lacks Asset 500 entirely
 
 **Size verification:** `8 + (level_width × level_height)` bytes matches actual asset sizes.
 
@@ -1524,7 +1530,7 @@ Offset  WIdx  Size  Type    Field                   Description
 # Asset Pointers (populated by LoadAssetContainer from sub-TOC)
 0x00    [0]   4     int     subBlockFlag            Set to subBlockIndex or 1, indicates loaded sub-block
 0x04    [1]   4     ptr     tileHeader              ID 100: Tile header (36 bytes)
-0x08    [2]   4     ptr     unknown101              ID 101: Unknown (sparse, 8 levels only)
+0x08    [2]   4     ptr     vramSlotConfig          ID 101: VRAM slot config (bank_a/b counts, 8 levels only)
 0x0C    [3]   4     ptr     tilemapContainer        ID 200: Tilemap sub-TOC
 0x10    [4]   4     ptr     layerEntries            ID 201: Layer entries (92 bytes each)
 0x14    [5]   4     ptr     tilePixels              ID 300: Tile pixel data (8bpp)
@@ -1600,7 +1606,7 @@ The sub-TOC contains entries with asset IDs that map to specific context offsets
 | Asset ID | Hex | Word Index | Field Name | Description |
 |----------|-----|------------|------------|-------------|
 | 100 | 0x64 | [1] | tileHeader | Tile header (36 bytes, BG color, spawn, tile counts) |
-| 101 | 0x65 | [2] | unknown101 | Unknown (12 bytes, sparse: only 8 levels have this) |
+| 101 | 0x65 | [2] | vramSlotConfig | VRAM slot config (12 bytes: bank_a_count, bank_b_count, reserved) |
 | 200 | 0xC8 | [3] | tilemapContainer | Tilemap sub-TOC (layer count + data offsets) |
 | 201 | 0xC9 | [4] | layerEntries | Layer definition entries (92 bytes per layer) |
 | 300 | 0x12C | [5] | tilePixels | Tile pixel data (8bpp indexed) |

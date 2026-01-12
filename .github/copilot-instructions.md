@@ -231,7 +231,7 @@ The `LoadAssetContainer` function (0x8007b074) maps asset types to context array
 | Asset ID | Hex   | Context Index | Name              | Notes |
 |----------|-------|---------------|-------------------|-------|
 | 100      | 0x64  | ctx[1]        | TileHeader        | 36 bytes, BG color, spawn, tile counts |
-| 101      | 0x65  | ctx[2]        | Unknown           | 12 bytes, sparse (8 levels only) |
+| 101      | 0x65  | ctx[2]        | VRAMSlotConfig    | 12 bytes (bank_a_count, bank_b_count, reserved) |
 | 200      | 0xC8  | ctx[3]        | TilemapContainer  | Sub-TOC with layer data |
 | 201      | 0xC9  | ctx[4]        | LayerEntries      | 92 bytes per layer |
 | 300      | 0x12C | ctx[5]        | TilePixels        | 8bpp indexed |

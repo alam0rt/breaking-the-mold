@@ -86,11 +86,11 @@ This controls how many VRAM texture page slots are allocated for the level's spr
 
 ### Discovery
 
-**IMPORTANT**: Function `GetTileHeaderField08` @ 0x8007b490 is **MISNAMED**!
+**NOTE**: Function was previously misnamed `GetTileHeaderField08` - renamed to `GetTileHeaderWorldIndex` (2026-01-13).
 
 ```c
-// Actually reads field 0x20, NOT field 0x08!
-char GetTileHeaderField08(LevelDataContext* ctx) {
+// Reads field 0x20 from TileHeader (Asset 100)
+char GetTileHeaderWorldIndex(LevelDataContext* ctx) {
     return *(char*)(ctx[1] + 0x20);  // ctx[1] is TileHeader pointer
 }
 ```
@@ -99,12 +99,12 @@ char GetTileHeaderField08(LevelDataContext* ctx) {
 
 1. **InitGameState** @ 0x8007cd34: Initializes player state:
    ```c
-   g_pPlayerState[4] = GetTileHeaderField08(state + 0x21);
+   g_pPlayerState[4] = GetTileHeaderWorldIndex(state + 0x21);
    ```
 
 2. **FUN_8007d8a0** (Level Transition): Accumulates across levels:
    ```c
-   g_pPlayerState[4] = g_pPlayerState[4] + GetTileHeaderField08();
+   g_pPlayerState[4] = g_pPlayerState[4] + GetTileHeaderWorldIndex();
    ```
 
 ### Values Observed
@@ -127,7 +127,7 @@ char GetTileHeaderField08(LevelDataContext* ctx) {
 - Could select background music themes or ambient sound sets
 
 ### Action Items
-- [ ] Rename `GetTileHeaderField08` to `GetTileHeaderField20` in Ghidra
+- [x] Rename `GetTileHeaderField08` to `GetTileHeaderWorldIndex` in Ghidra (DONE 2026-01-13)
 - [ ] Find xrefs to `g_pPlayerState[4]` to determine what consumes this value
 - [ ] Update blb.hexpat field comment
 
@@ -153,36 +153,133 @@ struct Asset700Header {
     u32 entry_count;   // Always 1
     u32 reserved;      // 0
     u32 entry_id;      // Varies - NOT ASCII
-    u32 data_size;     // Size of ADPCM data
-    u32 data_offset;   // Offset to data (typically 16)
+    u32 data_size;     // Size of data after header (NOT ADPCM)
+    u32 data_offset;   // Offset to data (always 16)
 };
 ```
 
 ### Levels with Asset 700
-- MENU: count=1, size=480
-- SCIE: count=1, size=284
-- TMPL: count=1, size=304  
-- BOIL: count=1, size=480 (same as MENU)
-- FOOD: count=1, size=316
-- BRG1: count=1, size=340
-- GLID: count=1, size=192
-- CAVE: count=1, size=208
-- WEED: count=1, size=344
 
-### Purpose
-Additional SPU audio samples beyond Asset 601. Loaded to SPU RAM after main audio.
-The entry_id values don't appear to be ASCII - possibly sample identifiers or offsets.
+| Level | entry_id | size | data entries |
+|-------|----------|------|--------------|
+| MENU (0) | 0x50412804 | 480 | 116 |
+| SCIE (2) | 0x1847C001 | 284 | 67 |
+| TMPL (3) | 0x5024100C | 304 | 72 |
+| BOIL (6) | 0x50412804 | 480 | 116 (same as MENU!) |
+| FOOD (8) | 0x10031015 | 316 | 75 |
+| BRG1 (10) | 0x72000210 | 340 | 81 |
+| GLID (11) | 0x0101820A | 192 | 44 |
+| CAVE (12) | 0x10050221 | 208 | 48 |
+| WEED (13) | 0x31190002 | 344 | 82 |
+
+### Data Structure Analysis (2026-01-13)
+
+Data after header is organized as **4-byte entries**:
+```
++00: u8 command_byte    (128=0x80, 192=0xC0 common)
++01: u8 flags           (0 or 32=0x20 bit)
++02: u8 param           (various values 2-118)
++03: u8 reserved        (usually 0, sometimes 255)
+```
+
+Example from GLID (level_11):
+```
+Entry 0: [47, 0, 66, 255] - command=47, flags=0, param=66, reserved=255
+Entry 1: [128, 0, 118, 0] - command=128 (0x80), param=118
+Entry 2: [128, 32, 28, 0] - command=128, flags=32 (0x20 bit), param=28
+Entry 3: [192, 32, 27, 0] - command=192 (0xC0), flags=32, param=27
+```
+
+The command bytes (0x80, 0xC0) resemble PSX SPU control codes.
+
+### Purpose Hypothesis
+NOT ADPCM samples (unlike Asset 601). Likely:
+1. Sound event trigger sequences
+2. SPU channel configuration commands
+3. Music/SFX playback schedules
 
 ### Needs Further Analysis
 - Trace where ctx[21] (Asset 700 pointer) is used at runtime
-- Determine entry_id meaning
+- Compare command bytes with PSX SPU documentation
+- Check if 0x80/0xC0 relate to voice on/off commands
 
 ---
 
-## 5. Playback Sequence unknown_00 - TBD
+## 5. TileAttributeHeader Unknown Field (Asset 500) - TWO U16 VALUES
 
-The playback sequence entries have 2 unknown bytes at offset 0x00.
-Need to examine if these are used or padding.
+### Discovery
+
+The first 4 bytes of Asset 500 (TileAttributeMap) were previously documented as:
+```c
+u32 unknown;  // "Always 0 - padding?"
+```
+
+**This is WRONG!** Analysis of all 98 stages with Asset 500 reveals:
+- The field contains **two u16 values**, not one u32
+- 69 out of 98 stages have non-zero values
+- Values range: lo = 0-21, hi = 0-21
+
+### Data Analysis
+
+```
+Level/Stage            (lo, hi)   Dimensions
+--------------------------------------------
+level_01/stage0        ( 7,  0)   428 x  55
+level_01/stage1        (21, 13)   328 x  52
+level_04/stage0        (18,  5)   180 x  45
+level_07/stage3        ( 0,  4)   394 x 113
+level_11/stage0        ( 3,  5)   495 x   9   (RUNN - horizontal auto-scroller)
+level_16/stage3        ( 0, 21)   200 x  61   (SNOW)
+level_23/stage5        ( 7, 20)    87 x   1
+```
+
+### Correlations Attempted
+- **Level/stage index**: No correlation
+- **Level dimensions**: No clear pattern
+- **Spawn position**: No correlation
+- **Tile page counts**: No clear relationship
+
+### Levels WITHOUT Asset 500
+- level_00 (MENU) - all stages lack Asset 500
+- This makes sense - menu doesn't need collision data
+
+### Updated Structure
+```c
+struct TileAttributeHeader {
+    u16 unknown_lo;    // Range 0-21, purpose unverified
+    u16 unknown_hi;    // Range 0-21, purpose unverified
+    u16 level_width;   // Width in tiles
+    u16 level_height;  // Height in tiles
+};
+```
+
+### Needs Further Analysis
+- Find code that reads ctx[11]+0x00 (first 2 bytes) and ctx[11]+0x02 (second 2 bytes)
+- Check if values relate to camera bounds, scroll speed, or collision behavior
+- May require runtime analysis with breakpoints
+
+---
+
+## 6. Playback Sequence Header (offset 0xF34)
+
+### Location
+- PAL: Header offset 0xF34-0xF35 (2 bytes before mode array at 0xF36)
+- Currently marked as `unknown_00[2]` with `[[hidden]]`
+
+### Values Observed
+```
+Byte[0] = 0x02 (2)
+Byte[1] = 0x11 (17)
+```
+
+### Hypothesis
+- Byte[1] = 17 matches the count of password screens (17 entries in table at 0xECC)
+- Byte[0] = 2 could be a version/revision number
+
+### Action Needed
+- Search for code that reads 0xF34 or 0xF35
+- Verify if byte[1] is used as password screen count
+- May be unused padding
 
 ---
 
@@ -193,11 +290,12 @@ Need to examine if these are used or padding.
 | Asset 101 | ✅ UNDERSTOOD | VRAM texture bank slot counts |
 | Tile Header 0x20 | ⚠️ PARTIAL | Cumulative world index, needs consumer analysis |
 | Layer Entry 0x2A | ✅ CONFIRMED PADDING | All zeros, mark as padding |
-| Asset 700 | ⚠️ PARTIAL | SPU audio, structure understood, entry_id meaning unknown |
-| Playback unknown_00 | ❓ TODO | Needs investigation |
+| TileAttributeHeader +0x00/+0x02 | ⚠️ PARTIAL | Two u16 values (0-21 range), purpose unknown |
+| Asset 700 data | ⚠️ PARTIAL | 4-byte entries, possibly SPU commands |
+| Playback 0xF34 | ❓ LOW PRIORITY | Bytes [2, 17], possibly version + password count |
 
-## Ghidra Fixes Needed
+## Ghidra Fixes Completed (2026-01-13)
 
-1. **Rename `GetTileHeaderField08` to `GetTileHeaderField20`** at 0x8007b490
-2. **Rename `FUN_80013b1c` to `InitVRAMSlotTable`** at 0x80013b1c
-3. **Create `GetAsset101Entry` comment** explaining VRAM slot configuration
+1. ✅ **Renamed `GetTileHeaderField08` to `GetTileHeaderWorldIndex`** at 0x8007b490
+2. ✅ **Renamed `FUN_80013b1c` to `InitVRAMSlotTable`** at 0x80013b1c
+3. ✅ **Renamed `FUN_8007b3fc` to `GetAsset101Entry`** with comment explaining VRAM slot configuration
