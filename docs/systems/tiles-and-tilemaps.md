@@ -236,13 +236,6 @@ See [Rendering Order](rendering-order.md) for complete priority documentation.
 
 ---
 
-## Extraction
-
-```bash
-# Extract all tiles and layers
-python3 scripts/extract_all_graphics.py disks/blb/GAME.BLB extracted/
-```
-
 ## Related Documentation
 
 - [Asset Types](../blb/asset-types.md) - Assets 100, 200, 201, 300-302, 400-401

@@ -230,14 +230,6 @@ Each level's tertiary container has different sprites:
 | 0x800a6060 | g_pSecondarySpriteBank | Secondary sprites (often NULL) |
 | 0x800a6064 | g_pLevelDataContext | Points to LevelDataContext |
 
-## Extraction Tool
-
-```bash
-python3 scripts/extract_sprites_600.py disks/blb/GAME.BLB extracted/
-```
-
-Extracts sprites with embedded palettes to PNG format.
-
 ## Related Documentation
 
 - [Entities](entities.md) - Entity system using sprites
