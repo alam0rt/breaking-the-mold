@@ -30,7 +30,7 @@ When the player remains idle at the main menu for approximately 30 seconds, the 
 
 ## Idle Timer Logic
 
-The menu tick callback at 0x80077940 (which Ghidra doesn't recognize as a function) implements:
+The menu tick callback at 0x80077940 (which Ghidra doesn't recognize as a function, TODO create in Ghidra) implements:
 
 ```c
 // Pseudocode reconstructed from disassembly at 0x80077940

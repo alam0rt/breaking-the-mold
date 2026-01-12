@@ -130,8 +130,10 @@ void InitGameState(GameState* state, void* inputState) {
         }
     }
     
-    // Copy tile header field to player state
-    g_pPlayerState[4] = GetTileHeaderField08(state + 0x21);
+    // Copy world index from tile header to player state
+    // NOTE: GetTileHeaderField08 was MISNAMED - actually reads offset 0x20
+    // Renamed to GetTileHeaderWorldIndex (2026-01-13)
+    g_pPlayerState[4] = GetTileHeaderWorldIndex(state + 0x21);
     
     SpawnPlayerAndEntities(state);
 }

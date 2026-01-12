@@ -303,7 +303,9 @@ struct Palette256Raw {
 //
 // SECONDARY SEGMENT - Tile Data:
 //   100 (0x064) TILE_HEADER      - Tile counts and level dimensions (36 bytes)
-//   101 (0x065) TILE_HEADER_101  - Unknown geometry (12 bytes, sparse)
+//   101 (0x065) VRAM_SLOT_CONFIG - VRAM texture bank counts (12 bytes, sparse)
+//                                  Format: u32 bank_a_count, u32 bank_b_count, u32 pad
+//                                  Used by FUN_80013b1c to allocate texture page slots
 //   200 (0x0C8) TILEMAP_CONTAINER - Tilemap sub-TOC with layer data
 //   201 (0x0C9) LAYER_ENTRIES    - Layer definitions (92 bytes each)
 //   300 (0x12C) TILE_PIXELS      - 8bpp indexed pixel data
@@ -433,13 +435,39 @@ struct TileHeader {
     // - Read by GetEntityCount (0x8007b7a8), used by LoadEntitiesFromAsset501 (0x80024dc4)
     u16 entity_count [[name("Entity Count"), comment("Number of entities in Asset 501"), color("FF8080")]];
     
-    // Field 0x20: Unknown (values 1-6 observed)
-    // - Possibly related to world index or music theme
-    u16 field_20 [[name("Field 0x20"), comment("Unknown - values 1-6"), color("888888")]];
+    // Field 0x20: World/Area Index (VERIFIED 2026-01-13)
+    // - Values 0-6 observed, accumulated across level transitions
+    // - Read by GetTileHeaderField08 (MISNAMED, actually reads +0x20) @ 0x8007b490
+    // - InitGameState stores initial value in g_pPlayerState[4]
+    // - Level transition (FUN_8007d8a0) ADDS field_20 to g_pPlayerState[4]
+    // - Likely selects audio theme or visual style per world
+    u16 world_index [[name("World Index"), comment("World/area index (0-6), accumulated across levels"), color("80CCFF")]];
     
     // Remaining padding
     u8 remaining[2] [[hidden]];
 } [[name("Tile Header"), color("80FF80"), static]];
+
+// =============================================================================
+// VRAM Slot Configuration - Asset 101 (0x65) - 12 bytes
+// =============================================================================
+// VERIFIED 2026-01-13 via Ghidra (GetAsset101Entry @ 0x8007b3fc, InitVRAMSlotTable @ 0x80013b1c)
+//
+// Controls texture page slot allocation for the level's sprites/tiles.
+// Only present in ~14 levels that need custom VRAM layouts.
+//
+// GetAsset101Entry(ctx, index) returns field at index 0 or 1.
+// InitVRAMSlotTable allocates (bank_a_count + bank_b_count) * 3 texture slots.
+//
+// Observations:
+//   - bank_a_count: 1-4 (higher for complex levels like MEGA, EGGS)
+//   - bank_b_count: 0-1 (only FOOD and HEAD have 1 - special rendering)
+//   - reserved: always 0
+
+struct VRAMSlotConfig {
+    u32 bank_a_count [[name("Bank A Count"), comment("Texture slots in upper VRAM (y=0xF0), values 1-4"), color("80CCFF")]];
+    u32 bank_b_count [[name("Bank B Count"), comment("Texture slots in lower VRAM (y=0x1F0), values 0-1"), color("80AAFF")]];
+    u32 reserved [[name("Reserved"), comment("Always 0 - padding"), hidden]];
+} [[name("VRAM Slot Config"), color("AA80FF"), static]];
 
 // =============================================================================
 // Entity Structure - Asset 501 (0x1F5) - 24 bytes each
@@ -610,8 +638,8 @@ struct LayerEntry {
     // If layer_type != 3 AND this == 0, layer is rendered
     u16 skip_render [[name("Skip Render"), comment("If !=0 (and type!=3), skip this layer")]];
     
-    // Unknown (0x2A-0x2B)
-    u16 unknown_2a [[hidden]];
+    // Padding (0x2A-0x2B) - CONFIRMED 2026-01-13: All values are 0 across all levels
+    u16 pad_2a [[hidden]];
     
     // ==========================================================================
     // Color Tint Table (0x2C-0x5B) - 16 RGB entries, 48 bytes
@@ -1526,7 +1554,7 @@ fn build_sectors_toc() {
 
 fn get_asset_name(u32 id) {
     if (id == 100) return "tile_header";
-    if (id == 101) return "unknown_101";
+    if (id == 101) return "vram_slot_config";
     if (id == 200) return "tilemap_container";
     if (id == 201) return "layer_entries";
     if (id == 300) return "tile_pixels";
@@ -1777,15 +1805,16 @@ struct SecondarySegmentFull {
         TileHeaderAsset tile_header1 @ (_base + toc[1].offset) [[name("Tile Header")]];
     }
     
-    // Parse Asset 101 (Unknown - only 8 levels, 12 bytes each)
+    // Parse Asset 101 (VRAM Slot Config - controls texture page allocation)
+    // VERIFIED 2026-01-13: bank_a_count + bank_b_count determines texture slots
     if (toc_count > 0 && toc[0].asset_type == 101) {
-        u8 unknown101_0[toc[0].size] @ (_base + toc[0].offset) [[name("Unknown 101")]];
+        VRAMSlotConfig vram_config_0 @ (_base + toc[0].offset) [[name("VRAM Slot Config")]];
     }
     if (toc_count > 1 && toc[1].asset_type == 101) {
-        u8 unknown101_1[toc[1].size] @ (_base + toc[1].offset) [[name("Unknown 101")]];
+        VRAMSlotConfig vram_config_1 @ (_base + toc[1].offset) [[name("VRAM Slot Config")]];
     }
     if (toc_count > 2 && toc[2].asset_type == 101) {
-        u8 unknown101_2[toc[2].size] @ (_base + toc[2].offset) [[name("Unknown 101")]];
+        VRAMSlotConfig vram_config_2 @ (_base + toc[2].offset) [[name("VRAM Slot Config")]];
     }
     
     // Parse Asset 400 (Palette Container) 
