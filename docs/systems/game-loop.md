@@ -340,7 +340,7 @@ Entity* InitMenuEntity(void* buffer, void* inputController,
 | 0x12d | u8 | Current selected menu item index |
 | 0x12e-0x130 | u8[3] | Stage 4 selection indices |
 | 0x131 | u8 | Input repeat counter (auto-repeat) |
-| 0x13a | u16 | Timer/animation counter |
+| 0x13a | u16 | Timer/animation counter (probably for playing demo on idle) |
 
 ### Menu Stages
 
@@ -760,4 +760,5 @@ Used during level transitions.
 
 - [Level Loading](level-loading.md) - Asset loading flow
 - [Entities](entities.md) - Entity system details
+- [Player Animation](player-animation.md) - Player sprite rendering, direction, powerups
 - [Game Functions](../reference/game-functions.md) - Complete function list

@@ -275,6 +275,7 @@ To add a new entity type → sprite mapping, you must:
 ## Related Documentation
 
 - [Game Loop](game-loop.md) - Main loop and player creation
+- [Player Animation](player-animation.md) - Player sprite system details
 - [Sprites](sprites.md) - Sprite data format
 - [Rendering Order](rendering-order.md) - Entity z_order
 - [Asset Types](../blb/asset-types.md) - Asset 501 details
