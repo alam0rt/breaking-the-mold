@@ -862,16 +862,22 @@ For PHRO: `1109 * 256 + 540 * 128 = 283,904 + 69,120 = 353,024 bytes` ✅ Matche
 For all layers, tile indices use this format:
 
 ```
-Bits 0-10 (0x7FF): Tile index (11 bits, 1-based, 0 = transparent)
-Bits 11-15:        Unknown/unused (tiles are not flipped in game)
+Bits 0-11 (0xFFF): Tile index (12 bits, 1-based, 0 = transparent)
+Bits 12-15:        Color tint selector (indexes into layer's color_tints[16])
 ```
 
-**Entity Detection:** If `(tile_val & 0x7FF) > total_tile_count`, this may be an entity tile
-from a separate atlas. Entity tiles appear primarily in layers 8-11.
+**VERIFIED via Ghidra** `RenderTilemapSprites16x16` @ 0x8001713c:
+```c
+tile_idx = tilemap_entry & 0xFFF;           // 12-bit tile index
+color_idx = (tilemap_entry >> 12) & 0xF;    // 4-bit color tint
+```
 
-**Reference implementation:** `scripts/extract_all_graphics.py`:
+**Entity Detection:** If `(tile_val & 0xFFF) > total_tile_count`, this may be an entity tile.
+
+**Reference implementation:** (CORRECTED)
 ```python
-tile_idx = raw_idx & 0x7FF  # Lower 11 bits = tile index
+tile_idx = raw_idx & 0xFFF  # Lower 12 bits = tile index
+color_tint = (raw_idx >> 12) & 0xF  # Upper 4 bits = color tint
 ```
 
 ---

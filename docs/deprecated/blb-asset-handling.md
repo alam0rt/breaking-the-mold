@@ -1,5 +1,15 @@
 # Asset Handling Analysis
 
+> ⚠️ **DEPRECATED**: This document has been reorganized.
+> See the new documentation:
+> - [Asset Types Reference](../blb/asset-types.md)
+> - [Level Loading](../systems/level-loading.md)
+> - [LevelDataContext](../reference/level-data-context.md)
+>
+> This file is kept for reference but will not be updated.
+
+---
+
 This document describes how assets are loaded and processed at runtime.
 
 ## Overview

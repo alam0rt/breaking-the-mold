@@ -1,5 +1,21 @@
 # GAME.BLB Data Format Documentation
 
+> ⚠️ **DEPRECATED**: This document has been split into smaller, focused chapters.
+> See the new documentation structure:
+> - [BLB Overview](../blb/README.md)
+> - [Header Format](../blb/header.md)
+> - [Level Metadata](../blb/level-metadata.md)
+> - [Asset Types](../blb/asset-types.md)
+> - [TOC Format](../blb/toc-format.md)
+> - [Tiles and Tilemaps](../systems/tiles-and-tilemaps.md)
+> - [Sprites](../systems/sprites.md)
+> - [Audio](../systems/audio.md)
+> - [LevelDataContext](../reference/level-data-context.md)
+>
+> This file is kept for reference but will not be updated.
+
+---
+
 This document describes the structure of level and asset data in Skullmonkeys' GAME.BLB archive.
 
 ## Game Structure Overview

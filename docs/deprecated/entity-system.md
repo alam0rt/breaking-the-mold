@@ -1,5 +1,15 @@
 # Entity System Analysis
 
+> ⚠️ **DEPRECATED**: This document has been reorganized.
+> See the new documentation:
+> - [Entities](../systems/entities.md)
+> - [Sprites](../systems/sprites.md)
+> - [Rendering Order](../systems/rendering-order.md)
+>
+> This file is kept for reference but will not be updated.
+
+---
+
 ## Overview
 
 Entities in Skullmonkeys are game objects that combine:

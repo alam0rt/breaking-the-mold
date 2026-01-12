@@ -1,5 +1,15 @@
 # Stage Loading Analysis
 
+> ⚠️ **DEPRECATED**: This document has been reorganized.
+> See the new documentation:
+> - [Level Loading](../systems/level-loading.md)
+> - [LevelDataContext](../reference/level-data-context.md)
+> - [Asset Types](../blb/asset-types.md)
+>
+> This file is kept for reference but will not be updated.
+
+---
+
 **Status**: Working Document  
 **Last Updated**: 2026-01-06  
 **Sources**: Ghidra decompilation, ImHex template (`blb.hexpat`), existing documentation, runtime verification via PCSX-Redux MCP

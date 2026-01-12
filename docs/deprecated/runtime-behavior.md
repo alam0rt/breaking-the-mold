@@ -1,5 +1,15 @@
 # Skullmonkeys Runtime Behavior
 
+> ⚠️ **DEPRECATED**: This document has been reorganized.
+> See the new documentation:
+> - [Level Loading](../systems/level-loading.md)
+> - [Sprites](../systems/sprites.md)
+> - [Game Functions](../reference/game-functions.md)
+>
+> This file is kept for reference but will not be updated.
+
+---
+
 This document describes runtime behavior observed via PCSX-Redux MCP debugging.
 
 **NOTE: All addresses are for PAL version (SLES-01090).**
