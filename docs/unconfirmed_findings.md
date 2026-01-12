@@ -119,22 +119,61 @@ Both in stage segments, 93 of 94 locations shared:
 
 ### TileHeader Unknown Fields Now Identified (Updated 2026-01-11):
 
-**Verified Fields:**
+**Verified Fields (Ghidra decompilation confirmed):**
 - **field_16 (0x16)** = Vehicle waypoint count (matches Asset 504 entry count)
   - FINN = 78 waypoints, RUNN = 1 waypoint, all others = 0
-- **field_1c (0x1C)** = VRAM rectangle count (matches Asset 502)
-- **field_1e (0x1E)** = Entity count (matches Asset 501 size / 24)
+- **field_1a (0x1A)** = Special level ID (VERIFIED 2026-01-11)
+  - Value 99 only in FINN and SEVN (special gameplay modes)
+  - Correlates with level_flags bit 1 (0x02)
+- **field_1c (0x1C)** = VRAM rectangle count
+  - Read by GetAsset100Field1C @ 0x8007b7c8
+  - Stored at GameState+0x78 by InitLayersAndTileState @ 0x80024778
+  - Matches Asset 502 entry count exactly for all levels
+- **field_1e (0x1E)** = Entity count
+  - Read by GetEntityCount @ 0x8007b7a8
+  - Used by LoadEntitiesFromAsset501 @ 0x80024dc4 as loop bound
+  - Matches Asset 501 size / 24 exactly for all levels
 
-**Tentative Fields (Patterns observed but meaning unclear):**
-- **field_18 (0x18)** = Level flags bitfield
-  - Bit 3 (0x08): EGGS, FOOD, GLID, HEAD, MEGA, TMPL, WEED
-  - Bit 6 (0x40): FOOD, GLEN, HEAD, MEGA, MENU, RUNN, TMPL, WIZZ
-  - Values: 0, 8, 64, 72 observed
-- **field_1a (0x1A)** = Special level ID
-  - Value 99 only in FINN and SEVN (vehicle/special mode levels)
-  - Value 0 in all other levels
-- **field_20 (0x20)** = Unknown (values 1-6 observed)
-  - Possibly world index or music theme
+**Tentative Fields (Patterns observed, no Ghidra accessor found):**
+- **field_18 (0x18)** = Level flags bitfield (updated analysis 2026-01-11)
+  - Bit 1 (0x02): SEVN, FINN - special gameplay mode
+  - Bit 2 (0x04): FINN only - FlynnBoy-specific
+  - Bit 3 (0x08): EGGS, GLID, WEED, HEAD, MEGA, TMPL, FOOD
+  - Bit 4 (0x10): RUNN only - runner vehicle mode
+  - Bit 6 (0x40): WIZZ, HEAD, RUNN, GLEN, MEGA, TMPL, FOOD - boss/special?
+  - Bit 12 (0x1000): PHRO, MEGA - possibly world 1
+  - Full value list: BOIL=0, BRG1=0, CAVE=0, PHRO=0x1000, FOOD=0x8048, etc.
+- **field_20 (0x20)** = Unknown (values 0-6 observed)
+  - No Ghidra accessor function found
+  - Boss/special levels always = 0
+  - Regular levels vary per-stage within same level
+  - Possibly visual effect or music variation index
+
+---
+
+## Entity Layer Field Discovery (2026-01-11) - NEW
+
+The Entity structure's layer field (offset 0x14) is NOT just a simple layer index.
+
+**Discovery:** CSTL level entities have layer values like 259, 515, 771, 7169, 11778, 62209.
+
+**Analysis:**
+- Lower byte (bits 0-7) = actual render layer (1, 2, or 3)
+- Upper byte (bits 8-15) = render flags or z-order modifiers
+
+**Examples from CSTL stage0:**
+| Raw Value | Hex | Layer | Flags | Entity Types |
+|-----------|-----|-------|-------|--------------|
+| 259 | 0x0103 | 3 | 0x01 | various |
+| 515 | 0x0203 | 3 | 0x02 | various |
+| 7169 | 0x1C01 | 1 | 0x1C | type 81 |
+| 11778 | 0x2E02 | 2 | 0x2E | type 9 |
+| 62209 | 0xF301 | 1 | 0xF3 | type 81 |
+
+**Affected entity types:** Type 9 and Type 81 primarily use extended layer values.
+
+**Status:** Needs Ghidra verification to understand what the upper byte flags control
+(possibly depth sorting, transparency, or special rendering modes).
 
 ---
 

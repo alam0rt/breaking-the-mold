@@ -395,35 +395,42 @@ struct TileHeader {
     u16 count_8x8_b [[name("8x8 Tiles B"), comment("Additional tile count (often 0)")]];
     
     // Field 0x16: Vehicle Waypoint Count (VERIFIED 2026-01-11)
-    // - Matches Asset 504 entry count exactly for FINN (78) and RUNN (1)
-    // - Always 0 for non-vehicle levels
-    u16 vehicle_waypoint_count [[name("Vehicle Waypoints"), comment("Asset 504 waypoint count (FINN/RUNN only)"), color("AAFFAA")]];
+    // - Matches Asset 504 entry count exactly: FINN=78, RUNN=1, all others=0
+    // - Used by vehicle/flying gameplay modes (FINN=FlynnBoy, RUNN=Runner)
+    u16 vehicle_waypoint_count [[name("Vehicle Waypoints"), comment("Asset 504 waypoint count (FINN/RUNN only)"), color("40FF40")]];
     
-    // Field 0x18: Level Flags (TENTATIVE 2026-01-10)
-    // Bitfield controlling level behavior. Observed bit patterns:
-    //   Bit 1 (0x0002): FINN, SEVN - special gameplay modes (matches special_level_id=99)
-    //   Bit 2 (0x0004): FINN only
-    //   Bit 3 (0x0008): EGGS, FOOD, GLID, HEAD, MEGA, TMPL, WEED - 7 levels
-    //   Bit 4 (0x0010): RUNN only - runner vehicle stage
-    //   Bit 6 (0x0040): FOOD, GLEN, HEAD, MEGA, MENU, RUNN, TMPL, WIZZ - 8 levels (boss/special?)
-    //   Bits 7-15: Various unique level flags (EVIL=0x80, GLEN=0x100, etc.)
-    // Common values: 0x0000 (15 levels), 0x0008 (4), 0x0048 (3), 0x0006 (FINN)
+    // Field 0x18: Level Flags (TENTATIVE 2026-01-11)
+    // Bitfield controlling level rendering/behavior. Analyzed per-level values:
+    //   Bit 1 (0x0002): SEVN, FINN - special gameplay mode (correlates with special_level_id=99)
+    //   Bit 2 (0x0004): FINN only - FlynnBoy-specific flag
+    //   Bit 3 (0x0008): EGGS, GLID, WEED, HEAD, MEGA, TMPL, FOOD - possibly collision behavior
+    //   Bit 4 (0x0010): RUNN only - runner vehicle mode
+    //   Bit 6 (0x0040): WIZZ, HEAD, RUNN, GLEN, MEGA, TMPL, FOOD - boss/special rendering?
+    //   Bit 7 (0x0080): EVIL only
+    //   Bit 8 (0x0100): GLEN only  
+    //   Bit 9 (0x0200): MENU only
+    //   Bit 12 (0x1000): PHRO, MEGA - possibly world 1 / first encounter
+    //   Bit 14 (0x4000): CLOU only
+    //   Bit 15 (0x8000): FOOD only
+    // Values: 0x0000 (9 levels), 0x0008 (3), 0x1048 (2), unique flags for others
     u16 level_flags [[name("Level Flags"), comment("Level behavior bitfield"), color("CCCCCC")]];
     
-    // Field 0x1A: Special Level ID (TENTATIVE 2026-01-11)
-    // - Value 99 only in FINN and SEVN levels (special mode levels)
-    // - Value 0 in all other levels
-    u16 special_level_id [[name("Special Level ID"), comment("99 = special mode (FINN/SEVN)"), color("CCCCCC")]];
+    // Field 0x1A: Special Level ID (VERIFIED 2026-01-11)
+    // - Value 99 in FINN and SEVN (special gameplay mode identifier)
+    // - Value 0 in all other levels (normal gameplay)
+    // - Correlates with level_flags bit 1 (0x0002)
+    u16 special_level_id [[name("Special Level ID"), comment("99 = special mode (FINN/SEVN)"), color("40FF40")]];
     
-    // Field 0x1C: VRAM Rectangle Count (VERIFIED 2026-01-10)
+    // Field 0x1C: VRAM Rectangle Count (VERIFIED 2026-01-11)
     // - Read by GetAsset100Field1C (0x8007b7c8), stored at GameState+0x78
+    // - Also stored at GameState+0x78 by InitLayersAndTileState (0x80024778)
     // - Matches Asset 502 (vram_rects) entry count exactly for all levels
     // - Boss levels=0 (no VRAM rects), scrolling levels have values 1-300+
     u16 vram_rect_count [[name("VRAM Rect Count"), comment("Number of VRAM rectangles (Asset 502 entries)"), color("FFAA00")]];
     
-    // Field 0x1E: Entity Count (VERIFIED 2026-01-10)
+    // Field 0x1E: Entity Count (VERIFIED 2026-01-11)
     // - Matches Asset 501 (entities) byte size / 24 exactly for all levels
-    // - Read by FUN_8007b7a8 to get entity count for level loading
+    // - Read by GetEntityCount (0x8007b7a8), used by LoadEntitiesFromAsset501 (0x80024dc4)
     u16 entity_count [[name("Entity Count"), comment("Number of entities in Asset 501"), color("FF8080")]];
     
     // Field 0x20: Unknown (values 1-6 observed)
@@ -482,10 +489,12 @@ struct Entity {
     // Known types: 2=clayball, 3=ammo, 8=item, 24=special ammo, 25/27=enemy, 45=message
     u16 entity_type [[name("Type"), comment("Entity type ID (2=clayball, 3=ammo, 24=special ammo, 45=message, etc)"), color("FF80FF")]];
     
-    // Render layer (0x14-0x15)
-    // Normal values: 1, 2, or 3
-    // NOTE: Some entities have unusual layer values (e.g., 17667) - possibly corrupted or special flags
-    u16 layer [[name("Layer"), comment("Render layer (1, 2, or 3)"), color("80FF80")]];
+    // Render layer with flags (0x14-0x15)
+    // Lower byte (bits 0-7): Actual layer index (1, 2, or 3)
+    // Upper byte (bits 8-15): Render flags or z-order modifiers
+    // Examples from CSTL: 0xF301 = layer 1 + 0xF3 flags, 0x2E02 = layer 2 + 0x2E flags
+    // Most entities have simple values (1, 2, 3) but type 81 and type 9 use extended values
+    u16 layer [[name("Layer"), comment("Lower byte=layer, upper byte=render flags"), color("80FF80")]];
     
     // Padding (0x16-0x17) - always zero
     u16 padding3 [[hidden]];

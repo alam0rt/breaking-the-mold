@@ -514,29 +514,28 @@ based on mode flag at ctx+0x04. See Audio System section below for details.
 
 #### Asset 100 - Tile Header (36 bytes, CODE-VERIFIED)
 
-Verified via Ghidra decompilation of `CopyTilePixelData` (0x8007b588) and `GetTotalTileCount` (0x8007b53c).
-Fields 0x1C and 0x1E verified via extraction analysis (2026-01-10).
+Verified via Ghidra decompilation of multiple accessor functions (2026-01-11).
 
 ```
 Offset  Size  Type   Description
 ------  ----  ----   -----------
-0x00    3     u8[3]  Background RGB color (written to param+0x124 on first entity)
+0x00    3     u8[3]  Background RGB color (LoadBGColorFromTileHeader @ 0x80024678)
 0x03    1     u8     Padding
 0x04    3     u8[3]  Secondary RGB color  
 0x07    1     u8     Padding
-0x08    2     u16    Level width in tiles (*16 for pixels, see GetLevelDimensions)
-0x0A    2     u16    Level height in tiles (*16 for pixels, see GetLevelDimensions)
-0x0C    2     u16    Spawn X position in tiles (VERIFIED: spawn_x * 16 + 8 for pixels)
-0x0E    2     u16    Spawn Y position in tiles (VERIFIED: spawn_y * 16 + 15 for pixels)
-0x10    2     u16    16×16 tile count (CODE-VERIFIED: CopyTilePixelData uses for data offset)
-0x12    2     u16    8×8 tile count (CODE-VERIFIED: summed in GetTotalTileCount)
-0x14    2     u16    Additional tile count (summed in GetTotalTileCount with 0x10, 0x12)
+0x08    2     u16    Level width in tiles (GetLevelDimensions @ 0x8007b434, *16 for pixels)
+0x0A    2     u16    Level height in tiles (GetLevelDimensions @ 0x8007b434, *16 for pixels)
+0x0C    2     u16    Spawn X position in tiles (GetSpawnPosition @ 0x8007b458)
+0x0E    2     u16    Spawn Y position in tiles (GetSpawnPosition @ 0x8007b458)
+0x10    2     u16    16×16 tile count (GetTotalTileCount @ 0x8007b53c)
+0x12    2     u16    8×8 tile count (GetTotalTileCount @ 0x8007b53c)
+0x14    2     u16    Additional tile count (GetTotalTileCount @ 0x8007b53c)
 0x16    2     u16    Vehicle Waypoint Count (VERIFIED: matches Asset 504 entries for FINN/RUNN)
-0x18    2     u16    Level Flags bitfield (TENTATIVE: bit 3 and bit 6 observed)
-0x1A    2     u16    Special Level ID (TENTATIVE: 99 = FINN/SEVN special levels)
-0x1C    2     u16    VRAM Rect Count (VERIFIED: matches Asset 502 entry count exactly)
-0x1E    2     u16    Entity Count (VERIFIED: matches Asset 501 size / 24 exactly)
-0x20    2     u16    Field 0x20 (values 1-6 observed, purpose unknown)
+0x18    2     u16    Level Flags bitfield (see Level Flags Analysis below)
+0x1A    2     u16    Special Level ID (VERIFIED: 99 = FINN/SEVN special modes)
+0x1C    2     u16    VRAM Rect Count (GetAsset100Field1C @ 0x8007b7c8, matches Asset 502)
+0x1E    2     u16    Entity Count (GetEntityCount @ 0x8007b7a8, used by LoadEntitiesFromAsset501)
+0x20    2     u16    Field 0x20 (values 0-6 observed, no accessor found, purpose unknown)
 0x22    2     u16    Padding
 ```
 
@@ -550,6 +549,33 @@ Offset  Size  Type   Description
 **Code reference:** `GetTotalTileCount` (0x8007b53c) computes total tiles as:
 `*(u16*)(asset100 + 0x10) + *(u16*)(asset100 + 0x12) + *(u16*)(asset100 + 0x14)`
 
+**Level Flags Analysis (offset 0x18, TENTATIVE):**
+
+Per-level flag values extracted from all 26 levels (stage0):
+| Level | Value | Bits Set |
+|-------|-------|----------|
+| BOIL, BRG1, CAVE, CRYS, CSTL, MOSS, SCIE, SNOW, SOAR | 0x0000 | (none) |
+| SEVN | 0x0002 | bit 1 |
+| FINN | 0x0006 | bits 1,2 |
+| EGGS, GLID, WEED | 0x0008 | bit 3 |
+| WIZZ | 0x0040 | bit 6 |
+| HEAD | 0x0048 | bits 3,6 |
+| RUNN | 0x0050 | bits 4,6 |
+| EVIL | 0x0080 | bit 7 |
+| GLEN | 0x0140 | bits 6,8 |
+| MENU | 0x0240 | bits 6,9 |
+| KLOG | 0x0400 | bit 10 |
+| TMPL | 0x0868 | bits 3,5,6,11 |
+| PHRO | 0x1000 | bit 12 |
+| MEGA | 0x1048 | bits 3,6,12 |
+| CLOU | 0x4000 | bit 14 |
+| FOOD | 0x8048 | bits 3,6,15 |
+
+**Observed bit patterns:**
+- Bit 1 (0x02): Special gameplay mode (FINN, SEVN)
+- Bit 4 (0x10): Runner vehicle mode (RUNN only)
+- Bit 6 (0x40): Common in boss and special levels
+
 #### Asset 300 - Tile Pixel Data (EXTRACTION-VERIFIED)
 
 8-bit indexed pixel data with 16-byte row stride:
@@ -561,9 +587,16 @@ Layout in file:
 1. First `count_16x16` tiles (256 bytes each)
 2. Then `count_8x8` tiles (128 bytes each)
 
-**Rendering Note:** The tilemap uses a consistent 16-pixel grid. When rendering layers,
-8×8 tiles are scaled 2× to 16×16 to fill their grid cell. This is how the game handles
-mixed tile sizes - all tiles occupy a 16×16 space on screen regardless of native size.
+**Rendering Note (CODE-VERIFIED via Ghidra):** The tilemap uses a consistent 16-pixel grid.
+When rendering layers, 8×8 tiles are scaled 2× to 16×16 to fill their grid cell.
+This is how the game handles mixed tile sizes - all tiles occupy a 16×16 space on screen
+regardless of native size.
+
+Verified in `RenderTilemapSprites16x16` (0x8001713c):
+- Always uses `SetSprt16()` (16x16 sprite primitive) for all tiles
+- X position advances by 0x10 (16) pixels per tile: `local_48 = local_48 + 0x10`
+- Y position advances by 0x10 (16) pixels per row: `local_68 = local_68 + 0x10`
+- No separate code path for 8x8 tiles - they are simply stretched by the GPU
 
 **Extraction script:** `scripts/extract_all_graphics.py` extracts tiles using
 Assets 300+301+302+400 to produce correctly colored PNG images.
@@ -659,10 +692,10 @@ Each palette: 512 bytes = 256 × u16 (PSX 15-bit RGB)
 | 401 | 0x191 | RAW | Animation/palette config |
 | 500 | 0x1F4 | RAW | **Tile attribute map** (collision/triggers) |
 | 501 | 0x1F5 | RAW | **Entity placement data** (24-byte structures) |
-| 502 | 0x1F6 | RAW | Audio configuration |
-| 503 | 0x1F7 | RAW | Audio configuration |
+| 502 | 0x1F6 | RAW | VRAM rectangles (16 bytes each, count in TileHeader+0x1C) |
+| 503 | 0x1F7 | RAW | Animation offset table (ToolX sequence data) |
 | 600 | 0x258 | CONTAINER | RLE sprites with embedded palettes |
-| 700 | 0x2BC | RAW | Audio/VAB data |
+| 700 | 0x2BC | RAW | SPU audio data |
 
 #### Asset 500 - Tile Attribute Map (STRUCTURE-VERIFIED)
 
@@ -689,6 +722,47 @@ Offset  Size               Field         Description
 | 101 | 0x65 | Entity spawn zone/trigger |
 
 **Distribution (typical level):** ~96% value 0 (passable), ~3% value 2 (solid), ~1% value 101 (entity zones).
+
+#### Asset 501 - Entity Placement Data (24 bytes each, CODE-VERIFIED)
+
+Entity structures loaded by `LoadEntitiesFromAsset501` @ 0x80024dc4. Count stored in TileHeader+0x1E.
+
+```
+Offset  Size  Type   Description
+------  ----  ----   -----------
+0x00    2     u16    Bounding box X1 (left, pixels)
+0x02    2     u16    Bounding box Y1 (top, pixels)
+0x04    2     u16    Bounding box X2 (right, pixels)
+0x06    2     u16    Bounding box Y2 (bottom, pixels)
+0x08    2     u16    Center X (pixels)
+0x0A    2     u16    Center Y (pixels)
+0x0C    2     u16    Variant (animation frame or subtype selector)
+0x0E    4     u8[4]  Padding (always zero)
+0x12    2     u16    Entity type ID (see Known Entity Types below)
+0x14    2     u16    Layer with flags (see Layer Field below)
+0x16    2     u16    Padding (always zero)
+```
+
+**Layer Field (offset 0x14) - DISCOVERED 2026-01-11:**
+- Lower byte (bits 0-7): Actual render layer (1, 2, or 3)
+- Upper byte (bits 8-15): Render flags or z-order modifiers
+- Most entities use simple values (1, 2, 3)
+- CSTL level uses extended values like 0xF301 (layer 1 + 0xF3 flags)
+- Entity types 9 and 81 observed with extended layer values
+
+**Known Entity Types (verified via extraction):**
+| Type | Name | Description |
+|------|------|-------------|
+| 2 | Clayball | Collectible coins (most common, ~5700 total) |
+| 3 | Ammo | Bullet pickup for player weapon |
+| 8 | Item | Generic item pickup |
+| 9 | Unknown | Uses extended layer flags in CSTL |
+| 24 | SpecialAmmo | Special ammunition pickup |
+| 25, 27 | Enemy | Enemy entities |
+| 28, 48 | Platform | Moving platforms / directional objects |
+| 45 | MessageBox | In-game message display |
+| 64, 103 | Unknown | Various other entity types |
+| 81 | Unknown | Uses extended layer flags in CSTL |
 
 ## Supplementary Graphics Containers
 
@@ -1476,6 +1550,9 @@ Offset  WIdx  Size  Type    Field                   Description
 | `GetAnimatedTileData` | 0x8007B658 | ptr | Animated tile lookup from ctx[11] |
 | `LoadTileDataToVRAM` | 0x80025240 | void | Upload tiles to VRAM, build sprite info array |
 | `InitTilemapLayer16x16` | 0x80017540 | ptr | Init 16x16 tilemap layer with SPRT_16 primitives |
+| `InitTilemapLayerRendering` | 0x8001601c | void | Sets up SPRT_16 and DR_TPAGE primitives for layers |
+| `RenderTilemapSprites16x16` | 0x8001713c | void | Renders tiles as SPRT_16 on 16-pixel grid |
+| `InitLayersAndTileState` | 0x80024778 | void | Master layer init, sets level dimensions (width*16, height*16) |
 
 #### Asset ID Mapping (LoadAssetContainer)
 
