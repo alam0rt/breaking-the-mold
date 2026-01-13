@@ -169,6 +169,16 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8007B910 | GetTileHeaderField16 | Header field at +0x16 |
 | 0x8007B924 | GetVehicleDataPtr | Asset 504 pointer (FINN/RUNN) |
 
+## Tile Attribute Accessors (Asset 500 / Collision)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8007B74C | HasTileAttributes | Returns true if Asset 500 exists |
+| 0x8007B758 | GetTileAttributeUnknown | Reads header bytes 0-3 (two u16, unknown purpose) |
+| 0x8007B778 | GetTileAttributeDimensions | Reads header bytes 4-7 (width/height in tiles) |
+| 0x8007B79C | GetTileAttributeData | Returns pointer to collision data (header+8) |
+| 0x80024CF4 | InitTileAttributeState | Copies Asset 500 header to GameState |
+
 ## VRAM/Texture Management
 
 | Address | Name | Purpose |
@@ -188,8 +198,35 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x8005B414 | PlayerTickCallback | Main player per-frame update |
+| 0x8005A914 | PlayerProcessTileCollision | Handle tile attribute effects |
+| 0x80059BC8 | CheckWallCollision | Check 4-point vertical wall collision |
 | 0x80077940 | MenuTickCallback | Menu entity per-frame update |
 | 0x800589E8 | InitHaloPowerup | Create halo effect entity |
+
+## Collision Functions
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x800241F4 | GetTileAttributeAtPosition | Read tile attribute from collision map |
+| 0x800245BC | CheckTriggerZoneCollision | Check bbox trigger zones |
+| 0x80059BC8 | CheckWallCollision | 4-point vertical wall check |
+
+See [Normal Player Documentation](../systems/player-normal.md) for details.
+
+## FINN Player (Swimming Levels)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80074100 | CreateFinnPlayerEntity | FINN player creation |
+| 0x80074B54 | FinnStateIdle | Main swimming state handler |
+| 0x80074BF4 | (inline) | FINN state enter (not defined as function) |
+| 0x80074C84 | (inline) | FINN state turn |
+| 0x80074D18 | (inline) | FINN state special |
+| 0x80074DB0 | (inline) | FINN state swim |
+| 0x8001FEA8 | EntityApplyMovementCallbacks | X/Y movement dispatch |
+| 0x800241F4 | GetTileAttributeAtPosition | Tile collision lookup |
+
+See [FINN Player Documentation](../systems/player-finn.md) for details.
 
 ## Game Mode
 

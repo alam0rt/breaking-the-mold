@@ -253,10 +253,35 @@ struct TileAttributeHeader {
 };
 ```
 
-### Needs Further Analysis
-- Find code that reads ctx[11]+0x00 (first 2 bytes) and ctx[11]+0x02 (second 2 bytes)
-- Check if values relate to camera bounds, scroll speed, or collision behavior
-- May require runtime analysis with breakpoints
+### Ghidra Function Discovery (2026-01-13)
+
+Found the accessor functions for Asset 500:
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8007b74c | `HasTileAttributes` | Returns true if Asset 500 exists |
+| 0x8007b758 | `GetTileAttributeUnknown` | Reads bytes 0-3 (the two u16 values) |
+| 0x8007b778 | `GetTileAttributeDimensions` | Reads bytes 4-7 (width/height) |
+| 0x8007b79c | `GetTileAttributeData` | Returns pointer to collision data (header+8) |
+| 0x80024cf4 | `InitTileAttributeState` | Copies header to GameState (called during level load) |
+
+**Data Flow:**
+1. `InitializeAndLoadLevel` calls `InitTileAttributeState`
+2. `InitTileAttributeState` calls `GetTileAttributeUnknown` and `GetTileAttributeDimensions`
+3. Values copied to:
+   - `GameState + 0x68`: Pointer to collision data
+   - `GameState + 0x6c`: Unknown u32 (the two u16 values)
+   - `GameState + 0x70`: Width/height u32
+
+**No consumers found!** After tracing the code, the unknown u16 values are copied to GameState+0x6c but I found **no code that reads them back**. This suggests:
+- Possibly **unused/vestigial** values from development
+- May only be used for validation during loading (not runtime)
+- Could require runtime tracing with breakpoints to confirm
+
+### Action Items
+- [x] Find accessor functions in Ghidra (DONE - see table above)
+- [ ] Set breakpoint on GameState+0x6c to see if anything reads it at runtime
+- [ ] Check if values are debugging/editor-only metadata
 
 ---
 
