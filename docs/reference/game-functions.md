@@ -11,6 +11,9 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8007A62C | LevelDataParser | Parse primary segment |
 | 0x8007B074 | LoadAssetContainer | Parse secondary/tertiary |
 | 0x8007D1D0 | InitializeAndLoadLevel | Full level load |
+| 0x8007D8A0 | SetupAndStartLevel | Full level setup: load, spawn, audio, remap |
+| 0x8007CFC0 | RespawnAfterDeath | Respawn player without full reload |
+| 0x8007DD0C | DisplayTransitionSprite | Show transition sprite (0x8ab92024) |
 | 0x80038BA0 | CdBLB_ReadSectors | Low-level CD read |
 | 0x80020848 | LoaderCallback | CD read wrapper |
 
@@ -46,6 +49,8 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8007BA78 | GetAsset601Ptr | Audio sample pointer |
 | 0x8007BAA0 | GetAsset602Ptr | Volume/pan table |
 | 0x8007C088 | UploadAudioToSPU | Upload to SPU RAM |
+| 0x8007C7EC | StopAllSPUVoices | SpuSetKey(0, 0xffffff) - stop all voices |
+| 0x8007CB20 | StopCDStreaming | Disable CD streaming |
 
 ### Entity System
 
@@ -64,8 +69,8 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8007BBEC | FUN_8007bbec | Get sprite data pointer |
 | 0x8007BEBC | GetFrameMetadata | Get 36-byte frame entry |
 | 0x80010068 | DecodeRLESprite | RLE decoder with flip support |
-| 0x8001CDAC | FUN_8001cdac | Allocate SpriteRenderContext (0x3C bytes) |
-| 0x8001D080 | FUN_8001d080 | Set sprite ID at entity+0xBC |
+| 0x8001CDAC | AllocSpriteRenderContext | Allocate SpriteRenderContext (0x3C bytes) |
+| 0x8001D080 | SetEntitySpriteId | Set sprite ID at entity+0xBC |
 
 ### Sprite Lookup Order
 
@@ -91,6 +96,7 @@ LookupSpriteById(sprite_id) @ 0x8007bb10
 | Address | Name | Purpose |
 |---------|------|---------|
 | 0x8001A0C8 | InitEntityStruct | Zero and init 0x44C entity struct |
+| 0x8001C980 | InitEntityAnimationState | Init animation fields +0x6c to +0xfe |
 | 0x8001C720 | InitEntitySprite | Core entity sprite init |
 | 0x8001C868 | InitEntityWithSprite | Full entity+sprite wrapper |
 | 0x8001CB88 | EntityUpdateCallback | Default entity tick callback |
@@ -102,6 +108,40 @@ LookupSpriteById(sprite_id) @ 0x8007bb10
 | 0x8001EAAC | EntitySetState | State machine transitions |
 | 0x8001FCFC | InitPlayerEntity | Player setup |
 | 0x80020E1C | EntityTickLoop | Main entity update loop |
+| 0x800223BC | FreeEntityLists | Free all entities in +0x1C, +0x20, +0x24 lists |
+| 0x80024468 | CleanupDeadEntities | Remove entities with death flag (bit 2) |
+| 0x80024F34 | InitAnimatedTileEntities | Create entities for animated tiles |
+
+### Entity List Management
+
+GameState uses several linked lists for entity management:
+- **+0x1C**: Tick list (z-sorted, for EntityTickLoop)
+- **+0x20**: Render list (z-sorted, for RenderEntities)
+- **+0x24**: Update queue (priority sorted)
+- **+0x28**: Entity definition list (loaded from Asset 501)
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80020F68 | AddToZOrderList | Add to +0x1C z-sorted tick list |
+| 0x8002107C | AddToXPositionList | Add to +0x20 x-sorted render list |
+| 0x80021190 | AddToUpdateQueue | Add to +0x24 priority queue |
+| 0x80021350 | AddToEntityDefList | Prepend to +0x28 entity def list |
+| 0x80021B48 | AddEntityToBothLists | Add to both +0x1C and +0x20 |
+| 0x800213A8 | AddEntityToSortedRenderList | Register entity in sorted lists |
+| 0x80021D30 | RemoveFromTickList | Remove entity from +0x1C |
+| 0x80021DC0 | RemoveFromRenderList | Remove entity from +0x20 |
+| 0x80021E50 | RemoveFromUpdateQueue | Remove entity from +0x24 |
+| 0x80021EDC | ChangeRenderZOrder | Update z-order in +0x20 list |
+| 0x80022074 | RemoveEntityFromAllLists | Remove from all lists + destructor |
+| 0x80022218 | ClearTickList | Free all entries in +0x1C |
+| 0x80022338 | ClearEntityDefList | Free all entries in +0x28 |
+
+### Entity Scale Functions
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x8001A26C | ScaleXByEntityScale | Scale by entity+0x58 (fixed-point) |
+| 0x8001A29C | ScaleYByEntityScale | Scale by entity+0x5C (fixed-point) |
 
 ## Menu System
 
@@ -129,7 +169,7 @@ LookupSpriteById(sprite_id) @ 0x8007bb10
 | 0x80052678 | InitEntity_a89d0ad0 | Unknown entity |
 | 0x80047FB8 | InitBossEntity | Boss setup |
 | 0x80059A70 | InitPlayerSpriteAvailability | Check available player sprites |
-| 0x800281A4 | FUN_800281a4 | Menu UI factory (creates ~30 entities) |
+| 0x800281A4 | CreateMenuEntities | Menu UI factory (creates ~30 entities) |
 
 ### Entity Init Pattern
 
@@ -157,6 +197,8 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x80021590 | AddLayerToRenderList_Standard | Add to list C |
 | 0x80021778 | AddLayerToRenderList_Medium | Add to list B |
 | 0x80021960 | AddLayerToRenderList_Small | Add to list A |
+| 0x80019238 | FreeLayerRenderSlot | Free single layer render entry |
+| 0x80019474 | FreeAllLayerRenderSlots | Free all 20 layer render slots |
 
 ## Tile Rendering
 
@@ -173,6 +215,7 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 |---------|------|---------|
 | 0x800399A8 | DisplayLoadingScreen | Show loading MDEC |
 | 0x80024678 | LoadBGColorFromTileHeader | Set background color |
+| 0x800134B8 | ClearOrderingTables | Clear OT buffers, set g_SkipVSync |
 
 ## Main Loop
 
@@ -184,6 +227,7 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x80020E80 | RenderEntities | Draw entities via +0x20 render list |
 | 0x8008150C | RemapEntityTypesForLevel | Entity type translation table |
 | 0x80081E84 | ClearSaveSlotFlags | Reset save slot state |
+| 0x8007EAEC | RestoreCheckpointEntities | Restore entities from checkpoint |
 | 0x8007CA9C | StartCDAudioForLevel | Initialize CD audio for level |
 | 0x8007CCB8 | TickCDStreamBuffer | Stream CD data every 4 frames |
 | 0x80082C10 | ProcessDebugMenuInput | Debug level select menu |
@@ -257,6 +301,9 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x8005B414 | PlayerTickCallback | Main player per-frame update |
 | 0x8005A914 | PlayerProcessTileCollision | Handle tile attribute effects |
 | 0x80059BC8 | CheckWallCollision | Check 4-point vertical wall collision |
+| 0x80026164 | ResetPlayerCollectibles | Clear collectible flags on level start |
+| 0x800262AC | DecrementPlayerLives | Decrement lives counter at +0x11 |
+| 0x80026B18 | ResetPlayerUnlocksByLevel | Reset unlocks based on level index |
 | 0x80077940 | MenuTickCallback | Menu entity per-frame update |
 | 0x800589E8 | InitHaloPowerup | Create halo effect entity |
 
