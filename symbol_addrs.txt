@@ -73,11 +73,8 @@ initPlayerState = 0x800260D0; // size:0x8C
 g_pPlayerState = 0x800A5754; // type:u8* // Pointer to player state structure
 
 // Player State Callback Table (8 bytes per entry: flags, callback)
-// Used by EntitySetState for player state machine
-PlayerStateCallback_Respawn = 0x800A5D20; // 0xFFFF0000, 0x80066CE0
-PlayerStateCallback_Special = 0x800A5D28; // 0xFFFF0000, 0x8006A310  
-PlayerStateCallback_Normal = 0x800A5D30; // 0xFFFF0000, 0x8006864C (main gameplay)
-PlayerStateCallback_Alt = 0x800A5D38; // 0xFFFF0000, 0x8006AE0C
+// Used by EntitySetState for player state machine - table @ 0x800A5D20
+g_PlayerStateCallbackTable = 0x800A5D20; // type:PlayerStateEntry[4] // 4 entries × 8 bytes
 
 main = 0x800828B0; // size:0x360
 LoadBLBHeader = 0x800208B0; // size:0xC4 // Initializes BLB archive system and reads header
@@ -194,19 +191,99 @@ RemapEntityTypesForLevel = 0x8008150C; // size:0x978 // Converts BLB types → i
 g_EntityTypeCallbackTable = 0x8009D5F8; // type:EntityTypeEntry[121] // 121 entries × 8 bytes (flags, callback)
 g_GameStateBase = 0x8009DC40; // type:GameState // Main game state structure
 
-// Entity Type Callbacks (from g_EntityTypeCallbackTable)
-// See docs/reference/entity-types.md for full table
-EntityCallback_Type00 = 0x8007EFD0; // type:func // Default handler (types 0, 3, 4)
-EntityCallback_Type01 = 0x8007F730; // type:func // Type 1 handler
-EntityCallback_Type02 = 0x80080328; // type:func // Clayball (type 2)
-EntityCallback_Type08 = 0x80081504; // type:func // Item (type 8)
-EntityCallback_Type24 = 0x8007F460; // type:func // SpecialAmmo (type 24)
-EntityCallback_Type25 = 0x800805C8; // type:func // EnemyA (type 25)
-EntityCallback_Type27 = 0x8007F354; // type:func // EnemyB (type 27)
-EntityCallback_Type28 = 0x80080638; // type:func // PlatformA (type 28)
-EntityCallback_Type42 = 0x80080DDC; // type:func // Portal (types 42-44, 53-55, 60)
-EntityCallback_Type45 = 0x80080F1C; // type:func // Message (type 45)
-EntityCallback_Type48 = 0x80080E4C; // type:func // PlatformB (types 47, 48)
-EntityCallback_Type50 = 0x8007FC20; // type:func // Boss (type 50)
-EntityCallback_Type51 = 0x8007FC9C; // type:func // BossPart (type 51)
-EntityCallback_Type61 = 0x80080718; // type:func // Sparkle (type 61)
+// =============================================================================
+// Entity Type Tick Callbacks (from g_EntityTypeCallbackTable @ 0x8009D5F8)
+// 82 unique tick callbacks for 121 entity types
+// See docs/reference/entity-types.md for entity type descriptions
+// =============================================================================
+EntityType001_TickCallback = 0x8007F730;
+EntityType002_TickCallback = 0x80080328; // Clayball
+EntityType004_TickCallback = 0x8007EFD0; // Default (also types 0, 3)
+EntityType005_TickCallback = 0x8007F7B0;
+EntityType006_TickCallback = 0x8007F830;
+EntityType007_TickCallback = 0x80080408;
+EntityType008_TickCallback = 0x80081504; // Item
+EntityType009_TickCallback = 0x800804E8;
+EntityType010_TickCallback = 0x8007F244;
+EntityType011_TickCallback = 0x80080478;
+EntityType012_TickCallback = 0x8007F8B0;
+EntityType017_TickCallback = 0x8007F930;
+EntityType018_TickCallback = 0x8007F9B0;
+EntityType019_TickCallback = 0x8007FA30;
+EntityType020_TickCallback = 0x8007FAAC;
+EntityType021_TickCallback = 0x8007FB28;
+EntityType022_TickCallback = 0x80080398;
+EntityType023_TickCallback = 0x80080558;
+EntityType025_TickCallback = 0x800805C8; // EnemyA
+EntityType026_TickCallback = 0x8007F2CC;
+EntityType027_TickCallback = 0x8007F354; // EnemyB
+EntityType028_TickCallback = 0x80080638; // PlatformA
+EntityType029_TickCallback = 0x800806A8;
+EntityType030_TickCallback = 0x80080A98;
+EntityType033_TickCallback = 0x80080AF8;
+EntityType036_TickCallback = 0x80080B60;
+EntityType038_TickCallback = 0x80080BC8;
+EntityType040_TickCallback = 0x80080CFC;
+EntityType041_TickCallback = 0x80080D6C;
+EntityType045_TickCallback = 0x80080F1C; // Message
+EntityType046_TickCallback = 0x80080C2C;
+EntityType048_TickCallback = 0x80080E4C; // PlatformB
+EntityType049_TickCallback = 0x8007FBA4;
+EntityType050_TickCallback = 0x8007FC20; // Boss
+EntityType051_TickCallback = 0x8007FC9C; // BossPart
+EntityType052_TickCallback = 0x80080C8C;
+EntityType057_TickCallback = 0x8007FD18;
+EntityType058_TickCallback = 0x8007FD94;
+EntityType059_TickCallback = 0x8007FE10;
+EntityType060_TickCallback = 0x80080DDC; // Portal
+EntityType061_TickCallback = 0x80080718; // Sparkle
+EntityType062_TickCallback = 0x8007FE8C;
+EntityType063_TickCallback = 0x8007FEFC;
+EntityType064_TickCallback = 0x8007FF6C;
+EntityType065_TickCallback = 0x80080F8C;
+EntityType066_TickCallback = 0x8007FFDC;
+EntityType067_TickCallback = 0x80080050;
+EntityType068_TickCallback = 0x800800C4;
+EntityType069_TickCallback = 0x80080788;
+EntityType070_TickCallback = 0x800807F8;
+EntityType071_TickCallback = 0x80080FEC;
+EntityType072_TickCallback = 0x80080868;
+EntityType075_TickCallback = 0x800808D8;
+EntityType076_TickCallback = 0x8007F3DC;
+EntityType079_TickCallback = 0x8008121C;
+EntityType080_TickCallback = 0x80080EBC;
+EntityType081_TickCallback = 0x80080948;
+EntityType082_TickCallback = 0x8008127C;
+EntityType083_TickCallback = 0x800809B8;
+EntityType084_TickCallback = 0x8007F5B0;
+EntityType088_TickCallback = 0x8007F050;
+EntityType090_TickCallback = 0x80080138;
+EntityType091_TickCallback = 0x800801B4;
+EntityType092_TickCallback = 0x80080230;
+EntityType093_TickCallback = 0x800802AC;
+EntityType094_TickCallback = 0x80081428;
+EntityType095_TickCallback = 0x800814A4;
+EntityType096_TickCallback = 0x8007F638;
+EntityType099_TickCallback = 0x8007F4D0;
+EntityType100_TickCallback = 0x8008105C;
+EntityType101_TickCallback = 0x800810CC;
+EntityType102_TickCallback = 0x8008113C;
+EntityType103_TickCallback = 0x800811AC;
+EntityType105_TickCallback = 0x800812EC;
+EntityType108_TickCallback = 0x8007F0D0;
+EntityType109_TickCallback = 0x8007F540;
+EntityType111_TickCallback = 0x8008134C;
+EntityType114_TickCallback = 0x8007F140;
+EntityType117_TickCallback = 0x8007F1C0;
+EntityType118_TickCallback = 0x8007F460; // SpecialAmmo
+EntityType119_TickCallback = 0x80080A28;
+EntityType120_TickCallback = 0x8007F6C0;
+
+// =============================================================================
+// Player State Callbacks (from table @ 0x800A5D20)
+// State machine handlers for player entity
+// =============================================================================
+PlayerStateCallback_0 = 0x80066CE0; // Respawn state
+PlayerStateCallback_1 = 0x8006A310; // Special mode
+PlayerStateCallback_2 = 0x8006864C; // Normal gameplay (main)
+PlayerStateCallback_3 = 0x8006AE0C; // Alt state
