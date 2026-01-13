@@ -199,6 +199,43 @@ Extracted from game code init functions:
 | 0x8818a018 | FUN_80058310 | Boss element 2 (×6) |
 | 0x244655d | FUN_80047fb8 | Boss detail |
 
+## Entity-to-Sprite Mapping
+
+**Critical insight**: Sprite IDs are **NOT stored in BLB entity data**. They are **hardcoded in the game executable**.
+
+### How Entity Types Get Sprites
+
+1. **BLB Asset 501** contains 24-byte entity definitions (position/bounds/type)
+2. **entity_type** field at offset +0x12 is a small integer (e.g., 1-91)
+3. **Game code** has ~91 entity init functions, each with a hardcoded sprite ID
+4. When an entity spawns, code dispatches by type → calls Init → passes sprite ID
+
+### Spawn Chain
+
+```
+LoadEntitiesFromAsset501() - copies 24-byte defs to ctx+0x28
+    ↓
+Entity type dispatch (switch on entity_type)
+    ↓
+InitEntity_XXXXXXXX(entity) - entity-specific initializer
+    ↓
+InitEntitySprite(entity, HARDCODED_SPRITE_ID, z_order, x, y, flags)
+    ↓
+InitSpriteContext() → LookupSpriteById() → FindSpriteInTOC()
+```
+
+### Player Sprite Tables
+
+Player uses `InitEntityWithSprite` with sprite ID tables:
+
+| Table Address | Contents |
+|---------------|----------|
+| 0x8009c174 | 16+ sprite IDs for player states |
+| 0x8009c3a8 | 7 player sprite variants |
+| 0x8009b174 | Menu cursor sprites |
+
+`InitPlayerSpriteAvailability` (0x80059a70) checks which player sprites exist in current level.
+
 ## Per-Level Sprite Availability
 
 Each level's tertiary container has different sprites:

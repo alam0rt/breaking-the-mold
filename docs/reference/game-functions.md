@@ -58,11 +58,33 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x8007BC3C | InitSpriteContext | Setup sprite for entity |
-| 0x8007BB10 | LookupSpriteById | Find sprite by 32-bit ID |
-| 0x8007B968 | FindSpriteInTOC | Search container TOC |
+| 0x8007BC3C | InitSpriteContext | Parse sprite header, find animation |
+| 0x8007BB10 | LookupSpriteById | Find sprite in tertiary then secondary |
+| 0x8007B968 | FindSpriteInTOC | Search ctx+0x70 and ctx+0x40 TOCs |
+| 0x8007BBEC | FUN_8007bbec | Get sprite data pointer |
 | 0x8007BEBC | GetFrameMetadata | Get 36-byte frame entry |
-| 0x80010068 | DecodeRLESprite | RLE decoder with flip |
+| 0x80010068 | DecodeRLESprite | RLE decoder with flip support |
+| 0x8001CDAC | FUN_8001cdac | Allocate SpriteRenderContext (0x3C bytes) |
+| 0x8001D080 | FUN_8001d080 | Set sprite ID at entity+0xBC |
+
+### Sprite Lookup Order
+
+```
+LookupSpriteById(sprite_id) @ 0x8007bb10
+  ├─► FindSpriteInTOC(g_pLevelDataContext, sprite_id)
+  │     └─► Search ctx+0x70 (tertiary TOC)
+  │     └─► Search ctx+0x40 (tertiary fallback)
+  └─► If not found: search g_pSecondarySpriteBank (often NULL)
+```
+
+### Sprite TOC Entry (12 bytes)
+
+```
++0x00  u32  Sprite count (at TOC start)
++0x04  u32  Sprite ID (32-bit hash)
++0x08  u32  Data size
++0x0C  u32  Offset from container start
+```
 
 ## Entity System
 
@@ -100,9 +122,29 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8002107C | AddToXPositionList | X-position sorted list (+0x20) |
 | 0x800213A8 | AddEntityToSortedRenderList | Register entity |
 | 0x80021190 | AddEntityToQueue | Add to update queue |
-| 0x80024DC4 | LoadEntitiesFromAsset501 | Load entity defs |
-| 0x800250C8 | AddPreInitEntitiesToList | Pre-init entities |
+| 0x80024DC4 | LoadEntitiesFromAsset501 | Load 24-byte entity defs to ctx+0x28 |
+| 0x800250C8 | AddPreInitEntitiesToList | Pre-init entities to ctx+0x1C |
+| 0x80027A00 | InitEntity_8c510186 | Menu cursor entity |
+| 0x80034BB8 | InitEntity_168254b5 | Particle entity |
+| 0x80052678 | InitEntity_a89d0ad0 | Unknown entity |
 | 0x80047FB8 | InitBossEntity | Boss setup |
+| 0x80059A70 | InitPlayerSpriteAvailability | Check available player sprites |
+| 0x800281A4 | FUN_800281a4 | Menu UI factory (creates ~30 entities) |
+
+### Entity Init Pattern
+
+All `InitEntity_*` functions follow this pattern:
+```c
+void InitEntity_XXXXXXXX(Entity* entity) {
+    InitEntitySprite(entity, 0xXXXXXXXX, z_order, x, y, flags);
+    entity[1] = TickCallback;      // Main update callback
+    entity[6] = &Hitbox;           // Collision data
+    EntitySetState(entity, initial_state, callback);
+    // ... entity-specific setup
+}
+```
+
+The sprite ID in the function name **IS** the sprite ID passed to InitEntitySprite.
 
 ## Layer Initialization
 
@@ -260,7 +302,11 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | 0x800A59F0 | g_GameBLBSector | BLB starting sector (0x146) |
 | 0x800A6060 | g_pSecondarySpriteBank | Secondary sprites |
 | 0x800A6064 | g_pLevelDataContext | Context pointer |
-| 0x8009C174 | DAT_8009c174 | Player sprite lookup table |
+| 0x8009C174 | g_PlayerSpriteTable | Player sprite ID lookup table (16+ entries) |
+| 0x8009C3A8 | g_PlayerSpriteVariants | 7 player sprite variants |
+| 0x8009B174 | g_MenuCursorSprites | Menu cursor sprite table |
+| 0x8009B180 | g_MenuSpriteTable2 | Menu sprite table 2 |
+| 0x8009B18C | g_MenuSpriteTable3 | Menu sprite table 3 |
 | 0x800A6082 | DAT_800a6082 | Current game mode (0-6) |
 | 0x800A5764 | g_pPlayer1Input | Player 1 input state pointer |
 | 0x800A5768 | g_pPlayer2Input | Player 2 input state pointer |
@@ -273,6 +319,27 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | 0x800A5770 | g_DefaultBGColorR | Default BG red component |
 | 0x800A5771 | g_DefaultBGColorG | Default BG green component |
 | 0x800A5772 | g_DefaultBGColorB | Default BG blue component |
+
+### Player Sprite Tables
+
+Player uses `InitEntityWithSprite` with sprite ID tables at fixed addresses:
+
+**g_PlayerSpriteTable (0x8009c174)** - 16 player state sprite IDs:
+```
+[0]  0x08208902    [1]  0x48204012    [2]  0x8569A090    [3]  0x0708A4A0
+[4]  0x052AA082    [5]  0x393C80C2    [6]  0x1CF99931    [7]  0x00388110
+[8]  0x1C3AA013    [9]  0x1C395196    [10] 0x3838801A    [11] 0x04084011
+[12] 0x092B8480    [13] 0x0B2084D0    [14] 0x292E8480    [15] 0x282B8491
+```
+
+**g_PlayerSpriteVariants (0x8009c3a8)** - 7 player variant sprites:
+```
+[0] 0x48608484    [1] 0xF936C015    [2] 0xFA20CD14    [3] 0x5D2CE434
+[4] 0x52A08394    [5] 0x5A204C30    [6] 0xD305D045
+```
+
+These tables are indexed by player state to select different animations.
+`InitPlayerSpriteAvailability()` at 0x80059a70 checks which variants are present.
 
 ## GameState Offsets
 
