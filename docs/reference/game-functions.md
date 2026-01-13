@@ -95,7 +95,7 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x800778EC | SetMenuBackgroundColor | Set BG from color index |
 | 0x800754CC | AttachMenuCursor | Create cursor for button |
 | 0x80075FF4 | InitPasswordDisplay | 12-digit password entity |
-| 0x8007C388 | FUN_8007c388 | Play sound effect |
+| 0x8007C388 | PlaySoundEffect | Play sound effect with pan |
 | 0x80020F68 | AddToZOrderList | Z-order sorted list (+0x1C) |
 | 0x8002107C | AddToXPositionList | X-position sorted list (+0x20) |
 | 0x800213A8 | AddEntityToSortedRenderList | Register entity |
@@ -138,10 +138,25 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 |---------|------|---------|
 | 0x800828B0 | main | Main game loop |
 | 0x8007CD34 | InitGameState | One-time game initialization |
-| 0x80020E80 | RenderEntities | Draw entities |
+| 0x80020E1C | EntityTickLoop | Per-frame entity updates (+0x1C list) |
+| 0x80020E80 | RenderEntities | Draw entities via +0x20 render list |
 | 0x8008150C | RemapEntityTypesForLevel | Entity type translation table |
 | 0x80081E84 | ClearSaveSlotFlags | Reset save slot state |
 | 0x8007CA9C | StartCDAudioForLevel | Initialize CD audio for level |
+| 0x8007CCB8 | TickCDStreamBuffer | Stream CD data every 4 frames |
+| 0x80082C10 | ProcessDebugMenuInput | Debug level select menu |
+| 0x800259D4 | UpdateInputState | Process controller input |
+| 0x8001352C | WaitForVBlankIfNeeded | Conditional VSync wait |
+| 0x80013500 | FlushDebugFontAndEndFrame | Draw debug text, end frame |
+| 0x80013554 | SwapBuffersAndClearOT | Swap buffers, clear OT |
+
+## Graphics Initialization
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80013268 | InitGraphicsSystem | Double-buffer GPU setup (320x256) |
+| 0x80013B1C | InitVRAMSlotTable | Texture page slot configuration |
+| 0x800260D0 | InitPlayerControllerState | Player 1 controller init |
 
 ## Player Creation
 
@@ -238,7 +253,7 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 
 | Address | Name | Description |
 |---------|------|-------------|
-| 0x800AE3E0 | blbHeaderBuffer | BLB header in RAM |
+| 0x800AE3E0 | blbHeaderBufferBase | BLB header buffer, also GPU state |
 | 0x8009DC40 | g_GameStateBase | Main game state structure |
 | 0x8009DCC4 | LevelDataContext | Level loading state (GameState+0x84) |
 | 0x8009B4B4 | g_GameBLBFile | CdlFILE for GAME.BLB |
@@ -246,18 +261,44 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | 0x800A6060 | g_pSecondarySpriteBank | Secondary sprites |
 | 0x800A6064 | g_pLevelDataContext | Context pointer |
 | 0x8009C174 | DAT_8009c174 | Player sprite lookup table |
+| 0x800A6082 | DAT_800a6082 | Current game mode (0-6) |
+| 0x800A5764 | g_pPlayer1Input | Player 1 input state pointer |
+| 0x800A5768 | g_pPlayer2Input | Player 2 input state pointer |
+| 0x800A5754 | g_pPlayerState | Player persistent state |
+| 0x800A576C | g_pCurrentInputState | Active input state |
+| 0x800A5950 | g_GameFlags | Game flags (bit 0x80=debug menu) |
+| 0x800A594C | g_SkipVSync | Skip VSync flag |
+| 0x800A5948 | g_FrameReady | Frame complete flag |
+| 0x800A5960 | g_GameStatePtr | Pointer to active GameState |
+| 0x800A5770 | g_DefaultBGColorR | Default BG red component |
+| 0x800A5771 | g_DefaultBGColorG | Default BG green component |
+| 0x800A5772 | g_DefaultBGColorB | Default BG blue component |
 
 ## GameState Offsets
 
 | Offset | Type | Purpose |
 |--------|------|---------|
+| +0x00 | s16 | Mode callback base offset |
+| +0x02 | s16 | Mode callback table index (or -1) |
+| +0x04 | ptr | Mode callback pointer or table |
+| +0x0C | ptr | Layer render context pointer |
+| +0x1C | ptr | Entity tick list head (z-sorted) |
+| +0x20 | ptr | Entity render list head (z-sorted) |
+| +0x2C | ptr | Player entity (alternate ref) |
 | +0x30 | ptr | Player entity pointer |
+| +0x48 | s16 | Level width in pixels |
+| +0x4A | s16 | Level height in pixels |
+| +0x50 | ptr | Player 1 input state pointer |
 | +0x84 | struct | LevelDataContext base |
-| +0x116 | u16 | Spawn X position (pixels) |
-| +0x118 | u16 | Spawn Y position (pixels) |
+| +0x10C | u32 | Input repeat timer/flags |
+| +0x116 | s16 | Spawn X position (pixels) |
+| +0x118 | s16 | Spawn Y position (pixels) |
 | +0x11C | u32 | Scale factor (0x8000/0xC000/0x10000) |
 | +0x124/5/6 | u8[3] | Player RGB color |
+| +0x130 | u8 | BG color update request flag |
+| +0x131/2/3 | u8[3] | Pending BG RGB color |
 | +0x140 | ptr | Checkpoint/HUD data pointer |
+| +0x148 | u8 | Level transition state |
 | +0x14C | ptr | HUD entity pointer |
 | +0x161 | u8 | Respawn/continue flag |
 | +0x16C | ptr | Glide/scrolling buffer |
@@ -265,6 +306,8 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | +0x171-17A | u8[10] | Password-selectable level list |
 | +0x17B | u8 | Password level count |
 | +0x198-19B | u8[4] | Respawn state data |
+| +0x19C | u8 | Level flag bit 1 (from GetLevelFlags) |
+| +0x19D | u8 | TileHeader field 0x1A value |
 
 ## Level Metadata Accessors
 

@@ -77,6 +77,54 @@ int main(void) {
 }
 ```
 
+## Mode Callback System
+
+The game uses a mode callback system stored in GameState offsets 0-8 for dispatching
+level-specific logic each frame.
+
+### GameState Mode Fields
+
+| Offset | Type | Purpose |
+|--------|------|---------|
+| +0x00 | s16 | Base offset for callback parameter |
+| +0x02 | s16 | Current callback table index (or -1 for single callback) |
+| +0x04 | ptr | Callback pointer OR table base |
+
+### Callback Dispatch Logic
+
+```c
+// From main loop (@ 0x80082ae0)
+iVar2 = (int)g_GameStatePtr[1];  // Callback index at +0x02
+if (iVar2 != 0) {
+    if (iVar2 < 1) {
+        // Negative index: Direct callback pointer at +0x04
+        pcVar12 = *(code **)(g_GameStatePtr + 2);
+    } else {
+        // Positive index: Table-based lookup
+        // Table at offset stored in +0x04, index * 8 bytes per entry
+        iVar7 = iVar2 * 8 + *(int *)((int)g_GameStatePtr + (int)g_GameStatePtr[2]);
+        unaff_s4 = *(undefined4 *)(iVar7 + -8);  // Parameter offset
+        pcVar12 = *(code **)(iVar7 + -4);        // Callback function
+    }
+    iVar7 = (int)*g_GameStatePtr;  // Base offset from +0x00
+    if (0 < iVar2 << 0x10) {
+        iVar7 = (short)unaff_s4 + iVar7;  // Adjust for table entry
+    }
+    (*pcVar12)((int)g_GameStatePtr + iVar7);  // Call with adjusted offset
+}
+```
+
+### Mode Callback Initialization
+
+In `InitGameState` the mode callback is initialized to 0x8007e654:
+```c
+state[0] = 0xFFFF0000;           // Base offset in high word
+state[1] = &LAB_8007e654;        // Initial mode handler (indirect pointer)
+```
+
+The initial mode handler at 0x8007e654 manages level loading transitions,
+checkpoint handling, and respawn logic.
+
 ## InitGameState (`InitGameState` @ 0x8007cd34)
 
 Called once at startup to initialize the game:
@@ -654,6 +702,43 @@ void EntityTickLoop(GameState* state) {
     }
 }
 ```
+
+## RenderEntities (`RenderEntities` @ 0x80020e80)
+
+Called every frame to render all entities in z-order:
+
+```c
+void RenderEntities(GameState* state) {
+    // Handle background color update request
+    if (*(char *)(state + 0x130) != 0) {
+        // Copy RGB from state+0x131/132/133 to BLB header buffer
+        // for both frame buffers (double-buffered)
+        blbHeaderBufferBase[0x1d] = state[0x131];  // R
+        blbHeaderBufferBase[0x1e] = state[0x132];  // G
+        blbHeaderBufferBase[0x1f] = state[0x133];  // B
+        blbHeaderBufferBase[0x505d] = state[0x131]; // Second buffer
+        blbHeaderBufferBase[0x505e] = state[0x132];
+        blbHeaderBufferBase[0x505f] = state[0x133];
+        *(char *)(state + 0x130) = 0;  // Clear request
+    }
+    
+    // First pass: iterate tick list (+0x1C) - empty loop, possibly for sorting
+    for (entity = state+0x1c; entity != NULL; entity = entity->next) {
+        // No operations (optimization artifact?)
+    }
+    
+    // Second pass: iterate render list (+0x20) and call render callbacks
+    for (node = state+0x20; node != NULL; node = node->next) {
+        int methodTable = *(node[1] + 0xC);
+        code* renderFunc = *(methodTable + 0xC);
+        short offset = *(methodTable + 0x8);
+        renderFunc(node[1] + offset);  // Call entity render method
+    }
+}
+```
+
+**Note:** The render list at +0x20 stores entities in z-order (sorted during insertion).
+Each entity's method table at +0xC contains function pointers for update and render.
 
 ## Memory Allocation
 
