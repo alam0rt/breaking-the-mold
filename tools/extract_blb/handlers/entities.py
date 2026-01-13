@@ -35,16 +35,50 @@ import struct
 from . import register_handler
 
 # Entity type name lookup
+# See docs/reference/entity-types.md for full callback table documentation
 ENTITY_TYPE_NAMES = {
+    # Collectibles
     2: "clayball",
     3: "ammo",
     8: "item",
     24: "special_ammo",
+    
+    # Enemies
     25: "enemy_a",
     27: "enemy_b",
+    
+    # Platforms & Objects
+    10: "object",
     28: "platform_a",
-    45: "message",
     48: "platform_b",
+    
+    # Interactive
+    42: "portal",
+    45: "message",
+    
+    # Boss entities
+    50: "boss",
+    51: "boss_part",
+    
+    # Effects
+    60: "particle",
+    61: "sparkle",
+    
+    # Less common types observed in extracted data
+    9: "trigger_a",
+    11: "trigger_b",
+    12: "trigger_c",
+    13: "hazard_a",
+    15: "hazard_b",
+    16: "spawner",
+    22: "switch_a",
+    23: "switch_b",
+    41: "checkpoint",
+    64: "decoration",
+    81: "camera_zone",
+    82: "lava_hazard",
+    103: "level_exit",
+    215: "special",
 }
 
 

@@ -176,3 +176,20 @@ RemapEntityTypesForLevel = 0x8008150C; // size:0x978 // Converts BLB types → i
 // Entity System - Global Data
 g_EntityTypeCallbackTable = 0x8009D5F8; // type:EntityTypeEntry[121] // 121 entries × 8 bytes (flags, callback)
 g_GameStateBase = 0x8009DC40; // type:GameState // Main game state structure
+
+// Entity Type Callbacks (from g_EntityTypeCallbackTable)
+// See docs/reference/entity-types.md for full table
+EntityCallback_Type00 = 0x8007EFD0; // type:func // Default handler (types 0, 3, 4)
+EntityCallback_Type01 = 0x8007F730; // type:func // Type 1 handler
+EntityCallback_Type02 = 0x80080328; // type:func // Clayball (type 2)
+EntityCallback_Type08 = 0x80081504; // type:func // Item (type 8)
+EntityCallback_Type24 = 0x8007F460; // type:func // SpecialAmmo (type 24)
+EntityCallback_Type25 = 0x800805C8; // type:func // EnemyA (type 25)
+EntityCallback_Type27 = 0x8007F354; // type:func // EnemyB (type 27)
+EntityCallback_Type28 = 0x80080638; // type:func // PlatformA (type 28)
+EntityCallback_Type42 = 0x80080DDC; // type:func // Portal (types 42-44, 53-55, 60)
+EntityCallback_Type45 = 0x80080F1C; // type:func // Message (type 45)
+EntityCallback_Type48 = 0x80080E4C; // type:func // PlatformB (types 47, 48)
+EntityCallback_Type50 = 0x8007FC20; // type:func // Boss (type 50)
+EntityCallback_Type51 = 0x8007FC9C; // type:func // BossPart (type 51)
+EntityCallback_Type61 = 0x80080718; // type:func // Sparkle (type 61)

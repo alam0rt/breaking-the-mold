@@ -11,6 +11,8 @@ The entity system has three key aspects:
 
 **Critical**: Entity type → sprite ID mapping is **HARDCODED** in game code, not in BLB data.
 
+> **See Also**: [Entity Types Reference](../reference/entity-types.md) for full callback table (121 entries) and type mappings.
+
 ## Asset 501 - Entity Placement Data
 
 24-byte structures loaded from tertiary segment.
@@ -50,18 +52,22 @@ Most entities use simple values (1, 2, 3). Some use extended values like 0xF301.
 
 ## Known Entity Types
 
-| Type | Name | Count | Description |
-|------|------|-------|-------------|
-| 2 | Clayball | 5,727 | Collectible coins |
-| 3 | Ammo | 308 | Bullet pickup |
-| 8 | Item | 144 | Generic item pickup |
-| 9 | Unknown | - | Uses extended layer flags |
-| 24 | SpecialAmmo | 227 | Special ammunition |
-| 25, 27 | Enemy | - | Enemy entities |
-| 28, 48 | Platform | - | Moving platforms |
-| 45 | MessageBox | - | In-game messages |
-| 64, 103 | Unknown | - | Various types |
-| 81 | Unknown | - | Uses extended layer flags |
+Common entity types observed in BLB data:
+
+| Type | Name | Description |
+|------|------|-------------|
+| 2 | Clayball | Collectible coins (5,727 total) |
+| 3 | Ammo | Standard bullet pickup |
+| 8 | Item | Generic item pickup |
+| 24 | SpecialAmmo | Special ammunition |
+| 25, 27 | EnemyA/B | Enemy entities |
+| 28, 48 | PlatformA/B | Moving platforms |
+| 42 | Portal | Warp point |
+| 45 | Message | Save/message box |
+| 50, 51 | Boss/BossPart | Boss entities |
+| 60, 61 | Particle/Sparkle | Visual effects |
+
+For the complete list of 121 entity types with callback addresses, see [Entity Types Reference](../reference/entity-types.md).
 
 ## Runtime Entity Structure (0x44C bytes)
 
@@ -313,9 +319,11 @@ To add a new entity type → sprite mapping, you must:
 
 ## Related Documentation
 
+- [Entity Types Reference](../reference/entity-types.md) - Full callback table (121 entries)
+- [Game Functions Reference](../reference/game-functions.md) - Function addresses
 - [Game Loop](game-loop.md) - Main loop and player creation
 - [Player Animation](player-animation.md) - Player sprite system details
 - [Sprites](sprites.md) - Sprite data format
 - [Rendering Order](rendering-order.md) - Entity z_order
-- [Asset Types](../blb/asset-types.md) - Asset 501 details
-- [Runtime Behavior](level-loading.md) - Entity loading flow
+- [BLB Asset Handling](../blb-asset-handling.md) - Asset 501 details
+- [Level Loading](level-loading.md) - Entity loading flow
