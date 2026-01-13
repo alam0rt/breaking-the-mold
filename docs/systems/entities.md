@@ -308,6 +308,39 @@ struct EntityTypeEntry {
 2. Internal type indexes into the callback table
 3. Callback initializes entity behavior
 
+## Entity Collision System
+
+Collision detection is handled via the entity update queue at `GameState+0x24`.
+
+### Key Functions
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `CheckEntityCollision` | 0x800226f8 | Main collision check |
+| `FUN_8001b47c` | 0x8001b47c | Collision check wrapper |
+| `FUN_8001b3f0` | 0x8001b3f0 | Bounding box overlap test |
+
+### Collision Flow
+
+```
+1. Entity tick calls FUN_8001b47c(entity, type_mask, message, data)
+2. FUN_8001b47c wraps CheckEntityCollision with entity's bbox
+3. CheckEntityCollision:
+   - type_mask == 2: Fast path - check player at GameState+0x2c directly
+   - Other: Iterate GameState+0x24 queue for matching entities
+4. If collision: Invoke target entity's state callback with message
+5. Caller can check return value to determine if collision occurred
+```
+
+### Special Case: Clayballs (type_mask = 2)
+
+Clayballs use an optimized collision path:
+- Instead of iterating the collision queue, directly check the player entity
+- Player entity stored at `GameState+0x2c`
+- On collision, GameState callback receives message `3` (COLLECTED)
+
+> **See Also**: [Entity Types Reference - Clayball Collision System](../reference/entity-types.md#clayball-collision-system) for detailed flow.
+
 ## Sprite ID Lookup
 
 Entity type → sprite ID is hardcoded in init functions. The BLB does NOT contain this mapping.

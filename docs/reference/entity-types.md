@@ -276,6 +276,85 @@ Index  Sprite ID    Description
 
 See [Game Functions](game-functions.md) for full player sprite table.
 
+## Clayball Collision System
+
+The clayball (type 2) collision system demonstrates how entity-to-player collision works in Skullmonkeys.
+
+### Collision Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        CLAYBALL TICK (FUN_80056518)                     │
+│                                                                         │
+│  1. Check entity+0x110 flag:                                            │
+│     - If set: Call FUN_8001b47c(clayball, 2, 0x1000, 1)                │
+│     - If entity+0x111 set: Call FUN_8001b47c(clayball, 2, 0x1007, val) │
+│                                                                         │
+│  2. FUN_8001b47c wraps CheckEntityCollision:                           │
+│     - Passes clayball bounding box (entity+0x48/0x4c)                   │
+│     - Type mask = 2 (identifies as clayball)                            │
+│     - Message = 0x1000 or 0x1007                                        │
+│                                                                         │
+│  3. CheckEntityCollision (0x800226f8) special case:                     │
+│     - If type_mask == 2: Check player at GameState+0x2c directly       │
+│     - Uses FUN_8001b3f0 for bounding box overlap test                   │
+│     - If overlap: Invoke player's state callback                        │
+│                                                                         │
+│  4. After collision check returns:                                      │
+│     - If collision detected (FUN_8002453c returns true):                │
+│       a. Clear clayball+0x100+0x16 collision flag                       │
+│       b. Clear clayball+0x100 pointer                                   │
+│       c. Call GameState callback with message 3 (COLLECTED)             │
+│       d. If clayball+0x11c exists: send message 0x1009                  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Functions
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x80056518 | FUN_80056518 | Clayball tick callback |
+| 0x800561d4 | FUN_800561d4 | Clayball init callback |
+| 0x8001b47c | FUN_8001b47c | Collision check wrapper |
+| 0x800226f8 | CheckEntityCollision | Main collision detection |
+| 0x8001b3f0 | FUN_8001b3f0 | Bounding box overlap test |
+| 0x8007e654 | (not created) | GameState callback - handles collect messages |
+
+### Collision Messages
+
+| Message | Hex | Purpose |
+|---------|-----|---------|
+| CLAYBALL_COLLECT | 0x1000 | Standard clayball collected |
+| CLAYBALL_VARIANT | 0x1007 | Special clayball variant |
+| COLLECTED | 3 | Notify GameState of collection |
+| NOTIFY_LINKED | 0x1009 | Notify linked entity |
+
+### Entity Offsets Used
+
+| Offset | Type | Purpose |
+|--------|------|---------|
+| +0x100 | ptr | Collision target entity (player) |
+| +0x110 | u8 | Collision enabled flag |
+| +0x111 | u8 | Variant collision flag |
+| +0x114 | u32 | Variant collision data |
+| +0x11c | ptr | Linked entity to notify |
+| +0x48/+0x4c | u32 | Bounding box (x1,y1,x2,y2) |
+
+### GameState Entity Pointers
+
+| Offset | Purpose |
+|--------|---------|
+| +0x2c | Player entity (used for type==2 collision) |
+| +0x24 | Collision queue list head |
+| +0x30 | Main player entity reference |
+
+### Notes
+
+- The collision system uses a special fast path for clayballs (type mask = 2)
+- Instead of iterating the collision queue, it directly checks the player entity
+- This is an optimization since clayballs only ever need to collide with the player
+- The GameState callback at 0x8007e654 needs to be created in Ghidra to trace score increment logic
+
 ## Related Documentation
 
 - [Entity System](../systems/entities.md) - Entity lifecycle and structure

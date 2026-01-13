@@ -68,7 +68,17 @@ GetCurrentModeReservedData = 0x8007AE9C; // size:0x108 // Mode-specific reserved
 GetCurrentLevelFlag = 0x8007AFA4; // size:0x54 // Get flag byte for current level (mode 3)
 GetCurrentTertiaryDataSize = 0x8007AFF8; // size:0x7C // Tertiary block size calculation
 
+// Player State
 initPlayerState = 0x800260D0; // size:0x8C
+g_pPlayerState = 0x800A5754; // type:u8* // Pointer to player state structure
+
+// Player State Callback Table (8 bytes per entry: flags, callback)
+// Used by EntitySetState for player state machine
+PlayerStateCallback_Respawn = 0x800A5D20; // 0xFFFF0000, 0x80066CE0
+PlayerStateCallback_Special = 0x800A5D28; // 0xFFFF0000, 0x8006A310  
+PlayerStateCallback_Normal = 0x800A5D30; // 0xFFFF0000, 0x8006864C (main gameplay)
+PlayerStateCallback_Alt = 0x800A5D38; // 0xFFFF0000, 0x8006AE0C
+
 main = 0x800828B0; // size:0x360
 LoadBLBHeader = 0x800208B0; // size:0xC4 // Initializes BLB archive system and reads header
 // PSY-Q SDK functions identified from main()
@@ -161,12 +171,19 @@ RemoveEntityFromAllLists = 0x80022074; // size:0x1A4 // Remove from all lists + 
 ClearTickList = 0x80022218; // size:0x120 // Free all entries in +0x1C
 ClearEntityDefList = 0x80022338; // size:0x80 // Free all entries in +0x28
 CheckEntityCollision = 0x800226F8; // size:0x128 // Iterate +0x24 list for collision detection
+CheckBBoxOverlap = 0x8001B3F0; // size:0x8C // Bounding box overlap test (entity+0x48/0x4C vs bbox)
+CollisionCheckWrapper = 0x8001B47C; // size:0x24 // Wraps CheckEntityCollision with entity bbox
 UpdateCameraPosition = 0x80023DBC; // size:0x380 // Camera scroll based on player at +0x30
 LoadEntitiesFromAsset501 = 0x80024DC4; // size:0x304 // Load 24-byte entity defs to GameState+0x28
 AddPreInitEntitiesToList = 0x800250C8; // size:0x178 // Pre-init entities to ctx+0x1C
 
+// Entity System - Clayball
+ClayballTickCallback = 0x80056518; // type:func // Clayball entity tick - handles collision with player
+ClayballInitCallback = 0x800561D4; // type:func // Clayball entity init - sets up tick callback
+
 // Entity System - Player/Checkpoint
 SpawnPlayerAndEntities = 0x8007DF38; // size:0xAF4 // Creates player/camera/HUD entities
+GameStateCollisionCallback = 0x8007E654; // type:func // GameState callback - handles collected/collision messages
 SaveCheckpointState = 0x8007EAAC; // size:0x40 // Saves tick list to +0x134, set checkpoint flags
 RestoreCheckpointEntities = 0x8007EAEC; // size:0x198 // Restore entities from checkpoint
 
