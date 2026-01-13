@@ -170,6 +170,12 @@ help:
 	@echo "  verify           - Alias for 'check' (for compatibility)"
 	@echo "  clean            - Remove build artifacts"
 	@echo ""
+	@echo "Emulator/Debugging:"
+	@echo "  emu              - Launch PCSX-Redux with GDB server"
+	@echo "  watch            - Run game with behavior tracing (Lua)"
+	@echo "  snapshot         - Capture RAM snapshot (web API)"
+	@echo "  mcp-server       - Start MCP server for Copilot"
+	@echo ""
 	@echo "Decompilation:"
 	@echo "  diff FUNC=name   - Compare function with asm-differ"
 	@echo "  decompile FUNC=f - Decompile function with m2c"
@@ -374,6 +380,28 @@ emu:
 # Enable: Configuration > Emulation > Enable Web Server
 mcp-server:
 	python3 scripts/pcsx_mcp_server.py
+
+# Run game watcher to capture behavior traces
+# Output: /tmp/skullmonkeys_trace.jsonl
+# Usage: make watch
+#        (Play the game, then type dump_log() in Lua console)
+watch:
+	@echo "Starting PCSX-Redux with game watcher..."
+	@echo "Commands available in Lua console:"
+	@echo "  status()    - Show current player state"
+	@echo "  snapshot()  - Get state as table"
+	@echo "  dump_log()  - Save trace to /tmp/skullmonkeys_trace.jsonl"
+	@echo "  clear_log() - Clear captured log"
+	@echo "  cleanup()   - Remove watchers"
+	@echo ""
+	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile scripts/game_watcher.lua -run
+
+# Quick RAM snapshot (requires web server enabled in PCSX-Redux)
+# Usage: make snapshot
+snapshot:
+	@echo "Capturing RAM snapshot..."
+	python3 scripts/ram_snapshot.py -v -o /tmp/skullmonkeys_snapshot.json
+	@echo "Saved to /tmp/skullmonkeys_snapshot.json"
 
 # Run a Lua script in PCSX-Redux
 # Usage: make lua SCRIPT=scripts/hello.lua

@@ -130,17 +130,47 @@ Once PCSX-Redux is running with web server enabled, use these tools:
 5. Use `read_ram(0x80010000, 256)` to inspect memory
 6. Use `resume()` to continue
 
-### Advanced Features (Lua Extension)
+### Game Watcher (Lua Script)
 
-For advanced debugging, load the Lua extension script in PCSX-Redux:
-```bash
-make lua SCRIPT=scripts/mcp_endpoints.lua
+The `scripts/game_watcher.lua` script sets up breakpoints on key game functions
+to capture behavior traces. These traces can be replayed in evil-engine for verification.
+
+**Loading the watcher:**
+```
+# In PCSX-Redux: Debug > Lua Editor, then paste contents of game_watcher.lua
+# Or load via command line:
+pcsx-redux -dofile scripts/game_watcher.lua
 ```
 
-This enables additional endpoints:
-- `/api/v1/lua/registers` - Read/write CPU registers
-- `/api/v1/lua/breakpoints` - Manage breakpoints programmatically
-- `/api/v1/lua/struct` - Read structured data (BLB headers, level entries)
+**Commands (in Lua console):**
+- `status()` - Show current player state, position, animation
+- `snapshot()` - Get current state as a Lua table
+- `dump_log()` - Save captured events to `/tmp/skullmonkeys_trace.jsonl`
+- `clear_log()` - Clear the captured log
+- `cleanup()` - Remove all breakpoint watchers
+
+**Watched Functions:**
+- `PlayerTickCallback` (0x80059E10) - Player state changes, movement
+- `EntitySetState` (0x8001EAAC) - State machine transitions
+- `SetEntitySpriteId` (0x8001D080) - Sprite/animation changes
+- `CheckEntityCollision` (0x800226F8) - Collision events
+- `LoadLevelFromBLB` (0x8007E474) - Level loading
+
+**Trace Format (JSONL):**
+```json
+{"frame":1234,"type":"PlayerState","data":{"callback":"Idle","x":100,"y":200}}
+{"frame":1235,"type":"PlayerMove","data":{"x":102,"y":200,"vx":2,"vy":0}}
+{"frame":1240,"type":"PlayerAnim","data":{"frame":3,"end_frame":8}}
+```
+
+**Using with evil-engine:**
+The `demo/trace_player.gd` script can load and replay traces for verification:
+```gdscript
+var trace := GameTracePlayer.new()
+trace.load_trace("res://traces/idle_test.jsonl")
+trace.game_runner = $GameRunner
+trace.play()
+```
 
 ### Disk Images
 
