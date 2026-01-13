@@ -28,9 +28,12 @@ Game engine subsystems and runtime behavior:
 | [tiles-and-tilemaps.md](systems/tiles-and-tilemaps.md) | Tile graphics and tilemap rendering |
 | [sprites.md](systems/sprites.md) | RLE sprite format and lookup system |
 | [entities.md](systems/entities.md) | Entity system and spawn data |
+| [entity-identification.md](systems/entity-identification.md) | **Entity type identification guide** |
+| [player-system.md](systems/player-system.md) | **Player mechanics, powerups, death** |
 | [audio.md](systems/audio.md) | SPU audio sample system |
 | [rendering-order.md](systems/rendering-order.md) | Layer/entity z-ordering and priorities |
 | [level-loading.md](systems/level-loading.md) | Stage loading state machine |
+| [game-loop.md](systems/game-loop.md) | Main loop and mode callbacks |
 
 ### Reference (`reference/`)
 Technical reference material:
@@ -46,6 +49,7 @@ Ongoing research and unverified findings:
 
 | Document | Description |
 |----------|-------------|
+| [gap-analysis.md](analysis/gap-analysis.md) | **Documentation gap analysis and priorities** |
 | [unconfirmed-findings.md](analysis/unconfirmed-findings.md) | Observations awaiting verification |
 | [password-screens.md](analysis/password-screens.md) | World completion password screens |
 
