@@ -86,5 +86,7 @@ Ongoing research and unverified findings:
 | Asset types 500-700 | ⚠️ Mostly verified |
 | Sprite format | ✅ Fully verified |
 | Entity system | ⚠️ Partially verified |
+| Entity identification | ✅ Verified (2026-01-13) |
+| Tile collision | ⚠️ Partially documented |
 | Audio system | ✅ Verified |
 | Rendering order | ✅ Verified |
