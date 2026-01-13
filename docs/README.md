@@ -26,6 +26,7 @@ Game engine subsystems and runtime behavior:
 | Document | Description |
 |----------|-------------|
 | [tiles-and-tilemaps.md](systems/tiles-and-tilemaps.md) | Tile graphics and tilemap rendering |
+| [collision.md](systems/collision.md) | **Tile collision attributes and physics** |
 | [sprites.md](systems/sprites.md) | RLE sprite format and lookup system |
 | [entities.md](systems/entities.md) | Entity system and spawn data |
 | [entity-identification.md](systems/entity-identification.md) | **Entity type identification guide** |
