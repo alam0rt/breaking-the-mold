@@ -23,6 +23,13 @@ CODE_START = 0x80010000
 CODE_END = 0x800A0000  # Approximate end of code section
 DATA_START = 0x8009D000  # Start of data section with callback tables
 
+# Known regions that contain strings, not code
+# These look like code pointers but are actually ASCII strings
+STRING_REGIONS = [
+    (0x80012798, 0x80013000),  # CD-ROM function name strings (CdlReadS, CdlSeekP, etc.)
+    (0x80090000, 0x800A0000),  # BSS/data section - not code
+]
+
 
 def ghidra_request(endpoint: str, port: int = DEFAULT_PORT) -> dict:
     """Make a request to the Ghidra MCP bridge."""
@@ -103,6 +110,14 @@ def analyze_callback_table(name: str, address: int, entry_count: int, entry_size
     return unrecognized
 
 
+def is_in_string_region(addr: int) -> bool:
+    """Check if address falls within a known string region."""
+    for start, end in STRING_REGIONS:
+        if start <= addr < end:
+            return True
+    return False
+
+
 def scan_data_section_for_pointers(start: int, end: int, port: int, 
                                     known_functions: dict) -> list:
     """Scan a data section for values that look like code pointers."""
@@ -120,6 +135,9 @@ def scan_data_section_for_pointers(start: int, end: int, port: int,
             
             # Check if it looks like a code pointer
             if CODE_START <= ptr < CODE_END:
+                # Skip known string regions
+                if is_in_string_region(ptr):
+                    continue
                 # Check alignment (MIPS functions are 4-byte aligned)
                 if ptr & 3 == 0:
                     if ptr not in known_functions:
