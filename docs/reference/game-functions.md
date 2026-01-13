@@ -227,6 +227,7 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x80020E80 | RenderEntities | Draw entities via +0x20 render list |
 | 0x8008150C | RemapEntityTypesForLevel | Entity type translation table |
 | 0x80081E84 | ClearSaveSlotFlags | Reset save slot state |
+| 0x8007EAAC | SaveCheckpointState | Save tick list to +0x134, set checkpoint flags |
 | 0x8007EAEC | RestoreCheckpointEntities | Restore entities from checkpoint |
 | 0x8007CA9C | StartCDAudioForLevel | Initialize CD audio for level |
 | 0x8007CCB8 | TickCDStreamBuffer | Stream CD data every 4 frames |
@@ -235,6 +236,14 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x8001352C | WaitForVBlankIfNeeded | Conditional VSync wait |
 | 0x80013500 | FlushDebugFontAndEndFrame | Draw debug text, end frame |
 | 0x80013554 | SwapBuffersAndClearOT | Swap buffers, clear OT |
+| 0x80023DBC | UpdateCameraPosition | Camera scroll based on player at +0x30 |
+
+## Collision System
+
+| Address | Name | Purpose |
+|---------|------|---------|
+| 0x800226F8 | CheckEntityCollision | Iterate +0x24 list for collision detection |
+| 0x8001B3F0 | CheckBoundingBoxOverlap | Box overlap test (called by CheckEntityCollision) |
 
 ## Graphics Initialization
 
@@ -345,6 +354,7 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | 0x800AE3E0 | blbHeaderBufferBase | BLB header buffer, also GPU state |
 | 0x8009DC40 | g_GameStateBase | Main game state structure |
 | 0x8009DCC4 | LevelDataContext | Level loading state (GameState+0x84) |
+| 0x8009D5F8 | g_EntityTypeCallbackTable | Entity type dispatch table (121 entries × 8 bytes) |
 | 0x8009B4B4 | g_GameBLBFile | CdlFILE for GAME.BLB |
 | 0x800A59F0 | g_GameBLBSector | BLB starting sector (0x146) |
 | 0x800A6060 | g_pSecondarySpriteBank | Secondary sprites |
@@ -366,6 +376,14 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | 0x800A5770 | g_DefaultBGColorR | Default BG red component |
 | 0x800A5771 | g_DefaultBGColorG | Default BG green component |
 | 0x800A5772 | g_DefaultBGColorB | Default BG blue component |
+
+### Entity Type Callback Table (g_EntityTypeCallbackTable)
+
+Located at `0x8009d5f8`, this table maps entity types (0-120) to initialization callbacks.
+Each entry is 8 bytes: `[flags u32, callback_ptr u32]`.
+
+Used by `RemapEntityTypesForLevel` to translate BLB entity types to internal types,
+then index this table to get the init callback. Stored at `GameState+0x7C` at runtime.
 
 ### Player Sprite Tables
 
@@ -398,11 +416,14 @@ These tables are indexed by player state to select different animations.
 | +0x0C | ptr | Layer render context pointer |
 | +0x1C | ptr | Entity tick list head (z-sorted) |
 | +0x20 | ptr | Entity render list head (z-sorted) |
+| +0x24 | ptr | Entity collision/update queue head |
+| +0x28 | ptr | Entity definition pool (raw Asset 501 defs) |
 | +0x2C | ptr | Player entity (alternate ref) |
 | +0x30 | ptr | Player entity pointer |
 | +0x48 | s16 | Level width in pixels |
 | +0x4A | s16 | Level height in pixels |
 | +0x50 | ptr | Player 1 input state pointer |
+| +0x7C | ptr | Entity type callback table (→ 0x8009d5f8) |
 | +0x84 | struct | LevelDataContext base |
 | +0x10C | u32 | Input repeat timer/flags |
 | +0x116 | s16 | Spawn X position (pixels) |
@@ -411,6 +432,8 @@ These tables are indexed by player state to select different animations.
 | +0x124/5/6 | u8[3] | Player RGB color |
 | +0x130 | u8 | BG color update request flag |
 | +0x131/2/3 | u8[3] | Pending BG RGB color |
+| +0x134 | ptr | Checkpoint entity list (saved from +0x1C) |
+| +0x138 | u32 | Checkpoint score |
 | +0x140 | ptr | Checkpoint/HUD data pointer |
 | +0x148 | u8 | Level transition state |
 | +0x14C | ptr | HUD entity pointer |

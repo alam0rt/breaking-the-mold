@@ -141,3 +141,38 @@ CdControlB = 0x80083454; // type:func // Send CD command (sync)
 CdSetFilter = 0x80083580; // type:func // Set XA filter (cmd 0x0D)
 CdStatus = 0x800832AC; // type:func // Get CD status
 CdCallback = 0x8008320C; // type:func // CD callback handler
+
+// =============================================================================
+// Entity System (0x80020E1C - 0x800250C8+)
+// Entity lists, callbacks, collision, and lifecycle management
+// =============================================================================
+EntityTickLoop = 0x80020E1C; // size:0x64 // Per-frame entity updates via +0x1C list
+RenderEntities = 0x80020E80; // size:0x88 // Draw entities via +0x20 render list
+AddToZOrderList = 0x80020F68; // size:0x114 // Add to +0x1C z-sorted tick list
+AddToXPositionList = 0x8002107C; // size:0x114 // Add to +0x20 x-sorted render list
+AddToUpdateQueue = 0x80021190; // size:0x1C0 // Add to +0x24 priority queue
+AddToEntityDefList = 0x80021350; // size:0x58 // Prepend to +0x28 entity def list
+AddEntityToBothLists = 0x80021B48; // size:0x44 // Add to both +0x1C and +0x20
+AddEntityToSortedRenderList = 0x800213A8; // size:0x7A0 // Register entity in sorted lists
+RemoveFromTickList = 0x80021D30; // size:0x90 // Remove entity from +0x1C
+RemoveFromRenderList = 0x80021DC0; // size:0x90 // Remove entity from +0x20
+RemoveFromUpdateQueue = 0x80021E50; // size:0x8C // Remove entity from +0x24
+RemoveEntityFromAllLists = 0x80022074; // size:0x1A4 // Remove from all lists + destructor
+ClearTickList = 0x80022218; // size:0x120 // Free all entries in +0x1C
+ClearEntityDefList = 0x80022338; // size:0x80 // Free all entries in +0x28
+CheckEntityCollision = 0x800226F8; // size:0x128 // Iterate +0x24 list for collision detection
+UpdateCameraPosition = 0x80023DBC; // size:0x380 // Camera scroll based on player at +0x30
+LoadEntitiesFromAsset501 = 0x80024DC4; // size:0x304 // Load 24-byte entity defs to GameState+0x28
+AddPreInitEntitiesToList = 0x800250C8; // size:0x178 // Pre-init entities to ctx+0x1C
+
+// Entity System - Player/Checkpoint
+SpawnPlayerAndEntities = 0x8007DF38; // size:0xAF4 // Creates player/camera/HUD entities
+SaveCheckpointState = 0x8007EAAC; // size:0x40 // Saves tick list to +0x134, set checkpoint flags
+RestoreCheckpointEntities = 0x8007EAEC; // size:0x198 // Restore entities from checkpoint
+
+// Entity System - Type Dispatch
+RemapEntityTypesForLevel = 0x8008150C; // size:0x978 // Converts BLB types → internal types (0-0x78)
+
+// Entity System - Global Data
+g_EntityTypeCallbackTable = 0x8009D5F8; // type:EntityTypeEntry[121] // 121 entries × 8 bytes (flags, callback)
+g_GameStateBase = 0x8009DC40; // type:GameState // Main game state structure

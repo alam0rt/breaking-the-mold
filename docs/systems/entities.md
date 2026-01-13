@@ -255,13 +255,52 @@ void EntityTickLoop(GameState* state) {
 | `InitBossEntity` | 0x80047fb8 | Boss setup |
 | `InitPlayerSpriteAvailability` | 0x80059a70 | Check 7 player sprites |
 
-## LevelDataContext Entity Offsets
+## Entity Data Locations
 
-| Offset | Description |
-|--------|-------------|
-| +0x38 (ctx[14]) | Asset 501 pointer (entity data) |
-| +0x1C (ctx[7]) | Active entity linked list head |
-| +0x28 (ctx[10]) | Entity definition list |
+### LevelDataContext (GameState+0x84)
+
+| Offset | Field | Description |
+|--------|-------|-------------|
+| +0x38 (ctx[14]) | entityData | Asset 501 pointer (24-byte entity definitions) |
+
+### GameState Entity Lists
+
+| Offset | Field | Description |
+|--------|-------|-------------|
+| +0x1C | tickListHead | Entity tick list (z-sorted, iterated by EntityTickLoop) |
+| +0x20 | renderListHead | Entity render list (z-sorted, iterated by RenderEntities) |
+| +0x24 | updateQueueHead | Collision/update queue list |
+| +0x28 | entityDefListHead | Entity definition pool (raw defs from Asset 501) |
+| +0x2C | playerEntityAlt | Player entity (alternate reference) |
+| +0x30 | playerEntity | Main player entity pointer |
+
+## Entity Type Callback Table
+
+The game uses a static callback table at `0x8009d5f8` to dispatch entity initialization/behavior
+by type. This table is populated during `RemapEntityTypesForLevel` and stored at `GameState+0x7c`.
+
+**Table Structure**: 121 entries (types 0-0x78), 8 bytes each:
+```c
+struct EntityTypeEntry {
+    u32 flags;         // State flags (often 0xFFFF0000)
+    void* callback;    // Init/tick callback function pointer
+};
+```
+
+**Address**: `g_EntityTypeCallbackTable` @ `0x8009d5f8`
+
+**Example entries** (from ROM):
+| Type | Flags | Callback | Description |
+|------|-------|----------|-------------|
+| 0 | 0xFFFF0000 | 0x8007efd0 | Default/unused |
+| 1 | 0xFFFF0000 | 0x8007f730 | Type 1 handler |
+| 2 | 0xFFFF0000 | 0x80080328 | Type 2 handler |
+| ... | ... | ... | ... |
+
+**Loading flow**:
+1. `RemapEntityTypesForLevel` @ 0x8008150c converts BLB entity types → internal types (0-0x78)
+2. Internal type indexes into the callback table
+3. Callback initializes entity behavior
 
 ## Sprite ID Lookup
 

@@ -154,6 +154,7 @@ Known runtime addresses (verified via MCP for PAL version SLES-01090):
 - BLB header: `0x800AE3E0` (loaded after game starts)
 - GameState: `0x8009DC40` (main game state structure)
 - LevelDataContext: `0x8009DCC4` (GameState + 0x84, level loading state)
+- Entity Type Callback Table: `0x8009D5F8` (121 entries × 8 bytes)
 - Level count: `0x800AF311` (offset 0xF31 in header, value=26)
 - Movie count: `0x800AF312` (offset 0xF32 in header, value=13)
 - Game mode: `0x800AF316` (offset 0xF36, 3=level, 6=special)
@@ -161,11 +162,17 @@ Known runtime addresses (verified via MCP for PAL version SLES-01090):
 - g_GameBLBFile: `0x8009B4B4` (CdlFILE structure)
 - g_GameBLBSector: `0x800A59F0` (starting sector, typically 0x146=326)
 
+**GameState Entity Lists (from 0x8009DC40):**
+- `+0x1C`: Entity tick list head (z-sorted, iterated by EntityTickLoop)
+- `+0x20`: Entity render list head (z-sorted, iterated by RenderEntities)
+- `+0x24`: Entity collision/update queue head
+- `+0x28`: Entity definition pool (raw 24-byte defs from Asset 501)
+- `+0x2C`: Player entity (alternate reference)
+- `+0x30`: Main player entity pointer
+- `+0x7C`: Entity type callback table pointer (→ 0x8009D5F8)
+
 **LevelDataContext Offsets (from 0x8009DCC4):**
-- `+0x1C`: Active entity linked list head
-- `+0x28`: Entity definition list (loaded from Asset 501)
-- `+0x2C`: Entity data pointer (Asset 500) → typically `0x8014xxxx`
-- `+0x38`: Secondary entity pointer
+- `+0x38` (ctx[14]): Asset 501 pointer (24-byte entity definitions)
 
 ### Finding Level/Entity Data in RAM
 
@@ -219,9 +226,13 @@ for i in range(len(data) - 24):
 - Pixel position = tile position × 16 (e.g., tile 505 = pixel 8080)
 
 **Key Entity Functions in Ghidra:**
-- `EntityTickLoop` (0x80020e1c): Iterates active entities, calls update functions
-- `FUN_80024dc4`: Loads 24-byte entity defs from Asset 501 into linked list
-- `FUN_800250c8`: Adds pre-init entities to active list
+- `EntityTickLoop` (0x80020e1c): Iterates +0x1C list, calls update functions
+- `LoadEntitiesFromAsset501` (0x80024dc4): Loads 24-byte entity defs to GameState+0x28
+- `RemapEntityTypesForLevel` (0x8008150c): Converts BLB types → internal types (0-0x78)
+- `SpawnPlayerAndEntities` (0x8007df38): Creates player/camera/HUD entities
+- `SaveCheckpointState` (0x8007eaac): Saves +0x1C list to +0x134 for respawn
+- `CheckEntityCollision` (0x800226f8): Collision detection via +0x24 list
+- `UpdateCameraPosition` (0x80023dbc): Camera scroll based on player at +0x30
 - `InitEntity_*` functions: Type-specific entity initialization (91 functions, hardcoded sprite IDs)
 
 ### Asset Type → LevelDataContext Mapping (Verified via Ghidra)
