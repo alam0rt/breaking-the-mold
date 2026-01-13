@@ -31,6 +31,7 @@ Game engine subsystems and runtime behavior:
 | [entities.md](systems/entities.md) | Entity system and spawn data |
 | [entity-identification.md](systems/entity-identification.md) | **Entity type identification guide** |
 | [player-system.md](systems/player-system.md) | **Player mechanics, powerups, death** |
+| [player-physics.md](systems/player-physics.md) | **Player physics constants and movement** |
 | [audio.md](systems/audio.md) | SPU audio sample system |
 | [rendering-order.md](systems/rendering-order.md) | Layer/entity z-ordering and priorities |
 | [level-loading.md](systems/level-loading.md) | Stage loading state machine |
