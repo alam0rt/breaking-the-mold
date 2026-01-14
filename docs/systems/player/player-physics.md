@@ -15,42 +15,47 @@ The player uses 16.16 fixed-point math for smooth sub-pixel movement. Position i
 | 0x6C | u16 | x_frac | X fractional (0-65535) |
 | 0x6E | u16 | y_frac | Y fractional (0-65535) |
 
-Position update formula (from `PlayerCallback_80061180`):
+Position update formula (from `ApplyEntityPositionUpdate` @ 0x80061180):
 ```c
 // Combine whole + frac into 16.16 fixed
 int32 pos_x = (x_whole << 16) | x_frac;
 int32 pos_y = (y_whole << 16) | y_frac;
 
-// Apply velocity (respecting direction flags)
+// Apply push forces (respecting direction flags)
+int32 force_x = push_x;
+int32 force_y = push_y;
+
 if (facing_left) {
-    pos_x -= velocity_x;
-} else {
-    pos_x += velocity_x;
+    force_x = -force_x;  // Negate for left movement
 }
+pos_x += force_x;
 
 if (moving_up) {
-    pos_y -= velocity_y;
-} else {
-    pos_y += velocity_y;
+    force_y = -force_y;  // Negate for upward movement
 }
+pos_y += force_y;
 
-// Split back
+// Split back to whole + frac
 x_whole = pos_x >> 16;
 y_whole = pos_y >> 16;
 x_frac = pos_x & 0xFFFF;
 y_frac = pos_y & 0xFFFF;
+
+// NOTE: push_x and push_y are then cleared by the calling function
 ```
 
-## Velocity Storage
+## Movement System
+
+**CRITICAL: Primary movement uses push forces at +0x160/+0x162, NOT the velocity fields at +0xB4/+0xB8!**
 
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
-| 0x74 | u8 | facing_left | 0=right, 1=left |
-| 0x75 | u8 | moving_up | 0=down, 1=up |
-| 0xB4 | s32 | velocity_x | X velocity (16.16 fixed) |
-| 0xB8 | s32 | velocity_y | Y velocity (16.16 fixed) |
-| 0x160 | s16 | push_x | External X push force |
-| 0x162 | s16 | push_y | External Y push force |
+| 0x74 | u8 | facing_left | Direction flag: 0=right, 1=left (negates push_x) |
+| 0x75 | u8 | moving_up | Direction flag: 0=down, 1=up (negates push_y) |
+| 0x160 | s16 | push_x | **Primary X movement force** (pixels per frame) |
+| 0x162 | s16 | push_y | **Primary Y movement force** (pixels per frame) |
+| 0xB4 | s32 | unknown_vx | Physics state (NOT used for position updates) |
+| 0xB8 | s32 | unknown_vy | Physics state (NOT used for position updates) |
 
 ## Player Dimensions
 
@@ -99,9 +104,32 @@ Floor detection checks at:
 - Y + 2 - just below feet
 - Y + 16 (0x10) - one tile below
 
-## Physics Constants (TO BE VERIFIED)
+## Movement Speeds (Measured from Gameplay Traces)
 
-These are **estimated values** based on typical PSX platformers. Actual values need extraction via PCSX-Redux tracing.
+**Source:** PHRO Stage 1 gameplay analysis - 949 velocity samples over 4235 frames  
+**Method:** Position delta / frame delta between samples (4-frame intervals)  
+**Trace:** `trace_20260114_214044_unknown_stage0_f0.jsonl`
+
+| Player State | Avg Speed (px/frame) | Max H Speed | Min Vy | Max Vy | Sample Count |
+|--------------|----------------------|-------------|--------|--------|--------------|
+| IdleBlink | 2.91 | 3.25 | 0.0 | 7.0 | 114 |
+| IdleLook | 2.27 | 3.25 | -6.5 | 8.0 | 693 |
+| PlayerTickCallback (0x8005B414) | 0.61 | 3.0 | -0.25 | 6.25 | 42 |
+| Idle | 0.25 | 1.75 | 0.0 | 4.0 | 16 |
+| Cutscene (0x8001CB88) | 0.82 | 65.82 | -3.0 | 69.7 | 82 |
+
+**Key Findings:**
+- Idle animation states (IdleBlink, IdleLook) show most movement due to breathing/looking animations
+- Vertical speeds range from -6.5 (rising) to +8.0 (falling) px/frame
+- Horizontal speeds typically 2-3 px/frame during normal gameplay
+- Cutscene state shows extreme velocities (65+ px/frame) for teleportation effects
+- Push forces at +0x160/+0x162 are applied then cleared each frame (sample as 0)
+
+## Physics Constants (TO BE VERIFIED via Direct Memory Reading)
+
+These values need extraction via PCSX-Redux memory inspection during active movement states.
+The push_x/push_y fields are cleared after application, so constants must be read from the
+input handler or state-specific movement code.
 
 ### Movement (Estimated)
 
@@ -110,9 +138,9 @@ These are **estimated values** based on typical PSX platformers. Actual values n
 | Walk Speed | 2.0 px/frame | 0x20000 | Horizontal ground movement |
 | Run Speed | 3.0 px/frame | 0x30000 | If run button held |
 | Air Control | 1.5 px/frame | 0x18000 | Horizontal in air |
-| Jump Velocity | -8.0 px/frame | -0x80000 | Initial upward |
+| Jump Velocity | -8.0 px/frame | -0x80000 | Initial upward (matches max_vy) |
 | Gravity | 0.5 px/frame² | 0x8000 | Downward accel |
-| Max Fall Speed | 8.0 px/frame | 0x80000 | Terminal velocity |
+| Max Fall Speed | 8.0 px/frame | 0x80000 | Terminal velocity (matches observed) |
 
 ### Scale Values
 

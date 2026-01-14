@@ -392,6 +392,27 @@ State table at 0x800a5d20:
 - Sets velocity: 0x30000 (if bit match), else 0x20000, OR'd with 0x8000
 - **WARNING**: This state may cause segfaults on rapid pickups due to SetEntitySpriteId spam
 - Observed: Frame 521 (Klayman head?), 1183 (clayball), 1243 (crash)
+- **Frequency**: 37 transitions in PHRO Stage 1 trace (frequent item collection)
+
+**Checkpoint Activation (Ma-Bird)** @ 0x8006A214 (`PlayerState_CheckpointActivated`)
+- **Purpose**: Activates checkpoint save and teleports player to exit
+- **Sequence** (verified from trace frame 3810-4124):
+  1. Player collides with Ma-Bird checkpoint entity at position (6739, 667)
+  2. Transitions to this state (frame 3810)
+  3. Calls `StopCDStreaming()` to pause audio
+  4. Clears all entity callbacks except `EntityUpdateCallback`
+  5. Freezes player in cutscene state (0x8001CB88) for ~160 frames
+  6. Triggers `LevelLoad` event (frame 3969) - reloads same level
+  7. Calls `SaveCheckpointState` @ 0x8007EAAC to save entity list
+  8. Teleports player to checkpoint exit point (632, 927)
+  9. Returns to normal gameplay in IdleLook state (frame 4216)
+- **NOT a death/respawn** - this is the checkpoint save + exit teleport sequence
+- **Fields modified**:
+  - +0x1B2: Set to 1 (checkpoint active flag)
+  - +0x5A: Checkpoint entity reference (gets +0x2C set to 1)
+  - +0x4A, +0x43, +0x44: Cleared
+- Related: `RestoreCheckpointEntities` @ 0x8007EAEC (called on death to respawn)
+- Observed: Frame 3810 (single checkpoint activation in PHRO Stage 1)
 
 ### State Transition Flow (from trace)
 
