@@ -180,6 +180,86 @@ void UpdateCameraPosition(GameState* state) {
 }
 ```
 
+### Rendering Pipeline @ 0x80020e80
+
+Renders all entities and handles background color updates:
+
+```c
+void RenderEntities(GameState* state) {
+    // Update background color if requested
+    if (state[0x130] != 0) {
+        u8 r = state[0x131];
+        u8 g = state[0x132];
+        u8 b = state[0x133];
+        
+        // Double-buffered write
+        blbHeaderBufferBase[0x1d] = r;    // FB1 red
+        blbHeaderBufferBase[0x1e] = g;    // FB1 green
+        blbHeaderBufferBase[0x1f] = b;    // FB1 blue
+        blbHeaderBufferBase[0x505d] = r;  // FB2 red
+        blbHeaderBufferBase[0x505e] = g;  // FB2 green
+        blbHeaderBufferBase[0x505f] = b;  // FB2 blue
+        
+        state[0x130] = 0;  // Clear flag
+    }
+    
+    // Empty iteration over tick list (+0x1C) - optimization artifact?
+    
+    // Render loop over z-sorted render list (+0x20)
+    for (node = state[0x20]; node != NULL; node = node->next) {
+        Entity* entity = node[1];
+        void* vtable = entity[0xC];
+        code* render_func = *(vtable + 0xC);
+        short offset = *(vtable + 8);
+        
+        (*render_func)(entity + offset);
+    }
+}
+```
+
+**Background Color Format:**
+- Offset 0x1d/5e/5f: RGB bytes (0-255)
+- Two copies for double-buffering (0x5040 byte stride)
+- Updated when state[0x130] flag set (collision events, triggers)
+
+**Render List:**
+- Z-sorted during insertion (AddEntityToSortedRenderList @ 0x800213a8)
+- Each entity has method table (vtable) at entity+0xC
+- Render callback at vtable+0xC with adjusted pointer (entity+offset)
+
+## Complete Game Loop Reference
+
+Full main loop with all discovered functions:
+
+| Order | Function | Address | Purpose |
+|-------|----------|---------|---------|
+| 1 | TickCDStreamBuffer | 0x8007ccb8 | CD streaming (every 4 frames) |
+| 2 | PadRead | PSY-Q | Read controller ports |
+| 3 | UpdateInputState | 0x800259d4 | Process P1/P2 input |
+| 4 | GameModeCallback | 0x8007e654 | Level coordinator |
+| 4a | └─ SpawnEntitiesAlternateSystem | 0x80081d0c | Spawn from 128-byte array |
+| 4b | └─ SpawnOnScreenEntities | 0x80024288 | Spawn from Asset 501 |
+| 4c | └─ EntityTickLoop | 0x80020b34 | Update entity callbacks |
+| 5 | WaitForVBlankIfNeeded | 0x8001352c | Conditional VSync |
+| 6 | RenderEntities | 0x80020e80 | Entity rendering |
+| 7 | DrawSync | PSY-Q | Wait for GPU |
+| 8 | [Layer Render Callback] | via GameState+0xC | Tile layer rendering |
+| 9 | DrawSync | PSY-Q | Wait for GPU again |
+| 10 | VSync timing | PSY-Q | Optional 2-frame wait |
+| 11 | ProcessDebugMenuInput | 0x80082c10 | Debug level select |
+| 12 | FlushDebugFontAndEndFrame | 0x80013500 | Finalize frame |
+
+**Frame Timing Modes:**
+- Normal: VSync locks to 60 FPS (NTSC) or 50 FPS (PAL)
+- Flag 0x06 set: Wait 2 vblanks (30 FPS mode)
+- g_SkipVSync: Run unlocked (benchmarking/loading)
+
+**CD Streaming:**
+- ProcessCDStreamState @ 0x80038ef0 handles async CD reads
+- State machine with retry logic (max 6 retries)
+- Sector table at 0x8009b3d8, CdlLOC params at 0x8009b43c
+- Enables audio/FMV streaming without blocking gameplay
+
 ## Asset 501 - Entity Placement Data
 
 24-byte structures loaded from tertiary segment.
