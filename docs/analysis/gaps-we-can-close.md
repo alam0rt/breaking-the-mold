@@ -436,24 +436,26 @@ From player-physics.md:
 
 ## Metrics
 
-### Functions Analyzed This Session
+### Functions Analyzed This Session (2026-01-15)
 - Animation framework: 15+ functions documented
-- Named/renamed: 4 functions (AdvanceAnimationFrame, StartAnimationSequence, StepAnimationSequence, ApplyAnimationPositionOffsets)
-- Pending rename: 8 animation setters
+- Collision system: 8+ functions documented
+- **Named/renamed: 20 functions total** (12 animation, 8 collision)
+  * Animation: AllocateSpriteContext, SetAnimation* (7 setters), AdvanceAnimationFrame, StartAnimationSequence, StepAnimationSequence, ApplyAnimationPositionOffsets
+  * Collision: PlayerProcessTileCollision, CheckEntityCollision, GetTileAttributeAtPosition, CheckTriggerZoneCollision, InitTileAttributeState, SetSpawnZoneGroup1, SetSpawnZoneGroup2, HandleGenericTriggerZone
 
 ### Remaining Unknown Functions
-- Total: 242 FUN_ functions (15%)
-- Animation: 8 (can close today)
-- Collision: ~15 (high priority)
+- **Total: 225 FUN_ functions (14%)** - Down from 242 (15%)
+- Animation: 0 immediate unknowns ✅
+- Collision: ~7 (slopes, physics response)
 - Physics: ~10 (need verification)
 - Audio: ~20 (medium priority)
 - Entity AI: ~150+ (long-term)
-- Other: ~40 (misc)
+- Other: ~38 (misc)
 
-### Documentation Coverage
+### Documentation Coverage (2026-01-15)
 - BLB Format: 95% complete
-- Animation System: 95% complete (was 0%)
-- Collision System: 40% complete
+- **Animation System: 95% complete** ✅ (was 0% at session start)
+- **Collision System: 90% complete** ✅ (was 40%)
 - Physics Constants: 50% complete (estimated values)
 - Entity System: 70% complete
 - Audio System: 30% complete
@@ -463,11 +465,27 @@ From player-physics.md:
 
 ## Recommended Next Actions
 
-### Today (Immediate)
+### Today (Immediate) ✅ COMPLETE
 1. ✅ Rename 8 animation setter functions
 2. ✅ Add plate comments with flag values
-3. 🔄 Decompile GetTileAttributeAtPosition
-4. 🔄 Decompile CheckEntityCollision
+3. ✅ Decompile GetTileAttributeAtPosition
+4. ✅ Decompile CheckEntityCollision
+5. ✅ Decompile PlayerProcessTileCollision
+6. ✅ Map tile attributes from switch statement (30+ values)
+7. ✅ Rename 8 collision helper functions
+8. ✅ Create comprehensive collision reference doc
+
+### This Week (2-3 hours remaining)
+1. Extract physics constants from player state functions
+2. Build sound ID table from grep results
+3. Document entity lifecycle patterns
+4. Map remaining slope collision values
+
+### This Month (10-15 hours)
+1. Per-entity AI deep dives (top 10 enemies)
+2. Boss behavior documentation
+3. Complete audio system reference
+4. Level-specific mechanics (FINN vehicle, RUNN scrolling, etc.)
 5. 🔄 Extract physics constants from player states
 
 ### This Week
