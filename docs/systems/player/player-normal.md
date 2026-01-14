@@ -304,9 +304,42 @@ State table at 0x800a5d20:
 | 2 | 0x8006864c | Normal/idle |
 | 3 | 0x8006ae0c | Unknown |
 
+### Verified Player States (from gameplay trace)
+
+**Standing Idle** @ 0x8006888C (`PlayerState_StandingIdle`)
+- Entered when: No input or velocity stops
+- Sprite: 0x1c395196 (if +0xCC == 0x388110), else 0x3838801a
+- Movement callback: PlayerCallback_8006120c (or 80061934 if shrunk)
+- Next state: PlayerStateCallback_0
+
+**Walking** @ 0x800674CC (`PlayerState_WalkingLeft`)
+- Entered when: Horizontal input detected from idle
+- Sprite: 0x18298210 (walking animation)
+- Movement callback: PlayerCallback_800638d0 (or 80062ad4 if shrunk)
+- Next state: PlayerStateCallback_0
+- Clears +0x156 field
+
+**Running** @ 0x8006762C (`PlayerState_Running`)
+- Entered when: Sustained horizontal input from walking
+- Sprite: 0x292e8480 (running animation)
+- Movement callback: PlayerCallback_800638d0 (same as walk)
+- Next state: Callback_800678d4 (DIFFERENT from walk - may be falling/jump)
+- Clears +0x156 field
+- Calls FUN_8001d0c0(entity, 1)
+
+**Pickup Item** @ 0x80068B48 (`PlayerState_PickupItem`)
+- Entered when: Collision with clayball or collectible
+- Sprite: 0x1c3aa013 (pickup animation)
+- Tick callback: PlayerCallback_8005bbac (SPECIAL - not normal tick!)
+- Movement callback: PlayerCallback_80064b40 (or 80064008 if shrunk)
+- Next state: EntityInitCallback_80069600
+- Sets g_GameStatePtr[0x60] = 1 (pickup flag)
+- Sets velocity: 0x30000 or 0x20000 OR'd with 0x8000
+- **WARNING**: This state may cause segfaults on rapid pickups due to SetEntitySpriteId spam
+
 States referenced in tick:
 - 0x80069ef4: Death state (skip collision)
-- 0x800678d4: Water/swimming
+- 0x800678d4: Water/swimming (or post-running transition)
 - 0x80067e28: Jumping/airborne
 
 ## Spawn Position

@@ -369,7 +369,7 @@ lint-lua:
 	@luacheck scripts/*.lua --globals PCSX bit mem --no-max-line-length --no-unused-args --codes || true
 
 # Check Lua syntax (fast check without full analysis)
-check-lua:
+check-lua: lint-lua
 	@echo "Checking Lua syntax..."
 	@for f in scripts/*.lua; do \
 		luac -p "$$f" || exit 1; \

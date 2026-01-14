@@ -200,6 +200,47 @@ Ground check looks at Y+2 for solid tiles (attribute in range 0x01-0x3B):
 | 0x80066ce0 | PlayerStateCallback_0 | Idle state entry |
 | 0x80067e28 | Callback_80067e28 | Jump state entry |
 
+## Animation System (Verified from Trace)
+
+### Animation Frame Data
+
+Animation tracked at entity offsets:
+- `anim_frame` - Current frame in sequence
+- `anim_end` - Last frame index (e.g., 7 for 8-frame walk)
+- `anim_timer` - Countdown timer (decrements each tick)
+- `anim_speed` - Timer reset value (e.g., 5 = 5 frames per anim frame)
+
+### Walk/Run Animation Pattern
+
+From trace at frames 435-467:
+```
+Frame 435: anim[1], timer=8, speed=5, end=7  (start walking)
+Frame 439: anim[2], timer=8, speed=5, end=7  (+4 frames later)
+Frame 443: anim[3], timer=8, speed=5, end=7
+Frame 447: anim[4], timer=8, speed=5, end=7
+Frame 451: anim[5], timer=8, speed=5, end=7
+Frame 455: anim[6], timer=8, speed=5, end=7
+Frame 459: anim[7], timer=8, speed=5, end=7  (reached end)
+Frame 463: anim[5], timer=8, speed=5, end=7  (loops back to 5!)
+Frame 467: anim[6], timer=8, speed=5, end=7
+```
+
+**Observations**:
+- Animation advances every 4 game frames (at 60fps = 15fps animation)
+- 8-frame walk cycle (frames 0-7)
+- After reaching frame 7, loops back to frame 5 (not frame 0!)
+- This creates a smooth 5→6→7→5→6→7 loop for sustained walking
+
+### Animation Speed Values
+
+| Speed | Game Frames | Real Time @ 60fps |
+|-------|-------------|-------------------|
+| 5 | ~4-5 frames | ~67-83ms |
+| 8 | ~7-8 frames | ~117-133ms |
+| 3 | ~2-3 frames | ~33-50ms |
+
+Speed value appears to control timer reset, affecting frame advance rate.
+
 ## Godot Implementation Notes
 
 ### Basic Player Pseudocode
