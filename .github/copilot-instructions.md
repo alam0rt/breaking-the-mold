@@ -297,3 +297,137 @@ The `LoadAssetContainer` function (0x8007b074) maps asset types to context array
 The developer has Ghidra installed, so they can use the provided script to generate the initial splat configuration from the binary.
 
 The developer also has PCSX-Redux installed and can be used to test the built binary.
+
+## Reverse Engineering Technique: Runtime Tracing with game_watcher.lua
+
+### Overview
+The `scripts/game_watcher.lua` script provides comprehensive runtime analysis by hooking into PCSX-Redux's Lua API. This technique captures real gameplay behavior to verify Ghidra decompilation and discover physics constants, state machines, and system interactions.
+
+### Recording Gameplay Traces
+
+**Start a trace session:**
+```bash
+make record LEVEL=1 STAGE=0  # Records SCIE Stage 0
+```
+
+This launches PCSX-Redux with the game watcher loaded, streaming events to `game_watcher/logs/trace_YYYYMMDD_HHMMSS_*.jsonl`.
+
+### What Gets Captured
+
+**State Transitions:**
+- Player state changes (idle → walk → jump → fall → death)
+- Entity state machine transitions
+- Animation frame progression
+
+**Physics Data:**
+- Player velocity (vx, vy) sampled at 15Hz (every 4 frames)
+- Position updates with sub-pixel precision
+- Velocity during jump, fall, walk, run states
+
+**Game Events:**
+- Level loading and BLB asset container access
+- Entity spawning (Asset 501 data)
+- Sprite ID changes (SetEntitySpriteId calls)
+- Collision events (entity-entity, tile attributes)
+- Audio uploads to SPU
+
+**Frame Snapshots:**
+- Complete game state every 300 frames (5 seconds)
+- All active entities with positions, velocities, callbacks
+- Camera position and scroll state
+
+### Analyzing Traces
+
+**Event type summary:**
+```bash
+cat game_watcher/logs/trace_*.jsonl | jq -s 'group_by(.type) | map({type: .[0].type, count: length})'
+```
+
+**Extract player state transitions:**
+```bash
+cat game_watcher/logs/trace_*.jsonl | jq -c 'select(.type == "PlayerStateChange")'
+```
+
+**Extract velocity samples:**
+```bash
+cat game_watcher/logs/trace_*.jsonl | jq -c 'select(.type == "PlayerVelocity")'
+```
+
+### Trace → Ghidra → Documentation Workflow
+
+1. **Record gameplay** showing the behavior you want to understand (jump, enemy collision, item pickup)
+
+2. **Analyze trace** to find callback addresses:
+   ```bash
+   jq '.data.callback' trace.jsonl | sort -u
+   ```
+
+3. **Look up functions in Ghidra** using MCP tools:
+   ```
+   Use mcp_ghidra_functions_get with the callback address
+   Use mcp_ghidra_functions_decompile to see the code
+   ```
+
+4. **Rename and document** in Ghidra:
+   ```
+   Use mcp_ghidra_functions_rename to give it a descriptive name
+   Use mcp_ghidra_functions_set_comment to add detailed plate comments
+   ```
+
+5. **Document in markdown** with verified addresses, sprite IDs, and transition flows
+   - `docs/systems/player/` - Player state machine, physics, animations
+   - `docs/systems/` - Other game systems (collision, rendering, etc.)
+
+6. **Extract constants** from velocity samples:
+   ```bash
+   # Get all jump velocities
+   jq 'select(.type == "PlayerVelocity" and .data.state == "PlayerState_Jump") | .data.vy' trace.jsonl
+   
+   # Get walk speeds
+   jq 'select(.type == "PlayerVelocity" and .data.state == "PlayerState_WalkingRight") | .data.vx' trace.jsonl
+   ```
+
+### Configuration Options
+
+Edit `scripts/game_watcher.lua` CONFIG section:
+
+**Sampling rates:**
+- `sample_every_n_frames = 300` - Full state dump frequency
+- `sample_velocity_every_n_frames = 4` - Velocity logging (15Hz)
+
+**Event filtering:**
+- `watch_player = true` - Track player state/movement
+- `watch_animation = true` - Sprite/animation changes
+- `watch_collision = false` - Tile/entity collision (verbose!)
+- `watch_blb_access = true` - Asset loading
+
+**Throttling (prevents crashes):**
+- Handlers use frame-based throttling to prevent overwhelming emulator
+- `SPRITE_THROTTLE_FRAMES = 5` - Skip redundant sprite changes
+- `COLLISION_THROTTLE_FRAMES = 3` - Skip redundant collision checks
+
+**Boot override:**
+- `boot_level_override = {level=1, stage=0}` - Skip intro, load specific level
+
+### Example: Discovering Player Jump Physics
+
+1. **Record**: `make record LEVEL=1 STAGE=0`, jump 3 times, quit
+2. **Find jump state**: `jq 'select(.type == "PlayerStateChange" and .data.callback == "0x80067E28")' trace.jsonl`
+3. **Get jump velocities**: `jq 'select(.type == "PlayerVelocity" and .data.state == "PlayerState_Jump") | {frame, vy: .data.vy, vy_float: .data.vy_float}' trace.jsonl`
+4. **Calculate**: Initial jump velocity = first vy_float value (e.g., -8.5 px/frame)
+5. **Document**: Add to `docs/systems/player/player-physics.md` with "Verified via trace" note
+
+### Trace Analysis Documents
+
+After recording, analysis should be documented in:
+- `docs/systems/player/trace-findings.md` - Detailed trace analysis with event sequences
+- `docs/systems/player/player-normal.md` - Verified state machine with addresses and transitions
+- `docs/systems/player/player-physics.md` - Physics constants with actual measured values
+
+### Best Practices
+
+- **Record short, focused sessions** (10-20 seconds) showing specific behaviors
+- **Isolate variables**: Test one thing at a time (only jump, only walk, only collision)
+- **Verify in Ghidra**: Cross-reference callback addresses with decompiled code
+- **Document immediately**: Update docs while trace is fresh
+- **Use multiple traces**: Verify consistency across multiple gameplay sessions
