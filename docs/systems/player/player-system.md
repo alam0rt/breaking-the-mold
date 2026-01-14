@@ -14,12 +14,17 @@ The global player state is at `g_pPlayerState` (0x8009DC20). This structure pers
 | 0x06-0x0F | u8[10] | clayball_flags | Per-stage clayball collection flags |
 | 0x10 | u8 | level_complete | Level complete flag |
 | 0x11 | u8 | lives | Current lives (default: 5) |
-| 0x12 | u8 | unknown_12 | |
-| 0x13 | u8 | unknown_13 | |
-| 0x14-0x16 | u8[3] | unknown | |
+| 0x12 | u8 | orb_count | Clay/orb count (100 → 1up) |
+| 0x13 | u8 | checkpoint_count | Swirl/checkpoint count (3 → bonus room) |
+| 0x14 | u8 | phoenix_hands | Bird powerup count (max 7) |
+| 0x15 | u8 | phart_heads | Head powerup count (max 7) |
+| 0x16 | u8 | universe_enemas | Fart Clone powerup count (max 7) |
 | 0x17 | u8 | **powerup_flags** | Active powerup bitmask |
 | 0x18 | u8 | **shrink_mode** | Player is shrunk (mini mode) |
-| 0x19-0x1C | u8[4] | unknown | |
+| 0x19 | u8 | icon_1970_count | "1970" icon count (max 3) |
+| 0x1A | u8 | green_bullets | Energy Ball count (max 3) |
+| 0x1B | u8 | unknown_1b | |
+| 0x1C | u8 | super_willies | Super Power count (max 7) |
 | 0x1D | u8 | unknown_1d | Cleared on death |
 
 ### Powerup Flags (offset 0x17)
@@ -217,17 +222,19 @@ Collision uses **type masks** for filtering:
 ### Collision Callbacks
 
 When collision detected:
-1. Check bounding box overlap (`FUN_8001b3f0`)
+1. Check bounding box overlap (`CheckBBoxOverlap` @ 0x8001b3f0)
 2. Invoke target entity's state callback
 3. Pass message type (e.g., 0x1000 = COLLECTED)
 
 ### Clayball Collection
 
 When player touches clayball (type 2):
-1. Clayball tick calls `FUN_8001b47c(clayball, 2, 0x1000, 1)`
+1. Clayball tick calls `CollisionCheckWrapper` @ 0x8001b47c(clayball, 2, 0x1000, 1)
 2. `CheckEntityCollision` special case: check player at GameState+0x2c
 3. On hit: Clear collision flag, notify GameState (message 3)
 4. Clayball disappears, score increments
+
+> See [Items Reference](../../reference/items.md#clay-clayball) for complete collection system documentation.
 
 ### Enemy Damage
 

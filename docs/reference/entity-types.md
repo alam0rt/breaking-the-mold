@@ -284,20 +284,20 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        CLAYBALL TICK (FUN_80056518)                     │
+│                   CLAYBALL TICK (ClayballTickCallback)                  │
 │                                                                         │
 │  1. Check entity+0x110 flag:                                            │
-│     - If set: Call FUN_8001b47c(clayball, 2, 0x1000, 1)                │
-│     - If entity+0x111 set: Call FUN_8001b47c(clayball, 2, 0x1007, val) │
+│     - If set: Call CollisionCheckWrapper(clayball, 2, 0x1000, 1)       │
+│     - If entity+0x111 set: Call CollisionCheckWrapper(clayball, 2, 0x1007, val) │
 │                                                                         │
-│  2. FUN_8001b47c wraps CheckEntityCollision:                           │
+│  2. CollisionCheckWrapper wraps CheckEntityCollision:                  │
 │     - Passes clayball bounding box (entity+0x48/0x4c)                   │
 │     - Type mask = 2 (identifies as clayball)                            │
 │     - Message = 0x1000 or 0x1007                                        │
 │                                                                         │
 │  3. CheckEntityCollision (0x800226f8) special case:                     │
 │     - If type_mask == 2: Check player at GameState+0x2c directly       │
-│     - Uses FUN_8001b3f0 for bounding box overlap test                   │
+│     - Uses CheckBBoxOverlap @ 0x8001b3f0 for bounding box test         │
 │     - If overlap: Invoke player's state callback                        │
 │                                                                         │
 │  4. After collision check returns:                                      │
@@ -313,12 +313,11 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x80056518 | FUN_80056518 | Clayball tick callback |
-| 0x800561d4 | FUN_800561d4 | Clayball init callback |
-| 0x8001b47c | FUN_8001b47c | Collision check wrapper |
+| 0x80056518 | ClayballTickCallback | Clayball tick callback |
+| 0x800561d4 | ClayballInitCallback | Clayball init callback |
+| 0x8001b47c | CollisionCheckWrapper | Collision check wrapper |
 | 0x800226f8 | CheckEntityCollision | Main collision detection |
-| 0x8001b3f0 | FUN_8001b3f0 | Bounding box overlap test |
-| 0x8007e654 | (not created) | GameState callback - handles collect messages |
+| 0x8001b3f0 | CheckBBoxOverlap | Bounding box overlap test |
 
 ### Collision Messages
 
@@ -353,7 +352,8 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 - The collision system uses a special fast path for clayballs (type mask = 2)
 - Instead of iterating the collision queue, it directly checks the player entity
 - This is an optimization since clayballs only ever need to collide with the player
-- The GameState callback at 0x8007e654 needs to be created in Ghidra to trace score increment logic
+- Collection handling occurs via GameState callback mechanism (message 3) which dispatches through GameState+0xC callback table
+- See [Items Reference](items.md) for complete collection system documentation
 
 ## Related Documentation
 

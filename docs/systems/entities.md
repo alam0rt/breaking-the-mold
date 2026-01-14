@@ -16,7 +16,7 @@ The entity system has three key aspects:
 ## Game Loop Integration
 
 Entities are managed through a frame-based game loop executed in `main` @ 0x800828b0.
-
+a
 ### Mode System Architecture
 
 **Important**: There is **only ONE mode callback** (`GameModeCallback @ 0x8007e654`), not multiple mode-specific callbacks. The "mode" concept refers to three different systems:
@@ -702,14 +702,14 @@ Collision detection is handled via the entity update queue at `GameState+0x24`.
 | Function | Address | Purpose |
 |----------|---------|---------|
 | `CheckEntityCollision` | 0x800226f8 | Main collision check |
-| `FUN_8001b47c` | 0x8001b47c | Collision check wrapper |
-| `FUN_8001b3f0` | 0x8001b3f0 | Bounding box overlap test |
+| `CollisionCheckWrapper` | 0x8001b47c | Collision check wrapper |
+| `CheckBBoxOverlap` | 0x8001b3f0 | Bounding box overlap test |
 
 ### Collision Flow
 
 ```
-1. Entity tick calls FUN_8001b47c(entity, type_mask, message, data)
-2. FUN_8001b47c wraps CheckEntityCollision with entity's bbox
+1. Entity tick calls CollisionCheckWrapper(entity, type_mask, message, data)
+2. CollisionCheckWrapper wraps CheckEntityCollision with entity's bbox
 3. CheckEntityCollision:
    - type_mask == 2: Fast path - check player at GameState+0x2c directly
    - Other: Iterate GameState+0x24 queue for matching entities

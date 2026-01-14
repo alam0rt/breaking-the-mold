@@ -42,6 +42,9 @@ Technical reference material:
 
 | Document | Description |
 |----------|-------------|
+| [items.md](reference/items.md) | **Complete item/powerup reference with verified addresses** |
+| [entity-types.md](reference/entity-types.md) | **Entity callback table (121 types) and type mappings** |
+| [cheat-codes.md](reference/cheat-codes.md) | **All 22 cheat codes with button sequences** |
 | [level-data-context.md](reference/level-data-context.md) | LevelDataContext structure (128 bytes) |
 | [game-functions.md](reference/game-functions.md) | Key function addresses and purposes |
 | [pal-jp-comparison.md](reference/pal-jp-comparison.md) | Regional version differences |

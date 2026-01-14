@@ -1110,7 +1110,7 @@ The game includes a complete pause system with audio muting, entity backup, and 
      * Lives count (from g_pPlayerState[0x11])
      * Orb count (from g_pPlayerState[0x12])
      * Checkpoint count (from g_pPlayerState[0x13])
-     * Blue orbs × 3 (from g_pPlayerState[0x19])
+     * "1970" icons × 3 (from g_pPlayerState[0x19])
      * Green orbs × 3 (from g_pPlayerState[0x1A])
      * 7 powerup icons (from g_pPlayerState[0x14-0x16, 0x1C])
 
@@ -1158,7 +1158,7 @@ The pause menu entity (state+0x14C) contains 30+ HUD element pointers:
 | +0x20 | 3 | Lives icons |
 | +0x2C | 3 | Lives count digits |
 | +0x38 | 3 | Orb icons |
-| +0x44 | 3 | Blue orb icons |
+| +0x44 | 3 | "1970" icon indicators |
 | +0x50 | 3 | Green orb icons |
 | +0x5C | 3 | Powerup icon 1 (type from +0x14) |
 | +0x68 | 4 | Powerup icon 2 (type from +0x15) |
@@ -1199,33 +1199,37 @@ Called by `CheckCheatCodeInput @ 0x800820B4` from GameModeCallback during pause 
 
 ### Cheat Codes
 
-| Index | Effect | Code Requirement |
-|-------|--------|------------------|
-| 0x00 | Toggle debug graphics (g_GameFlags ^= 0x80) | 8-button sequence |
-| 0x02 | Full powerups + 7 lives + 48 orbs | 8-button sequence |
-| 0x03 | Set checkpoint count to 20 | 8-button sequence |
-| 0x04 | Enable invincibility flag | 8-button sequence |
-| 0x05 | Set lives to 99 | 8-button sequence |
-| 0x06 | Unlock powerup slot 3 (7 uses) | 8-button sequence |
-| 0x07 | Unlock powerup slot 1 (7 uses) | 8-button sequence |
-| 0x08 | Unlock powerup slot 4 (7 uses) | 8-button sequence |
-| 0x09 | Unlock powerup slot 2 (7 uses) + reset level unlocks | 8-button sequence |
-| 0x0A | Set green orbs to 3 | 8-button sequence |
-| 0x0B | Set blue orbs to 3 | 8-button sequence |
-| 0x0C | Warp to next stage | 8-button sequence |
-| 0x0D | Warp to stage 99 (menu) | 8-button sequence |
-| 0x0E | Toggle invincibility (g_GameFlags ^= 1) | 8-button sequence |
-| 0x0F | Toggle pause menu visibility | 8-button sequence |
-| 0x10 | Unlock special ability 1 (level-restricted) | 8-button sequence |
-| 0x11 | Unlock special ability 2 (level-restricted) | 8-button sequence |
-| 0x12 | Toggle frame skip (g_GameFlags ^= 2) | 8-button sequence |
-| 0x13 | Set player re-add flag | 8-button sequence |
-| 0x14 | Unlock special ability 3 (level-restricted) | 8-button sequence |
-| 0x15 | Unlock special ability 4 (level-restricted) | 8-button sequence |
+All cheats activated via 8-button sequences during pause menu.
 
-**Level Restrictions (0x10-0x15):**
+| Index | Name | Effect | Implementation |
+|-------|------|--------|----------------|
+| 0x00 | Remove Pause Text & Inventory Screen | Hides pause menu HUD elements | g_GameFlags ^= 0x80 |
+| 0x01 | (Unknown) | - | - |
+| 0x02 | Max Items (most types) | Full powerups + 7 lives + 48 orbs | Sets multiple player state fields |
+| 0x03 | Get all Swirly Q's immediately | Sets orb/checkpoint count to 20 | g_pPlayerState[0x13] = 20 |
+| 0x04 | (Extra Halo?) | Enables invincibility flag | Sets player invincibility |
+| 0x05 | Max Lives | Sets lives to 99 | g_pPlayerState[0x11] = 99 |
+| 0x06 | Max Universe Enemas | Unlocks powerup slot 3 (7 uses) | g_pPlayerState[0x16] = 7 |
+| 0x07 | Max Phoenix Hands | Unlocks powerup slot 1 (7 uses) | g_pPlayerState[0x14] = 7 |
+| 0x08 | Max Super Willies | Unlocks powerup slot 4 (7 uses) | g_pPlayerState[0x1C] = 7 |
+| 0x09 | Max Phart Heads | Unlocks powerup slot 2 (7 uses) + reset flags | g_pPlayerState[0x15] = 7 |
+| 0x0A | Max Green Bullets | Sets green orbs to 3 | g_pPlayerState[0x1A] = 3 |
+| 0x0B | Max 1970s Items | Sets "1970" icons to 3 | g_pPlayerState[0x19] = 3 |
+| 0x0C | Level Skip | Warp to next stage/level | Advances level sequence |
+| 0x0D | (Menu Warp?) | Warp to stage 99 (debug menu) | Sets stage index to 99 |
+| 0x0E | (Invincibility Toggle) | Toggle invincibility | g_GameFlags ^= 1 |
+| 0x0F | (Pause Menu Toggle) | Toggle pause menu visibility | Hides/shows HUD |
+| 0x10 | Tinted Klaymen | Random RGB color effect (rainbow) | Sets entity RGB @ +0x15D-15F |
+| 0x11 | Hazy Klaymen | Special visual effect | Level-restricted ability |
+| 0x12 | Slow/Fast Gameplay | Toggle frame skip/turbo mode | g_GameFlags ^= 2 |
+| 0x13 | (Player Respawn) | Set player re-add flag | Forces player respawn |
+| 0x14 | Mini Klaymen | Player size reduction | Level-restricted ability |
+| 0x15 | Fire Klaymen's Heads | Special attack ability | Level-restricted ability |
+
+**Level Restrictions (0x10, 0x11, 0x14, 0x15):**
 - Only activate if level flags (0x400, 0x200, 0x2000, 0x100, 0x10, 0x04) are ALL clear
-- Prevents use in special levels (bosses, vehicles, etc.)
+- Prevents use in vehicle levels, bosses, and special stages
+- Cheat 0x10 (Tinted Klaymen) calls ApplyRandomRGBEffect @ 0x8005B3D0
 
 ### Cheat Activation
 
@@ -1243,4 +1247,235 @@ When valid pattern detected:
 | 0x02 | 0x12 | Frame skip/turbo mode |
 | 0x40 | 0x00 | Debug graphics |
 | 0x80 | 0x00 | Debug overlay |
+
+---
+
+## Alternate Entity Spawning System
+
+In addition to the Asset 501 spawning system, there's a parallel entity spawning mechanism for animated tiles, particles, and decorative elements.
+
+**Implementation:**
+- SpawnEntitiesAlternateSystem @ 0x80081d0c (main loop)
+- Source data: 128-byte stride array @ GameState+0x164
+- Entity count: GameState+0x168
+- Allocated size: 0x10C bytes per entity
+
+**Spawning Algorithm:**
+```c
+void SpawnEntitiesAlternateSystem(GameState* state) {
+    for (int i = 0; i < state->alt_entity_count; i += 2) {  // Process in pairs
+        u8* source = state->alt_entity_data + (i * 128);
+        
+        // Check if entity should be spawned (screen visibility, etc.)
+        if (!ShouldSpawnEntity(source)) continue;
+        
+        // Check if already spawned
+        if (IsEntityAlreadySpawned(source)) continue;
+        
+        // Allocate and initialize
+        Entity* entity = AllocateFromHeap(blbHeaderBufferBase, 0x10C, 1, 0);
+        InitAlternateEntity(entity, source);
+        
+        // Add to render list
+        AddToRenderList(state, entity);
+    }
+}
+```
+
+### Source Data Structure (128-byte)
+
+| Offset | Type | Field | Description |
+|--------|------|-------|-------------|
+| 0x00 | u32 | entity_type_index | For sprite ID lookup @ 0x8009B144 |
+| 0x04 | u16 | anim_seq_1_id | Animation sequence 1 ID |
+| 0x10 | u16 | width | Entity width in pixels |
+| 0x12 | u16 | height | Entity height in pixels |
+| 0x14 | u32 | custom_field_1 | Copied to entity+0x60 |
+| 0x18 | u32 | custom_field_2 | Copied to entity+0x64 |
+| 0x1C | u16 | frame_count | Animation frame count |
+| 0x20 | u16 | anim_seq_2_id | Animation sequence 2 ID |
+| 0x38 | u32 | comparison_value | For sprite ctx+0x5B flag |
+
+### Entity Initialization Functions
+
+**InitAlternateEntity @ 0x80033d3c:**
+Complete initialization for alternate entity system.
+1. Calls InitFullEntityWithAnimation(entity, 0x44C)
+2. Sets vtable @ entity+0x18 = 0x80010AB8
+3. Stores source pointer @ entity+0x100
+4. Sets flags: +0x00=0xFFFF0000, +0x04=&LAB_8003433c
+5. Allocates sprite render context (via SetupAlternateEntitySpriteContext)
+6. Looks up sprite ID from table @ 0x8009B144 indexed by source[0]
+7. Copies GameState RGB @ +0x124-126 to sprite context
+8. Copies dimensions and custom fields from source
+
+**SetupAlternateEntitySpriteContext @ 0x80033ef4:**
+Allocates and initializes sprite rendering context. Two types based on sprite metadata:
+
+**Type A (vtable 0x80010B00, size 0x60):**
+- Used when sprite metadata == 0x180104 or 0x1498810C
+- Allocates 3 frame buffer arrays (0x34 × frames, 0x34 × frames, 2 × frames)
+- Creates secondary object @ entity+0x104 (0x10 bytes, vtable 0x80010AD8)
+- Calls AddToXPositionList(GameState)
+- Sets entity+0x108 = 1
+
+**Type B (vtable 0x80010AE8, size 0x5C):**
+- Used for other sprite types
+- Allocates 2 frame buffer arrays (no frame index array)
+- No secondary object (entity+0x104 = 0)
+- Sets entity+0x108 = 0
+
+**Both types allocate:**
+- Pixel buffer @ entity+0xB0: width × height bytes (8bpp indexed)
+- Buffer size @ entity+0xD4: width × height
+
+**InitFullEntityWithAnimation @ 0x8001c6c8:**
+Complete entity setup with sprite and animation support.
+- Calls InitEntityStruct(entity, size)
+- Sets vtable @ entity+0x18 = 0x8001044C
+- Clears sprite context @ entity+0x78 (via ClearSpriteContextWrapper)
+- Zeros field @ entity+0x8C (via ZeroEntityField)
+- Initializes animation state
+
+**InitBasicEntityWithVtable @ 0x8001543c:**
+Minimal entity for UI/simple objects (0x10 bytes).
+- Sets vtable @ entity+0x0C = 0x8001039C
+- Stores size parameter @ entity+0x08
+- Zeros position fields
+- Sets enable flag @ entity+0x0A = 1
+
+**InitMenuEntityWithVtable @ 0x80019748:**
+Menu/UI entity initialization (0x16 bytes).
+- Sets vtable @ entity+0x0C = 0x800104AC
+- Zeros 6 u16 fields (positions, velocities, state)
+- Stores parameter @ entity+0x10
+- Sets enable flag @ entity+0x14 = 1
+
+**InitColoredOverlayEntity @ 0x80034894:**
+Colored overlay for menu shadows/fades.
+- Calls InitBasicEntityWithVtable
+- Sets vtable @ entity+0x0C = 0x80010AA8
+- Stores RGBA @ entity+0x40-43
+- Used by ShowPauseMenuHUD with (0x20, 0x20, 0x20, 2, 9000) for dark gray shadow
+
+### Vtable Hierarchy
+
+| Address | Purpose | Used By |
+|---------|---------|---------|
+| 0x80010AB8 | Alternate entity main | entity+0x18 |
+| 0x80010B00 | Type A sprite context | sprite+0x0C |
+| 0x80010AE8 | Type B sprite context | sprite+0x0C |
+| 0x80010AD8 | Secondary object (Type A) | entity+0x104 |
+| 0x8001044C | Full entity with animation | entity+0x18 |
+| 0x8001039C | Basic entity | entity+0x0C |
+| 0x800104AC | Menu entity | entity+0x0C |
+| 0x80010AA8 | Colored overlay | entity+0x0C |
+
+---
+
+## CD Audio Control Integration
+
+The pause system integrates CD-ROM audio control alongside SPU voice muting.
+
+**Functions:**
+- PauseCDAudio @ 0x80038e50 (called during pause)
+- ResumeCDAudio @ 0x80038ea0 (called during unpause)
+
+**Global State:**
+- 0x800A59E8: CD audio enable flag (byte)
+- 0x800A59EA: CD paused state flag (byte)
+
+**PSY-Q Commands:**
+- CdControl(0x09, NULL, NULL) = CdlPause (pause CD audio)
+- CdControl(0x1B, NULL, NULL) = CdlResume (resume CD audio)
+
+**Pause Flow Integration:**
+```c
+void SaveAndMuteAllVoicePitches(GameState* state) {
+    // Save SPU voice pitches (24 voices @ state+0x17C)
+    for (int i = 0; i < 24; i++) {
+        state->saved_voice_pitch[i] = SpuGetVoicePitch(i);
+        SpuSetVoicePitch(i, 0);  // Mute
+    }
+    
+    // Pause CD audio
+    PauseCDAudio();  // @ 0x80038E50
+}
+
+void ResumeAllVoicePitches(GameState* state) {
+    // Restore SPU voice pitches
+    for (int i = 0; i < 24; i++) {
+        SpuSetVoicePitch(i, state->saved_voice_pitch[i]);
+    }
+    
+    // Resume CD audio
+    ResumeCDAudio();  // @ 0x80038EA0
+}
+```
+
+**Notes:**
+- CD commands use PSY-Q libcd.h CdControl function
+- State flags prevent redundant pause/resume commands
+- Paired with SPU voice backup/restore for complete audio pause
+- PauseCDAudio called from SaveAndMuteAllVoicePitches @ 0x8007CB44
+- ResumeCDAudio called from ResumeAllVoicePitches @ 0x8007CBC0
+
+---
+
+## Level Progression System
+
+**AdvanceLevelSequence @ 0x8007a578:**
+Called from GameModeCallback when level is complete (state+0x146 set, g_pPlayerState[0x11] == 0).
+
+**Algorithm:**
+```c
+void AdvanceLevelSequence(LevelDataContext* ctx) {
+    u8 current_index = ctx->blb_header[0xF30];  // Read from BLB header
+    ctx->next_level_index = current_index - 2;   // Decrement by 2
+}
+```
+
+**Memory Layout:**
+- Context+0x5C: Pointer to BLB header
+- BLB header+0xF30: Current level sequence index (byte)
+- Context+0x60: Next level index to load (byte)
+
+**Notes:**
+- Decrement by 2 suggests level pairs or reverse indexing
+- BLB header+0xF30 is the master level progression counter
+- Next level loads based on context+0x60 value
+- Called from GameModeCallback when player completes level
+
+---
+
+## Cheat Code Effects
+
+### Tinted Klaymen (Rainbow Effect)
+
+**ApplyRandomRGBEffect @ 0x8005b3d0:**
+Applies random RGB color to entity sprite (cheat code 0x10 "Tinted Klaymen").
+
+**Algorithm:**
+```c
+void ApplyRandomRGBEffect(Entity* entity) {
+    entity->color_r = rand() & 0xFF;  // +0x15D
+    entity->color_g = rand() & 0xFF;  // +0x15E
+    entity->color_b = rand() & 0xFF;  // +0x15F
+    entity->effect_enabled = 1;       // +0x1AE
+}
+```
+
+**Entity Fields:**
+- +0x15D: Red color component (byte)
+- +0x15E: Green color component (byte)
+- +0x15F: Blue color component (byte)
+- +0x1AE: Effect enabled flag (1 = rainbow mode active)
+
+**Notes:**
+- Called from CheckCheatCodeInput case 0x10
+- Creates rainbow/tinted visual effect on player sprite
+- Rendering code checks +0x1AE to enable color modulation
+- RGB values randomly regenerated each frame for animation effect
+
+
 
