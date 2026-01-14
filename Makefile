@@ -140,7 +140,7 @@ LD_SCRIPT := $(BUILD_DIR)/$(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract expected diff context check tools help
+.PHONY: all clean extract expected diff context check tools help lint lint-lua check-lua lint-fix
 
 # Default target - uses recursive make if ASM files don't exist
 all:
@@ -169,6 +169,10 @@ help:
 	@echo "  check            - Verify build matches original (quick)"
 	@echo "  verify           - Alias for 'check' (for compatibility)"
 	@echo "  clean            - Remove build artifacts"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  lint             - Run all linters (Lua)"
+	@echo "  lint-lua         - Lint Lua scripts with luacheck"
 	@echo ""
 	@echo "Emulator/Debugging:"
 	@echo "  emu              - Launch PCSX-Redux with GDB server"
@@ -356,6 +360,34 @@ clean-build:
 	rm -rf $(BUILD_DIR)
 
 # =============================================================================
+# Code Quality / Linting
+# =============================================================================
+
+# Lint Lua scripts
+lint-lua:
+	@echo "Running luacheck on Lua scripts..."
+	@luacheck scripts/*.lua --globals PCSX bit mem --no-max-line-length --no-unused-args --codes || true
+
+# Check Lua syntax (fast check without full analysis)
+check-lua:
+	@echo "Checking Lua syntax..."
+	@for f in scripts/*.lua; do \
+		luac -p "$$f" || exit 1; \
+	done
+	@echo "✓ All Lua scripts have valid syntax"
+
+# Lint all code
+lint: lint-lua
+	@echo "Linting complete!"
+
+# Fix common Lua issues automatically
+lint-fix:
+	@echo "Auto-fixing Lua scripts not yet implemented (luacheck doesn't auto-fix)"
+	@echo "Please manually fix issues reported by: make lint-lua"
+
+.PHONY: lint lint-lua lint-fix
+
+# =============================================================================
 # Launch PCSX-Redux in debug mode (requires nixGL for OpenGL on non-NixOS)
 # Connect Ghidra debugger to localhost:3333
 # TODO: Use the flake's nixGLIntel wrapper instead of 'nix run' once we figure out
@@ -381,20 +413,38 @@ emu:
 mcp-server:
 	python3 scripts/pcsx_mcp_server.py
 
-# Run game watcher to capture behavior traces
-# Output: /tmp/skullmonkeys_trace.jsonl
-# Usage: make watch
-#        (Play the game, then type dump_log() in Lua console)
-watch:
+# Game Watcher - Record gameplay traces with comprehensive debugging
+# Output: game_watcher/logs/trace_TIMESTAMP_LEVEL_fFRAME.jsonl (auto-saved on exit)
+# Usage: make record [LEVEL=1] [STAGE=0]
+#        make record LEVEL=5 STAGE=1    # Start at MOSS Stage 1
+#        make record LEVEL=SCIE STAGE=0 # Use level ID
+# Commands in Lua console:
+#   status(), entities(), stats()
+#   dump_log(), clear_log()
+#   mark('label'), markers()
+#   load_level(idx, stage), set_boot_override(idx, stage)
+RECORD_LEVEL ?= $(LEVEL)
+RECORD_STAGE ?= $(STAGE)
+
+record: check-lua
 	@echo "Starting PCSX-Redux with game watcher..."
-	@echo "Commands available in Lua console:"
-	@echo "  status()    - Show current player state"
-	@echo "  snapshot()  - Get state as table"
-	@echo "  dump_log()  - Save trace to /tmp/skullmonkeys_trace.jsonl"
-	@echo "  clear_log() - Clear captured log"
-	@echo "  cleanup()   - Remove watchers"
-	@echo ""
+	@mkdir -p game_watcher/logs
+ifdef LEVEL
+	@echo "Boot override: Level $(LEVEL), Stage $(or $(STAGE),0)"
+	@cp scripts/game_watcher.lua /tmp/watcher_override.lua
+	@echo "" >> /tmp/watcher_override.lua
+	@echo "-- Override applied via make record" >> /tmp/watcher_override.lua
+	@echo "CONFIG.boot_level_override = {level=$(LEVEL), stage=$(or $(STAGE),0)}" >> /tmp/watcher_override.lua
+	@echo "reload_watchers()" >> /tmp/watcher_override.lua
+	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile /tmp/watcher_override.lua -run
+else
+	@echo "No level override (normal boot). Use: make record LEVEL=1 STAGE=0"
 	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile scripts/game_watcher.lua -run
+endif
+
+# Legacy alias
+watch: record
+	@echo "Note: 'make watch' is deprecated. Use 'make record' instead."
 
 # Quick RAM snapshot (requires web server enabled in PCSX-Redux)
 # Usage: make snapshot

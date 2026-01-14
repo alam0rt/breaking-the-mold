@@ -97,6 +97,7 @@
             file
             which
             iconv
+            luaPackages.luacheck  # Lua linter
 
             # Debugging
             gdb

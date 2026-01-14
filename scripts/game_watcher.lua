@@ -26,30 +26,65 @@ local ffi = require('ffi')
 
 local CONFIG = {
     -- Master enable/disable for watcher categories
-    watch_frame_state = true,     -- Full state dump each frame
-    watch_entity_tick = true,     -- EntityTickLoop breakpoint
-    watch_entity_callbacks = true, -- Individual entity callbacks
-    watch_player = true,          -- Player-specific state changes
-    watch_animation = true,       -- Sprite/animation changes
-    watch_collision = true,       -- Tile and entity collision
-    watch_level_load = true,      -- Level loading events
+    watch_frame_state = true,      -- Full state dump each frame
+    watch_entity_tick = true,      -- EntityTickLoop breakpoint
+    watch_entity_callbacks = false, -- Individual entity callbacks
+    watch_player = true,           -- Player-specific state changes
+    watch_animation = true,        -- Sprite/animation changes
+    watch_collision = false,       -- Tile and entity collision (very verbose)
+    watch_level_load = true,       -- Level loading events
+    watch_blb_access = true,       -- BLB header and asset access
+    watch_memory_ops = false,      -- Memory allocations (very verbose)
+    
+    -- Debugging
+    debug_breakpoints = false,     -- Print when breakpoints fire (very verbose!)
     
     -- Frame state dump options
     dump_all_entities = true,     -- Include ALL active entities each frame
     dump_player_only = false,     -- Only dump player state (faster)
     max_entities_per_frame = 64,  -- Cap entity dumps per frame
+    dump_blb_metadata = true,     -- Include BLB level metadata in frames
+    dump_asset_info = true,       -- Include asset container info
     
     -- Logging
     log_to_console = false,       -- Print to Lua console (verbose!)
     console_summary_only = true,  -- Only print summaries to console
-    log_file_path = "/tmp/skullmonkeys_trace.jsonl",
+    log_dir = "game_watcher/logs",  -- Directory for log files
+    stream_to_file = true,        -- Stream logs to file immediately (less memory)
+    log_format_pretty = false,    -- Pretty-print JSON (larger files)
+    auto_flush_interval = 60,     -- Flush file buffer every N frames
+    
+    -- Stdout event filtering (what to print to console)
+    stdout_events = {
+        WatcherStarted = true,     -- Initial startup message
+        BootOverride = true,       -- Boot-time level override applied
+        LevelLoad = true,          -- Level loading started
+        SpawnEntities = true,      -- Entity spawn completed
+        GameStateTick = false,     -- Complete frame state for replay (very verbose)
+        FrameState = false,        -- Full frame state (very verbose)
+        PlayerState = false,       -- Player state changes
+        PlayerMove = false,        -- Player movement
+        PlayerAnim = false,        -- Player animation changes
+        EntitySetState = false,    -- Entity state machine transitions
+        SetEntitySpriteId = false, -- Sprite ID changes
+        TickEntityAnimation = false, -- Animation tick events
+        PlayerCollisionCheck = false, -- Collision checks
+        TileAttrCheck = false,     -- Tile attribute lookups
+        LoadAsset = false,         -- Asset container loading
+        UploadAudio = false,       -- SPU audio uploads
+        Marker = true,             -- User-added markers
+    },
     
     -- Sampling
-    sample_every_n_frames = 1,    -- Full dump every N frames (1 = every frame)
+    sample_every_n_frames = 300,  -- Full dump every N frames (300 = every 5 seconds at 60fps)
     max_log_entries = 50000,      -- Max entries before auto-stop
     
     -- Change detection (reduce noise)
     log_only_changes = false,     -- Only log when state changes
+    
+    -- Boot-time level override (nil = normal boot)
+    boot_level_override = {level=1, stage=0},    -- Set to {level=1, stage=0} to force SCIE Stage 0
+    boot_stage_override = nil,    -- Deprecated: use boot_level_override table
 }
 
 -- =============================================================================
@@ -134,9 +169,34 @@ local ADDR = {
     FN_CheckEntityCollision = 0x800226F8,   -- Entity-entity collision
     FN_GetTileAttributeAtPosition = 0x800241F4, -- Tile collision lookup
     FN_LoadAssetContainer = 0x8007B074,     -- Load asset from BLB
-    FN_LoadLevelFromBLB = 0x8007E474,       -- Load level
+    FN_InitializeAndLoadLevel = 0x8007D1D0, -- Main level init (verified)
     FN_SpawnPlayerAndEntities = 0x8007DF38, -- Spawn entities from defs
     FN_RemapEntityTypes = 0x8008150C,       -- Convert BLB→internal types
+    FN_SeekToLevelInSequence = 0x8007A3AC,  -- Set level in playback sequence
+    FN_LoadBLBHeader = 0x800208B0,          -- Load BLB header from disc (CRITICAL)
+    FN_InitLevelDataContext = 0x8007A1BC,   -- Init context with header (SAFE POINT)
+    FN_InitGameState = 0x8007CD34,          -- Called from main, loads header
+    FN_UploadAudioToSPU = 0x8007C088,       -- Upload audio samples
+    FN_LoadTileDataToVRAM = 0x80025240,     -- Load tile graphics
+    
+    -- BLB Header structure (loaded at 0x800AE3E0, verified via symbol_addrs.txt)
+    BLB_level_count = 0x800AF311,           -- u8: number of levels (26) @ header+0xF31
+    BLB_movie_count = 0x800AF312,           -- u8: number of movies (13) @ header+0xF32
+    BLB_sector_count = 0x800AF313,          -- u8: sector table entries @ header+0xF33
+    BLB_game_mode = 0x800AF316,             -- u8: 3=level, 6=special @ header+0xF36
+    BLB_level_index = 0x800AF372,           -- u8: current level index @ header+0xF92
+    BLB_stage_index = 0x800AF373,           -- u8: current stage index @ header+0xF93
+    
+    -- g_pPlayerState verified at 0x800A5754 (stores level/stage progression)
+    g_pPlayerState = 0x800A5754,            -- u8* pointer to player state/save data
+    
+    -- Level metadata table (26 entries × 0x70 bytes starting at BLBHeader)
+    BLB_level_table = 0x800AE3E0,           -- Level metadata table base
+    LEVEL_ENTRY_SIZE = 0x70,                -- Size of each level entry
+    LEVEL_ID_OFFSET = 0x56,                 -- char[5] level ID (e.g. "SCIE")
+    LEVEL_NAME_OFFSET = 0x5B,               -- char[21] level name
+    LEVEL_STAGE_COUNT_OFFSET = 0x0C,        -- u8 stage count
+    LEVEL_FLAGS_OFFSET = 0x0D,              -- u8 flags
 }
 
 -- Player callback functions (state machine) - extended list
@@ -192,6 +252,12 @@ local ENTITY_TYPES = {
 -- =============================================================================
 
 local mem = PCSX.getMemPtr()
+local PSX_RAM_SIZE = 0x200000  -- 2MB PSX RAM
+
+-- Check if pointer is valid PSX RAM address
+local function is_valid_ptr(addr)
+    return addr >= 0x80000000 and addr < 0x80200000
+end
 
 -- Convert PSX address to memory offset (strip high bits for kuseg/kseg0/kseg1)
 local function psx_to_offset(addr)
@@ -199,11 +265,16 @@ local function psx_to_offset(addr)
 end
 
 local function read_u8(addr)
-    return mem[psx_to_offset(addr)]
+    if not is_valid_ptr(addr) then return 0 end
+    local off = psx_to_offset(addr)
+    if off < 0 or off >= PSX_RAM_SIZE then return 0 end
+    return mem[off]
 end
 
 local function read_u16(addr)
+    if not is_valid_ptr(addr) then return 0 end
     local off = psx_to_offset(addr)
+    if off < 0 or off + 1 >= PSX_RAM_SIZE then return 0 end
     return mem[off] + mem[off + 1] * 256
 end
 
@@ -214,7 +285,9 @@ local function read_s16(addr)
 end
 
 local function read_u32(addr)
+    if not is_valid_ptr(addr) then return 0 end
     local off = psx_to_offset(addr)
+    if off < 0 or off + 3 >= PSX_RAM_SIZE then return 0 end
     return mem[off] + mem[off + 1] * 256 + mem[off + 2] * 65536 + mem[off + 3] * 16777216
 end
 
@@ -229,9 +302,25 @@ local function fixed_to_float(v)
     return v / 65536.0
 end
 
--- Check if pointer is valid PSX RAM address
-local function is_valid_ptr(addr)
-    return addr >= 0x80000000 and addr < 0x80200000
+-- Write a byte to memory
+local function write_u8(addr, value)
+    if not is_valid_ptr(addr) then return false end
+    local off = psx_to_offset(addr)
+    if off < 0 or off >= PSX_RAM_SIZE then return false end
+    mem[off] = bit.band(value, 0xFF)
+    return true
+end
+
+-- Read a null-terminated string from memory
+local function read_string(addr, max_len)
+    max_len = max_len or 32
+    local chars = {}
+    for i = 0, max_len - 1 do
+        local byte = read_u8(addr + i)
+        if byte == 0 then break end
+        table.insert(chars, string.char(byte))
+    end
+    return table.concat(chars)
 end
 
 -- =============================================================================
@@ -241,8 +330,14 @@ end
 local state = {
     frame_count = 0,
     log_entries = {},
+    log_file = nil,              -- File handle for streaming logs
+    log_file_path = nil,         -- Current log file path
     breakpoints = {},
     listeners = {},
+    session_id = os.date("%Y%m%d_%H%M%S"),  -- Unique session identifier
+    markers = {},  -- User-defined markers for parsing
+    boot_override_applied = false,  -- Track if boot override was applied
+    last_flush = 0,              -- Frame of last file flush
     
     -- Last known state for change detection
     last_player_state = nil,
@@ -334,9 +429,26 @@ local function log_entry(entry_type, data)
         data = data,
     }
     
-    table.insert(state.log_entries, entry)
+    -- Stream to file if enabled, otherwise buffer in memory
+    if CONFIG.stream_to_file and state.log_file then
+        local json_line = to_json(entry)
+        state.log_file:write(json_line .. "\n")
+        
+        -- Flush periodically to ensure data is written
+        if state.frame_count - state.last_flush >= CONFIG.auto_flush_interval then
+            state.log_file:flush()
+            state.last_flush = state.frame_count
+        end
+    else
+        -- Buffer in memory (old behavior)
+        table.insert(state.log_entries, entry)
+    end
     
-    if CONFIG.log_to_console and not CONFIG.console_summary_only then
+    -- Check if this event type should be printed to stdout
+    if CONFIG.stdout_events and CONFIG.stdout_events[entry_type] then
+        print(string.format("[%d] %s: %s", state.frame_count, entry_type, to_json(data)))
+    elseif CONFIG.log_to_console and not CONFIG.console_summary_only then
+        -- Fallback to old behavior if stdout_events not configured
         print(string.format("[%d] %s: %s", state.frame_count, entry_type, to_json(data)))
     end
     
@@ -509,48 +621,227 @@ local function get_player_state_compact()
 end
 
 -- =============================================================================
+-- BLB Metadata
+-- =============================================================================
+
+-- Get level metadata for a specific level index
+local function get_level_info(level_idx)
+    local base = ADDR.BLB_level_table + (level_idx * ADDR.LEVEL_ENTRY_SIZE)
+    
+    -- Read sector offsets for all stages (up to 6 stages)
+    local stage_offsets = {}
+    local stage_counts = {}
+    for i = 0, 5 do
+        local sec_off = read_u32(base + 0x1E + (i * 8))
+        local sec_cnt = read_u16(base + 0x22 + (i * 8))
+        if sec_cnt > 0 then
+            table.insert(stage_offsets, sec_off)
+            table.insert(stage_counts, sec_cnt)
+        end
+    end
+    
+    return {
+        index = level_idx,
+        id = read_string(base + ADDR.LEVEL_ID_OFFSET, 5),
+        name = read_string(base + ADDR.LEVEL_NAME_OFFSET, 21),
+        stage_count = read_u8(base + ADDR.LEVEL_STAGE_COUNT_OFFSET),
+        flags = read_u8(base + ADDR.LEVEL_FLAGS_OFFSET),
+        primary_size = read_u32(base + 0x04),
+        entry1_offset = read_u32(base + 0x08),
+        primary_sector = read_u32(base + 0x00),
+        stage_sectors = stage_offsets,
+        stage_sector_counts = stage_counts,
+    }
+end
+
+-- Get current level and stage
+local function get_current_level()
+    return {
+        level_index = read_u8(ADDR.BLB_level_index),
+        stage_index = read_u8(ADDR.BLB_stage_index),
+        game_mode = read_u8(ADDR.BLB_game_mode),
+        level_count = read_u8(ADDR.BLB_level_count),
+        movie_count = read_u8(ADDR.BLB_movie_count),
+        sector_count = read_u8(ADDR.BLB_sector_count),
+    }
+end
+
+-- Get comprehensive BLB metadata for current level
+local function get_blb_metadata()
+    local current = get_current_level()
+    
+    if current.level_index >= current.level_count then
+        return {
+            valid = false,
+            current = current,
+        }
+    end
+    
+    local level_info = get_level_info(current.level_index)
+    
+    return {
+        valid = true,
+        current = current,
+        level = level_info,
+        header_addr = string.format("0x%08X", ADDR.BLB_level_table),
+    }
+end
+
+-- =============================================================================
 -- Breakpoint Handlers
 -- =============================================================================
 
--- Called when EntityTickLoop starts - dump full frame state
+-- Wrapper to safely call breakpoint handlers
+local function safe_breakpoint_handler(handler_name, handler_func)
+    return function(address, width, cause)
+        if CONFIG.debug_breakpoints then
+            print(string.format("[BP] %s @ 0x%08X", handler_name, address))
+        end
+        local success, err = pcall(handler_func, address, width, cause)
+        if not success then
+            print(string.format("[ERROR] Breakpoint handler '%s' failed: %s", handler_name, tostring(err)))
+            -- Log the error
+            log_entry("BreakpointError", {
+                handler = handler_name,
+                error = tostring(err),
+                address = string.format("0x%08X", address),
+            })
+        end
+    end
+end
+
+-- Read complete GameState for replay (called at EntityTickLoop)
+local function read_game_state_tick()
+    local gs_base = ADDR.GameState
+    
+    -- Mode callback state (for level/mode transitions)
+    local mode_offset = read_s16(gs_base + 0x00)
+    local mode_index = read_s16(gs_base + 0x02)
+    local mode_callback_ptr = read_u32(gs_base + 0x04)
+    
+    -- Background color change (RenderEntities clears this)
+    local bg_change_flag = read_u8(gs_base + 0x130)
+    local bg_r = read_u8(gs_base + 0x131)
+    local bg_g = read_u8(gs_base + 0x132)
+    local bg_b = read_u8(gs_base + 0x133)
+    
+    -- Camera position (critical for deterministic replay)
+    local camera_x = read_s16(gs_base + 0x38)
+    local camera_y = read_s16(gs_base + 0x3C)
+    
+    -- Input state pointers (to verify input capture)
+    local p1_input_ptr = read_u32(gs_base + 0x50)
+    
+    -- Player entity reference
+    local player_entity_ptr = read_u32(gs_base + 0x30)
+    
+    return {
+        mode_offset = mode_offset,
+        mode_index = mode_index,
+        mode_callback = string.format("0x%08X", mode_callback_ptr),
+        bg_change_flag = bg_change_flag,
+        bg_color = (bg_change_flag ~= 0) and {r=bg_r, g=bg_g, b=bg_b} or nil,
+        camera = {x=camera_x, y=camera_y},
+        player_ptr = string.format("0x%08X", player_entity_ptr),
+        p1_input_ptr = string.format("0x%08X", p1_input_ptr),
+    }
+end
+
+-- Read controller input state (for replay)
+local function read_input_state(input_ptr)
+    if not is_valid_ptr(input_ptr) then return nil end
+    
+    -- Input structure offsets from UpdateInputState analysis:
+    -- +0x00: u16 held_buttons (current frame)
+    -- +0x01: u16 pressed_buttons (newly pressed this frame)
+    -- +0x04: recording flag/pointer
+    -- +0x10: u16 playback_index
+    -- +0x12: u16 playback_timer
+    
+    local held = read_u16(input_ptr + 0x00)
+    local pressed = read_u16(input_ptr + 0x02)
+    
+    return {
+        held = held,
+        pressed = pressed,
+        -- PSX button mapping for reference in logs
+        buttons = {
+            select   = bit.band(held, 0x0001) ~= 0,
+            l3       = bit.band(held, 0x0002) ~= 0,
+            r3       = bit.band(held, 0x0004) ~= 0,
+            start    = bit.band(held, 0x0008) ~= 0,
+            up       = bit.band(held, 0x1000) ~= 0,
+            right    = bit.band(held, 0x2000) ~= 0,
+            down     = bit.band(held, 0x4000) ~= 0,
+            left     = bit.band(held, 0x8000) ~= 0,
+            l2       = bit.band(held, 0x0100) ~= 0,
+            r2       = bit.band(held, 0x0200) ~= 0,
+            l1       = bit.band(held, 0x0400) ~= 0,
+            r1       = bit.band(held, 0x0800) ~= 0,
+            triangle = bit.band(held, 0x0010) ~= 0,
+            circle   = bit.band(held, 0x0020) ~= 0,
+            cross    = bit.band(held, 0x0040) ~= 0,
+            square   = bit.band(held, 0x0080) ~= 0,
+        },
+    }
+end
+
+-- Called when EntityTickLoop starts - dump full frame state for replay
 local function on_entity_tick_loop(address, width, cause)
     if not CONFIG.watch_entity_tick then return end
     if state.frame_count % CONFIG.sample_every_n_frames ~= 0 then return end
     
-    local player = read_player_entity()
-    local camera = get_camera()
-    local entities = {}
+    -- Core GameState (mode, camera, input)
+    local game_state = read_game_state_tick()
     
+    -- Input state (for deterministic replay)
+    local p1_input_ptr = read_u32(ADDR.GameState + 0x50)
+    local input = read_input_state(p1_input_ptr)
+    
+    -- Player entity
+    local player = read_player_entity()
+    
+    -- All entities for full state capture
+    local entities = {}
     if CONFIG.dump_all_entities then
         entities = iterate_entity_list()
     end
     
-    -- Build frame state
+    -- Build complete frame state for replay
     local frame_data = {
-        camera = camera,
+        game_state = game_state,
+        input = input,
         entity_count = #entities,
     }
     
-    -- Player state
+    -- Player state (most important for replay)
     if player then
         frame_data.player = {
             ptr = player.ptr,
             x = player.x,
             y = player.y,
-            vx = player.vx_float,
-            vy = player.vy_float,
+            x_whole = player.x_whole,
+            y_whole = player.y_whole,
+            x_frac = player.x_frac,
+            y_frac = player.y_frac,
+            vx = player.vx,
+            vy = player.vy,
+            vx_float = player.vx_float,
+            vy_float = player.vy_float,
             facing = player.facing_dir,
             state = player.callback_name,
+            callback_main = string.format("0x%08X", player.callback_main),
             sprite_id = player.sprite_id,
             anim_frame = player.anim_frame,
             anim_end = player.anim_end,
-            input = player.input,
-            health = player.health,
-            invuln = player.invuln_timer,
+            anim_timer = player.anim_timer,
+            flags = player.flags,
+            layer = player.layer,
+            z_order = player.z_order,
         }
     end
     
-    -- All entities (compact form)
+    -- All entities (compact form for full state)
     if CONFIG.dump_all_entities and #entities > 0 then
         local ent_list = {}
         for _, ent in ipairs(entities) do
@@ -560,16 +851,21 @@ local function on_entity_tick_loop(address, width, cause)
                 type_name = ent.type_name,
                 x = ent.x,
                 y = ent.y,
+                vx = ent.vx,
+                vy = ent.vy,
+                facing = ent.facing,
                 layer = ent.layer,
+                z_order = ent.z_order,
                 sprite_id = ent.sprite_id,
                 anim_frame = ent.anim_frame,
-                callback = string.format("0x%08X", ent.callback_main),
+                callback_main = string.format("0x%08X", ent.callback_main),
+                flags = ent.flags,
             })
         end
         frame_data.entities = ent_list
     end
     
-    log_entry("FrameState", frame_data)
+    log_entry("GameStateTick", frame_data)
 end
 
 -- Called when an entity's state/callback is changed
@@ -716,17 +1012,21 @@ end
 local function on_level_load(address, width, cause)
     if not CONFIG.watch_level_load then return end
     
-    local regs = PCSX.getRegisters()
-    local level_idx = regs.GPR.n.a0
-    local stage_idx = regs.GPR.n.a1
+    local blb = get_blb_metadata()
     
     state.stats.level_loads = state.stats.level_loads + 1
     
     log_entry("LevelLoad", {
-        level = level_idx,
-        stage = stage_idx,
+        blb_metadata = blb,
+        timestamp = os.time(),
     })
-    log_summary(string.format("Loading level %d stage %d", level_idx, stage_idx))
+    
+    if blb.valid then
+        log_summary(string.format("Loading %s (%s) Stage %d", 
+            blb.level.id, blb.level.name, blb.current.stage_index))
+    else
+        log_summary("Loading level (metadata invalid)")
+    end
     
     -- Clear entity tracking on level load
     state.entity_cache = {}
@@ -737,8 +1037,95 @@ end
 local function on_spawn_entities(address, width, cause)
     if not CONFIG.watch_level_load then return end
     
-    log_entry("SpawnEntities", {})
-    log_summary("Spawning entities from definitions")
+    local blb = get_blb_metadata()
+    
+    log_entry("SpawnEntities", {
+        level_id = blb.valid and blb.level.id or "UNKNOWN",
+        stage_index = blb.valid and blb.current.stage_index or -1,
+    })
+    log_summary("Spawning entities from Asset 501")
+end
+
+-- Called when asset container is loaded
+local function on_load_asset_container(address, width, cause)
+    if not CONFIG.watch_blb_access then return end
+    
+    local regs = PCSX.getRegisters()
+    local ctx_ptr = regs.GPR.n.a0
+    local asset_index = regs.GPR.n.a1
+    local load_mode = regs.GPR.n.a2
+    
+    local blb = get_blb_metadata()
+    
+    -- Decode load mode (1=secondary, 0=tertiary)
+    local segment_type = (load_mode == 1) and "secondary" or "tertiary"
+    
+    log_entry("LoadAssetContainer", {
+        level_id = blb.valid and blb.level.id or "UNKNOWN",
+        stage_index = blb.valid and blb.current.stage_index or -1,
+        asset_index = asset_index,
+        segment_type = segment_type,
+        load_mode = load_mode,
+        ctx_ptr = string.format("0x%08X", ctx_ptr),
+    })
+end
+
+-- Called when audio is uploaded to SPU
+local function on_upload_audio(address, width, cause)
+    if not CONFIG.watch_blb_access then return end
+    
+    local regs = PCSX.getRegisters()
+    local sample_ptr = regs.GPR.n.a0
+    local volume_ptr = regs.GPR.n.a1
+    local size = regs.GPR.n.a2
+    
+    log_entry("UploadAudioToSPU", {
+        sample_ptr = string.format("0x%08X", sample_ptr),
+        volume_ptr = string.format("0x%08X", volume_ptr),
+        size_bytes = size,
+        size_kb = math.floor(size / 1024 * 10) / 10,
+    })
+end
+
+-- Called when InitLevelDataContext completes (CRITICAL: BLB header is now loaded and safe to modify)
+-- This is called from LoadBLBHeader @ 0x800208B0 AFTER the header is read from disc
+-- Call chain: main → InitGameState → LoadBLBHeader → InitLevelDataContext → [HERE]
+-- At this point: BLB header is in RAM, no videos have played, safe to patch level indices
+local function on_header_loaded(address, width, cause)
+    print(string.format("[BP-BOOT] on_header_loaded fired @ 0x%08X", address))
+    
+    -- Only apply boot override once
+    if state.boot_override_applied then return end
+    
+    if CONFIG.boot_level_override then
+        local level_idx = CONFIG.boot_level_override.level or 0
+        local stage_idx = CONFIG.boot_level_override.stage or 0
+        
+        print(string.format("[BOOT] Applying level override: Level %d, Stage %d", level_idx, stage_idx))
+        
+        -- Set level/stage in BLB header (now safely loaded)
+        write_u8(ADDR.BLB_game_mode, 3)  -- Set to level mode
+        write_u8(ADDR.BLB_level_index, level_idx)
+        write_u8(ADDR.BLB_stage_index, stage_idx)
+        
+        -- Also set in g_pPlayerState for consistency
+        local player_state_ptr = read_u32(ADDR.g_pPlayerState)
+        if is_valid_ptr(player_state_ptr) then
+            write_u8(player_state_ptr, level_idx)
+            write_u8(player_state_ptr + 1, stage_idx)
+            print(string.format("[BOOT] Updated g_pPlayerState[0-1] = {%d, %d}", level_idx, stage_idx))
+        end
+        
+        state.boot_override_applied = true
+        
+        log_entry("BootOverride", {
+            level_index = level_idx,
+            stage_index = stage_idx,
+            timestamp = os.time(),
+        })
+        
+        print("[BOOT] Override applied successfully. Game will load this level after intro.")
+    end
 end
 
 -- Called at player tick callback
@@ -787,6 +1174,17 @@ end
 local function on_vsync()
     state.frame_count = state.frame_count + 1
     
+    -- Auto-save periodically if enabled
+    if CONFIG.auto_save_interval and CONFIG.auto_save_interval > 0 then
+        if state.frame_count - state.last_auto_save >= CONFIG.auto_save_interval then
+            if #state.log_entries > 0 then
+                print(string.format("\n[AUTO-SAVE] Saving %d entries (frame %d)...", #state.log_entries, state.frame_count))
+                dump_log()
+                state.last_auto_save = state.frame_count
+            end
+        end
+    end
+    
     -- Auto-stop when log is full
     if #state.log_entries >= CONFIG.max_log_entries then
         if state.log_entries[#state.log_entries].type ~= "LogFull" then
@@ -803,11 +1201,33 @@ end
 local function setup_breakpoints()
     print("Setting up comprehensive Skullmonkeys watchers...")
     
+    -- Set up boot-time level override guard
+    -- This breakpoint fires AFTER InitLevelDataContext completes, when BLB header is safely loaded
+    -- Call chain: main → InitGameState @ 0x8007CD34 → LoadBLBHeader @ 0x800208B0 →
+    --             InitLevelDataContext @ 0x8007A1BC → [return address]
+    -- Return address is 0x80020950 (inside LoadBLBHeader, right after jal InitLevelDataContext)
+    -- Disassembly: 0x80020948: jal 0x8007a1bc
+    --              0x8002094C: move a0,s1 (delay slot)
+    --              0x80020950: clear a0  ← BREAKPOINT HERE
+    if CONFIG.boot_level_override then
+        print(string.format("  [!] Boot override configured: Level %d, Stage %d", 
+            CONFIG.boot_level_override.level or 0,
+            CONFIG.boot_level_override.stage or 0))
+        print("  [!] Setting breakpoint at InitLevelDataContext return (0x80020950)")
+        
+        -- Breakpoint at return address in LoadBLBHeader (0x80020950 = offset +0xA0 from function start)
+        -- This is right after: jal InitLevelDataContext (0x80020948) + delay slot (0x8002094C)
+        state.breakpoints.header_loaded = PCSX.addBreakpoint(
+            0x80020950, 'Exec', 4,
+            'BLBHeaderLoaded', safe_breakpoint_handler('BLBHeaderLoaded', on_header_loaded)
+        )
+    end
+    
     -- EntityTickLoop - main game tick (full state dump)
     if CONFIG.watch_frame_state then
         state.breakpoints.tick_loop = PCSX.addBreakpoint(
             ADDR.FN_EntityTickLoop, 'Exec', 4,
-            'EntityTickLoop', on_entity_tick_loop
+            'EntityTickLoop', safe_breakpoint_handler('EntityTickLoop', on_entity_tick_loop)
         )
         print("  [x] Frame state capture (EntityTickLoop)")
     end
@@ -816,7 +1236,7 @@ local function setup_breakpoints()
     if CONFIG.watch_player then
         state.breakpoints.player_tick = PCSX.addBreakpoint(
             ADDR.FN_PlayerTickCallback, 'Exec', 4, 
-            'PlayerTickCallback', on_player_tick
+            'PlayerTickCallback', safe_breakpoint_handler('PlayerTickCallback', on_player_tick)
         )
         print("  [x] Player movement tracking")
     end
@@ -825,15 +1245,15 @@ local function setup_breakpoints()
     if CONFIG.watch_animation then
         state.breakpoints.set_state = PCSX.addBreakpoint(
             ADDR.FN_EntitySetState, 'Exec', 4,
-            'EntitySetState', on_entity_set_state
+            'EntitySetState', safe_breakpoint_handler('EntitySetState', on_entity_set_state)
         )
         state.breakpoints.set_sprite = PCSX.addBreakpoint(
             ADDR.FN_SetEntitySpriteId, 'Exec', 4,
-            'SetEntitySpriteId', on_set_sprite_id
+            'SetEntitySpriteId', safe_breakpoint_handler('SetEntitySpriteId', on_set_sprite_id)
         )
         state.breakpoints.tick_anim = PCSX.addBreakpoint(
             ADDR.FN_TickEntityAnimation, 'Exec', 4,
-            'TickEntityAnimation', on_tick_animation
+            'TickEntityAnimation', safe_breakpoint_handler('TickEntityAnimation', on_tick_animation)
         )
         print("  [x] Animation/state change tracking")
     end
@@ -842,11 +1262,11 @@ local function setup_breakpoints()
     if CONFIG.watch_collision then
         state.breakpoints.tile_attr = PCSX.addBreakpoint(
             ADDR.FN_GetTileAttributeAtPosition, 'Exec', 4,
-            'GetTileAttributeAtPosition', on_tile_attribute_check
+            'GetTileAttributeAtPosition', safe_breakpoint_handler('TileAttrCheck', on_tile_attribute_check)
         )
         state.breakpoints.collision = PCSX.addBreakpoint(
             ADDR.FN_CheckEntityCollision, 'Exec', 4,
-            'CheckEntityCollision', on_entity_collision_check
+            'CheckEntityCollision', safe_breakpoint_handler('EntityCollision', on_entity_collision_check)
         )
         print("  [x] Collision tracking")
     end
@@ -854,14 +1274,27 @@ local function setup_breakpoints()
     -- Level loading
     if CONFIG.watch_level_load then
         state.breakpoints.level_load = PCSX.addBreakpoint(
-            ADDR.FN_LoadLevelFromBLB, 'Exec', 4,
-            'LoadLevelFromBLB', on_level_load
+            ADDR.FN_InitializeAndLoadLevel, 'Exec', 4,
+            'InitializeAndLoadLevel', safe_breakpoint_handler('LevelLoad', on_level_load)
         )
         state.breakpoints.spawn = PCSX.addBreakpoint(
             ADDR.FN_SpawnPlayerAndEntities, 'Exec', 4,
-            'SpawnPlayerAndEntities', on_spawn_entities
+            'SpawnPlayerAndEntities', safe_breakpoint_handler('SpawnEntities', on_spawn_entities)
         )
         print("  [x] Level load tracking")
+    end
+    
+    -- BLB asset access
+    if CONFIG.watch_blb_access then
+        state.breakpoints.load_asset = PCSX.addBreakpoint(
+            ADDR.FN_LoadAssetContainer, 'Exec', 4,
+            'LoadAssetContainer', safe_breakpoint_handler('LoadAsset', on_load_asset_container)
+        )
+        state.breakpoints.upload_audio = PCSX.addBreakpoint(
+            ADDR.FN_UploadAudioToSPU, 'Exec', 4,
+            'UploadAudioToSPU', safe_breakpoint_handler('UploadAudio', on_upload_audio)
+        )
+        print("  [x] BLB asset/audio tracking")
     end
     
     -- VSync listener for frame counting
@@ -870,21 +1303,50 @@ local function setup_breakpoints()
     print("")
     print("Watchers active! Use these commands:")
     print("  status()     - Show current game state")
-    print("  snapshot()   - Get full state as table")
-    print("  dump_log()   - Save log to " .. CONFIG.log_file_path)
-    print("  clear_log()  - Clear captured log")
-    print("  entities()   - List all active entities")
     print("  stats()      - Show capture statistics")
-    print("  cleanup()    - Remove all watchers")
+    print("  test_logging() - Test log system (saves 5 test entries)")
+    print("  snapshot()   - Get full state as table")
+    print("  dump_log()   - Save log with auto-generated filename")
+    print("  clear_log()  - Clear captured log")
+    print("  mark('name') - Add parsing marker at current frame")
+    print("  markers()    - List all markers")
+    print("  entities()   - List all active entities")
+    print("  cleanup()    - Remove all watchers (auto-saves)")
+    print("")
+    print("Level commands:")
+    print("  levels()           - List all 26 levels")
+    print("  level_info(idx)    - Show level details")
+    print("  load_level(idx,stg) - Set level to load")
+    print("  load_level_by_id('SCIE',0) - Load by ID")
+    print("  set_boot_override(level, stage) - Override boot level")
+    print("")
+    print("Logs will auto-save to: " .. CONFIG.log_dir .. "/")
 end
 
 local function cleanup()
     print("Removing watchers...")
+    
+    -- Auto-save logs if enabled and there are entries
+    if CONFIG.auto_save_on_exit and #state.log_entries > 0 then
+        print(string.format("Auto-saving %d log entries...", #state.log_entries))
+        dump_log()  -- Use auto-generated filename
+    end
+    
     for name, bp in pairs(state.breakpoints) do
-        if bp then bp:remove() end
+        if bp then 
+            local success, err = pcall(function() bp:remove() end)
+            if not success then
+                print(string.format("Warning: Failed to remove breakpoint %s: %s", name, tostring(err)))
+            end
+        end
     end
     for name, listener in pairs(state.listeners) do
-        if listener then listener:remove() end
+        if listener then 
+            local success, err = pcall(function() listener:remove() end)
+            if not success then
+                print(string.format("Warning: Failed to remove listener %s: %s", name, tostring(err)))
+            end
+        end
     end
     state.breakpoints = {}
     state.listeners = {}
@@ -895,12 +1357,30 @@ end
 -- Commands
 -- =============================================================================
 
-function dump_log()
-    local filename = CONFIG.log_file_path
+function dump_log(filename)
+    -- Generate timestamped filename if not provided
+    if not filename then
+        -- Create directory if it doesn't exist
+        os.execute("mkdir -p " .. CONFIG.log_dir)
+        
+        -- Build filename with session info
+        local blb = get_blb_metadata()
+        local level_str = "unknown"
+        if blb.valid then
+            level_str = string.format("%s_stage%d", blb.level.id, blb.current.stage_index)
+        end
+        
+        filename = string.format("%s/trace_%s_%s_f%d.jsonl",
+            CONFIG.log_dir,
+            state.session_id,
+            level_str,
+            state.frame_count)
+    end
+    
     local file = io.open(filename, "w")
     if not file then
         print("Failed to open " .. filename)
-        return
+        return false
     end
     
     for _, entry in ipairs(state.log_entries) do
@@ -913,6 +1393,7 @@ function dump_log()
         state.stats.player_state_changes,
         state.stats.sprite_changes,
         state.stats.level_loads))
+    return true
 end
 
 function clear_log()
@@ -924,6 +1405,7 @@ function clear_log()
     state.last_player_sprite = nil
     state.last_anim_frame = nil
     state.entity_cache = {}
+    state.markers = {}
     state.stats = {
         total_entities_seen = 0,
         player_state_changes = 0,
@@ -931,6 +1413,32 @@ function clear_log()
         level_loads = 0,
     }
     print("Log cleared.")
+end
+
+-- Add a marker for easy log parsing
+function mark(label)
+    label = label or "marker"
+    local marker_data = {
+        label = label,
+        frame = state.frame_count,
+        timestamp = os.time(),
+        log_index = #state.log_entries,
+    }
+    table.insert(state.markers, marker_data)
+    log_entry("Marker", marker_data)
+    print(string.format("[MARKER] '%s' at frame %d (entry %d)", label, state.frame_count, #state.log_entries))
+end
+
+-- List all markers
+function markers()
+    if #state.markers == 0 then
+        print("No markers set.")
+        return
+    end
+    print("=== Markers ===")
+    for i, m in ipairs(state.markers) do
+        print(string.format("%2d. Frame %6d (entry %6d): %s", i, m.frame, m.log_index, m.label))
+    end
 end
 
 function status()
@@ -981,6 +1489,34 @@ function stats()
     print(string.format("Player state changes: %d", state.stats.player_state_changes))
     print(string.format("Sprite changes: %d", state.stats.sprite_changes))
     print(string.format("Level loads: %d", state.stats.level_loads))
+    print(string.format("Markers: %d", #state.markers))
+    print(string.format("Session ID: %s", state.session_id))
+    print(string.format("Log directory: %s", CONFIG.log_dir))
+end
+
+-- Test logging to verify it works
+function test_logging()
+    print("=== Testing Logging System ===")
+    print("Adding test entries...")
+    
+    for i = 1, 5 do
+        log_entry("TestEvent", {
+            test_number = i,
+            message = string.format("Test entry %d", i),
+            timestamp = os.time(),
+        })
+    end
+    
+    print(string.format("Added 5 test entries. Total: %d", #state.log_entries))
+    print("")
+    print("Attempting to save...")
+    local success = dump_log()
+    
+    if success then
+        print("✓ Logging system is working!")
+    else
+        print("✗ Logging failed - check permissions for: " .. CONFIG.log_dir)
+    end
 end
 
 function snapshot()
@@ -1022,14 +1558,294 @@ function snapshot()
 end
 
 -- =============================================================================
+-- Level Management Functions
+-- =============================================================================
+
+-- List all levels in the BLB
+function levels()
+    local level_count = read_u8(ADDR.BLB_level_count)
+    local current = get_current_level()
+    
+    print(string.format("=== BLB Levels (%d total) ===", level_count))
+    print(string.format("Current: Level %d, Stage %d, Mode %d", 
+        current.level_index, current.stage_index, current.game_mode))
+    print("")
+    print("Idx  ID    Stages  Name")
+    print("---  ----  ------  --------------------")
+    
+    for i = 0, level_count - 1 do
+        local info = get_level_info(i)
+        local marker = (i == current.level_index) and "*" or " "
+        print(string.format("%s%2d  %-4s  %d       %s", 
+            marker, i, info.id, info.stage_count, info.name))
+    end
+    print("")
+    print("Use load_level(index, stage) to load a level")
+end
+
+-- Load a specific level and stage
+-- This works by setting the level/stage index and triggering a level load
+function load_level(level_idx, stage_idx)
+    stage_idx = stage_idx or 0
+    local level_count = read_u8(ADDR.BLB_level_count)
+    
+    if level_idx < 0 or level_idx >= level_count then
+        print(string.format("Error: Level index must be 0-%d", level_count - 1))
+        return false
+    end
+    
+    local info = get_level_info(level_idx)
+    if stage_idx < 0 or stage_idx >= info.stage_count then
+        print(string.format("Error: Stage index must be 0-%d for %s", 
+            info.stage_count - 1, info.id))
+        return false
+    end
+    
+    print(string.format("Loading %s (%s) Stage %d...", info.id, info.name, stage_idx))
+    
+    -- Set game mode to level mode (3)
+    write_u8(ADDR.BLB_game_mode, 3)
+    
+    -- Set level and stage index
+    write_u8(ADDR.BLB_level_index, level_idx)
+    write_u8(ADDR.BLB_stage_index, stage_idx)
+    
+    -- Note: The actual level load happens when the game loop processes the mode
+    -- You may need to trigger a mode transition or reset
+    print("Level index set. The game should load this level on next mode transition.")
+    print("Tip: Use reset() or wait for a death/exit to trigger the load.")
+    
+    return true
+end
+
+-- Convenience function to load level by ID (e.g., "SCIE", "PHRO")
+function load_level_by_id(level_id, stage_idx)
+    stage_idx = stage_idx or 0
+    local level_count = read_u8(ADDR.BLB_level_count)
+    
+    level_id = string.upper(level_id)
+    
+    for i = 0, level_count - 1 do
+        local info = get_level_info(i)
+        if info.id == level_id then
+            return load_level(i, stage_idx)
+        end
+    end
+    
+    print(string.format("Error: Level '%s' not found", level_id))
+    print("Use levels() to see available levels")
+    return false
+end
+
+-- Show detailed info for a specific level
+function level_info(level_idx)
+    local level_count = read_u8(ADDR.BLB_level_count)
+    
+    if level_idx < 0 or level_idx >= level_count then
+        print(string.format("Error: Level index must be 0-%d", level_count - 1))
+        return
+    end
+    
+    local info = get_level_info(level_idx)
+    
+    print(string.format("=== Level %d: %s ===", level_idx, info.id))
+    print(string.format("  Name: %s", info.name))
+    print(string.format("  Stages: %d", info.stage_count))
+    print(string.format("  Flags: 0x%02X", info.flags))
+    print(string.format("  Primary buffer size: %d bytes (%.1f KB)", 
+        info.primary_size, info.primary_size / 1024))
+    print(string.format("  Primary sector: %d (0x%X in file)", 
+        info.primary_sector, info.primary_sector * 2048))
+    print(string.format("  Entry[1] offset: 0x%X", info.entry1_offset))
+    
+    if #info.stage_sectors > 0 then
+        print(string.format("  Stage sectors:"))
+        for i, sector in ipairs(info.stage_sectors) do
+            print(string.format("    Stage %d: Sector %d (%d sectors, 0x%X in file)", 
+                i - 1, sector, info.stage_sector_counts[i], sector * 2048))
+        end
+    end
+end
+
+-- Set boot-time level override (call before game reset)
+function set_boot_override(level_idx, stage_idx)
+    stage_idx = stage_idx or 0
+    local level_count = read_u8(ADDR.BLB_level_count)
+    
+    if level_idx < 0 or level_idx >= level_count then
+        print(string.format("Error: Level index must be 0-%d", level_count - 1))
+        return false
+    end
+    
+    local info = get_level_info(level_idx)
+    if stage_idx < 0 or stage_idx >= info.stage_count then
+        print(string.format("Error: Stage index must be 0-%d for %s", 
+            info.stage_count - 1, info.id))
+        return false
+    end
+    
+    CONFIG.boot_level_override = {level = level_idx, stage = stage_idx}
+    print(string.format("Boot override set: %s (%s) Stage %d", 
+        info.id, info.name, stage_idx))
+    print("Call reload_watchers() to apply the override")
+    return true
+end
+
+-- Reload watchers with current config (apply boot override)
+function reload_watchers()
+    cleanup()
+    setup_breakpoints()
+end
+
+-- Export trace as structured JSON with metadata
+function export_trace(filename)
+    filename = filename or (CONFIG.log_file_path .. ".export.json")
+    
+    local blb = get_blb_metadata()
+    local current_level = get_current_level()
+    
+    local export_data = {
+        metadata = {
+            version = "2.0",
+            game = "Skullmonkeys",
+            region = "PAL",
+            game_version = "SLES-01090",
+            export_time = os.time(),
+            frame_count = state.frame_count,
+            log_entries = #state.log_entries,
+        },
+        statistics = state.stats,
+        blb_info = blb,
+        current_state = {
+            level = current_level,
+            player = get_player_state_compact(),
+            camera = get_camera(),
+        },
+        config = {
+            sample_rate = CONFIG.sample_every_n_frames,
+            dump_all_entities = CONFIG.dump_all_entities,
+            dump_blb_metadata = CONFIG.dump_blb_metadata,
+        },
+        entries = state.log_entries,
+    }
+    
+    local file = io.open(filename, "w")
+    if not file then
+        print("Failed to open " .. filename)
+        return false
+    end
+    
+    -- Write structured JSON
+    file:write(to_json(export_data))
+    file:close()
+    
+    print(string.format("Exported %d entries to %s (%.1f KB)", 
+        #state.log_entries, filename,
+        io.popen("stat -c%s " .. filename):read("*n") / 1024))
+    return true
+end
+
+-- =============================================================================
 -- Initialization
 -- =============================================================================
 
 print("╔══════════════════════════════════════════════╗")
-print("║  Skullmonkeys Game Watcher v2.0              ║")
+print("║  Skullmonkeys Game Watcher v2.5              ║")
 print("║  PAL version (SLES-01090)                    ║")
-print("║  Comprehensive entity & state tracking       ║")
+print("║  Comprehensive runtime debugging             ║")
+print("║                                              ║")
+print("║  Features:                                   ║")
+print("║  • Full frame-by-frame entity tracking       ║")
+print("║  • BLB asset/level metadata logging          ║")
+print("║  • Boot-time level selection                 ║")
+print("║  • Structured JSONL trace export             ║")
 print("╚══════════════════════════════════════════════╝")
 print("")
 
+-- Show current BLB state
+local current = get_current_level()
+print(string.format("BLB Header: %d levels, %d movies, %d sector entries",
+    current.level_count, current.movie_count, current.sector_count))
+
+if current.level_index < current.level_count then
+    local info = get_level_info(current.level_index)
+    print(string.format("Current Level: %s (%s) Stage %d/%d",
+        info.id, info.name, current.stage_index, info.stage_count - 1))
+else
+    print(string.format("Current Level: Index %d (not loaded)", current.level_index))
+end
+
+print("")
+
+-- Open log file for streaming if enabled
+if CONFIG.stream_to_file then
+    local blb_info = get_current_level()
+    local level_id = "unknown"
+    if blb_info.level_index < blb_info.level_count then
+        local info = get_level_info(blb_info.level_index)
+        level_id = info.id or "unknown"
+    end
+    
+    local filename = string.format("trace_%s_%s_stage%d_f%d.jsonl",
+        os.date("%Y%m%d_%H%M%S"),
+        level_id,
+        blb_info.stage_index,
+        state.frame_count)
+    
+    state.log_file_path = CONFIG.log_dir .. "/" .. filename
+    state.log_file = io.open(state.log_file_path, "w")
+    
+    if state.log_file then
+        print(string.format("[STREAM] Logging to: %s", state.log_file_path))
+    else
+        print(string.format("[ERROR] Failed to open log file: %s", state.log_file_path))
+        CONFIG.stream_to_file = false
+    end
+end
+
 setup_breakpoints()
+
+-- Log initial startup for testing
+log_entry("WatcherStarted", {
+    session_id = state.session_id,
+    timestamp = os.time(),
+    log_file = state.log_file_path,
+    config = {
+        frame_state = CONFIG.watch_frame_state,
+        entity_tick = CONFIG.watch_entity_tick,
+        player = CONFIG.watch_player,
+        animation = CONFIG.watch_animation,
+        level_load = CONFIG.watch_level_load,
+        blb_access = CONFIG.watch_blb_access,
+        stream_to_file = CONFIG.stream_to_file,
+    }
+})
+
+print(string.format("[INIT] Watcher started with session ID: %s", state.session_id))
+print(string.format("[INIT] %d log entries captured so far", #state.log_entries))
+
+-- Register exit handler to save logs when emulator quits
+state.listeners.quitting = PCSX.Events.createEventListener('Quitting', function()
+    print(string.format("\n[EXIT] Emulator closing..."))
+    
+    -- Close streaming log file if open
+    if state.log_file then
+        state.log_file:flush()
+        state.log_file:close()
+        print(string.format("[EXIT] Stream closed: %s", state.log_file_path))
+        print(string.format("[EXIT] %d frames logged", state.frame_count))
+    end
+    
+    -- Save buffered entries if streaming was disabled
+    if not CONFIG.stream_to_file and #state.log_entries > 0 then
+        print(string.format("[EXIT] Saving %d buffered log entries...", #state.log_entries))
+        local success = dump_log()
+        if success then
+            print("[EXIT] Buffered logs saved successfully")
+        end
+    end
+end)
+
+print("\n[TIP] Logs stream to file continuously (flushed every 60 frames)")
+print("[TIP] Use mark('label') to add parsing markers for easy log analysis")
+print("[TIP] Use test_logging() to verify logging system works")

@@ -125,6 +125,227 @@ state[1] = &LAB_8007e654;        // Initial mode handler (indirect pointer)
 The initial mode handler at 0x8007e654 manages level loading transitions,
 checkpoint handling, and respawn logic.
 
+## Game State Tick Specification
+
+**For building replay/validation tools, capture the following state at EntityTickLoop entry:**
+
+This section documents the complete game state required for deterministic replay and validation.
+
+### GameState Structure (Base @ 0x8009DC40)
+
+The GameState structure is the central data structure for the game loop. All state modifications
+happen through functions called by the main loop.
+
+#### Core State Offsets
+
+| Offset | Type | Size | Field Name | Description | Modified By |
+|--------|------|------|------------|-------------|-------------|
+| 0x00 | s16 | 2 | mode_base_offset | Base offset for callback parameter | InitGameState, mode callbacks |
+| 0x02 | s16 | 2 | mode_callback_index | Callback table index (-1 = direct ptr) | Mode transition functions |
+| 0x04 | ptr | 4 | mode_callback_ptr | Callback pointer or table base | Mode transition functions |
+| 0x08 | ptr | 4 | (unknown) | | |
+| 0x0C | ptr | 4 | level_data_context_ptr | Pointer to LevelDataContext (+0x84) | InitializeAndLoadLevel |
+| 0x1C | ptr | 4 | entity_tick_list_head | Head of tick-sorted entity list | Entity add/remove functions |
+| 0x20 | ptr | 4 | entity_render_list_head | Head of render-sorted list | Entity add/remove functions |
+| 0x24 | ptr | 4 | entity_collision_list_head | Entity collision/update queue | Collision system |
+| 0x28 | ptr | 4 | entity_pool | Raw entity definitions (Asset 501) | LoadEntitiesFromAsset501 |
+| 0x2C | ptr | 4 | player_alt | Alternate player reference | SpawnPlayerAndEntities |
+| 0x30 | ptr | 4 | player_entity_ptr | Main player entity pointer | SpawnPlayerAndEntities |
+| 0x38 | s16 | 2 | camera_x | Camera X position (pixels) | UpdateCameraPosition |
+| 0x3A | s16 | 2 | (camera_x_high) | | |
+| 0x3C | s16 | 2 | camera_y | Camera Y position (pixels) | UpdateCameraPosition |
+| 0x3E | s16 | 2 | (camera_y_high) | | |
+| 0x50 | ptr | 4 | input_state_ptr | g_pPlayer1Input pointer | InitGameState |
+| 0x7C | ptr | 4 | callback_table_ptr | Entity type callback table (0x8009D5F8) | InitGameState |
+| 0x84 | struct | varies | level_data_context | LevelDataContext (0x8009DCC4) | Level loading functions |
+| 0x11C | u32 | 4 | player_scale | Player scale factor (0x8000-0x10000) | SpawnPlayerAndEntities |
+| 0x124 | u8 | 1 | player_tint_r | Player RGB tint (red) | Various |
+| 0x125 | u8 | 1 | player_tint_g | Player RGB tint (green) | Various |
+| 0x126 | u8 | 1 | player_tint_b | Player RGB tint (blue) | Various |
+| 0x130 | u8 | 1 | bg_color_change_flag | Background color change request | Various, cleared by RenderEntities |
+| 0x131 | u8 | 1 | bg_color_r | Background color (red) | Various |
+| 0x132 | u8 | 1 | bg_color_g | Background color (green) | Various |
+| 0x133 | u8 | 1 | bg_color_b | Background color (blue) | Various |
+| 0x134 | struct | varies | checkpoint_entity_list | Saved entity list for respawn | SaveCheckpointState |
+| 0x161 | u8 | 1 | respawn_flag | Respawn requested flag | Respawn system |
+| 0x171 | u8[10] | 10 | password_level_list | Password-selectable levels | InitGameState |
+| 0x17B | u8 | 1 | password_level_count | Count of password levels (max 10) | InitGameState |
+| 0x17C | u16[8] | 16 | checkpoint_save_data | Checkpoint/save data | InitGameState, checkpoint system |
+
+### Input State Structure (g_pPlayer1Input)
+
+Input is captured by `PadRead(1)` in the main loop and processed by `UpdateInputState`.
+
+**Structure Layout (verified @ 0x800259d4):**
+
+| Offset | Type | Field Name | Description |
+|--------|------|------------|-------------|
+| 0x00 | u16 | buttons_held | Currently held buttons (bitfield) |
+| 0x02 | u16 | buttons_pressed | Newly pressed this frame (edge detect) |
+| 0x04 | ptr | playback_data_ptr | Pointer to playback buffer (demo mode) |
+| 0x05 | u8 | playback_active | Non-zero if replaying recorded input |
+| 0x08 | ptr | recording_buffer | Pointer to recording buffer |
+| 0x10 | u16 | playback_index | Current playback position |
+| 0x12 | u16 | playback_timer | Frames until next input event |
+
+**PSX Controller Button Mapping:**
+
+| Bit | Hex | Button |
+|-----|-----|--------|
+| 0 | 0x0001 | Select |
+| 1 | 0x0002 | L3 |
+| 2 | 0x0004 | R3 |
+| 3 | 0x0008 | Start |
+| 4 | 0x0010 | Triangle |
+| 5 | 0x0020 | Circle |
+| 6 | 0x0040 | Cross (X) |
+| 7 | 0x0080 | Square |
+| 8 | 0x0100 | L2 |
+| 9 | 0x0200 | R2 |
+| 10 | 0x0400 | L1 |
+| 11 | 0x0800 | R1 |
+| 12 | 0x1000 | D-Pad Up |
+| 13 | 0x2000 | D-Pad Right |
+| 14 | 0x4000 | D-Pad Down |
+| 15 | 0x8000 | D-Pad Left |
+
+**Input Processing Flow:**
+1. `PadRead(1)` returns 32-bit value (P1 in low 16 bits, P2 in high 16 bits)
+2. `UpdateInputState(g_pPlayer1Input, padData & 0xFFFF)` processes P1
+3. `UpdateInputState(g_pPlayer2Input, padData >> 16)` processes P2
+4. Function updates `buttons_held` and calculates `buttons_pressed` (edge detect)
+5. If playback mode active, reads from recording buffer instead
+
+### Camera State
+
+Camera position is stored in GameState and updated by `UpdateCameraPosition` @ 0x80023dbc.
+
+**Memory Locations:**
+- GameState+0x38: `camera_x` (s16) - X position in pixels
+- GameState+0x3C: `camera_y` (s16) - Y position in pixels
+
+**Camera Update Logic:**
+```c
+void UpdateCameraPosition(GameState* state) {
+    Entity* player = state->player_entity_ptr;  // +0x30
+    
+    // Calculate camera target based on player position
+    s16 target_x = player->x_pos - SCREEN_WIDTH/2;
+    s16 target_y = player->y_pos - SCREEN_HEIGHT/2;
+    
+    // Apply level bounds clamping
+    // Apply smoothing/interpolation
+    
+    state->camera_x = clamped_x;
+    state->camera_y = clamped_y;
+}
+```
+
+### Entity State
+
+Entities are stored in linked lists in GameState. The `EntityTickLoop` @ 0x80020e1c
+iterates the tick list at GameState+0x1C and calls each entity's update callback.
+
+**Entity Lists:**
+- **Tick List** (+0x1C): Entities that need per-frame updates
+- **Render List** (+0x20): Entities sorted by z-order for rendering
+- **Collision List** (+0x24): Entities involved in collision detection
+
+**Entity Structure (see [entities.md](entities.md) for full details):**
+
+| Offset | Type | Field | Description |
+|--------|------|-------|-------------|
+| 0x00 | ptr | next | Next entity in linked list |
+| 0x04 | ptr | callback_main | Main tick callback function |
+| 0x08 | ptr | callback_render | Render callback function |
+| 0x0C | u16 | entity_type | Entity type ID (0-120) |
+| 0x48 | s16 | x_whole | X position (whole part) |
+| 0x4A | s16 | y_whole | Y position (whole part) |
+| 0x4C | u16 | x_frac | X position (fractional) |
+| 0x4E | u16 | y_frac | Y position (fractional) |
+| 0x68 | s16 | x_pos | X pixel position (for rendering) |
+| 0x6A | s16 | y_pos | Y pixel position (for rendering) |
+| 0xB4 | s32 | vx | X velocity (16.16 fixed-point) |
+| 0xB8 | s32 | vy | Y velocity (16.16 fixed-point) |
+| 0xBC | u32 | sprite_id | Current sprite ID |
+| 0xD8 | u16 | anim_timer | Animation timer |
+| 0xDA | u16 | anim_frame | Current animation frame |
+
+**Entity Iteration:**
+```c
+void EntityTickLoop(GameState* state) {
+    Entity* entity = state->entity_tick_list_head;  // +0x1C
+    
+    while (entity != NULL) {
+        if (entity->callback_main != NULL) {
+            entity->callback_main(entity);
+        }
+        entity = entity->next;
+    }
+}
+```
+
+### Main Loop State Modifications
+
+**Functions that WRITE to GameState during main loop:**
+
+1. **UpdateInputState** (0x800259d4)
+   - Writes to: g_pPlayer1Input, g_pPlayer2Input (external to GameState)
+   - Updates: buttons_held, buttons_pressed, playback state
+
+2. **Mode Callback** (varies by mode)
+   - Writes to: Various GameState fields depending on current mode
+   - Examples: Level transitions, checkpoint handling, respawn logic
+
+3. **EntityTickLoop** (0x80020e1c)
+   - Writes to: Entity structures (position, velocity, state, animation)
+   - Does NOT directly write to GameState base structure
+
+4. **RenderEntities** (0x80020e80)
+   - Writes to: GameState+0x130 (clears bg_color_change_flag)
+   - Copies RGB values from GameState+0x131/132/133 to frame buffers
+
+5. **UpdateCameraPosition** (0x80023dbc)
+   - Writes to: GameState+0x38 (camera_x), GameState+0x3C (camera_y)
+
+### Deterministic Replay Requirements
+
+To replay a level deterministically, capture the following per frame:
+
+**Required State (Frame N):**
+1. Input state (buttons_held, buttons_pressed)
+2. GameState mode callback state (mode_index, mode_callback_ptr)
+3. Camera position (camera_x, camera_y)
+4. Player entity (position, velocity, state, sprite, animation frame)
+5. All entities (position, velocity, type, callback, animation)
+6. Background color change flag and RGB values
+
+**Optional State (for validation):**
+1. RNG seed (if deterministic RNG used)
+2. Frame counter
+3. BLB metadata (level ID, stage index)
+
+**Capture Points:**
+- **Before EntityTickLoop**: Input state is finalized
+- **After EntityTickLoop**: All entity updates complete
+- **After RenderEntities**: Background color flag cleared
+
+**Implementation Notes:**
+- PSX uses little-endian byte order
+- Fixed-point velocities: divide by 65536.0 for float conversion
+- Entity pointers must be validated (0x80000000-0x80200000 range)
+- Camera position can be negative (level bounds)
+
+### Key Functions for State Capture
+
+| Address | Name | Purpose | Reads From | Writes To |
+|---------|------|---------|------------|-----------|
+| 0x800259d4 | UpdateInputState | Process controller input | PadRead result | g_pPlayer1Input |
+| 0x80020e1c | EntityTickLoop | Update all entities | GS+0x1C (tick list) | Entity structures |
+| 0x80020e80 | RenderEntities | Render frame | GS+0x20 (render list) | GS+0x130 (bg flag) |
+| 0x80023dbc | UpdateCameraPosition | Update camera scroll | Player entity, level bounds | GS+0x38, GS+0x3C |
+| 0x8007e654 | InitialModeHandler | Level loading/respawn logic | Various | GS mode fields |
+
 ## InitGameState (`InitGameState` @ 0x8007cd34)
 
 Called once at startup to initialize the game:
