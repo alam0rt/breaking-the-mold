@@ -63,6 +63,7 @@ local CONFIG = {
         PlayerState = false,       -- Player state changes
         PlayerMove = false,        -- Player movement
         PlayerAnim = false,        -- Player animation changes
+        PlayerVelocity = false,    -- Player velocity samples (high frequency)
         EntitySetState = false,    -- Entity state machine transitions
         SetEntitySpriteId = false, -- Sprite ID changes
         TickEntityAnimation = false, -- Animation tick events
@@ -75,10 +76,12 @@ local CONFIG = {
 
     -- Sampling
     sample_every_n_frames = 300,  -- Full dump every N frames (300 = every 5 seconds at 60fps)
+    sample_velocity_every_n_frames = 4,  -- Log velocity every N frames (4 = 15Hz, good for physics)
     max_log_entries = 50000,      -- Max entries before auto-stop
 
     -- Change detection (reduce noise)
     log_only_changes = false,     -- Only log when state changes
+    log_velocity_changes_only = false,  -- Only log velocity when it changes (false = log every N frames)
 
     -- Boot-time level override (nil = normal boot)
     boot_level_override = {level=1, stage=0},    -- Set to {level=1, stage=0} to force SCIE Stage 0
@@ -344,6 +347,8 @@ local state = {
     last_player_sprite = nil,
     last_anim_frame = nil,
     last_entity_count = 0,
+    last_vx = nil,               -- Last velocity X for change detection
+    last_vy = nil,               -- Last velocity Y for change detection
 
     -- Entity tracking
     entity_cache = {},           -- Cache of known entities
@@ -1212,6 +1217,39 @@ end
 
 local function on_vsync()
     state.frame_count = state.frame_count + 1
+
+    -- Sample player velocity at high frequency for physics analysis
+    if CONFIG.watch_player and CONFIG.sample_velocity_every_n_frames > 0 then
+        if state.frame_count % CONFIG.sample_velocity_every_n_frames == 0 then
+            local player = read_player_entity()
+            if player then
+                local should_log = true
+                
+                -- Optional: only log when velocity changes
+                if CONFIG.log_velocity_changes_only then
+                    if state.last_vx == player.vx and state.last_vy == player.vy then
+                        should_log = false
+                    end
+                end
+                
+                if should_log then
+                    log_entry("PlayerVelocity", {
+                        vx = player.vx,
+                        vy = player.vy,
+                        vx_float = player.vx_float,
+                        vy_float = player.vy_float,
+                        x = player.x,
+                        y = player.y,
+                        state = player.callback_name,
+                        facing = player.facing_dir,
+                        on_ground = player.vy == 0 or player.vy == -65536,  -- Heuristic
+                    })
+                    state.last_vx = player.vx
+                    state.last_vy = player.vy
+                end
+            end
+        end
+    end
 
     -- Clear throttle caches every 600 frames (~10 seconds) to prevent memory growth
     if state.frame_count % 600 == 0 then
