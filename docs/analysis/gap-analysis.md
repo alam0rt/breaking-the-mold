@@ -13,14 +13,17 @@ The decompilation project has made excellent progress on:
 - ✅ Entity system basics
 - ✅ Player mechanics (recent addition)
 - ✅ Entity type identification (recent addition)
+- ✅ **Animation framework (5-layer system documented 2026-01-15)**
 
 **Major gaps remain in:**
-- ❌ Collision/physics system
+- ⚠️ Collision/physics system (can partially close from code analysis)
 - ❌ Save/load/memory card system
 - ❌ Boss AI and specific enemy behaviors
 - ❌ Projectile/weapon system
-- ❌ Tile attribute meanings (collision flags)
-- ❌ Input handling details
+- ⚠️ Tile attribute meanings (60-80% extractable from code)
+- ⚠️ Input handling details (button mappings documented)
+
+**See [gaps-we-can-close.md](gaps-we-can-close.md) for detailed analysis of what can be extracted from decompiled code.**
 
 ---
 
