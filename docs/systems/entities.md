@@ -17,6 +17,31 @@ The entity system has three key aspects:
 
 Entities are managed through a frame-based game loop executed in `main` @ 0x800828b0.
 
+### Mode System Architecture
+
+**Important**: There is **only ONE mode callback** (`GameModeCallback @ 0x8007e654`), not multiple mode-specific callbacks. The "mode" concept refers to three different systems:
+
+1. **BLB Content Mode** (header+0xF36): Determines which data structures load via `GetCurrentModeReservedData @ 0x8007ae9c`
+   - Mode 1: Movie entries (28 bytes @ header+0xB64)
+   - Mode 2: Credits entries (12 bytes @ header+0xF1C)
+   - Mode 3: Level entries (112 bytes @ header+0x56)
+   - Mode 4/5: Demo entries (16 bytes @ header+0xCD3)
+   - Mode 0, 6: No reserved data
+
+2. **Level Loading Mode** (param_2): Controls level execution behavior passed to `SetupAndStartLevel`
+   - param_2=1: Normal gameplay (live controller input)
+   - param_2=5: Demo Mode 1 (input replay from buffer)
+   - param_2=6: Demo Mode 2 (alternate demo replay)
+   - param_2=99: Menu trigger mode
+
+3. **Audio Mode** (0x800A6082): Used by `PlaySoundEffect @ 0x8007c388` to adjust sound behavior
+   - Set via `SetGameMode @ 0x8007c36c` (validates 0-6)
+   - Cleared to 0 by `UploadAudioToSPU @ 0x8007c088`
+
+**All modes execute through the same callback** - they differ in which data loads and whether input is live or replayed, but the execution flow is identical.
+
+> **See Also**: [Demo/Attract Mode System](demo-attract-mode.md) for input replay details.
+
 ### Frame Processing Flow
 
 ```

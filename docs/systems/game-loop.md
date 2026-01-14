@@ -1,6 +1,13 @@
 # Game Loop & Player Creation
 
-The main game loop and player entity dispatch system.
+The main game loop, player entity dispatch system, and pause/cheat systems.
+
+## Newly Discovered Systems
+
+This document was updated after tracing GameModeCallback and discovering:
+- **Pause System**: Complete pause/unpause flow with audio muting and entity backup
+- **Cheat Code System**: Button sequence detection and 22 cheat codes
+- **Pause Menu HUD**: Complex HUD with player stats (lives, orbs, powerups)
 
 ## Main Loop (`main` @ 0x800828b0)
 
@@ -1067,6 +1074,173 @@ Used during level transitions.
 ## Related Documentation
 
 - [Level Loading](level-loading.md) - Asset loading flow
-- [Entities](entities.md) - Entity system details
+- [Entities](entities.md) - Entity system details  
 - [Player Animation](player-animation.md) - Player sprite rendering, direction, powerups
 - [Game Functions](../reference/game-functions.md) - Complete function list
+
+## Pause System
+
+The game includes a complete pause system with audio muting, entity backup, and a HUD display.
+
+### Pause Flow
+
+**Entering Pause (START button pressed):**
+
+1. `PauseGameAndShowMenu @ 0x8007EC08` called from GameModeCallback
+2. Calls `SaveAndMuteAllVoicePitches @ 0x8007CB44`:
+   - Saves 24 SPU voice pitches to buffer @ 0x8009CC30
+   - Sets all voice pitches to 0 (mutes audio)
+   - Calls audio pause function @ 0x80038E50
+   - Sets mute flag @ 0x800A6087
+3. Plays menu open sound (ID 0x65281E40, volume 0xA0)
+4. Backs up game state:
+   - Saves tick list pointer (state+0x1C → state+0x15C)
+   - Saves frame counter (state+0x10C → state+0x154)
+   - Saves pause byte (state+0x63 → state+0x158)
+5. Sets pause flags:
+   - state+0x151 = 0 (no fade-out)
+   - state+0x150 = 1 (pause active)
+   - state+0x160 = 22 (22 frame countdown)
+   - state+0x63 = 1 (halt gameplay logic)
+6. Clears active tick list (state+0x1C = 0)
+7. Shows pause menu HUD via `ShowPauseMenuHUD @ 0x8002B22C`:
+   - Adds 3 fade overlays to render list
+   - Spawns shadow entity for menu
+   - Displays HUD elements (lives, orbs, powerups):
+     * Lives count (from g_pPlayerState[0x11])
+     * Orb count (from g_pPlayerState[0x12])
+     * Checkpoint count (from g_pPlayerState[0x13])
+     * Blue orbs × 3 (from g_pPlayerState[0x19])
+     * Green orbs × 3 (from g_pPlayerState[0x1A])
+     * 7 powerup icons (from g_pPlayerState[0x14-0x16, 0x1C])
+
+**Exiting Pause (menu selection confirmed):**
+
+1. `PauseGameWithFadeOut @ 0x8007ED34` called
+2. Plays pause sound (ID 0x4C60F249, volume 0xA0)
+3. Sets fade-out flag (state+0x151 = 1)
+4. Calls fade function @ 0x8002BB94 (hides HUD)
+5. Sets countdown to 22 frames (state+0x160 = 0x16)
+6. GameModeCallback decrements countdown each frame
+7. When countdown hits 1 and fade flag set:
+   - Calls `UnpauseGameAndRestoreEntities @ 0x8007ED9C`
+   - Calls `ResumeAllVoicePitches @ 0x8007CBC0`:
+     * Restores 24 voice pitches from buffer @ 0x8009CC30
+     * Calls audio resume @ 0x80038EA0
+     * Clears mute flag @ 0x800A6087
+   - Clears pause flags (state+0x151 = 0, state+0x150 = 0)
+   - Restores frame counter (state+0x154 → state+0x10C)
+   - Restores pause byte (state+0x158 → state+0x63)
+   - Restores tick list (state+0x15C → state+0x1C)
+   - Re-adds player to render list if needed
+
+### Pause State Offsets
+
+| Offset | Type | Purpose |
+|--------|------|---------|
+| +0x63 | u8 | Pause state (1 = paused) |
+| +0x10C | u32 | Frame counter (saved during pause) |
+| +0x14C | ptr | Pause menu entity pointer |
+| +0x150 | u8 | Pause active flag |
+| +0x151 | u8 | Fade-out active flag |
+| +0x154 | u32 | Saved frame counter |
+| +0x158 | u8 | Saved pause byte |
+| +0x15C | ptr | Saved tick list pointer |
+| +0x160 | u8 | Pause countdown (22 frames) |
+| +0x18D | u8 | Re-add player flag |
+
+### Pause Menu HUD Structure
+
+The pause menu entity (state+0x14C) contains 30+ HUD element pointers:
+
+| Offset | Count | Element |
+|--------|-------|---------|
+| +0x20 | 3 | Lives icons |
+| +0x2C | 3 | Lives count digits |
+| +0x38 | 3 | Orb icons |
+| +0x44 | 3 | Blue orb icons |
+| +0x50 | 3 | Green orb icons |
+| +0x5C | 3 | Powerup icon 1 (type from +0x14) |
+| +0x68 | 4 | Powerup icon 2 (type from +0x15) |
+| +0x78 | 3 | Powerup icon 3 (type from +0x16) |
+| +0x84 | 3 | Powerup icon 4 (type from +0x1C) |
+| +0x90 | 1 | Shadow entity |
+| +0x94 | 1 | Fade overlay 1 |
+| +0x98 | 1 | Fade overlay 2 (RGB 0x80/0x80/0x80) |
+| +0x9C | 1 | Fade overlay 3 (RGB 0x40/0x40/0x40) |
+
+## Cheat Code System
+
+The game includes a button sequence detection system with 22 cheat codes.
+
+### Input Ring Buffer
+
+- Located at GameState+0x17C (8 × u16 = 16 bytes)
+- Current position at GameState+0x18C (u8)
+- Advances on any button press (non-zero button state)
+- Wraps around after 8 entries
+
+### Pattern Matching
+
+Called by `CheckCheatCodeInput @ 0x800820B4` from GameModeCallback during pause handling.
+
+**Algorithm:**
+1. Read button state from input+0x02
+2. Store in ring buffer at current position
+3. Advance position (wrap at 8)
+4. Compare all 8 positions against 22 cheat patterns
+5. Cheat patterns stored at global table @ 0x8009DAE0
+6. Each pattern is 8 buttons wide × 16 bytes per cheat = 128 bytes total
+
+**Pattern Format:**
+- 8 consecutive button states must match exactly
+- Pattern table entry = [button0, button1, ... button7] (8 × u16)
+- 22 patterns indexed 0-0x15
+
+### Cheat Codes
+
+| Index | Effect | Code Requirement |
+|-------|--------|------------------|
+| 0x00 | Toggle debug graphics (g_GameFlags ^= 0x80) | 8-button sequence |
+| 0x02 | Full powerups + 7 lives + 48 orbs | 8-button sequence |
+| 0x03 | Set checkpoint count to 20 | 8-button sequence |
+| 0x04 | Enable invincibility flag | 8-button sequence |
+| 0x05 | Set lives to 99 | 8-button sequence |
+| 0x06 | Unlock powerup slot 3 (7 uses) | 8-button sequence |
+| 0x07 | Unlock powerup slot 1 (7 uses) | 8-button sequence |
+| 0x08 | Unlock powerup slot 4 (7 uses) | 8-button sequence |
+| 0x09 | Unlock powerup slot 2 (7 uses) + reset level unlocks | 8-button sequence |
+| 0x0A | Set green orbs to 3 | 8-button sequence |
+| 0x0B | Set blue orbs to 3 | 8-button sequence |
+| 0x0C | Warp to next stage | 8-button sequence |
+| 0x0D | Warp to stage 99 (menu) | 8-button sequence |
+| 0x0E | Toggle invincibility (g_GameFlags ^= 1) | 8-button sequence |
+| 0x0F | Toggle pause menu visibility | 8-button sequence |
+| 0x10 | Unlock special ability 1 (level-restricted) | 8-button sequence |
+| 0x11 | Unlock special ability 2 (level-restricted) | 8-button sequence |
+| 0x12 | Toggle frame skip (g_GameFlags ^= 2) | 8-button sequence |
+| 0x13 | Set player re-add flag | 8-button sequence |
+| 0x14 | Unlock special ability 3 (level-restricted) | 8-button sequence |
+| 0x15 | Unlock special ability 4 (level-restricted) | 8-button sequence |
+
+**Level Restrictions (0x10-0x15):**
+- Only activate if level flags (0x400, 0x200, 0x2000, 0x100, 0x10, 0x04) are ALL clear
+- Prevents use in special levels (bosses, vehicles, etc.)
+
+### Cheat Activation
+
+When valid pattern detected:
+1. Plays activation sound (ID 0x90810000, volume 0xA0)
+2. Executes cheat effect (modifies g_GameFlags or g_pPlayerState)
+3. Returns 1 (processed) or 0 (no effect)
+4. Return value determines if GameModeCallback should continue or pause
+
+### Global Flags Affected
+
+| Flag Bit | Cheat | Effect |
+|----------|-------|--------|
+| 0x01 | 0x0E | Invincibility |
+| 0x02 | 0x12 | Frame skip/turbo mode |
+| 0x40 | 0x00 | Debug graphics |
+| 0x80 | 0x00 | Debug overlay |
+
