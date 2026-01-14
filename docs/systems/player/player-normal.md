@@ -311,10 +311,21 @@ State table at 0x800a5d20:
 - Sprite: 0x1c395196 (if +0xCC == 0x388110), else 0x3838801a
 - Movement callback: PlayerCallback_8006120c (or 80061934 if shrunk)
 - Next state: PlayerStateCallback_0
+- Observed: Frame 504, 572 (after pickup)
 
-**Walking** @ 0x800674CC (`PlayerState_WalkingLeft`)
-- Entered when: Horizontal input detected from idle
-- Sprite: 0x18298210 (walking animation)
+**Walking Right** @ 0x8006736C (`PlayerState_WalkingRight`)
+- Entered when: Right input detected from idle
+- Sprite: 0x292e8480 (same as running - direction handled by facing flag)
+- Secondary callback: PlayerCallback_8005cc84
+- Movement callback: PlayerCallback_800638d0 (or 80062ad4 if shrunk)
+- Next state: Callback_800678d4 (falling state)
+- Clears +0x156 field
+- Observed: Frame 601, 618, 641 (repeated short walk bursts)
+
+**Walking Left** @ 0x800674CC (`PlayerState_WalkingLeft`)
+- Entered when: Left input detected from idle
+- Sprite: 0x18298210 (mirrored version)
+- Secondary callback: PlayerCallback_8005f540
 - Movement callback: PlayerCallback_800638d0 (or 80062ad4 if shrunk)
 - Next state: PlayerStateCallback_0
 - Clears +0x156 field
@@ -323,9 +334,53 @@ State table at 0x800a5d20:
 - Entered when: Sustained horizontal input from walking
 - Sprite: 0x292e8480 (running animation)
 - Movement callback: PlayerCallback_800638d0 (same as walk)
-- Next state: Callback_800678d4 (DIFFERENT from walk - may be falling/jump)
+- Next state: Callback_800678d4 (DIFFERENT from walk - leads to falling)
 - Clears +0x156 field
 - Calls FUN_8001d0c0(entity, 1)
+
+**Jump** @ 0x80067E28 (`PlayerState_Jump`)
+- Entered when: X button pressed on ground
+- Sprite: 0x092b8480 (jump animation)
+- Secondary callback: FUN_8005c1c4
+- Movement callback: PlayerCallback_800638d0 (or 80062ad4 if shrunk)
+- Sets +0x156 = 0x0C (jump parameter)
+- Plays jump sound: FUN_8001c4a4(entity, 0x248e52)
+- Calls FUN_8001ec18 with state table parameters
+- Observed: Frame 731 (first jump), 1064 (second jump)
+
+**Falling** @ 0x800678D4 (`PlayerState_Falling`)
+- Entered when: Leaving ground (after run) or apex of jump
+- Sprite: 0x0b2084d0 (falling/descending animation)
+- Tick callback: PlayerCallback_8005bb80 (DIFFERENT from normal tick!)
+- Secondary callback: FUN_8005c1c4 (same as jump)
+- Movement callback: PlayerCallback_800638d0
+- Sets +0x156 = 0x0C (if coming from jump 0x092b8480), else 0
+- Clears +0x110 field
+- Observed: Frame 653 (transition), 1059 (pre-jump)
+
+**Death** @ 0x8006A0B8 (`PlayerState_Death`)
+- Entered when: Hit by enemy with no health remaining
+- Sprite: 0x1b301085 (death/explosion animation)
+- Tick callback: PlayerTickCallback (normal)
+- Secondary callback: PlayerCallback_8005d404
+- Movement callback: PlayerCallback_80061180 (position update only)
+- Clears +0x104/+0x108 callbacks (no movement processing)
+- Sets g_GameStatePtr[0x170] = 0
+- Sets +0x178 = 1 (entity flag)
+- Sets +0x158 = 0 (clear field)
+- Sets +0x168 = 1 (render flag)
+- Observed: Frame 814 (death after monkey collision)
+
+**Respawn** @ 0x80066CE0 (`PlayerStateCallback_0`)
+- Entered when: Transitioning between movement states
+- Multiple sprites: 0x48204012 (turn animation), 0x00388110 (other)
+- Used as "next state" target by many other states
+- Observed: Frame 604, 621 (between walk bursts)
+
+**Normal/Idle** @ 0x8006864C (`PlayerStateCallback_2`)
+- Entered when: Respawning or returning from death
+- Sprite: 0x00388110 (idle standing)
+- Observed: Frame 984 (after respawn)
 
 **Pickup Item** @ 0x80068B48 (`PlayerState_PickupItem`)
 - Entered when: Collision with clayball or collectible
@@ -334,13 +389,32 @@ State table at 0x800a5d20:
 - Movement callback: PlayerCallback_80064b40 (or 80064008 if shrunk)
 - Next state: EntityInitCallback_80069600
 - Sets g_GameStatePtr[0x60] = 1 (pickup flag)
-- Sets velocity: 0x30000 or 0x20000 OR'd with 0x8000
+- Sets velocity: 0x30000 (if bit match), else 0x20000, OR'd with 0x8000
 - **WARNING**: This state may cause segfaults on rapid pickups due to SetEntitySpriteId spam
+- Observed: Frame 521 (Klayman head?), 1183 (clayball), 1243 (crash)
 
-States referenced in tick:
-- 0x80069ef4: Death state (skip collision)
-- 0x800678d4: Water/swimming (or post-running transition)
-- 0x80067e28: Jumping/airborne
+### State Transition Flow (from trace)
+
+```
+[Spawn] 
+  → Idle (0x8006888C, frame 504)
+  → Pickup (0x80068B48, frame 521) 
+  → Idle (0x8006888C, frame 572)
+  → Walk Right (0x8006736C, frame 601)
+  → Respawn (0x80066CE0, frame 604) 
+  → Walk Right (0x8006736C, frame 618)
+  → Respawn (0x80066CE0, frame 621)
+  → Walk Right (0x8006736C, frame 641)
+  → Jump (0x80067E28, frame 731)
+  → Death (0x8006A0B8, frame 814)   ← Hit monkey
+  → Normal (0x8006864C, frame 984)  ← Respawn
+  → Falling (0x800678D4, frame 1059)
+  → Jump (0x80067E28, frame 1064)
+  → Pickup (0x80068B48, frame 1183)
+  → Falling (0x800678D4, frame 1238)
+  → Jump (0x80067E28, frame 1239)
+  → Pickup (0x80068B48, frame 1243)  ← CRASH
+```
 
 ## Spawn Position
 
