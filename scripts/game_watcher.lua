@@ -128,10 +128,15 @@ local ADDR = {
     ENT_x_pos = 0x68,              -- X pixel position (s16) - used for rendering
     ENT_y_pos = 0x6A,              -- Y pixel position (s16)
     ENT_facing = 0x74,             -- Facing direction (0=right, 1=left)
+    ENT_moving_up = 0x75,          -- Vertical direction flag (0=down, 1=up)
 
-    -- Entity velocity (fixed-point 16.16)
-    ENT_vx = 0xB4,                 -- X velocity (s32, 16.16 fixed)
-    ENT_vy = 0xB8,                 -- Y velocity (s32, 16.16 fixed)
+    -- Movement forces (PRIMARY movement mechanism)
+    ENT_push_x = 0x160,            -- X push force (s16, pixels per frame)
+    ENT_push_y = 0x162,            -- Y push force (s16, pixels per frame)
+
+    -- Unknown physics fields (NOT used for position updates)
+    ENT_unknown_vx = 0xB4,         -- Unknown physics state (s32, 16.16 fixed)
+    ENT_unknown_vy = 0xB8,         -- Unknown physics state (s32, 16.16 fixed)
 
     -- Entity animation/sprite
     ENT_sprite_data_ptr = 0x78,    -- Pointer to sprite animation data
@@ -527,11 +532,16 @@ local function read_entity(entity_ptr)
         y_frac = read_u16(entity_ptr + ADDR.ENT_y_frac),
 
         -- Velocity (fixed-point)
-        vx = read_s32(entity_ptr + ADDR.ENT_vx),
-        vy = read_s32(entity_ptr + ADDR.ENT_vy),
+        vx = read_s32(entity_ptr + ADDR.ENT_unknown_vx),
+        vy = read_s32(entity_ptr + ADDR.ENT_unknown_vy),
+
+        -- Movement forces (actual movement)
+        push_x = read_s16(entity_ptr + ADDR.ENT_push_x),
+        push_y = read_s16(entity_ptr + ADDR.ENT_push_y),
 
         -- Direction
         facing = read_u8(entity_ptr + ADDR.ENT_facing),
+        moving_up = read_u8(entity_ptr + ADDR.ENT_moving_up),
 
         -- Animation
         sprite_data_ptr = read_u32(entity_ptr + ADDR.ENT_sprite_data_ptr),
@@ -558,6 +568,8 @@ local function read_entity(entity_ptr)
     ent.facing_dir = ent.facing == 0 and "right" or "left"
     ent.vx_float = fixed_to_float(ent.vx)
     ent.vy_float = fixed_to_float(ent.vy)
+    ent.push_x_float = ent.push_x  -- Already in pixels per frame
+    ent.push_y_float = ent.push_y  -- Already in pixels per frame
 
     return ent
 end
@@ -1234,15 +1246,21 @@ local function on_vsync()
                 
                 if should_log then
                     log_entry("PlayerVelocity", {
+                        -- Unknown physics fields (not used for movement)
                         vx = player.vx,
                         vy = player.vy,
                         vx_float = player.vx_float,
                         vy_float = player.vy_float,
+                        -- Actual movement forces
+                        push_x = player.push_x,
+                        push_y = player.push_y,
+                        -- Position and state
                         x = player.x,
                         y = player.y,
                         state = player.callback_name,
                         facing = player.facing_dir,
-                        on_ground = player.vy == 0 or player.vy == -65536,  -- Heuristic
+                        moving_up = player.moving_up == 1,
+                        on_ground = player.push_y == 0,  -- Better heuristic
                     })
                     state.last_vx = player.vx
                     state.last_vy = player.vy

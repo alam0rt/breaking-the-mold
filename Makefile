@@ -446,6 +446,26 @@ endif
 watch: record
 	@echo "Note: 'make watch' is deprecated. Use 'make record' instead."
 
+# Start DuckDB trace streaming (runs in background)
+# Usage: make stream
+stream:
+	@echo "Starting DuckDB trace streaming in background..."
+	@mkdir -p build
+	@./scripts/trace_to_duckdb.sh watch &
+	@echo "Stream started. Query with: ./scripts/query_trace.sh <query>"
+	@echo "Stop with: pkill -f trace_to_duckdb"
+
+# Query trace database
+# Usage: make query QUERY=velocity-summary
+query:
+ifndef QUERY
+	@echo "Available queries: velocity-summary velocity-raw states jump-physics walk-speed stats"
+	@echo "Usage: make query QUERY=velocity-summary"
+	@echo "Custom SQL: make query QUERY='sql SELECT * FROM player_velocity LIMIT 10'"
+else
+	@./scripts/query_trace.sh $(QUERY)
+endif
+
 # Quick RAM snapshot (requires web server enabled in PCSX-Redux)
 # Usage: make snapshot
 snapshot:
