@@ -122,6 +122,13 @@ def get_decompiled_code(name: str, address: int) -> Optional[str]:
     if result.get("success"):
         decompiled = result.get("result", {}).get("decompiled", "")
         return decompiled
+    else:
+        # Print detailed error from Ghidra
+        error_msg = result.get("error", "Unknown error")
+        print(f"❌ Ghidra decompilation failed: {error_msg}", file=sys.stderr)
+        # Also print full result for debugging
+        if result:
+            print(f"   Full response: {json.dumps(result, indent=2)}", file=sys.stderr)
     return None
 
 def check_symbol_file(name: str, address: int, size: int, dry_run: bool = False) -> bool:
@@ -284,12 +291,12 @@ def update_splat_yaml(name: str, rom_offset: int, size: int, dry_run: bool = Fal
             if insert_idx is None:
                 error("Could not determine where to insert segment")
             
-            # Insert new segments
+            # Insert new segments (use integers, not hex strings)
             new_segments = [
-                [f"0x{rom_offset:X}", "c", name]
+                [rom_offset, "c", name]
             ]
             if size:
-                new_segments.append([f"0x{rom_offset + size:X}", "asm"])
+                new_segments.append([rom_offset + size, "asm"])
             
             for offset, seg in enumerate(new_segments):
                 subsegments.insert(insert_idx + offset, seg)

@@ -14,26 +14,26 @@ options:
   # create_asm_dependencies: True
 
   ld_script_path: build/pal/game.ld
-  ld_dependencies: True
+  ld_dependencies: true
 
-  find_file_boundaries: True
+  find_file_boundaries: true
   gp_value: 0x800A5954
   # ld_gp_expression: main_SCOMMON_START + 0x7FF0
 
-  o_as_suffix: True
-  use_legacy_include_asm: False
+  o_as_suffix: true
+  use_legacy_include_asm: false
 
   section_order: [".rodata", ".text", ".data", ".sdata", ".bss"]
   auto_link_sections: [".data", ".rodata", ".sdata", ".bss"]
 
   # Disable section alignment to match original binary layout
-  ld_align_section_vram_end: False
-  ld_align_segment_vram_end: False
+  ld_align_section_vram_end: false
+  ld_align_segment_vram_end: false
 
   symbol_addrs_path:
-    - symbol_addrs.txt
+  - symbol_addrs.txt
   reloc_addrs_path:
-    - reloc_addrs.txt
+  - reloc_addrs.txt
 
   undefined_funcs_auto_path: undefined_funcs_auto.txt
   undefined_syms_auto_path: undefined_syms_auto.txt
@@ -51,76 +51,81 @@ options:
   # https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
   # include_asm_macro_style: maspsx_hack
 segments:
-  - name: header
-    type: header
-    start: 0x0
+- name: header
+  type: header
+  start: 0x0
 
-  - name: main
-    type: code
-    start: 0x800
-    vram: 0x80010000
-    bss_size: 0x8278
-    subsegments:
+- name: main
+  type: code
+  start: 0x800
+  vram: 0x80010000
+  bss_size: 0x8278
+  subsegments:
       # .rdata: 0x80010000 - 0x800131EF (size: 0x31F0)
-      - [0x800, rodata]
+  - [0x800, rodata]
       # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
-      - [0x39F0, asm]
+  - [0x39F0, asm]
       # LoadBLBHeader: 0x800208B0 - 0x80020973 (BLB archive initialization)
-      - [0x110B0, c, LoadBLBHeader]
-      - [0x11174, asm]
+  - [0x110B0, c, LoadBLBHeader]
+  - [0x11174, asm]
+  - - 90580
+    - c
+    - UpdateInputState
+  - - 90980
+    - asm
       # initPlayerState: 0x800260D0 - 0x8002615B
-      - [0x168D0, c, initPlayerState]
-      - [0x1695C, asm]
+  - [0x168D0, c, initPlayerState]
+  - [0x1695C, asm]
       # LoadGameAssetLocations: 0x800389DC - 0x80038B97
-      - [0x291DC, c, LoadGameAssetLocations]
+  - [0x291DC, c, LoadGameAssetLocations]
       # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F
-      - [0x29398, c, CdBLB]
-      - [0x29950, asm]
+  - [0x29398, c, CdBLB]
+  - [0x29950, asm]
       # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
-      - [0x6AE2C, c, LevelDataParser]
-      - [0x6B080, asm]
+  - [0x6AE2C, c, LevelDataParser]
+  - [0x6B080, asm]
       # GetLevelCount: 0x8007A9B0 - 0x8007A9C3 (returns header[0xF31])
-      - [0x6B1B0, c, GetLevelCount]
+  - [0x6B1B0, c, GetLevelCount]
       # StateAccessors: 0x8007A9C4 - 0x8007AA27
       # GetLevelAssetIndex, GetLevelDisplayName, getLevelName
-      - [0x6B1C4, c, StateAccessors]
+  - [0x6B1C4, c, StateAccessors]
       # ASM gap: GetLevelFlagByIndex, GetCurrentLevelAssetIndex, GetCurrentLevelDisplayName,
       # GetCurrentLevelName, GetCurrentSectorOrderUnk1, GetCurrentSectorOrderUnk2
-      - [0x6B228, asm]
+  - [0x6B228, asm]
       # CreditsAccessors: 0x8007ABCC - 0x8007ACDB
       # GetCurrentSectorOffset, GetCurrentSectorCount
-      - [0x6B3CC, c, CreditsAccessors]
+  - [0x6B3CC, c, CreditsAccessors]
       # GetAssetCount: 0x8007ACDC - 0x8007ACEF
-      - [0x6B4DC, c, GetAssetCount]
+  - [0x6B4DC, c, GetAssetCount]
       # MovieAccessors: 0x8007ACF0 - 0x8007AE13
       # GetMovieReservedByIndex, GetMovieShortNameByIndex, GetCurrentMovieReserved,
       # GetCurrentMovieShortName, GetCurrentMovieFilename
-      - [0x6B4F0, asm]
+  - [0x6B4F0, asm]
       # BLBHeaderAccessors: 0x8007AE14 - 0x8007AE9B
       # GetMovieUnknown00, GetMovieSectorCount
-      - [0x6B614, c, BLBHeaderAccessors]
+  - [0x6B614, c, BLBHeaderAccessors]
       # ASM: GetCurrentModeReservedData (has jumptable), GetCurrentLevelFlag, GetCurrentTertiaryDataSize
-      - [0x6B69C, asm]
+  - [0x6B69C, asm]
       # SetupSound: 0x8007B8B8 - 0x8007c084 ?
-      - [0x6C7B8, c, SetupSound]
-      - [0x6C888, asm]
+  - [0x6C7B8, c, SetupSound]
+  - [0x6C888, asm]
       # SaveCheckpointState: 0x8007EAAC - 0x8007EAEB
       # Saves entity tick list for checkpoint respawn
-      - [0x6F2AC, c, SaveCheckpointState]
-      - [0x6F2EC, asm]
+  - [0x6F2AC, c, SaveCheckpointState]
+  - [0x6F2EC, asm]
       # main: 0x800828B0 - 0x80082C0F
-      - [0x730B0, c, main]
-      - [0x73410, asm]
+  - [0x730B0, c, main]
+  - [0x73410, asm]
       # __main: 0x8008E6E0 - 0x8008E7B7 (constructor init)
-      - [0x7EEE0, c, __main]
+  - [0x7EEE0, c, __main]
       # .text continued after __main
-      - [0x7EFB8, asm]
+  - [0x7EFB8, asm]
       # .text.split: 0x800907D0 - 0x800907EB (size: 0x1C)
-      - [0x80FD0, asm]
+  - [0x80FD0, asm]
       # .data: 0x800907EC - 0x800A5953 (size: 0x15168)
-      - [0x80FEC, data]
+  - [0x80FEC, data]
       # .sdata: 0x800A5954 - 0x800A611F (size: 0x7CC)
-      - [0x96154, sdata]
+  - [0x96154, sdata]
       # Padding to end of file (zeros) - placed after sdata using linker_section_order
-      - [0x96920, pad]
-  - [0x97000]  # End of file (actual size)
+  - [0x96920, pad]
+- [0x97000]    # End of file (actual size)

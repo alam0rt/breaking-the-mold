@@ -292,3 +292,4 @@ PlayerStateCallback_0 = 0x80066CE0; // Respawn state
 PlayerStateCallback_1 = 0x8006A310; // Special mode
 PlayerStateCallback_2 = 0x8006864C; // Normal gameplay (main)
 PlayerStateCallback_3 = 0x8006AE0C; // Alt state
+UpdateInputState = 0x800259D4; // size:0x190
