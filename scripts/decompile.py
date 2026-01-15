@@ -98,30 +98,21 @@ def get_function_info(name: str) -> Optional[Dict]:
     address_str = func.get("address", "0")
     address = int(address_str, 16) if isinstance(address_str, str) else address_str
     
-    # Get detailed info including size
-    detail = ghidra_request(f"/functions/{address:08x}")
-    if detail.get("success"):
-        body = detail.get("result", {}).get("body", {})
-        if body:
-            min_addr = body.get("minAddress", "0")
-            max_addr = body.get("maxAddress", "0")
-            if isinstance(min_addr, str):
-                min_addr = int(min_addr, 16)
-            if isinstance(max_addr, str):
-                max_addr = int(max_addr, 16)
-            size = max_addr - min_addr + 1 if max_addr > min_addr else 0
-            
-            return {
-                "name": func.get("name"),
-                "address": address,
-                "size": size,
-                "rom_offset": vram_to_rom(address)
-            }
+    # Try to get size from disassembly (count instructions × 4 bytes)
+    size = 0
+    try:
+        disasm = ghidra_request(f"/functions/{address:08x}/disassembly")
+        if disasm.get("success"):
+            instructions = disasm.get("result", {}).get("instructions", [])
+            if instructions:
+                size = len(instructions) * 4
+    except:
+        pass
     
     return {
         "name": func.get("name"),
         "address": address,
-        "size": 0,
+        "size": size,
         "rom_offset": vram_to_rom(address)
     }
 
@@ -133,26 +124,61 @@ def get_decompiled_code(name: str, address: int) -> Optional[str]:
         return decompiled
     return None
 
-def check_symbol_file(name: str, address: int, size: int) -> bool:
+def check_symbol_file(name: str, address: int, size: int, dry_run: bool = False) -> bool:
     """Check if function is in symbol_addrs.txt and add if missing."""
     if not SYMBOL_FILE.exists():
         error(f"{SYMBOL_FILE} not found")
     
     with open(SYMBOL_FILE, 'r') as f:
-        content = f.read()
+        lines = f.readlines()
     
-    if f"{name} =" in content:
-        info(f"Found in {SYMBOL_FILE}")
-        return True
+    # Look for exact match or just name
+    found_line = None
+    found_idx = None
+    for idx, line in enumerate(lines):
+        if f"{name} =" in line:
+            found_line = line.strip()
+            found_idx = idx
+            break
     
-    # Add to symbol file
+    if found_line:
+        # Check if it matches what we expect
+        expected = f"{name} = 0x{address:08X};"
+        if size:
+            expected += f" // size:0x{size:X}"
+        
+        if expected in found_line:
+            info(f"Found in {SYMBOL_FILE} (line {found_idx + 1})")
+            return True
+        else:
+            # Show difference
+            info(f"Found in {SYMBOL_FILE} (line {found_idx + 1}) but differs:")
+            print(f"    Existing: {found_line}")
+            print(f"    Expected: {expected}")
+            
+            if not dry_run:
+                # Update the line
+                lines[found_idx] = expected + "\n"
+                with open(SYMBOL_FILE, 'w') as f:
+                    f.writelines(lines)
+                success(f"Updated in {SYMBOL_FILE}")
+            else:
+                info("Would update this line")
+            return True
+    
+    # Not found - need to add
     line = f"{name} = 0x{address:08X};"
     if size:
         line += f" // size:0x{size:X}"
-    line += "\n"
     
+    if dry_run:
+        info(f"Not found in {SYMBOL_FILE}")
+        print(f"    Would add: {line}")
+        return True
+    
+    # Add to symbol file
     with open(SYMBOL_FILE, 'a') as f:
-        f.write(line)
+        f.write(line + "\n")
     
     success(f"Added to {SYMBOL_FILE}")
     return True
@@ -369,10 +395,7 @@ def main():
     info(f"Size:       {size} bytes (0x{size:X})" if size else "Size:       Unknown")
     
     # Step 2: Check/update symbol_addrs.txt
-    if not args.dry_run:
-        check_symbol_file(name, address, size)
-    else:
-        info(f"Would check/update {SYMBOL_FILE}")
+    check_symbol_file(name, address, size, args.dry_run)
     
     # Step 3: Show Ghidra decompilation if requested
     if args.ghidra:
