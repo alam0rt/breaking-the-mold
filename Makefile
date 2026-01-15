@@ -313,10 +313,22 @@ ifndef FUNC
 endif
 	$(PYTHON) tools/asm-differ/diff.py -mw3 $(FUNC)
 
+# Generate context file for m2c decompiler
+# This preprocesses common.h to create ctx.c with all type definitions
+# Usage: make context
+CTX_FILE := ctx.c
+context: $(CTX_FILE)
+
+$(CTX_FILE): include/common.h
+	@echo "Generating $(CTX_FILE)..."
+	@cpp -E -P -I include -I psyq -D_LANGUAGE_C include/common.h > $(CTX_FILE)
+	@echo "✓ Generated $(CTX_FILE) ($$(wc -l < $(CTX_FILE)) lines)"
+
 # Decompile a function using m2c
 # Usage: make decompile FUNC=FunctionName
 # The function must exist in asm/pal/nonmatchings/*/FUNC.s
-decompile:
+# Automatically generates ctx.c if needed
+decompile: $(CTX_FILE)
 ifndef FUNC
 	@echo "Usage: make decompile FUNC=FunctionName"
 	@exit 1
@@ -326,7 +338,7 @@ endif
 		echo "Error: Could not find $(FUNC).s in $(ASM_DIR)/nonmatchings/"; \
 		exit 1; \
 	fi; \
-	$(PYTHON) tools/m2c/m2c.py -t mipsel-gcc-c "$$ASM_FILE"
+	$(PYTHON) tools/m2c/m2c.py --context $(CTX_FILE) -t mipsel-gcc-c "$$ASM_FILE"
 
 # Import function into decomp-permuter
 # Usage: make permuter-import FILE=src/main.c FUNC=FunctionName
@@ -445,26 +457,6 @@ endif
 # Legacy alias
 watch: record
 	@echo "Note: 'make watch' is deprecated. Use 'make record' instead."
-
-# Start DuckDB trace streaming (runs in background)
-# Usage: make stream
-stream:
-	@echo "Starting DuckDB trace streaming in background..."
-	@mkdir -p build
-	@./scripts/trace_to_duckdb.sh watch &
-	@echo "Stream started. Query with: ./scripts/query_trace.sh <query>"
-	@echo "Stop with: pkill -f trace_to_duckdb"
-
-# Query trace database
-# Usage: make query QUERY=velocity-summary
-query:
-ifndef QUERY
-	@echo "Available queries: velocity-summary velocity-raw states jump-physics walk-speed stats"
-	@echo "Usage: make query QUERY=velocity-summary"
-	@echo "Custom SQL: make query QUERY='sql SELECT * FROM player_velocity LIMIT 10'"
-else
-	@./scripts/query_trace.sh $(QUERY)
-endif
 
 # Quick RAM snapshot (requires web server enabled in PCSX-Redux)
 # Usage: make snapshot

@@ -26,17 +26,6 @@
  */
 
 /**
- * GetLevelCount - Get the total number of levels from BLB header
- * 
- * Reads the level count byte at header offset 0xF31.
- * For PAL version, this returns 26 (including MENU as level 0).
- * 
- * @param gameState  Pointer to GameState structure
- * @return           Number of levels defined in BLB header
- */
-INCLUDE_ASM("asm/pal/nonmatchings/StateAccessors", GetLevelCount);
-
-/**
  * GetLevelAssetIndex - Get the asset index for a specific level
  * 
  * Each level entry has an asset index at offset +0x0C that determines

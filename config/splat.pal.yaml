@@ -79,9 +79,11 @@ segments:
       # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
       - [0x6AE2C, c, LevelDataParser]
       - [0x6B080, asm]
-      # StateAccessors: 0x8007A9B0 - 0x8007AA27
-      # GetLevelCount, GetLevelAssetIndex, GetLevelDisplayName, getLevelName
-      - [0x6B1B0, c, StateAccessors]
+      # GetLevelCount: 0x8007A9B0 - 0x8007A9C3 (returns header[0xF31])
+      - [0x6B1B0, c, GetLevelCount]
+      # StateAccessors: 0x8007A9C4 - 0x8007AA27
+      # GetLevelAssetIndex, GetLevelDisplayName, getLevelName
+      - [0x6B1C4, c, StateAccessors]
       # ASM gap: GetLevelFlagByIndex, GetCurrentLevelAssetIndex, GetCurrentLevelDisplayName,
       # GetCurrentLevelName, GetCurrentSectorOrderUnk1, GetCurrentSectorOrderUnk2
       - [0x6B228, asm]
