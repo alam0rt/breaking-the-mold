@@ -253,58 +253,34 @@ def run_m2c(func_name: str, source_file: str, dry_run: bool = False) -> Tuple[bo
 
 def create_or_update_source(func_name: str, source_file: str, decompiled_code: str, 
                              dry_run: bool = False) -> bool:
-    """Create or update source file with decompiled code."""
-    src_path = Path(SRC_BASE) / f"{source_file}.c"
+    """Create or update source file with decompiled code.
     
-    # Check if file exists
-    if src_path.exists():
-        print(f"  Updating {src_path}...", file=sys.stderr)
-        
-        if dry_run:
-            print(f"    [DRY RUN] Would replace INCLUDE_ASM in {src_path}", file=sys.stderr)
-            return True
-        
-        # Read existing file
-        with open(src_path, 'r') as f:
-            content = f.read()
-        
-        # Find and replace INCLUDE_ASM macro
-        include_asm_pattern = rf'INCLUDE_ASM\s*\(\s*["\']([^"\']+)["\']\s*,\s*["\']?{re.escape(func_name)}["\']?\s*\)\s*;?'
-        
-        if re.search(include_asm_pattern, content):
-            # Replace INCLUDE_ASM with decompiled code
-            new_content = re.sub(include_asm_pattern, decompiled_code, content)
-            
-            with open(src_path, 'w') as f:
-                f.write(new_content)
-            
-            print(f"    Replaced INCLUDE_ASM in {src_path}", file=sys.stderr)
-            return True
-        else:
-            print(f"    WARNING: INCLUDE_ASM for {func_name} not found in {src_path}", file=sys.stderr)
-            print(f"    You may need to manually add the decompiled code", file=sys.stderr)
-            return False
+    IMPORTANT: Each function must be in its own C file to avoid linker ordering issues.
+    When multiple functions are in one file with INCLUDE_ASM, the linker places
+    assembled functions first, breaking address layout.
+    """
+    # Always use function name as the file name (one function per file)
+    src_path = Path(SRC_BASE) / f"{func_name}.c"
     
-    else:
-        print(f"  Creating {src_path}...", file=sys.stderr)
-        
-        if dry_run:
-            print(f"    [DRY RUN] Would create {src_path}", file=sys.stderr)
-            return True
-        
-        # Create new file
-        src_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        content = f'''#include "common.h"
+    print(f"  Creating {src_path} (one function per file)...", file=sys.stderr)
+    
+    if dry_run:
+        print(f"    [DRY RUN] Would create {src_path}", file=sys.stderr)
+        return True
+    
+    # Always create new file (overwrite if exists)
+    src_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    content = f'''#include "common.h"
 
 {decompiled_code}
 '''
-        
-        with open(src_path, 'w') as f:
-            f.write(content)
-        
-        print(f"    Created {src_path}", file=sys.stderr)
-        return True
+    
+    with open(src_path, 'w') as f:
+        f.write(content)
+    
+    print(f"    Created {src_path}", file=sys.stderr)
+    return True
 
 
 def verify_build(dry_run: bool = False) -> bool:
@@ -364,9 +340,12 @@ def main():
         else:
             func = get_function_by_name(args.function, args.port)
             if func:
-                func_address = func.get("entryPoint", 0)
-                if isinstance(func_address, str):
-                    func_address = int(func_address, 16)
+                # get_function_by_name returns simplified object with 'address' field
+                address_str = func.get("address", "0")
+                func_address = int(address_str, 16) if isinstance(address_str, str) else address_str
+                
+                # Now get full function details
+                func = get_function_by_address(func_address, args.port)
         
         if not func:
             print(f"ERROR: Function '{args.function}' not found in Ghidra", file=sys.stderr)
@@ -391,7 +370,9 @@ def main():
         rom_offset = vram_to_rom(func_address)
         
         # Determine source file name
-        source_file = args.source_file or func_name
+        source_file = func_name  # Always use function name (one function per file)
+        
+        print(f"  Function size: 0x{func_size:X} bytes" if func_size else "  Function size: unknown", file=sys.stderr)
         
         # Step 1: Ensure context file exists
         if not ensure_context_file(args.dry_run):

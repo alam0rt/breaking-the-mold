@@ -87,11 +87,15 @@ segments:
       # ASM gap: GetLevelFlagByIndex, GetCurrentLevelAssetIndex, GetCurrentLevelDisplayName,
       # GetCurrentLevelName, GetCurrentSectorOrderUnk1, GetCurrentSectorOrderUnk2
       - [0x6B228, asm]
-      # CreditsAccessors: 0x8007ABCC - 0x8007AE13
-      # GetCurrentSectorOffset, GetCurrentSectorCount, GetAssetCount,
+      # CreditsAccessors: 0x8007ABCC - 0x8007ACDB
+      # GetCurrentSectorOffset, GetCurrentSectorCount
+      - [0x6B3CC, c, CreditsAccessors]
+      # GetAssetCount: 0x8007ACDC - 0x8007ACEF
+      - [0x6B4DC, c, GetAssetCount]
+      # MovieAccessors: 0x8007ACF0 - 0x8007AE13
       # GetMovieReservedByIndex, GetMovieShortNameByIndex, GetCurrentMovieReserved,
       # GetCurrentMovieShortName, GetCurrentMovieFilename
-      - [0x6B3CC, c, CreditsAccessors]
+      - [0x6B4F0, asm]
       # BLBHeaderAccessors: 0x8007AE14 - 0x8007AE9B
       # GetMovieUnknown00, GetMovieSectorCount
       - [0x6B614, c, BLBHeaderAccessors]
