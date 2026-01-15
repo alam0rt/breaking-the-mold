@@ -104,6 +104,10 @@ segments:
       # SetupSound: 0x8007B8B8 - 0x8007c084 ?
       - [0x6C7B8, c, SetupSound]
       - [0x6C888, asm]
+      # SaveCheckpointState: 0x8007EAAC - 0x8007EAEB
+      # Saves entity tick list for checkpoint respawn
+      - [0x6F2AC, c, SaveCheckpointState]
+      - [0x6F2EC, asm]
       # main: 0x800828B0 - 0x80082C0F
       - [0x730B0, c, main]
       - [0x73410, asm]
