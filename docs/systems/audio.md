@@ -1,6 +1,9 @@
 # Audio System
 
-The game uses the PSX SPU (Sound Processing Unit) with ADPCM-encoded samples.
+**Status**: ✅ 90% Complete - Positional audio system discovered!  
+**Last Updated**: January 15, 2026
+
+The game uses the PSX SPU (Sound Processing Unit) with ADPCM-encoded samples and automatic stereo positioning.
 
 ## Audio Asset Distribution
 

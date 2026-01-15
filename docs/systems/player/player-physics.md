@@ -125,22 +125,53 @@ Floor detection checks at:
 - Cutscene state shows extreme velocities (65+ px/frame) for teleportation effects
 - Push forces at +0x160/+0x162 are applied then cleared each frame (sample as 0)
 
-## Physics Constants (TO BE VERIFIED via Direct Memory Reading)
+## Physics Constants ✅ VERIFIED from Decompiled Source
 
-These values need extraction via PCSX-Redux memory inspection during active movement states.
-The push_x/push_y fields are cleared after application, so constants must be read from the
-input handler or state-specific movement code.
+**Source**: SLES_010.90.c (PAL version decompilation)  
+**Extraction Date**: January 14, 2026
 
-### Movement (Estimated)
+### Movement Constants (EXACT VALUES)
 
-| Constant | Estimated Value | 16.16 Fixed | Notes |
-|----------|----------------|-------------|-------|
-| Walk Speed | 2.0 px/frame | 0x20000 | Horizontal ground movement |
-| Run Speed | 3.0 px/frame | 0x30000 | If run button held |
-| Air Control | 1.5 px/frame | 0x18000 | Horizontal in air |
-| Jump Velocity | -8.0 px/frame | -0x80000 | Initial upward (matches max_vy) |
-| Gravity | 0.5 px/frame² | 0x8000 | Downward accel |
-| Max Fall Speed | 8.0 px/frame | 0x80000 | Terminal velocity (matches observed) |
+| Constant | Hex Value | Decimal | Pixels/Frame | Pixels/Second (60fps) | Source Code Reference |
+|----------|-----------|---------|--------------|----------------------|----------------------|
+| **Walk Speed (Normal)** | `0x20000` | 131,072 | **2.0** | 120.0 | Lines 31761, 31941, 32013 |
+| **Walk Speed (Fast)** | `0x30000` | 196,608 | **3.0** | 180.0 | Lines 31759, 31939, 32011 |
+| **Speed Modifier Flag** | `0x8000` | 32,768 | +0.5 | +30.0 | OR'd with base speed @ line 31943 |
+| **Initial Jump Velocity** | `0xFFFDC000` | -147,456 | **-2.25** | -135.0 | Lines 32904, 32919, 32934, 33011 |
+| **Jump Apex Velocity** | `0xFFD8` | -40 (s16) | **-0.625** | -37.5 | Line 31426 (entity+0x136) |
+| **Gravity** | `0xFFFA0000` | -393,216 | **-6.0** | -360.0 | Lines 32023, 32219, 32271 (entity+0x110) |
+| **Landing Cushion** | `0xFFFFEE00` | -4,608 | **-0.07** | -4.2 | Line 32018 (entity+0x118) |
+
+### Velocity Storage Offsets (VERIFIED)
+
+| Offset | Size | Field | Description | Usage |
+|--------|------|-------|-------------|-------|
+| `+0x104` | 4 bytes | `velocity_x` | X velocity (16.16 fixed) | General entity velocity |
+| `+0x108` | 4 bytes | `velocity_y` | Y velocity (16.16 fixed) | General entity velocity |
+| `+0x110` | 4 bytes | `gravity_accel` | Gravity/vertical acceleration | Set to `0xFFFA0000` in falling states |
+| `+0x118` | 4 bytes | `cushion_vel` | Landing deceleration | Set to `0xFFFFEE00` on landing |
+| `+0x11C` | 1 byte | `landing_timer` | Landing state countdown | Set to 5 frames |
+| `+0x124` | 4 bytes | `max_velocity` | Velocity clamp value | Walk speed OR 0x8000 |
+| `+0x136` | 2 bytes | `apex_velocity` | Jump apex velocity | Set to `0xFFD8` at peak |
+| `+0x156` | 2 bytes | `jump_param` | Jump apex detection | Set to `0x0C` (12) during jump |
+
+### Speed Selection Logic (VERIFIED)
+
+**From PlayerState functions** (lines 31939-31943, 32011-32015):
+```c
+// Conditional velocity based on powerup flags
+uint max_velocity;
+if (g_DefaultBGColorB & entity_input_flags) {
+    max_velocity = 0x30000;  // Fast (3.0 px/frame)
+} else {
+    max_velocity = 0x20000;  // Normal (2.0 px/frame)
+}
+
+// Often OR'd with flag for intermediate speed
+entity[0x49] = max_velocity | 0x8000;  // Stored at entity+0x124
+```
+
+**Result**: Base speed of 2.0 or 3.0 px/frame, with 0x8000 flag providing +0.5 px/frame boost.
 
 ### Scale Values
 

@@ -234,7 +234,8 @@ All powerup items stored in `g_pPlayerState` with max count of 7.
 | 0x05 | u8 | total_1ups | Total 1-ups collected (returned on reset) |
 | 0x11 | u8 | lives | Current lives (default: 5) |
 | 0x12 | u8 | orb_count | Clay/orb count (100 → 1up) |
-| 0x13 | u8 | checkpoint_count | Swirl/checkpoint count (3 → bonus room) |
+| 0x13 | u8 | checkpoint_count | Swirl/checkpoint count (current ammo, max 20) |
+| 0x1b | u8 | total_swirly_qs | **Total Swirly Qs collected (for secret ending, >= 48)** |
 | 0x14 | u8 | phoenix_hands | Bird powerup count (max 7) |
 | 0x15 | u8 | phart_heads | Head powerup count (max 7) |
 | 0x16 | u8 | universe_enemas | Fart Clone powerup count (max 7) |

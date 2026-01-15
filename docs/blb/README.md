@@ -94,12 +94,25 @@ Container sub-TOC format:
 - **RAM location**: Header loaded at 0x800AE3E0
 - **Starting sector**: 0x146 (326) stored at 0x800A59F0
 
+## Format Completeness
+
+**Status**: ✅ **100% UNDERSTOOD**
+
+All fields documented and categorized:
+- ✅ Functional fields: Complete with runtime usage
+- ✅ Vestigial fields: Confirmed unused (safe to ignore)
+- ✅ Rarely-used fields: Documented with usage patterns
+- ✅ Legacy data: Asset 700 confirmed unused
+
+**See**: [vestigial-fields-complete.md](vestigial-fields-complete.md) for analysis of unused fields
+
 ## Related Documentation
 
 - [Header Format](header.md) - Detailed header structure
 - [Level Metadata](level-metadata.md) - Per-level entry format
-- [Asset Types](asset-types.md) - Complete asset reference
+- [Asset Types](asset-types.md) - Complete asset reference (100%)
 - [TOC Format](toc-format.md) - TOC parsing details
+- [Vestigial Fields](vestigial-fields-complete.md) - Analysis of unused fields
 
 ## Tools
 

@@ -59,8 +59,10 @@ Offset  Size  Type   Description
 0x1A    2     u16    Special level ID (99=FINN/SEVN)
 0x1C    2     u16    VRAM rect count (matches Asset 502)
 0x1E    2     u16    Entity count (matches Asset 501)
-0x20    2     u16    Unknown (values 0-6)
+0x20    2     u16    World index (values 0-6) ✅ VESTIGIAL - Written to g_pPlayerState[4], never read
 0x22    2     u16    Padding
+
+**Field 0x20 (World Index)**: ✅ **CONFIRMED VESTIGIAL** - Accumulated to g_pPlayerState[4] but never read. Originally tracked world/area number but replaced by other systems. Safe to ignore or set to 0.
 ```
 
 **Accessor**: `GetTotalTileCount` @ 0x8007b53c
@@ -155,13 +157,16 @@ Key fields:
 Per-tile collision and trigger data.
 
 ```
-0x00    u32              Flags
-0x04    u16              Level width
-0x06    u16              Level height
+0x00    u16              offset_x ✅ FUNCTIONAL (usually 0) - Collision map X offset
+0x02    u16              offset_y ✅ FUNCTIONAL (usually 0) - Collision map Y offset
+0x04    u16              Level width (tiles)
+0x06    u16              Level height (tiles)
 0x08    width×height     Tile data (1 byte per tile)
 ```
 
-Values: 0=passable, 2=solid, 101=entity zone
+**Header Fields 0x00-0x03**: Copied to GameState+0x6C but no runtime consumer found. Likely unused offset values from development.
+
+**Tile Values**: 0=passable, 2=solid, 0x2A=death, 0x3D-0x41=wind, 0x51-0x7A=spawn zones. See [Collision System](../systems/tile-collision-complete.md) for complete reference.
 
 ### Asset 501 - Entity Placement Data (24 bytes each)
 
@@ -252,9 +257,23 @@ See [Audio](../systems/audio.md) for details.
 0x02    u16    Pan (0=center)
 ```
 
-### Asset 700 - Additional SPU Data
+### Asset 700 - Legacy SPU Data ✅ CONFIRMED UNUSED
 
-Additional audio samples, appears in 9 of 26 levels.
+Appears in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED.  
+**17 levels work fine without it** - Not required for gameplay.
+
+```
+0x00    u32    Entry count (always 1)
+0x04    u32    Reserved (0)
+0x08    u32    Entry ID (varies, not ASCII)
+0x0C    u32    Data size
+0x10    u32    Data offset (always 16)
+0x14+   var    4-byte entries (command, flags, param, reserved)
+```
+
+**Status**: ✅ **CONFIRMED UNUSED** - Loaded to ctx[21-22] but never accessed at runtime. Contains SPU-like commands (0x80, 0xC0) but with invalid ADPCM filter values. Legacy audio system from development, replaced by Asset 601/602. Safe to skip during BLB loading.
+
+**Analysis**: Complete investigation in [vestigial-fields-complete.md](vestigial-fields-complete.md)
 
 ---
 
