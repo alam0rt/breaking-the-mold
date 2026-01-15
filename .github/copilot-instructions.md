@@ -14,6 +14,40 @@ Also see `docs/decompilation-guide.md` for detailed steps.
 4. Use m2c to decompile: `python3 tools/m2c/m2c.py --context ctx.c --target mipsel-gcc-c <asm_file>`
 5. Create C file in `src/` with decompiled code from m2c
 
+### Simplified Workflow with decompile.py
+```bash
+# Show what would be done
+python3 scripts/decompile.py GetAssetCount --dry-run
+
+# Prepare for decompilation (update YAML, generate ASM)
+python3 scripts/decompile.py GetAssetCount --prepare
+
+# Get m2c decompilation
+python3 scripts/decompile.py GetAssetCount --decompile
+
+# Full workflow (prepare + decompile)
+python3 scripts/decompile.py GetAssetCount --full
+
+# Export struct from Ghidra to C header
+python3 scripts/decompile.py --export-struct PlayerState
+```
+
+### Struct Definitions in Ghidra
+See `docs/ghidra/struct-workflow.md` for complete workflow.
+
+**Create structs in Ghidra** using MCP tools (via Copilot Chat):
+- `mcp_ghidra_structs_create` - Create new struct
+- `mcp_ghidra_structs_add_field` - Add fields with offsets and types
+- `mcp_ghidra_structs_get` - View struct definition
+- `mcp_ghidra_structs_update_field` - Modify existing fields
+
+**Export to C headers:**
+```bash
+python3 scripts/decompile.py --export-struct PlayerState > include/player.h
+```
+
+Benefits: Ghidra decompilation shows `state->lives` instead of `state[0x00]`
+
 ## BLB File Format
 
 ### Source of Truth: ImHex Template

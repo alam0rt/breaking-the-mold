@@ -141,10 +141,54 @@ Update documentation to reference new structure:
 
 ## Migration Considerations
 
-- Must preserve exact build output (SHA1 match)
-- Need to update splat.pal.yaml segments carefully
-- Linker order matters - may need careful LD script updates
-- Some functions may legitimately belong in multiple modules (use best judgment)
+### Critical Issues Discovered
+
+1. **Binary Matching Requirement**: Any reorganization of source files MUST maintain exact binary matching (SHA1: 5a14b65cb44813bfed1ee53c6a3f4456bc230f97). Changing file paths changes linker order, which breaks matching.
+
+2. **Splat Subdirectory Support**: Splat DOES support subdirectories in segment names (e.g., `blb/LoadBLBHeader`). However:
+   - INCLUDE_ASM paths must match exactly: `INCLUDE_ASM("asm/pal/nonmatchings/blb/LoadBLBHeader", LoadBLBHeader)`
+   - Object file paths in linker script will reflect the subdirectory structure
+   - ALL files using INCLUDE_ASM must be updated when moving files
+
+3. **Splat Configuration Requirements**:
+   - Segment offsets MUST be integers, not hex strings
+   - ❌ Wrong: `["0x161D4", "c", "UpdateInputState"]`
+   - ✅ Right: `[90580, "c", "UpdateInputState"]` or `[0x161D4, c, UpdateInputState]` (YAML hex literals)
+   - Python will auto-convert YAML hex literals (0x...) to integers
+
+4. **Function Size Detection Issues**:
+   - Ghidra's function size may be incorrect if control flow extends beyond function boundary
+   - Example: UpdateInputState had branches to .L80025B70 which was outside its detected range
+   - This creates unresolved symbols during linking
+   - Always verify function boundaries before splitting
+
+5. **ASM File Generation**:
+   - After running splat, verify ASM files exist before proceeding
+   - Missing ASM files indicate segment name mismatch or empty functions
+
+### Safe Migration Strategy
+
+Instead of wholesale directory restructuring, use this incremental approach:
+
+**Phase 1: No File Movement** (CURRENT - SAFE)
+- Keep all C files in flat `src/` directory
+- Use clear, descriptive filenames that indicate module (e.g., `BLB_LoadHeader.c`, `Player_Input.c`)
+- Use symbol_addrs.txt comments to group related functions
+
+**Phase 2: Module Mapping** (DOCUMENTATION ONLY)
+- Create `docs/module_map.yaml` documenting logical organization
+- Map address ranges to conceptual modules
+- Use this for navigation and understanding, NOT for actual file moves
+
+**Phase 3: New Functions Only** (LOW RISK)
+- Future decompiled functions can go into subdirectories
+- Use decompile.py with module path: `python3 scripts/decompile.py NewFunction --module player/NewFunction`
+- Old functions stay in place to maintain binary matching
+
+**Phase 4: Post-100% Decompilation** (FUTURE)
+- Only after 100% decompilation and binary match is no longer critical
+- Then reorganize freely using build system that doesn't depend on link order
+- Consider switching to more modern build system (ninja, CMake)
 
 ## Next Steps
 

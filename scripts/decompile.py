@@ -11,6 +11,10 @@ This tool handles the entire decompilation process:
 6. Optionally runs m2c to get initial decompilation
 7. Creates C file stub or shows decompiled code
 
+Additional features:
+- Export struct definitions from Ghidra to C headers
+- Sync verified structs between Ghidra and source
+
 Usage:
     # Show function info and what would be done
     python3 scripts/decompile.py GetAssetCount --dry-run
@@ -23,6 +27,9 @@ Usage:
     
     # Full workflow: prepare + decompile
     python3 scripts/decompile.py GetAssetCount --full
+    
+    # Export struct from Ghidra to C header format
+    python3 scripts/decompile.py --export-struct PlayerState
 
 Key features:
 - Preserves YAML formatting using ruamel.yaml
@@ -30,6 +37,7 @@ Key features:
 - Checks if function already in YAML
 - Clear error messages
 - Handles address conversion automatically
+- Exports struct definitions from Ghidra
 """
 
 import sys
@@ -130,6 +138,73 @@ def get_decompiled_code(name: str, address: int) -> Optional[str]:
         if result:
             print(f"   Full response: {json.dumps(result, indent=2)}", file=sys.stderr)
     return None
+
+def export_struct_from_ghidra(struct_name: str) -> str:
+    """
+    Export a struct definition from Ghidra to C header format.
+    
+    Returns the C code as a string.
+    """
+    print(f"Fetching struct '{struct_name}' from Ghidra...")
+    
+    # Get struct details from Ghidra
+    result = ghidra_request(f"/structs?name={struct_name}")
+    
+    if not result.get("success"):
+        error(f"Struct '{struct_name}' not found in Ghidra")
+    
+    data = result["result"]
+    fields = data.get("fields", [])
+    size = data.get("size", 0)
+    description = data.get("description", "")
+    
+    # Generate C code
+    lines = []
+    lines.append(f"/* {'-' * 77}")
+    lines.append(f" * {struct_name}")
+    if description:
+        lines.append(f" * {description}")
+    lines.append(f" * Size: {size} bytes (0x{size:X})")
+    lines.append(f" * Exported from Ghidra")
+    lines.append(f" * {'-' * 77} */")
+    lines.append("")
+    lines.append(f"typedef struct {{")
+    
+    # Track used offsets to detect padding
+    last_offset = 0
+    
+    for field in fields:
+        offset = field["offset"]
+        name = field["name"] or f"field_{offset:02X}"
+        field_type = field["type"]
+        length = field["length"]
+        comment = field.get("comment", "")
+        
+        # Add padding if needed
+        if offset > last_offset:
+            padding_size = offset - last_offset
+            lines.append(f"    /* 0x{last_offset:02X} */ u8      padding{last_offset:02X}[{padding_size}];")
+        
+        # Map Ghidra types to C types
+        type_map = {
+            "byte": "u8",
+            "word": "u16",
+            "dword": "u32",
+            "qword": "u64",
+            "undefined": "u8",
+        }
+        c_type = type_map.get(field_type, field_type)
+        
+        # Format the field
+        comment_str = f"  // {comment}" if comment else ""
+        lines.append(f"    /* 0x{offset:02X} */ {c_type:<8} {name};{comment_str}")
+        
+        last_offset = offset + length
+    
+    lines.append(f"}} {struct_name};  // Size: 0x{size:02X} ({size} bytes)")
+    lines.append("")
+    
+    return "\n".join(lines)
 
 def check_symbol_file(name: str, address: int, size: int, dry_run: bool = False) -> bool:
     """Check if function is in symbol_addrs.txt and add if missing."""
@@ -292,11 +367,29 @@ def update_splat_yaml(name: str, rom_offset: int, size: int, dry_run: bool = Fal
                 error("Could not determine where to insert segment")
             
             # Insert new segments (use integers, not hex strings)
+            # IMPORTANT: Splat requires integer offsets, not hex strings
+            # Using hex strings like "0x161D4" will cause splat to fail with:
+            # "ValueError: invalid literal for int() with base 10: '0x161D4'"
             new_segments = [
                 [rom_offset, "c", name]
             ]
             if size:
                 new_segments.append([rom_offset + size, "asm"])
+            
+            # Validate that we're not creating overlapping segments
+            next_segment_start = None
+            for i in range(insert_idx, len(subsegments)):
+                if isinstance(subsegments[i], list) and len(subsegments[i]) >= 1:
+                    next_str = str(subsegments[i][0])
+                    next_segment_start = int(next_str, 16) if next_str.startswith('0x') else int(next_str)
+                    break
+            
+            if next_segment_start and size and (rom_offset + size) > next_segment_start:
+                error(f"Function size (0x{size:X}) would overlap with next segment at 0x{next_segment_start:X}\n"
+                      f"       Function ends at 0x{rom_offset + size:X} but next segment starts at 0x{next_segment_start:X}\n"
+                      f"       This may indicate incorrect function size from Ghidra,\n"
+                      f"       or the function may share code with another function.")
+                return False
             
             for offset, seg in enumerate(new_segments):
                 subsegments.insert(insert_idx + offset, seg)
@@ -317,6 +410,7 @@ def run_splat(dry_run: bool = False) -> bool:
         return True
     
     try:
+        info("Running splat to generate assembly...")
         result = subprocess.run(
             ["python3", "-m", "splat", "split", str(CONFIG_FILE)],
             capture_output=True,
@@ -331,6 +425,27 @@ def run_splat(dry_run: bool = False) -> bool:
             error(f"Splat failed with exit code {result.returncode}")
     except Exception as e:
         error(f"Failed to run splat: {e}")
+
+def verify_asm_generated(name: str) -> bool:
+    """Verify that ASM files were generated by splat."""
+    asm_dir = ASM_BASE / name
+    asm_file = asm_dir / f"{name}.s"
+    
+    if not asm_dir.exists():
+        error(f"ASM directory not created: {asm_dir}\n"
+              f"       Splat may not have split this segment correctly.\n"
+              f"       Check that the segment name matches what was added to splat.pal.yaml")
+        return False
+    
+    if not asm_file.exists():
+        error(f"ASM file not found: {asm_file}\n"
+              f"       Splat created the directory but no .s file.\n"
+              f"       The function may have been decompiled to C already,\n"
+              f"       or the segment might be empty.")
+        return False
+    
+    success(f"Assembly generated: {asm_file}")
+    return True
 
 def run_m2c(name: str) -> Optional[str]:
     """Run m2c decompiler on generated assembly."""
@@ -363,7 +478,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__.split("Usage:")[1]
     )
-    parser.add_argument("function", help="Function name to decompile")
+    parser.add_argument("function", nargs="?", help="Function name to decompile")
     parser.add_argument("--dry-run", action="store_true",
                         help="Show what would be done without making changes")
     parser.add_argument("--prepare", action="store_true",
@@ -374,8 +489,20 @@ def main():
                         help="Do both --prepare and --decompile")
     parser.add_argument("--ghidra", action="store_true",
                         help="Show Ghidra's decompilation")
+    parser.add_argument("--export-struct", metavar="NAME",
+                        help="Export struct definition from Ghidra to C header format")
     
     args = parser.parse_args()
+    
+    # Handle struct export (doesn't need function name)
+    if args.export_struct:
+        code = export_struct_from_ghidra(args.export_struct)
+        print(code)
+        return
+    
+    # All other operations need a function name
+    if not args.function:
+        parser.error("function name is required (unless using --export-struct)")
     
     if not any([args.dry_run, args.prepare, args.decompile, args.full, args.ghidra]):
         parser.error("Must specify one of: --dry-run, --prepare, --decompile, --full, --ghidra")
@@ -428,14 +555,11 @@ def main():
         update_splat_yaml(name, rom_offset, size, args.dry_run)
         
         if not args.dry_run:
-            info("\nRunning splat to generate assembly...")
             run_splat(args.dry_run)
             
-            asm_file = ASM_BASE / name / f"{name}.s"
-            if asm_file.exists():
-                success(f"Assembly generated: {asm_file}")
-            else:
-                error("Assembly file was not created. Check splat output above.")
+            # Verify ASM was generated
+            if not verify_asm_generated(name):
+                error("Failed to generate assembly files")
     
     # Step 5: Run m2c if decompiling
     if args.decompile or args.full:
@@ -449,11 +573,13 @@ def main():
             print(f"\n{'='*60}")
             print("Next steps:")
             print(f"{'='*60}")
-            print(f"1. Edit src/{name}.c with the decompiled code above")
+            print(f"1. Create src/{name}.c with the decompiled code above")
             print(f"2. Fix types and variable names")
-            print(f"3. Run: make")
-            print(f"4. Run: make check")
-            print(f"5. If it doesn't match, iterate on the code")
+            print(f"3. Replace INCLUDE_ASM with actual function")
+            print(f"4. Run: make")
+            print(f"5. Run: make check")
+            print(f"6. If it doesn't match, iterate on the code")
+            print(f"\n⚠️  Note: Complex functions may fail in m2c. Use --ghidra as fallback.")
     
     print()
 

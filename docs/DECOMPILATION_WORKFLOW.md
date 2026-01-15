@@ -147,3 +147,71 @@ If a function is inside an existing C file (like GetAssetCount was in CreditsAcc
 **Hard (80+ bytes):** SaveCheckpointState, InitializeAndLoadLevel
 
 Start with easy functions to learn the process!
+
+## Troubleshooting
+
+### "ValueError: invalid literal for int() with base 10: '0x161D4'"
+
+**Cause**: Splat config has hex strings instead of integers  
+**Fix**: The decompile.py script now prevents this by using integers directly
+
+### "Assembly file was not created"
+
+**Causes**:
+1. Function is already part of a C file (decompiled)
+2. Segment name mismatch in splat.pal.yaml
+3. Function doesn't exist at that address
+
+**Fix**: 
+- Check if `asm/pal/nonmatchings/FunctionName/` directory exists
+- Verify segment name matches what was added to YAML
+- Run with --dry-run first to check addresses
+
+### "undefined reference to `.L80025B70`"
+
+**Cause**: Function control flow extends beyond detected size. Branches jump to labels outside the function boundary.
+
+**Why it happens**: 
+- Ghidra's function size detection can be wrong
+- Function may share tail code with another function
+- Control flow analysis missed some branches
+
+**Fix**:
+1. Check the function's actual end in Ghidra
+2. Look for all branch targets in the disassembly
+3. Adjust function size in symbol_addrs.txt
+4. Re-run splat
+5. Or keep as INCLUDE_ASM if function boundaries are complex
+
+### "Function size would overlap with next segment"
+
+**Cause**: Detected function size extends past the next segment's start
+
+**Fix**:
+1. Verify function size in Ghidra
+2. Check if next segment address is correct
+3. Function may need to stay smaller (shared code issue)
+4. Update symbol_addrs.txt with corrected size
+
+### Build succeeds but "BUILD DOES NOT MATCH"
+
+**Cause**: File organization changes linker order
+
+**Important**: Any file reorganization breaks binary matching. Current decompilation requires exact SHA1 match.
+
+**Fix**: Keep files in flat `src/` directory structure. See `docs/SOURCE_STRUCTURE_PLAN.md` for safe migration strategy.
+
+### INCLUDE_ASM file not found
+
+**Cause**: File moved but INCLUDE_ASM path not updated
+
+**Example**:
+```c
+// If file is in src/blb/BLBHeaderAccessors.c, path must be:
+INCLUDE_ASM("asm/pal/nonmatchings/blb/BLBHeaderAccessors", GetMovieUnknown00);
+
+// NOT:
+INCLUDE_ASM("asm/pal/nonmatchings/BLBHeaderAccessors", GetMovieUnknown00);
+```
+
+**Prevention**: Use decompile.py which handles paths automatically
