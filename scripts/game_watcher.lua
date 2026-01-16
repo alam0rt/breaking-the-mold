@@ -120,123 +120,119 @@ local CONFIG = {
 }
 
 -- =============================================================================
+-- Struct Definitions (Auto-generated from Ghidra)
+-- Regenerate with: python3 scripts/decompile.py --export-lua <StructName>
+-- =============================================================================
+
+-- Import struct offsets from Ghidra exports
+local PlayerState = dofile("scripts/structs/PlayerState.lua")
+local Entity = dofile("scripts/structs/Entity.lua")
+local GameState = dofile("scripts/structs/GameState.lua")
+local InputState = dofile("scripts/structs/InputState.lua")
+
+-- =============================================================================
 -- Memory Addresses (PAL / SLES-01090)
 -- =============================================================================
 
 local ADDR = {
-    -- Core structures
+    -- Core structure base addresses
     GameState = 0x8009DC40,
     LevelDataContext = 0x8009DCC4,
     BLBHeader = 0x800AE3E0,
     EntityCallbackTable = 0x8009D5F8,  -- 121 entries × 8 bytes
 
-    -- GameState offsets (from 0x8009DC40)
-    GS_entity_tick_list = 0x1C,    -- Head of tick-sorted entity list
-    GS_entity_render_list = 0x20,  -- Head of render-sorted list
-    GS_collision_list = 0x24,      -- Entity collision queue
-    GS_entity_pool = 0x28,         -- Raw entity definitions
-    GS_player_alt = 0x2C,          -- Alternate player ref
-    GS_player = 0x30,              -- Main player entity pointer
-    GS_camera_x = 0x38,            -- Camera X position (s16)
-    GS_camera_y = 0x3C,            -- Camera Y position (s16)
-    GS_callback_table = 0x7C,      -- Entity type callback table ptr
-    GS_checkpoint_list = 0x134,    -- Saved entity list for respawn
-
-    -- Entity structure offsets (0x44C bytes total)
-    ENT_next = 0x00,               -- Next entity in list (u32 ptr)
-    ENT_callback_main = 0x04,      -- Main tick callback (u32 fn ptr)
-    ENT_callback_render = 0x08,    -- Render callback (u32 fn ptr)
-    ENT_entity_type = 0x0C,        -- Entity type ID (u16)
-    ENT_flags = 0x0E,              -- Entity flags (u16)
-    ENT_layer = 0x10,              -- Render layer (u16)
-    ENT_z_order = 0x12,            -- Z-order for sorting (s16)
-
-    -- Entity position/physics
-    ENT_x_whole = 0x48,            -- X position whole part (s16)
-    ENT_y_whole = 0x4A,            -- Y position whole part (s16)
-    ENT_x_frac = 0x4C,             -- X position fractional (u16)
-    ENT_y_frac = 0x4E,             -- Y position fractional (u16)
-    ENT_x_pos = 0x68,              -- X pixel position (s16) - used for rendering
-    ENT_y_pos = 0x6A,              -- Y pixel position (s16)
-    ENT_facing = 0x74,             -- Facing direction (0=right, 1=left)
-    ENT_moving_up = 0x75,          -- Vertical direction flag (0=down, 1=up)
-
-    -- Movement forces (PRIMARY movement mechanism)
-    ENT_push_x = 0x160,            -- X push force (s16, pixels per frame)
-    ENT_push_y = 0x162,            -- Y push force (s16, pixels per frame)
-
-    -- Unknown physics fields (NOT used for position updates)
-    ENT_unknown_vx = 0xB4,         -- Unknown physics state (s32, 16.16 fixed)
-    ENT_unknown_vy = 0xB8,         -- Unknown physics state (s32, 16.16 fixed)
-
-    -- Entity animation/sprite
-    ENT_sprite_data_ptr = 0x78,    -- Pointer to sprite animation data
-    ENT_sprite_id = 0xBC,          -- Current sprite ID (u32)
-    ENT_anim_timer = 0xD8,         -- Animation timer (u16)
-    ENT_anim_frame = 0xDA,         -- Current animation frame (u16)
-    ENT_anim_speed = 0xDC,         -- Animation speed (u16)
-    ENT_anim_end = 0xDE,           -- End frame of current anim (u16)
-
-    -- Entity state machine
-    ENT_state_ptr = 0xA0,          -- Current state data pointer
-    ENT_state_timer = 0xA4,        -- State timer (u16)
-    ENT_state_data = 0xA8,         -- State-specific data (varies)
-
-    -- Entity collision box
-    ENT_hitbox_x1 = 0x1C,          -- Hitbox left (s16)
-    ENT_hitbox_y1 = 0x1E,          -- Hitbox top (s16)
-    ENT_hitbox_x2 = 0x20,          -- Hitbox right (s16)
-    ENT_hitbox_y2 = 0x22,          -- Hitbox bottom (s16)
-
-    -- Player-specific offsets (within 0x1B4 byte player entity)
-    PLAYER_health = 0xF0,          -- Player health/lives
-    PLAYER_invuln_timer = 0xF4,    -- Invulnerability frames
-    PLAYER_input = 0x100,          -- Current input state
-    PLAYER_input_prev = 0x102,     -- Previous input state
-
-    -- Key functions to watch
-    FN_EntityTickLoop = 0x80020E1C,         -- Main entity update loop
-    FN_EntitySetState = 0x8001EAAC,         -- Set entity state/callback
-    FN_SetEntitySpriteId = 0x8001D080,      -- Change entity sprite
-    FN_InitEntityAnimationState = 0x8001D1D0, -- Init animation state
-    FN_TickEntityAnimation = 0x8001D290,    -- Advance animation frame
-    FN_UpdateSpriteFrameData = 0x8001D748,  -- Update sprite frame ptr
-    FN_CreatePlayerEntity = 0x800596A4,     -- Create player
-    FN_PlayerTickCallback = 0x80059E10,     -- Player main tick
-    FN_CheckEntityCollision = 0x800226F8,   -- Entity-entity collision
-    FN_GetTileAttributeAtPosition = 0x800241F4, -- Tile collision lookup
-    FN_LoadAssetContainer = 0x8007B074,     -- Load asset from BLB
-    FN_InitializeAndLoadLevel = 0x8007D1D0, -- Main level init (verified)
-    FN_SpawnPlayerAndEntities = 0x8007DF38, -- Spawn entities from defs
-    FN_RemapEntityTypes = 0x8008150C,       -- Convert BLB→internal types
-    FN_SeekToLevelInSequence = 0x8007A3AC,  -- Set level in playback sequence
-    FN_LoadBLBHeader = 0x800208B0,          -- Load BLB header from disc (CRITICAL)
-    FN_InitLevelDataContext = 0x8007A1BC,   -- Init context with header (SAFE POINT)
-    FN_InitGameState = 0x8007CD34,          -- Called from main, loads header
-    FN_UploadAudioToSPU = 0x8007C088,       -- Upload audio samples
-    FN_LoadTileDataToVRAM = 0x80025240,     -- Load tile graphics
-
-    -- BLB Header structure (loaded at 0x800AE3E0, verified via symbol_addrs.txt)
-    BLB_level_count = 0x800AF311,           -- u8: number of levels (26) @ header+0xF31
-    BLB_movie_count = 0x800AF312,           -- u8: number of movies (13) @ header+0xF32
-    BLB_sector_count = 0x800AF313,          -- u8: sector table entries @ header+0xF33
-    BLB_game_mode = 0x800AF316,             -- u8: 3=level, 6=special @ header+0xF36
-    BLB_level_index = 0x800AF372,           -- u8: current level index @ header+0xF92
-    BLB_stage_index = 0x800AF373,           -- u8: current stage index @ header+0xF93
-
     -- g_pPlayerState is a POINTER at 0x800A597C that points to PlayerState struct
     -- The actual PlayerState struct is at 0x8009B1D8 (read from the pointer)
-    -- See main() disasm: lw a0,0x597c(0x800a) then jal initPlayerState
-    g_pPlayerState = 0x800A597C,            -- Pointer to PlayerState struct
+    g_pPlayerState = 0x800A597C,
+
+    -- BLB Header absolute addresses (for direct reads)
+    BLB_level_count = 0x800AF311,           -- u8: number of levels (26)
+    BLB_movie_count = 0x800AF312,           -- u8: number of movies (13)
+    BLB_sector_count = 0x800AF313,          -- u8: sector table entries
+    BLB_game_mode = 0x800AF316,             -- u8: 3=level, 6=special
+    BLB_level_index = 0x800AF372,           -- u8: current level index
+    BLB_stage_index = 0x800AF373,           -- u8: current stage index
 
     -- Level metadata table (26 entries × 0x70 bytes starting at BLBHeader)
-    BLB_level_table = 0x800AE3E0,           -- Level metadata table base
-    LEVEL_ENTRY_SIZE = 0x70,                -- Size of each level entry
-    LEVEL_ID_OFFSET = 0x56,                 -- char[5] level ID (e.g. "SCIE")
-    LEVEL_NAME_OFFSET = 0x5B,               -- char[21] level name
-    LEVEL_STAGE_COUNT_OFFSET = 0x0C,        -- u8 stage count
-    LEVEL_FLAGS_OFFSET = 0x0D,              -- u8 flags
+    BLB_level_table = 0x800AE3E0,
+    LEVEL_ENTRY_SIZE = 0x70,
+    LEVEL_ID_OFFSET = 0x56,
+    LEVEL_NAME_OFFSET = 0x5B,
+    LEVEL_STAGE_COUNT_OFFSET = 0x0C,
+    LEVEL_FLAGS_OFFSET = 0x0D,
+
+    -- Key functions to watch
+    FN_EntityTickLoop = 0x80020E1C,
+    FN_EntitySetState = 0x8001EAAC,
+    FN_SetEntitySpriteId = 0x8001D080,
+    FN_InitEntityAnimationState = 0x8001D1D0,
+    FN_TickEntityAnimation = 0x8001D290,
+    FN_UpdateSpriteFrameData = 0x8001D748,
+    FN_CreatePlayerEntity = 0x800596A4,
+    FN_PlayerTickCallback = 0x80059E10,
+    FN_CheckEntityCollision = 0x800226F8,
+    FN_GetTileAttributeAtPosition = 0x800241F4,
+    FN_LoadAssetContainer = 0x8007B074,
+    FN_InitializeAndLoadLevel = 0x8007D1D0,
+    FN_SpawnPlayerAndEntities = 0x8007DF38,
+    FN_RemapEntityTypes = 0x8008150C,
+    FN_SeekToLevelInSequence = 0x8007A3AC,
+    FN_LoadBLBHeader = 0x800208B0,
+    FN_InitLevelDataContext = 0x8007A1BC,
+    FN_InitGameState = 0x8007CD34,
+    FN_UploadAudioToSPU = 0x8007C088,
+    FN_LoadTileDataToVRAM = 0x80025240,
 }
+
+-- Compatibility aliases: Map old ENT_/GS_ prefixed names to imported struct offsets
+-- These allow existing code to work without changes
+-- Note: Some fields fall back to hardcoded values if not yet defined in Ghidra struct
+
+ADDR.GS_entity_tick_list = GameState.entity_tick_list_head or 0x1C
+ADDR.GS_entity_render_list = GameState.entity_render_list_head or 0x20
+ADDR.GS_collision_list = GameState.entity_collision_list_head or 0x24
+ADDR.GS_entity_pool = GameState.entity_pool or 0x28
+ADDR.GS_player_alt = GameState.player_alt or 0x2C
+ADDR.GS_player = GameState.player_entity_ptr or 0x30
+ADDR.GS_camera_x = GameState.camera_x or 0x38
+ADDR.GS_camera_y = GameState.camera_y or 0x3C
+ADDR.GS_callback_table = 0x7C  -- Not in struct yet
+ADDR.GS_checkpoint_list = 0x134  -- Not in struct yet
+
+ADDR.ENT_next = Entity.state_high or 0x00
+ADDR.ENT_callback_main = Entity.callback_main or 0x04
+ADDR.ENT_callback_render = Entity.callback2 or 0x0C
+ADDR.ENT_entity_type = 0x0C  -- Hardcoded - struct layout differs
+ADDR.ENT_flags = 0x0E  -- Hardcoded
+ADDR.ENT_layer = 0x10  -- Hardcoded
+ADDR.ENT_z_order = Entity.z_order or 0x10
+ADDR.ENT_x_whole = Entity.bbox_x1 or 0x48
+ADDR.ENT_y_whole = Entity.bbox_y1 or 0x4A
+ADDR.ENT_x_frac = Entity.bbox_x2 or 0x4C
+ADDR.ENT_y_frac = Entity.bbox_y2 or 0x4E
+ADDR.ENT_x_pos = Entity.world_x_pos or 0x68
+ADDR.ENT_y_pos = Entity.world_y_pos or 0x6A
+ADDR.ENT_facing = Entity.facing_left or 0x74
+ADDR.ENT_moving_up = 0x75  -- Hardcoded
+ADDR.ENT_push_x = 0x160  -- Not in struct yet (Entity struct is incomplete in Ghidra)
+ADDR.ENT_push_y = 0x162  -- Not in struct yet
+ADDR.ENT_unknown_vx = Entity.velocity_x_per_frame or 0xB4
+ADDR.ENT_unknown_vy = Entity.velocity_y_per_frame or 0xB8
+ADDR.ENT_sprite_data_ptr = Entity.anim_frame_table or 0x78
+ADDR.ENT_sprite_id = Entity.pending_sprite_id or 0xBC
+ADDR.ENT_anim_timer = Entity.anim_frame_timer or 0xEC
+ADDR.ENT_anim_frame = Entity.anim_current_frame or 0xDA
+ADDR.ENT_state_data = 0xA8  -- Hardcoded
+ADDR.ENT_hitbox_x1 = Entity.z_list_head or 0x1C
+ADDR.ENT_hitbox_y1 = 0x1E  -- Hardcoded
+ADDR.ENT_hitbox_x2 = Entity.x_list_head or 0x20
+ADDR.ENT_hitbox_y2 = 0x22  -- Hardcoded
+
+-- Player-specific offsets (within entity, not PlayerState)
+ADDR.PLAYER_health = 0xF0
+ADDR.PLAYER_invuln_timer = 0xF4
+ADDR.PLAYER_input = 0x100
+ADDR.PLAYER_input_prev = 0x102
 
 -- Player callback functions (state machine) - extended list
 local PLAYER_CALLBACKS = {
@@ -659,7 +655,7 @@ local function iterate_entity_list()
 end
 
 -- Read the complete PlayerState struct from g_pPlayerState
--- Matches Ghidra struct: scripts/decompile.py --export-struct PlayerState
+-- Uses imported struct offsets from: scripts/structs/PlayerState.lua
 local function read_player_state_struct()
     -- g_pPlayerState is a POINTER at 0x800A597C pointing to the PlayerState struct
     local ptr = read_u32(ADDR.g_pPlayerState)
@@ -669,52 +665,58 @@ local function read_player_state_struct()
 
     return {
         addr = ptr,
-        -- Core state [0x00-0x04]
-        initialized = read_u8(ptr + 0x00),
-        active = read_u8(ptr + 0x01),
-        unknown02 = read_u16(ptr + 0x02),
-        unknown04 = read_u8(ptr + 0x04),
+        -- Core state
+        initialized = read_u8(ptr + PlayerState.initialized),
+        active = read_u8(ptr + PlayerState.active),
+        unknown02 = read_u16(ptr + PlayerState.unknown02),
+        unknown04 = read_u8(ptr + PlayerState.unknown04),
 
-        -- Cumulative stats [0x05]
-        total_1ups = read_u8(ptr + 0x05),
+        -- Cumulative stats
+        total_1ups = read_u8(ptr + PlayerState.total_1ups),
 
-        -- Clayball collection flags [0x06-0x0F]
+        -- Clayball collection flags
         clayball_flags = {
-            read_u8(ptr + 0x06), read_u8(ptr + 0x07), read_u8(ptr + 0x08),
-            read_u8(ptr + 0x09), read_u8(ptr + 0x0A), read_u8(ptr + 0x0B),
-            read_u8(ptr + 0x0C), read_u8(ptr + 0x0D), read_u8(ptr + 0x0E),
-            read_u8(ptr + 0x0F),
+            read_u8(ptr + PlayerState.clayball_flag_0),
+            read_u8(ptr + PlayerState.clayball_flag_1),
+            read_u8(ptr + PlayerState.clayball_flag_2),
+            read_u8(ptr + PlayerState.clayball_flag_3),
+            read_u8(ptr + PlayerState.clayball_flag_4),
+            read_u8(ptr + PlayerState.clayball_flag_5),
+            read_u8(ptr + PlayerState.clayball_flag_6),
+            read_u8(ptr + PlayerState.clayball_flag_7),
+            read_u8(ptr + PlayerState.clayball_flag_8),
+            read_u8(ptr + PlayerState.clayball_flag_9),
         },
 
-        -- Progress [0x10]
-        level_complete = read_u8(ptr + 0x10),
+        -- Progress
+        level_complete = read_u8(ptr + PlayerState.level_complete),
 
-        -- Resources [0x11-0x12]
-        lives = read_u8(ptr + 0x11),
-        orb_count = read_u8(ptr + 0x12),
+        -- Resources
+        lives = read_u8(ptr + PlayerState.lives),
+        orb_count = read_u8(ptr + PlayerState.orb_count),
 
-        -- Weapons [0x13-0x16, 0x1C]
-        swirly_q_count = read_u8(ptr + 0x13),
-        phoenix_hands = read_u8(ptr + 0x14),
-        phart_heads = read_u8(ptr + 0x15),
-        universe_enemas = read_u8(ptr + 0x16),
-        super_willies = read_u8(ptr + 0x1C),
+        -- Weapons
+        swirly_q_count = read_u8(ptr + PlayerState.swirly_q_count),
+        phoenix_hands = read_u8(ptr + PlayerState.phoenix_hands),
+        phart_heads = read_u8(ptr + PlayerState.phart_heads),
+        universe_enemas = read_u8(ptr + PlayerState.universe_enemas),
+        super_willies = read_u8(ptr + PlayerState.super_willies),
 
-        -- Powerup flags [0x17]
-        powerup_flags = read_u8(ptr + 0x17),
-        has_halo = bit.band(read_u8(ptr + 0x17) or 0, 0x01) ~= 0,
-        has_yellow_bird = bit.band(read_u8(ptr + 0x17) or 0, 0x02) ~= 0,
+        -- Powerup flags
+        powerup_flags = read_u8(ptr + PlayerState.powerup_flags),
+        has_halo = bit.band(read_u8(ptr + PlayerState.powerup_flags) or 0, 0x01) ~= 0,
+        has_yellow_bird = bit.band(read_u8(ptr + PlayerState.powerup_flags) or 0, 0x02) ~= 0,
 
-        -- Special modes [0x18]
-        shrink_mode = read_u8(ptr + 0x18),
+        -- Special modes
+        shrink_mode = read_u8(ptr + PlayerState.shrink_mode),
 
-        -- Collectibles [0x19-0x1B]
-        icon_1970_count = read_u8(ptr + 0x19),
-        hamster_count = read_u8(ptr + 0x1A),
-        total_swirly_qs = read_u8(ptr + 0x1B),
+        -- Collectibles
+        icon_1970_count = read_u8(ptr + PlayerState.icon_1970_count),
+        hamster_count = read_u8(ptr + PlayerState.hamster_count),
+        total_swirly_qs = read_u8(ptr + PlayerState.total_swirly_qs),
 
-        -- Unknown [0x1D]
-        unknown_1d = read_u8(ptr + 0x1D),
+        -- Unknown
+        unknown_1d = read_u8(ptr + PlayerState.unknown_1d),
     }
 end
 
@@ -904,6 +906,7 @@ local function read_input_state(input_ptr)
 end
 
 -- Apply boot powerups (called once after level fully loads)
+-- Uses imported struct offsets from: scripts/structs/PlayerState.lua
 local function apply_boot_powerups()
     if state.powerups_applied then return false end
 
@@ -933,7 +936,7 @@ local function apply_boot_powerups()
 
     local applied = {}
 
-    -- Helper to apply a powerup value
+    -- Helper to apply a powerup value using PlayerState struct offsets
     local function set_powerup(offset, value, name)
         if value then
             write_u8(player_state_ptr + offset, value)
@@ -945,50 +948,50 @@ local function apply_boot_powerups()
 
     if CONFIG.boot_all_powerups then
         -- Weapons (max 99 for button weapons, 20 for swirly)
-        set_powerup(0x14, p.phoenix_hands or 99, "phoenix_hands")
-        set_powerup(0x15, p.phart_heads or 99, "phart_heads")
-        set_powerup(0x16, p.universe_enema or 99, "universe_enema")
-        set_powerup(0x1C, p.super_willie or 99, "super_willie")
-        set_powerup(0x13, p.swirly_q or 20, "swirly_q")
+        set_powerup(PlayerState.phoenix_hands, p.phoenix_hands or 99, "phoenix_hands")
+        set_powerup(PlayerState.phart_heads, p.phart_heads or 99, "phart_heads")
+        set_powerup(PlayerState.universe_enemas, p.universe_enema or 99, "universe_enema")
+        set_powerup(PlayerState.super_willies, p.super_willie or 99, "super_willie")
+        set_powerup(PlayerState.swirly_q_count, p.swirly_q or 20, "swirly_q")
 
         -- Passive powerups
-        local flags = read_u8(player_state_ptr + 0x17) or 0
+        local flags = read_u8(player_state_ptr + PlayerState.powerup_flags) or 0
         if p.halo ~= false then flags = bit.bor(flags, 0x01) end
         if p.yellow_bird ~= false then flags = bit.bor(flags, 0x02) end
-        write_u8(player_state_ptr + 0x17, flags)
+        write_u8(player_state_ptr + PlayerState.powerup_flags, flags)
         applied.powerup_flags = string.format("0x%02X", flags)
 
         -- Hamster
-        set_powerup(0x1A, p.hamster or 3, "hamster")
+        set_powerup(PlayerState.hamster_count, p.hamster or 3, "hamster")
 
         -- Resources
-        set_powerup(0x11, p.lives or 9, "lives")
-        set_powerup(0x12, p.clay_orbs or 99, "clay_orbs")
-        set_powerup(0x19, p.icon_1970 or 5, "icon_1970")
+        set_powerup(PlayerState.lives, p.lives or 9, "lives")
+        set_powerup(PlayerState.orb_count, p.clay_orbs or 99, "clay_orbs")
+        set_powerup(PlayerState.icon_1970_count, p.icon_1970 or 5, "icon_1970")
 
         -- Cumulative stats
-        set_powerup(0x1B, p.total_swirly_qs, "total_swirly_qs")
-        set_powerup(0x18, p.shrink_mode, "shrink_mode")
+        set_powerup(PlayerState.total_swirly_qs, p.total_swirly_qs, "total_swirly_qs")
+        set_powerup(PlayerState.shrink_mode, p.shrink_mode, "shrink_mode")
     else
         -- Apply only explicitly set values
-        set_powerup(0x14, p.phoenix_hands, "phoenix_hands")
-        set_powerup(0x15, p.phart_heads, "phart_heads")
-        set_powerup(0x16, p.universe_enema, "universe_enema")
-        set_powerup(0x1C, p.super_willie, "super_willie")
-        set_powerup(0x13, p.swirly_q, "swirly_q")
-        set_powerup(0x1A, p.hamster, "hamster")
-        set_powerup(0x11, p.lives, "lives")
-        set_powerup(0x12, p.clay_orbs, "clay_orbs")
-        set_powerup(0x19, p.icon_1970, "icon_1970")
-        set_powerup(0x1B, p.total_swirly_qs, "total_swirly_qs")
-        set_powerup(0x18, p.shrink_mode, "shrink_mode")
+        set_powerup(PlayerState.phoenix_hands, p.phoenix_hands, "phoenix_hands")
+        set_powerup(PlayerState.phart_heads, p.phart_heads, "phart_heads")
+        set_powerup(PlayerState.universe_enemas, p.universe_enema, "universe_enema")
+        set_powerup(PlayerState.super_willies, p.super_willie, "super_willie")
+        set_powerup(PlayerState.swirly_q_count, p.swirly_q, "swirly_q")
+        set_powerup(PlayerState.hamster_count, p.hamster, "hamster")
+        set_powerup(PlayerState.lives, p.lives, "lives")
+        set_powerup(PlayerState.orb_count, p.clay_orbs, "clay_orbs")
+        set_powerup(PlayerState.icon_1970_count, p.icon_1970, "icon_1970")
+        set_powerup(PlayerState.total_swirly_qs, p.total_swirly_qs, "total_swirly_qs")
+        set_powerup(PlayerState.shrink_mode, p.shrink_mode, "shrink_mode")
 
         -- Handle powerup flags
         if p.halo or p.yellow_bird then
-            local flags = read_u8(player_state_ptr + 0x17) or 0
+            local flags = read_u8(player_state_ptr + PlayerState.powerup_flags) or 0
             if p.halo then flags = bit.bor(flags, 0x01) end
             if p.yellow_bird then flags = bit.bor(flags, 0x02) end
-            write_u8(player_state_ptr + 0x17, flags)
+            write_u8(player_state_ptr + PlayerState.powerup_flags, flags)
             applied.powerup_flags = string.format("0x%02X", flags)
         end
     end

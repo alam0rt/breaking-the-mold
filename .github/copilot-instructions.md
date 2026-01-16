@@ -30,6 +30,9 @@ python3 scripts/decompile.py GetAssetCount --full
 
 # Export struct from Ghidra to C header
 python3 scripts/decompile.py --export-struct PlayerState
+
+# Export struct from Ghidra to Lua table (for game_watcher.lua)
+python3 scripts/decompile.py --export-lua PlayerState > scripts/structs/PlayerState.lua
 ```
 
 ### Struct Definitions in Ghidra
@@ -44,6 +47,14 @@ See `docs/ghidra/struct-workflow.md` for complete workflow.
 **Export to C headers:**
 ```bash
 python3 scripts/decompile.py --export-struct PlayerState > include/player.h
+```
+
+**Export to Lua for game_watcher.lua:**
+```bash
+python3 scripts/decompile.py --export-lua PlayerState > scripts/structs/PlayerState.lua
+# Usage in game_watcher.lua:
+# local PlayerState = require("scripts/structs/PlayerState")
+# local lives = read_u8(player_ptr + PlayerState.lives)
 ```
 
 Benefits: Ghidra decompilation shows `state->lives` instead of `state[0x00]`

@@ -206,6 +206,100 @@ def export_struct_from_ghidra(struct_name: str) -> str:
     
     return "\n".join(lines)
 
+
+def export_struct_to_lua(struct_name: str) -> str:
+    """
+    Export a struct definition from Ghidra to Lua table format.
+    
+    Output is compatible with game_watcher.lua's ADDR table and
+    can be directly included or require()'d.
+    
+    Returns the Lua code as a string.
+    """
+    print(f"-- Fetching struct '{struct_name}' from Ghidra...", file=sys.stderr)
+    
+    # Get struct details from Ghidra
+    result = ghidra_request(f"/structs?name={struct_name}")
+    
+    if not result.get("success"):
+        error(f"Struct '{struct_name}' not found in Ghidra")
+    
+    data = result["result"]
+    fields = data.get("fields", [])
+    size = data.get("size", 0)
+    description = data.get("description", "")
+    
+    # Generate Lua code
+    lines = []
+    lines.append(f"-- {'-' * 77}")
+    lines.append(f"-- {struct_name}")
+    if description:
+        lines.append(f"-- {description}")
+    lines.append(f"-- Size: {size} bytes (0x{size:X})")
+    lines.append(f"-- Exported from Ghidra via: python3 scripts/decompile.py --export-lua {struct_name}")
+    lines.append(f"-- {'-' * 77}")
+    lines.append("")
+    
+    # Create prefix from struct name (e.g., PlayerState -> PS_, Entity -> ENT_)
+    # Use common abbreviations or first letters of camelCase words
+    abbrev_map = {
+        "PlayerState": "PS",
+        "Entity": "ENT",
+        "GameState": "GS",
+        "LevelDataContext": "LDC",
+    }
+    prefix = abbrev_map.get(struct_name, struct_name[:3].upper())
+    
+    lines.append(f"local {struct_name}_offsets = {{")
+    lines.append(f"    _size = 0x{size:02X},  -- Total struct size")
+    
+    for field in fields:
+        offset = field["offset"]
+        name = field["name"] or f"field_{offset:02X}"
+        field_type = field["type"]
+        length = field["length"]
+        comment = field.get("comment", "")
+        
+        # Map Ghidra types to Lua comments
+        type_comment_map = {
+            "byte": "u8",
+            "word": "u16",
+            "dword": "u32",
+            "qword": "u64",
+            "undefined": "u8",
+            "pointer": "ptr",
+        }
+        type_hint = type_comment_map.get(field_type, field_type)
+        
+        # Format array types
+        if length > 1 and field_type in ("byte", "undefined"):
+            type_hint = f"u8[{length}]"
+        elif length > 4:
+            type_hint = f"[{length}]"
+        
+        # Build comment string
+        comment_parts = [type_hint]
+        if comment:
+            comment_parts.append(comment)
+        comment_str = " -- " + ", ".join(comment_parts)
+        
+        # Use snake_case field name for Lua
+        lua_name = name
+        lines.append(f"    {lua_name} = 0x{offset:02X},{comment_str}")
+    
+    lines.append("}")
+    lines.append("")
+    
+    # Add convenience accessor comment
+    lines.append(f"-- Usage in game_watcher.lua:")
+    lines.append(f"-- local value = read_u8(struct_addr + {struct_name}_offsets.field_name)")
+    lines.append("")
+    lines.append(f"return {struct_name}_offsets")
+    lines.append("")
+    
+    return "\n".join(lines)
+
+
 def check_symbol_file(name: str, address: int, size: int, dry_run: bool = False) -> bool:
     """Check if function is in symbol_addrs.txt and add if missing."""
     if not SYMBOL_FILE.exists():
@@ -491,6 +585,12 @@ def main():
                         help="Show Ghidra's decompilation")
     parser.add_argument("--export-struct", metavar="NAME",
                         help="Export struct definition from Ghidra to C header format")
+    parser.add_argument("--export-lua", metavar="NAME",
+                        help="Export struct definition from Ghidra to Lua table format (for game_watcher.lua)")
+    parser.add_argument("--export-symbols", action="store_true",
+                        help="Export all named functions from Ghidra to symbol_addrs.txt format")
+    parser.add_argument("--symbol-filter", metavar="PATTERN",
+                        help="Filter symbols by name pattern (e.g., 'Entity' or 'Player')")
     
     args = parser.parse_args()
     
@@ -500,9 +600,15 @@ def main():
         print(code)
         return
     
+    # Handle Lua struct export (doesn't need function name)
+    if args.export_lua:
+        code = export_struct_to_lua(args.export_lua)
+        print(code)
+        return
+    
     # All other operations need a function name
     if not args.function:
-        parser.error("function name is required (unless using --export-struct)")
+        parser.error("function name is required (unless using --export-struct or --export-lua)")
     
     if not any([args.dry_run, args.prepare, args.decompile, args.full, args.ghidra]):
         parser.error("Must specify one of: --dry-run, --prepare, --decompile, --full, --ghidra")
