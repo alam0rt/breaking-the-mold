@@ -223,30 +223,55 @@ All powerup items stored in `g_pPlayerState` with max count of 7. Use buttons L1
 
 ### Hamster Shield
 
-**Gameplay:** Three hamsters spin around player and absorb up to 3 enemy hits (damage protection).
+**Gameplay (Manual Claims):** Three hamsters spin around player and absorb up to 3 enemy 
+hits, then "wander off after a limited duration".
 
-**Technical Details:**
-- Storage: `g_pPlayerState[0x1A]` (u8, hamster_count, max 3)
-- Cheat: 0x0A @ 0x80082370 sets count to 3 (MISLABELED as "Max Green Bullets" in game!)
-- Clear Function: `ClearHamsterCount` @ 0x8002615c (called by SetupAndStartLevel)
-- HUD Sprite: `0x80e85ea0` (3 icons displayed in HUD)
-- Player Sprite: Same `0x80e85ea0` used in `Callback_8006d910`
+**Technical Reality - ⚠️ POSSIBLY CUT FEATURE:**
+
+Code analysis reveals the hamster protection mechanism described in the manual was either:
+1. **Cut/unimplemented** in the PAL version
+2. **Works differently** than documented
+3. **Regional difference** (NTSC may differ)
+
+**Evidence Against Full Implementation:**
+- `PlayerEntityCollisionHandler` (0x8005c400) ONLY checks `g_pPlayerState[0x17] & 1` (Halo) 
+  for damage protection - **NO hamster count check exists**
+- `PlayerProcessBounceCollision` similarly only checks Halo bit for lethal damage
+- No orbiting entity creation found - unlike Halo (`player+0x168`) and Yellow Bird 
+  (`player+0x16c`) which have explicit entity spawning
+- Cheat 0x0A only sets `g_pPlayerState[0x1A] = 3` with no entity spawn side effects
+- Count appears used ONLY for HUD icon visibility (3 icons at `param_1+0x50`)
+- **NO PICKUP MECHANISM EXISTS** - exhaustive search found only ClearHamsterCount (sets to 0)
+  and cheat code (sets to 3). No entity pickup increments this value.
+
+**What IS Verified:**
+| Component | Details |
+|-----------|---------|
+| Storage | `g_pPlayerState[0x1A]` (u8, max 3) |
+| Cheat | 0x0A @ 0x80082370 sets count to 3 |
+| Clear Function | `ClearHamsterCount` @ 0x8002615c |
+| HUD Sprite | `0x80e85ea0` (3 icons in HUD) |
+| Callback | `HamsterSpriteCallback` @ 0x8006d910 |
 
 **Verified Functions (Ghidra):**
 | Address | Function | Purpose |
 |---------|----------|---------|
 | 0x8002615c | ClearHamsterCount | Clear hamster count on level start |
-| 0x8006d910 | Callback_8006d910 | Hamster sprite state callback |
+| 0x8006d910 | HamsterSpriteCallback | Sprite state callback (HUD display only?) |
 
 **IMPORTANT:** The cheat system label "Max Green Bullets" is WRONG. Field [0x1A] is
-actually the Hamster count (orbiting damage shields), NOT Green Bullet ammo.
+the Hamster count, NOT Green Bullet ammo. However, the count may only affect HUD display.
 
-**⚠️ UNVERIFIED:** The documentation claims hamsters absorb enemy hits, but this was NOT
-found in `PlayerEntityCollisionHandler` (0x8005c400). The damage check only uses
-`g_pPlayerState[0x17] & 1` (Halo). The hamster damage absorption mechanism may work
-differently (e.g., separate collision entities) and needs further investigation.
+**Final Verdict:** The Hamster system in PAL SLES-01090 is **NOT FULLY IMPLEMENTED**:
+1. No pickup handler exists in the code
+2. No damage absorption logic in PlayerEntityCollisionHandler
+3. No orbiting entity spawning like Halo/YellowBird
+4. Only the cheat code can set the value
 
-**Verified:** 2026-01-16 via Ghidra decompilation, ClearHamsterCount @ 0x8002615c
+The game manual's description of "orbiting hamsters that absorb hits" appears to be
+either a cut feature, regional difference (NTSC may vary), or embellished documentation.
+
+**Verified:** 2026-01-16 via exhaustive Ghidra code search. Feature NOT implemented.
 
 ---
 

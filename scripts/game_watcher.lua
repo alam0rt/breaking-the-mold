@@ -24,11 +24,11 @@
 
 local CONFIG = {
     -- Master enable/disable for watcher categories
-    watch_frame_state = true,      -- Full state dump each frame
-    watch_entity_tick = true,      -- EntityTickLoop breakpoint
+    watch_frame_state = false,      -- Full state dump each frame
+    watch_entity_tick = false,      -- EntityTickLoop breakpoint
     watch_entity_callbacks = false, -- Individual entity callbacks
     watch_player = true,           -- Player-specific state changes
-    watch_animation = true,        -- Sprite/animation changes
+    watch_animation = false,        -- Sprite/animation changes
     watch_collision = false,       -- Tile and entity collision (very verbose)
     watch_level_load = true,       -- Level loading events
     watch_blb_access = true,       -- BLB header and asset access
@@ -38,8 +38,9 @@ local CONFIG = {
     debug_breakpoints = false,     -- Print when breakpoints fire (very verbose!)
 
     -- Frame state dump options
-    dump_all_entities = true,     -- Include ALL active entities each frame
+    dump_all_entities = false,     -- Include ALL active entities each frame
     dump_player_only = false,     -- Only dump player state (faster)
+    dump_player_state_struct = true, -- Include full PlayerState struct (powerups, items, flags)
     max_entities_per_frame = 64,  -- Cap entity dumps per frame
     dump_blb_metadata = true,     -- Include BLB level metadata in frames
     dump_asset_info = true,       -- Include asset container info
@@ -56,6 +57,7 @@ local CONFIG = {
     stdout_events = {
         WatcherStarted = true,     -- Initial startup message
         BootOverride = true,       -- Boot-time level override applied
+        BootPowerups = true,       -- Boot-time powerup initialization
         LevelLoad = true,          -- Level loading started
         SpawnEntities = true,      -- Entity spawn completed
         GameStateTick = false,     -- Complete frame state for replay (very verbose)
@@ -86,6 +88,35 @@ local CONFIG = {
     -- Boot-time level override (nil = normal boot)
     boot_level_override = {level=1, stage=0},    -- Set to {level=1, stage=0} to force SCIE Stage 0
     boot_stage_override = nil,    -- Deprecated: use boot_level_override table
+
+    -- Boot-time powerup/weapon initialization (for testing)
+    -- Set to true to start with max powerups, or customize individual values
+    -- Offsets match PlayerState struct from Ghidra (see: scripts/decompile.py --export-struct PlayerState)
+    boot_all_powerups = true,    -- Master switch: give all weapons/powerups at boot
+    boot_powerups = {
+        -- Weapons (L1/L2/R1/R2 buttons) - max 99 for all
+        phoenix_hands = nil,      -- [0x14] L1 weapon (nil = don't set)
+        phart_heads = nil,        -- [0x15] L2 weapon
+        universe_enema = nil,     -- [0x16] R1 weapon
+        super_willie = nil,       -- [0x1C] R2 weapon
+        swirly_q = nil,           -- [0x13] Circle button ammo, max 20
+
+        -- Passive powerups (powerup_flags @ 0x17)
+        halo = nil,               -- [0x17] bit 0x01: damage immunity (1-hit shield)
+        yellow_bird = nil,        -- [0x17] bit 0x02: glide ability
+
+        -- Collectibles/shields
+        hamster = nil,            -- [0x1A] orbiting shields, max 3 (NOTE: may not work, see items.md)
+        total_swirly_qs = nil,    -- [0x1B] cumulative swirly Q total (48+ for secret ending)
+
+        -- Resources
+        lives = nil,              -- [0x11] extra lives (default 5)
+        clay_orbs = nil,          -- [0x12] collectible orbs (100 = 1up)
+        icon_1970 = nil,          -- [0x19] 1970 icons, max 3
+
+        -- Special modes
+        shrink_mode = nil,        -- [0x18] player is shrunk (mini mode)
+    },
 }
 
 -- =============================================================================
@@ -193,8 +224,10 @@ local ADDR = {
     BLB_level_index = 0x800AF372,           -- u8: current level index @ header+0xF92
     BLB_stage_index = 0x800AF373,           -- u8: current stage index @ header+0xF93
 
-    -- g_pPlayerState verified at 0x800A5754 (stores level/stage progression)
-    g_pPlayerState = 0x800A5754,            -- u8* pointer to player state/save data
+    -- g_pPlayerState is a POINTER at 0x800A597C that points to PlayerState struct
+    -- The actual PlayerState struct is at 0x8009B1D8 (read from the pointer)
+    -- See main() disasm: lw a0,0x597c(0x800a) then jal initPlayerState
+    g_pPlayerState = 0x800A597C,            -- Pointer to PlayerState struct
 
     -- Level metadata table (26 entries × 0x70 bytes starting at BLBHeader)
     BLB_level_table = 0x800AE3E0,           -- Level metadata table base
@@ -371,6 +404,15 @@ local state = {
 -- =============================================================================
 -- JSON Serialization
 -- =============================================================================
+
+-- Simple table to string for console output
+local function table_to_string(t)
+    local parts = {}
+    for k, v in pairs(t) do
+        table.insert(parts, string.format("%s=%s", tostring(k), tostring(v)))
+    end
+    return "{" .. table.concat(parts, ", ") .. "}"
+end
 
 local function escape_json_string(s)
     return s:gsub('\\', '\\\\'):gsub('"', '\\"'):gsub('\n', '\\n')
@@ -616,6 +658,66 @@ local function iterate_entity_list()
     return entities
 end
 
+-- Read the complete PlayerState struct from g_pPlayerState
+-- Matches Ghidra struct: scripts/decompile.py --export-struct PlayerState
+local function read_player_state_struct()
+    -- g_pPlayerState is a POINTER at 0x800A597C pointing to the PlayerState struct
+    local ptr = read_u32(ADDR.g_pPlayerState)
+    if not is_valid_ptr(ptr) then
+        return nil
+    end
+
+    return {
+        addr = ptr,
+        -- Core state [0x00-0x04]
+        initialized = read_u8(ptr + 0x00),
+        active = read_u8(ptr + 0x01),
+        unknown02 = read_u16(ptr + 0x02),
+        unknown04 = read_u8(ptr + 0x04),
+
+        -- Cumulative stats [0x05]
+        total_1ups = read_u8(ptr + 0x05),
+
+        -- Clayball collection flags [0x06-0x0F]
+        clayball_flags = {
+            read_u8(ptr + 0x06), read_u8(ptr + 0x07), read_u8(ptr + 0x08),
+            read_u8(ptr + 0x09), read_u8(ptr + 0x0A), read_u8(ptr + 0x0B),
+            read_u8(ptr + 0x0C), read_u8(ptr + 0x0D), read_u8(ptr + 0x0E),
+            read_u8(ptr + 0x0F),
+        },
+
+        -- Progress [0x10]
+        level_complete = read_u8(ptr + 0x10),
+
+        -- Resources [0x11-0x12]
+        lives = read_u8(ptr + 0x11),
+        orb_count = read_u8(ptr + 0x12),
+
+        -- Weapons [0x13-0x16, 0x1C]
+        swirly_q_count = read_u8(ptr + 0x13),
+        phoenix_hands = read_u8(ptr + 0x14),
+        phart_heads = read_u8(ptr + 0x15),
+        universe_enemas = read_u8(ptr + 0x16),
+        super_willies = read_u8(ptr + 0x1C),
+
+        -- Powerup flags [0x17]
+        powerup_flags = read_u8(ptr + 0x17),
+        has_halo = bit.band(read_u8(ptr + 0x17) or 0, 0x01) ~= 0,
+        has_yellow_bird = bit.band(read_u8(ptr + 0x17) or 0, 0x02) ~= 0,
+
+        -- Special modes [0x18]
+        shrink_mode = read_u8(ptr + 0x18),
+
+        -- Collectibles [0x19-0x1B]
+        icon_1970_count = read_u8(ptr + 0x19),
+        hamster_count = read_u8(ptr + 0x1A),
+        total_swirly_qs = read_u8(ptr + 0x1B),
+
+        -- Unknown [0x1D]
+        unknown_1d = read_u8(ptr + 0x1D),
+    }
+end
+
 -- Get compact player state for frequent logging
 local function get_player_state_compact()
     local player = read_player_entity()
@@ -801,9 +903,115 @@ local function read_input_state(input_ptr)
     }
 end
 
+-- Apply boot powerups (called once after level fully loads)
+local function apply_boot_powerups()
+    if state.powerups_applied then return false end
+
+    -- Wait a few frames after level load before applying (avoids crash during init)
+    if not state.powerup_wait_frames then
+        state.powerup_wait_frames = 60  -- Wait 1 second (60 frames)
+        return false
+    end
+    state.powerup_wait_frames = state.powerup_wait_frames - 1
+    if state.powerup_wait_frames > 0 then
+        return false
+    end
+
+    -- Check if we should apply powerups
+    if not CONFIG.boot_all_powerups and not (CONFIG.boot_powerups and next(CONFIG.boot_powerups)) then
+        return false
+    end
+
+    -- g_pPlayerState is a POINTER at 0x800A597C - dereference it to get struct address
+    local player_state_ptr = read_u32(ADDR.g_pPlayerState)
+    if not is_valid_ptr(player_state_ptr) then
+        log_summary("[POWERUP] Waiting for g_pPlayerState to be valid...")
+        return false
+    end
+
+    log_summary(string.format("[POWERUP] PlayerState struct at 0x%08X", player_state_ptr))
+
+    local applied = {}
+
+    -- Helper to apply a powerup value
+    local function set_powerup(offset, value, name)
+        if value then
+            write_u8(player_state_ptr + offset, value)
+            applied[name] = value
+        end
+    end
+
+    local p = CONFIG.boot_powerups or {}
+
+    if CONFIG.boot_all_powerups then
+        -- Weapons (max 99 for button weapons, 20 for swirly)
+        set_powerup(0x14, p.phoenix_hands or 99, "phoenix_hands")
+        set_powerup(0x15, p.phart_heads or 99, "phart_heads")
+        set_powerup(0x16, p.universe_enema or 99, "universe_enema")
+        set_powerup(0x1C, p.super_willie or 99, "super_willie")
+        set_powerup(0x13, p.swirly_q or 20, "swirly_q")
+
+        -- Passive powerups
+        local flags = read_u8(player_state_ptr + 0x17) or 0
+        if p.halo ~= false then flags = bit.bor(flags, 0x01) end
+        if p.yellow_bird ~= false then flags = bit.bor(flags, 0x02) end
+        write_u8(player_state_ptr + 0x17, flags)
+        applied.powerup_flags = string.format("0x%02X", flags)
+
+        -- Hamster
+        set_powerup(0x1A, p.hamster or 3, "hamster")
+
+        -- Resources
+        set_powerup(0x11, p.lives or 9, "lives")
+        set_powerup(0x12, p.clay_orbs or 99, "clay_orbs")
+        set_powerup(0x19, p.icon_1970 or 5, "icon_1970")
+
+        -- Cumulative stats
+        set_powerup(0x1B, p.total_swirly_qs, "total_swirly_qs")
+        set_powerup(0x18, p.shrink_mode, "shrink_mode")
+    else
+        -- Apply only explicitly set values
+        set_powerup(0x14, p.phoenix_hands, "phoenix_hands")
+        set_powerup(0x15, p.phart_heads, "phart_heads")
+        set_powerup(0x16, p.universe_enema, "universe_enema")
+        set_powerup(0x1C, p.super_willie, "super_willie")
+        set_powerup(0x13, p.swirly_q, "swirly_q")
+        set_powerup(0x1A, p.hamster, "hamster")
+        set_powerup(0x11, p.lives, "lives")
+        set_powerup(0x12, p.clay_orbs, "clay_orbs")
+        set_powerup(0x19, p.icon_1970, "icon_1970")
+        set_powerup(0x1B, p.total_swirly_qs, "total_swirly_qs")
+        set_powerup(0x18, p.shrink_mode, "shrink_mode")
+
+        -- Handle powerup flags
+        if p.halo or p.yellow_bird then
+            local flags = read_u8(player_state_ptr + 0x17) or 0
+            if p.halo then flags = bit.bor(flags, 0x01) end
+            if p.yellow_bird then flags = bit.bor(flags, 0x02) end
+            write_u8(player_state_ptr + 0x17, flags)
+            applied.powerup_flags = string.format("0x%02X", flags)
+        end
+    end
+
+    if next(applied) then
+        log_summary("[POWERUP] Applied: " .. table_to_string(applied))
+        log_entry("BootPowerups", applied)
+        state.powerups_applied = true
+        return true
+    end
+
+    return false
+end
+
 -- Called when EntityTickLoop starts - dump full frame state for replay
 local function on_entity_tick_loop(address, width, cause)
+    -- ALWAYS try to apply boot powerups on first valid tick (regardless of watch settings)
+    if not state.powerups_applied then
+        apply_boot_powerups()
+    end
+
     if not CONFIG.watch_entity_tick then return end
+
     if state.frame_count % CONFIG.sample_every_n_frames ~= 0 then return end
 
     -- Core GameState (mode, camera, input)
@@ -878,6 +1086,30 @@ local function on_entity_tick_loop(address, width, cause)
             })
         end
         frame_data.entities = ent_list
+    end
+
+    -- PlayerState struct (powerups, items, flags from g_pPlayerState)
+    if CONFIG.dump_player_state_struct then
+        local ps = read_player_state_struct()
+        if ps then
+            frame_data.player_state = {
+                lives = ps.lives,
+                orb_count = ps.orb_count,
+                swirly_q_count = ps.swirly_q_count,
+                total_swirly_qs = ps.total_swirly_qs,
+                phoenix_hands = ps.phoenix_hands,
+                phart_heads = ps.phart_heads,
+                universe_enemas = ps.universe_enemas,
+                super_willies = ps.super_willies,
+                powerup_flags = ps.powerup_flags,
+                has_halo = ps.has_halo,
+                has_yellow_bird = ps.has_yellow_bird,
+                hamster_count = ps.hamster_count,
+                icon_1970_count = ps.icon_1970_count,
+                shrink_mode = ps.shrink_mode,
+                level_complete = ps.level_complete,
+            }
+        end
     end
 
     log_entry("GameStateTick", frame_data)
@@ -1100,6 +1332,10 @@ local function on_spawn_entities(address, width, cause)
         stage_index = blb.valid and blb.current.stage_index or -1,
     })
     log_summary("Spawning entities from Asset 501")
+
+    -- Reset powerup state so they get applied after wait period
+    state.powerups_applied = false
+    state.powerup_wait_frames = nil  -- Will be set on first apply_boot_powerups call
 end
 
 -- Called when asset container is loaded
@@ -1165,12 +1401,15 @@ local function on_header_loaded(address, width, cause)
         write_u8(ADDR.BLB_stage_index, stage_idx)
 
         -- Also set in g_pPlayerState for consistency
-        local player_state_ptr = read_u32(ADDR.g_pPlayerState)
-        if is_valid_ptr(player_state_ptr) then
-            write_u8(player_state_ptr, level_idx)
-            write_u8(player_state_ptr + 1, stage_idx)
-            print(string.format("[BOOT] Updated g_pPlayerState[0-1] = {%d, %d}", level_idx, stage_idx))
-        end
+        -- NOTE: g_pPlayerState IS the struct, not a pointer to it
+        -- However, PlayerState[0] and [1] are initialized/active flags, NOT level/stage
+        -- This may be incorrect - commenting out for now
+        -- local player_state_addr = ADDR.g_pPlayerState
+        -- if is_valid_ptr(player_state_addr) then
+        --     write_u8(player_state_addr, level_idx)
+        --     write_u8(player_state_addr + 1, stage_idx)
+        --     print(string.format("[BOOT] Updated g_pPlayerState[0-1] = {%d, %d}", level_idx, stage_idx))
+        -- end
 
         state.boot_override_applied = true
 
@@ -1310,6 +1549,11 @@ local function setup_breakpoints()
     -- Disassembly: 0x80020948: jal 0x8007a1bc
     --              0x8002094C: move a0,s1 (delay slot)
     --              0x80020950: clear a0  ← BREAKPOINT HERE
+    -- 
+    -- NOTE: This early breakpoint was causing crashes. Disabling for now.
+    -- The boot_level_override is handled by the Makefile's -lua flag which passes
+    -- the level/stage to the game watcher config.
+    --[[
     if CONFIG.boot_level_override then
         print(string.format("  [!] Boot override configured: Level %d, Stage %d",
             CONFIG.boot_level_override.level or 0,
@@ -1323,14 +1567,22 @@ local function setup_breakpoints()
             'BLBHeaderLoaded', safe_breakpoint_handler('BLBHeaderLoaded', on_header_loaded)
         )
     end
+    --]]
 
     -- EntityTickLoop - main game tick (full state dump)
-    if CONFIG.watch_frame_state then
+    -- Also needed for boot powerup application even if not watching frames
+    local need_tick_loop = CONFIG.watch_frame_state or CONFIG.boot_all_powerups or 
+                           (CONFIG.boot_powerups and next(CONFIG.boot_powerups))
+    if need_tick_loop then
         state.breakpoints.tick_loop = PCSX.addBreakpoint(
             ADDR.FN_EntityTickLoop, 'Exec', 4,
             'EntityTickLoop', safe_breakpoint_handler('EntityTickLoop', on_entity_tick_loop)
         )
-        print("  [x] Frame state capture (EntityTickLoop)")
+        if CONFIG.watch_frame_state then
+            print("  [x] Frame state capture (EntityTickLoop)")
+        else
+            print("  [x] EntityTickLoop (for boot powerups only)")
+        end
     end
 
     -- Player tick callback

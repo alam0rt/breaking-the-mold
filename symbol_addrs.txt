@@ -70,7 +70,7 @@ GetCurrentTertiaryDataSize = 0x8007AFF8; // size:0x7C // Tertiary block size cal
 
 // Player State
 initPlayerState = 0x800260D0; // size:0x8C
-g_pPlayerState = 0x800A5754; // Pointer to player state structure
+g_pPlayerState = 0x800A597C; // Pointer to PlayerState structure (points to 0x8009B1D8)
 
 // Player State Callback Table (8 bytes per entry: flags, callback)
 // Used by EntitySetState for player state machine - table @ 0x800A5D20
