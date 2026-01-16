@@ -68,14 +68,6 @@ segments:
       # LoadBLBHeader: 0x800208B0 - 0x80020973 (BLB archive initialization)
   - [0x110B0, c, LoadBLBHeader]
   - [0x11174, asm]
-  - - 90580
-    - c
-    - UpdateInputState
-  - - 90980
-    - asm
-      # initPlayerState: 0x800260D0 - 0x8002615B
-  - [0x168D0, c, initPlayerState]
-  - [0x1695C, asm]
       # LoadGameAssetLocations: 0x800389DC - 0x80038B97
   - [0x291DC, c, LoadGameAssetLocations]
       # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F
@@ -84,8 +76,6 @@ segments:
       # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
   - [0x6AE2C, c, LevelDataParser]
   - [0x6B080, asm]
-      # GetLevelCount: 0x8007A9B0 - 0x8007A9C3 (returns header[0xF31])
-  - [0x6B1B0, c, GetLevelCount]
       # StateAccessors: 0x8007A9C4 - 0x8007AA27
       # GetLevelAssetIndex, GetLevelDisplayName, getLevelName
   - [0x6B1C4, c, StateAccessors]
@@ -109,10 +99,6 @@ segments:
       # SetupSound: 0x8007B8B8 - 0x8007c084 ?
   - [0x6C7B8, c, SetupSound]
   - [0x6C888, asm]
-      # SaveCheckpointState: 0x8007EAAC - 0x8007EAEB
-      # Saves entity tick list for checkpoint respawn
-  - [0x6F2AC, c, SaveCheckpointState]
-  - [0x6F2EC, asm]
       # main: 0x800828B0 - 0x80082C0F
   - [0x730B0, c, main]
   - [0x73410, asm]
