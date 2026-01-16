@@ -103,25 +103,36 @@ From game-loop.md (lines 198-217):
 
 ### Gameplay Controls
 
-**Movement**:
-- D-Pad Left/Right (0x0080/0x0020): Walk
-- Triangle (0x0010): Look up
-- Down (0x4000): Crouch / Look down
+**Movement** (D-Pad):
+- D-Pad Left (0x8000): Walk left
+- D-Pad Right (0x2000): Walk right
+- D-Pad Up (0x1000): Look up / Menu up
+- D-Pad Down (0x4000): Crouch / Look down / Menu down
 
-**Actions**:
-- Cross/X (0x0040): Jump
-- Square (0x0080): Attack / Shoot
-- Circle (0x2000): Context action (interact, use item)
+**Actions** (Face Buttons):
+- Cross/X (0x0040): Jump / Confirm
+- Square (0x0080): Attack / Shoot / Cancel
+- Circle (0x0020): Context action (interact)
+- Triangle (0x0010): Look up (alternate)
+
+**Shoulder Buttons** (Weapons - verified in PlayerTickCallback):
+- L1 (0x0004): Phoenix Hands
+- L2 (0x0001): Phart Heads  
+- R1 (0x0008): Universe Enema
+- R2 (0x0002): Super Willie
 
 **System**:
-- Start (0x0008): Pause game
-- Select (0x0001): Pause menu (alternate)
+- Start (0x0800): Pause game
+- Select (0x0100): Pause menu (alternate)
+
+> **Note**: Button bit mapping verified via ProcessDebugMenuInput @ 0x80082c10
+> which uses 0x1000 (Up), 0x4000 (Down), 0x0040 (Cross) directly on input state.
 
 ---
 
 ## UpdateInputState Function
 
-**Address**: 0x80025ab4 (line 9871 in SLES_010.90.c)
+**Address**: 0x800259d4 (VERIFIED in Ghidra - 0x80025ab4 was incorrect)
 
 **Purpose**: Process raw pad data into held/pressed states
 

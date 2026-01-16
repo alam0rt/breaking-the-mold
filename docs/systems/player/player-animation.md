@@ -58,7 +58,7 @@ void CreatePlayerEntity(Entity* entity, void* input, short x, short y, char faci
     InitEntityWithSprite(entity, &DAT_8009c174, 1000, x, y);
     
     // Set main tick callback
-    entity[1] = FUN_8005b414;  // Player tick handler
+    entity[1] = PlayerTickCallback;  // Player tick handler
     
     // Set secondary callback slot
     entity[8] = LAB_80061180;  // Additional update logic
@@ -91,7 +91,7 @@ void CreatePlayerEntity(Entity* entity, void* input, short x, short y, char faci
     
     // Create halo powerup if active
     if (g_pPlayerState[0x17] & 1) {
-        entity[0x5A] = FUN_8006de98(AllocateFromHeap(..., 0x30), entity);
+        entity[0x5A] = CreateHaloEntity(AllocateFromHeap(..., 0x30), entity);
     }
 }
 ```
@@ -186,7 +186,7 @@ Each frame:
    - Otherwise advance current_frame (0xDA)
 3. Call `UpdateSpriteFrameData` to update render params
 
-### Frame Advancement (`FUN_8001d4bc`)
+### Frame Advancement (`AdvanceAnimationFrame`)
 
 ```c
 void AdvanceAnimationFrame(Entity* entity) {
@@ -225,7 +225,7 @@ The state callback at 0x80066ce0 (idle facing right):
 
 ## RGB Modulation & Damage Effects
 
-### Per-Frame RGB Processing (`FUN_8005b414`)
+### Per-Frame RGB Processing (`PlayerTickCallback`)
 
 ```c
 // Damage flash effect
@@ -271,7 +271,7 @@ if (entity[0x17D] != 0) {
 | 0xC000 | 75% | Medium scale |
 | 0x10000 | 100% | Normal size |
 
-### Scale Transition (`FUN_8005b414`)
+### Scale Transition (`PlayerTickCallback`)
 
 ```c
 // Interpolate toward target scale
@@ -290,7 +290,7 @@ When `g_pPlayerState[0x18] != 0`:
 - Bounding box reduced to (-5, -10, 10, 10)
 - Can access smaller passages
 
-## Halo Powerup (`FUN_8006de98` @ 0x8006de98)
+## Halo Powerup (`CreateHaloEntity` @ 0x8006de98)
 
 Created when `g_pPlayerState[0x17] & 1`:
 
@@ -300,9 +300,9 @@ Entity* CreateHaloEntity(void* memory, Entity* player) {
     InitEntityStruct(entity, 0x30);
     entity[7] = player;  // Parent reference
     
-    // Create particle child (0x1E8 bytes) via FUN_8003286c
+    // Create particle child (0x1E8 bytes) via InitHUDIconEntity
     Entity* particle = AllocateFromHeap(..., 0x1E8);
-    FUN_8003286c(particle);
+    InitHUDIconEntity(particle);
     
     // Position above player head
     // z_order = 0x3E9 (1001)
@@ -312,12 +312,12 @@ Entity* CreateHaloEntity(void* memory, Entity* player) {
 
 The halo entity follows the player and creates a glowing particle effect above their head.
 
-## Trail Powerup (`FUN_8006e1d8` @ 0x8006e1d8)
+## Yellow Bird Powerup (`CreateYellowBirdEntity` @ 0x8006e1d8)
 
 Created when `g_pPlayerState[0x17] & 2`:
 
 ```c
-Entity* CreateTrailEntity(void* memory, Entity* player) {
+Entity* CreateYellowBirdEntity(void* memory, Entity* player) {
     // 0x110 byte entity with sprite DAT_8009c3c4
     InitEntityWithSprite(entity, &DAT_8009c3c4, 999, ...);
     
@@ -370,7 +370,7 @@ Triggered when `entity[0x1AF] != 0` and `(frameCount & 7) == 0`:
 ```c
 if (entity[0x1AF] && (g_GameStatePtr[0x10C] & 7) == 0) {
     Entity* particle = AllocateFromHeap(..., size);
-    FUN_800362a4(particle);  // Initialize particle
+    CreatePlayerParticleEntity(particle);  // Initialize particle
     AddToZOrderList(g_GameStatePtr, particle);
     AddToXPositionList(g_GameStatePtr, particle);
 }
@@ -386,13 +386,14 @@ Spawns particle every 8 frames when flag is set.
 | 0x8005b414 | PlayerTickCallback | Per-frame player update |
 | 0x80059a70 | InitPlayerSpriteAvailability | Check alternate sprites |
 | 0x8006de98 | CreateHaloEntity | Create halo powerup entity |
-| 0x8006e1d8 | CreateTrailEntity | Create trail powerup entity |
+| 0x8006e1d8 | CreateYellowBirdEntity | Create yellow bird powerup entity |
 | 0x8001cb88 | EntityUpdateCallback | Generic entity update |
 | 0x8001d290 | TickEntityAnimation | Animation frame advancement |
 | 0x8001d4bc | AdvanceAnimationFrame | Next frame calculation |
 | 0x8001d748 | UpdateSpriteFrameData | Copy frame metadata to entity |
 | 0x8007bebc | GetFrameMetadata | Get frame render parameters |
 | 0x80010068 | DecodeRLESprite | Decode sprite with flip support |
+| 0x800362a4 | CreatePlayerParticleEntity | Create player trailing particle |
 
 ## State Callback Addresses
 

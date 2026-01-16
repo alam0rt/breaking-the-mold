@@ -15,24 +15,24 @@ The global player state is at `g_pPlayerState` (0x8009DC20). This structure pers
 | 0x10 | u8 | level_complete | Level complete flag |
 | 0x11 | u8 | lives | Current lives (default: 5) |
 | 0x12 | u8 | orb_count | Clay/orb count (100 → 1up) |
-| 0x13 | u8 | checkpoint_count | Swirl/checkpoint count (3 → bonus room) |
-| 0x14 | u8 | phoenix_hands | Bird powerup count (max 7) |
-| 0x15 | u8 | phart_heads | Head powerup count (max 7) |
-| 0x16 | u8 | universe_enemas | Fart Clone powerup count (max 7) |
+| 0x13 | u8 | **green_bullets** | **Green Bullets** (projectile ammo, max 20, Circle) |
+| 0x14 | u8 | phoenix_hands | Phoenix Hand count (max 7, L1) |
+| 0x15 | u8 | phart_heads | Phart Head count (max 7, L2) |
+| 0x16 | u8 | universe_enemas | Universe Enema count (max 7, R1) |
 | 0x17 | u8 | **powerup_flags** | Active powerup bitmask |
 | 0x18 | u8 | **shrink_mode** | Player is shrunk (mini mode) |
 | 0x19 | u8 | icon_1970_count | "1970" icon count (max 3) |
-| 0x1A | u8 | green_bullets | Energy Ball count (max 3) |
-| 0x1B | u8 | unknown_1b | |
-| 0x1C | u8 | super_willies | Super Power count (max 7) |
+| 0x1A | u8 | **hamster_count** | **Hamsters** (orbiting shield, max 3 hits) |
+| 0x1B | u8 | total_swirly_qs | Total Swirly Qs (secret ending, need 48+) |
+| 0x1C | u8 | super_willies | Super Willie count (max 7, R2) |
 | 0x1D | u8 | unknown_1d | Cleared on death |
 
 ### Powerup Flags (offset 0x17)
 
 | Bit | Name | Effect |
 |-----|------|--------|
-| 0x01 | **Halo** | Grants invincibility, creates halo entity following player |
-| 0x02 | **Trail** | Creates trail/glide entity following player |
+| 0x01 | **Halo** | Single-hit shield (collect 2 = clay reward) |
+| 0x02 | **Yellow Bird** | Glidey Bird - hold X to glide |
 | 0x04+ | (unknown) | Reserved for additional powerups |
 
 ## Player Entity Structure

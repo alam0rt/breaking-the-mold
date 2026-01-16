@@ -1,5 +1,7 @@
 # Demo/Attract Mode System
 
+**Status: PARTIALLY VERIFIED via Ghidra analysis (2026-01-16)**
+
 The demo/attract mode system plays pre-recorded gameplay demos when the player is idle at the main menu.
 
 ## Overview
@@ -9,10 +11,11 @@ When the player remains idle at the main menu for approximately 30 seconds, the 
 ## Key Memory Addresses (PAL / SLES-01090)
 
 | Address | Name | Purpose |
-|---------|------|---------|
-| 0x80076928 | `InitMenuEntity` | Menu entity initialization |
-| 0x80077940 | Menu Tick Callback | Idle timer logic (not a recognized function) |
-| 0x80077aa0 | Demo Countdown Callback | 20-frame countdown before demo load |
+|---------|------|--------|
+| 0x80076928 | `InitMenuEntity` | Menu entity initialization (uses sprite 0xb8700ca1) |
+| 0x800313cc | `InitMenuEntity` | **Second** menu entity init (different, uses sprite 0xb8700ca1) |
+| 0x80077940 | `MenuTickCallback` | Menu idle timer logic (VERIFIED) |
+| 0x80077aa0 | `DemoCountdownCallback` | 20-frame countdown before demo load (VERIFIED) |
 | 0x800a6043 | `g_DemoIndex` | Current demo index (gp+0x6ef) |
 | 0x800a6045 | `DAT_800a6045` | Demo-related flag (gp+0x6f1) |
 | 0x800a60a4 | `g_MenuDemoRotationCounter` | Demo mode cycling counter (0-4) |
@@ -28,97 +31,113 @@ When the player remains idle at the main menu for approximately 30 seconds, the 
 | 0x13c | u16 | Demo countdown timer (set to 20) |
 | 0x148 | u8 | Menu mode (99 = trigger demo) |
 
-## Idle Timer Logic
+## Idle Timer Logic (MenuTickCallback @ 0x80077940)
 
-The menu tick callback at 0x80077940 (which Ghidra doesn't recognize as a function, TODO create in Ghidra) implements:
+**VERIFIED via Ghidra decompilation (2026-01-16)**
 
 ```c
-// Pseudocode reconstructed from disassembly at 0x80077940
-void MenuTickCallback(Entity* entity) {
-    int stage = GetCurrentStageIndex(g_LevelDataContext + 0x84);
+// Actual decompiled code from Ghidra
+void MenuTickCallback(undefined4 *param_1) {
+    byte stage = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    if (stage > 4) stage = 1;
     
-    // Only count idle on stage 1 (main menu)
-    if (stage != 1) {
-        entity->idle_timer = 0;  // Reset on stage change
-        goto update;
-    }
-    
-    // Check if any input is pressed
-    u16* input = (u16*)entity->input_ptr;
-    if (*input != 0) {
-        entity->idle_timer = 0;  // Reset on any input
-        goto update;
-    }
-    
-    // Increment idle timer
-    entity->idle_timer++;
-    
-    // Check threshold: 0x709 = 1801 frames ≈ 30 seconds at 60fps
-    if (entity->idle_timer >= 0x709) {
-        // Trigger demo mode
-        u8 demo_index = g_DemoIndex + 1;
-        if (demo_index >= entity->max_demos) {
-            demo_index = 0;
+    // Check if any input is pressed (param_1[0x40] = input state ptr)
+    if (*(short *)param_1[0x40] == 0) {
+        // No input - check if on stage 1 (main menu)
+        if (stage == 1) {
+            // Increment idle timer at +0x13A
+            ushort timer = *(ushort *)((int)param_1 + 0x13a) + 1;
+            *(ushort *)((int)param_1 + 0x13a) = timer;
+            
+            // Check threshold: 0x709 = 1801 frames ≈ 30 seconds at 60fps
+            if (timer > 0x708 && *(char *)(param_1 + 0x4e) != '\0') {
+                // Trigger demo mode
+                SeekToLevelInSequence(
+                    g_GameStatePtr + 0x84,
+                    *(undefined1 *)(param_1[0x4d] + (uint)g_DemoIndex),
+                    1, 0
+                );
+                *(undefined1 *)(g_GameStatePtr + 0x148) = 99;  // Menu mode
+                *(undefined1 *)(g_GameStatePtr + 0x152) = 1;   // Load trigger
+                
+                // Advance demo index, wrap if needed
+                g_DemoIndex = g_DemoIndex + 1;
+                if (*(byte *)(param_1 + 0x4e) <= g_DemoIndex) {
+                    g_DemoIndex = 0;
+                }
+            }
         }
-        g_DemoIndex = demo_index;
-        
-        // Set menu mode to 99 (trigger level load)
-        entity->mode = 99;  // at +0x148
-        g_LevelDataContext->trigger = 1;  // at context+0x152
-        
-        // Switch to countdown callback
-        entity->countdown_timer = 20;  // at +0x13c
-        entity->tick_callback = DemoCountdownCallback;  // 0x80077aa0
+    } else {
+        // Input pressed - reset idle timer
+        *(undefined2 *)((int)param_1 + 0x13a) = 0;
     }
     
-update:
-    EntityUpdateCallback(entity);
+    FUN_80077af0(param_1);  // Menu state update
+    EntityUpdateCallback(param_1);
+    
+    // Check if demo flag was set
+    if (g_DemoFlag != '\0') {
+        *(undefined2 *)(param_1 + 0x4f) = 0x14;  // Countdown = 20 frames
+        *param_1 = 0xffff0000;
+        param_1[1] = DemoCountdownCallback;  // Switch callback
+    }
 }
 ```
 
-## Demo Countdown Callback (0x80077aa0)
+## Demo Countdown Callback (DemoCountdownCallback @ 0x80077aa0)
+
+**VERIFIED via Ghidra decompilation (2026-01-16)**
 
 After the idle threshold is reached, this callback counts down for 20 frames before the demo actually loads:
 
 ```c
-void DemoCountdownCallback(Entity* entity) {
-    entity->countdown_timer--;
+// Actual decompiled code from Ghidra
+void DemoCountdownCallback(int param_1) {
+    short timer = *(short *)(param_1 + 0x13c) - 1;
+    *(short *)(param_1 + 0x13c) = timer;
     
-    if (entity->countdown_timer == 0) {
-        // Store demo flag to context
-        g_LevelDataContext->menu_mode = g_DemoFlag;  // at context+0x148
+    if (timer == 0) {
+        // Copy demo flag to GameState menu mode
+        *(undefined1 *)(g_GameStatePtr + 0x148) = g_DemoFlag;
     }
     
-    EntityUpdateCallback(entity);
+    EntityUpdateCallback();
 }
 ```
 
 ## Demo Mode Rotation (InitializeAndLoadLevel @ 0x8007d1d0)
 
+**VERIFIED via Ghidra analysis (2026-01-16)**
+
 When loading level 0 (MENU) with param_2=1, the demo rotation logic activates:
 
 ```c
-// In InitializeAndLoadLevel, around offset 0x3C0
-if (levelAssetIndex == 0 && param_2 == 1) {
+// VERIFIED from Ghidra decompilation of InitializeAndLoadLevel
+cVar2 = GetCurrentLevelAssetIndex(param_1 + 0x21);
+if ((cVar2 == '\0') && (param_2 == 1)) {
     param_2 = 5;  // Default to demo mode 1
     
     if (g_MenuDemoRotationCounter == 4) {
         g_MenuDemoRotationCounter = 0;
     } else {
-        switch (g_MenuDemoRotationCounter) {
-            case 0:
-            case 2:
-                param_2 = 1;  // Normal mode (return to menu)
-                break;
-            case 1:
-            case 3:
-                param_2 = 6;  // Demo mode 2
-                break;
+        // Note: Uses comma operator - param_2 = 6 happens before the == 2 check
+        if ((g_MenuDemoRotationCounter == 0) || (param_2 = 6, g_MenuDemoRotationCounter == 2)) {
+            param_2 = 1;  // Normal mode (no demo)
         }
-        g_MenuDemoRotationCounter++;
+        g_MenuDemoRotationCounter = g_MenuDemoRotationCounter + 1;
     }
 }
 ```
+
+### Demo Mode Rotation Sequence
+
+| Counter | param_2 Result | Mode |
+|---------|---------------|------|
+| 0 | 1 | Normal (no demo), counter→1 |
+| 1 | 5 | Demo Mode 1, counter→2 |
+| 2 | 1 | Normal (no demo), counter→3 |
+| 3 | 5 | Demo Mode 1, counter→4 |
+| 4 | 5 | Demo Mode 1, counter→0 (reset) |
 
 ### Demo Mode Values
 
@@ -126,24 +145,24 @@ if (levelAssetIndex == 0 && param_2 == 1) {
 |---------|------|-------------|
 | 1 | Normal | Standard level loading |
 | 5 | Demo Mode 1 | First demo playback mode |
-| 6 | Demo Mode 2 | Alternate demo playback mode |
+| 6 | Demo Mode 2 | Set by comma operator, but immediately overwritten to 1 |
 
 ## Input Replay System (UpdateInputState @ 0x800259d4)
 
 The same function handles both live input and replay playback.
 
-### Input State Structure
+### Input State Structure (VERIFIED in Ghidra as `InputState`)
 
 | Offset | Type | Field | Purpose |
-|--------|------|-------|---------|
-| 0x00 | u16 | current_buttons | Current button state |
-| 0x02 | u16 | pressed_buttons | Newly pressed (edge detect) |
-| 0x04 | u8 | record_mode | Recording enabled flag |
-| 0x05 | u8 | playback_mode | **Playback enabled flag** |
-| 0x08 | u16* | frame_count_ptr | Pointer to total entry count |
-| 0x0C | u32* | replay_buffer | Pointer to replay data |
-| 0x10 | u16 | current_index | Current playback position |
-| 0x12 | u16 | frame_counter | RLE frame countdown |
+|--------|------|-------|--------|
+| 0x00 | u16 | buttons_held | Current button state (PSX controller bitfield) |
+| 0x02 | u16 | buttons_pressed | Newly pressed (edge detection) |
+| 0x04 | ptr | playback_data_ptr | Pointer to playback buffer (demo mode) |
+| 0x08 | u8 | playback_active | Non-zero if replaying recorded input |
+| 0x09-0x0B | - | padding | Unused |
+| 0x0C | ptr | recording_buffer | Pointer to recording buffer |
+| 0x10 | u16 | playback_index | Current playback position |
+| 0x12 | u16 | playback_timer | Frames until next input event |
 
 ### Replay Data Format (4 bytes per entry)
 

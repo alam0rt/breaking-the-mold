@@ -322,11 +322,13 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 ### Collision Messages
 
 | Message | Hex | Purpose |
-|---------|-----|---------|
+|---------|-----|----------|
 | CLAYBALL_COLLECT | 0x1000 | Standard clayball collected |
+| MSG_PROJECTILE_HIT | 0x1002 | Player projectile hit (also used by Universe Enema) |
 | CLAYBALL_VARIANT | 0x1007 | Special clayball variant |
 | COLLECTED | 3 | Notify GameState of collection |
 | NOTIFY_LINKED | 0x1009 | Notify linked entity |
+| MSG_UNIVERSE_ENEMA | 0x1018 | Universe Enema activation broadcast |
 
 ### Entity Offsets Used
 

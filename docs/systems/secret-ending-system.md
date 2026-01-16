@@ -64,7 +64,7 @@ if ((input->buttons & 0x10) == 0 ||  // D-Pad button check
 **Max**: Unknown (at least 48+ for secret ending)
 
 **Different from**:
-- `g_pPlayerState[0x13]`: Current Swirly Q ammo (max 20, used for shooting)
+- `g_pPlayerState[0x13]`: Current Swirl count (max 20, for bonus room unlock)
 - `g_pPlayerState[0x1b]`: **Total collected** (cumulative, for secret ending)
 
 ### Cheat Code Sets It (Line 42618)
@@ -248,7 +248,7 @@ func show_secret_ending_unlocked() -> void:
 **Threshold**: >= 48 for secret ending
 
 **Different From**:
-- **Field 0x13**: Current Swirly Q ammo (max 20, for shooting)
+- **Field 0x13**: Current Swirl count (max 20, for bonus room portal)
 - **Field 0x1b**: Total collected (cumulative, for ending)
 
 **Cheat Code**: Cheat 0x02 sets this to 0x30 (48) - minimum for secret

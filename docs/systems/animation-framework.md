@@ -1,6 +1,7 @@
 # Animation Framework Architecture
 
-**Status**: ✅ Fully verified via Ghidra analysis (2026-01-15)
+**Status**: ✅ Fully verified via Ghidra analysis (2026-01-16)
+**SpriteFrameEntry struct**: Corrected field order - frame_delay at +0x04, flip_flags at +0x0E
 
 Skullmonkeys uses a sophisticated **5-layer animation system** with data-driven sequences, double-buffered state changes, frame-accurate timing, and multi-priority callback dispatch.
 
@@ -23,25 +24,27 @@ Layer 5: Callback Dispatch (3-Level Priority)
 
 ## Layer 1: Frame Metadata (SpriteFrameEntry)
 
-### Structure (36 bytes)
+### Structure (36 bytes) - VERIFIED 2026-01-16 via Ghidra decompilation
 
 | Offset | Type | Field | Description |
 |--------|------|-------|-------------|
 | +0x00 | u32 | callback_id | Frame event callback (0 = none) |
-| +0x04 | u16 | flip_flags | Horizontal/vertical flip |
-| +0x06 | s16 | render_x | Sprite X offset (signed) |
-| +0x08 | s16 | render_y | Sprite Y offset (signed) |
+| +0x04 | u16 | frame_delay | Frame duration in ticks (copied to entity+0xEC) |
+| +0x06 | s16 | origin_x | Sprite X offset (for velocity calc → entity+0xE6) |
+| +0x08 | s16 | origin_y | Sprite Y offset (for velocity calc → entity+0xE8) |
 | +0x0A | u16 | width | Render width |
 | +0x0C | u16 | height | Render height |
-| +0x0E | u16 | frame_delay | Frame duration in ticks |
-| +0x10 | s16 | hitbox_x | Collision X offset |
-| +0x12 | s16 | hitbox_y | Collision Y offset |
-| +0x14 | u16 | hitbox_w | Collision width |
-| +0x16 | u16 | hitbox_h | Collision height |
-| +0x18 | u32 | padding | Unused |
-| +0x1C | u32 | rle_offset | RLE pixel data offset |
+| +0x0E | u16 | flip_flags | Mirror decode (0=normal, 1=H-flip) |
+| +0x10 | u32 | unknown_10 | Unknown (accessed as piVar9[4]) |
+| +0x14 | s16 | hitbox_x | Collision X offset |
+| +0x16 | s16 | hitbox_y | Collision Y offset |
+| +0x18 | u16 | hitbox_w | Collision width |
+| +0x1A | u16 | hitbox_h | Collision height |
+| +0x1C | u32 | flags | Bit 0: play positioned sound (PlayEntityPositionSound) |
+| +0x20 | u32 | rle_offset | RLE pixel data offset |
 
 ### Location
+
 
 - Standard sprites: `entity+0x78` points to array
 - Alternate system: `entity+0x8C` (FUN_80019650 lookup)

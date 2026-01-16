@@ -16,16 +16,12 @@
 __asm__(".rept 14 ; nop ; .endr");
 #endif
 void SaveCheckpointState(void *gameState) {
-    s32 temp_a1;
-    s32 temp_v1;
-    s32 temp_a1_2;
-    s32 temp_v0;
+    s32 temp_a1 = *(s32 *)((u8 *)gameState + 0x1C);
+    s32 temp_v1 = *(s32 *)((u8 *)gameState + 0x10C);
+    s32 temp_a1_2 = *(s32 *)((u8 *)gameState + 0x2C);
+    s32 temp_v0 = 1;
     
-    temp_a1 = *(s32 *)((u8 *)gameState + 0x1C);
-    temp_v1 = *(s32 *)((u8 *)gameState + 0x10C);
     *(s32 *)((u8 *)gameState + 0x134) = temp_a1;
-    temp_a1_2 = *(s32 *)((u8 *)gameState + 0x2C);
-    temp_v0 = 1;
     *(u8 *)((u8 *)gameState + 0x14A) = temp_v0;
     *(u8 *)((u8 *)gameState + 0x63) = temp_v0;
     *(s32 *)((u8 *)gameState + 0x1C) = 0;

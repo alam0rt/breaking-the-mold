@@ -1,8 +1,8 @@
 # Complete Function Reference
 
-**Last Updated**: January 15, 2026  
-**Total Functions Analyzed**: 50+  
-**Source**: Batch analysis of SLES_010.90.c  
+**Last Updated**: January 16, 2026  
+**Total Functions Analyzed**: 53+  
+**Source**: Batch analysis of SLES_010.90.c + Ghidra MCP  
 **Confidence**: 85-100% on all entries
 
 ---
@@ -11,9 +11,9 @@
 
 This document consolidates all function discoveries from systematic C code analysis. Functions are organized by system for easy reference.
 
-**Total Game Functions**: ~1,743  
-**Named Functions**: ~1,588 (91%)  
-**Analyzed Here**: 50+ previously unnamed functions
+**Total Game Functions**: ~1,701  
+**Named Functions**: ~1,526 (89.7%)  
+**Analyzed Here**: 53+ previously unnamed functions
 
 ---
 
@@ -23,7 +23,7 @@ This document consolidates all function discoveries from systematic C code analy
 
 | Address | Name | Purpose | Confidence |
 |---------|------|---------|------------|
-| 0x8001d024 | AllocateSpriteGPUPrimitive | GPU primitive allocation | 100% |
+| 0x8001d024 | AllocateSpriteContext | Allocate sprite context | 100% |
 | 0x8001d0b0 | SetAnimationSpriteFlags | Set sprite render flags | 100% |
 | 0x8001d0c0 | SetAnimationFrameIndex | Set current frame | 100% |
 | 0x8001d0f0 | SetAnimationFrameCallback | Set frame callback | 100% |
@@ -34,13 +34,13 @@ This document consolidates all function discoveries from systematic C code analy
 | 0x8001d240 | EntitySetRenderFlags | Set render flags | 100% |
 | 0x8001d290 | TickEntityAnimation | Main animation tick | 100% |
 | 0x8001d4bc | AdvanceAnimationFrame | Frame advancement logic | 100% |
-| 0x8001d548 | ApplyPendingSpriteState | Apply buffered state | 100% |
+| 0x8001d554 | ApplyPendingSpriteState | Apply buffered state | 100% |
 | 0x8001d748 | UpdateSpriteFrameData | Load frame metadata | 100% |
 | 0x8001e790 | StartAnimationSequence | Start sequence playback | 100% |
 | 0x8001e7b8 | StepAnimationSequence | Execute sequence step | 100% |
 | 0x8001e928 | EntityProcessCallbackQueue | Callback dispatch | 100% |
-| 0x8001ea64 | EntitySetState | State machine transition | 100% |
-| 0x8001ec18 | ProcessSequenceCallback | Sequence helper | 95% |
+| 0x8001eaac | EntitySetState | State machine transition | 100% |
+| 0x8001ec18 | EntitySetCallback | Set entity callback | 100% |
 
 **Source**: animation-setters-reference.md, animation-framework.md
 
@@ -51,9 +51,9 @@ This document consolidates all function discoveries from systematic C code analy
 | Address | Name | Purpose | Confidence |
 |---------|------|---------|------------|
 | 0x8007c388 | PlaySoundEffect | Play sound with stereo pan | 100% |
-| 0x8007c7e0 | StopAllSPUVoices | Stop all 24 voices | 100% |
-| 0x8007ca60 | StartCDAudioForLevel | Start CD music track | 100% |
-| 0x8001c4a4 | PlayEntitySound | Entity-relative sound | 100% |
+| 0x8007c7ec | StopAllSPUVoices | Stop all 24 voices | 100% |
+| 0x8007ca9c | StartCDAudioForLevel | Start CD music track | 100% |
+| 0x8001c4a4 | PlayEntityPositionSound | Entity-relative sound | 100% |
 | 0x8001c5b4 | **UpdateEntitySoundPanning** | Positional audio (stereo) | 100% |
 | 0x8007c7b8 | **StopSPUVoice** | Stop single voice channel | 100% |
 | 0x8007c818 | **CalculateStereoVolume** | Pan → L/R volume conversion | 100% |
@@ -71,25 +71,25 @@ This document consolidates all function discoveries from systematic C code analy
 | Address | Name | Purpose | Confidence |
 |---------|------|---------|------------|
 | 0x800213a8 | AddEntityToSortedRenderList | Add to render list (sorted) | 100% |
-| 0x80021b44 | AddEntityToBothLists | Add to tick + render lists | 100% |
-| 0x80021fc8 | RemoveFromTickList | Remove from tick list | 100% |
-| 0x80021ff8 | RemoveFromRenderList | Remove from render list | 100% |
-| 0x80022028 | RemoveFromUpdateQueue | Remove from update queue | 100% |
-| 0x80022058 | ClearTickList | Free entire tick list | 100% |
-| 0x8002209c | ClearEntityDefList | Free entity definition list | 100% |
+| 0x80021b48 | AddEntityToBothLists | Add to tick + render lists | 100% |
+| 0x80021d30 | RemoveFromTickList | Remove from tick list | 100% |
+| 0x80021dc0 | RemoveFromRenderList | Remove from render list | 100% |
+| 0x80021e50 | RemoveFromUpdateQueue | Remove from update queue | 100% |
+| 0x80022218 | ClearTickList | Free entire tick list | 100% |
+| 0x80022338 | ClearEntityDefList | Free entity definition list | 100% |
 
 ### Newly Discovered
 
 | Address | Name | Purpose | Confidence |
 |---------|------|---------|------------|
-| 0x80020974 | **DestroyGameStateAndCleanup** | Complete gamestate destruction | 95% |
-| 0x80020a1c | **FreeEntityMemoryBlock** | Free entity memory at +0x108 | 95% |
-| 0x80020a74 | **DestroyEntityArray** | Destroy array of entities | 95% |
+| 0x80020974 | **AddToZOrderList** | Add entity to z-order list | 100% |
+| 0x80020a1c | **AddToUpdateQueue** | Add entity to update queue | 100% |
+| 0x80020a74 | **RemoveFromZOrderList** | Remove entity from z-order list | 100% |
 | 0x8001ca60 | **DestroyEntityAndFreeMemory** | Entity destructor | 100% |
 | 0x8001aab4 | **SetEntityFacingDirection** | Set/toggle facing (mode 2=toggle) | 95% |
 | 0x8001c364 | **SetupEntityScaleCallbacks** | Configure shrink/grow scaling | 100% |
-| 0x80025b7c | **InitEntityDataPointers** | Set paired data pointers | 90% |
-| 0x80022d94 | **BroadcastMessageToEntities** | Send message to player/all | 90% |
+| 0x80025b7c | **InitEntityDataPointers** | Set paired data pointers | 100% |
+| 0x80022d94 | **SendMessageToPlayer** | Send message to player entity | 100% |
 
 **Key Discovery**: Complete entity lifecycle and list management  
 **Source**: Batch 1-2
@@ -100,14 +100,14 @@ This document consolidates all function discoveries from systematic C code analy
 
 | Address | Name | Purpose | Confidence |
 |---------|------|---------|------------|
-| 0x80026162 | ResetPlayerUnlocksByLevel | Reset powerups by level | 100% |
-| 0x80081e84 | DecrementPlayerLives | Decrement lives, clear powerups | 100% |
+| 0x80026b18 | ResetPlayerUnlocksByLevel | Reset powerups by level | 100% |
+| 0x80081e84 | ClearAlternateEntitySpawnFlags | Reset entity spawn flags | 100% |
 | 0x800261d4 | **InitializePlayerState** | Initialize all player state to defaults | 100% |
-| 0x80026260 | **AdvanceLevelProgress** | Increment progress, clear collectibles | 100% |
-| 0x8002615c | **ClearGreenBullets** | Clear green bullet ammo | 100% |
-| 0x80025c7c | **EncodePasswordFromPlayerState** | Generate password from state | 100% |
-| 0x80025bc0 | **SetDemoPlaybackActive** | Enable demo mode | 90% |
-| 0x8001c4a4 | PlayEntitySound | Sound with position | 100% |
+| 0x80026260 | **AdvanceLevelAndClearCollectibles** | Increment progress, clear collectibles | 100% |
+| 0x8002615c | **ClearHamsterCount** | Clear hamster count | 100% |
+| 0x80025c7c | **BuildPasswordFromPlayerState** | Generate password from state | 100% |
+| 0x80025bc0 | **EnableDemoPlaybackMode** | Enable demo mode | 100% |
+| 0x8001c4a4 | PlayEntityPositionSound | Sound with position | 100% |
 
 **Key Discovery**: Password encoding algorithm (FUN_80025c7c)!  
 **Source**: Batch 1-2
@@ -136,8 +136,8 @@ This document consolidates all function discoveries from systematic C code analy
 | 0x8001f150 | InitLayerRenderContext_Medium | Init medium layer | 100% |
 | 0x8001f534 | InitLayerRenderContext_Small | Init small layer | 100% |
 | 0x80019650 | GetLayerProperty | Get layer field | 95% |
-| 0x800196d8 | **FreeLayerRenderSlotsWrapper** | Free layer slots wrapper | 100% |
-| 0x80019700 | **ZeroAllLayerRenderSlots** | Initialize 20 layer slots | 100% |
+| 0x800196d8 | **FreeAllLayerRenderSlotsWrapper** | Free layer slots wrapper | 100% |
+| 0x80019700 | **ClearAllLayerRenderSlots** | Initialize 20 layer slots | 100% |
 
 **Source**: Batch 2
 
@@ -170,6 +170,39 @@ This document consolidates all function discoveries from systematic C code analy
 
 ---
 
+## Powerup Functions (5 functions)
+
+| Address | Name | Purpose | Confidence |
+|---------|------|---------|------------|
+| 0x8006c0d8 | **UniverseEnemaActivate** | Activation callback for R1 powerup | 100% |
+| 0x8006c278 | **UniverseEnemaKillAllEnemies** | Kill phase - iterates and kills all enemies | 100% |
+| 0x80022f24 | SendMessageToPlayerVariant | Broadcast message to entities | 100% |
+| 0x8002615c | **ClearHamsterCount** | Clear hamster count on level start | 100% |
+| 0x8006d910 | **HamsterSpriteCallback** | Hamster visual sprite state callback | 100% |
+
+### Universe Enema (R1) - Verified
+
+**Activation Flow**:
+1. R1 button press → check `g_pPlayerState[0x16]` > 0
+2. `UniverseEnemaActivate` broadcasts message 0x1018, sets screen effect flag
+3. `UniverseEnemaKillAllEnemies` iterates collision list (`g_GameStatePtr+0x24`)
+4. Sends message 0x1002 (projectile hit) to all killable entities (flag 0x04)
+5. Decrements enema count, clears screen effect
+
+### Hamster Shield - Partially Verified
+
+**Storage**: `g_pPlayerState[0x1A]` (max 3)  
+**HUD Sprite**: `0x80e85ea0`  
+**Cheat**: 0x0A sets count to 3 (mislabeled as "Max Green Bullets")
+
+**⚠️ NOTE**: Hamster damage absorption was NOT found in `PlayerEntityCollisionHandler`.
+The damage check only uses `g_pPlayerState[0x17] & 1` (Halo). The hamster protection
+mechanism may use separate orbiting collision entities - needs further investigation.
+
+**Source**: Ghidra decompilation (verified January 2026)
+
+---
+
 ## Menu System Functions (8 functions)
 
 | Address | Name | Purpose | Confidence |
@@ -182,7 +215,7 @@ This document consolidates all function discoveries from systematic C code analy
 | 0x800778ec | **UpdateBackgroundColor** | Apply color selection | 100% |
 | 0x80077af0 | **MenuInputHandler** | Process menu input | 100% |
 | 0x800754cc | **AttachCursorToButton** | Add cursor highlight | 100% |
-| 0x80075ff4 | **InitPasswordEntryEntity** | Create password entry UI | 100% |
+| 0x80075ff4 | **InitPasswordDisplayEntity** | Create password display UI | 100% |
 
 **Source**: menu-system-complete.md
 
@@ -207,8 +240,8 @@ This document consolidates all function discoveries from systematic C code analy
 
 | Address | Name | Purpose | Confidence |
 |---------|------|---------|------------|
-| 0x8007963c | **EndingInputHandler** | Check 48 Swirly Qs condition | 100% |
-| 0x800797a8 | **TriggerSecretEndingSequence** | Spawn secret entity 0xaa0da270 | 100% |
+| 0x8007963c | **EndingTickCallback** | Check 48 Swirly Qs condition | 100% |
+| 0x800797a8 | **TriggerEndingSequence** | Trigger ending sequence | 100% |
 
 **Source**: secret-ending-system.md
 
@@ -258,7 +291,7 @@ Functions with good confidence:
 
 ### 🔑 Password Encoding (MAJOR DISCOVERY)
 
-**FUN_80025c7c** @ 0x80025c7c → `EncodePasswordFromPlayerState`
+**FUN_80025c7c** @ 0x80025c7c → `BuildPasswordFromPlayerState`
 
 **Discovery**: Passwords encode player state, not just pre-rendered!
 

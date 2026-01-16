@@ -1,8 +1,8 @@
 # Audio System Functions Reference
 
 **Source**: Ghidra SLES_010.90.c + function-batches-to-analyze.md  
-**Date**: January 14, 2026  
-**Status**: ✅ Complete audio function documentation
+**Date**: January 16, 2026  
+**Status**: ✅ VERIFIED via Ghidra decompilation - SoundEntry struct created
 
 This document provides detailed analysis of the audio playback functions discovered in the decompiled code.
 
@@ -56,15 +56,13 @@ struct SoundEntry {
 
 ---
 
-### 2. FUN_8007c7b8 - StopSoundEffect
+### 2. StopSPUVoice @ 0x8007c7b8
 
-**Address**: 0x8007c7b8 (line 40475)
-
-**Purpose**: Stop a specific SPU voice
+**Purpose**: Stop a specific SPU voice (already named in Ghidra)
 
 **Signature**:
 ```c
-void StopSoundEffect(uint voice_index)
+void StopSPUVoice(uint voice_index)
 ```
 
 **Implementation**:
@@ -168,11 +166,11 @@ void SetVoicePanning(uint voice_index, short pan_pos) {
 
 ---
 
-### 5. StopAllSPUVoices @ 0x8007c7e0
+### 5. StopAllSPUVoices @ 0x8007c7ec
 
 **Purpose**: Stop all 24 SPU voices
 
-**Already Named**: ✅ Documented
+**Already Named**: ✅ In Ghidra
 
 **Implementation**:
 ```c
@@ -183,11 +181,11 @@ void StopAllSPUVoices(void) {
 
 ---
 
-### 6. StartCDAudioForLevel @ 0x8007ca60
+### 6. StartCDAudioForLevel @ 0x8007ca9c
 
 **Purpose**: Start CD-XA music for current level
 
-**Already Named**: ✅ Documented
+**Already Named**: ✅ In Ghidra
 
 **Usage**: Called during level loading to start background music track
 
@@ -255,16 +253,19 @@ graph TD
 
 ---
 
-## Proposed Function Names (for Ghidra)
+## Function Names in Ghidra (VERIFIED)
 
-| Address | Old Name | New Name | Status |
-|---------|----------|----------|--------|
-| 0x8007c388 | PlaySoundEffect | ✅ Already named | Complete |
-| 0x8007c7b8 | FUN_8007c7b8 | StopSoundEffect | Document |
-| 0x8007c7e0 | StopAllSPUVoices | ✅ Already named | Complete |
-| 0x8007c818 | FUN_8007c818 | CalculateStereoVolume | Document |
-| 0x8007ca28 | FUN_8007ca28 | SetVoicePanning | Document |
-| 0x8007ca60 | StartCDAudioForLevel | ✅ Already named | Complete |
+| Address | Name | Status |
+|---------|------|--------|
+| 0x8007c388 | PlaySoundEffect | ✅ Named + commented |
+| 0x8007c7b8 | StopSPUVoice | ✅ Named + commented |
+| 0x8007c7ec | StopAllSPUVoices | ✅ Named |
+| 0x8007c818 | CalculateStereoVolume | ✅ Named + commented |
+| 0x8007ca28 | SetVoicePanning | ✅ Named |
+| 0x8007ca9c | StartCDAudioForLevel | ✅ Named |
+| 0x8007c088 | UploadAudioToSPU | ✅ Named + commented |
+| 0x8001c4a4 | PlayEntityPositionSound | ✅ Named + commented |
+| 0x8001c5b4 | UpdateEntitySoundPanning | ✅ Named |
 
 ---
 

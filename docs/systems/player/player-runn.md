@@ -18,7 +18,7 @@ RUNN levels are auto-scrolling runner sequences where the player automatically m
 
 ## Creation
 
-**Function**: CreateRunnPlayerEntity @ 0x80073ce8 (line 36777)
+**Function**: CreateRunnPlayerEntity @ 0x80073934
 
 ```c
 Entity* CreateRunnPlayerEntity(Entity* buffer, void* inputController,

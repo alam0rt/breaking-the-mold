@@ -154,7 +154,7 @@ void PlayerState_Death(Entity* player) {
 
 ## Lives and Game Over
 
-### DecrementPlayerLives @ 0x80026ac (Line 10149)
+### DecrementPlayerLives @ 0x800262ac (Line 10149)
 
 **Called**: During RespawnAfterDeath
 
@@ -187,7 +187,7 @@ void DecrementPlayerLives(PlayerState* state) {
 if (state[0x146] && !state[0x19c]) {
     if (g_pPlayerState[0x11] == 0) {  // Lives = 0
         // GAME OVER
-        FUN_8007a578(state + 0x84);  // Advance to game over screen
+        AdvanceLevelSequence(state + 0x84);  // Advance to game over screen
         SetupAndStartLevel(state, 99);  // Load menu (level 99)
     } else {
         // Still have lives - respawn
@@ -198,7 +198,7 @@ if (state[0x146] && !state[0x19c]) {
 
 **Game Over Flow**:
 1. Lives reaches 0
-2. FUN_8007a578 advances to game over screen
+2. AdvanceLevelSequence advances to game over screen
 3. Load level 99 (menu system)
 4. Player returns to main menu
 
@@ -274,34 +274,64 @@ if (ProjectileHitsEnemy(projectile, enemy)) {
 ## Universe Enema Powerup (Screen Clear)
 
 **Storage**: `g_pPlayerState[0x16]` (max 7)  
-**Effect**: **Clears all enemies on screen**
+**Effect**: **Clears all enemies on screen**  
+**Trigger**: R1 button (button mask 0x08)
 
-**Usage**: Activated by player input (button combination?)
+### Verified Functions (Ghidra)
+
+| Address | Function Name | Purpose |
+|---------|---------------|----------|
+| 0x8006c0d8 | UniverseEnemaActivate | Activation callback |
+| 0x8006c278 | UniverseEnemaKillAllEnemies | Kill phase callback |
+| 0x80022f24 | SendMessageToPlayerVariant | Broadcast message |
+
+### Activation Flow (Verified)
 
 ```c
-void ActivateUniverseEnema() {
-    if (g_pPlayerState[0x16] > 0) {
-        // Decrement enema count
-        g_pPlayerState[0x16]--;
+// Phase 1: UniverseEnemaActivate @ 0x8006c0d8
+void UniverseEnemaActivate(Entity* player) {
+    // Broadcast message 0x1018 to all entities
+    SendMessageToPlayerVariant(g_GameStatePtr, 0x40, 0x1018, 0, player);
+    
+    // Set screen effect flag
+    *(g_GameStatePtr + 0x149) = 1;
+    
+    // Clear input buffers
+    player[0x179] = player[0x17a] = player[0x17b] = 0;
+    
+    // Set callback selection based on water state
+    code* nextCallback = (player[0x4b] != 0) 
+        ? PlayerCallback_800625b4   // Underwater
+        : PlayerCallback_8006187c;  // Normal
+    
+    // Play activation sprite
+    SetEntitySpriteId(player, 0x6c22083a, 1);
+    
+    // Transition to kill phase
+    EntitySetCallback(player, NULL, UniverseEnemaKillAllEnemies);
+}
+
+// Phase 2: UniverseEnemaKillAllEnemies @ 0x8006c278
+void UniverseEnemaKillAllEnemies(Entity* player) {
+    // Iterate collision list (g_GameStatePtr + 0x24)
+    for (ListNode* node = g_GameStatePtr->collision_list; node; node = node->next) {
+        Entity* entity = node->entity;
         
-        // For each enemy entity on screen
-        for (Entity* enemy : active_enemies) {
-            // Kill enemy instantly
-            enemy->hp = 0;
+        // Check killable flag (entity_flags & 0x04)
+        if ((entity->flags_at_0x12 & 0x04) != 0) {
+            // Get entity callback from state machine
+            callback = GetEntityStateCallback(entity);
             
-            // Spawn death animation
-            SpawnDeathParticles(enemy);
-            
-            // Remove entity
-            RemoveEntity(enemy);
+            // Send MSG_PROJECTILE_HIT (0x1002) - kills the entity
+            (*callback)(entity, 0x1002, 0, player);
         }
-        
-        // Play screen-clear sound/effect
-        PlaySoundEffect(ENEMA_SOUND, 0, 0);
-        
-        // Visual: Screen flash or explosion effect
-        SpawnScreenFlash();
     }
+    
+    // Consume one Universe Enema
+    g_pPlayerState[0x16]--;
+    
+    // Clear screen effect flag
+    *(g_GameStatePtr + 0x149) = 0;
 }
 ```
 
@@ -405,15 +435,17 @@ void ActivateUniverseEnema() {
 ### Universe Enema (Screen Clear)
 
 ```
-1. Player activates (g_pPlayerState[0x16] > 0)
-2. Decrement enema count
-3. For ALL on-screen enemies:
-   - Set HP = 0 (instant kill)
-   - Spawn death effect
-   - Remove entity
-4. Screen flash effect
-5. Play enema sound
-6. Clears entire screen in one frame
+1. R1 pressed → check g_pPlayerState[0x16] > 0
+2. UniverseEnemaActivate (0x8006c0d8):
+   - Broadcast message 0x1018
+   - Set screen effect flag (GameState+0x149)
+   - Play activation sprite
+3. UniverseEnemaKillAllEnemies (0x8006c278):
+   - Iterate collision list (GameState+0x24)
+   - Send MSG_PROJECTILE_HIT (0x1002) to killable entities
+   - Enemies die via their normal death handlers
+4. Decrement enema count: g_pPlayerState[0x16]--
+5. Clear screen effect flag
 ```
 
 ---

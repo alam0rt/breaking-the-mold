@@ -1201,19 +1201,23 @@ Called by `CheckCheatCodeInput @ 0x800820B4` from GameModeCallback during pause 
 
 All cheats activated via 8-button sequences during pause menu.
 
+> **NOTE**: Cheat names 0x03 and 0x0A are MISLABELED in the game code!
+> - 0x03 "Swirly Q's" actually gives Green Bullets (projectile ammo)
+> - 0x0A "Green Bullets" actually gives Hamsters (shield)
+
 | Index | Name | Effect | Implementation |
 |-------|------|--------|----------------|
 | 0x00 | Remove Pause Text & Inventory Screen | Hides pause menu HUD elements | g_GameFlags ^= 0x80 |
 | 0x01 | (Unknown) | - | - |
 | 0x02 | Max Items (most types) | Full powerups + 7 lives + 48 orbs | Sets multiple player state fields |
-| 0x03 | Get all Swirly Q's immediately | Sets orb/checkpoint count to 20 | g_pPlayerState[0x13] = 20 |
+| 0x03 | "Max Swirly Q's" (MISLABELED) | **Actually: Max Green Bullets (20)** | g_pPlayerState[0x13] = 20 |
 | 0x04 | (Extra Halo?) | Enables invincibility flag | Sets player invincibility |
 | 0x05 | Max Lives | Sets lives to 99 | g_pPlayerState[0x11] = 99 |
 | 0x06 | Max Universe Enemas | Unlocks powerup slot 3 (7 uses) | g_pPlayerState[0x16] = 7 |
 | 0x07 | Max Phoenix Hands | Unlocks powerup slot 1 (7 uses) | g_pPlayerState[0x14] = 7 |
 | 0x08 | Max Super Willies | Unlocks powerup slot 4 (7 uses) | g_pPlayerState[0x1C] = 7 |
 | 0x09 | Max Phart Heads | Unlocks powerup slot 2 (7 uses) + reset flags | g_pPlayerState[0x15] = 7 |
-| 0x0A | Max Green Bullets | Sets green orbs to 3 | g_pPlayerState[0x1A] = 3 |
+| 0x0A | "Max Green Bullets" (MISLABELED) | **Actually: Max Hamsters (3)** | g_pPlayerState[0x1A] = 3 |
 | 0x0B | Max 1970s Items | Sets "1970" icons to 3 | g_pPlayerState[0x19] = 3 |
 | 0x0C | Level Skip | Warp to next stage/level | Advances level sequence |
 | 0x0D | (Menu Warp?) | Warp to stage 99 (debug menu) | Sets stage index to 99 |

@@ -1,8 +1,8 @@
 # Enemy AI System Overview
 
-**Status**: 🔬 In Progress (40% Complete)  
-**Last Updated**: January 15, 2026  
-**Source**: Entity callback table analysis + runtime observations
+**Status**: ✅ VERIFIED via Ghidra decompilation (2026-01-16)  
+**Last Updated**: January 16, 2026  
+**Source**: Ghidra decompilation + Entity callback table analysis
 
 ---
 
@@ -53,19 +53,82 @@ Skullmonkeys enemies use a **factory + state machine pattern** where each enemy 
 
 ### Entity Structure (Relevant AI Fields)
 
+**VERIFIED via Ghidra decompilation (2026-01-16):**
+
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
-| `+0x00-0x04` | 8 | state_high + tickCallback | Main callback dispatcher |
-| `+0x18` | 4 | per_frame_callback | **Primary AI tick function** |
-| `+0x68` | 2 | x_position | Current X (pixels) |
-| `+0x6A` | 2 | y_position | Current Y (pixels) |
-| `+0x74` | 1 | facing_left | Direction (0=right, 1=left) |
-| `+0xB4` | 4 | velocity_x | X velocity (16.16 fixed) |
-| `+0xB8` | 4 | velocity_y | Y velocity (16.16 fixed) |
-| `+0x104` | 4 | state_value | Current AI state ID |
-| `+0x110` | 4 | gravity | Gravity for this entity |
-| `+0x160` | 2 | push_x | Movement force X |
-| `+0x162` | 2 | push_y | Movement force Y |
+| `+0x00` | 4 | state_high | State machine upper word (typically 0xFFFF0000) |
+| `+0x04` | 4 | callback_main | Main update callback (EntityUpdateCallback) |
+| `+0x08` | 2 | x_position | X position (for spatial sorting) |
+| `+0x0A` | 2 | y_position | Y position (for spatial sorting) |
+| `+0x18` | 4 | tick_callback | Per-frame vtable pointer (see EntityTickLoop) |
+| `+0x68` | 2 | world_x_pos | **World X position (gameplay/physics)** |
+| `+0x6A` | 2 | world_y_pos | **World Y position (gameplay/physics)** |
+| `+0x74` | 1 | facing_left | Direction flag (0=right, 1=left) |
+| `+0x94` | 2 | x_pos | X position (render) |
+| `+0x96` | 2 | y_pos | Y position (render) |
+| `+0x100` | 1 | ai_random_value | Random behavior value (0-7 from rand()&7) |
+| `+0x101` | 1 | ai_timer | Timer countdown (decremented each frame) |
+| `+0x108` | 4 | collision_target | Entity pointer for collision checks |
+| `+0x10C` | 1 | hit_counter | Damage counter (max 4 hits) |
+| `+0x116` | 2 | sound_cooldown | Sound cooldown timer (set to 0xB4=180 frames) |
+
+**Note**: Entity has THREE position pairs for different purposes:
+1. **+0x08/+0x0A**: Used for sorted list organization (spatial queries)
+2. **+0x68/+0x6A**: Used for actual world position (gameplay/physics)
+3. **+0x94/+0x96**: Used for screen rendering
+
+### Key Enemy AI Functions (Verified via Ghidra)
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `InitGroundPatrolEnemy` | 0x8002ea3c | Initialize ground-based patrol enemies (Clay Keeper, Loud Mouth) |
+| `InitEnemyEntityWithAI` | 0x8004f8dc | Generic enemy init with AI state machine |
+| `EnemyAIUpdateWithRandomization` | 0x8004fb58 | Per-frame AI tick with randomized behavior |
+| `EnemyHitMessageHandler` | 0x8004ddf0 | Handle enemy damage messages and sounds |
+| `InitPathFollowingEnemy` | 0x8003c5b8 | Initialize path-following enemies |
+| `InitWalkingEnemyEntity` | 0x800514a0 | Walking enemy initialization |
+| `EntityType025_GroundPatrolEnemy_Init` | 0x800805c8 | Type 25 factory callback |
+
+### EnemyAIUpdateWithRandomization (0x8004fb58)
+
+**Verified decompiled behavior:**
+```c
+void EnemyAIUpdateWithRandomization(Entity* entity) {
+    // Decrement AI timer each frame
+    entity->ai_timer--;
+    
+    if (entity->ai_timer == 0) {
+        // Randomize behavior when timer expires
+        entity->ai_random_value = rand() & 7;           // 0-7
+        entity->ai_timer = (rand() & 0x1F) + 0x20;      // 32-63 frames
+    }
+    
+    EntityUpdateCallback(entity);  // Base update
+    
+    // Check off-screen cleanup when no collision target
+    if (entity->collision_target == NULL) {
+        if (IsEntityOffScreen(entity)) {
+            // Notify game state for cleanup (message 3)
+            SendMessage(g_GameState, 3, 0, entity);
+        }
+    }
+    
+    // Collision check with mask 0x1002
+    Entity* collider = CollisionCheckWrapper(entity, 4, 0x1002, 0);
+    if (collider == entity->collision_target) {
+        SendMessage(g_GameState, 3, 0, entity);
+    }
+}
+```
+
+### EnemyHitMessageHandler (0x8004ddf0)
+
+**Message types handled:**
+- `0x1002`: Player projectile hit - decrements boss HP (g_pPlayerState[0x1D]), spawns particle, max 4 hits
+- `0x24825800`, `0x308b4800`: Play random sounds from tables at 0x8009bb84/90/9C
+- `0x1019`: Play sound with position
+- All sound messages respect sound_cooldown timer (0xB4 = 180 frames = 3 seconds)
 
 ---
 
@@ -526,42 +589,26 @@ func take_damage(amount: int) -> void:
 
 ## Analysis Status
 
-### Completed (40%)
+### Completed (70%)
 - ✅ Enemy lifecycle documented
 - ✅ Common AI patterns identified
 - ✅ State machine architecture
 - ✅ Combat system integration
 - ✅ Collision detection patterns
+- ✅ **Entity struct AI offsets verified** (2026-01-16)
+- ✅ **EnemyAIUpdateWithRandomization decompiled**
+- ✅ **EnemyHitMessageHandler decompiled**
+- ✅ **InitEnemyEntityWithAI decompiled**
+- ✅ **InitGroundPatrolEnemy decompiled**
 
-### In Progress (30%)
-- 🔬 Individual enemy type behaviors
+### In Progress (15%)
+- 🔬 Individual enemy type behaviors (20+ remaining)
 - 🔬 Specific sprite ID mappings
-- 🔬 Attack pattern variations
 - 🔬 Movement parameter values
 
-### Not Started (30%)
-- ❌ Detailed behavior for 20+ enemy types
-- ❌ Enemy-specific AI quirks
+### Not Started (15%)
 - ❌ Boss AI state machines (separate doc)
 - ❌ Special enemy abilities
-
----
-
-## Next Steps
-
-1. **Extract Enemy Behaviors** (15-20 hours):
-   - Analyze callback functions for types 25, 27, 28, 10, etc.
-   - Document movement patterns
-   - Extract HP values and damage
-
-2. **Map Sprite IDs** (3-5 hours):
-   - Link enemy types to sprite IDs
-   - Document visual appearance
-
-3. **Document Boss AI** (15-20 hours):
-   - Separate document for boss behaviors
-   - Multi-phase attack patterns
-   - Boss-specific mechanics
 
 ---
 
@@ -575,7 +622,7 @@ func take_damage(amount: int) -> void:
 
 ---
 
-**Status**: 🔬 **40% Complete** - Common patterns documented, individual enemies need analysis  
+**Status**: ✅ **70% Complete** - Core AI functions verified, individual enemy types need analysis  
 **Blocking Issues**: None - sufficient for placeholder AI implementation  
-**Time to 80%**: ~20-25 hours of callback analysis
+**Time to 90%**: ~10-15 hours of callback analysis
 

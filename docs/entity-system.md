@@ -157,22 +157,33 @@ Based on decompiled code analysis and runtime tracing:
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
 | 0x00 | 4 | state_high | State machine upper word (0xffff0000) |
-| 0x04 | 4 | callback_main | Main update callback (entity[1]) |
-| 0x08 | 4 | state2_high | Secondary state |
-| 0x0C | 4 | callback2 | Secondary callback (entity[3]) |
-| **0x18** | **4** | **tick_callback** | **Per-frame update function - set by init, changed via EntitySetState** |
-| 0x24 | 4 | callback3 | Tertiary callback (entity[9]) |
-| 0x28 | 4 | callback4 | (entity[10]) |
-| 0x2C | 4 | callback5 | (entity[11]) |
-| 0x30 | 4 | callback6 | (entity[12]) |
-| 0x34 | 4 | sprite_ptr | Pointer to sprite/POLY structure |
-| 0x68 | 2 | x_pos | X position (short) |
-| 0x6A | 2 | y_pos | Y position (short) |
-| 0xF6 | 1 | visibility? | Rendering flag |
-| 0xF7 | 1 | load_flag | Sprite load method selector |
-| 0x100+ | ... | Extended | Entity-specific data |
+| 0x04 | 4 | callback_main | Main update callback (EntityUpdateCallback) |
+| 0x08 | 2 | x_position | X position (for spatial sorting) |
+| 0x0A | 2 | y_position | Y position (for spatial sorting) |
+| 0x0C | 4 | callback2 | Secondary callback |
+| **0x18** | **4** | **tick_callback** | **Per-frame vtable pointer (see EntityTickLoop)** |
+| 0x44 | 4 | child_entity | Child entity pointer (destroyed with parent) |
+| 0x48 | 16 | bounding_box | Bbox: x1, y1, x2, y2 (4 shorts each) |
+| 0x60 | 4 | scale_x | X scale (16.16 fixed-point, 0x10000=1.0) |
+| 0x64 | 4 | scale_y | Y scale (16.16 fixed-point) |
+| **0x68** | **2** | **world_x_pos** | **World X position (gameplay/physics)** |
+| **0x6A** | **2** | **world_y_pos** | **World Y position (gameplay/physics)** |
+| 0x74 | 1 | facing_left | Direction flag (0=right, 1=left) |
+| 0x78 | 4 | frame_table | Frame table / sprite context pointer |
+| 0x94 | 2 | x_pos | X position (render) |
+| 0x96 | 2 | y_pos | Y position (render) |
+| 0x100 | 1 | ai_random_value | AI random value (0-7, enemy AI) |
+| 0x101 | 1 | ai_timer | AI timer countdown (enemy AI) |
+| 0x108 | 4 | collision_target | Collision target entity pointer |
+| 0x10C | 1 | hit_counter | Damage counter (max 4 hits) |
+| 0x116 | 2 | sound_cooldown | Sound cooldown timer (0xB4 = 180 frames) |
 
-**Key insight**: Offset `0x18` is the **actual per-frame tick callback**, NOT the factory callback from the entity type table. This callback is set during initialization and can be changed via `EntitySetState` for state machine transitions.
+**Key insight**: Entity has THREE position pairs for different purposes:
+1. **+0x08/+0x0A**: Used for sorted list organization (spatial queries)  
+2. **+0x68/+0x6A**: Used for actual world position (gameplay/physics)
+3. **+0x94/+0x96**: Used for screen rendering
+
+**VERIFIED via Ghidra decompilation (2026-01-16)** - See [enemy-ai-overview.md](systems/enemy-ai-overview.md) for verified decompiled code.
 
 ## Sprite ID Format
 

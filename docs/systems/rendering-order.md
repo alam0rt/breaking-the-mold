@@ -1,8 +1,10 @@
 # Skullmonkeys Rendering Order Documentation
 
-**Status: VERIFIED via Ghidra analysis (2026-01-12)**
+**Status: VERIFIED via Ghidra analysis (2026-01-16)**
 
 This document describes how layers and entities are rendered and ordered in Skullmonkeys (PAL SLES-01090).
+
+**Last Verification**: January 16, 2026 - Confirmed all function addresses, added comprehensive Ghidra comments, discovered dual EntityTickLoop functions.
 
 ## Executive Summary
 
@@ -37,8 +39,8 @@ Offset  Size  Type    Field           Description
 0x10    4     u32     scroll_x        Parallax factor X (0x10000 = 1.0)
 0x14    4     u32     scroll_y        Parallax factor Y
 ...
-0x26    1     u8      layer_type      0=normal, 3=skip render # NOT VERIFIED
-0x28    2     u16     skip_render     If !=0, skip this layer #  NOT VERIFIED
+0x26    1     u8      layer_type      0=normal, 3=skip render (VERIFIED)
+0x28    2     u16     skip_render     If !=0, skip this layer (VERIFIED)
 0x2C    48    u8[48]  color_tints     16 RGB entries for tile tinting
 ```
 
@@ -74,9 +76,9 @@ Most entities use simple values (1, 2, 3). Some entities (types 9, 81 in CSTL) u
 2. For each layer:
    - Checks skip conditions: `layer_type == 3` OR `skip_render != 0` → skip
    - Creates layer render context based on dimensions:
-     - ≤64x64: Calls `FUN_8001f534` → adds to render list A
-     - ≤128x128: Calls `FUN_8001f150` → adds to render list B
-     - Otherwise: Calls `FUN_8001ecc0` → adds to render list C
+     - ≤64x64: Calls `InitLayerRenderContext_Small` → adds to render list
+     - ≤128x128: Calls `InitLayerRenderContext_Medium` → adds to render list
+     - Otherwise: Calls `InitLayerRenderContext_Standard` → adds to render list
    - **Priority is `(short)(render_param & 0xFFFF)`** from LayerEntry+0x0C
 
 ### Entity Initialization (InitEntitySprite @ 0x8001c720)
@@ -106,7 +108,7 @@ The game maintains two linked lists in GameState:
 - **GameState+0x1C**: Update/tick list
 - **GameState+0x20**: Render list
 
-Both lists are sorted by priority during insertion (see `FUN_80021590/FUN_80021778/FUN_80021960`):
+Both lists are sorted by priority during insertion (see `AddLayerToRenderList_Standard/Medium/Small`):
 
 ```c
 // Sorted insertion - lower priority values come first in list
@@ -216,8 +218,17 @@ These findings were verified through:
 ## References
 
 - `InitLayersAndTileState` @ 0x80024778
-- `FUN_8001ecc0` (layer render init C) @ 0x8001ecc0
-- `FUN_80021590` (add to render list C) @ 0x80021590
+- `InitLayerRenderContext_Standard` @ 0x8001ecc0
+- `AddLayerToRenderList_Standard` @ 0x80021590
+- `AddLayerToRenderList_Medium` @ 0x80021778
+- `AddLayerToRenderList_Small` @ 0x80021960
+- `InitEntitySprite` @ 0x8001c720
+- `RenderEntities` @ 0x80020e80
+- `EntityTickLoop` @ 0x80020e1c (simple version from main)
+- `EntityTickLoopWithCamera` @ 0x80020b34 (extended version from GameModeCallback)
+- `UpdateCameraPositionSmooth` @ 0x800233c0 (smooth scrolling camera)
+- `SetCameraPositionDirect` @ 0x80023dbc (instant camera set)
+- `main` @ 0x800828b0
 - `InitEntitySprite` @ 0x8001c720
 - `RenderEntities` @ 0x80020e80
 - `main` @ 0x800828b0

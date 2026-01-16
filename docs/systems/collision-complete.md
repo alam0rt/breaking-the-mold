@@ -160,7 +160,7 @@ default:
     if (item_id < 10) {  // Items 0-9
         if (g_pPlayerState[item_id + 6] == 0) {  // Not yet collected
             g_pPlayerState[item_id + 6] = 1;  // Mark collected
-            FUN_8001c4a4(player, 0x7003474c);  // Play pickup sound
+            PlayEntityPositionSound(player, 0x7003474c);  // Play pickup sound
         }
     }
 ```
@@ -181,27 +181,27 @@ default:
 **Code**:
 ```c
 case 0x51:
-    FUN_80025664(g_GameStatePtr, 1);  // Enable group 1
+    SetSpawnOffsetGroup1(g_GameStatePtr, 1);  // Enable group 1
     player[0x1a6] = 1;
     break;
 case 0x52:
-    FUN_800256b8(g_GameStatePtr, 1);  // Enable group 2
+    SetSpawnOffsetGroup2(g_GameStatePtr, 1);  // Enable group 2
     player[0x1a8] = 1;
     break;
 case 0x65:
-    FUN_80025664(g_GameStatePtr, 0);  // Disable group 1
+    SetSpawnOffsetGroup1(g_GameStatePtr, 0);  // Disable group 1
     player[0x1a6] = 0;
     break;
 case 0x66:
-    FUN_800256b8(g_GameStatePtr, 0);  // Disable group 2
+    SetSpawnOffsetGroup2(g_GameStatePtr, 0);  // Disable group 2
     player[0x1a8] = 0;
     break;
 case 0x79:
-    FUN_80025664(g_GameStatePtr, 2);  // Mode 2 for group 1
+    SetSpawnOffsetGroup1(g_GameStatePtr, 2);  // Mode 2 for group 1
     player[0x1a6] = 2;
     break;
 case 0x7a:
-    FUN_800256b8(g_GameStatePtr, 2);  // Mode 2 for group 2
+    SetSpawnOffsetGroup2(g_GameStatePtr, 2);  // Mode 2 for group 2
     player[0x1a8] = 2;
 ```
 
@@ -231,7 +231,7 @@ For any attribute >= 0x3C not explicitly handled:
 ```c
 default:
     if (player[0x1ae] == 0) {  // Check some player flag
-        FUN_8007ee6c(g_GameStatePtr, local_30 & 0xff, 
+        HandleGenericTriggerZone(g_GameStatePtr, local_30 & 0xff, 
                      player + 0x15d, player + 0x15e, player + 0x15f);
     }
 ```
@@ -456,12 +456,12 @@ const TILE_SPAWN_ZONE: int = 0x65
 | 0x800241f4 | GetTileAttributeAtPosition | Pixel → tile attr lookup |
 | 0x8005a914 | PlayerProcessTileCollision | Handle all trigger events |
 | 0x800226f8 | CheckEntityCollision | Entity-to-entity collision |
-| 0x8001b3f0 | FUN_8001b3f0 | Bounding box overlap test |
+| 0x8001b3f0 | CheckBoxOverlap | Bounding box overlap test |
 | 0x800245bc | CheckTriggerZoneCollision | Filter solid vs triggers |
 | 0x80024cf4 | InitTileAttributeState | Load Asset 500 data |
-| 0x80025664 | FUN_80025664 | Spawn zone group 1 control |
-| 0x800256b8 | FUN_800256b8 | Spawn zone group 2 control |
-| 0x8007ee6c | FUN_8007ee6c | Generic trigger handler |
+| 0x80025664 | SetSpawnOffsetGroup1 | Spawn zone group 1 control |
+| 0x800256b8 | SetSpawnOffsetGroup2 | Spawn zone group 2 control |
+| 0x8007ee6c | HandleGenericTriggerZone | Generic trigger handler |
 
 ---
 

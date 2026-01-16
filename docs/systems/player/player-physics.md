@@ -252,12 +252,12 @@ Ground check looks at Y+2 for solid tiles (attribute in range 0x01-0x3B):
 |---------|------|---------|
 | 0x800596a4 | CreatePlayerEntity | Initialize player |
 | 0x8005b414 | PlayerTickCallback | Main per-frame update |
-| 0x80061180 | PlayerCallback_80061180 | Position update from velocity |
-| 0x800638d0 | PlayerCallback_800638d0 | Movement + collision |
+| 0x80061180 | ApplyEntityPositionUpdate | Position update from velocity |
+| 0x800638d0 | PlayerCallback_HandleMovementAndCollision | Movement + collision |
 | 0x8005a914 | PlayerProcessTileCollision | Tile trigger processing |
 | 0x80059bc8 | CheckWallCollision | 4-point wall check |
 | 0x80066ce0 | PlayerStateCallback_0 | Idle state entry |
-| 0x80067e28 | Callback_80067e28 | Jump state entry |
+| 0x80067e28 | PlayerState_Jump | Jump state entry |
 
 ## Animation System (Verified from Trace)
 

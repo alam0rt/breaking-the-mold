@@ -13,7 +13,7 @@ The HUD (Heads-Up Display) shows player stats during gameplay and pause menu. Th
 **Display Elements**:
 - Lives count
 - Clayball/orb count
-- Checkpoint/swirl count (Swirly Q ammo)
+- Swirl count (bonus room unlock, NOT weapon ammo)
 - 1970 icons (×3)
 - Green bullets (×3)
 - 7 powerup icons
@@ -146,10 +146,10 @@ entity2[0x116] = g_pPlayerState[0x14];
 |-----------------------|------------------|-----------------|
 | [0x11] | Lives counter | Lives count |
 | [0x12] | Orb counter | Clayball count |
-| [0x13] | entity[0x116] × 3 | Checkpoint/Swirly Q count |
+| [0x13] | entity[0x116] × 3 | **Green Bullets** (projectile ammo, max 20) |
 | [0x14] | entity[0x116] × 2 | Phoenix Hands count |
 | [0x19] | entity[0x115] × 3 | 1970 Icons count |
-| [0x1A] | entity[0x115] × 3 | Green Bullets count |
+| [0x1A] | entity[0x115] × 3 | **Hamsters** (shield, max 3) |
 
 **Update Frequency**: Every frame when HUD active
 
@@ -167,9 +167,9 @@ entity2[0x116] = g_pPlayerState[0x14];
 | 0x6a351094 | 1,781,612,692 | Timer display |
 | 0x8c510186 | 2,354,389,382 | Lives counter (from line 10314) |
 | Unknown | - | Clayball counter |
-| Unknown | - | Checkpoint counter |
+| Unknown | - | Green Bullet counter |
 | Unknown | - | 1970 icon display |
-| Unknown | - | Green bullet display |
+| Unknown | - | Hamster display |
 | Unknown | - | Powerup icons |
 
 **Note**: Some HUD sprites need extraction from additional entity init functions
@@ -432,7 +432,7 @@ All HUD values read from global player state:
 |--------|-------|---------|-----|
 | [0x11] | lives | Lives count | 99 |
 | [0x12] | orb_count | Clayballs | 99 (100→1up) |
-| [0x13] | checkpoint_count | Swirly Qs/Checkpoints | 20 |
+| [0x13] | swirl_count | Swirls (3 → bonus room) | 20 |
 | [0x14] | phoenix_hands | Phoenix Hand powerup | 7 |
 | [0x15] | phart_heads | Phart Head powerup | 7 |
 | [0x16] | universe_enemas | Universe Enema powerup | 7 |

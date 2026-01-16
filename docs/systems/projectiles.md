@@ -1,41 +1,49 @@
 # Projectile & Weapon System
 
 **Source**: SLES_010.90.c decompilation  
-**Date**: January 14, 2026  
-**Status**: ✅ Complete projectile system documented
+**Date**: January 16, 2026  
+**Status**: ✅ CORRECTED per official game manual
 
-This document describes how the player fires projectiles and the ammo management system.
+This document describes projectile entities and the weapon/powerup systems.
 
 ---
 
 ## Overview
 
-Skullmonkeys has **two projectile weapon types**:
+> **CORRECTION (Jan 16, 2026)**: Field mappings have been corrected per official game manual.
+>
+> - `[0x13]` = **Green Bullets** (projectile ammo, max 20, Circle button)
+> - `[0x1A]` = **Hamsters** (orbiting shield, max 3 hits, pickup only)
+> - `[0x1b]` = **Swirly Q total** (secret ending counter, need 48+)
 
-1. **Swirly Q's** (Primary weapon) - Stored at `g_pPlayerState[0x13]`
-2. **Green Bullets** (Energy Balls) - Stored at `g_pPlayerState[0x1A]`
+### Weapon Systems
 
-Both use the same spawning function but different sprite IDs.
+| Weapon | Storage | Max | Button | Purpose |
+|--------|---------|-----|--------|----------|
+| Green Bullets | `[0x13]` | 20 | Circle | Standard ranged projectile |
+| Phoenix Hand | `[0x14]` | 7 | L1 | Homing bird attack |
+| Phart Head | `[0x15]` | 7 | L2 | Ghost clone scout |
+| Universe Enema | `[0x16]` | 7 | R1 | Screen-wide destruction |
+| Super Willie | `[0x1C]` | 7 | R2 | Auto-collect all items |
 
----
+### Defensive Items
 
-## Ammo Storage
+| Item | Storage | Max | Purpose |
+|------|---------|-----|----------|
+| Hamsters | `[0x1A]` | 3 | Orbiting shield (3 extra hits) |
+| Halo | `[0x17]` bit 0 | 1 | Single-hit shield |
 
-### g_pPlayerState Array
+### Cheat Codes
 
-| Offset | Field | Max | Cheat Code | Description |
-|--------|-------|-----|------------|-------------|
-| `[0x13]` | swirly_q_count | 20 | 0x03 | Primary projectile ammo |
-| `[0x1A]` | green_bullet_count | 3 | 0x0A | Energy ball ammo |
-
-**From cheat system** (lines 42536-42646):
 ```c
-// Cheat 0x03: Max Swirly Q's
-g_pPlayerState[0x13] = 0x14;  // 20 max
+// Cheat 0x03: "Max Swirly Q's" (MISLABELED - actually Green Bullets!)
+g_pPlayerState[0x13] = 0x14;  // 20 Green Bullets
 
-// Cheat 0x0A: Max Green Bullets
-g_pPlayerState[0x1A] = 3;     // 3 max
+// Cheat 0x0A: "Max Green Bullets" (MISLABELED - actually Hamsters!)
+g_pPlayerState[0x1A] = 3;     // 3 Hamsters
 ```
+
+**Note**: The cheat code labels in the game are backwards/confusing.
 
 ---
 
@@ -130,7 +138,7 @@ From player attack code (lines 21143-21927):
 ```c
 // Check if player has ammo
 if (g_pPlayerState[0x13] == 0) {
-    // No ammo - can't shoot
+    // No Green Bullets - can't shoot
     return;
 }
 
@@ -138,18 +146,18 @@ if (g_pPlayerState[0x13] == 0) {
 // ... shooting logic ...
 ```
 
-**Pattern**: Code checks ammo count at `g_pPlayerState[0x13]` before allowing projectile spawn.
+**Pattern**: Code checks Green Bullet count at `g_pPlayerState[0x13]` before allowing projectile spawn.
 
 ### Consuming Ammo
 
 From line 17925:
 
 ```c
-// After shooting projectile
-g_pPlayerState[0x13] = g_pPlayerState[0x13] - 1;  // Decrement ammo
+// After firing projectile
+g_pPlayerState[0x13] = g_pPlayerState[0x13] - 1;  // Decrement Green Bullet count
 ```
 
-**Decrement Location**: Inside spawn/attack function after successful projectile creation.
+**Decrement Location**: Inside projectile spawn function after successful creation.
 
 ---
 
@@ -186,23 +194,29 @@ speed = (angle >> 9) + 0x10;  // Base 16 + angle-based variation
 
 ---
 
-## Weapon Types
+## Collectibles vs Weapons
 
-### 1. Swirly Q's (Primary Weapon)
+### Swirls (Bonus Room Unlock) - NOT A WEAPON
 
-**Ammo Storage**: `g_pPlayerState[0x13]`  
-**Max Ammo**: 20  
-**HUD Display**: Likely shown as projectile icon count  
-**Pickup**: Unknown entity type (needs investigation)
+> **CORRECTION**: Swirls are collectibles, NOT weapon ammo!
 
-**Usage**:
-- Standard attack projectile
-- Straight-line trajectory
-- Hits enemies for damage
+**Storage**: `g_pPlayerState[0x13]`  
+**Max Count**: 20  
+**HUD Display**: Swirl icon with count  
+**Purpose**: Collect 3 to unlock bonus room portal at stage exit
+
+**Portal Spawn**: `SpawnSwirlPortalEntity` @ 0x8005ad54
+- Decrements `[0x13]` when portal is spawned
+- Uses sprite 0xca1b20cb or 0x3d348056
+
+**NOT used for**:
+- ❌ Attack projectiles
+- ❌ Weapon ammo
+- ❌ Enemy damage
 
 ---
 
-### 2. Green Bullets (Energy Balls)
+### Green Bullets (Energy Balls) - ACTUAL WEAPON
 
 **Ammo Storage**: `g_pPlayerState[0x1A]`  
 **Max Ammo**: 3  
@@ -220,23 +234,22 @@ speed = (angle >> 9) + 0x10;  // Base 16 + angle-based variation
 
 ### Square Button (0x8000)
 
+> **Note**: The player's normal attack mechanics need further investigation.
+> The code below may be from a cheat-enabled mode ("Fire Klaymen's Heads").
+
 From player state functions (lines 21143-21927):
 
 ```c
 // Check if Square button pressed
 if (input->buttons_pressed & 0x8000) {  // Square
-    // Check ammo
-    if (g_pPlayerState[0x13] != 0) {
-        // Calculate angle (based on facing direction)
-        uint angle = (player->facing_left) ? 0x800 : 0x000;  // Left or right
-        
-        // Spawn projectile
-        SpawnProjectileEntity(player, angle, 0x20);  // Speed 32
-        
-        // Consume ammo
-        g_pPlayerState[0x13]--;
+    // For Green Bullets:
+    if (g_pPlayerState[0x1A] != 0) {
+        // Spawn energy ball projectile
+        SpawnProjectileEntity(player, angle, 0x20);
+        g_pPlayerState[0x1A]--;  // Decrement green bullet count
     }
 }
+```
 ```
 
 **Default Angles**:
@@ -329,16 +342,16 @@ do {
 From lines 11209, 11248, 11427, 11458:
 
 ```c
-// Display ammo count on HUD
-HUD_element[0x116] = (u16)g_pPlayerState[0x13];  // Swirly Q count
-HUD_element[0x115] = g_pPlayerState[0x1A];       // Green bullet count
+// Display counts on HUD
+HUD_element[0x116] = (u16)g_pPlayerState[0x13];  // Green Bullet count
+HUD_element[0x115] = g_pPlayerState[0x1A];       // Hamster count
 HUD_element[0x114] = g_pPlayerState[0x1A];       // Alt display?
 ```
 
 **HUD Fields**:
-- +0x116: Swirly Q ammo display
-- +0x115: Green bullet ammo display
-- +0x114: Alternate ammo display
+- +0x116: Green Bullet count (projectile ammo, max 20)
+- +0x115: Hamster count (shield, max 3)
+- +0x114: Alternate display
 
 ---
 
@@ -372,9 +385,9 @@ HUD_element[0x114] = g_pPlayerState[0x1A];       // Alt display?
 ## C Library API
 
 ```c
-// Ammo constants
-#define AMMO_SWIRLY_Q_MAX    20
-#define AMMO_GREEN_BULLET_MAX 3
+// Count constants
+#define SWIRL_COUNT_MAX       20  // Bonus room collectible
+#define GREEN_BULLET_MAX      3   // Actual projectile ammo
 
 // Projectile constants
 #define PROJECTILE_SPRITE_ID  0x168254b5
@@ -389,9 +402,10 @@ HUD_element[0x114] = g_pPlayerState[0x1A];       // Alt display?
 
 // Functions
 void Projectile_Spawn(Entity* player, uint16_t angle, int16_t speed);
-bool Projectile_HasAmmo(PlayerState* state);
-void Projectile_ConsumeAmmo(PlayerState* state);
+bool Projectile_HasGreenBullet(PlayerState* state);
+void Projectile_ConsumeGreenBullet(PlayerState* state);
 void Projectile_SpawnCircle(Entity* player, int16_t base_speed);
+void SwirlPortal_Spawn(Entity* player);  // Uses swirl count
 ```
 
 ---
@@ -402,18 +416,21 @@ void Projectile_SpawnCircle(Entity* player, int16_t base_speed);
 extends Node2D
 class_name ProjectileSystem
 
-# Ammo
-var swirly_q_ammo: int = 0
-var green_bullet_ammo: int = 0
+# Swirls (bonus room collectible - NOT ammo!)
+var swirl_count: int = 0
+var total_swirls: int = 0  # For secret ending
 
-const MAX_SWIRLY_Q = 20
-const MAX_GREEN_BULLET = 3
+# Green Bullets (actual projectile ammo)
+var green_bullet_count: int = 0
+
+const MAX_SWIRLS = 20
+const MAX_GREEN_BULLETS = 3
 
 # Projectile scene
 var projectile_scene = preload("res://entities/projectile.tscn")
 
 func can_shoot() -> bool:
-    return swirly_q_ammo > 0
+    return green_bullet_count > 0
 
 func shoot(player_pos: Vector2, facing_left: bool) -> void:
     if not can_shoot():
@@ -428,8 +445,8 @@ func shoot(player_pos: Vector2, facing_left: bool) -> void:
     projectile.velocity = Vector2.from_angle(angle) * 240.0  # ~4 px/frame @ 60fps
     add_child(projectile)
     
-    # Consume ammo
-    swirly_q_ammo -= 1
+    # Consume green bullet (actual ammo)
+    green_bullet_count -= 1
 
 func shoot_circle(center_pos: Vector2, base_speed: float) -> void:
     # Spawn 8 projectiles in circle
@@ -463,17 +480,20 @@ uint angle = calculate_angle_from_input();
 SpawnProjectileEntity(player, angle, DEFAULT_SPEED);
 
 // Decrement ammo
-g_pPlayerState[0x13]--;
+g_pPlayerState[0x13]--;  // Green Bullets
 ```
 
-### Multi-Weapon System
+### Weapon System (Per Official Manual)
 
-**Speculation**: Game may have weapon selection logic:
-- Primary fire: Swirly Q's (check [0x13])
-- Secondary fire: Green Bullets (check [0x1A])
-- Different button or hold modifier
+**Confirmed Weapons:**
+- **Circle**: Green Bullets (check [0x13], max 20)
+- **L1**: Phoenix Hand (check [0x14], max 7) - homing bird
+- **L2**: Phart Head (check [0x15], max 7) - ghost scout
+- **R1**: Universe Enema (check [0x16], max 7) - screen clear
+- **R2**: Super Willie (check [0x1C], max 7) - auto-collect items
 
-**Needs Investigation**: How player selects between weapon types.
+**Defensive Item:**
+- **Hamsters** ([0x1A], max 3) - orbiting shield, provides 3 extra hits
 
 ---
 

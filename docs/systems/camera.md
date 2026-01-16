@@ -177,12 +177,12 @@ camera_y = camera_y + *(short *)(&DAT_8009b038 + GameState[0x11A] * 2);
 
 ## Triggering Camera Updates
 
-**Called from**: `EntityTickLoop` @ 0x80020b34
+**Called from**: `EntityTickLoopWithCamera` @ 0x80020b34
 
 ```c
 // Camera updates when entity z_order > 1999
 if (entity->z_order > 1999) {
-    UpdateCameraPosition(GameState);
+    UpdateCameraPositionSmooth(GameState);
 }
 ```
 
@@ -289,8 +289,11 @@ func _physics_process(delta: float) -> void:
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x800233c0 | `UpdateCameraPosition` | Main camera update (smooth scrolling) |
-| 0x80044f7c | `CreateCameraEntity` | Camera entity initialization |
+| 0x80020b34 | `EntityTickLoopWithCamera` | Entity loop that triggers camera at z_order > 1999 |
+| 0x800233c0 | `UpdateCameraPositionSmooth` | Main camera update (smooth scrolling with lookup tables) |
+| 0x80023dbc | `SetCameraPositionDirect` | Instant camera positioning (no smooth interpolation) |
+| 0x80044f7c | `CreateCameraEntity` | Camera visual indicator entity with trigger zone tints |
+| 0x80045878 | `InitCameraTrackingEntity` | Menu entity for camera tracking (vtable 0x44C) |
 
 ## Related Documentation
 

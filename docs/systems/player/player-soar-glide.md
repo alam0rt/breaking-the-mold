@@ -19,7 +19,7 @@ SOAR and GLIDE are special player movement modes for specific level types.
 
 ### Creation
 
-**Function**: CreateGlidePlayerEntity @ 0x8006e434 (line 34434)  
+**Function**: CreateGlidePlayerEntity @ 0x8006edb8  
 **Entity Size**: 0x11c bytes (284 bytes)
 
 ```c
@@ -87,7 +87,7 @@ Entity* CreateGlidePlayerEntity(Entity* buffer, void* inputController,
 
 ### Creation
 
-**Function**: CreateSoarPlayerEntity @ 0x8006e454 (line 35454)  
+**Function**: CreateSoarPlayerEntity @ 0x80070d68  
 **Entity Size**: 0x128 bytes (296 bytes)
 
 ```c

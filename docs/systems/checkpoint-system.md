@@ -196,34 +196,47 @@ void ClearSaveSlotFlags(int param_1) {
 
 ---
 
-## Player State: Checkpoint Activation
+## Player State: Level Exit Teleporter
 
-### PlayerState_CheckpointActivated @ 0x8006A214
+> **⚠️ IMPORTANT CLARIFICATION (2026-01-16)**: The function at `0x8006A214` is 
+> `PlayerState_LevelExitTeleporter`, NOT `PlayerState_CheckpointActivated`. 
+> This handles **level exit teleporters** (teleportation), which is DIFFERENT from
+> **Ma-Bird checkpoints** (save respawn point, no teleport).
 
-**Purpose**: Player state entered when colliding with Ma-Bird checkpoint entity.
+### PlayerState_LevelExitTeleporter @ 0x8006A214
 
-**Sequence** (verified from trace):
+**Purpose**: Player state entered when activating a level exit teleporter (NOT Ma-Bird checkpoint).
+
+**Ma-Bird Checkpoints vs Level Exit Teleporters:**
+| Feature | Ma-Bird Checkpoints | Level Exit Teleporters |
+|---------|---------------------|------------------------|
+| Purpose | Save respawn point | Teleport to exit |
+| Teleports player? | ❌ No | ✅ Yes |
+| Saves state? | ✅ Yes (entity list + score) | ❌ No |
+| Creates respawn point? | ✅ Yes | ❌ No |
+| Function | (unknown - needs research) | `PlayerState_LevelExitTeleporter` |
+
+**Sequence** (verified from trace - this is for teleporter, not checkpoint):
 
 | Frame | Event | Details |
 |-------|-------|---------|
-| 3810 | State transition | Enter `PlayerState_CheckpointActivated` |
+| 3810 | State transition | Enter `PlayerState_LevelExitTeleporter` |
 | 3810-3969 | Frozen cutscene | Player locked at (6739, 667) in state 0x8001CB88 |
 | 3969 | Level reload | `LevelLoad` event triggered (same level/stage) |
-| 3969 | Checkpoint save | `SaveCheckpointState()` called |
 | 4048 | Teleport | Player position transitions (garbage frame 0xEEEE) |
-| 4124 | Exit spawn | Player at checkpoint exit (632, 927) |
-| 4216 | Resume gameplay | Return to IdleLook state, falling to ground |
+| 4124 | Exit spawn | Player at teleporter exit (632, 927) |
+| 4216 | Resume gameplay | Return to IdleLook state via `PlayerState_CheckpointExit` |
 
-**Function Pseudocode**:
+**Function Pseudocode** (from Ghidra):
 ```c
-void PlayerState_CheckpointActivated(Entity* player) {
-    player[0x1B2] = 1;  // Set checkpoint flag
+void PlayerState_LevelExitTeleporter(Entity* player) {
+    player[0x1B2] = 1;  // Set teleporter active flag
     
     StopCDStreaming();  // Pause audio streaming
     
-    // Clear linked checkpoint entity reference
+    // Clear linked teleporter entity reference
     if (player[0x5A] != 0) {
-        player[0x5A][0x2C] = 1;  // Mark Ma-Bird as activated
+        player[0x5A][0x2C] = 1;  // Mark teleporter as activated
         player[0x5A] = 0;         // Clear link
     }
     
@@ -237,14 +250,14 @@ void PlayerState_CheckpointActivated(Entity* player) {
     player[0x01] = EntityUpdateCallback;
     player[0x02] = 0;  // Clear callback 2
     player[0x03] = 0;  // Clear callback 3
-    player[0x41] = 0xFFFF0000;
+    player[0x41] = 0;
     player[0x42] = 0;  // Clear callback at +0x108
-    player[0x07] = 0xFFFF0000;
+    player[0x07] = 0;
     player[0x08] = 0;  // Clear movement callback
     
-    // Setup sprite/animation for checkpoint cutscene
-    FUN_8001d1c0(player, player[0xDA]);  // Lock current frame
-    FUN_8001d240(player, 0);              // Disable animation
+    // Setup sprite/animation for cutscene
+    SetAnimationSpriteId(player, player[0xDA]);  // Lock current frame
+    EntitySetRenderFlags(player, 0);
     
     player[0x0D][10] = 0;  // Clear linked entity flag
 }
@@ -520,16 +533,18 @@ For a C-based reimplementation (matching original architecture):
 
 ---
 
-## Function Reference
+## Function Reference (VERIFIED 2026-01-16)
 
 | Function | Address | Purpose |
 |----------|---------|---------|
 | `SaveCheckpointState` | 0x8007EAAC | Save entity list and score to checkpoint buffers |
 | `RestoreCheckpointEntities` | 0x8007EAEC | Restore checkpoint state on respawn |
+| `RespawnAfterDeath` | 0x8007CFC0 | Full respawn sequence (calls RestoreCheckpointEntities) |
+| `PlayerState_Death` | 0x8006A0B8 | Player death state (triggers respawn sequence) |
+| `PlayerState_CheckpointExit` | 0x8006A3F8 | Player state after teleporter/checkpoint exit |
+| `PlayerState_LevelExitTeleporter` | 0x8006A214 | Level exit teleporter (NOT Ma-Bird checkpoint!) |
+| `InitCheckpointEntity` | 0x80041498 | Initialize Ma-Bird checkpoint entity |
 | `ClearSaveSlotFlags` | 0x80081E84 | Clear password/save slot flags (separate system) |
-| `PlayerState_CheckpointActivated` | 0x8006A214 | Player state during Ma-Bird collision |
-| `RespawnAfterDeath` | 0x80070736 | Respawn handler (calls RestoreCheckpointEntities) |
-| `PauseGameAndShowMenu` | 0x8007ECA8 | Pause system (uses similar backup mechanism) |
 | `AddToZOrderList` | 0x80020F68 | Add entity to render z-order list |
 | `RemoveFromTickList` | 0x80021190 | Remove entity from tick list |
 | `FreeFromHeap` | 0x800145A4 | Free memory from BLB buffer heap |
@@ -537,6 +552,6 @@ For a C-based reimplementation (matching original architecture):
 
 ---
 
-**Last Updated**: 2026-01-14  
-**Decompiled Source Reference**: SLES_010.90.c lines 41609-42507  
-**Verification Status**: ✅ Verified against runtime traces and decompiled code
+**Last Updated**: 2026-01-16  
+**Decompiled Source Reference**: SLES_010.90.c  
+**Verification Status**: ✅ VERIFIED via Ghidra decompilation - addresses corrected

@@ -1,5 +1,7 @@
 # Tiles and Tilemaps
 
+**Status: VERIFIED via Ghidra analysis (2026-01-16)**
+
 The tile system renders level backgrounds using indexed tile graphics and layer-based tilemaps.
 
 ## Tile Data (Secondary Segment)
@@ -128,7 +130,7 @@ Bits 12-15: Color tint selector (4 bits)
   - Entry 0 = white (no tinting)
 ```
 
-Verified via `FUN_80017540`:
+Verified via `InitTilemapLayer16x16` @ 0x80017540:
 ```c
 color_table_base = layer + 0x2C;
 tint_index = (tilemap_entry >> 12) & 0xF;
@@ -222,16 +224,20 @@ See [Rendering Order](rendering-order.md) for complete priority documentation.
 ## Key Functions
 
 | Function | Address | Purpose |
-|----------|---------|---------|
+|----------|---------|--------|
 | `GetTotalTileCount` | 0x8007b53c | Sum tile counts |
 | `CopyTilePixelData` | 0x8007b588 | Get tile pixels |
 | `GetPaletteIndices` | 0x8007b6b0 | Get palette per tile |
+| `GetPaletteGroupCount` | 0x8007b4d0 | Palette count |
+| `GetPaletteDataPtr` | 0x8007b4f8 | Get palette data |
+| `GetPaletteAnimData` | 0x8007b530 | Palette animation |
 | `GetTileSizeFlags` | 0x8007b6bc | Get tile flags |
 | `GetLayerCount` | 0x8007b6c8 | Layer count |
 | `GetLayerEntry` | 0x8007b700 | Get 92-byte entry |
 | `GetTilemapDataPtr` | 0x8007b6dc | Tilemap sub-TOC |
 | `LoadTileDataToVRAM` | 0x80025240 | Upload tiles |
 | `InitLayersAndTileState` | 0x80024778 | Init layers |
+| `InitTilemapLayer16x16` | 0x80017540 | Init layer with sprites |
 | `RenderTilemapSprites16x16` | 0x8001713c | Render tiles |
 
 ---

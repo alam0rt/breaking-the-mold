@@ -16,9 +16,9 @@ Skullmonkeys uses PSX .STR (movie stream) files for FMV cutscenes and intros. Mo
 
 ---
 
-## Movie Table (BLB Header 0xB60-0xCC7)
+## Movie Table (BLB Header 0xB64-0xCCB)
 
-**Location**: BLB Header offset 0xB60  
+**Location**: BLB Header offset 0xB64  
 **Size**: 13 entries × 0x1C (28) bytes = 360 bytes  
 **Global**: g_MovieCount = 13
 
@@ -60,7 +60,7 @@ Offset  Size  Type      Description
 
 ### PlayMovieFromCD
 
-**Function**: PlayMovieFromCD @ 0x80039128 (line 13128)  
+**Function**: PlayMovieFromCD @ 0x80039150 (VERIFIED in Ghidra)  
 **Signature**: `bool PlayMovieFromCD(char* iso_path, int sector, short param_3, u_short* dct_buffer)`
 
 **Parameters**:
@@ -91,7 +91,7 @@ Offset  Size  Type      Description
 
 ### PlayMovieFromBLBSectors
 
-**Function**: PlayMovieFromBLBSectors @ 0x80039264 (line 13263)  
+**Function**: PlayMovieFromBLBSectors @ 0x8003958c (VERIFIED in Ghidra)  
 **Signature**: `undefined4 PlayMovieFromBLBSectors(uint sector_start, uint sector_count, u_short* dct_buffer)`
 
 **Parameters**:
@@ -104,6 +104,16 @@ Offset  Size  Type      Description
 **Similar to PlayMovieFromCD** but reads from BLB sectors instead of external file
 
 **Key Difference**: Uses CdBLB_ReadSectors instead of CdSearchFile
+
+### Movie Accessor Functions (VERIFIED in Ghidra)
+
+| Function | Address | Purpose |
+|----------|---------|---------|
+| `GetMovieEntryByIndex` | 0x8007acf0 | Returns pointer to MovieEntry at blbHeader + 0xB64 + (index × 0x1C) |
+| `GetCurrentMovieReserved` | 0x8007ad30 | Get reserved field for current movie |
+| `GetCurrentMovieFilename` | 0x8007adc8 | Returns ISO path string (e.g., "\\MVLOGO.STR;1") |
+| `GetMovieUnknown00` | 0x8007ae14 | Get unknown field at offset 0x00 |
+| `GetMovieSectorCount` | 0x8007ae58 | Returns sector count (u16) for current movie |
 
 ---
 

@@ -131,14 +131,14 @@ void FinnHandleInput(Entity* entity) {
 ## State Machine
 
 **State Table**: Located at 0x800a601c
-**Main Tick Callback**: 0x8006EFC8 (EntityInitCallback_8006efc8)
+**Main Tick Callback**: 0x8006EFC8 (`FinnMainTickHandler`)
 
 The main player callback at 0x8006EFC8 is the active state handler that:
 1. Manages secondary entity (wake/shadow) at +0x114
 2. Handles random state timing at +0x112 (counter decrements, resets to 0x14 via rand())
 3. Calls movement/collision subsystems:
-   - `FUN_80070128` - Trigger zone collision detection
-   - `FUN_8006fbd0` - Tank control input handling
+   - `FinnCheckTriggerZones` @ 0x80070128 - Trigger zone collision detection
+   - `FinnHandleInput` @ 0x8006fbd0 - Tank control input handling
    - `FUN_8006f250` - Unknown (possibly physics/constraints)
    - `FUN_8006fd48` - Unknown (possibly animation)
    - `EntityUpdateCallback` - Standard entity update
@@ -186,23 +186,24 @@ Position update callback that:
 ## Related Functions
 
 | Address | Name | Purpose |
-|---------|------|---------|
+|---------|------|---------|  
 | 0x80074100 | CreateFinnPlayerEntity | Entity creation and initialization |
 | 0x800742c8 | (inline tick) | Main tick callback (inline code, not a function) |
 | 0x80074a40 | (inline secondary) | Secondary position update callback |
-| 0x8006EFC8 | EntityInitCallback_8006efc8 | Main active state handler |
+| 0x8006EFC8 | FinnMainTickHandler | Main active state handler (GLIDE reuses this) |
 | 0x8006fbd0 | FinnHandleInput | Tank control input and rotation |
-| 0x8006f250 | (unknown) | Physics/constraints subsystem |
-| 0x8006fd48 | (unknown) | Animation subsystem |
-| 0x8006FE94 | Callback_8006fe94 | Death/explosion state |
-| 0x80070128 | FUN_80070128 | Trigger zone collision detection |
+| 0x8006f250 | FUN_8006f250 | Physics/constraints subsystem |
+| 0x8006fd48 | FUN_8006fd48 | Animation subsystem |
+| 0x8006FE94 | FinnDeathExplosion | Death/explosion state |
+| 0x80070128 | FinnCheckTriggerZones | Trigger zone collision detection |
+| 0x80074b54 | FinnStateIdle | Idle state handler |
 | 0x8001fea8 | EntityApplyMovementCallbacks | X/Y movement dispatch |
 | 0x800241f4 | GetTileAttributeAtPosition | Collision lookup |
-| 0x8001eaac | EntitySetState | State machine dispatch |
+| 0x8001eaac | EntitySetState | State machine dispatch | |
 
 ## Collision & Pickups
 
-### Trigger Zones (FUN_80070128)
+### Trigger Zones (`FinnCheckTriggerZones` @ 0x80070128)
 
 The player checks for trigger zone collisions which handle:
 - **0x00**: State transition (sets callback at 0x80070094)

@@ -1,4 +1,4 @@
-# Entity Type 3: Ammo Pickup
+# Entity Type 3: Green Bullet Pickup
 
 **Entity Type**: 3  
 **BLB Type**: 3  
@@ -11,9 +11,13 @@
 
 ## Overview
 
-Standard ammo pickups that grant Swirly Q ammunition (primary weapon).
+Green Bullet pickups that grant projectile ammunition.
 
-**Gameplay Function**: Replenish player's primary weapon ammo
+> **CORRECTION (Jan 16, 2026)**: Per official game manual:
+> - `[0x13]` = **Green Bullets** (projectile ammo, max 20, Circle button)
+> - `[0x1A]` = **Hamsters** (orbiting shield, max 3 hits)
+
+**Gameplay Function**: Replenish Green Bullets for Circle button projectile attack
 
 ---
 
@@ -30,21 +34,21 @@ Standard ammo pickups that grant Swirly Q ammunition (primary weapon).
 ## Collection Logic
 
 ```c
-// When player touches ammo
-if (CheckEntityCollision(player, ammo)) {
-    // Grant Swirly Q ammo
-    int current = g_pPlayerState[0x13];  // Swirly Q count
+// When player touches Green Bullet pickup
+if (CheckEntityCollision(player, pickup)) {
+    // Grant Green Bullets
+    int current = g_pPlayerState[0x13];  // Green Bullet count
     g_pPlayerState[0x13] = min(current + 5, 20);  // +5, max 20
     
     // Play collection sound
     PlaySoundEffect(0x7003474c, pan, 0);
     
     // Remove pickup
-    RemoveEntity(ammo);
+    RemoveEntity(pickup);
 }
 ```
 
-**Storage**: `g_pPlayerState[0x13]` (Swirly Q count)  
+**Storage**: `g_pPlayerState[0x13]` (Green Bullet count)  
 **Max**: 20  
 **Amount**: +5 per pickup (estimated)
 
@@ -54,16 +58,15 @@ if (CheckEntityCollision(player, ammo)) {
 
 ```gdscript
 extends Area2D
-class_name AmmoPickup
+class_name GreenBulletPickup
 
-const AMMO_AMOUNT = 5
-const MAX_AMMO = 20
+const MAX_GREEN_BULLETS = 20
+const PICKUP_AMOUNT = 5
 
 func _on_player_touch(body: Node2D) -> void:
     if body.is_in_group("player"):
-        # Grant ammo
-        var current = body.swirly_q_ammo
-        body.swirly_q_ammo = min(current + AMMO_AMOUNT, MAX_AMMO)
+        # Grant Green Bullets (projectile ammo)
+        body.green_bullet_count = min(body.green_bullet_count + PICKUP_AMOUNT, MAX_GREEN_BULLETS)
         
         # Sound and remove
         AudioManager.play_sound(0x7003474c)
@@ -72,7 +75,7 @@ func _on_player_touch(body: Node2D) -> void:
 
 ---
 
-**Status**: ✅ **Fully Documented** (behavior)  
+**Status**: ✅ **Fully Documented** (corrected Jan 16, 2026)  
 **Sprite ID**: ⚠️ Needs extraction  
 **Implementation**: Ready
 
