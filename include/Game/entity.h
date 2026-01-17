@@ -3,12 +3,79 @@
 
 #include "common.h"
 
-/* -----------------------------------------------------------------------------
- * Entity (Base Structure)
+/* =============================================================================
+ * ENTITY HIERARCHY
  * 
- * Runtime base entity structure (0x80 = 128 bytes). All game entities share
- * this common layout. Extended entity types (Player, HUD, enemies, etc.)
- * allocate more memory and add type-specific fields after offset 0x78.
+ * The game uses THREE different entity struct layouts, each with its own
+ * vtable location and field organization:
+ * 
+ * 1. BasicEntity (0x10 bytes) - InitBasicEntityWithVtable @ 0x8001543c
+ *    Minimal struct for simple UI helpers. vtable @ +0x0C
+ * 
+ * 2. MenuEntityBase (0x1C bytes) - InitMenuEntityWithVtable @ 0x80019748
+ *    Base for menu/UI elements. vtable @ +0x18. Callers extend with more fields.
+ * 
+ * 3. Entity (0x80 bytes) - InitEntityStruct @ 0x8001a0c8
+ *    Full game entity with callbacks, physics, bounds. vtable @ +0x18
+ * 
+ * Extended types (Player 0x3E8, HUD 0x7530) build on Entity with extra fields.
+ * ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+ * BasicEntity (0x10 = 16 bytes)
+ * 
+ * Minimal entity for UI helpers and simple objects.
+ * Initialized by InitBasicEntityWithVtable @ 0x8001543c
+ * Uses vtable at 0x8001039c
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ s16  x;              /* X position or state */
+    /* 0x02 */ s16  y;              /* Y position or state */
+    /* 0x04 */ s16  field_04;       /* Additional state */
+    /* 0x06 */ s16  field_06;       /* Additional state */
+    /* 0x08 */ s16  sizeOrId;       /* Size or ID parameter */
+    /* 0x0A */ u8   active;         /* Enable flag (init to 1) */
+    /* 0x0B */ u8   pad0B;
+    /* 0x0C */ void *vtable;        /* Callback vtable (0x8001039c) */
+} BasicEntity;  /* Size: 0x10 */
+
+/* -----------------------------------------------------------------------------
+ * MenuEntityBase (0x1C = 28 bytes minimum)
+ * 
+ * Base entity for menu/UI elements like pause menu shadows.
+ * Initialized by InitMenuEntityWithVtable @ 0x80019748
+ * Uses vtable at 0x800104ac
+ * 
+ * IMPORTANT: This is just the BASE - callers extend it significantly:
+ *   - CreateMenuEntities: Uses up to offset 0xAB (holds 0x28 child pointers!)
+ *   - InitMenuCursorEntity: Uses up to offset 0x2C
+ *   - CreateFadeOverlayEntity: Uses up to offset 0x22
+ * 
+ * The actual allocation size varies per menu entity type.
+ * See CreateMenuEntities @ 0x800281a4 for the largest example.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ s16  field_00;       /* Zeroed by init */
+    /* 0x02 */ s16  field_02;       /* Zeroed by init */
+    /* 0x04 */ s32  field_04;       /* Zeroed by init (u32) */
+    /* 0x08 */ s16  field_08;       /* Zeroed by init */
+    /* 0x0A */ s16  field_0A;       /* Zeroed by init */
+    /* 0x0C */ s32  field_0C;       /* Zeroed by init (u32) */
+    /* 0x10 */ s16  sizeOrId;       /* Size or ID parameter */
+    /* 0x12 */ s16  field_12;       /* Zeroed by init */
+    /* 0x14 */ u8   active;         /* Enable flag (init to 1) */
+    /* 0x15 */ u8   pad15;
+    /* 0x16 */ u8   pad16;
+    /* 0x17 */ u8   pad17;
+    /* 0x18 */ void *vtable;        /* Callback vtable (0x800104ac) */
+} MenuEntityBase;  /* Size: 0x1C (28 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * Entity (Full Game Entity - 0x80 = 128 bytes)
+ * 
+ * Runtime base entity structure for game objects. Extended entity types
+ * (Player, HUD, enemies, etc.) allocate more memory and add type-specific
+ * fields after offset 0x78.
  * 
  * Allocation size is stored at +0x10 and varies by entity type:
  *   - Base entities: 0x78-0x80
@@ -80,16 +147,15 @@ struct Entity {
     /* 0x4C */ s16             screenX2;         /* Screen right (calculated) */
     /* 0x4E */ s16             screenY2;         /* Screen bottom (calculated) */
     
-    /* Collision Bounds (0x50-0x53) */
-    /* 0x50 */ s16             collisionX1;      /* Collision left (world coords) */
-    /* 0x52 */ s16             collisionY1;      /* Collision top (init to 1) */
-    
-    /* Scale Factors - 16.16 Fixed Point (0x54-0x67) */
-    /* 0x54 */ s32             scaleX;           /* X scale (0x10000 = 1.0) */
-    /* 0x58 */ s32             scaleY;           /* Y scale (0x10000 = 1.0) */
-    /* 0x5C */ s32             scale5C;          /* Scale factor 3 */
-    /* 0x60 */ s32             scale60;          /* Scale factor 4 */
-    /* 0x64 */ s32             scale64;          /* Scale factor 5 */
+    /* Scale Factors - 16.16 Fixed Point (0x50-0x67) */
+    /* All initialized to 0x10000 (1.0) by InitEntityStruct */
+    /* Used by SetupEntityScaleCallbacks @ 0x8001c364 for shrink/grow powerup */
+    /* 0x50 */ s32             scaleRender;      /* Render scale (applied to worldX/Y for final position) */
+    /* 0x54 */ s32             scaleRender2;     /* Secondary render scale */
+    /* 0x58 */ s32             scalePowerupX;    /* X scale from powerup (shrink/grow) */
+    /* 0x5C */ s32             scalePowerupY;    /* Y scale from powerup (shrink/grow) */
+    /* 0x60 */ s32             scaleParallaxX;   /* X parallax scale (g_GameStatePtr+0x44) */
+    /* 0x64 */ s32             scaleParallaxY;   /* Y parallax scale (g_GameStatePtr+0x46) */
     
     /* Position (0x68-0x6F) */
     /* 0x68 */ s16             worldX;           /* World X position (pixels) */
@@ -167,42 +233,63 @@ typedef struct {
 } EntityCallbackTableBase;  /* Size: 0x20 */
 
 /* -----------------------------------------------------------------------------
- * EntityCallbackTable (0x50+ bytes)
+ * MenuCallbackTable (0x58 = 88 bytes)
  * 
- * Extended callback table for complex entities (player, enemies, etc.)
- * Includes state machine callbacks beyond the base 3.
+ * Callback table for menu entities. Used by MenuInputHandler @ 0x80077af0.
+ * Extends base with 8-byte EntityCallbackSlot entries for input handling.
  * 
- * Extended table used by menu entities (MenuInputHandler @ 0x80077af0):
- *   - onSelect (0x20): Called when menu item becomes selected (up/down nav)
- *   - onDeselect (0x28): Called on previous item when selection changes
- *   - onConfirm (0x30): X button - takes extra param for shoulder button state
- *   - onCancel (0x38): Circle button
- *   - onLeftRight (0x40): Left/Right d-pad
- *   - onShoulder (0x48): L1/R1 shoulder buttons
- *   - onDpad (0x50): Any d-pad direction - takes direction enum (0-7)
- *
- * Player table at 0x80011804:
- *   - Uses custom destroy (0x80059b58)
- *   - Dense function pointer array for state-specific handlers
+ * Example: Checkpoint table at 0x800111a8
  * ----------------------------------------------------------------------------- */
 typedef struct {
     /* 0x00-0x1F: Base callbacks (same as EntityCallbackTableBase) */
-    /* 0x00 */ u32 unused_00;                   /* UNUSED - always 0, never accessed */
-    /* 0x04 */ u32 unused_04;                   /* UNUSED - always 0, never accessed */
-    /* 0x08 */ EntityCallbackSlot destroy;      /* Cleanup callback */
-    /* 0x10 */ EntityCallbackSlot tick;         /* Per-frame update */
-    /* 0x18 */ EntityCallbackSlot texture;      /* Texture upload */
+    /* 0x00 */ u32 unused_00;
+    /* 0x04 */ u32 unused_04;
+    /* 0x08 */ EntityCallbackSlot destroy;
+    /* 0x10 */ EntityCallbackSlot tick;
+    /* 0x18 */ EntityCallbackSlot texture;
     
-    /* 0x20-0x3F: Selection/action callbacks (menu entities) */
-    /* 0x20 */ EntityCallbackSlot onSelect;     /* Item selected (navigation) */
+    /* 0x20-0x3F: Selection/action callbacks */
+    /* 0x20 */ EntityCallbackSlot onSelect;     /* Item selected (navigation up/down) */
     /* 0x28 */ EntityCallbackSlot onDeselect;   /* Item deselected */
-    /* 0x30 */ EntityCallbackSlot onConfirm;    /* X button (takes shoulder state) */
+    /* 0x30 */ EntityCallbackSlot onConfirm;    /* X button (takes shoulder state param) */
     /* 0x38 */ EntityCallbackSlot onCancel;     /* Circle button */
     
     /* 0x40-0x57: Input callbacks */
     /* 0x40 */ EntityCallbackSlot onLeftRight;  /* Left/Right d-pad */
-    /* 0x48 */ EntityCallbackSlot onShoulder;   /* L1/R1 buttons */
+    /* 0x48 */ EntityCallbackSlot onShoulder;   /* L1/R1 shoulder buttons */
     /* 0x50 */ EntityCallbackSlot onDpad;       /* D-pad direction (0-7 enum) */
-} EntityCallbackTable;  /* Size: 0x58 (88 bytes) */
+} MenuCallbackTable;  /* Size: 0x58 (88 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * PlayerCallbackTable (0x80+ bytes)
+ * 
+ * Callback table for the player entity @ 0x80011804.
+ * Base slots use 8-byte EntityCallbackSlot format, but 0x40+ is a DENSE
+ * function pointer array (4 bytes each) for bounce/collision handlers.
+ * 
+ * The dense array at 0x40 contains 16 function pointers indexed by
+ * collision/bounce type. Used by PlayerProcessBounceCollision.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00-0x1F: Base callbacks (same as EntityCallbackTableBase) */
+    /* 0x00 */ u32 unused_00;
+    /* 0x04 */ u32 unused_04;
+    /* 0x08 */ EntityCallbackSlot destroy;      /* PlayerDestroy @ 0x80059b58 */
+    /* 0x10 */ EntityCallbackSlot tick;         /* UpdateEntityRender */
+    /* 0x18 */ EntityCallbackSlot texture;      /* UploadEntityTextureIfDirty */
+    
+    /* 0x20-0x3F: State callbacks (8-byte slots) */
+    /* 0x20 */ EntityCallbackSlot state_20;     /* NULL for player */
+    /* 0x28 */ EntityCallbackSlot state_28;     /* 0x8006ed54 */
+    /* 0x30 */ EntityCallbackSlot state_30;     /* 0x8006ed4c */
+    /* 0x38 */ EntityCallbackSlot state_38;     /* 0x8006ed44 */
+    
+    /* 0x40-0x7F: Dense function pointer array (4 bytes each, NOT slots!) */
+    /* Used by PlayerProcessBounceCollision for indexed dispatch */
+    /* 0x40 */ void *bounceHandlers[16];        /* 16 × 4 = 0x40 bytes */
+} PlayerCallbackTable;  /* Size: 0x80 (128 bytes) */
+
+/* Generic alias for code that doesn't know the specific table type */
+typedef MenuCallbackTable EntityCallbackTable;
 
 #endif /* ENTITY_H */
