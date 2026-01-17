@@ -68,6 +68,9 @@ segments:
       # LoadBLBHeader: 0x800208B0 - 0x80020973 (BLB archive initialization)
   - [0x110B0, c, LoadBLBHeader]
   - [0x11174, asm]
+  - [0x1161C, c, EntityTickLoop]
+  - [0x11680, asm]
+  - [0x11970, asm]
       # LoadGameAssetLocations: 0x800389DC - 0x80038B97
   - [0x291DC, c, LoadGameAssetLocations]
       # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F

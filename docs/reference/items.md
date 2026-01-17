@@ -59,10 +59,11 @@ All item data verified via Ghidra decompilation and runtime tracing.
 - Cheat: 0x03 @ 0x80082278 sets count to 20
 - Portal Spawn: `SpawnSwirlPortalEntity` @ 0x8005ad54 decrements count
 - Cumulative Total: `g_pPlayerState[0x1B]` (48+ for secret ending)
+- Add Function: `AddSwirlys` @ 0x800262cc
 
 **Note:** Cheat 0x03 is correctly labeled "Max Swirly Q's" in cheat lists.
 
-**Verified:** 2026-01-16 via CheckCheatCodeInput @ 0x800820b4 + SpawnSwirlPortalEntity @ 0x8005ad54
+**Verified:** 2026-01-17 via Ghidra decompilation @ 0x800262cc
 
 ---
 
@@ -134,8 +135,9 @@ weapon may use a different storage mechanism or be unlimited with cooldown.
 - SEVN Level: special_level_id = 99, accessible from level 11
 - Cheat: 0x0B @ 0x800823B0 sets "1970" icons to 3
 - HUD Display: game-loop.md line 1113 ("1970" icons × 3)
+- Add Function: `Add1970Icons` @ 0x80026884
 
-**Verified:** 2025-01-13 via EntityType095 decompilation, cheat 0x0B trace, SEVN level documentation
+**Verified:** 2026-01-17 via Ghidra decompilation @ 0x80026884
 
 ---
 
@@ -167,7 +169,9 @@ All powerup items stored in `g_pPlayerState` with max count of 7. Use buttons L1
 3. Iterates collision list, sends MSG_PROJECTILE_HIT (0x1002) to killable entities
 4. Decrements count, clears screen effect flag
 
-**Verified:** 2026-01-16 via cheat table @ 0x800820B4, Ghidra decompilation
+- Add Function: `AddUniverseEnemas` @ 0x800267b4
+
+**Verified:** 2026-01-17 via Ghidra decompilation @ 0x800267b4
 
 ---
 
@@ -182,8 +186,9 @@ All powerup items stored in `g_pPlayerState` with max count of 7. Use buttons L1
 - Cheat: 0x07 @ 0x800822F8 sets count to 7
 - HUD Slot: Powerup icon 1 (pause menu +0x5C)
 - Effect: Spawns homing bird projectile entity on use
+- Add Function: `AddPhoenixHands` @ 0x80026614
 
-**Verified:** 2026-01-16 via cheat table @ 0x800820B4, button mapping from game manual
+**Verified:** 2026-01-17 via Ghidra decompilation @ 0x80026614
 
 ---
 
@@ -198,8 +203,9 @@ All powerup items stored in `g_pPlayerState` with max count of 7. Use buttons L1
 - Cheat: 0x08 @ 0x80082320 sets count to 7
 - HUD Slot: Powerup icon 4 (pause menu +0x84)
 - Effect: Auto-collect all items on screen
+- Add Function: `AddSuperWillies` @ 0x80026a48
 
-**Verified:** 2026-01-16 via cheat table @ 0x800820B4, button mapping from game manual
+**Verified:** 2026-01-17 via Ghidra decompilation @ 0x80026a48
 
 ---
 
@@ -214,8 +220,9 @@ All powerup items stored in `g_pPlayerState` with max count of 7. Use buttons L1
 - Cheat: 0x09 @ 0x80082348 sets count to 7 + resets flags
 - HUD Slot: Powerup icon 2 (pause menu +0x68)
 - Effect: Spawns ghostly scout clone entity
+- Add Function: `AddPhartHeads` @ 0x800266e4
 
-**Verified:** 2026-01-16 via cheat table @ 0x800820B4, button mapping from game manual
+**Verified:** 2026-01-17 via Ghidra decompilation @ 0x800266e4
 
 ---
 
@@ -308,8 +315,14 @@ either a cut feature, regional difference (NTSC may vary), or embellished docume
 | 0x800814A4 | EntityType095_InitCallback | "1970" icon init handler |
 | 0x800820B4 | CheckCheatCodeInput | Cheat code entry point (22 handlers) |
 | 0x800262ac | DecrementPlayerLives | Decrement lives counter |
+| 0x800262cc | AddSwirlys | Add swirly Qs (max 20), notify HUD |
 | 0x8002639c | AddPlayerLives | Add lives (max 99), notify HUD |
 | 0x8002646c | AddPlayerOrbs | Add orbs, 100→1up conversion |
+| 0x80026614 | AddPhoenixHands | Add phoenix hands (max 7), notify HUD |
+| 0x800266e4 | AddPhartHeads | Add phart heads (max 7), notify HUD |
+| 0x800267b4 | AddUniverseEnemas | Add universe enemas (max 7), notify HUD |
+| 0x80026884 | Add1970Icons | Add 1970 icons (max 3), notify HUD |
+| 0x80026a48 | AddSuperWillies | Add super willies (max 7), notify HUD |
 | 0x8002615c | ClearHamsterCount | Clear hamster count on level start |
 | 0x80026164 | ResetPlayerCollectibles | Reset collectibles on death/level start |
 | 0x8007cfc0 | RespawnAfterDeath | Respawn player after death |
@@ -354,5 +367,21 @@ either a cut feature, regional difference (NTSC may vary), or embellished docume
 - ✅ **Verified:** Clay, Halo, Energy Ball, Swirl, 1up, 1970 Icons, Fart Clone, Bird, Super Power, Head, Yellow Bird
 - ⚠️ **Partial:** Hamster Shield (gameplay confirmed, entity type/callbacks need tracing)
 
-**Last Updated:** 2025-01-15
+**Last Updated:** 2026-01-17
 **Verification Method:** Ghidra decompilation + runtime trace analysis + cheat code reverse engineering
+
+## Collectible Add Functions Summary
+
+All verified via Ghidra decompilation on 2026-01-17:
+
+| Function | Address | Offset | Max | HUD Msg |
+|----------|---------|--------|-----|--------|
+| `AddPlayerLives` | 0x8002639c | 0x11 | 99 | 2 |
+| `AddPlayerOrbs` | 0x8002646c | 0x12 | 99→0 | 1 |
+| `AddSwirlys` | 0x800262cc | 0x13 | 20 | 3 |
+| `AddPhoenixHands` | 0x80026614 | 0x14 | 7 | 6 |
+| `AddPhartHeads` | 0x800266e4 | 0x15 | 7 | 7 |
+| `AddUniverseEnemas` | 0x800267b4 | 0x16 | 7 | 8 |
+| `Add1970Icons` | 0x80026884 | 0x19 | 3 | 4 |
+| `AddSuperWillies` | 0x80026a48 | 0x1C | 7 | 9 |
+| `ClearHamsterCount` | 0x8002615c | 0x1A | (clear) | - |
