@@ -64,8 +64,8 @@ segments:
       # .rdata: 0x80010000 - 0x800131EF (size: 0x31F0)
   - [0x800, rodata]
   - [0xE2C, rodata, entity_lists]
-  - [0x1F28, rodata, movie_player_a]
-  - [0x2044, rodata, movie_player_b]
+  - [0x1F28, rodata, fmv_callbacks]
+  - [0x2044, rodata, fmv_jumptables]
   - [0x2940, rodata, spu_audio]
   - [0x34F4, rodata, debug_menu]
   - [0x3970, rodata, heap_init]
@@ -82,8 +82,8 @@ segments:
   - [0x291DC, c, LoadGameAssetLocations]
       # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F
   - [0x29398, c, CdBLB]
-      # Movie playback (PlayMovieFromCD, etc) - pairs with movie_player_a and movie_player_b rodata
-  - [0x29950, asm, movie_player_a]
+      # FMV/streaming subsystem (PlayMovieFromCD, etc) - pairs with fmv_callbacks rodata
+  - [0x29950, asm, fmv_callbacks]
       # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
   - [0x6AE2C, c, LevelDataParser]
   - [0x6B080, asm]
