@@ -123,7 +123,14 @@ typedef struct EntityListNode {
 
 /* -----------------------------------------------------------------------------
  * EntityCallbackTable
- * Callback table entry used by state machine system
+ * Callback table used by entity state machine system.
+ * Size: 32 bytes (0x20)
+ * 
+ * Verified via runtime inspection:
+ * - Player entity (0x80194ac4) -> callback table at 0x80011804
+ * - field_0C = 0x80059b58 (player-specific callback)
+ * - tick = 0x8001d988 (UpdateEntityRender)
+ * - field_1C = 0x8001e5b8 (UploadEntityTextureIfDirty)
  * ----------------------------------------------------------------------------- */
 typedef void (*EntityTickFunc)(Entity *entity);
 
@@ -131,11 +138,12 @@ typedef struct {
     /* 0x00 */ u32 field_00;
     /* 0x04 */ u32 field_04;
     /* 0x08 */ u32 field_08;
-    /* 0x0C */ u32 field_0C;
-    /* 0x10 */ s16 entity_offset;      /* Offset to add to entity pointer */
+    /* 0x0C */ EntityTickFunc field_0C;        /* Entity-specific callback */
+    /* 0x10 */ s16 entity_offset;              /* Offset to add to entity pointer before calling tick */
     /* 0x12 */ s16 pad12;
-    /* 0x14 */ EntityTickFunc tick;    /* Tick callback function */
+    /* 0x14 */ EntityTickFunc tick;            /* Tick callback (usually UpdateEntityRender) */
     /* 0x18 */ u32 field_18;
+    /* 0x1C */ EntityTickFunc field_1C;        /* Usually UploadEntityTextureIfDirty */
 } EntityCallbackTable;
 
 #endif /* ENTITY_H */
