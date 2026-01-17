@@ -63,6 +63,12 @@ segments:
   subsegments:
       # .rdata: 0x80010000 - 0x800131EF (size: 0x31F0)
   - [0x800, rodata]
+  - [0xE2C, rodata]
+  - [0x1F28, rodata]
+  - [0x2044, rodata]
+  - [0x2940, rodata]
+  - [0x34F4, rodata]
+  - [0x3970, rodata]
       # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
   - [0x39F0, asm]
       # LoadBLBHeader: 0x800208B0 - 0x80020973 (BLB archive initialization)
