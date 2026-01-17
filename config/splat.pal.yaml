@@ -71,13 +71,10 @@ segments:
   - [0x3970, rodata, heap_init]
       # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
   - [0x39F0, asm]
-      # LoadBLBHeader: 0x800208B0 - 0x80020973 (BLB archive initialization)
   - [0x110B0, c, LoadBLBHeader]
   - [0x11174, asm]
-  - [0x1161C, c, EntityTickLoop]
-  - [0x11680, asm]
-      # Entity list management (AddToUpdateQueue, etc)
-  - [0x11970, asm, entity_lists]
+  - [0x11680, c, Game/ENGINE, entity_lists]
+  - [0x13BBC, asm, entity_lists]
       # LoadGameAssetLocations: 0x800389DC - 0x80038B97
   - [0x291DC, c, LoadGameAssetLocations]
       # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F

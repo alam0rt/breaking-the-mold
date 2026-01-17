@@ -24,19 +24,26 @@
 /* -----------------------------------------------------------------------------
  * BasicEntity (0x10 = 16 bytes)
  * 
- * Minimal entity for UI helpers and simple objects.
- * Initialized by InitBasicEntityWithVtable @ 0x8001543c
- * Uses vtable at 0x8001039c
+ * Base struct for renderable objects in the z-sorted render list.
+ * Initialized by InitBasicEntityWithVtable @ 0x8001543c.
+ * 
+ * This is a POLYMORPHIC struct - field meanings depend on vtable:
+ * - SpriteRenderContext (vtable 0x80010384): widthOrU/heightOrV = dimensions
+ * - UI/Cursor entities (vtable 0x80010b98): widthOrU/heightOrV = VRAM UV coords
+ * - Colored overlays (vtable 0x80010aa8): fields 0x04-0x06 unused (full screen)
+ * 
+ * Callers extend this struct for type-specific data (e.g., +0x40 for RGBA).
+ * Render list sorted by zOrder (AddToXPositionList @ 0x8002107c).
  * ----------------------------------------------------------------------------- */
 typedef struct {
-    /* 0x00 */ s16  x;              /* X position or state */
-    /* 0x02 */ s16  y;              /* Y position or state */
-    /* 0x04 */ s16  field_04;       /* Additional state */
-    /* 0x06 */ s16  field_06;       /* Additional state */
-    /* 0x08 */ s16  sizeOrId;       /* Size or ID parameter */
+    /* 0x00 */ s16  screenX;        /* Screen X position for rendering (calculated) */
+    /* 0x02 */ s16  screenY;        /* Screen Y position for rendering (calculated) */
+    /* 0x04 */ s16  widthOrU;       /* Width (sprites) or VRAM texture U (UI) */
+    /* 0x06 */ s16  heightOrV;      /* Height (sprites) or VRAM texture V (UI) */
+    /* 0x08 */ s16  zOrder;         /* Z-order for render list (lower = behind) */
     /* 0x0A */ u8   active;         /* Enable flag (init to 1) */
     /* 0x0B */ u8   pad0B;
-    /* 0x0C */ void *vtable;        /* Callback vtable (0x8001039c) */
+    /* 0x0C */ void *vtable;        /* Callback vtable (determines field interpretation) */
 } BasicEntity;  /* Size: 0x10 */
 
 /* -----------------------------------------------------------------------------
