@@ -13,7 +13,7 @@ void EntityTickLoop(GameState *state) {
     if (node) {
         do {
             entity = node->entity;
-            callbacks = (EntityCallbackTable *)entity->tick_callback;
+            callbacks = (EntityCallbackTable *)entity->collisionVtable;
             callbacks->tick((Entity *)((u8 *)entity + callbacks->entity_offset));
             node = node->next;
         } while (node);
