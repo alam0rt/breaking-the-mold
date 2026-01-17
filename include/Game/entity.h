@@ -159,8 +159,8 @@ typedef struct {
  *   texture: UploadEntityTextureIfDirty (0x8001e5b8)
  * ----------------------------------------------------------------------------- */
 typedef struct {
-    /* 0x00 */ u32 field_00;                    /* Unknown - always 0 */
-    /* 0x04 */ u32 field_04;                    /* Unknown - always 0 */
+    /* 0x00 */ u32 unused_00;                   /* UNUSED - always 0, never accessed */
+    /* 0x04 */ u32 unused_04;                   /* UNUSED - always 0, never accessed */
     /* 0x08 */ EntityCallbackSlot destroy;      /* Cleanup (called with param 3) */
     /* 0x10 */ EntityCallbackSlot tick;         /* Per-frame update */
     /* 0x18 */ EntityCallbackSlot texture;      /* Texture upload */
@@ -172,30 +172,37 @@ typedef struct {
  * Extended callback table for complex entities (player, enemies, etc.)
  * Includes state machine callbacks beyond the base 3.
  * 
+ * Extended table used by menu entities (MenuInputHandler @ 0x80077af0):
+ *   - onSelect (0x20): Called when menu item becomes selected (up/down nav)
+ *   - onDeselect (0x28): Called on previous item when selection changes
+ *   - onConfirm (0x30): X button - takes extra param for shoulder button state
+ *   - onCancel (0x38): Circle button
+ *   - onLeftRight (0x40): Left/Right d-pad
+ *   - onShoulder (0x48): L1/R1 shoulder buttons
+ *   - onDpad (0x50): Any d-pad direction - takes direction enum (0-7)
+ *
  * Player table at 0x80011804:
  *   - Uses custom destroy (0x80059b58)
- *   - State callbacks at 0x28-0x38 for state machine
- *   - Input callbacks at 0x40-0x48 for player control
- *   - Dense function pointer array at 0x40+ (16 pointers for player states)
+ *   - Dense function pointer array for state-specific handlers
  * ----------------------------------------------------------------------------- */
 typedef struct {
-    /* 0x00-0x1F: Base callbacks */
-    /* 0x00 */ u32 field_00;
-    /* 0x04 */ u32 field_04;
-    /* 0x08 */ EntityCallbackSlot destroy;
-    /* 0x10 */ EntityCallbackSlot tick;
-    /* 0x18 */ EntityCallbackSlot texture;
+    /* 0x00-0x1F: Base callbacks (same as EntityCallbackTableBase) */
+    /* 0x00 */ u32 unused_00;                   /* UNUSED - always 0, never accessed */
+    /* 0x04 */ u32 unused_04;                   /* UNUSED - always 0, never accessed */
+    /* 0x08 */ EntityCallbackSlot destroy;      /* Cleanup callback */
+    /* 0x10 */ EntityCallbackSlot tick;         /* Per-frame update */
+    /* 0x18 */ EntityCallbackSlot texture;      /* Texture upload */
     
-    /* 0x20-0x3F: State machine callbacks */
-    /* 0x20 */ EntityCallbackSlot state_20;     /* Usually NULL */
-    /* 0x28 */ EntityCallbackSlot state_28;
-    /* 0x30 */ EntityCallbackSlot state_30;
-    /* 0x38 */ EntityCallbackSlot state_38;
+    /* 0x20-0x3F: Selection/action callbacks (menu entities) */
+    /* 0x20 */ EntityCallbackSlot onSelect;     /* Item selected (navigation) */
+    /* 0x28 */ EntityCallbackSlot onDeselect;   /* Item deselected */
+    /* 0x30 */ EntityCallbackSlot onConfirm;    /* X button (takes shoulder state) */
+    /* 0x38 */ EntityCallbackSlot onCancel;     /* Circle button */
     
-    /* 0x40+: Input/state array (player only, variable length) */
-    /* For player: 16 function pointers (0x40 bytes) for state-specific handlers */
-    /* 0x40 */ EntityCallbackSlot input_40;
-    /* 0x48 */ EntityCallbackSlot input_48;
-} EntityCallbackTable;  /* Size: 0x50 minimum */
+    /* 0x40-0x57: Input callbacks */
+    /* 0x40 */ EntityCallbackSlot onLeftRight;  /* Left/Right d-pad */
+    /* 0x48 */ EntityCallbackSlot onShoulder;   /* L1/R1 buttons */
+    /* 0x50 */ EntityCallbackSlot onDpad;       /* D-pad direction (0-7 enum) */
+} EntityCallbackTable;  /* Size: 0x58 (88 bytes) */
 
 #endif /* ENTITY_H */
