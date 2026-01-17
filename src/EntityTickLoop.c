@@ -14,7 +14,7 @@ void EntityTickLoop(GameState *state) {
         do {
             entity = node->entity;
             callbacks = (EntityCallbackTable *)entity->collisionVtable;
-            callbacks->tick((Entity *)((u8 *)entity + callbacks->entity_offset));
+            callbacks->tick.func((Entity *)((u8 *)entity + callbacks->tick.entity_offset));
             node = node->next;
         } while (node);
     }

@@ -122,28 +122,80 @@ typedef struct EntityListNode {
 } EntityListNode;
 
 /* -----------------------------------------------------------------------------
- * EntityCallbackTable
- * Callback table used by entity state machine system.
- * Size: 32 bytes (0x20)
+ * Entity Callback System
  * 
- * Verified via runtime inspection:
- * - Player entity (0x80194ac4) -> callback table at 0x80011804
- * - field_0C = 0x80059b58 (player-specific callback)
- * - tick = 0x8001d988 (UpdateEntityRender)
- * - field_1C = 0x8001e5b8 (UploadEntityTextureIfDirty)
+ * Two-tier callback table architecture:
+ * 
+ * 1. EntityCallbackTableBase (0x20 bytes) - Used by simple entities
+ *    Located at 0x8001044c-0x8001052c (8 pre-defined tables)
+ *    Contains: destroy, tick, texture callbacks
+ * 
+ * 2. EntityCallbackTable (0x50+ bytes) - Used by complex entities  
+ *    Per-entity-type tables (player @ 0x80011804, checkpoint @ 0x800111a8)
+ *    Extends base with: state machine + input callbacks
+ * 
+ * Each callback slot is 8 bytes: [s16 entity_offset, s16 pad, func_ptr]
+ * The entity_offset is added to the entity pointer before calling.
  * ----------------------------------------------------------------------------- */
-typedef void (*EntityTickFunc)(Entity *entity);
+typedef void (*EntitySlotCallback)(void *entity_adjusted);
 
+/* Single callback slot (8 bytes) */
 typedef struct {
+    /* 0x00 */ s16 entity_offset;       /* Added to entity ptr before calling */
+    /* 0x02 */ s16 pad;
+    /* 0x04 */ EntitySlotCallback func; /* Callback function */
+} EntityCallbackSlot;
+
+/* -----------------------------------------------------------------------------
+ * EntityCallbackTableBase (0x20 = 32 bytes)
+ * 
+ * Base callback table used by simple entities. 8 pre-defined instances
+ * exist at 0x8001044c, 0x8001046c, 0x8001048c, 0x800104ac, 0x800104cc,
+ * 0x800104ec, 0x8001050c, 0x8001052c.
+ * 
+ * Callbacks:
+ *   destroy: DestroyEntityAndFreeMemory or similar
+ *   tick:    UpdateEntityRender (0x8001d988)
+ *   texture: UploadEntityTextureIfDirty (0x8001e5b8)
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ u32 field_00;                    /* Unknown - always 0 */
+    /* 0x04 */ u32 field_04;                    /* Unknown - always 0 */
+    /* 0x08 */ EntityCallbackSlot destroy;      /* Cleanup (called with param 3) */
+    /* 0x10 */ EntityCallbackSlot tick;         /* Per-frame update */
+    /* 0x18 */ EntityCallbackSlot texture;      /* Texture upload */
+} EntityCallbackTableBase;  /* Size: 0x20 */
+
+/* -----------------------------------------------------------------------------
+ * EntityCallbackTable (0x50+ bytes)
+ * 
+ * Extended callback table for complex entities (player, enemies, etc.)
+ * Includes state machine callbacks beyond the base 3.
+ * 
+ * Player table at 0x80011804:
+ *   - Uses custom destroy (0x80059b58)
+ *   - State callbacks at 0x28-0x38 for state machine
+ *   - Input callbacks at 0x40-0x48 for player control
+ *   - Dense function pointer array at 0x40+ (16 pointers for player states)
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00-0x1F: Base callbacks */
     /* 0x00 */ u32 field_00;
     /* 0x04 */ u32 field_04;
-    /* 0x08 */ u32 field_08;
-    /* 0x0C */ EntityTickFunc field_0C;        /* Entity-specific callback */
-    /* 0x10 */ s16 entity_offset;              /* Offset to add to entity pointer before calling tick */
-    /* 0x12 */ s16 pad12;
-    /* 0x14 */ EntityTickFunc tick;            /* Tick callback (usually UpdateEntityRender) */
-    /* 0x18 */ u32 field_18;
-    /* 0x1C */ EntityTickFunc field_1C;        /* Usually UploadEntityTextureIfDirty */
-} EntityCallbackTable;
+    /* 0x08 */ EntityCallbackSlot destroy;
+    /* 0x10 */ EntityCallbackSlot tick;
+    /* 0x18 */ EntityCallbackSlot texture;
+    
+    /* 0x20-0x3F: State machine callbacks */
+    /* 0x20 */ EntityCallbackSlot state_20;     /* Usually NULL */
+    /* 0x28 */ EntityCallbackSlot state_28;
+    /* 0x30 */ EntityCallbackSlot state_30;
+    /* 0x38 */ EntityCallbackSlot state_38;
+    
+    /* 0x40+: Input/state array (player only, variable length) */
+    /* For player: 16 function pointers (0x40 bytes) for state-specific handlers */
+    /* 0x40 */ EntityCallbackSlot input_40;
+    /* 0x48 */ EntityCallbackSlot input_48;
+} EntityCallbackTable;  /* Size: 0x50 minimum */
 
 #endif /* ENTITY_H */
