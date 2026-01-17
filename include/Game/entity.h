@@ -1,0 +1,382 @@
+#ifndef ENTITY_H
+#define ENTITY_H
+
+#include "common.h"
+/* -----------------------------------------------------------------------------
+ * Entity
+ * Runtime entity structure (0x44C = 1100 bytes). Initialized by InitEntityStruct @ 0x8001a0c8. Combines sprite graphics, behavior callbacks, and state data.
+ * Size: 491 bytes (0x1EB)
+ * Exported from Ghidra
+ * ----------------------------------------------------------------------------- */
+
+typedef struct {
+    /* 0x00 */ u32      state_high;  // State machine upper word
+    /* 0x04 */ u32  callback_main;  // Main update callback (EntityUpdateCallback)
+    /* 0x08 */ u16      x_position;  // X position (for spatial sorting)
+    /* 0x0A */ u16      y_position;  // Y position
+    /* 0x0C */ u32  callback2;  // Secondary callback
+    /* 0x10 */ u16      z_order;  // Render depth (for z-sorting)
+    /* 0x12 */ u16      padding12;  // Padding
+    /* 0x14 */ u8       field_14;
+    /* 0x15 */ u8       field_15;
+    /* 0x16 */ u8       field_16;
+    /* 0x17 */ u8       field_17;
+    /* 0x18 */ u32  tick_callback;  // Per-frame tick callback (set by EntitySetState)
+    /* 0x1C */ u32  z_list_head;  // Z-order sorted list head
+    /* 0x20 */ u32  x_list_head;  // X-position sorted list head
+    /* 0x24 */ short    collision_x_offset;  // X collision offset/data parameter
+    /* 0x26 */ short    collision_x_mode;  // X collision mode/index (0=none, <0=direct ptr, >0=table lookup)
+    /* 0x28 */ void *   collision_x_callback;  // X collision adjustment function/table u32
+    /* 0x2C */ short    collision_y_offset;  // Y collision offset/data parameter
+    /* 0x2E */ short    collision_y_mode;  // Y collision mode/index (0=none, <0=direct ptr, >0=table lookup)
+    /* 0x30 */ void *   collision_y_callback;  // Y collision adjustment function/table u32
+    /* 0x34 */ u8       field_34;
+    /* 0x35 */ u8       field_35;
+    /* 0x36 */ u8       field_36;
+    /* 0x37 */ u8       field_37;
+    /* 0x38 */ u8       field_38;
+    /* 0x39 */ u8       field_39;
+    /* 0x3A */ u8       field_3A;
+    /* 0x3B */ u8       field_3B;
+    /* 0x3C */ u8       field_3C;
+    /* 0x3D */ u8       field_3D;
+    /* 0x3E */ u8       field_3E;
+    /* 0x3F */ u8       field_3F;
+    /* 0x40 */ u8       field_40;
+    /* 0x41 */ u8       field_41;
+    /* 0x42 */ u8       field_42;
+    /* 0x43 */ u8       field_43;
+    /* 0x44 */ u32  child_entity;  // Child entity u32 (destroyed with parent)
+    /* 0x48 */ u16      bbox_x1;  // Bounding box (copied from frame metadata) - 16 bytes
+    /* 0x4A */ u16      bbox_y1;  // Bounding box Y1
+    /* 0x4C */ u16      bbox_x2;  // Bounding box X2
+    /* 0x4E */ u16      bbox_y2;  // Bounding box Y2
+    /* 0x50 */ u16      bbox_offset_x1;  // Bounding box X offset (left edge from center)
+    /* 0x52 */ u16      bbox_offset_y1;  // Bounding box Y offset (top edge from center)
+    /* 0x54 */ u16      bbox_width;  // Bounding box width
+    /* 0x56 */ u16      bbox_height;  // Bounding box height
+    /* 0x58 */ u16      screen_x1;  // Calculated screen X1 (left)
+    /* 0x5A */ u16      screen_y1;  // Calculated screen Y1 (top)
+    /* 0x5C */ u16      screen_x2;  // Calculated screen X2 (right)
+    /* 0x5E */ u16      screen_y2;  // Calculated screen Y2 (bottom)
+    /* 0x60 */ int      scale_x;  // X scale factor (16.16 fixed-point, 0x10000=1.0)
+    /* 0x64 */ int      scale_y;  // Y scale factor (16.16 fixed-point, 0x10000=1.0)
+    /* 0x68 */ short    world_x_pos;  // World X position for gameplay/physics (short at +0x68, used by enemy AI)
+    /* 0x6A */ short    world_y_pos;  // World Y position for gameplay/physics (short at +0x6A, used by enemy AI)
+    /* 0x6C */ u8       field_6C;
+    /* 0x6D */ u8       field_6D;
+    /* 0x6E */ u8       field_6E;
+    /* 0x6F */ u8       field_6F;
+    /* 0x70 */ u8       field_70;
+    /* 0x71 */ u8       field_71;
+    /* 0x72 */ u8       field_72;
+    /* 0x73 */ u8       child_count;  // Child entity count
+    /* 0x74 */ u8       facing_left;  // Facing direction (byte at +0x74, 0=right, 1=left)
+    /* 0x75 */ u8       field_75;
+    /* 0x76 */ u8       field_76;
+    /* 0x77 */ u8       field_77;
+    /* 0x78 */ u32  anim_frame_table;  // Frame table / sprite frames u32 (animation data, accessed as +0x78)
+    /* 0x7C */ u8       field_7C;
+    /* 0x7D */ void *   frame_table;  // Frame table / sprite context u32 (animation data)
+    /* 0x81 */ u8       field_81;
+    /* 0x82 */ u8       field_82;
+    /* 0x83 */ u8       field_83;
+    /* 0x84 */ u8       field_84;
+    /* 0x85 */ u8       field_85;
+    /* 0x86 */ u8       field_86;
+    /* 0x87 */ u8       field_87;
+    /* 0x88 */ u8       field_88;
+    /* 0x89 */ u8       field_89;
+    /* 0x8A */ u8       field_8A;
+    /* 0x8B */ u8       field_8B;
+    /* 0x8C */ u8       field_8C;
+    /* 0x8D */ u8       field_8D;
+    /* 0x8E */ u8       field_8E;
+    /* 0x8F */ u8       field_8F;
+    /* 0x90 */ u8       field_90;
+    /* 0x91 */ u8       field_91;
+    /* 0x92 */ u8       field_92;
+    /* 0x93 */ u8       field_93;
+    /* 0x94 */ u8       field_94;
+    /* 0x95 */ u8       field_95;
+    /* 0x96 */ u8       field_96;
+    /* 0x97 */ u8       field_97;
+    /* 0x98 */ u8       field_98;
+    /* 0x99 */ u16      x_pos;  // X position (render)
+    /* 0x9B */ u16      y_pos;  // Y position (render)
+    /* 0x9D */ u8       field_9D;
+    /* 0x9E */ u8       field_9E;
+    /* 0x9F */ u8       field_9F;
+    /* 0xA0 */ u8       field_A0;
+    /* 0xA1 */ u8       field_A1;
+    /* 0xA2 */ u8       field_A2;
+    /* 0xA3 */ u8       field_A3;
+    /* 0xA4 */ u8       field_A4;
+    /* 0xA5 */ u8       field_A5;
+    /* 0xA6 */ u8       field_A6;
+    /* 0xA7 */ u8       sprite_dirty;  // Frame data needs update
+    /* 0xA8 */ u8       state_dirty;  // State needs processing
+    /* 0xA9 */ u32  sprite_data_ptr;  // u32 to sprite frame data
+    /* 0xAD */ u8       field_AD;
+    /* 0xAE */ u8       field_AE;
+    /* 0xAF */ u8       field_AF;
+    /* 0xB0 */ u8       field_B0;
+    /* 0xB1 */ u8       field_B1;
+    /* 0xB2 */ u8       field_B2;
+    /* 0xB3 */ u8       field_B3;
+    /* 0xB4 */ int      velocity_x_per_frame;  // Velocity X per frame (16.16 fixed-point, calculated from frame data)
+    /* 0xB8 */ int      velocity_y_per_frame;  // Velocity Y per frame (16.16 fixed-point, calculated from frame data)
+    /* 0xBC */ u32      pending_sprite_id;  // Pending sprite ID (buffered, applied via anim_flags)
+    /* 0xC0 */ u32      pending_frame;  // Pending frame index (buffered, applied via anim_flags)
+    /* 0xC4 */ u32      pending_loop_frame;  // Pending loop frame (buffered, applied via anim_flags)
+    /* 0xC8 */ u8       field_C8;
+    /* 0xC9 */ u8       field_C9;
+    /* 0xCA */ u8       field_CA;
+    /* 0xCB */ u8       field_CB;
+    /* 0xCC */ u8       field_CC;
+    /* 0xCD */ void *   frame_buffer;  // Animation frame buffer u32 (allocated for multi-frame sprites)
+    /* 0xD1 */ u8       field_D1;
+    /* 0xD2 */ u8       field_D2;
+    /* 0xD3 */ u8       field_D3;
+    /* 0xD4 */ u8       field_D4;
+    /* 0xD5 */ u8       field_D5;
+    /* 0xD6 */ u8       field_D6;
+    /* 0xD7 */ u8       field_D7;
+    /* 0xD8 */ short    total_frame_count;  // Total frame count in sprite animation
+    /* 0xDA */ short    anim_current_frame;  // Current animation frame index
+    /* 0xDC */ short    anim_loop_frame;  // Loop target frame index
+    /* 0xDE */ short    anim_target_frame;  // Target animation frame index
+    /* 0xE0 */ u16      anim_state_flags;  // Animation state flags (bitfield for pending changes)
+    /* 0xE2 */ u8       field_E2;
+    /* 0xE3 */ u32  memory_block1;  // Memory block u32 1 (freed on destruction)
+    /* 0xE7 */ int      prev_frame;  // Previous/current animation frame index
+    /* 0xEB */ u8       field_EB;
+    /* 0xEC */ short    anim_frame_timer;  // Frame countdown timer (decremented each tick)
+    /* 0xEE */ u8       field_EE;
+    /* 0xEF */ u8       field_EF;
+    /* 0xF0 */ u8       anim_direction;  // Animation direction (0=forward, 1=backward)
+    /* 0xF1 */ u8       anim_loop_flag;  // Animation loop flag (1=loop to loop_frame when reaching target)
+    /* 0xF2 */ u8       anim_active;  // Animation active flag (1=tick enabled)
+    /* 0xF3 */ u8       pending_direction;  // Pending direction (buffered)
+    /* 0xF4 */ u8       pending_loop_flag;  // Pending loop flag (buffered)
+    /* 0xF5 */ u8       pending_anim_active;  // Pending anim_active flag (buffered)
+    /* 0xF6 */ u8       field_F6;
+    /* 0xF7 */ u8       sprite_lookup_type;  // Sprite lookup type flag (0=direct table, 1=alternate)
+    /* 0xF8 */ u8       field_F8;
+    /* 0xF9 */ u8       field_F9;
+    /* 0xFA */ u8       field_FA;
+    /* 0xFB */ u8       field_FB;
+    /* 0xFC */ u8       field_FC;
+    /* 0xFD */ u8       field_FD;
+    /* 0xFE */ u8       slow_motion;  // Slow motion flag (1=double frame_delay)
+    /* 0xFF */ u8       field_FF;
+    /* 0x100 */ u8       field_100;
+    /* 0x101 */ u8       field_101;
+    /* 0x102 */ u8       field_102;
+    /* 0x103 */ u16      state_index;  // Current state index
+    /* 0x105 */ short    frame_count;  // Total frame count in animation sequence
+    /* 0x107 */ int      buffer_size;  // Frame buffer size in bytes (width * height)
+    /* 0x10B */ u32      state_param2;  // State machine parameter 2
+    /* 0x10F */ u32      state_param1;  // State machine parameter 1
+    /* 0x113 */ u16      anim_flags;  // Animation state flags (bit 1=active, bit 4=pending, bit 0x10=target set)
+    /* 0x115 */ u8       field_115;
+    /* 0x116 */ u8       field_116;
+    /* 0x117 */ u8       field_117;
+    /* 0x118 */ u8       field_118;
+    /* 0x119 */ u32  memory_block2;  // Memory block u32 2 (freed on destruction)
+    /* 0x11D */ u32      frame_x_scale;  // X scale (fixed-point)
+    /* 0x121 */ u8       field_121;
+    /* 0x122 */ u8       field_122;
+    /* 0x123 */ u8       field_123;
+    /* 0x124 */ u8       frame_search_mode;  // Frame search mode (0=direct table, 1=alternate lookup)
+    /* 0x125 */ u32      frame_y_scale;  // Y scale (fixed-point)
+    /* 0x129 */ u8       field_129;
+    /* 0x12A */ u8       field_12A;
+    /* 0x12B */ u8       field_12B;
+    /* 0x12C */ u8       field_12C;
+    /* 0x12D */ u8       ai_random_value;  // AI random value (byte at +0x100, 0-7 from rand()&7)
+    /* 0x12E */ u8       ai_timer;  // AI timer countdown (byte at +0x101, decremented each frame, resets to 0x20-0x3F)
+    /* 0x12F */ short    timer_countdown;  // Countdown timer (decremented each frame)
+    /* 0x131 */ u8       timer_expired;  // Timer expired flag (set when countdown reaches 1)
+    /* 0x132 */ u8       field_132;
+    /* 0x133 */ u8       field_133;
+    /* 0x134 */ u8       field_134;
+    /* 0x135 */ u32  collision_target_entity;  // Collision target entity u32 (dword at +0x108, checked for off-screen cleanup)
+    /* 0x139 */ u8       hit_counter;  // Hit counter (byte at +0x10C, max 4, incremented on damage)
+    /* 0x13A */ void *   timer_notify_entity;  // Entity to notify when timer expires
+    /* 0x13E */ u8       field_13E;
+    /* 0x13F */ u8       field_13F;
+    /* 0x140 */ u8       field_140;
+    /* 0x141 */ u8       field_141;
+    /* 0x142 */ u8       field_142;
+    /* 0x143 */ short    sound_cooldown;  // Sound cooldown timer (short at +0x116, set to 0xB4=180 frames after sound plays)
+    /* 0x145 */ u8       field_145;
+    /* 0x146 */ u8       field_146;
+    /* 0x147 */ u8       field_147;
+    /* 0x148 */ u8       field_148;
+    /* 0x149 */ u8       field_149;
+    /* 0x14A */ u8       field_14A;
+    /* 0x14B */ u8       field_14B;
+    /* 0x14C */ u8       field_14C;
+    /* 0x14D */ u8       field_14D;
+    /* 0x14E */ u8       field_14E;
+    /* 0x14F */ u8       field_14F;
+    /* 0x150 */ u8       field_150;
+    /* 0x151 */ u8       field_151;
+    /* 0x152 */ u8       field_152;
+    /* 0x153 */ u8       field_153;
+    /* 0x154 */ u8       field_154;
+    /* 0x155 */ u8       field_155;
+    /* 0x156 */ u8       field_156;
+    /* 0x157 */ u8       field_157;
+    /* 0x158 */ u8       field_158;
+    /* 0x159 */ u16      current_frame;  // Current animation frame index
+    /* 0x15B */ u8       field_15B;
+    /* 0x15C */ u8       field_15C;
+    /* 0x15D */ u16      target_frame;  // Target animation frame index
+    /* 0x15F */ u16      pending_flags;  // Pending state change flags (bitmask)
+    /* 0x161 */ u8       field_161;
+    /* 0x162 */ u8       field_162;
+    /* 0x163 */ u8       field_163;
+    /* 0x164 */ u8       field_164;
+    /* 0x165 */ u16      frame_width;  // Current frame width
+    /* 0x167 */ u16      frame_height;  // Current frame height
+    /* 0x169 */ u8       field_169;
+    /* 0x16A */ u8       field_16A;
+    /* 0x16B */ u16      frame_countdown;  // Animation frame timer
+    /* 0x16D */ u8       field_16D;
+    /* 0x16E */ u8       field_16E;
+    /* 0x16F */ u8       rgb_current_r;  // Current RGB R component
+    /* 0x170 */ u8       rgb_current_g;  // Current RGB G component
+    /* 0x171 */ u8       rgb_current_b;  // Current RGB B component
+    /* 0x172 */ u8       rgb_pending_r;  // Pending RGB R component
+    /* 0x173 */ u8       rgb_pending_g;  // Pending RGB G component
+    /* 0x174 */ u8       rgb_pending_b;  // Pending RGB B component
+    /* 0x175 */ u8       visibility;  // Rendering flag (visible if non-zero)
+    /* 0x176 */ u8       sprite_type;  // Sprite lookup type flag
+    /* 0x177 */ u8       frame_loaded;  // Frame data loaded flag
+    /* 0x178 */ u8       field_178;
+    /* 0x179 */ u8       field_179;
+    /* 0x17A */ u8       field_17A;
+    /* 0x17B */ u8       field_17B;
+    /* 0x17C */ u8       field_17C;
+    /* 0x17D */ u8       scale_mode;  // Double-size flag
+    /* 0x17E */ u8       field_17E;
+    /* 0x17F */ u8       field_17F;
+    /* 0x180 */ u8       field_180;
+    /* 0x181 */ u8       field_181;
+    /* 0x182 */ u8       field_182;
+    /* 0x183 */ u8       field_183;
+    /* 0x184 */ u8       field_184;
+    /* 0x185 */ u8       field_185;
+    /* 0x186 */ u8       field_186;
+    /* 0x187 */ u8       field_187;
+    /* 0x188 */ u8       field_188;
+    /* 0x189 */ u8       field_189;
+    /* 0x18A */ u8       field_18A;
+    /* 0x18B */ u8       field_18B;
+    /* 0x18C */ u8       field_18C;
+    /* 0x18D */ u8       field_18D;
+    /* 0x18E */ u8       field_18E;
+    /* 0x18F */ u8       field_18F;
+    /* 0x190 */ u8       field_190;
+    /* 0x191 */ u8       field_191;
+    /* 0x192 */ u8       field_192;
+    /* 0x193 */ u8       field_193;
+    /* 0x194 */ u8       field_194;
+    /* 0x195 */ u8       field_195;
+    /* 0x196 */ u8       field_196;
+    /* 0x197 */ u8       field_197;
+    /* 0x198 */ u8       field_198;
+    /* 0x199 */ u8       field_199;
+    /* 0x19A */ u8       field_19A;
+    /* 0x19B */ u8       field_19B;
+    /* 0x19C */ u8       field_19C;
+    /* 0x19D */ u8       field_19D;
+    /* 0x19E */ u8       field_19E;
+    /* 0x19F */ u8       field_19F;
+    /* 0x1A0 */ u8       field_1A0;
+    /* 0x1A1 */ u8       field_1A1;
+    /* 0x1A2 */ u8       field_1A2;
+    /* 0x1A3 */ u8       field_1A3;
+    /* 0x1A4 */ u8       field_1A4;
+    /* 0x1A5 */ u8       field_1A5;
+    /* 0x1A6 */ u8       field_1A6;
+    /* 0x1A7 */ u8       field_1A7;
+    /* 0x1A8 */ u8       field_1A8;
+    /* 0x1A9 */ u8       field_1A9;
+    /* 0x1AA */ u8       field_1AA;
+    /* 0x1AB */ u8       field_1AB;
+    /* 0x1AC */ u8       field_1AC;
+    /* 0x1AD */ u8       field_1AD;
+    /* 0x1AE */ u8       field_1AE;
+    /* 0x1AF */ u32      player_scale_x;  // Player scale X (0x8000-0x10000)
+    /* 0x1B3 */ u32      player_scale_y;  // Player scale Y (0x8000-0x10000)
+    /* 0x1B7 */ u8       field_1B7;
+    /* 0x1B8 */ u8       field_1B8;
+    /* 0x1B9 */ u16      timer;  // Timer/counter
+    /* 0x1BB */ u8       field_1BB;
+    /* 0x1BC */ u8       field_1BC;
+    /* 0x1BD */ u8       field_1BD;
+    /* 0x1BE */ u8       field_1BE;
+    /* 0x1BF */ u8       field_1BF;
+    /* 0x1C0 */ u8       field_1C0;
+    /* 0x1C1 */ u8       field_1C1;
+    /* 0x1C2 */ u8       field_1C2;
+    /* 0x1C3 */ u8       field_1C3;
+    /* 0x1C4 */ u8       field_1C4;
+    /* 0x1C5 */ u8       field_1C5;
+    /* 0x1C6 */ u8       field_1C6;
+    /* 0x1C7 */ u8       field_1C7;
+    /* 0x1C8 */ u8       field_1C8;
+    /* 0x1C9 */ u8       field_1C9;
+    /* 0x1CA */ u8       field_1CA;
+    /* 0x1CB */ u8       field_1CB;
+    /* 0x1CC */ u8       field_1CC;
+    /* 0x1CD */ u8       field_1CD;
+    /* 0x1CE */ u8       field_1CE;
+    /* 0x1CF */ u8       field_1CF;
+    /* 0x1D0 */ u8       field_1D0;
+    /* 0x1D1 */ u8       field_1D1;
+    /* 0x1D2 */ u8       field_1D2;
+    /* 0x1D3 */ u8       field_1D3;
+    /* 0x1D4 */ u8       field_1D4;
+    /* 0x1D5 */ u8       field_1D5;
+    /* 0x1D6 */ u8       field_1D6;
+    /* 0x1D7 */ u8       field_1D7;
+    /* 0x1D8 */ u8       field_1D8;
+    /* 0x1D9 */ u8       field_1D9;
+    /* 0x1DA */ u8       field_1DA;
+    /* 0x1DB */ u8       field_1DB;
+    /* 0x1DC */ u8       tint_r;  // RGB tint R (player color from GameState+0x124)
+    /* 0x1DD */ u8       tint_g;  // RGB tint G (player color from GameState+0x125)
+    /* 0x1DE */ u8       tint_b;  // RGB tint B (player color from GameState+0x126)
+    /* 0x1DF */ u8       field_1DF;
+    /* 0x1E0 */ u8       field_1E0;
+    /* 0x1E1 */ u8       field_1E1;
+    /* 0x1E2 */ u8       field_1E2;
+    /* 0x1E3 */ u8       field_1E3;
+    /* 0x1E4 */ u8       field_1E4;
+    /* 0x1E5 */ u8       field_1E5;
+    /* 0x1E6 */ u8       field_1E6;
+    /* 0x1E7 */ u32  halo_entity;  // Halo entity reference (player only)
+} Entity;  // Size: 0x1EB (491 bytes)
+
+typedef void (*EntityTickFunc)(Entity *entity);
+
+typedef struct {
+    /* 0x00 */ u32 field_00;
+    /* 0x04 */ u32 field_04;
+    /* 0x08 */ u32 field_08;
+    /* 0x0C */ u32 field_0C;
+    /* 0x10 */ s16 entity_offset;      // Offset to add to entity pointer
+    /* 0x14 */ EntityTickFunc tick;    // Tick callback function
+    /* 0x18 */ u32 field_18;
+} EntityCallbackTable;
+
+typedef struct EntityListNode {
+    /* 0x00 */ struct EntityListNode *next;
+    /* 0x04 */ Entity *entity;
+} EntityListNode;
+
+#endif /* ENTITY_H */
