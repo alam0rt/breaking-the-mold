@@ -55,21 +55,26 @@ typedef struct {
  * 
  * IMPORTANT: This is just the BASE - callers extend it significantly:
  *   - CreateMenuEntities: Uses up to offset 0xAB (holds 0x28 child pointers!)
- *   - InitMenuCursorEntity: Uses up to offset 0x2C
+ *   - InitMenuCursorEntity: Uses up to offset 0x2C  
  *   - CreateFadeOverlayEntity: Uses up to offset 0x22
  * 
  * The actual allocation size varies per menu entity type.
  * See CreateMenuEntities @ 0x800281a4 for the largest example.
+ * 
+ * Fields 0x00-0x0F are FSM callback pairs (same as Entity):
+ *   - Zeroed by init, but callers immediately set tickMarker=0xFFFF0000, tickCallback
  * ----------------------------------------------------------------------------- */
 typedef struct {
-    /* 0x00 */ s16  field_00;       /* Zeroed by init */
-    /* 0x02 */ s16  field_02;       /* Zeroed by init */
-    /* 0x04 */ s32  field_04;       /* Zeroed by init (u32) */
-    /* 0x08 */ s16  field_08;       /* Zeroed by init */
-    /* 0x0A */ s16  field_0A;       /* Zeroed by init */
-    /* 0x0C */ s32  field_0C;       /* Zeroed by init (u32) */
-    /* 0x10 */ s16  sizeOrId;       /* Size or ID parameter */
-    /* 0x12 */ s16  field_12;       /* Zeroed by init */
+    /* FSM State Machine (0x00-0x0F) - same as Entity */
+    /* 0x00 */ s16  tickMarker;     /* FSM tick marker low (0xFFFF0000 = direct call) */
+    /* 0x02 */ s16  tickMarkerHi;   /* FSM tick marker high (0xFFFF for direct call) */
+    /* 0x04 */ void *tickCallback;  /* Per-frame update function pointer */
+    /* 0x08 */ s16  eventMarker;    /* FSM event marker low (0xFFFF0000 = direct call) */
+    /* 0x0A */ s16  eventMarkerHi;  /* FSM event marker high */
+    /* 0x0C */ void *eventCallback; /* Event handler function pointer */
+    /* Entity Info (0x10-0x17) */
+    /* 0x10 */ s16  zOrder;         /* Z-order for render list sorting (param_2 from init) */
+    /* 0x12 */ s16  reserved12;     /* Reserved/unused (zeroed by init, not used) */
     /* 0x14 */ u8   active;         /* Enable flag (init to 1) */
     /* 0x15 */ u8   pad15;
     /* 0x16 */ u8   pad16;
