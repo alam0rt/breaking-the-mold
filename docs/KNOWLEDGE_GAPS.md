@@ -45,12 +45,18 @@ Items here have been verified as "unknown" after checking existing documentation
 ## Medium Priority Gaps
 
 ### 3. Save System Architecture
-**Status**: Partially documented in `systems/password-system.md`  
+**Status**: ✅ MOSTLY RESOLVED (2026-01-19)  
 **Known**: Password screens are pre-rendered, no memory card support  
-**Unknown**:
+**Resolved**:
+- ✅ Password encoding algorithm documented in `reference/data-section-map.md`
+- ✅ `BuildPasswordFromPlayerState` @ 0x80025C7C encodes player state to 12-button sequence
+- ✅ `DecodePassword` @ 0x80025E48 decodes password back to state
+- ✅ Encoding table at 0x8009B198 (32 field/bit pairs)
+- ✅ Encoded fields: level, lives, phoenix hands, phart heads, universe enemas, 1970 icons, swirly qs, super willies
+
+**Still Unknown**:
 - How world completion triggers password screen selection
-- Full password encoding/decoding algorithm (if any exists beyond pre-baked)
-- How `DAT_8009cb00` password buffer is validated
+- How password validation occurs in menu system
 
 ### 4. Boss AI State Machines
 **Location**: `docs/systems/boss-ai/`  
@@ -140,6 +146,8 @@ These were gaps that have been resolved:
 | Input system | 2026-01-17 | `systems/input-system-complete.md` |
 | HUD system | 2026-01-17 | `systems/hud-system-complete.md` |
 | Menu system | 2026-01-17 | `systems/menu-system-complete.md` |
+| Password encoding algorithm | 2026-01-19 | `reference/data-section-map.md` |
+| Animation motion curves | 2026-01-19 | `reference/data-section-map.md` |
 
 ---
 

@@ -55,6 +55,44 @@ Used by animation/physics system.
 | 0x8009B180 | ? | g_MenuSpriteTable2 | Additional menu sprites |
 | 0x8009B18C | ? | g_MenuSpriteTable3 | Additional menu sprites |
 
+### Password Encoding Tables (0x8009B198 - 0x8009B1E8)
+
+**Address**: 0x8009B198 / 0x8009B199  
+**Size**: 80 bytes (32 entries × 2 bytes + padding)  
+**Name**: g_PasswordEncodingTable  
+**Referenced by**: `BuildPasswordFromPlayerState` @ 0x80025C7C, `DecodePassword` @ 0x80025E48
+
+Bit-field encoding lookup table for the password system. Used to map PlayerState fields
+(level, lives, collectibles) into a 12-button password sequence.
+
+**Format**: 32 pairs of (field_index, bit_position)
+```c
+// Each pair defines which PlayerState byte and bit to encode:
+// [0]: field_index (which byte of PlayerState to read)
+// [1]: bit_position (which bit within that byte)
+// 
+// Example from dump at 0x8009B198:
+// 01 00 - field 1, bit 0
+// 01 01 - field 1, bit 1  
+// 01 02 - field 1, bit 2
+// 01 03 - field 1, bit 3
+// ...
+```
+
+**Password Encoded Fields** (from decompilation):
+| PlayerState Offset | Field | Purpose |
+|--------------------|-------|---------|
+| 0x00 | level | Current level (+1, skips 5 and 0x11) |
+| 0x11 | lives | Life count |
+| 0x14 | phoenix_hands | Phoenix Hand collectibles |
+| 0x15 | phart_heads | Phart Head collectibles |
+| 0x16 | universe_enemas | Universe Enema collectibles |
+| 0x19 | 1970_icons | 1970 collectibles |
+| 0x1B | swirly_qs | Swirly Q collectibles |
+| 0x1C | super_willies | Super Willie collectibles |
+
+**Note**: This closes a gap in KNOWLEDGE_GAPS.md - the password encoding algorithm is fully implemented.
+
 ### CD-ROM Data (0x8009B3D8 - 0x8009B4DC)
 
 | Address | Size | Name | Purpose |
@@ -93,6 +131,29 @@ Used by animation/physics system.
 | 0x8009BBE0 | 3 | g_EnemyAISprites | InitEnemyEntityWithAI @ 0x8004f8dc |
 | 0x8009BBEC | 4 | g_JoeHeadJoeBallRegularSprites | InitJoeHeadJoeBallRegular @ 0x80053afc |
 | 0x8009BBFC | 3 | g_ProjectileSprites | InitProjectileWithTimer @ 0x80050970 |
+
+### Animation Motion Curves (0x8009BC08 - 0x8009C0E8)
+
+**Address**: 0x8009BC08  
+**Size**: ~0x4E0 bytes (1248 bytes)  
+**Name**: g_AnimationMotionCurves  
+**Referenced by**: Animation callback at LAB_80053664 (via InitAnimatedDirectionalEntity)
+
+Large table of signed 16-bit coordinate pairs (x, y deltas) forming sine/cosine motion curves.
+Used for smooth entity movement, bobbing, and oscillating animations.
+
+**Structure**: s16 pairs representing (dx, dy) per animation frame
+```c
+// Example from 0x8009BF00:
+// Oscillating pattern around a center point (sine-like):
+// 0xFFFF (-1), 0x00B0 (176)  - Y high
+// 0x0022 (34), 0x00AF (175)
+// 0x0043 (67), 0x00AA (170)
+// ... gradually decreases Y while X increases
+// Pattern continues through full oscillation
+```
+
+**Note**: No direct XRefs at aligned addresses - accessed via base pointer + index calculations.
 
 ### Player Data (0x8009C0E8 - 0x8009C3C0)
 
