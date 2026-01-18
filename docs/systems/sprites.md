@@ -236,6 +236,101 @@ Player uses `InitEntityWithSprite` with sprite ID tables:
 
 `InitPlayerSpriteAvailability` (0x80059a70) checks which player sprites exist in current level.
 
+### All Sprite ID Arrays
+
+The game executable contains **32 sprite ID arrays** across 7 memory regions. Each array is 
+null-terminated uint32 values passed to `InitEntityWithSprite()`, `CreateCollectibleWithFlags()`, 
+`InitPathFollowingEnemy()`, `InitScaledPlatformEntity()`, and `CreatePlayerEntity()`.
+
+**Ghidra script**: `scripts/ghidra_define_all_sprite_arrays.py` defines all arrays.
+
+#### Collectibles Region (0x8009B4DC - 0x8009B55C)
+
+| Address | Entries | Label | Init Function |
+|---------|---------|-------|---------------|
+| 0x8009B4DC | 4 | g_SpecialPickupSprites | InitSpecialPickupEntity @ 0x8003cfd8 |
+| 0x8009B4EC | 7 | g_WalkingCollectibleSprites | InitWalkingCollectibleEnemy @ 0x8003d638 |
+| 0x8009B508 | 7 | g_TempestPulsingMonkeySprites | InitTempestPulsingMonkey @ 0x8003e0fc |
+| 0x8009B524 | 3 | g_SoundEmittingEnemySprites | InitSoundEmittingEnemy @ 0x8003e950 |
+| 0x8009B530 | 3 | **g_CutEntitySprites_UNUSED** | **CUT CONTENT** - see below |
+| 0x8009B53C | 4 | g_LevelStateCollectibleSprites | InitLevelStateCollectible @ 0x8003f704 |
+| 0x8009B54C | 4 | g_CollectibleVariantSprites | InitCollectibleVariant @ 0x8003fe90 |
+
+#### Boss Region (0x8009BA48 - 0x8009BAE4)
+
+| Address | Entries | Label | Init Function |
+|---------|---------|-------|---------------|
+| 0x8009BA48 | 7 | g_MonkeyMageBossSprites | InitMonkeyMageBoss @ 0x80047fb8 |
+| 0x8009BA64 | 9 | g_GlennYntisBossSprites | InitGlennYntisBoss @ 0x80049a54 |
+| 0x8009BA88 | 9 | g_ShrineyGuardBossSprites | InitShrineyGuardBoss @ 0x8004af64 |
+| 0x8009BAAC | 8 | g_JoeHeadJoeBossSprites | InitJoeHeadJoeBoss @ 0x8004c0e0 |
+| 0x8009BACC | 6 | g_KloggBossSprites | InitKloggBoss @ 0x8004d88c |
+
+#### Enemy Region (0x8009BBE0 - 0x8009BC08)
+
+| Address | Entries | Label | Init Function |
+|---------|---------|-------|---------------|
+| 0x8009BBE0 | 3 | g_EnemyAISprites | InitEnemyEntityWithAI @ 0x8004f8dc |
+| 0x8009BBEC | 4 | g_JoeHeadJoeBallRegularSprites | InitJoeHeadJoeBallRegular @ 0x80053afc |
+| 0x8009BBFC | 3 | g_ProjectileSprites | InitProjectileWithTimer @ 0x80050970 |
+
+#### Special / Player Region
+
+| Address | Entries | Label | Init Function |
+|---------|---------|-------|---------------|
+| 0x8009C0E8 | 3 | g_JoeHeadJoeBallSprites | InitJoeHeadJoeBallSpecial |
+| 0x8009C174 | 56 | **g_PlayerSprites** | CreatePlayerEntity @ 0x800596a4 |
+
+The player sprite array is the largest with **55 sprite IDs** covering all Klaymen animations.
+
+#### Menu Region (0x8009CBDC - 0x8009CC18)
+
+| Address | Entries | Label | Init Function |
+|---------|---------|-------|---------------|
+| 0x8009CBDC | 3 | g_MenuCursorSprites | InitMenuStage1 @ 0x80076ba0 |
+| 0x8009CBE8 | 4 | g_MenuButtonSprites | AttachCursorToButton @ 0x800754cc |
+| 0x8009CBF8 | 4 | g_MenuLogoSprites | InitMenuStage1 |
+| 0x8009CC08 | 4 | g_MenuBackgroundSprites | InitMenuStage1 |
+
+#### Entity Type Init Region (0x8009D9FC - 0x8009DADC)
+
+| Address | Entries | Label | Init Function |
+|---------|---------|-------|---------------|
+| 0x8009D9FC | 7 | g_SpriteList_Type004_Type114 | EntityType004/114_Init |
+| 0x8009DA18 | 7 | g_SpriteList_Type088_ForegroundDecor | EntityType088_ForegroundDecor_Init |
+| 0x8009DA34 | 7 | g_SpriteList_Type117_DecorationB | EntityType117_DecorationB_Init |
+| 0x8009DA50 | 3 | g_SpriteList_Type010_InteractiveObject | EntityType010_InteractiveObject_Init |
+| 0x8009DA5C | 3 | g_SpriteList_Type026_Enemy | EntityType026_Enemy_Init |
+| 0x8009DA68 | 4 | g_SpriteList_Type027_PathEnemy | EntityType027_PathEnemy_Init |
+| 0x8009DA78 | 5 | g_SpriteList_Type061_ScaledPlatform | EntityType061_ScaledPlatform_Init |
+| 0x8009DA8C | 3 | g_SpriteList_Type062_Platform | EntityType062_Platform_Init |
+| 0x8009DA98 | 3 | g_SpriteList_Type063_MovingPlatform | EntityType063_MovingPlatform_Init |
+| 0x8009DAA4 | 3 | g_SpriteList_Type064_Trigger | EntityType064_Trigger_Init |
+| 0x8009DAB0 | 7 | g_SpriteList_Type111_Background | EntityType111_Background_Init |
+| 0x8009DACC | 5 | g_SpriteList_Type113_Hazard | EntityType113_Hazard_Init |
+
+These arrays are iterated by `CreateMultiFrameRenderContext()` to find max width/height across all
+sprite frames. The first entry is used as the initial sprite ID via `SetEntitySpriteId()`.
+
+### Cut Content: g_CutEntitySprites_UNUSED @ 0x8009B530
+
+This 12-byte array contains **sprite IDs that don't exist in GAME.BLB**:
+
+```
+[0] 0x1A828448 - NOT FOUND in any BLB file
+[1] 0x0886CC58 - NOT FOUND in any BLB file  
+[2] 0x00000000 - NULL terminator
+```
+
+**Evidence of cut content:**
+- Array follows the exact same pattern as neighboring collectible arrays
+- Located between `g_SoundEmittingEnemySprites` and `g_LevelStateCollectibleSprites`
+- No code references this address (no xrefs in Ghidra)
+- The Init function that used this array was removed, but the data remained
+
+This suggests a cut enemy or collectible entity whose sprites were deleted from GAME.BLB
+during development, but the sprite ID array was left in the executable.
+
 ## Per-Level Sprite Availability
 
 Each level's tertiary container has different sprites:

@@ -43,10 +43,12 @@ Key features:
 import sys
 import argparse
 import json
+import re
 import subprocess
+import struct
 from pathlib import Path
 from urllib.request import urlopen
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 from datetime import datetime
 
 # Configuration
@@ -57,6 +59,7 @@ CONFIG_FILE = Path("config/splat.pal.yaml")
 ASM_BASE = Path("asm/pal/nonmatchings")
 SRC_DIR = Path("src")
 CTX_FILE = Path("ctx.c")
+BINARY_PATH = Path("disks/pal/SLES_010.90")
 
 # Memory layout constants
 RAM_BASE = 0x80010000
@@ -82,6 +85,119 @@ def vram_to_rom(vram: int) -> int:
 def rom_to_vram(rom: int) -> int:
     """Convert ROM offset to VRAM address."""
     return (rom - ROM_BASE) + RAM_BASE
+
+def analyze_gap(start_addr: int, size: int, analyze_content: bool = True) -> Dict:
+    """
+    Analyze a gap in the symbol table to determine what kind of data it contains.
+    
+    Returns a dict with:
+        - type: 'pointers', 'strings', 'zeros', 'code', 'mixed', 'unknown'
+        - description: human-readable description
+        - pointer_count: number of valid PSX pointers found
+        - string_fragments: list of string snippets found
+        - suggested_type: suggested Ghidra data type
+    """
+    result = {
+        'type': 'unknown',
+        'description': '',
+        'pointer_count': 0,
+        'string_fragments': [],
+        'suggested_type': None,
+        'zero_percent': 0,
+    }
+    
+    if not analyze_content or not BINARY_PATH.exists():
+        return result
+    
+    # Read from binary
+    rom_offset = vram_to_rom(start_addr)
+    if rom_offset < 0:
+        return result
+    
+    try:
+        with open(BINARY_PATH, 'rb') as f:
+            f.seek(rom_offset)
+            data = f.read(min(size, 1024))  # Read up to 1KB for analysis
+    except Exception:
+        return result
+    
+    if not data:
+        return result
+    
+    # Count zeros
+    zero_count = data.count(b'\x00')
+    result['zero_percent'] = (zero_count * 100) // len(data)
+    
+    # Check for pointers (0x80xxxxxx pattern)
+    pointer_count = 0
+    pointer_targets = []
+    for i in range(0, len(data) - 3, 4):
+        word = struct.unpack('<I', data[i:i+4])[0]
+        if 0x80010000 <= word <= 0x80200000:
+            pointer_count += 1
+            pointer_targets.append(word)
+    result['pointer_count'] = pointer_count
+    
+    # Check for ASCII strings
+    string_fragments = []
+    current_string = b''
+    for byte in data:
+        if 0x20 <= byte <= 0x7E:  # Printable ASCII
+            current_string += bytes([byte])
+        else:
+            if len(current_string) >= 4:
+                try:
+                    string_fragments.append(current_string.decode('ascii'))
+                except:
+                    pass
+            current_string = b''
+    if len(current_string) >= 4:
+        try:
+            string_fragments.append(current_string.decode('ascii'))
+        except:
+            pass
+    result['string_fragments'] = string_fragments[:5]  # Keep first 5
+    
+    # Check for MIPS code patterns (common opcodes)
+    code_like = 0
+    for i in range(0, len(data) - 3, 4):
+        word = struct.unpack('<I', data[i:i+4])[0]
+        opcode = (word >> 26) & 0x3F
+        # Common MIPS opcodes: addiu(9), lw(35), sw(43), lui(15), ori(13), beq(4), bne(5), jal(3), jr(0+8)
+        if opcode in [9, 35, 43, 15, 13, 4, 5, 3, 0]:
+            code_like += 1
+    
+    # Determine type
+    total_words = len(data) // 4
+    
+    if result['zero_percent'] > 90:
+        result['type'] = 'zeros'
+        result['description'] = 'Mostly zeros (BSS or padding)'
+        result['suggested_type'] = f'undefined[0x{size:X}]'
+    elif pointer_count > total_words * 0.3:
+        result['type'] = 'pointers'
+        # Check if it's a regular pattern (vtable-like)
+        if pointer_count >= 4 and len(set(pointer_targets[:8])) > 1:
+            result['description'] = f'Pointer table ({pointer_count} ptrs)'
+            result['suggested_type'] = f'pointer[{size // 4}]'
+        else:
+            result['description'] = f'Contains {pointer_count} pointers'
+            result['suggested_type'] = f'pointer[{size // 4}]'
+    elif string_fragments:
+        result['type'] = 'strings'
+        preview = string_fragments[0][:30]
+        result['description'] = f'String data: "{preview}..."'
+        result['suggested_type'] = 'char[]'
+    elif code_like > total_words * 0.4:
+        result['type'] = 'code'
+        result['description'] = 'Likely code (undefined function?)'
+        result['suggested_type'] = 'function'
+    else:
+        result['type'] = 'mixed'
+        result['description'] = f'Mixed data ({result["zero_percent"]}% zeros, {pointer_count} ptrs)'
+        result['suggested_type'] = f'undefined[0x{size:X}]'
+    
+    return result
 
 def ghidra_request(endpoint: str) -> dict:
     """Make request to Ghidra MCP server."""
@@ -352,7 +468,8 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
                                include_data: bool = True,
                                fast_mode: bool = False,
                                include_unnamed_funcs: bool = False,
-                               include_unnamed_data: bool = False) -> str:
+                               include_unnamed_data: bool = False,
+                               analyze_gaps: bool = False) -> str:
     """
     Export symbols from Ghidra to symbol_addrs.txt format.
     
@@ -367,6 +484,7 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
         fast_mode: Skip fetching individual function sizes (much faster)
         include_unnamed_funcs: Include FUN_* auto-named functions
         include_unnamed_data: Include DAT_*, null_*, etc. auto-named data
+        analyze_gaps: Analyze gap contents from binary (slower but informative)
         
     Returns:
         String in symbol_addrs.txt format
@@ -495,7 +613,29 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
                 
                 # Get size from data type
                 size = 0
-                if data_type in type_sizes:
+                
+                # Check for array types like "pointer[144]" or "SpriteTypeCallbackEntry[481]"
+                array_match = re.match(r'(.+)\[(\d+)\]$', data_type)
+                if array_match:
+                    base_type = array_match.group(1)
+                    array_count = int(array_match.group(2))
+                    # Determine element size
+                    if base_type in type_sizes:
+                        elem_size = type_sizes[base_type]
+                    elif base_type.endswith("*") or base_type == "pointer" or base_type == "addr":
+                        elem_size = 4
+                    else:
+                        # Query Ghidra for struct size
+                        elem_size = 4  # Default
+                        try:
+                            struct_resp = urlopen(f"{GHIDRA_URL}/structs?name={base_type}", timeout=5)
+                            struct_data = json.loads(struct_resp.read().decode())
+                            if struct_data.get("success") and struct_data.get("result"):
+                                elem_size = struct_data["result"].get("size", 4)
+                        except:
+                            pass  # Use default
+                    size = elem_size * array_count
+                elif data_type in type_sizes:
                     size = type_sizes[data_type]
                 elif data_type.endswith("*") or data_type.startswith("pointer"):
                     size = 4  # All pointers are 4 bytes on PSX
@@ -512,6 +652,7 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
                     'size': size,
                     'ignore': ignore,
                     'kind': 'data',
+                    'data_type': data_type,
                 })
     
     # ==================== SORT ALL SYMBOLS BY ADDRESS ====================
@@ -535,6 +676,8 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
     # Track continuity
     expected_next_addr = None
     prev_symbol_name = None
+    prev_symbol_size = 0
+    prev_symbol_type = None
     gap_count = 0
     overlap_count = 0
     func_count = 0
@@ -553,7 +696,23 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
         if is_game_ram and expected_next_addr is not None and size > 0:
             if addr > expected_next_addr:
                 gap = addr - expected_next_addr
-                lines.append(f"// GAP: 0x{gap:X} bytes after {prev_symbol_name}")
+                gap_start = expected_next_addr
+                
+                if analyze_gaps and gap >= 0x10:  # Only analyze gaps >= 16 bytes
+                    analysis = analyze_gap(gap_start, gap)
+                    lines.append(f"// GAP: 0x{gap:X} bytes @ 0x{gap_start:08X} after {prev_symbol_name}")
+                    lines.append(f"//      Type: {analysis['type']} - {analysis['description']}")
+                    if analysis['suggested_type']:
+                        lines.append(f"//      Suggested: {analysis['suggested_type']}")
+                    # Check if previous symbol was a single pointer and gap is pointers
+                    # This suggests they should be merged into one array
+                    if (analysis['type'] == 'pointers' and 
+                        prev_symbol_size == 4 and 
+                        prev_symbol_type in ('pointer', 'addr', 'dword')):
+                        total_count = (gap + 4) // 4
+                        lines.append(f"//      HINT: Consider merging with {prev_symbol_name} as addr[{total_count}] at 0x{expected_next_addr - 4:08X}")
+                else:
+                    lines.append(f"// GAP: 0x{gap:X} bytes after {prev_symbol_name}")
                 gap_count += 1
             elif addr < expected_next_addr:
                 overlap = expected_next_addr - addr
@@ -579,6 +738,8 @@ def export_symbols_from_ghidra(name_filter: Optional[str] = None,
         if is_game_ram and size > 0:
             expected_next_addr = addr + size
             prev_symbol_name = name
+            prev_symbol_size = size
+            prev_symbol_type = entry.get('data_type', '')
         
         if kind == 'func':
             func_count += 1
@@ -894,6 +1055,8 @@ def main():
                         help="Include FUN_* auto-named functions in --export-symbols")
     parser.add_argument("--include-unnamed-data", action="store_true",
                         help="Include DAT_*, null_*, etc. auto-named data in --export-symbols")
+    parser.add_argument("--analyze-gaps", action="store_true",
+                        help="Analyze gap content (reads binary to detect pointers, strings, code)")
     
     args = parser.parse_args()
     
@@ -916,7 +1079,8 @@ def main():
             include_data=not args.no_data,
             fast_mode=args.fast,
             include_unnamed_funcs=args.include_unnamed_funcs,
-            include_unnamed_data=args.include_unnamed_data
+            include_unnamed_data=args.include_unnamed_data,
+            analyze_gaps=args.analyze_gaps
         )
         print(code)
         return
