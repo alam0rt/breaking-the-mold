@@ -11,7 +11,7 @@
 The BLB format contains several fields that are **written but never read** at runtime. These are vestigial fields from development that remain in the final format.
 
 **Vestigial Fields**: 3 confirmed  
-**Mystery Fields**: 1 (Asset 700 - possibly unused)  
+**Mystery Fields**: 0 (Asset 700 resolved as demo replay data)  
 **Impact on Implementation**: NONE (safe to ignore)
 
 ---
@@ -90,54 +90,79 @@ int tile_y = (pixel_y >> 4) - ctx[0x6e];  // offset_y
 
 ---
 
-## 3. Asset 700 - Mystery SPU Data ⚠️ POSSIBLY UNUSED
+## 3. Asset 700 - Demo Replay Data ✅ RESOLVED (2026-01-19)
 
 **Location**: ctx[21-22] in LevelDataContext  
 **Asset Type**: 0x2BC (700)  
-**Appears In**: 9 of 26 levels
+**Appears In**: 9 of 26 levels  
+**Purpose**: **Demo/attract mode input replay data**
 
-### Levels with Asset 700
+### ⚠️ Previous Documentation Was WRONG
 
-| Level | Stages | Entry ID | Size | Entries |
-|-------|--------|----------|------|---------|
-| MENU | All | 0x50412804 | 480 | 116 |
-| SCIE | Various | 0x1847C001 | 284 | 67 |
-| TMPL | Various | 0x5024100C | 304 | 72 |
-| BOIL | Various | 0x50412804 | 480 | 116 |
-| FOOD | Various | 0x10031015 | 316 | 75 |
-| BRG1 | Various | 0x72000210 | 340 | 81 |
-| GLID | Various | 0x0101820A | 192 | 44 |
-| CAVE | Various | 0x10050221 | 208 | 48 |
-| WEED | Various | 0x31190002 | 344 | 82 |
+This asset was incorrectly identified as "unused SPU audio data". It is actually the **demo input replay buffer** used by the attract mode system.
 
-**17 levels DON'T have Asset 700** - Works fine without it
+**Evidence**:
+- `GetDemoDataPtr` @ 0x8007BAC8 returns `ctx[0x54] + 0x10` (Asset 700 + header)
+- `SetupAndStartLevel` @ 0x8007D8A0 passes this to `EnableDemoPlaybackMode`
+- Data format matches `UpdateInputState` playback structure exactly
 
-### Structure
+### Levels with Demo Data (Asset 700)
+
+| Level | Size | Entries | Duration | Notes |
+|-------|------|---------|----------|-------|
+| MENU | 480 | 120 | ~51s | Title screen demo |
+| SCIE | 284 | 71 | ~26s | Science level demo |
+| TMPL | 304 | 76 | ~30s | Temple level demo |
+| BOIL | 480 | 120 | ~51s | Boiler level demo |
+| FOOD | 316 | 75 | ~varies | Food level demo |
+| BRG1 | 340 | 81 | ~varies | Bridge level demo |
+| GLID | 192 | 44 | ~varies | Glide level demo |
+| CAVE | 208 | 48 | ~varies | Cave level demo |
+| WEED | 344 | 82 | ~varies | Weed level demo |
+
+**17 levels DON'T have Asset 700** - These cannot be used as demo levels.
+
+### Correct Structure
 
 ```c
-struct Asset700 {
-    u32 entry_count;    // Always 1
-    u32 reserved;       // Always 0
-    u32 entry_id;       // Varies (not ASCII)
-    u32 data_size;      // Size in bytes
-    u32 data_offset;    // Always 16
-    // Followed by 4-byte entries
+struct Asset700_Header {
+    u32 entry_count;      // Always 1 (number of sub-TOC entries)
+    u32 entry_id;         // Varies per level
+    u32 data_size;        // Size of replay data in bytes
+    u32 data_offset;      // Always 16 (start of replay entries)
 };
 
-struct Asset700Entry {
-    u8 command;         // 0x80, 0xC0 common (SPU-like)
-    u8 flags;           // 0 or 0x20
-    u8 param;           // Various
-    u8 reserved;        // Usually 0, sometimes 0xFF
+struct DemoReplayEntry {
+    u16 buttons;          // PSX controller button bitmask
+    u16 duration;         // Frames to hold this button state (RLE)
 };
 ```
 
-### Analysis
+### Why It Looked Like "SPU Data"
 
-**Command Bytes**: 0x80, 0xC0 resemble SPU control codes  
-**Problem**: Contains invalid ADPCM filter values (filter=15, valid is 0-4)  
-**Loading**: Referenced at ctx[21-22] in LoadAssetContainer (line 38933)  
-**Runtime**: **NO consumer found** - ctx[21] never accessed after loading
+The button values (0x80, 0xC0, 0x2080, 0x20C0, etc.) were misinterpreted as SPU control codes. They are actually PSX button bitmasks:
+- `0x0080` = Left button
+- `0x00C0` = Left + Down  
+- `0x2080` = Left + Circle (jump)
+- `0x20C0` = Left + Down + Circle
+
+### Runtime Consumer
+
+**Found**: `GetDemoDataPtr` @ 0x8007BAC8
+```c
+int GetDemoDataPtr(int ctx) {
+    if (ctx[0x54] == 0) return 0;
+    return ctx[0x54] + 0x10;  // Skip 16-byte header
+}
+```
+
+Called from `SetupAndStartLevel` when `gameState->field_0x152 != 0` (demo mode flag).
+
+### See Also
+
+- [Demo/Attract Mode System](../systems/demo-attract-mode.md) - Complete documentation
+- [Input System](../systems/input-system-complete.md) - Playback mechanism
+````
 
 ### Hypotheses
 
@@ -230,14 +255,14 @@ struct Asset700Entry {
 
 **Action**: Mark as "Usually 0, used for collision map alignment"
 
-### Mystery (Mark as Likely Unused)
+### ✅ Asset 700 - RESOLVED (Not Mystery)
 
-⚠️ **Asset 700**:
-- No runtime consumer found
-- Invalid data format
-- 17/26 levels don't have it
+**RESOLVED 2026-01-19**: Asset 700 is **demo/attract mode input replay data**!
+- Accessed via `GetDemoDataPtr` @ 0x8007BAC8 (returns ctx[0x54] + 0x10)
+- 9 levels have demo recordings: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
+- RLE format: 4-byte entries (buttons u16, duration u16)
 
-**Action**: Mark as "Legacy/unused audio data (no runtime consumer)"
+**Action**: See `docs/systems/demo-attract-mode.md` for complete documentation
 
 ### Minor Gaps (Document Mode Meanings)
 
@@ -261,10 +286,10 @@ struct Asset700Entry {
 **Current**: "⚠️ VESTIGIAL (usually 0)"  
 **New**: "✅ FUNCTIONAL - Used for collision map alignment. Usually 0 (69/98 stages). Non-zero values shift collision detection coordinates."
 
-### 3. Update Asset 700 Documentation
+### 3. ✅ Asset 700 Documentation - COMPLETED
 
-**Current**: "⚠️ POSSIBLY UNUSED"  
-**New**: "✅ CONFIRMED UNUSED - No runtime consumer (ctx[21] never accessed). Legacy SPU data from development. Safe to skip during loading."
+**Previous**: "⚠️ POSSIBLY UNUSED"  
+**Resolved**: "✅ DEMO REPLAY DATA - Accessed via GetDemoDataPtr for attract mode playback. RLE-encoded input replay (buttons u16, duration u16). See docs/systems/demo-attract-mode.md"
 
 ### 4. Document Header Modes
 
@@ -280,7 +305,7 @@ struct Asset700Entry {
 - Functional fields: Documented with purpose
 - Vestigial fields: Confirmed and marked
 - Unused fields: Confirmed and marked
-- Mystery resolved: Asset 700 unused
+- ✅ Asset 700 resolved: Demo replay data (not unused!)
 
 ---
 

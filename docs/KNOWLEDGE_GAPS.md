@@ -113,13 +113,18 @@ Items here have been verified as "unknown" after checking existing documentation
 - How animated palettes interact with entity rendering
 - Performance impact of palette cycling
 
-### 9. Demo/Attract Mode Recording Format
+### 9. Demo/Attract Mode Recording Format - ✅ RESOLVED (2026-01-19)
 **Location**: `docs/systems/demo-attract-mode.md`  
-**Known**: Demo playback exists, stored in BLB  
-**Unknown**:
-- Input recording format (if demos can be created)
-- Frame-by-frame input replay structure
-- How demo selection works on timeout
+**Status**: Fully documented
+
+**Resolved**:
+- ✅ Input recording format: RLE-encoded (buttons u16, duration u16) in Asset 700
+- ✅ Frame-by-frame replay via `UpdateInputState` @ 0x800259D4
+- ✅ Demo selection: `MenuTickCallback` uses idle timer (1801 frames = 30s)
+- ✅ Data location: Asset 700 in tertiary segment (stage0) of 9 levels
+- ✅ Header: 16 bytes (count, id, size, offset=16)
+
+**See**: `docs/systems/demo-attract-mode.md` for complete details
 
 ### 10. Multi-Layer Parallax Scrolling
 **Location**: `docs/systems/rendering-order.md`, `docs/systems/camera.md`  
@@ -148,6 +153,8 @@ These were gaps that have been resolved:
 | Menu system | 2026-01-17 | `systems/menu-system-complete.md` |
 | Password encoding algorithm | 2026-01-19 | `reference/data-section-map.md` |
 | Animation motion curves | 2026-01-19 | `reference/data-section-map.md` |
+| Demo/attract mode replay format | 2026-01-19 | `systems/demo-attract-mode.md` |
+| Asset 700 purpose | 2026-01-19 | `blb/vestigial-fields-complete.md` |
 
 ---
 

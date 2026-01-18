@@ -145,63 +145,56 @@ Searched all 26 levels, all stages, all layers for `unknown_2a` values.
 
 ---
 
-## 4. Asset 700 (0x2BC) - SPU Audio Header
+## 4. Asset 700 (0x2BC) - ✅ Demo Replay Data (RESOLVED)
 
-### Structure (from hexpat)
+**RESOLVED 2026-01-15**: Asset 700 is demo/attract mode input replay data!
+
+### Structure (16-byte header + RLE entries)
 ```c
-struct Asset700Header {
-    u32 entry_count;   // Always 1
-    u32 reserved;      // 0
-    u32 entry_id;      // Varies - NOT ASCII
-    u32 data_size;     // Size of data after header (NOT ADPCM)
+struct DemoReplayHeader {
+    u16 entry_count;   // Number of replay entries
+    u16 reserved;      // 0
+    u32 entry_id;      // Level identifier
+    u32 data_size;     // Size of replay data after header
     u32 data_offset;   // Offset to data (always 16)
+};
+
+struct DemoReplayEntry {
+    u16 buttons;       // PSX controller button bitmask
+    u16 duration;      // Frames to hold these buttons
 };
 ```
 
-### Levels with Asset 700
+### Levels with Asset 700 (Demo Recordings)
 
-| Level | entry_id | size | data entries |
-|-------|----------|------|--------------|
-| MENU (0) | 0x50412804 | 480 | 116 |
-| SCIE (2) | 0x1847C001 | 284 | 67 |
-| TMPL (3) | 0x5024100C | 304 | 72 |
-| BOIL (6) | 0x50412804 | 480 | 116 (same as MENU!) |
-| FOOD (8) | 0x10031015 | 316 | 75 |
-| BRG1 (10) | 0x72000210 | 340 | 81 |
-| GLID (11) | 0x0101820A | 192 | 44 |
-| CAVE (12) | 0x10050221 | 208 | 48 |
-| WEED (13) | 0x31190002 | 344 | 82 |
+| Level | entry_id | size | entries | ~duration |
+|-------|----------|------|---------|----------|
+| MENU (0) | 0x50412804 | 480 | 120 | ~51 sec |
+| SCIE (2) | 0x1847C001 | 284 | 70 | ~30 sec |
+| TMPL (3) | 0x5024100C | 304 | 75 | ~32 sec |
+| BOIL (6) | 0x50412804 | 480 | 119 | ~50 sec |
+| FOOD (8) | 0x10031015 | 316 | 78 | ~33 sec |
+| BRG1 (10) | 0x72000210 | 340 | 84 | ~37 sec |
+| GLID (11) | 0x0101820A | 192 | 47 | ~20 sec |
+| CAVE (12) | 0x10050221 | 208 | 51 | ~22 sec |
+| WEED (13) | 0x31190002 | 344 | 85 | ~37 sec |
 
-### Data Structure Analysis (2026-01-13)
+### Key Discovery: Button Bitmask Values
 
-Data after header is organized as **4-byte entries**:
-```
-+00: u8 command_byte    (128=0x80, 192=0xC0 common)
-+01: u8 flags           (0 or 32=0x20 bit)
-+02: u8 param           (various values 2-118)
-+03: u8 reserved        (usually 0, sometimes 255)
-```
+The values we mistook for "SPU commands" are actually PSX controller button states:
+- `0x0000` = No buttons (idle)
+- `0x0080` = Right (D-pad right)
+- `0x00C0` = Right + L1 (run right)
+- `0x2000` = X (jump)
+- `0x2080` = X + Right (jump right)
 
-Example from GLID (level_11):
-```
-Entry 0: [47, 0, 66, 255] - command=47, flags=0, param=66, reserved=255
-Entry 1: [128, 0, 118, 0] - command=128 (0x80), param=118
-Entry 2: [128, 32, 28, 0] - command=128, flags=32 (0x20 bit), param=28
-Entry 3: [192, 32, 27, 0] - command=192 (0xC0), flags=32, param=27
-```
+### Key Functions (Ghidra)
 
-The command bytes (0x80, 0xC0) resemble PSX SPU control codes.
+- `GetDemoDataPtr` @ 0x8007BAC8: Returns `ctx[0x54] + 0x10`
+- `EnableDemoPlaybackMode` @ 0x80025BC0: Sets demo mode flags
+- `UpdateInputState` @ 0x800259D4: Reads replay during demo
 
-### Purpose Hypothesis
-NOT ADPCM samples (unlike Asset 601). Likely:
-1. Sound event trigger sequences
-2. SPU channel configuration commands
-3. Music/SFX playback schedules
-
-### Needs Further Analysis
-- Trace where ctx[21] (Asset 700 pointer) is used at runtime
-- Compare command bytes with PSX SPU documentation
-- Check if 0x80/0xC0 relate to voice on/off commands
+See `docs/systems/demo-attract-mode.md` for complete documentation.
 
 ---
 
@@ -316,7 +309,7 @@ Byte[1] = 0x11 (17)
 | Tile Header 0x20 | ⚠️ PARTIAL | Cumulative world index, needs consumer analysis |
 | Layer Entry 0x2A | ✅ CONFIRMED PADDING | All zeros, mark as padding |
 | TileAttributeHeader +0x00/+0x02 | ⚠️ PARTIAL | Two u16 values (0-21 range), purpose unknown |
-| Asset 700 data | ⚠️ PARTIAL | 4-byte entries, possibly SPU commands |
+| Asset 700 data | ✅ RESOLVED | Demo replay RLE entries (buttons u16, duration u16) |
 | Playback 0xF34 | ❓ LOW PRIORITY | Bytes [2, 17], possibly version + password count |
 
 ## Ghidra Fixes Completed (2026-01-13)

@@ -30,7 +30,7 @@ Asset IDs are decimal numbers stored as hex in the TOC:
 | 600 | 0x258 | Pri/Tert | CONTAINER | ctx[16-17] | Geometry/Sprites |
 | 601 | 0x259 | Pri/Sec | CONTAINER | ctx[18-19] | Audio samples |
 | 602 | 0x25A | Pri/Sec | RAW | ctx[20] +0x50 | Palette/Audio metadata |
-| 700 | 0x2BC | Tert | RAW | ctx[21-22] | SPU audio data |
+| 700 | 0x2BC | Tert | RAW | ctx[21-22] | Demo replay data |
 
 ---
 
@@ -257,23 +257,22 @@ See [Audio](../systems/audio.md) for details.
 0x02    u16    Pan (0=center)
 ```
 
-### Asset 700 - Legacy SPU Data ✅ CONFIRMED UNUSED
+### Asset 700 - Demo Replay Data ✅ RESOLVED (2026-01-19)
 
 Appears in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED.  
-**17 levels work fine without it** - Not required for gameplay.
+**17 levels don't have demos** - Only levels with Asset 700 can be used in attract mode.
 
 ```
 0x00    u32    Entry count (always 1)
-0x04    u32    Reserved (0)
-0x08    u32    Entry ID (varies, not ASCII)
-0x0C    u32    Data size
-0x10    u32    Data offset (always 16)
-0x14+   var    4-byte entries (command, flags, param, reserved)
+0x04    u32    Entry ID (varies per level)
+0x08    u32    Data size (bytes)
+0x0C    u32    Data offset (always 16)
+0x10+   4×N    Replay entries (buttons u16, duration u16)
 ```
 
-**Status**: ✅ **CONFIRMED UNUSED** - Loaded to ctx[21-22] but never accessed at runtime. Contains SPU-like commands (0x80, 0xC0) but with invalid ADPCM filter values. Legacy audio system from development, replaced by Asset 601/602. Safe to skip during BLB loading.
+**Status**: ✅ **RESOLVED** - This is the demo/attract mode input replay data, NOT audio. The "SPU-like" bytes (0x80, 0xC0) are PSX button bitmasks. Accessed via `GetDemoDataPtr` @ 0x8007BAC8 which returns `ctx[0x54] + 0x10`.
 
-**Analysis**: Complete investigation in [vestigial-fields-complete.md](vestigial-fields-complete.md)
+**See**: [Demo/Attract Mode System](../systems/demo-attract-mode.md) for complete documentation.
 
 ---
 

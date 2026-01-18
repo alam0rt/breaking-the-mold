@@ -102,7 +102,7 @@ void LoadAssetContainer(int *pLevelDataCtx, int subBlockIndex, char containerTyp
             case 0x258: ctx[16-17] = data+size; break; // Asset 600: Geometry
             case 0x259: ctx[18-19] = data+size; break; // Asset 601: Audio
             case 0x25A: ctx[20] = data; break; // Asset 602: Palette
-            case 0x2BC: ctx[21-22] = data+size; break; // Asset 700: SPUAudio
+            case 0x2BC: ctx[21-22] = data+size; break; // Asset 700: DemoReplay
         }
     }
 }

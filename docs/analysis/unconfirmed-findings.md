@@ -1537,10 +1537,10 @@ This section has been verified and fully documented. See:
    - Format: `u16 volume (0-0x3FFF), u16 pan (0 = center)`
    - Default if NULL: volume=0x3FFF, pan=0
 
-3. **Tertiary Asset 700**: ⚠️ See "Asset 700 Analysis" section above
-   - Header format similar to 601, but content is NOT ADPCM audio
-   - First u16 at data offset may be music/track ID (range 47-119)
-   - NOT passed to UploadAudioToSPU (uses different ctx offset)
+3. **Tertiary Asset 700**: ✅ RESOLVED - Demo replay data
+   - RLE-encoded input replay for attract mode demos
+   - Accessed via `GetDemoDataPtr` @ 0x8007BAC8 (returns ctx[0x54] + 0x10)
+   - See "Asset 700 Analysis" section above for complete format
 
 4. **Key functions verified in Ghidra:**
    - `UploadAudioToSPU` @ 0x8007c088

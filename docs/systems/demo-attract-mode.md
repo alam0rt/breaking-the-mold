@@ -284,14 +284,113 @@ Based on the playback sequence and demo mode values, the game cycles through spe
 
 ## Open Questions
 
-1. **Replay Data Location**: Where is the demo input replay data stored in the BLB? It's not in the level metadata or known asset types. Possibilities:
-   - Hardcoded in the executable
-   - Stored in an undocumented asset type
-   - Part of entity data (Asset 501)
+~~1. **Replay Data Location**: Where is the demo input replay data stored in the BLB?~~ **RESOLVED**
 
 2. **DEMO Sprite Spawning**: What entity type or function is responsible for spawning and positioning the DEMO sprite during playback?
 
 3. **Demo Level Selection**: Which specific levels are used for demos? The playback sequence data should reveal this.
+
+## Demo Replay Data Source - RESOLVED (2026-01-19)
+
+**The demo replay data is stored in Asset 700 (0x2BC) in the tertiary segment (stage0).**
+
+### Asset 700 = Demo Replay Data
+
+Previous documentation incorrectly identified Asset 700 as "unused SPU audio data". It is actually the **demo input replay buffer**.
+
+**Key Discovery**: `GetDemoDataPtr` @ 0x8007BAC8 returns `ctx[0x54] + 0x10`, which is the Asset 700 pointer + 16 bytes (skipping the header).
+
+### Asset 700 Format
+
+```c
+struct Asset700_Header {
+    u32 entry_count;      // Always 1 (refers to sub-entries, not replay entries)
+    u32 entry_id;         // Varies per level (e.g., 0x50412804)
+    u32 data_size;        // Size of replay data in bytes
+    u32 data_offset;      // Always 16 (offset to replay entries)
+};
+
+struct DemoReplayEntry {
+    u16 buttons;          // PSX controller button bitmask
+    u16 duration;         // Frames to hold this button state (RLE encoding)
+};
+```
+
+### PSX Button Bitmask
+
+| Bit | Value | Button |
+|-----|-------|--------|
+| 0 | 0x0001 | Select |
+| 3 | 0x0008 | Start |
+| 4 | 0x0010 | Up |
+| 5 | 0x0020 | Right |
+| 6 | 0x0040 | Down |
+| 7 | 0x0080 | Left |
+| 8 | 0x0100 | L2 |
+| 9 | 0x0200 | R2 |
+| 10 | 0x0400 | L1 |
+| 11 | 0x0800 | R1 |
+| 12 | 0x1000 | Triangle |
+| 13 | 0x2000 | Circle (Jump in Skullmonkeys) |
+| 14 | 0x4000 | Cross |
+| 15 | 0x8000 | Square |
+
+### Levels with Demo Data (Asset 700)
+
+| Level | Stage | Size | Entries | Duration |
+|-------|-------|------|---------|----------|
+| MENU | stage0 | 480 | 120 | ~51s |
+| SCIE | stage0 | 284 | 71 | ~26s |
+| TMPL | stage0 | 304 | 76 | ~30s |
+| BOIL | stage0 | 480 | 120 | ~51s |
+| FOOD | stage0 | 316 | 75 | ~varies |
+| BRG1 | stage0 | 340 | 81 | ~varies |
+| GLID | stage0 | 192 | 44 | ~varies |
+| CAVE | stage0 | 208 | 48 | ~varies |
+| WEED | stage0 | 344 | 82 | ~varies |
+
+**17 levels do NOT have Asset 700** - they cannot be used as demo levels.
+
+### Example Replay Data (MENU/stage0)
+
+```
+Entry   Buttons         Duration  Description
+-----   -------         --------  -----------
+[0]     0x0077          0         Metadata (not played)
+[1]     0x0000 (none)   35        Wait 35 frames
+[2]     0x0080 (Left)   77        Walk left for 77 frames
+[3]     0x2080 (L+○)    2         Jump while walking left
+[4]     0x20C0 (L+D+○)  13        Crouch-jump left
+...
+Total: 120 entries, 3072 frames (~51 seconds)
+```
+
+### Code Flow for Demo Playback
+
+1. **Idle Detection** (`MenuTickCallback` @ 0x80077940):
+   - Counts idle frames at MenuEntity+0x13A
+   - At 1801 frames (~30s), triggers demo mode
+
+2. **Demo Level Selection**:
+   - Reads from demo level array at MenuEntity+0x134
+   - Uses `g_DemoIndex` (0x800A6043) to rotate through demos
+   - Calls `SeekToLevelInSequence` to find demo level
+
+3. **Level Loading** (`SetupAndStartLevel` @ 0x8007D8A0):
+   - Checks `gameState->field_0x152` for demo mode
+   - Calls `GetDemoDataPtr(ctx)` → returns Asset 700 + 0x10
+   - Calls `InitEntityDataPointers(inputState, demoDataPtr)`
+   - Calls `EnableDemoPlaybackMode(inputState, 1)`
+
+4. **Input Replay** (`UpdateInputState` @ 0x800259D4):
+   - When playback_active flag set, reads from replay buffer
+   - Decrements duration counter each frame
+   - Advances to next entry when counter hits 0
+   - Exits demo if player presses any real button
+
+5. **Demo Sprite Display**:
+   - Spawns sprite ID 0x28C080DF at position (0xA0, 0x20)
+   - Z-order 30000 (always on top)
 
 ## See Also
 

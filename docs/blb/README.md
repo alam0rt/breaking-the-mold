@@ -102,7 +102,7 @@ All fields documented and categorized:
 - ✅ Functional fields: Complete with runtime usage
 - ✅ Vestigial fields: Confirmed unused (safe to ignore)
 - ✅ Rarely-used fields: Documented with usage patterns
-- ✅ Legacy data: Asset 700 confirmed unused
+- ✅ Asset 700: Demo replay data (previously misidentified as unused SPU audio)
 
 **See**: [vestigial-fields-complete.md](vestigial-fields-complete.md) for analysis of unused fields
 

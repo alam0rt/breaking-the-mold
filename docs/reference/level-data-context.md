@@ -31,8 +31,8 @@ struct LevelDataContext {
     /* 0x48 */ void*    audioSamples;         // Asset 601
     /* 0x4C */ u32      audioSamplesSize;     // Asset 601 size
     /* 0x50 */ void*    paletteData;          // Asset 602
-    /* 0x54 */ void*    spuAudioData;         // Asset 700
-    /* 0x58 */ u32      spuAudioDataSize;     // Asset 700 size
+    /* 0x54 */ void*    demoReplayData;       // Asset 700 (demo input replay)
+    /* 0x58 */ u32      demoReplayDataSize;   // Asset 700 size
     
     // Context State
     /* 0x5C */ void*    blbHeaderBuffer;      // → 0x800AE3E0
@@ -77,7 +77,7 @@ For code using `ctx[N]` notation:
 | [18] | 0x48 | 601 | Audio samples |
 | [19] | 0x4C | - | Audio size |
 | [20] | 0x50 | 602 | Palette data |
-| [21] | 0x54 | 700 | SPU audio |
+| [21] | 0x54 | 700 | Demo replay data |
 | [22] | 0x58 | - | SPU audio size |
 | [23] | 0x5C | - | Header buffer |
 | [24] | 0x60 | - | Playback index |

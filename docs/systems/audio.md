@@ -8,12 +8,12 @@ The game uses the PSX SPU (Sound Processing Unit) with ADPCM-encoded samples and
 ## Audio Asset Distribution
 
 | Segment | Asset | Contents |
-|---------|-------|----------|
+|---------|-------|---------|
 | Secondary | 601 (0x259) | Audio sample bank with TOC |
 | Secondary | 602 (0x25A) | Volume/pan table (per-sample) |
 | Primary | 601 (0x259) | Alternative audio source |
 | Primary | 602 (0x25A) | Alternative volume/pan |
-| Tertiary | 700 (0x2BC) | Additional SPU samples |
+| Tertiary | 700 (0x2BC) | **Demo replay data** (not audio) |
 
 ## Asset 601 - Audio Sample Bank
 
@@ -68,16 +68,18 @@ Offset  Size  Type   Description
 
 If Asset 602 is NULL, defaults are used: volume=0x3FFF, pan=0.
 
-## Asset 700 - Additional Audio
+## Asset 700 - Demo Replay Data (Not Audio)
+
+⚠️ **CORRECTION (2026-01-19)**: Asset 700 is NOT audio data. It contains **demo/attract mode input replay data**.
 
 Appears in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED.
 
-⚠️ **Note**: Asset 700 may not be standard ADPCM. Observed data has invalid filter values (filter=15, valid is 0-4).
+The "SPU-like" command bytes (0x80, 0xC0) were misidentified - they are actually PSX button bitmasks:
+- `0x0080` = Left button
+- `0x2080` = Left + Circle (jump)
+- `0x20C0` = Left + Down + Circle
 
-Possible uses:
-- Music track selection
-- Level-specific audio configuration
-- Unused/legacy data
+**See**: [Demo/Attract Mode System](demo-attract-mode.md) for complete format documentation.
 
 ## Audio Loading Flow
 
@@ -113,7 +115,7 @@ UploadAudioToSPU(audioSamples, volumePanTable, audioSize);
 | +0x48 | ctx[18] | Asset 601 ptr (secondary) |
 | +0x4C | ctx[19] | Asset 601 size |
 | +0x50 | ctx[20] | Asset 602 ptr |
-| +0x54 | ctx[21] | Asset 700 ptr |
+| +0x54 | ctx[21] | Asset 700 ptr (demo replay, not audio) |
 | +0x58 | ctx[22] | Asset 700 size |
 | +0x74 | ctx[29] | Asset 601 ptr (primary) |
 | +0x78 | ctx[30] | Asset 601 size (primary) |
