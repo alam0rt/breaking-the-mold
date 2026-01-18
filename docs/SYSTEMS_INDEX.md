@@ -10,10 +10,10 @@ This index provides quick navigation to all documentation organized by category.
 
 ## Quick Links
 
-- **[Gap Analysis](GAP_ANALYSIS_CURRENT.md)** - Current documentation status (~90% complete)
+- **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand (~85% complete)
 - **[BLB Format Overview](blb/README.md)** - Start here for file format
 - **[Decompilation Guide](decompilation-guide.md)** - How to add new functions
-- **[Implementation Status](../IMPLEMENTATION_STATUS.md)** - C library status
+- **[GameState Fields](systems/gamestate-field-analysis.md)** - GameState structure analysis
 
 ---
 

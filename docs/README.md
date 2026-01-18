@@ -6,6 +6,8 @@ This documentation covers the reverse engineering of **Skullmonkeys** (PAL SLES-
 
 - **[Decompilation Guide](decompilation-guide.md)** - How to add new functions to the decompilation
 - **[BLB File Format Overview](blb/README.md)** - Start here for understanding the game's data format
+- **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand
+- **[Systems Index](SYSTEMS_INDEX.md)** - Complete documentation index
 
 ## Documentation Structure
 
@@ -55,9 +57,15 @@ Ongoing research and unverified findings:
 
 | Document | Description |
 |----------|-------------|
-| [gap-analysis.md](analysis/gap-analysis.md) | **Documentation gap analysis and priorities** |
+| [gap-analysis.md](analysis/gap-analysis.md) | Documentation gap analysis (historical) |
 | [unconfirmed-findings.md](analysis/unconfirmed-findings.md) | Observations awaiting verification |
-| [password-screens.md](analysis/password-screens.md) | World completion password screens |
+
+### Project Status
+
+| Document | Description |
+|----------|-------------|
+| [KNOWLEDGE_GAPS.md](KNOWLEDGE_GAPS.md) | **Current gaps in understanding** |
+| [SYSTEMS_INDEX.md](SYSTEMS_INDEX.md) | Complete documentation index with status |
 
 ## Key Addresses (PAL SLES-01090)
 
@@ -87,11 +95,15 @@ Ongoing research and unverified findings:
 |----------|--------|
 | BLB header format | ✅ Fully verified |
 | Level metadata | ✅ Fully verified |
-| Asset types 100-400 | ✅ Fully verified |
-| Asset types 500-700 | ⚠️ Mostly verified |
+| Asset types 100-700 | ✅ Fully verified |
 | Sprite format | ✅ Fully verified |
-| Entity system | ⚠️ Partially verified |
-| Entity identification | ✅ Verified (2026-01-13) |
-| Tile collision | ⚠️ Partially documented |
-| Audio system | ✅ Verified |
-| Rendering order | ✅ Verified |
+| Entity system | ✅ Fully documented (121 types) |
+| Tile collision | ✅ Complete (collision-complete.md) |
+| Animation system | ✅ 5-layer framework documented |
+| Camera system | ✅ Smooth scrolling documented |
+| Audio system | ✅ SPU format verified |
+| GameState structure | ⚠️ ~75% fields documented |
+| Boss AI | ⚠️ ~40% depth documented |
+| Sound effect IDs | ⚠️ ~35% mapped |
+
+**Overall Coverage**: ~85% (see [KNOWLEDGE_GAPS.md](KNOWLEDGE_GAPS.md) for details)
