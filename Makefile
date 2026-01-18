@@ -458,6 +458,23 @@ endif
 watch: record
 	@echo "Note: 'make watch' is deprecated. Use 'make record' instead."
 
+# GameState Dumper - Dump raw GameState bytes for analysis
+# Usage: make dump-gamestate [LEVEL=1] [STAGE=0]
+dump-gamestate: check-lua
+	@echo "Starting PCSX-Redux with GameState dumper..."
+	@mkdir -p game_watcher/logs
+ifdef LEVEL
+	@echo "Boot override: Level $(LEVEL), Stage $(or $(STAGE),0)"
+	@cp scripts/gamestate_dumper.lua /tmp/gamestate_override.lua
+	@echo "" >> /tmp/gamestate_override.lua
+	@echo "-- Override applied via make dump-gamestate" >> /tmp/gamestate_override.lua
+	@echo "CONFIG.boot_level_override = {level=$(LEVEL), stage=$(or $(STAGE),0)}" >> /tmp/gamestate_override.lua
+	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile /tmp/gamestate_override.lua -run
+else
+	@echo "No level override (normal boot). Use: make dump-gamestate LEVEL=1 STAGE=0"
+	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile scripts/gamestate_dumper.lua -run
+endif
+
 # Quick RAM snapshot (requires web server enabled in PCSX-Redux)
 # Usage: make snapshot
 snapshot:

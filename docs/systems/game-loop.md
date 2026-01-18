@@ -2,6 +2,106 @@
 
 The main game loop, player entity dispatch system, and pause/cheat systems.
 
+## Asset Data Hierarchy (Primary/Secondary/Tertiary)
+
+**Verified via Ghidra 2026-01-XX - LoadAssetContainer @ 0x8007b074**
+
+Each level has THREE data segments loaded from the BLB file:
+
+### Data Segment Hierarchy
+
+| Segment | Scope | Per-Stage | Contains | LevelEntry Offsets |
+|---------|-------|-----------|----------|-------------------|
+| **Primary** | Entire Level | No | Collision, audio, shared tiles | 0x00-0x07 (sector_offset, sector_count, buffer_size) |
+| **Secondary** | Per-Stage | Yes | Stage-specific tiles, palettes | 0x1E-0x37 (sec_sector_off[6], sec_sector_cnt[6]) |
+| **Tertiary** | Per-Stage | Yes | Tilemaps, layers, entities, sprites | 0x3A-0x55 (tert_sector_off[6], tert_sector_cnt[6]) |
+
+### LoadAssetContainer() containerType Parameter
+
+The `containerType` parameter controls which offset table is used:
+
+```c
+// In LoadAssetContainer @ 0x8007b074:
+if (containerType == 0) {
+    // TERTIARY - Stage-specific assets
+    sectorOffset = LevelEntry[0x38 + stage * 2];  // tert_sector_off
+    sectorCount  = LevelEntry[0x46 + stage * 2];  // tert_sector_cnt
+} else {
+    // SECONDARY - Stage-specific tile data  
+    sectorOffset = LevelEntry[0x1c + stage * 2];  // sec_sector_off
+    sectorCount  = LevelEntry[0x2a + stage * 2];  // sec_sector_cnt
+}
+```
+
+### InitializeAndLoadLevel() Loading Sequence
+
+```c
+// @ 0x8007d1d0 - simplified
+void InitializeAndLoadLevel(GameState* state, u8 stage_index) {
+    LevelDataContext* ctx = &state->level_data_context;
+    
+    // 1. Load SECONDARY data (containerType=1) - Stage tiles
+    LoadAssetContainer(ctx, stage_index, 1);  // Uses sec_sector_off/cnt
+    UploadAudioToSPU(GetAsset601Ptr(ctx), ...);
+    
+    // 2. Calculate memory layout
+    u32 primary_size = GetPrimaryBufferSize(ctx);    // LevelEntry+0x04
+    u32 tertiary_size = GetCurrentTertiaryDataSize(ctx);  // tert_data_off[stage] << 5
+    
+    // 3. Initialize heap for remaining space
+    InitHeapConfig(..., primary_size - tertiary_size);
+    
+    // 4. Load tiles to VRAM
+    LoadTileDataToVRAM(state);
+    
+    // 5. Load TERTIARY data (containerType=0) - Stage tilemaps/entities
+    LoadAssetContainer(ctx, stage_index, 0);  // Uses tert_sector_off/cnt
+    
+    // 6. Initialize level state
+    InitPlayerSpawnPosition(state);
+    LoadEntitiesFromAsset501(state);
+    InitLayersAndTileState(state);
+}
+```
+
+### Asset Type → Context Index Mapping
+
+Both SECONDARY and TERTIARY segments contain TOC containers with these asset types:
+
+| Asset ID | Hex | Context Index | Name | Found In |
+|----------|-----|--------------|------|----------|
+| 100 | 0x64 | ctx[1] +0x04 | TileHeader | Secondary, Tertiary |
+| 101 | 0x65 | ctx[2] +0x08 | VRAMSlotConfig | Secondary |
+| 200 | 0xC8 | ctx[3] +0x0C | TilemapContainer | Tertiary |
+| 201 | 0xC9 | ctx[4] +0x10 | LayerEntries | Tertiary |
+| 300 | 0x12C | ctx[5] +0x14 | TilePixels | Secondary |
+| 301 | 0x12D | ctx[6] +0x18 | PaletteIndices | Secondary |
+| 302 | 0x12E | ctx[7] +0x1C | TileFlags | Secondary |
+| 303 | 0x12F | ctx[10] +0x28 | AnimatedTiles | Secondary |
+| 400 | 0x190 | ctx[8] +0x20 | PaletteContainer | Secondary |
+| 401 | 0x191 | ctx[9] +0x24 | PaletteAnim | Secondary |
+| 500 | 0x1F4 | ctx[11] +0x2C | TileAttributes | Tertiary |
+| 501 | 0x1F5 | ctx[14] +0x38 | Entities | Tertiary |
+| 502 | 0x1F6 | ctx[15] +0x3C | VRAMRects | Tertiary |
+| 503 | 0x1F7 | ctx[12] +0x30 | AnimOffsets | Tertiary |
+| 504 | 0x1F8 | ctx[13] +0x34 | VehicleData | Tertiary |
+| 600 | 0x258 | ctx[16-17] | Geometry+size | Tertiary |
+| 601 | 0x259 | ctx[18-19] | Audio+size | Both |
+| 602 | 0x25A | ctx[20] +0x50 | Palette/AudioMeta | Tertiary |
+| 700 | 0x2BC | ctx[21-22] | SPUAudio+size | Tertiary |
+
+### Summary: What's Shared vs Stage-Specific
+
+- **PRIMARY** (Level-wide): Buffer size, entry point offset - shared across all stages
+- **SECONDARY** (Per-stage): Tile graphics, palettes, tile flags - changes per stage
+- **TERTIARY** (Per-stage): Tilemaps, layers, entities, sprites, audio - unique to each stage
+
+**Hypothesis Confirmed**: The original hypothesis that "tertiary = stage-specific, secondary = world-specific" is **partially correct**. Both secondary and tertiary are per-stage, but:
+- Secondary contains the **visual assets** (tiles, palettes) that define the look
+- Tertiary contains the **gameplay assets** (entities, tilemaps, collision) that define the stage layout
+
+The "world-specific" sharing happens through **stage 0** - multiple levels in the same world can reference the same secondary data by using the same stage indices.
+
 ## Newly Discovered Systems
 
 This document was updated after tracing GameModeCallback and discovering:
