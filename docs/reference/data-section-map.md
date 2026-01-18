@@ -2,6 +2,9 @@
 
 This document maps the .data and .sdata sections of the PAL binary (SLES-01090).
 
+**Last Updated**: January 19, 2026  
+**Ghidra Plate Comments**: Key data areas have been annotated with plate comments for easier navigation.
+
 ## Overview
 
 | Section | Start | End | Size | Purpose |
@@ -9,6 +12,27 @@ This document maps the .data and .sdata sections of the PAL binary (SLES-01090).
 | .data | 0x8009B000 | 0x800A5950 | ~0xA950 (43KB) | Static data, tables, arrays |
 | .sdata | 0x800A5950 | 0x800A60C4 | ~0xB74 (2.9KB) | Small data (GP-relative) |
 | .rodata | 0x800A60C4 | ~0x800A6500 | ~0x440 | Read-only strings |
+
+## Key Data Areas (Ghidra Annotated)
+
+These addresses have plate comments in Ghidra for reference:
+
+| Address | Name | Size | Ghidra Comment |
+|---------|------|------|----------------|
+| 0x8009B074 | g_MenuLookupTables | ~300 | Menu background/anim/transition data |
+| 0x8009B3D8 | g_SectorTable | 100 | CD sector lookup table (sector offsets) |
+| 0x8009B4B4 | g_GameBLBFile | 40 | CdlFILE structure for GAME.BLB |
+| 0x8009B4DC | g_CollectibleSpriteTables | ~128 | Sprite arrays for pickups/items |
+| 0x8009BA48 | g_BossSpriteTables | ~160 | Sprite arrays for 5 bosses |
+| 0x8009C174 | g_PlayerSpriteTable | 56 | Player state → sprite ID mapping |
+| 0x8009D5F8 | g_EntityTypeCallbackTable | 968 | 121 entity types × 8 bytes |
+| 0x8009D9C0 | g_TriggerZoneColorTable | 60 | RGB colors for 20 trigger zones |
+| 0x8009DAE0 | g_CheatPatternTable | 280 | Button sequences for cheats |
+| 0x8009DC40 | g_GameState | 416 | Main game state structure |
+| 0x800A5754 | g_pPlayerState | 4 | Pointer to 30-byte PlayerState |
+| 0x800A5960 | g_GameStatePtr | 4 | Pointer to active GameState |
+| 0x800A59F0 | g_GameBLBSector | 4 | BLB starting sector (0x146) |
+| 0x800AE3E0 | BLBHeaderBuffer | 0x1000 | Loaded BLB header at runtime |
 
 ## .data Section (0x8009B000 - 0x800A5950)
 

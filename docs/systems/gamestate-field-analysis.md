@@ -20,12 +20,24 @@ was traced through Ghidra decompilation to determine its purpose.
 **Source:** `InitGameState`, `SetupAndStartLevel`
 
 ### Layer Render System (0x08-0x1B)
+
+**UPDATED 2026-01-19**: Layer list heads fully documented from Ghidra struct.
+
 | Offset | Name | Type | Purpose |
 |--------|------|------|---------|
-| 0x08-0x14 | field_08-14 | int | Unknown - possibly layer-related |
+| 0x08 | layer_list_static | ptr | Static layer list head (AddLayerToRenderList_Static) |
+| 0x0C | layer_list_scrolling | ptr | Scrolling layer list head (AddLayerToRenderList_Scrolling) |
+| 0x10 | layer_list_parallax | ptr | Parallax layer list head (AddLayerToRenderList_Parallax) |
+| 0x14 | layer_list_standard | ptr | Standard layer list head (AddLayerToRenderList_Standard) |
 | 0x18 | layer_render_context_ptr | ptr | Layer render context with callback at +0x1C |
 
-**Source:** `main()` game loop uses `layer_render_context_ptr` to call render callbacks
+Each layer type has its own linked list for z-sorting with entities. During rendering,
+the game iterates these lists interleaved with the entity render list (0x20) based on
+z_order comparisons.
+
+**Source:** `ClearTickAndRenderLists` @ 0x80020C54, `main()` game loop
+
+**Verified in Ghidra**: 2026-01-19 - all 4 layer list fields confirmed
 
 ### Entity Lists (0x1C-0x33)
 | Offset | Name | Type | Purpose |
@@ -163,8 +175,25 @@ See `docs/systems/level-data-context.md` for details.
 
 **Source:** `InitGameState` - builds list from levels with flag=1 AND index≠0
 
-### Score Display (0x17C-0x18B)
-8 × 2-byte array for score digit display.
+### Cheat Code Input Buffer (0x17C-0x18C)
+
+**CORRECTED**: This is a cheat code circular buffer, NOT score display.
+
+| Offset | Name | Type | Purpose |
+|--------|------|------|---------|
+| 0x17C-0x18A | cheat_input_buffer | u16[8] | Last 8 button presses for cheat detection |
+| 0x18C | cheat_input_index | u8 | Circular buffer write index (0-7) |
+| 0x18D | player_readd_flag | u8 | Player re-add to render list (cheat 0x13) |
+| 0x18E | boss_player_type | u8 | Boss mode player type (0=KLOGG,1=BIRDHEAD,2=JOE_HEAD) |
+| 0x18F | debug_pause_enable | u8 | Debug frame-step enable (cheat 0x0F) |
+| 0x190 | debug_pause_active | u8 | Debug frame-step active state |
+
+**Source:** `CheckCheatCodeInput` @ 0x800820b4  
+**Verified in Ghidra**: Confirmed via decompilation 2026-01-19
+
+The buffer stores the last 8 button inputs. When the pause menu is open, each button press
+is written to `cheat_input_buffer[cheat_input_index++]`. The function then compares
+the circular buffer contents against 22 predefined cheat code sequences in `g_CheatCodeTable`.
 
 ### Background Colors (0x199-0x19B)
 | Offset | Name | Type | Purpose |

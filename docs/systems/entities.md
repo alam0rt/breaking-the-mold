@@ -7,11 +7,91 @@ Entities are game objects combining sprite graphics, behavior callbacks, and pos
 The entity system has three key aspects:
 1. **Entity data** - BLB Asset 501 stores placement (24-byte structures)
 2. **Entity behavior** - Hardcoded init functions with sprite IDs
-3. **Entity struct** - Runtime 0x44C byte structure
+3. **Entity struct hierarchy** - Three tiers of runtime structures
 
 **Critical**: Entity type → sprite ID mapping is **HARDCODED** in game code, not in BLB data.
 
 > **See Also**: [Entity Types Reference](../reference/entity-types.md) for full callback table (121 entries) and type mappings.
+
+## Entity Structure Hierarchy
+
+**Verified in Ghidra 2026-01-19** - Three-tier entity system:
+
+### BasicEntity (16 bytes)
+**Init**: `InitBasicEntityWithVtable` @ 0x8001543c  
+**Usage**: Simple UI helpers, overlays
+
+| Offset | Type | Name | Description |
+|--------|------|------|-------------|
+| 0x00 | s16 | screenX | Screen X position |
+| 0x02 | s16 | screenY | Screen Y position |
+| 0x04 | s16 | widthOrU | Width or VRAM U coord |
+| 0x06 | s16 | heightOrV | Height or VRAM V coord |
+| 0x08 | s16 | zOrder | Render z-order (lower = behind) |
+| 0x0A | u8 | active | Enable flag (1=active) |
+| 0x0B | u8 | pad | Padding |
+| 0x0C | ptr | vtable | Callback vtable (0x8001039c) |
+
+### MenuEntityBase (28 bytes)
+**Init**: `InitMenuEntityWithVtable` @ 0x80019748  
+**Usage**: Menu/UI elements, HUD components
+
+| Offset | Type | Name | Description |
+|--------|------|------|-------------|
+| 0x00 | s32 | tickMarker | FSM marker (0xFFFF0000 = direct call) |
+| 0x04 | ptr | tickCallback | Per-frame update function |
+| 0x08 | s32 | eventMarker | Event callback marker |
+| 0x0C | ptr | eventCallback | Event handler function |
+| 0x10 | s16 | zOrder | Render z-order |
+| 0x12 | s16 | reserved | Unused |
+| 0x14 | u8 | active | Enable flag |
+| 0x15-0x17 | u8[3] | pad | Padding |
+| 0x18 | ptr | vtable | Callback vtable (0x800104ac) |
+
+### Entity (128 bytes)
+**Init**: `InitEntityStruct` @ 0x8001a0c8  
+**Usage**: Gameplay entities, enemies, items, player
+
+| Offset | Type | Name | Description |
+|--------|------|------|-------------|
+| 0x00 | s32 | tickMarker | State machine tick marker |
+| 0x04 | ptr | tickCallback | Per-frame update callback |
+| 0x08 | s32 | eventMarker | Event callback marker |
+| 0x0C | ptr | eventCallback | Event handler |
+| 0x10 | s16 | allocSize | Total allocation size |
+| 0x12 | s16 | collisionMask | Collision layer mask |
+| 0x14 | u8 | active | Active flag |
+| 0x18 | ptr | collisionVtable | Collision handler vtable |
+| 0x1C | s32 | renderMarker | Render callback marker |
+| 0x20 | ptr | renderCallback | Render function |
+| 0x24-0x33 | - | movement | Movement markers and offsets |
+| 0x34 | ptr | spriteContext | Sprite render context |
+| 0x38-0x3F | s16[4] | renderBox | Render offset X/Y, width/height |
+| 0x40-0x47 | s16[4] | hitbox | Hitbox offset X/Y, width/height |
+| 0x48-0x4F | s16[4] | screenBox | Screen bounds (calculated) |
+| 0x50-0x5F | s32[4] | scale | Render/powerup/parallax scales |
+| 0x68 | s16 | worldX | World X position |
+| 0x6A | s16 | worldY | World Y position |
+| 0x6C | s16 | velocityX | X velocity |
+| 0x6E | s16 | velocityY | Y velocity |
+| 0x70 | s16 | targetX | Target X for movement |
+| 0x72 | s16 | targetY | Target Y for movement |
+| 0x74 | u8 | facing | 0=left, 1=right |
+| 0x75 | u8 | flipY | Vertical flip |
+| 0x76 | u8 | textureDirty | Needs VRAM upload |
+| 0x77 | u8 | boundsValid | Screen bounds calculated |
+| 0x78 | ptr | moveCallbackY | Y movement callback |
+| 0x7C | ptr | moveCallbackX | X movement callback |
+
+### Extended Entities
+
+Player and HUD entities extend the 128-byte base:
+
+| Entity Type | Alloc Size | Extended Fields |
+|-------------|------------|-----------------|
+| Player | 0x3E8 (1000) | PlayerState at +0x80, animation at +0xA0+ |
+| HUD | 0x7530 (30000) | HUD data buffer, UI state |
+| Boss | ~0x200+ | Boss-specific state machines |
 
 ## Game Loop Integration
 
@@ -341,47 +421,35 @@ Common entity types observed in BLB data:
 
 For the complete list of 121 entity types with callback addresses, see [Entity Types Reference](../reference/entity-types.md).
 
-## Runtime Entity Structure (0x44C bytes)
+## Runtime Entity Structure
 
-Based on Ghidra decompilation:
+**Note**: This section documents the **OLD** understanding. See "Entity Structure Hierarchy"
+at the top of this document for the **VERIFIED** Ghidra struct definitions.
+
+The base Entity struct is **128 bytes** (0x80), not 0x44C. Extended entities allocate more:
+- Player: 0x3E8 bytes (1000)
+- HUD: 0x7530 bytes (30000)
+- Standard enemies: 0x100-0x200 bytes typically
+
+### Extended Entity Fields (Player, beyond +0x80)
+
+Fields beyond the 128-byte base are entity-type-specific:
 
 | Offset | Size | Field | Description |
 |--------|------|-------|-------------|
-| 0x00 | 4 | state_high | State machine upper word |
-| 0x04 | 4 | callback_main | Main update callback (EntityUpdateCallback) |
-| 0x08 | 2 | x_position | X position (for spatial sorting) |
-| 0x0A | 2 | y_position | Y position |
-| 0x0C | 4 | callback2 | Secondary callback |
-| 0x10 | 2 | z_order | Render depth (for z-sorting) |
-| 0x18 | 4 | vtable | Method pointer table |
-| 0x1C | 4 | z_list_head | Z-order sorted list head |
-| 0x20 | 4 | x_list_head | X-position sorted list head |
-| 0x34 | 4 | poly_ptr | Pointer to GPU primitive (POLY_*) |
-| 0x38-0x47 | 16 | bbox | Bounding box (copied from frame metadata) |
-| 0x68 | 2 | x_pos | X position (render) |
-| 0x6A | 2 | y_pos | Y position (render) |
-| 0x76 | 1 | sprite_dirty | Frame data needs update |
-| 0x77 | 1 | state_dirty | State needs processing |
-| 0x78 | 4 | sprite_data_ptr | Pointer to sprite frame data |
-| 0xA0 | 4 | state_param1 | State machine parameter 1 |
-| 0xA2 | 2 | state_index | Current state index |
-| 0xA4 | 4 | state_param2 | State machine parameter 2 |
-| 0xA8-0xAC | 8 | pending_state | Pending state transition |
-| 0xB4 | 4 | frame_x_scale | X scale (fixed-point) |
-| 0xB8 | 4 | frame_y_scale | Y scale (fixed-point) |
+| 0x80+ | ... | PlayerState | 30-byte PlayerState embedded |
+| 0xA0+ | ... | animation | Animation state machine |
+| 0xB4 | 4 | frame_x_scale | X scale (16.16 fixed-point) |
+| 0xB8 | 4 | frame_y_scale | Y scale (16.16 fixed-point) |
 | 0xDA | 2 | current_frame | Current animation frame index |
-| 0xDE | 2 | target_frame | Target animation frame index |
-| 0xE0 | 2 | pending_flags | Pending state change flags (bitmask) |
-| 0xE6 | 2 | frame_width | Current frame width |
-| 0xE8 | 2 | frame_height | Current frame height |
+| 0xDE | 2 | target_frame | Target animation frame |
+| 0xE0 | 2 | pending_flags | Pending state change flags |
 | 0xEC | 2 | frame_countdown | Animation frame timer |
-| 0xF0-0xF2 | 3 | rgb_current | Current RGB modulation |
-| 0xF3-0xF5 | 3 | rgb_pending | Pending RGB values |
+| 0xF0-0xF5 | 6 | rgb | Current/pending RGB modulation |
 | 0xF6 | 1 | visibility | Rendering flag |
-| 0xF7 | 1 | sprite_type | Sprite lookup type flag |
-| 0xF8 | 1 | frame_loaded | Frame data loaded flag |
-| 0xFE | 1 | scale_mode | Double-size flag |
-| 0x100+ | ... | Extended | Entity-specific data |
+| 0x1AF | 1 | cheat_effect_1 | Cheat code effect flag (from cheat 0x11) |
+| 0x1B0 | 1 | cheat_effect_2 | Cheat code effect flag (from cheat 0x14) |
+| 0x1B1 | 1 | cheat_effect_3 | Cheat code effect flag (from cheat 0x15) |
 
 ## Entity Lifecycle
 
@@ -389,10 +457,11 @@ Based on Ghidra decompilation:
 1. ALLOCATION
    AllocateFromHeap(blbHeaderBuffer, size, 1, 0) @ 0x800143f0
    └── Allocates from BLB buffer (16-byte aligned blocks)
+   └── Size varies: 0x80 (base), 0x3E8 (player), 0x7530 (HUD)
 
 2. INITIALIZATION
    InitEntityWithSprite(entity, sprite_id, z_order, x, y, flags) @ 0x8001c868
-   ├── InitEntityStruct(entity, 0x44C) @ 0x8001a0c8 - Zero/init struct
+   ├── InitEntityStruct(entity, size) @ 0x8001a0c8 - Zero/init 128-byte base
    ├── FUN_8007bbc0() - GPU/render state setup
    ├── FUN_8001954c() - Animation state init
    ├── FUN_8001c980() - Entity core setup
@@ -400,10 +469,9 @@ Based on Ghidra decompilation:
    └── FUN_8001d080() - Finalize setup
 
 3. CALLBACK ASSIGNMENT
-   entity[1] = EntityUpdateCallback;  // Default @ 0x8001cb88
-   entity[3] = secondary_callback;
-   entity[10] = collision_callback?
-   entity[12] = destroy_callback?
+   entity->tickCallback = EntityUpdateCallback;  // Default @ 0x8001cb88
+   entity->eventCallback = event_handler;
+   entity->renderCallback = render_func;
 
 4. REGISTRATION
    AddEntityToSortedRenderList(GameState, entity) @ 0x800213a8 - Z-order list
@@ -412,11 +480,17 @@ Based on Ghidra decompilation:
 
 5. TICK LOOP
    EntityTickLoop (0x80020e1c)
-   └── For each entity:
-       └── EntityUpdateCallback (entity[1])
+   └── For each entity in tick_list_head:
+       └── entity->tickCallback(entity)
            ├── TickEntityAnimation() @ 0x8001d290
            ├── ApplyPendingSpriteState() @ 0x8001d554
            └── UpdateSpriteFrameData() @ 0x8001d748
+
+6. DESTRUCTION
+   MarkEntityForDeferredRemoval @ 0x80020D74
+   └── Sets GameState+0x34 = entity, +0x38 = mode
+   DeferredEntityRemoval @ 0x80020B1C
+   └── Removes from all lists, calls destructor via vtable
 
 6. STATE TRANSITIONS
    EntitySetState(entity, param1, param2) @ 0x8001eaac

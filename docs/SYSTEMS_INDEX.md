@@ -1,8 +1,8 @@
 # Skullmonkeys Documentation Index
 
 **Project**: Evil Engine - Skullmonkeys Reverse Engineering  
-**Version**: 2.0  
-**Last Updated**: January 15, 2026
+**Version**: 2.1  
+**Last Updated**: January 19, 2026
 
 This index provides quick navigation to all documentation organized by category.
 
@@ -10,10 +10,20 @@ This index provides quick navigation to all documentation organized by category.
 
 ## Quick Links
 
-- **[Gap Analysis](GAP_ANALYSIS_CURRENT.md)** - Current documentation status (85% complete)
+- **[Gap Analysis](GAP_ANALYSIS_CURRENT.md)** - Current documentation status (~90% complete)
 - **[BLB Format Overview](blb/README.md)** - Start here for file format
 - **[Decompilation Guide](decompilation-guide.md)** - How to add new functions
 - **[Implementation Status](../IMPLEMENTATION_STATUS.md)** - C library status
+
+---
+
+## Architecture
+
+**Location**: [`architecture/`](architecture/)
+
+| Document | Description | Status |
+|----------|-------------|--------|
+| [memory-layout.md](architecture/memory-layout.md) | **Section organization, PSY-Q layout (NEW)** | ✅ Complete |
 
 ---
 
@@ -139,6 +149,8 @@ This index provides quick navigation to all documentation organized by category.
 | [level-data-context.md](reference/level-data-context.md) | LevelDataContext structure | ✅ Complete |
 | [game-functions.md](reference/game-functions.md) | Key function addresses | ✅ Complete |
 | [pal-jp-comparison.md](reference/pal-jp-comparison.md) | Regional version differences | ✅ Complete |
+| [source-structure.md](reference/source-structure.md) | **Compilation unit analysis (NEW)** | ✅ Complete |
+| [data-section-map.md](reference/data-section-map.md) | **Data section memory map (UPDATED)** | ✅ Complete |
 
 ---
 
@@ -246,9 +258,10 @@ Old documentation superseded by current system docs. Kept for historical referen
 
 | Category | Files | Avg Completion |
 |----------|-------|----------------|
+| **Architecture** | 1 | 100% |
 | **BLB Format** | 5 | 98% |
-| **Systems** | 28 | 85% |
-| **Reference** | 8 | 88% |
+| **Systems** | 28 | 90% |
+| **Reference** | 10 | 92% |
 | **Analysis** | 3 | 90% |
 | **Guides** | 3 | 100% |
 
@@ -256,15 +269,23 @@ Old documentation superseded by current system docs. Kept for historical referen
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| ✅ **Complete** (≥95%) | 35 | 73% |
-| ⚠️ **Partial** (50-94%) | 10 | 21% |
-| 📋 **Planned** (<50%) | 3 | 6% |
+| ✅ **Complete** (≥95%) | 40 | 80% |
+| ⚠️ **Partial** (50-94%) | 8 | 16% |
+| 📋 **Planned** (<50%) | 2 | 4% |
 
 ### Overall
 
-**Total Documentation Files**: 66 active + 12 archived = 78 total  
-**Overall Completion**: **90%**  
-**Total Lines**: ~32,000 lines of documentation
+**Total Documentation Files**: 68 active + 12 archived = 80 total  
+**Overall Completion**: **~92%**  
+**Total Lines**: ~35,000 lines of documentation
+
+### Recent Updates (January 2026)
+
+- **Architecture**: New `memory-layout.md` explaining PSY-Q section organization
+- **Reference**: New `source-structure.md` with compilation unit analysis
+- **Reference**: Updated `data-section-map.md` with Ghidra plate comment annotations
+- **Systems**: Fixed entity struct hierarchy (128-byte base, not 0x44C)
+- **Systems**: Corrected GameState cheat buffer (was mislabeled "Score Display")
 
 ---
 
@@ -357,7 +378,7 @@ When adding new documentation:
 
 ---
 
-**Last Updated**: January 15, 2026  
+**Last Updated**: January 19, 2026  
 **Maintained By**: Evil Engine Documentation Team  
-**Status**: ✅ **Documentation Consolidated** (Version 2.0)
+**Status**: ✅ **Documentation Consolidated** (Version 2.1)
 
