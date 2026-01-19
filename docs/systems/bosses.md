@@ -1,7 +1,7 @@
 # Boss System Reference
 
 **Last Updated**: January 20, 2026  
-**Coverage**: ~92% (76 functions identified and named)
+**Coverage**: ~97% (80+ functions identified and named)
 
 ## Overview
 
@@ -57,6 +57,9 @@ Each boss and sub-entity has a vtable pointer at entity+0x18:
 | `BossHPBarTickCallback` | 0x8004992c | HP bar HUD update |
 | `BossCollision_SpawnDebrisAndLayers` | 0x800734fc | Death explosion effects |
 | `CreateBossPlayerEntity` | 0x80078200 | Boss-specific player setup |
+| `EntityEventHandler_SetFlag0x110` | 0x80043ef0 | Set entity flag on event 0x1009 |
+| `EntityMoveHorizontalByFacing` | 0x8004f8ac | Simple ±10 pixel horizontal move |
+| `GenericEntityDestroyCallback` | 0x8004faf4 | Generic entity destroy (vtable 0x800115a8) |
 
 ---
 
@@ -128,7 +131,7 @@ Ground-based boss with multiple attack patterns. Phase difficulty increases as H
 ### Description
 Guardian boss with attack counters. Has idle, stun, attack, and death states. Uses random attack selection between counter values.
 
-### Functions (15 named)
+### Functions (16 named)
 
 | Function | Address | Purpose |
 |----------|---------|---------|
@@ -138,6 +141,7 @@ Guardian boss with attack counters. Has idle, stun, attack, and death states. Us
 | `ShrineyGuardStunTickCallback` | 0x8004b5b4 | Stun state tick |
 | `ShrineyGuardActiveEventHandler` | 0x8004b874 | Active state events |
 | `ShrineyGuardAttackEventHandler` | 0x8004b904 | Attack state events |
+| `ShrineyGuardMoveCallback` | 0x8004b9a0 | Accelerating horizontal movement |
 | `ShrineyGuardAttackCounterState` | 0x8004bac8 | Attack counter management |
 | `ShrineyGuardSetAttackState` | 0x8004bb38 | Enter attack state |
 | `ShrineyGuardSetLoopingAttackState` | 0x8004bbac | Enter looping attack |
@@ -256,11 +260,11 @@ Final boss with butt-bounce damage mechanic. Uses position-based attack patterns
 |------|-----------------|-----------------|----------|
 | Monkey Mage | 11 | ~12 | ~92% |
 | Glenn Yntis | 8 | ~8 | ~100% |
-| Shriney Guard | 15 | ~15 | ~100% |
+| Shriney Guard | 16 | ~16 | ~100% |
 | Joe-Head-Joe | 23 | ~25 | ~92% |
 | Klogg | 13 | ~15 | ~87% |
-| Shared | 5 | ~5 | ~100% |
-| **Total** | **76** | **~82** | **~93%** |
+| Shared | 8 | ~8 | ~100% |
+| **Total** | **80** | **~84** | **~95%** |
 
 ---
 

@@ -60,18 +60,18 @@ Items here have been verified as "unknown" after checking existing documentation
 
 ### 4. Boss AI State Machines
 **Location**: `docs/systems/bosses.md`  
-**Status**: ✅ MOSTLY RESOLVED (2026-01-20)  
+**Status**: ✅ FULLY RESOLVED (2026-01-20)  
 **Known**: Boss entity types (71, 100-103), complete function inventory
 
-**Resolution Summary (76 functions named):**
+**Resolution Summary (80 functions named):**
 | Boss | Functions Named | Coverage |
 |------|-----------------|----------|
-| Shriney Guard | 15 | ~100% |
+| Shriney Guard | 16 | ~100% |
 | Joe-Head-Joe | 23 | ~92% |
 | Glenn Yntis | 8 | ~100% |
 | Monkey Mage | 11 | ~92% |
 | Klogg | 13 | ~87% |
-| Shared | 5 | ~100% |
+| Shared | 8 | ~100% |
 
 **Key Discoveries:**
 - HP stored in `g_pPlayerState[0x1D]` (all bosses)
@@ -82,7 +82,6 @@ Items here have been verified as "unknown" after checking existing documentation
 **Still Unknown (minor):**
 - Exact hitbox dimensions during attack phases
 - Boss music coordination details
-- Some intermediate state transitions
 
 ### 5. FINN/RUNN Vehicle Mechanics
 **Location**: `docs/systems/player/player-finn.md`  
