@@ -90,7 +90,7 @@ FIELD_NAMES = {
     0x199: "bg_color_r",
     0x19A: "bg_color_g",
     0x19B: "bg_color_b",
-    0x19C: "scrolling_layer_active",
+    0x19C: "boss_defeated",
     0x19D: "tile_header_field_1a",
 }
 

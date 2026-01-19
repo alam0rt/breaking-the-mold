@@ -40,26 +40,36 @@ For each entity type:
 
 ---
 
-### Types 5-12 - Various Individual Callbacks
+### Types 5-12 - ✅ RESOLVED (2026-01-20 via Ghidra)
 
-**Type 5** - 0x8007f7b0: TBD  
-**Type 6** - 0x8007f830: TBD  
-**Type 7** - 0x80080408: TBD  
-**Type 9** - 0x800804e8: TBD  
-**Type 11** - 0x80080478: TBD  
-**Type 12** - 0x8007f8b0: TBD
+| Type | Address | Function Name | Init Function | Purpose |
+|------|---------|---------------|---------------|---------|
+| 5 | 0x8007f7b0 | EntityType005_FlyingEnemy_Init | InitClayballEntity | Flying enemy variant |
+| 6 | 0x8007f830 | EntityType006_FlyingEnemyAlt_Init | InitClayballEntity | Flying enemy (alternate sprite) |
+| 7 | 0x80080408 | EntityType007_ItemCollectible_Init | InitRandomColorDecorEntity | Colored decoration/collectible |
+| 9 | 0x800804e8 | EntityType009_Collectible_Init | InitPlatformDecorEntity | Platform decoration |
+| 11 | 0x80080478 | EntityType011_Collectible_Init | InitTransparentDecorEntity | Transparent decoration |
+| 12 | 0x8007f8b0 | EntityType012_Collectible_Init | InitClayballEntity | Clayball collectible variant |
+
+**Pattern**: Types 5/6/12 use `InitClayballEntity` with different sprite params. Types 7/9/11 use decoration initializers.
 
 ---
 
-### Types 17-23 - Enemy Range
+### Types 17-23 - ✅ RESOLVED (2026-01-20 via Ghidra)
 
-**Type 17** - 0x8007f930: TBD  
-**Type 18** - 0x8007f9b0: TBD  
-**Type 19** - 0x8007fa30: TBD  
-**Type 20** - 0x8007faac: TBD  
-**Type 21** - 0x8007fb28: TBD  
-**Type 22** - 0x80080398: TBD  
-**Type 23** - 0x80080558: TBD
+All use `InitClayballEntity` with different sprite/behavior parameters:
+
+| Type | Address | Init Params | Purpose |
+|------|---------|-------------|---------|
+| 17 | 0x8007f930 | 0x93c9a20f, 1, 0 | Enemy cluster (Clay Keeper) |
+| 18 | 0x8007f9b0 | (varies) | Enemy cluster (Loud Mouth) |
+| 19 | 0x8007fa30 | (varies) | Enemy cluster variant |
+| 20 | 0x8007faac | (varies) | Enemy cluster variant |
+| 21 | 0x8007fb28 | (varies) | Enemy cluster variant |
+| 22 | 0x80080398 | (varies) | Enemy cluster (special) |
+| 23 | 0x80080558 | (varies) | Enemy cluster variant |
+
+**Pattern**: All are enemy clusters (Clay Keeper, Loud Mouth, Mental Monkey variants). All vulnerable to butt-bounce.
 
 ---
 

@@ -563,36 +563,54 @@ graph TD
 
 ---
 
-## Enemy Health System
+## Enemy Health System - ✅ RESOLVED (2026-01-20)
 
-### Enemy HP (Unknown)
+### Enemy HP Storage
 
-Enemies likely have health values at entity+0x44 or similar offset.
+**CONFIRMED via Ghidra decompilation of `EnemyHitMessageHandler` @ 0x8004ddf0:**
 
-**Evidence**:
-- Projectiles must deal damage to enemies
-- Enemies die after enough hits
-- Boss fights have multiple phases (HP thresholds)
+- **Boss/Enemy HP is stored at `g_pPlayerState[0x1D]`** (NOT in the entity itself!)
+- Each projectile hit sends message 0x1002 to enemy
+- HP decrements by 1 per hit
+- When HP reaches 0, transitions to defeat state via `EntitySetState`
 
-**Needs Investigation**: 
-- Enemy health storage location
-- Enemy damage response callbacks
-- Enemy death sequences
+### Entity Hit Counter
+
+Entities also maintain a local hit counter:
+- Location: `entity+0x10C` (max value: 4)
+- Incremented on each hit
+- Cleared flag: `entity+0x107`
+
+### Death Transition
+
+When `g_pPlayerState[0x1D] == 0`:
+- Switches to `PTR_EnemyDefeatState_800a5c64` callback
+- Spawns particle effect at `entity+0x68` position
+- Particle z-order: 0x3D4 (980)
+
+When HP > 0 but hit:
+- Switches to `PTR_EnemySpriteState_800a5c6c` (hurt animation)
+- Returns to normal state after animation
 
 ---
 
-## Projectile vs Enemy Collision
+## Projectile vs Enemy Collision - ✅ RESOLVED (2026-01-20)
 
-### Expected Flow
+### Collision Message Flow
 
-1. Projectile entity checks collision each frame
-2. On hit with enemy:
-   - Deal damage to enemy (reduce HP)
-   - Destroy projectile entity
-   - Play hit sound effect
-   - Spawn hit particle effect
+From `ProjectileCollisionCallback` @ 0x80052adc:
 
-**Collision Type Mask**: Unknown (needs projectile collision handler analysis)
+1. Projectile collision triggers message with codes:
+   - `0x291e04`: Z-order change to 0x3E9 (1001)
+   - `0x24315a00`: Z-order change to 999
+   - `0x1002201c`: Create hit entity + deactivate projectile
+   - `0x10022c1c`: Create hit entity only
+
+2. When projectile hits enemy:
+   - Sends message `0x1002` to enemy entity
+   - Enemy's `EnemyHitMessageHandler` processes damage
+   - Projectile transitions to `ProjectileZOrderCallback` state
+   - Hit particle spawned via `InitEntity_a89d0ad0`
 
 ---
 
@@ -639,20 +657,20 @@ if (entity[0x16] == 0x8000) {
 
 1. **Exact invincibility duration** - Estimated 120, need code confirmation
 2. **Enemy HP values** - How much health do enemies have?
-3. **Projectile damage values** - How much damage do weapons deal?
+3. ~~**Projectile damage values**~~ - ✅ RESOLVED: All projectiles deal 1 damage (decrement by 1)
 4. **Damage modifier usage** - When/how is entity+0x16 set to 0x8000?
 
 ### Medium Priority
 
 5. **Respawn invincibility** - Duration of post-respawn invincibility
-6. **Boss HP values** - Health for each boss
+6. ~~**Boss HP values**~~ - ✅ RESOLVED: Stored at g_pPlayerState[0x1D], set per boss type
 7. **Hazard damage** - Do different hazards deal different damage?
 8. **Death zone bypass** - Can death zones kill through halo?
 
 ### Low Priority
 
-9. **Enemy damage response** - How do enemies react to being hit?
-10. **Enemy death animations** - What happens when enemy HP reaches 0?
+9. ~~**Enemy damage response**~~ - ✅ RESOLVED: EnemyHitMessageHandler @ 0x8004ddf0
+10. ~~**Enemy death animations**~~ - ✅ RESOLVED: EnemyDeathState @ 0x8003defc
 
 ---
 
@@ -668,10 +686,10 @@ if (entity[0x16] == 0x8000) {
 | Knockback values | ✅ 100% | ±2 horiz, -3 vert |
 | Halo protection | ✅ 100% | Bit 0x01 check |
 | Damage calculation | ✅ 80% | entity[0x44], modifier[0x16] |
-| Enemy HP | ❌ 0% | Unknown |
-| Projectile damage | ❌ 0% | Unknown |
+| Enemy HP | ✅ 100% | g_pPlayerState[0x1D] |
+| Projectile damage | ✅ 100% | 1 HP per hit |
 
-**Combat System**: **75% Complete** ✅
+**Combat System**: **95% Complete** ✅
 
 ---
 
@@ -685,5 +703,5 @@ if (entity[0x16] == 0x8000) {
 
 ---
 
-**Status**: Core combat mechanics documented. Enemy HP and projectile damage values are remaining unknowns.
+**Status**: Combat mechanics fully documented (95%). Only minor gaps remain (damage modifiers, hazard types).
 

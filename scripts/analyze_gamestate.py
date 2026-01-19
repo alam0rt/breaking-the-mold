@@ -43,9 +43,9 @@ FIELDS = [
     (0x5B, 1, "scroll_limit_bottom"),
     (0x5C, 2, "camera_subpixel_x"),
     (0x5E, 2, "camera_subpixel_y"),
-    (0x60, 1, "camera_y_lock"),
+    (0x60, 1, "bounce_active_flag"),
     (0x61, 1, "camera_mode_flags"),
-    (0x62, 1, "camera_invert_x"),
+    (0x62, 1, "camera_follow_direction"),
     (0x63, 1, "pause_freeze_flag"),
     (0x64, 2, "player_hitbox_width"),
     (0x66, 2, "player_hitbox_y_offset"),
@@ -131,8 +131,8 @@ FIELDS = [
     (0x199, 1, "bg_color_r"),
     (0x19A, 1, "bg_color_g"),
     (0x19B, 1, "bg_color_b"),
-    (0x19C, 1, "scrolling_layer_active"),
-    (0x19D, 1, "direct_stage_index"),
+    (0x19C, 1, "boss_defeated"),
+    (0x19D, 1, "boss_facing"),
     (0x19E, 2, "_pad_19E"),  # Verified padding (always 0)
 ]
 

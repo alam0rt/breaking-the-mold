@@ -101,7 +101,7 @@ z_order comparisons.
 |--------|------|------|---------|
 | 0x74 | level_context_field_3C | ptr | LevelDataContext+0x3C ptr |
 | 0x78 | tile_header_field_1C | s16 | TileHeader field 0x1C |
-| 0x7A | field_7A | s16 | Unknown |
+| 0x7A | (padding) | s16 | Alignment padding (4-byte boundary) |
 | 0x7C | entity_callback_table | ptr | Entity type callbacks (121 × 8 bytes) |
 | 0x80 | entity_type_count | int | 0x79 = 121 entity types |
 
@@ -115,7 +115,7 @@ See `docs/systems/level-data-context.md` for details.
 | Offset | Name | Type | Purpose |
 |--------|------|------|---------|
 | 0x104 | tile_render_state_count | u16 | Tile render state count (total tiles + 1) |
-| 0x106 | field_106 | u16 | Unknown |
+| 0x106 | (padding) | u16 | Alignment padding after tile_render_state_count |
 | 0x108 | tile_render_state_ptr | ptr | Tile render buffer (8 bytes per tile, allocated) |
 | 0x10C | frame_counter | int | Frame counter (incremented each tick, saved to 0x138 on checkpoint) |
 | 0x110 | palette_group_ptrs | ptr | Array of palette render context pointers |
@@ -124,7 +124,7 @@ See `docs/systems/level-data-context.md` for details.
 | 0x116 | spawn_x | s16 | Player spawn X position |
 | 0x118 | spawn_y | s16 | Player spawn Y position |
 | 0x11A | screen_shake_index | u8 | Screen shake countdown |
-| 0x11B | field_11B | u8 | Unknown |
+| 0x11B | screen_shake_active | u8 | Screen shake active flag (set with screen_shake_index) |
 | 0x11C | camera_scroll_speed | int | 0x8000/0xC000/0x10000 based on level flags |
 
 **Source:** `EntityTickLoopWithCamera` (0x10C, 0x11A), `SpawnPlayerAndEntities`, `LoadTileDataToVRAM` (0x104, 0x108, 0x110, 0x114)
@@ -213,9 +213,14 @@ the circular buffer contents against 22 predefined cheat code sequences in `g_Ch
 
 ## Remaining Unknown Fields
 
-Fields requiring further analysis:
-- 0x08-0x14: Possibly layer scroll accumulators or unused padding (not accessed in analyzed functions)
-- ~~0x3C-0x40~~: RESOLVED - `previous_spawn_list` (0x3C) and `blb_header_ptr` (0x40)
+**UPDATED 2026-01-20**: All major unknowns resolved via Ghidra analysis.
+
+| Offset | Previous | Resolved |
+|--------|----------|----------|
+| 0x7A | Unknown | Padding (4-byte alignment) |
+| 0x106 | Unknown | Padding after tile_render_state_count |
+| 0x11B | Unknown | screen_shake_active flag |
+| 0x3C-0x40 | Unknown | previous_spawn_list + blb_header_ptr |
 
 ## Key Discoveries
 

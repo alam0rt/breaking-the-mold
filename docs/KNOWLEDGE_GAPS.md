@@ -28,15 +28,15 @@ Items here have been verified as "unknown" after checking existing documentation
 - 0x150-0x160: pause/menu system
 - 0x17C-0x18C: cheat_input_buffer
 
-### 2. Unknown GameState Fields - MOSTLY RESOLVED
+### 2. Unknown GameState Fields - ✅ FULLY RESOLVED (2026-01-20)
 **Location**: `docs/systems/gamestate-field-analysis.md`
 
-| Offset Range | Status | Notes |
-|--------------|--------|-------|
+| Offset Range | Status | Resolution |
+|--------------|--------|------------|
 | ~~0x3C-0x43~~ | ✅ RESOLVED | `previous_spawn_list` (0x3C) + `blb_header_ptr` (0x40) |
-| 0x7A | ✅ RESOLVED | Padding to 4-byte alignment |
-| 0x106 | ✅ RESOLVED | Padding to 4-byte alignment |
-| 0x11B | Unknown | Near screen shake |
+| ~~0x7A~~ | ✅ RESOLVED | Alignment padding (4-byte boundary) |
+| ~~0x106~~ | ✅ RESOLVED | Alignment padding after tile_render_state_count |
+| ~~0x11B~~ | ✅ RESOLVED | screen_shake_active flag |
 | 0x127-0x129 | ✅ RESOLVED | Layer 1 tints (R/G/B) |
 | 0x130-0x133 | ✅ RESOLVED | bg_color_change_flag + pending RGB (double-buffer system) |
 | 0x191-0x198 | ✅ RESOLVED | Padding fields + _reserved_194/198 |
