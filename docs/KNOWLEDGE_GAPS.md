@@ -32,7 +32,7 @@ Items here have been verified as "unknown" after checking existing documentation
 
 | Offset Range | Status | Notes |
 |--------------|--------|-------|
-| 0x3C-0x43 | Unknown | Between deferred removal and camera |
+| ~~0x3C-0x43~~ | ✅ RESOLVED | `previous_spawn_list` (0x3C) + `blb_header_ptr` (0x40) |
 | 0x7A | Unknown | In level/layer state region |
 | 0x106 | Unknown | In render/frame state region |
 | 0x11B | Unknown | Near screen shake |
@@ -155,6 +155,12 @@ These were gaps that have been resolved:
 | Animation motion curves | 2026-01-19 | `reference/data-section-map.md` |
 | Demo/attract mode replay format | 2026-01-19 | `systems/demo-attract-mode.md` |
 | Asset 700 purpose | 2026-01-19 | `blb/vestigial-fields-complete.md` |
+| GameState 0x3C-0x43 | 2026-01-20 | `include/Game/game_state.h` (previous_spawn_list, blb_header_ptr) |
+| GameState 0x60 bounce_active_flag | 2026-01-20 | Boss AI tracing analysis |
+| GameState 0x62 camera_follow_direction | 2026-01-20 | Boss AI tracing analysis |
+| GameState 0x19C boss_defeated | 2026-01-20 | Boss AI tracing analysis |
+| GameState 0x19D boss_facing | 2026-01-20 | Boss AI tracing analysis |
+| 98 PlayerCallback functions | 2026-01-20 | Ghidra MCP renaming session |
 
 ---
 
@@ -183,11 +189,12 @@ These were gaps that have been resolved:
 
 | Category | Documented | Estimated Total | Coverage |
 |----------|------------|-----------------|----------|
-| GameState fields | 60+ | ~80 | ~75% |
+| GameState fields | 70+ | ~80 | ~88% |
 | Entity types | 121 | 121 | 100% |
 | Tile attributes | 100+ | ~128 | ~80% |
 | Sound effects | 35 | ~100 | ~35% |
 | Boss AI states | 5 bosses | 5 bosses | ~40% depth |
 | BLB assets | 16/16 | 16 | 100% |
+| PlayerCallback functions | 98 | 98 | 100% |
 
-**Overall Project Coverage**: ~85% (estimated based on function naming in Ghidra)
+**Overall Project Coverage**: ~90% (estimated based on function naming in Ghidra)

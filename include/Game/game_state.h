@@ -80,10 +80,10 @@ typedef struct {
     /* 0x5C */ u16  camera_subpixel_x;
     /* 0x5E */ u16  camera_subpixel_y;
     
-    /* Camera mode flags (0x60-0x63) */
-    /* 0x60 */ u8   camera_y_lock;
+    /* Player state flags (0x60-0x63) - Used by PlayerCallback functions */
+    /* 0x60 */ u8   bounce_active_flag;          /* Set to 1 during bounce/pickup, cleared on landing */
     /* 0x61 */ u8   camera_mode_flags;
-    /* 0x62 */ u8   camera_invert_x;
+    /* 0x62 */ u8   camera_follow_direction;     /* Set to player facing for camera tracking, cleared on knockback end */
     /* 0x63 */ u8   pause_freeze_flag;           /* Freezes spawning, also set by SaveCheckpointState */
     
     /* Player hitbox (0x64-0x67) */
@@ -204,9 +204,9 @@ typedef struct {
     /* 0x19A */ u8   bg_color_g;                 /* Background G component (default 0x40) */
     /* 0x19B */ u8   bg_color_b;                 /* Background B component (default 0x40) */
     
-    /* Scrolling layer (0x19C-0x19F) */
-    /* 0x19C */ u8   scrolling_layer_active;     /* Scrolling layer active (level flags bit 1) */
-    /* 0x19D */ u8   direct_stage_index;         /* Direct stage index for SetupAndStartLevel */
+    /* Boss defeat state (0x19C-0x19F) - Set by boss defeat callback @ 0x8004906c */
+    /* 0x19C */ u8   boss_defeated;              /* Set to 1 when boss HP reaches 0 */
+    /* 0x19D */ u8   boss_facing;                /* Boss facing direction for cutscene (from entity+0x50) */
     /* 0x19E */ u8   _pad_19E[2];                /* Padding to 0x1A0 total size */
 } GameState;  /* Size: 0x1A0 (416 bytes) */
 

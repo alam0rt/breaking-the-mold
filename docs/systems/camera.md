@@ -44,7 +44,7 @@ offset = GameState[0x12A];
 if (entity[0x74] == 1) {  // Facing left
     offset = -offset;
 }
-if (GameState[0x62] != 0) {  // Camera invert
+if (GameState[0x62] != 0) {  // Camera follow direction
     offset = -offset;
 }
 

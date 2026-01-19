@@ -388,7 +388,7 @@ State table at 0x800a5d20:
 - Tick callback: PlayerCallback_8005bbac (SPECIAL - not normal tick!)
 - Movement callback: PlayerCallback_80064b40 (or 80064008 if shrunk)
 - Next state: EntityInitCallback_80069600
-- Sets g_GameStatePtr[0x60] = 1 (pickup flag)
+- Sets g_GameStatePtr[0x60] = 1 (bounce_active_flag)
 - Sets velocity: 0x30000 (if bit match), else 0x20000, OR'd with 0x8000
 - **WARNING**: This state may cause segfaults on rapid pickups due to SetEntitySpriteId spam
 - Observed: Frame 521 (Klayman head?), 1183 (clayball), 1243 (crash)

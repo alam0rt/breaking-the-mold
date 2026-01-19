@@ -67,7 +67,7 @@ Offset  Size  Type    Description
 ```
 Offset  Size  Type    Description
 ------  ----  ----    -----------
-0x00    2     u16     Callback ID (triggers FUN_8001c4a4)
+0x00    2     u16     Callback ID (triggers PlayEntityPositionSound)
 0x02    2     u16     Reserved
 0x04    2     u16     Flip flags (non-zero = horizontal mirror)
 0x06    2     s16     Render X offset
@@ -168,36 +168,36 @@ Extracted from game code init functions:
 
 | Sprite ID | Function | Purpose |
 |-----------|----------|---------|
-| 0x21842018 | FUN_8001fcf0 | Player (Klaymen) |
-| 0xe4ac9451 | FUN_80078200 | HUD digits (×18) |
-| 0xec95689b | FUN_80078200 | HUD status |
-| 0xaa0da270 | FUN_80078200 | HUD secondary |
+| 0x21842018 | InitPlayerEntity | Player (Klaymen) |
+| 0xe4ac9451 | CreateBossPlayerEntity | HUD digits (×18) |
+| 0xec95689b | CreateBossPlayerEntity | HUD status |
+| 0xaa0da270 | CreateBossPlayerEntity | HUD secondary |
 
 ### Menu/UI
 
 | Sprite ID | Function | Purpose |
 |-----------|----------|---------|
-| 0xb8700ca1 | FUN_80076928 | Menu frame |
-| 0xe2f188 | FUN_800281a4 | Menu items (×12) |
-| 0xa9240484 | FUN_800281a4 | Buttons |
-| 0x88a28194 | FUN_800281a4 | Icons |
+| 0xb8700ca1 | InitMenuEntity | Menu frame |
+| 0xe2f188 | CreateMenuEntities | Menu items (×12) |
+| 0xa9240484 | CreateMenuEntities | Buttons |
+| 0x88a28194 | CreateMenuEntities | Icons |
 
 ### Entities
 
 | Sprite ID | Function | Purpose |
 |-----------|----------|---------|
-| 0x168254b5 | FUN_80034bb8 | Particles (z_order=959) |
-| 0x6a351094 | FUN_80037ae0 | Sparkle effect |
-| 0x1e1000b3 | FUN_8006dd98 | Enemy type 1 |
-| 0xc34aa22 | FUN_800549f0 | Flying collectible |
+| 0x168254b5 | InitEntity_168254b5 | Particles (z_order=959) |
+| 0x6a351094 | InitScalableTimerEntity | Sparkle effect |
+| 0x1e1000b3 | InitHUDAnimatedEntity | Enemy type 1 |
+| 0xc34aa22 | InitNegativeVelocityEntity | Flying collectible |
 
 ### Bosses
 
 | Sprite ID | Function | Purpose |
 |-----------|----------|---------|
-| 0x181c3854 | FUN_80047fb8 | Boss element 1 |
-| 0x8818a018 | FUN_80058310 | Boss element 2 (×6) |
-| 0x244655d | FUN_80047fb8 | Boss detail |
+| 0x181c3854 | InitMonkeyMageBoss | Boss element 1 |
+| 0x8818a018 | InitCircularPlatformEntity | Boss element 2 (×6) |
+| 0x244655d | InitMonkeyMageBoss | Boss detail |
 
 ## Entity-to-Sprite Mapping
 

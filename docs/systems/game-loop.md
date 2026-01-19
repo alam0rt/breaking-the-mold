@@ -612,7 +612,7 @@ int CreatePlayerEntity(void* buffer, void* inputController,
     entity[0x15f] = *(byte*)(g_GameStatePtr + 0x126);  // B
     
     // Set main update callback (player tick)
-    entity[1] = FUN_8005b414;  // Player tick callback
+    entity[1] = PlayerTickCallback;  // @ 0x8005b414
     
     // Set state machine from data tables based on facingLeft param
     int initialState = facingLeft ? DAT_800a5cc4 : DAT_800a5cc0;
@@ -621,7 +621,7 @@ int CreatePlayerEntity(void* buffer, void* inputController,
     // Create halo powerup effect if PlayerState[0x17] & 1
     if (g_pPlayerState[0x17] & 1) {
         void* haloBuffer = AllocateFromHeap(blbHeaderBufferBase, 0x68, 1, 0);
-        int haloEntity = FUN_800589e8(haloBuffer);  // Halo init
+        int haloEntity = InitHaloEntity(haloBuffer);  // @ 0x800589e8
         entity[0x168] = haloEntity;  // Store halo reference
         AddToXPositionList(g_GameStatePtr, haloEntity);
     }
@@ -673,7 +673,7 @@ Entity* InitMenuEntity(void* buffer, void* inputController,
     entity[1] = &MenuTickCallback;  // @ 0x80077940
     
     // Set background color from color table
-    FUN_800778ec(entity);  // Reads DAT_800a6042 * 3 for RGB
+    UpdateBackgroundColor(entity);  // @ 0x800778ec, reads DAT_800a6042 * 3 for RGB
     
     // Dispatch to stage-specific init based on current stage
     byte stage = GetCurrentStageIndex(g_GameStatePtr + 0x84);
@@ -724,12 +724,12 @@ Entity* InitMenuEntity(void* buffer, void* inputController,
 
 | Stage | Init Function | Purpose | Key Features |
 |-------|--------------|---------|--------------|
-| 1 | FUN_80076ba0 | Main Menu | Title, 4 menu buttons, Klaymen animation |
-| 2 | FUN_80077068 | Password Entry | 12-digit password input, cursor |
-| 3 | FUN_800771c4 | Options | Color picker, back button |
-| 4 | FUN_800773fc | Load Game | 3 save slots, back button |
+| 1 | InitMenuStage1 | Main Menu | Title, 4 menu buttons, Klaymen animation |
+| 2 | InitMenuStage2 | Password Entry | 12-digit password input, cursor |
+| 3 | InitMenuStage3 | Options | Color picker, back button |
+| 4 | InitMenuStage4 | Load Game | 3 save slots, back button |
 
-### Stage 1 - Main Menu (FUN_80076ba0)
+### Stage 1 - Main Menu (InitMenuStage1 @ 0x80076ba0)
 
 Creates the title screen with animated elements:
 
@@ -754,7 +754,7 @@ void InitMenuStage1(Entity* menuEntity) {
         byte type = DAT_8009cb10[i * 6];
         
         InitEntitySprite(alloc, 0x10094096, 1000, x, y, 0);
-        FUN_800754cc(entity);  // Attach cursor sprite
+        AttachMenuCursor(entity);  // Attach cursor sprite
         menuEntity[0x104 + menuEntity[0x4b]++] = entity;
     }
     
@@ -774,12 +774,12 @@ void InitMenuStage1(Entity* menuEntity) {
 | 0x10094096 | Menu button (reused for all buttons) |
 | 0x40b18011 | Bonus head animation (optional) |
 
-### Stage 2 - Password Entry (FUN_80077068)
+### Stage 2 - Password Entry (InitMenuStage2 @ 0x80077068)
 
 ```c
 void InitMenuStage2(Entity* menuEntity) {
     // Password display entity (0x144 bytes)
-    FUN_80075ff4(alloc, 0x24, 0x69, &DAT_8009cb00, &DAT_800a6041);
+    InitPasswordDisplayEntity(alloc, 0x24, 0x69, &DAT_8009cb00, &DAT_800a6041);
     // Creates 12 character slots using sprite 0xec95689b
     // Position highlight using sprite 0x3099991b
     
@@ -789,7 +789,7 @@ void InitMenuStage2(Entity* menuEntity) {
 }
 ```
 
-### Stage 3 - Options (FUN_800771c4)
+### Stage 3 - Options (InitMenuStage3 @ 0x800771c4)
 
 ```c
 void InitMenuStage3(Entity* menuEntity) {
@@ -804,7 +804,7 @@ void InitMenuStage3(Entity* menuEntity) {
 }
 ```
 
-### Stage 4 - Load Game (FUN_800773fc)
+### Stage 4 - Load Game (InitMenuStage4 @ 0x800773fc)
 
 ```c
 void InitMenuStage4(Entity* menuEntity) {
@@ -841,12 +841,12 @@ void MenuTickCallback(Entity* menuEntity) {
     // Check if any child items exist
     if (menuEntity[0x4b] == 0) return;
     
-    // Update current menu item (calls FUN_80077af0)
-    FUN_80077af0(menuEntity);
+    // Update current menu item (calls MenuInputHandler)
+    MenuInputHandler(menuEntity);
 }
 ```
 
-### Menu Input Handler (FUN_80077af0)
+### Menu Input Handler (MenuInputHandler @ 0x80077af0)
 
 Processes controller input for menu navigation:
 
@@ -900,7 +900,7 @@ void MenuInputHandler(Entity* menuEntity) {
 }
 ```
 
-### Menu Background Color (FUN_800778ec)
+### Menu Background Color (UpdateBackgroundColor @ 0x800778ec)
 
 Sets background color based on global color index:
 
@@ -915,7 +915,7 @@ void SetMenuBackgroundColor(void) {
 
 The color table at DAT_8009cbac contains multiple RGB presets that can be cycled in the options menu.
 
-### Menu Cursor Entity (FUN_800754cc)
+### Menu Cursor Entity (AttachMenuCursor @ 0x800754cc)
 
 Creates and attaches a cursor sprite to a menu button:
 

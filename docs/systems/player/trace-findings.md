@@ -46,7 +46,7 @@
 **Pickup Item** (0x80068B48)
 - Sprite: 0x1c3aa013
 - Uses special tick: PlayerCallback_8005bbac
-- Sets g_GameStatePtr[0x60] = 1
+- Sets g_GameStatePtr[0x60] = 1 (bounce_active_flag)
 - Frames: 521, 1183, 1243 (crashed)
 
 ## Velocity Data

@@ -76,9 +76,9 @@ z_order comparisons.
 | 0x5B | scroll_limit_bottom | u8 | Bottom scroll limit flag |
 | 0x5C | camera_subpixel_x | s16 | X sub-pixel accumulator |
 | 0x5E | camera_subpixel_y | s16 | Y sub-pixel accumulator |
-| 0x60 | camera_vertical_lock | u8 | Vertical lock flag |
+| 0x60 | bounce_active_flag | u8 | Bounce/pickup active flag (set during bounce animations) |
 | 0x61 | camera_mode_flags | u8 | Camera mode flags |
-| 0x62 | camera_invert_flag | u8 | Camera invert flag |
+| 0x62 | camera_follow_direction | u8 | Player facing for camera tracking (-1=left, 1=right) |
 | 0x63 | pause_freeze_flag | u8 | Pause/freeze flag (used by checkpoint) |
 | 0x64 | player_hitbox_width | s16 | Player hitbox width (0x28 normal) |
 | 0x66 | player_hitbox_y_offset | s16 | Player Y offset (0xFFD0 = -48) |
@@ -202,11 +202,20 @@ the circular buffer contents against 22 predefined cheat code sequences in `g_Ch
 | 0x19A | bg_color_g | u8 | Background G (default 0x40) |
 | 0x19B | bg_color_b | u8 | Background B (default 0x40) |
 
+### Boss State (0x19C-0x19D)
+| Offset | Name | Type | Purpose |
+|--------|------|------|---------|
+| 0x19C | boss_defeated | u8 | Set to 1 when boss HP reaches 0, triggers death sequence |
+| 0x19D | boss_facing | s8 | Boss facing direction for cutscene (-1=left, 1=right) |
+
+**Source:** Boss AI callbacks (e.g., `BossKloggCallback_BeamAttack` @ 0x80067F98)  
+**Verified:** Ghidra MCP tracing analysis 2026-01-20
+
 ## Remaining Unknown Fields
 
 Fields requiring further analysis:
 - 0x08-0x14: Possibly layer scroll accumulators or unused padding (not accessed in analyzed functions)
-- 0x3C-0x40: Unknown - need to find accessor (possibly layer list heads)
+- ~~0x3C-0x40~~: RESOLVED - `previous_spawn_list` (0x3C) and `blb_header_ptr` (0x40)
 
 ## Key Discoveries
 
