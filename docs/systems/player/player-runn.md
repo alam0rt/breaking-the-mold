@@ -140,6 +140,65 @@ void RunnPlayerTick(Entity* player) {
 
 ---
 
+## Vertical Movement Physics (from RunnVerticalMovementUpdate @ 0x80073b88)
+
+**Discovered via Ghidra Decompilation (2026-01-20)**
+
+### Velocity System (16.16 Fixed-Point)
+
+```c
+// Max vertical velocity: ±0x40000 (4.0 px/frame)
+int max_up = 0x40000;
+int max_down = -0x40000;
+
+// Collision adjusts limits based on tile type
+if (tile == 0xDE) {  // Floor tile
+    max_up = (~y_pos & 0xF) << 14;  // Subpixel snap to floor
+}
+if (tile == 0xB6) {  // Ceiling tile  
+    max_down = (y_pos & 0xF) * -0x4000;  // Subpixel snap to ceiling
+}
+
+// Drag: 0x4000 per frame (0.25 px/frame deceleration)
+if (yVelocity < 0) {
+    yVelocity += 0x4000;
+    if (yVelocity > 0) yVelocity = 0;
+}
+else if (yVelocity > 0) {
+    yVelocity -= 0x4000;
+    if (yVelocity < 0) yVelocity = 0;
+}
+```
+
+### Sound System Integration
+
+- **+0x10C**: SPU voice index (-1 when no sound playing)
+- **Sound on movement**: Plays sound 0x421586c2 when velocity non-zero
+- **Sound stops**: Calls `StopSPUVoice()` when velocity reaches 0
+- **One sound at a time**: Only one movement sound plays (voice index tracking)
+
+### Tile Collision Types
+
+| Tile | Hex | Effect on Velocity |
+|------|-----|--------------------|
+| 0xDE | Floor | Sets max upward velocity based on y-position |
+| 0xB6 | Ceiling | Sets max downward velocity based on y-position |
+| Other | Various | Default ±0x40000 limits |
+
+---
+
+## Physics Constants Summary
+
+| Property | Value | Human-Readable |
+|----------|-------|----------------|
+| **Max vertical velocity** | ±0x40000 | ±4.0 px/frame |
+| **Vertical drag** | 0x4000/frame | 0.25 px/frame deceleration |
+| **Horizontal adjust accel** | ±0xc000 | ±0.75 px/frame |
+| **Movement sound ID** | 0x421586c2 | Auto-run footsteps |
+| **Subpixel position** | +0x6E | Y fractional part |
+
+---
+
 ## Camera Behavior
 
 **Auto-Scroll**: Camera likely moves forward automatically

@@ -128,6 +128,33 @@ void FinnHandleInput(Entity* entity) {
 - **Angle range**: 0-0x400 (wraps around, 0x400 = 360 degrees)
 - **No reverse**: Only forward movement available
 
+## Physics Constants (from FinnVehicleMovementUpdate @ 0x8006f250)
+
+**Velocity System (16.16 fixed-point):**
+- **Max velocity**: ±0x20000 (2.0 pixels/frame in each axis)
+- **Drag**: 0xC00 per frame (0.046875 pixels/frame deceleration)
+- **Subpixel storage**: +0x6C (X fraction), +0x6E (Y fraction)
+
+**Tile Collision Attributes:**
+| Tile | Hex | Behavior |
+|------|-----|----------|
+| 0x52 | Death | Triggers `FinnDeathExplosion` state |
+| 0x65 | Diagonal NW/SE | Ejects based on X+Y position within tile |
+| 0xB5 | Diagonal slope | Reverses velocity, slides along edge |
+| 0xB6 | Horizontal floor | Snaps to tile top, reverses Y if negative |
+| 0xB7 | Diagonal slope | Reverses velocity, slides along edge |
+| 0xB8/B9 | Diagonal ceiling | Snaps up, clears Y velocity |
+| 0xBA | Diagonal SW/NE | Similar to 0x65 |
+| 0xC9 | Vertical wall left | Snaps to left edge, reverses X if negative |
+| 0xCB | Vertical wall right | Snaps to right edge, reverses X if positive |
+| 0xCC/CE | Vertical walls | Edge snapping |
+| 0xDE | Horizontal ceiling | Snaps down, reverses Y if positive |
+| 0xDD/DF | Diagonal slopes | Complex multi-direction handling |
+| 0xE0-E2 | Diagonal slopes | Various angle corrections |
+
+**Bounce Behavior:**
+When hitting solid tiles, velocity is halved and reversed: `vel = -(vel >> 1)`
+
 ## State Machine
 
 **State Table**: Located at 0x800a601c
@@ -192,8 +219,8 @@ Position update callback that:
 | 0x80074a40 | (inline secondary) | Secondary position update callback |
 | 0x8006EFC8 | FinnMainTickHandler | Main active state handler (GLIDE reuses this) |
 | 0x8006fbd0 | FinnHandleInput | Tank control input and rotation |
-| 0x8006f250 | FUN_8006f250 | Physics/constraints subsystem |
-| 0x8006fd48 | FUN_8006fd48 | Animation subsystem |
+| 0x8006f250 | FinnVehicleMovementUpdate | Physics/velocity/tile collision subsystem |
+| 0x8006fd48 | FinnUpdateRotationSprite | Sprite rotation angle update |
 | 0x8006FE94 | FinnDeathExplosion | Death/explosion state |
 | 0x80070128 | FinnCheckTriggerZones | Trigger zone collision detection |
 | 0x80074b54 | FinnStateIdle | Idle state handler |

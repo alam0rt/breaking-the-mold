@@ -84,14 +84,34 @@ Items here have been verified as "unknown" after checking existing documentation
 - Exact hitbox dimensions during attack phases
 - Boss music coordination details
 
-### 5. FINN/RUNN Vehicle Mechanics
-**Location**: `docs/systems/player/player-finn.md`  
-**Known**: Asset 504 path data format, vehicle entity types  
-**Unknown**:
-- How vehicle handles player input differently
-- Rail grinding physics constants
-- Auto-scroll speed calculations
-- How path waypoints are followed
+### 5. FINN/RUNN Vehicle Mechanics - ✅ FULLY RESOLVED (2026-01-20)
+**Location**: `docs/systems/player/player-finn.md`, `docs/systems/player/player-runn.md`  
+**Status**: Complete physics and input handling documented
+
+**FINN (Boat/Fish Mode) - 0x0400 Flag:**
+- **Input Handling**: `FinnHandleInput` @ 0x8006fbd0 - Tank controls
+  - Up/Down D-Pad: Rotate ±0x10 per frame, max ±0x40
+  - Action button: Move forward via sin/cos calculation
+  - Rotation drag: ±8 per frame when no input
+  - Angle range: 0-0x400 (360°)
+- **Physics**: `FinnVehicleMovementUpdate` @ 0x8006f250
+  - Max velocity: ±0x20000 (2.0 px/frame per axis)
+  - Drag: 0xC00 per frame
+  - Bounce: `vel = -(vel >> 1)` on collision
+  - 15+ tile collision types with specific handling (0xB5-0xE2)
+
+**RUNN (Auto-Scroller Mode) - 0x0100 Flag:**
+- **Input Handling**: `CreateRunnPlayerEntity` @ 0x80073934
+  - Triangle (0x1000): Adjust left
+  - X (0x4000): Adjust right  
+  - D-Pad (0xF0): Jump/special
+- **Physics**: `RunnVerticalMovementUpdate` @ 0x80073b88
+  - Max vertical velocity: ±0x40000 (4.0 px/frame)
+  - Drag: 0x4000 per frame (0.25 px/frame)
+  - Horizontal adjust: ±0xc000 (0.75 px/frame)
+- **Sound**: Voice index at +0x10C, sound 0x421586c2 while moving
+
+**See**: `player-finn.md` and `player-runn.md` for complete physics constants
 
 ### 6. Sound Effect ID Mappings
 **Location**: `docs/reference/sound-ids-complete.md`  
@@ -113,13 +133,48 @@ Items here have been verified as "unknown" after checking existing documentation
 - Which entity types share initialization code
 - Entity memory layout variations by type
 
-### 8. Palette Animation Runtime
-**Location**: `docs/analysis/unconfirmed-findings.md`  
-**Known**: Asset 401 format (4 bytes per palette: enabled, start, end, speed)  
-**Unknown**:
-- Which function processes palette animation each frame
-- How animated palettes interact with entity rendering
-- Performance impact of palette cycling
+### 8. Palette Animation Runtime - ✅ FULLY RESOLVED (2026-01-20)
+**Location**: `docs/systems/entities.md`, `docs/analysis/unconfirmed-findings.md`  
+**Status**: Complete runtime behavior documented via Ghidra decompilation
+
+**Key Functions:**
+- `CLUTPaletteCycleTickCallback` @ 0x8001991c - Per-frame palette rotation
+- `SetTexturePageParams` @ 0x80019f2c - Enables palette cycling for a texture page
+- `GetPaletteAnimData` @ 0x8007b530 - Returns Asset 401 pointer (ctx[9])
+
+**Entity Structure for Palette Animation:**
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| +0x1C | 4 | clut_ptr | Pointer to CLUT data (palette) |
+| +0x35 | 1 | start_index | First color index to animate |
+| +0x36 | 1 | end_index | Last color index to animate |
+| +0x37 | 1 | direction | 0=forward, 1=backward cycling |
+| +0x38 | 1 | speed | Frames between color shifts (copied to +0x39) |
+| +0x39 | 1 | timer | Countdown until next shift |
+
+**Runtime Behavior (CLUTPaletteCycleTickCallback):**
+```c
+void CLUTPaletteCycleTickCallback(Entity* e) {
+    if (--e->timer == 0) {
+        u16* clut = e->clut_ptr;
+        if (e->direction == 0) {  // Forward
+            u16 first = clut[e->start_index];
+            memmove(&clut[e->start_index], &clut[e->start_index+1], 
+                    (e->end_index - e->start_index) * 2);
+            clut[e->end_index] = first;  // Wrap first to end
+        } else {  // Backward
+            u16 last = clut[e->end_index];
+            memmove(&clut[e->start_index+1], &clut[e->start_index],
+                    (e->end_index - e->start_index) * 2);
+            clut[e->start_index] = last;  // Wrap last to start
+        }
+        UploadTextureOrClut(e, clut);  // Send to VRAM
+        e->timer = e->speed;  // Reset countdown
+    }
+}
+```
+
+**Performance**: One entity per animated palette, minimal CPU cost (memmove + CLUT upload)
 
 ### 9. Demo/Attract Mode Recording Format - ✅ RESOLVED (2026-01-19)
 **Location**: `docs/systems/demo-attract-mode.md`  
@@ -134,13 +189,49 @@ Items here have been verified as "unknown" after checking existing documentation
 
 **See**: `docs/systems/demo-attract-mode.md` for complete details
 
-### 10. Multi-Layer Parallax Scrolling
+### 10. Multi-Layer Parallax Scrolling - ✅ RESOLVED (2026-01-20)
 **Location**: `docs/systems/rendering-order.md`, `docs/systems/camera.md`  
-**Known**: 4 layer list types (static, scrolling, parallax, standard)  
-**Unknown**:
-- Exact parallax divisor per layer
-- How layer priorities interleave with entity z-order
-- Layer culling/visibility optimizations
+**Status**: Complete parallax calculation documented via Ghidra decompilation
+
+**Key Functions:**
+- `CalculateParallaxXOffset` @ 0x8001a304 - X offset with divisor
+- `UpdateParallaxLayerPosition` @ 0x8001ab14 - Full X/Y parallax update
+- `UpdateParallaxScrollWithWrap_Standard/Medium/Small` @ 0x8001eeec/0x8001f368/0x8001f778
+
+**Parallax Divisor System (16.16 Fixed-Point):**
+| Entity Offset | Field | Description |
+|---------------|-------|-------------|
+| +0x50 | x_scale | Parallax X scroll scale |
+| +0x54 | y_scale | Parallax Y scroll scale |
+| +0x58 | alt_x_scale | Alternative X scale (entity coord) |
+| +0x60 | camera_x_scale | Camera X parallax multiplier |
+| +0x64 | camera_y_scale | Camera Y parallax multiplier |
+
+**Calculation:**
+```c
+// When divisor == 0x10000 (1.0): no parallax, 1:1 with camera
+if (layer->camera_x_scale == 0x10000) {
+    adjusted_cam_x = g_GameState->camera_x;
+} else {
+    // Slower scroll for background layers (divisor < 0x10000)
+    adjusted_cam_x = (camera_x * layer->camera_x_scale) >> 16;
+}
+layer_screen_x = layer_world_x - adjusted_cam_x + layer->x_offset;
+```
+
+**Common Divisor Values:**
+- 0x10000 = 1.0 (foreground, 1:1)
+- 0x8000 = 0.5 (half-speed parallax)
+- 0x4000 = 0.25 (quarter-speed distant background)
+- 0x2000 = 0.125 (far horizon)
+
+**Z-Order Interleaving:**
+Layers are rendered in order from GameState lists:
+1. Static layers (0x08-0x0B): No scroll
+2. Scrolling layers (0x0C-0x0F): Parallax enabled
+3. Parallax layers (0x10-0x13): Far background
+4. Standard layers (0x14-0x17): Foreground
+Entities interleave by z_order value (0-65535)
 
 ---
 
