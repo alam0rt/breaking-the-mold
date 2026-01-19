@@ -1,7 +1,7 @@
 # Entity System
 
 **Status**: ✅ Complete (all FUN_ functions named)  
-**Last Updated**: January 19, 2026
+**Last Updated**: January 20, 2026
 
 Entities are game objects combining sprite graphics, behavior callbacks, and position/state data.
 
@@ -13,6 +13,623 @@ The entity system has three key aspects:
 3. **Entity struct hierarchy** - Three tiers of runtime structures
 
 **Critical**: Entity type → sprite ID mapping is **HARDCODED** in game code, not in BLB data.
+
+## Entity Composition Architecture (January 2026 Update)
+
+This section documents the **composition patterns** used by different entity categories based on comprehensive Ghidra analysis.
+
+### Base Entity Components
+
+All entities share a common lifecycle managed through **vtables** (virtual method tables):
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ENTITY VTABLE STRUCTURE (EntityCallbackTable)              │
+├─────────────────────────────────────────────────────────────┤
+│  +0x00: unused_00        (always 0)                         │
+│  +0x04: unused_04        (always 0)                         │
+│  +0x08: destroy          (EntityCallbackSlot - cleanup)     │
+│  +0x10: tick             (EntityCallbackSlot - per-frame)   │
+│  +0x18: texture          (EntityCallbackSlot - VRAM upload) │
+│  +0x20: onSelect         (menu only)                        │
+│  ...                                                        │
+└─────────────────────────────────────────────────────────────┘
+
+EntityCallbackSlot (8 bytes):
+  +0x00: s16 entity_offset  (offset into entity struct)
+  +0x02: s16 pad
+  +0x04: func_ptr           (callback function)
+```
+
+### Entity Lifecycle Functions
+
+| Phase | Function | Address | Purpose |
+|-------|----------|---------|---------|
+| **Allocate** | `AllocateFromHeap` | 0x800143f0 | Get memory from BLB buffer |
+| **Init Base** | `InitEntityStruct` | 0x8001a0c8 | Zero 128-byte base structure |
+| **Init Full** | `InitFullEntityWithAnimation` | 0x8001c6c8 | Base + sprite context + animation |
+| **Init Sprite** | `InitEntitySprite` | 0x8001c720 | Load sprite data, set z-order |
+| **Register** | `AddEntityToSortedRenderList` | 0x800213a8 | Add to render list |
+| **Register** | `AddToUpdateQueue` | - | Add to collision/update queue |
+| **Destroy** | `DestroyEntity` | 0x80020974 | Full cleanup + optional free |
+| **Destroy Base** | `DestroyEntityAndFreeMemory` | 0x8001ca60 | Free child entities + memory |
+
+### Vtable Progression Pattern
+
+Entities use **vtable progression** during destruction (C++ destructor chain emulation):
+
+```c
+void DestroyEntityAndFreeMemory(Entity* entity, uint flags) {
+    // Vtable progresses through hierarchy during cleanup
+    entity->vtable = 0x8001044c;  // Stage 1
+    FreeChildResources(entity);
+    entity->vtable = 0x8001046c;  // Stage 2  
+    DestroyChildEntities(entity);
+    entity->vtable = 0x800104ac;  // Stage 3 (base)
+    if (flags & 1) FreeFromHeap(entity);
+}
+```
+
+### Common Vtable Addresses
+
+| Address | Category | Used By |
+|---------|----------|---------|
+| 0x8001039c | BasicEntity | UI helpers, overlays |
+| 0x800104ac | MenuEntityBase | Menus, HUD |
+| 0x8001044c | Full Entity | Animated entities |
+| 0x8001046c | Entity (mid-destroy) | Destruction chain |
+| 0x80010770 | Ground Enemy | Patrol enemies |
+| 0x80010870 | Path-Following | Path-based entities |
+| 0x80010da4 | Collectible | Items, pickups |
+| 0x80010de4 | Path Enemy | Moving enemies |
+| 0x80011288 | Boss (JoeHeadJoe) | Final boss |
+| 0x800112a8 | Boss (ShrineyGuard) | Shriney boss |
+| 0x80011308 | Boss (MonkeyMage) | Wizz boss |
+| 0x80011328 | Boss (Klogg) | Multiple bosses |
+
+---
+
+## Entity Category Compositions
+
+### 1. Base Entity (Simple Objects)
+
+**Size**: 16 bytes (BasicEntity) or 128 bytes (Entity)  
+**Init Function**: `InitBasicEntityWithVtable` @ 0x8001543c
+
+```c
+void InitBasicEntity(Entity* entity, u16 size) {
+    entity->vtable = 0x8001039c;
+    entity->allocSize = size;
+    entity->active = 1;
+    // Zero positions, no sprite/animation
+}
+```
+
+**Components**:
+- ✅ Position (screen X/Y)
+- ✅ Active flag
+- ✅ Vtable pointer
+- ❌ No sprite
+- ❌ No animation
+- ❌ No collision
+
+**Used For**: UI helpers, colored overlays, simple effects.
+
+---
+
+### 2. Standard Entity (Animated Objects)
+
+**Size**: 128 bytes base + type-specific extensions  
+**Init Chain**: `InitEntityStruct` → `InitFullEntityWithAnimation` → `InitEntitySprite`
+
+```c
+void InitStandardEntity(Entity* entity, u32 spriteId, s16 z, s16 x, s16 y) {
+    InitEntityStruct(entity, ALLOC_SIZE);
+    entity->vtable = 0x8001044c;
+    ClearSpriteContextWrapper(entity + 0x78);  // Sprite context
+    InitEntityAnimationState(entity);           // Animation state
+    SetEntitySprite(entity, spriteId, z, x, y);
+}
+```
+
+**Components**:
+- ✅ Position (world X/Y)
+- ✅ Velocity (vX/vY)
+- ✅ Sprite context
+- ✅ Animation state
+- ✅ Render bounds
+- ✅ Hitbox
+- ✅ Tick callback
+- ✅ Event callback
+
+**Used For**: Decorations, particles, simple collectibles.
+
+---
+
+### 3. Collectible Entity (Pickups)
+
+**Size**: ~0x130 bytes  
+**Init Chain**: `InitEntityWithSprite` → `InitCollectibleEntity`
+
+```c
+void InitCollectibleEntity(Entity* entity, EntityDef* def, s16 z) {
+    entity->allocSize = 900;
+    entity->entityDef = def;
+    entity->tickCallback = CollectibleTickCallback;
+    entity->eventCallback = EntityEventHandlerWalk;
+    entity->collisionMask = 4;  // Player collision
+    SetupEntityScaleCallbacks(entity);
+    UpdateCollectibleTriggerZone(entity, def, z);
+}
+```
+
+**Additional Components**:
+- ✅ Entity definition reference (+0x100/0x40)
+- ✅ Collision mask (type 4 = player contact)
+- ✅ Scale callbacks (shrink/grow powerups)
+- ✅ Trigger zone bounds
+
+**Callback Pattern**:
+```
+Tick:  CollectibleTickCallback @ 0x8003acc8
+Event: EntityEventHandlerWalk @ (handles walk messages)
+```
+
+**Used For**: Clayballs, ammo, items, health.
+
+---
+
+### 4. Ground Patrol Enemy
+
+**Size**: 0x124 bytes (main) + 0x120 bytes (child)  
+**Init Function**: `InitGroundPatrolEnemy` @ 0x8002ea3c
+
+```c
+Entity* InitGroundPatrolEnemy(Entity* entity, EntityDef* def) {
+    // 1. Init main entity with sprite
+    InitEntitySprite(entity, 0x8c510186, 0x3de, def->x, def->y, 0);
+    entity->vtable = 0x80010770;
+    
+    // 2. Setup path/decor system
+    InitPathFollowingDecorEntity(entity, def, 0);
+    
+    // 3. Set tick callback
+    entity->tickMarker = 0xFFFF0000;
+    entity->tickCallback = CollectiblePhartHeadTickCallback;  // Misnamed
+    
+    // 4. Configure semi-transparency for sprite
+    poly = entity->spriteContext;
+    poly->r = 0x20; poly->g = 0x60; poly->b = 0x30;
+    
+    // 5. CREATE CHILD ENTITY (shadow/effect)
+    Entity* child = AllocateFromHeap(0x120);
+    InitEntitySprite(child, 0xa9240484, 0x3de, def->x, def->y, 0);
+    InitPathFollowingDecorEntity(child, def, 0);
+    entity->childEntity = child;  // Store at +0x120
+    child->worldX = entity->worldX - 8;
+    child->worldY = entity->worldY - 16;
+    child->tickCallback = EntityUpdateCallback;
+    
+    AddEntityToSortedRenderList(g_GameStatePtr, child);
+    return entity;
+}
+```
+
+**Unique Components**:
+- ✅ Child entity at +0x120 (shadow/effect)
+- ✅ Path-following system
+- ✅ Semi-transparent rendering
+- ✅ Texture page configuration
+
+**Callback Pattern**:
+```
+Tick:   CollectiblePhartHeadTickCallback @ 0x8002ec3c (patrol behavior)
+Child:  EntityUpdateCallback @ 0x8001cb88 (basic animation)
+Vtable: 0x80010870 (path-following) → 0x80010770 (ground enemy)
+```
+
+---
+
+### 5. Path-Following Enemy
+
+**Size**: ~0x130 bytes  
+**Init Function**: `InitPathFollowingEnemy` @ 0x8003c5b8
+
+```c
+Entity* InitPathFollowingEnemy(Entity* entity, EntityDef* def, u32* spriteTable,
+                                u8 param4, u8 param5, u8 param6) {
+    // 1. Init with sprite from table
+    InitEntityWithSprite(entity, spriteTable, 0x3ca, def->x, def->y - 1);
+    entity->vtable = 0x80010da4;
+    
+    // 2. Setup collectible base (shared logic)
+    InitCollectibleEntity(entity, def, 0x3ca);
+    
+    // 3. Sound by variant type
+    short variant = *(entity->entityDef + 0x12);
+    switch(variant) {
+        case 10:  PlayEntityPositionSound(entity, 0x7c108242); break;
+        case 0x1a: PlayEntityPositionSound(entity, 0x7c108244); break;
+        case 0x1b: PlayEntityPositionSound(entity, 0x68009240); break;
+        case 0x54: PlayEntityPositionSound(entity, 0x42c11270); break;
+        case 0x60: PlayEntityPositionSound(entity, 0xc2820c70); break;
+    }
+    
+    // 4. PATH DATA SETUP
+    entity->tickCallback = SoundEmitterTickCallback;
+    entity->spriteTable = spriteTable;
+    
+    u16 pathId = *(entity->entityDef + 0xc);  // Variant field
+    if (pathId != 0) {
+        entity->eventCallback = EntityFollowPathWithWrapping;
+        GetEntitySpawnData(g_GameStatePtr, pathId, &entity->pathData, &entity->pathCount);
+        // Initialize position along path...
+    }
+    return entity;
+}
+```
+
+**Unique Components**:
+- ✅ Path data system (GetEntitySpawnData lookup)
+- ✅ Position sound (variant-dependent)
+- ✅ Sprite table reference (multiple sprites)
+- ✅ Path wrapping at endpoints
+
+**Callback Pattern**:
+```
+Tick:  SoundEmitterTickCallback @ 0x8003c950 (with panning)
+Event: EntityFollowPathWithWrapping @ 0x80055c70
+```
+
+---
+
+### 6. Boss Entity Architecture
+
+Bosses are the most complex entities, featuring:
+- Multiple child entities (HP bar, projectiles, platforms)
+- State machine with attack patterns
+- Custom event handlers
+- HP tracking via `g_pPlayerState[0x1D]`
+
+#### Boss Common Pattern
+
+```c
+void InitBoss_Common(Entity* boss, EntityDef* def, u32* spriteTable) {
+    // 1. Base initialization via collectible (handles position)
+    CreateCollectibleFromSpawn(boss, def, spriteTable);
+    
+    // 2. Set boss-specific vtable
+    boss->vtable = BOSS_VTABLE;  // e.g., 0x80011308
+    
+    // 3. Initialize player HP (stored in PlayerState!)
+    g_pPlayerState[0x1d] = BOSS_HP;  // 3-5 depending on boss
+    
+    // 4. Create HP bar HUD entity
+    Entity* hpBar = AllocateFromHeap(0x104);
+    InitEntitySprite(hpBar, HP_BAR_SPRITE, 10000, 0xa2, 0xf4, 0);
+    hpBar->tickCallback = BossHPBarTickCallback;
+    hpBar->hpValue = g_pPlayerState[0x1d];
+    AddEntityToSortedRenderList(g_GameStatePtr, hpBar);
+    
+    // 5. Set event handler for damage
+    boss->eventCallback = BossEventHandler;
+    
+    // 6. Set initial state
+    EntitySetState(boss, INITIAL_STATE_MARKER, InitialStateCallback);
+}
+```
+
+#### Known Boss Implementations
+
+| Boss | Level | HP | Init Function | Vtable | Notes |
+|------|-------|----|--------------|---------| ------|
+| **Klogg** | Multiple | 5 | `InitKloggBossEntity` @ 0x80047288 | 0x80011328 | Uses `g_KloggBossSprites` |
+| **MonkeyMage** | WIZZ (21) | 5 | `InitMonkeyMageBoss` @ 0x80047fb8 | 0x80011308 | 6 rotating platforms + force field |
+| **GlennYntis** | - | - | `InitGlennYntisBoss` @ 0x80049a54 | - | - |
+| **ShrineyGuard** | SHRI (9) | 3 | `InitShrineyGuardBoss` @ 0x8004af64 | 0x800112a8 | Lower HP, ground-based |
+| **JoeHeadJoe** | HEAD (15) | 5 | `InitJoeHeadJoeBoss` @ 0x8004c0e0 | 0x80011288 | Brick-breaker mechanics |
+
+#### Boss Event Handler
+
+```c
+int BossEventHandler(Entity* boss, u16 event, int param3, int param4) {
+    switch(event) {
+        case 0x1001:  // Ball hit (upper)
+        case 0x1002:  // Ball hit (lower)
+            if (boss->vulnerableFlag) {
+                g_pPlayerState[0x1d]--;  // Decrement HP
+                if (g_pPlayerState[0x1d] == 0) {
+                    EntitySetState(boss, DEATH_STATE);
+                } else {
+                    EntitySetState(boss, ATTACK_LOOP_STATE);
+                }
+            }
+            break;
+            
+        case 0x0001:  // Animation marker
+            // Spawn effects based on param3
+            break;
+            
+        case 0x1008:  // Register projectile
+            boss->activeProjectile = param4;
+            break;
+    }
+}
+```
+
+#### MonkeyMage Boss Composition (Most Complex)
+
+```
+MonkeyMage Boss Entity (0x200+ bytes)
+├── Main boss body (sprite from g_MonkeyMageBossSprites)
+├── HP Bar entity (sprite 0x181c3854)
+├── 6x Rotating Platform entities (InitCircularPlatformEntity)
+│   └── Positions from table at 0x8009b860
+├── Force Field entity (vtable 0x80011328)
+│   └── Color = vulnerability state (red=invuln, blue=vuln)
+└── Additional boss part (vtable 0x80011348)
+    └── Sparkle/effect entity
+```
+
+---
+
+### 7. Destructor Patterns
+
+Entity destructors follow a consistent pattern with vtable progression:
+
+#### Simple Destructor (Type 0-6)
+
+```c
+void EntityDestructor_TypeN(Entity* entity, uint flags) {
+    entity->vtable = 0x800105cc;  // Mark destruction in progress
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(blbHeaderBufferBase, entity, 0, 0);
+    }
+}
+```
+
+#### Destructor with Child Cleanup
+
+```c
+void EntityDestructor_DestroyAllChildEntities(Entity* entity, uint flags) {
+    entity->vtable = 0x800104cc;
+    RemoveFromUpdateQueue(entity);
+    RemoveFromZOrderList(entity);
+    ClearEntityDefList(entity);
+    FreeEntityLists(entity);
+    
+    if (entity->spriteContext != NULL) {
+        __builtin_delete(entity->spriteContext);
+    }
+    ConditionalDelete(entity + 0x84, 2);
+    
+    entity->vtable = 0x800104ec;
+    if (flags & 1) {
+        FreeFromHeap(blbHeaderBufferBase, entity, 0, 0);
+    }
+}
+```
+
+#### Destructor with SPU Cleanup (Sound Entities)
+
+```c
+void SoundEmitterDestroyCallback(Entity* entity, uint flags) {
+    if (entity->spuVoiceIndex >= 0) {
+        SpuSetKey(0, 1 << entity->spuVoiceIndex);  // Stop voice
+    }
+    EntityDestructor_Simple(entity, flags);
+}
+```
+
+---
+
+### Entity Size Reference
+
+| Entity Type | Allocation Size | Description |
+|-------------|-----------------|-------------|
+| BasicEntity | 0x10 (16) | Minimal UI helper |
+| MenuEntityBase | 0x1C (28) | Menu/HUD base |
+| Entity (base) | 0x80 (128) | Standard entity |
+| Collectible | 0x100-0x130 | Items, pickups |
+| Ground Enemy | 0x124 (main) + 0x120 (child) | Patrol enemies |
+| Path Enemy | 0x130 | Moving enemies |
+| Boss | 0x200+ | Boss entities |
+| HP Bar | 0x104 | Boss HP display |
+| Player | 0x3E8 (1000) | Player entity |
+| HUD | 0x7530 (30000) | Full HUD system |
+
+---
+
+## Enemy Entity State Machines
+
+Enemies use a state machine pattern driven by the tick callback and event handler.
+
+### Ground Enemy States
+
+```
+┌──────────────┐     Timer/Event     ┌──────────────┐
+│    IDLE      │ ─────────────────>  │    PATROL    │
+│ (wait/spawn) │                     │  (walk L/R)  │
+└──────────────┘                     └──────────────┘
+       │                                    │
+       │  Player Near                       │ Edge/Wall
+       v                                    v
+┌──────────────┐                     ┌──────────────┐
+│    CHASE     │                     │ TURN_AROUND  │
+│ (pursue)     │                     │ (flip facing)│
+└──────────────┘                     └──────────────┘
+       │                                    │
+       │  Hit by Player                     │
+       v                                    v
+┌──────────────┐                     ┌──────────────┐
+│    DEATH     │ <────────────────── │   FALLING   │
+│  (particles) │                     │ (off ledge)  │
+└──────────────┘                     └──────────────┘
+```
+
+### Enemy State Functions
+
+| State | Function | Address | Behavior |
+|-------|----------|---------|----------|
+| Patrol | `EnemyPatrolState` | 0x8003dd20 | Walk in direction, check edges |
+| Falling | `InitEnemyFallingState` | 0x8003de08 | Apply gravity, check ground |
+| Death | `EnemyDeathState` | 0x8003defc | Spawn particles, destroy |
+| Idle Timer | `EnemyIdleTimerState` | 0x8004e9f4 | Wait for timer, then activate |
+| Sprite | `EnemySpriteState` | 0x8004eac8 | Animation-only state |
+| Defeat | `EnemyDefeatState` | 0x8004eb94 | Post-death cleanup |
+
+### Enemy Tick Patterns
+
+```c
+// EnemyTickWithCollision @ 0x8004839c
+void EnemyTickWithCollision(Entity* enemy) {
+    TickEntityAnimation(enemy);
+    
+    // Check player collision
+    if (CheckEntityBoxCollision(enemy, PLAYER_MASK)) {
+        // Player hit enemy - send damage event
+        SendEventToEntity(enemy, 0x1001, 0, g_PlayerEntity);
+    }
+    
+    // Check offscreen
+    if (IsEntityOffScreen(enemy)) {
+        DestroyEntity(enemy);
+    }
+}
+
+// EnemyUpdateWithCollisionAndDeath @ 0x8004b2ec
+void EnemyUpdateWithCollisionAndDeath(Entity* enemy) {
+    EnemyTickWithCollision(enemy);
+    
+    if (enemy->hp <= 0) {
+        EnemyDeathWithParticles(enemy);
+    }
+}
+```
+
+### Path-Following Enemy Movement
+
+```c
+// EntityFollowPathWithWrapping @ 0x80055c70
+void EntityFollowPathWithWrapping(Entity* enemy) {
+    short* pathData = enemy->pathData;
+    short pathLen = enemy->pathCount;
+    short pathIndex = enemy->pathIndex;
+    
+    // Get current and next waypoints
+    short x1 = pathData[pathIndex * 2];
+    short y1 = pathData[pathIndex * 2 + 1];
+    short x2 = pathData[(pathIndex + 1) * 2];
+    short y2 = pathData[(pathIndex + 1) * 2 + 1];
+    
+    // Interpolate position
+    enemy->worldX = Lerp(x1, x2, enemy->pathProgress);
+    enemy->worldY = Lerp(y1, y2, enemy->pathProgress);
+    
+    // Advance along path
+    enemy->pathProgress += enemy->speed;
+    if (enemy->pathProgress >= 0x100) {
+        enemy->pathProgress = 0;
+        enemy->pathIndex++;
+        
+        // Wraparound at end
+        if (enemy->pathIndex >= pathLen) {
+            if (enemy->pathLooping) {
+                enemy->pathIndex = 0;
+            } else {
+                // Reverse direction
+                enemy->speed = -enemy->speed;
+            }
+        }
+    }
+    
+    // Face movement direction
+    enemy->facing = (x2 > x1) ? 1 : 0;
+}
+```
+
+---
+
+## Boss Attack State Machines
+
+Bosses use complex state machines with attack patterns, invulnerability windows, and phase transitions.
+
+### Boss State Flow (Generic)
+
+```
+┌─────────────────┐
+│   SPAWN/INTRO   │  ←── Initial animation, invulnerable
+└────────┬────────┘
+         │
+         v
+┌─────────────────┐     ┌─────────────────┐
+│      IDLE       │ ──> │   ATTACK_PREP   │  ←── Wind-up animation
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         │                       v
+         │              ┌─────────────────┐
+         │              │    ATTACKING    │  ←── Spawn projectiles/hazards
+         │              └────────┬────────┘
+         │                       │
+         │  HP > 0               │  HP > 0
+         └───────────────────────┘
+                   │
+                   │  HP == 0
+                   v
+         ┌─────────────────┐
+         │     DEATH       │  ←── Death animation, victory trigger
+         └─────────────────┘
+```
+
+### Boss-Specific State Tables
+
+**Klogg Boss States** (from 0x800a5b60):
+| Marker | Callback | State |
+|--------|----------|-------|
+| 0xFFFF0000 | 0x800479d0 | Intro/Idle |
+| 0xFFFF0000 | BossRandomAttackChoice | Attack Selection |
+| 0xFFFF0000 | ShrineyGuardStartLoopAttackState | Loop Attack |
+| 0xFFFF0000 | ShrineyGuardDeathState | Death |
+
+**JoeHeadJoe Boss** (Brick-Breaker Style):
+- Attack pattern table at 0x8009bb28
+- Ball types: 0=Normal (catchable), 1=Spiky (hazard), 2=Special
+- Lower HP = more spiky balls in pattern
+
+### Boss HP System
+
+Boss HP is stored in `g_pPlayerState[0x1D]` (NOT the boss entity):
+
+```c
+// HP initialization varies by boss
+InitKloggBoss:        g_pPlayerState[0x1d] = 5;  // 5 hits
+InitShrineyGuardBoss: g_pPlayerState[0x1d] = 3;  // 3 hits
+InitMonkeyMageBoss:   g_pPlayerState[0x1d] = 5;  // 5 hits
+InitJoeHeadJoeBoss:   g_pPlayerState[0x1d] = 5;  // 5 hits
+```
+
+### Boss Vulnerability System
+
+Bosses track vulnerability at entity offset +0x115:
+
+```c
+// In BossEventHandler
+case 0x1001:  // Hit event
+case 0x1002:
+    if (boss->vulnerableFlag) {  // +0x115 != 0
+        g_pPlayerState[0x1d]--;
+        // State transition
+    }
+    break;
+```
+
+Vulnerability windows are controlled by:
+1. State machine (invulnerable during intro/attack animations)
+2. Entity properties (force field color for MonkeyMage)
+3. Animation markers (specific frames can toggle vulnerability)
+
+---
 
 > **See Also**: [Entity Types Reference](../reference/entity-types.md) for full callback table (121 entries) and type mappings.
 
