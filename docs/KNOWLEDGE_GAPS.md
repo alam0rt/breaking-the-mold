@@ -8,6 +8,19 @@ Items here have been verified as "unknown" after checking existing documentation
 
 ---
 
+## ⚠️ CRITICAL: Recent Documentation Correction (2026-01-20)
+
+**Entity Type Mapping Error Discovered**: BLB entity types are **layer-dependent**!
+
+Previous docs incorrectly stated "BLB 25 = Loud Mouth enemy". In reality:
+- BLB 25 on Layer 1 → Internal 0 → **Pickup** (not enemy!)
+- BLB 25 on Layer 2 → Internal 79 → **Spawner**
+- BLB 13 on Layer 2 → Internal 25 → **Ground Enemy** (this is "EnemyA")
+
+**See**: `docs/reference/ENTITY_REMAPPING_CORRECTION.md` for full details.
+
+---
+
 ## Critical Gaps (Block Full Understanding)
 
 ### 1. GameState Structure Corruption - ✅ RESOLVED (2026-01-20)

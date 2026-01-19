@@ -42,22 +42,40 @@ All bosses have 5 HP (except Shriney Guard with 3 HP).
 
 | Official Name | Description | Weakness | Behavior | BLB Type | Status |
 |---------------|-------------|----------|----------|----------|--------|
-| **Loud Mouth** | Monkeys that run around flailing arms | Butt-bounce | Long reach, geeky run | **BLB 25** | ✅ CONFIRMED |
+| **Loud Mouth** | Monkeys that run around flailing arms | Butt-bounce | Long reach, geeky run | **BLB 13** (Layer 2) | ⚠️ CORRECTED |
 | **Clay Keeper** | Skullmonkeys that snack on clay balls | Butt-bounce (free clayball drop) | Sits still or lumbers back and forth | Unknown | ❓ |
 | **Mental Monkey** | Similar to Loud Mouth but faster | Carefully timed butt-bounce | Double speed when flailing | Unknown | ❓ |
 | **Tempest Pulsating Monkey** | Enemy that periodically glows | Wait for calm, then bounce or shoot | Electricity when glowing | Unknown | ❓ |
 | **Jumpy the Gorilla** | Large monkey that jumps | Run under or butt-bounce | Constant jumping | Unknown | ❓ |
 | **Swarm-o-Ynts** | Baby Ynts in groups | Butt-bounce | Travel in packs | Unknown | ❓ |
 
+### ⚠️ CRITICAL: Layer-Dependent Entity Mapping
+
+**Entity types are remapped based on layer!** See `ENTITY_REMAPPING_CORRECTION.md`.
+
+- BLB 25 on **Layer 1** → Pickup (Internal 0)
+- BLB 25 on **Layer 2** → Spawner (Internal 79)
+- BLB 13 on **Layer 2** → **Phart Head Collectible** (Internal 25) ← NOT an enemy!
+
 ### Verified Entity Mappings
 
-| BLB Type | Official Name | Levels Found | Verification |
-|----------|---------------|--------------|--------------|
-| **25** | **Loud Mouth** | SCIE stage 0 (8x) | Visual confirmation Jan 2026 |
-| **27** | Unknown | SCIE stage 0 (8x) | Often near BLB 25, purpose unclear |
-| **8** | Halo (1-up item) | SCIE stage 0 | Visual confirmation - NOT an enemy |
-| **Worker Ynt** | Insect-like scuttlers | Moving quickly or standard attacks | Scuttle and scratch | 27 (Path Enemy) |
-| **El Barfo** | Skulls that barf themselves | Butt-bounce or weapons | Deadly without skin | Unknown |
+| BLB Type | Layer | Internal | Actual Behavior | Notes |
+|----------|-------|----------|-----------------|-------|
+| **13** | 2 | 25 | **Phart Head Collectible** | Sprite 0x8c510186, calls AddPhartHeads() |
+| **22** | 2 | 29 | **Ground Patrol Enemy** | EntityType029_Enemy_Init |
+| **25** | 1 | 0 | **Pickup** | NOT an enemy! |
+| **25** | 2 | 79 | **Spawner** | Creates particles |
+| **27** | 1 | 4 | **Pickup** | NOT an enemy! |
+| **27** | 2 | 97 | **Grid Helper** | Invisible |
+| **8** | 1 | 115 | **Halo (1-up)** | Collectible |
+| **8** | 2 | 22 | **Item Pickup** | Different on L2 |
+
+### Actual Ground Enemies
+
+Based on decompilation, actual ground patrol enemies use these internal types:
+- **Internal 26**: EntityType026_Enemy_Init @ 0x8007f2cc - Path-following with `g_SpriteList_Type026_Enemy`
+- **Internal 27**: EntityType027_PathEnemy_Init @ 0x8007f354 - Path enemy variant
+- **Internal 29**: EntityType029_Enemy_Init @ 0x800806a8 - From BLB 22 Layer 2
 
 ### Flying Enemies
 
