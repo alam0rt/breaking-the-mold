@@ -310,6 +310,43 @@ for i in range(len(data) - 24):
 - `UpdateCameraPosition` (0x80023dbc): Camera scroll based on player at +0x30
 - `InitEntity_*` functions: Type-specific entity initialization (91 functions, hardcoded sprite IDs)
 
+### Entity Subsystems (all functions named January 19, 2026)
+
+**VRAM Slot Entities** (0x800318e0 - 0x80031da0):
+- `InitVRAMSlotEntity` - Allocate 8x16 VRAM slot
+- `DestroyVRAMSlotEntity` - Free VRAM slot
+- `RenderVRAMSlotOverlay` - Complex SPRT/TILE_1/DR_OFFSET rendering
+- `CheckVRAMSlotPixelColor` - StoreImage + magenta marker check (0x3c0f)
+
+**Multi-Part Entities** (0x80032124 - 0x80032800):
+- `MultiPartEntityTick` - Iterate 5 sub-entities at +0x104
+- `MultiPartEntityRenderTick` - Texture upload + VRAM check
+- `MultiPartEntityMessageHandler` - Handle 0x100f/0x1009/0x1010 messages
+
+**Path-Following Entities** (33 functions):
+- `InitPathFollowEntity` (0x80032e0c)
+- `UpdateEntityAlongPath` (0x800558b8)
+- Path tables at 0x8009bc08 (200 entries) and 0x8009bf28 (61 entries)
+
+**Projectile System** (24 functions, 0x8004fxxx - 0x80070xxx):
+- `HomingProjectileTick` (0x80050ce4) - Track player, apply velocity
+- `CalculateSineValue` (0x8004f2a4) - 256-entry sine table at 0x8009c09c
+- `ProjectileApplyVelocity` (0x80052554) - +0x100/+0x104 velocity
+
+**Sound Entities** (41 functions):
+- `SoundEmitterTickCallback` (0x8003c950)
+- `SoundEmitterDestroyCallback` (0x8004591c) - Stop SPU voice on destroy
+- Sound entities store voice index at +0x110
+
+**Timer Entities** (37 functions):
+- Timer locations: +0x100, +0x104, +0x106 (lifetime)
+- `TimerEntityTick` (0x8007504c) - Decrement +0x100, trigger on 0
+
+**Menu System** (47 functions):
+- `InitMenuCursorEntity` (0x80074f98)
+- `InitMenuButtonEntity` (0x80075234)
+- Global sprites: `g_MenuCursorSprites`, `g_MenuButtonSprites`
+
 ### Asset Type → LevelDataContext Mapping (Verified via Ghidra)
 
 The `LoadAssetContainer` function (0x8007b074) maps asset types to context array indices:

@@ -369,13 +369,70 @@ g_NextVoiceIndex = 0;
 |---------|----------|--------|
 | 0x8007787c | ApplyAudioSettings | ✅ Named |
 
+### Sound Entity System (0x8003cxxx - 0x80053xxx)
+
+**All 41 sound-related entity functions named (January 19, 2026)**:
+
+| Address | Function | Purpose |
+|---------|----------|--------|
+| 0x8003c8d4 | `DestroySoundEmitterEntity` | Destroy sound emitter |
+| 0x8003c950 | `SoundEmitterTickCallback` | Sound emitter tick |
+| 0x8003cbd0 | `SoundEmitterStunnedTickCallback` | Stunned sound emitter tick |
+| 0x8003cd8c | `EnemyStartMovingWithSound` | Enemy movement + sound |
+| 0x8003cea8 | `EntityInitSoundEmitterState` | Init sound emitter state |
+| 0x8003e950 | `InitSoundEmittingEnemy` | Sound-emitting enemy init |
+| 0x8003f2e0 | `DestroySoundEntityWithVoice` | Destroy + stop SPU voice |
+| 0x8003f350 | `SoundEmitterIdleTickCallback` | Idle sound emitter tick |
+| 0x80040cac | `DestroyEntityWithSoundAndChild` | Complex sound cleanup |
+| 0x80040d3c | `CollectibleTickWithSoundPanning` | Collectible + panning |
+| 0x8004591c | `SoundEmitterDestroyCallback` | Stop SPU voice on destroy |
+| 0x8004598c | `SoundEmitterWithPanningTick` | Update panning from position |
+| 0x800469b0 | `SoundEntityDestroyCallback` | Entity sound cleanup |
+| 0x80048d60 | `EntityStopSound` | Stop entity's sound |
+| 0x8004a768 | `HazardActivateWithSound` | Hazard activation + sound |
+| 0x8004a814 | `HazardStopSound` | Stop hazard sound |
+| 0x8004a930 | `HazardIdleWithSound` | Hazard idle + sound |
+| 0x8004aa08 | `HazardStopSoundAlt` | Alt hazard sound stop |
+| 0x8004dd30 | `KloggUpdateWithSound` | Klogg boss sound update |
+| 0x80053bd8 | `DestroySoundEntity` | Destroy sound entity |
+| 0x80053ca4 | `FallingSoundEntityTick` | Falling sound tick |
+| 0x80053edc | `JoeHeadJoeBallStopSound` | Boss-specific sound stop |
+| 0x80057500 | `ShrineyGuardDeactivateWithSound` | Shriney guard + sound |
+| 0x80059074 | `ShrineyGuardSoundUpdateTick` | Shriney guard sound tick |
+| 0x8005a3f8 | `IsEntityNearSoundTrigger` | Sound trigger proximity |
+| 0x8006eec8 | `FinnEntityDestroyWithSoundCleanup` | Finn sound cleanup |
+| 0x80073a88 | `EntityTick_ScaledSpriteWithSound` | Scaled sprite + sound |
+| 0x80074258 | `FinnDestroyWithSoundCleanup` | Alt Finn cleanup |
+
+### Sound Emitter Entity Pattern
+
+Sound emitters allocate SPU voices and must clean up on destroy:
+
+```c
+void SoundEmitterDestroyCallback(Entity* entity, uint flags) {
+    // Stop SPU voice first
+    uint voice = entity[0x110];  // Voice index stored at +0x110
+    if (voice != 0xFF) {
+        StopSPUVoice(voice);
+    }
+    // Then normal entity cleanup
+    DestroyEntityAndFreeMemory(entity, flags);
+}
+```
+
+**Key Fields**:
+- `+0x110`: SPU voice index (0-23, or 0xFF if none)
+- `+0x112`: Sound ID hash
+- `+0x114`: Volume level
+
 ---
 
 ## Summary
 
-**Total Audio Functions**: 24 (all named)  
+**Total Audio Functions**: 65+ (all named)  
+**Sound Entity Functions**: 41 (all named)  
 **Global Variables**: 10 (all documented)  
 **Sound IDs**: 35+ documented, ~100 estimated total  
 **Status**: ✅ 100% Function Coverage
 
-The sound system is fully reverse-engineered. The only remaining work is mapping all ~100 sound IDs through gameplay correlation.
+The sound system is fully reverse-engineered including all entity sound management functions. The only remaining work is mapping all ~100 sound IDs through gameplay correlation.

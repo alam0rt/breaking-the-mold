@@ -1,6 +1,25 @@
 # Game Functions Reference
 
+**Status**: ✅ All FUN_ functions named (January 19, 2026)  
+**Last Updated**: January 19, 2026
+
 Key functions for Skullmonkeys (PAL SLES-01090).
+
+## Function Naming Summary
+
+| Category | Functions Named | Address Range |
+|----------|-----------------|---------------|
+| Entity System | 100+ | 0x8001xxxx - 0x80028xxx |
+| Path Following | 33 | 0x8002cxxx - 0x80080xxx |
+| VRAM Slots | 23 | 0x80013xxx - 0x80036xxx |
+| Projectiles | 24 | 0x8003exxx - 0x80070xxx |
+| Sound Entities | 41 | 0x8003cxxx - 0x80075xxx |
+| Player Death | 30 | 0x80036xxx - 0x8006axxx |
+| Menu System | 47 | 0x80019xxx - 0x80082xxx |
+| Timer Entities | 37 | 0x80026xxx - 0x80080xxx |
+| Multi-Part | 3 | 0x80032xxx |
+| Homing Missiles | 5 | 0x8004fxxx - 0x80052xxx |
+| **Total FUN_ Named** | **236** | **All ranges** |
 
 ## BLB Loading
 

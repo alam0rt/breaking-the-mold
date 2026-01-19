@@ -1,5 +1,8 @@
 # Entity System
 
+**Status**: ✅ Complete (all FUN_ functions named)  
+**Last Updated**: January 19, 2026
+
 Entities are game objects combining sprite graphics, behavior callbacks, and position/state data.
 
 ## Overview
@@ -12,6 +15,19 @@ The entity system has three key aspects:
 **Critical**: Entity type → sprite ID mapping is **HARDCODED** in game code, not in BLB data.
 
 > **See Also**: [Entity Types Reference](../reference/entity-types.md) for full callback table (121 entries) and type mappings.
+
+### Entity Subsystems
+
+| Subsystem | Functions | Description |
+|-----------|-----------|-------------|
+| VRAM Slot Entities | 4 | Entities with dedicated VRAM texture slots |
+| Multi-Part Entities | 3 | Composite entities with 5 sub-entity array |
+| Path-Following Entities | 33 | Entities that move along predefined paths |
+| Projectile System | 24 | Homing missiles, bouncing projectiles |
+| Death/Particle System | 30 | Death animations, debris spawning |
+| Sound Entities | 41 | Entities with SPU voice management |
+| Menu System | 47 | UI elements, buttons, cursors |
+| Timer Entities | 37 | Countdown-based state transitions |
 
 ## Entity Structure Hierarchy
 
@@ -719,6 +735,72 @@ void EntityTickLoop(GameState* state) {
 | `InitPlayerEntity` | 0x8001fcf0 | Player setup |
 | `InitBossEntity` | 0x80047fb8 | Boss setup |
 | `InitPlayerSpriteAvailability` | 0x80059a70 | Check 7 player sprites |
+
+## VRAM Slot Entity System
+
+**Address Range**: 0x800318e0 - 0x80031da0
+
+Entities that allocate dedicated VRAM texture slots for dynamic rendering (e.g., color-keyed overlays).
+
+| Function | Address | Purpose |
+|----------|---------|--------|
+| `InitVRAMSlotEntity` | 0x800318e0 | Allocate 8x16 VRAM slot, setup vtable 0x80010b68 |
+| `DestroyVRAMSlotEntity` | 0x80031984 | Free VRAM slot if allocated |
+| `RenderVRAMSlotOverlay` | 0x80031a14 | Complex SPRT/TILE_1/DR_OFFSET/DR_AREA rendering |
+| `CheckVRAMSlotPixelColor` | 0x80031da0 | StoreImage + check pixel == 0x3c0f (magenta marker) |
+
+**Pattern**: These entities use StoreImage to read back GPU pixels and check for specific color values.
+
+## Multi-Part Entity System
+
+**Address Range**: 0x80032124 - 0x80032800
+
+Composite entities with an array of 5 sub-entities at offset +0x104. Used for segmented enemies/bosses.
+
+| Function | Address | Purpose |
+|----------|---------|--------|
+| `MultiPartEntityTick` | 0x80032124 | Iterate 5 sub-entities, send 0x1010/0x100f/0x1009 messages |
+| `MultiPartEntityRenderTick` | 0x80032454 | UploadEntityTextureIfDirty, VRAM color check |
+| `MultiPartEntityMessageHandler` | 0x80032800 | Handle 0x100f/0x1009/0x1010 flag operations |
+
+**Message Codes**:
+- `0x1010` - Set flag
+- `0x100f` - Clear flag  
+- `0x1009` - Toggle flag
+
+## Path-Following Entity System
+
+**Address Range**: 0x80032e0c - 0x80033xxx, 0x8003c5b8+, 0x80055790+
+
+Entities that move along predefined path data. Used for platforms, enemies, and decorations.
+
+### Core Path Functions
+
+| Function | Address | Purpose |
+|----------|---------|--------|
+| `InitPathFollowEntity` | 0x80032e0c | GetEntitySpawnData x2, alloc 3 buffers (0x34, 0x34, 2) |
+| `DestroyPathFollowEntity` | 0x80032f3c | Free path buffers |
+| `RenderPathEntitySegments` | 0x80032fec | POLY_GT4 with depth bucket, distance coloring |
+| `InitPathFollowEntityAlt` | 0x800335d8 | Alternate path init |
+| `CalculatePathDistance` | 0x80055790 | Distance calculation along path |
+| `UpdateEntityAlongPath` | 0x800558b8 | Apply velocity along path |
+| `UpdateEntityPathWithWrapping` | 0x80055c70 | Path with wraparound at endpoints |
+
+### Path Animation Tables
+
+| Address | Size | Purpose |
+|---------|------|--------|
+| `0x8009bc08` | 200 entries | Primary path animation data |
+| `0x8009bf28` | 61 entries | Secondary path data |
+
+### Entity Types Using Paths
+
+| Function | Address | Entity Type |
+|----------|---------|-------------|
+| `EntityType027_PathEnemy_Init` | 0x8007f354 | Type 27 - Path enemy |
+| `EntityType076_PathEnemy_Init` | 0x8007f3dc | Type 76 - Alt path enemy |
+| `EntityType070_PathDecor_Init` | 0x800807f8 | Type 70 - Path decoration |
+| `EntityType082_PathHazard_Init` | 0x8008127c | Type 82 - Path hazard |
 
 ## Entity Data Locations
 
