@@ -7,11 +7,42 @@ This document maps Skullmonkeys entity types to their in-game names and behavior
 Entities in Skullmonkeys use a two-stage type system:
 1. **BLB Type**: The type stored in the BLB file's Asset 501 entity definitions
 2. **Internal Type**: The remapped type used at runtime to index the callback table
+3. **Variant**: Entity-specific parameter that modifies behavior (see below)
 
 The `RemapEntityTypesForLevel` function (0x8008150c) converts BLB types to internal types based on the entity's **layer**:
 - **Layer 1**: Foreground/decoration entities
 - **Layer 2**: Main gameplay entities (collectibles, enemies, platforms)
 - **Layer 3**: Special/effect entities (bosses, flying enemies)
+
+### Entity Definition Structure
+
+Each entity is defined by a **24-byte structure** in Asset 501. The key fields are:
+
+| Offset | Size | Field | Description |
+|--------|------|-------|-------------|
+| +0x08 | u16 | x_center | Pixel X position |
+| +0x0A | u16 | y_center | Pixel Y position |
+| +0x0C | u16 | **variant** | Behavior modifier (see Variant System) |
+| +0x12 | u16 | entity_type | BLB entity type ID |
+| +0x14 | u16 | layer | 1=foreground, 2=background, 3=special |
+
+**Full structure documented in:** [Entity Types Reference](../reference/entity-types.md)
+
+### Variant System
+
+The **variant** field at offset +0x0C is a multi-purpose parameter. Its meaning depends on the entity type:
+
+| Usage | Entity Types | Description |
+|-------|--------------|-------------|
+| **Text Selection** | Message Box (45) | Index into text sprite collection |
+| **Path ID** | Moving platforms, enemies | Selects waypoint path from path tables |
+| **Direction** | Platforms (28, 48) | 1=up, 2=down, etc. |
+| **Behavior Flags** | Collectibles (8) | Item subtype (1-up, health, etc.) |
+| **Destination** | Portal (42) | Target level/stage |
+
+When variant is non-zero, many entity init functions call `GetEntitySpawnData()` to retrieve path waypoints from tables at `0x8009bc08` (200 entries) or `0x8009bf28` (61 entries).
+
+**Full variant system documented in:** [Entity Types Reference](../reference/entity-types.md#the-variant-system)
 
 ## Quick Reference: Common Entities
 

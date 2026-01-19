@@ -7,12 +7,17 @@ Entities are game objects combining sprite graphics, behavior callbacks, and pos
 
 ## Overview
 
-The entity system has three key aspects:
+The entity system has four key aspects:
 1. **Entity data** - BLB Asset 501 stores placement (24-byte structures)
 2. **Entity behavior** - Hardcoded init functions with sprite IDs
 3. **Entity struct hierarchy** - Three tiers of runtime structures
+4. **Variant parameter** - Per-entity modifier stored at offset +0x0C in placement data
 
 **Critical**: Entity type → sprite ID mapping is **HARDCODED** in game code, not in BLB data.
+
+**See also:**
+- [Entity Types Reference](../reference/entity-types.md) - Callback table and variant system
+- [Entity Identification Guide](entity-identification.md) - BLB→Internal type mapping
 
 ## Entity Composition Architecture (January 2026 Update)
 

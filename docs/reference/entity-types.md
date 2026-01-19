@@ -10,6 +10,98 @@ Entity types are 16-bit IDs stored in Asset 501 (entity placement data). The gam
 - **BLB Type**: The entity_type field in Asset 501 data (0-255+)
 - **Internal Type**: Remapped type (0-120) used to index callback table
 - **Callback Table**: 121 entries at `g_EntityTypeCallbackTable` (0x8009d5f8)
+- **Variant**: Entity-specific parameter that modifies behavior (see below)
+
+---
+
+## Entity Definition Structure (Asset 501)
+
+Each entity in a level is defined by a **24-byte structure** in Asset 501:
+
+```c
+struct EntityDefinition {
+    u16 x1;           // +0x00: Bounding box left
+    u16 y1;           // +0x02: Bounding box top
+    u16 x2;           // +0x04: Bounding box right
+    u16 y2;           // +0x06: Bounding box bottom
+    u16 x_center;     // +0x08: Center X position (pixels)
+    u16 y_center;     // +0x0A: Center Y position (pixels)
+    u16 variant;      // +0x0C: *** VARIANT FIELD *** (see below)
+    u8  padding[4];   // +0x0E: Usually zeros
+    u16 entity_type;  // +0x12: BLB entity type ID
+    u16 layer;        // +0x14: Layer (1=foreground, 2=background, 3=special)
+    u8  padding2[2];  // +0x16: Usually zeros
+};
+```
+
+---
+
+## The Variant System
+
+The **variant** field at offset +0x0C is a multi-purpose parameter that changes meaning based on entity type. This allows a single entity type to support many different behaviors, appearances, or configurations.
+
+### Variant Usage Patterns
+
+| Entity Type | Variant Meaning | Examples |
+|------------|-----------------|----------|
+| **Message Box (45)** | Text sprite index | 0=first tutorial, 1=second, 14=checkpoint |
+| **Clayball (2)** | Animation/path ID | Different movement patterns |
+| **Platform (28,48)** | Direction/speed | 1=up, 2=down, path selection |
+| **Enemy (25,27)** | Patrol bounds reference | Links to paired entity |
+| **Collectible (8)** | Item subtype | 0=1-up, 1=health, etc. |
+| **Portal (42)** | Destination ID | Which level/stage to warp to |
+| **Decoration** | Color/animation | Visual variant selection |
+
+### How Variant Is Used at Runtime
+
+1. **Entity Init**: The init function reads `entityDef + 0x0C` (variant)
+2. **Callback Setup**: Variant may select different state machines or callbacks
+3. **Path Following**: Non-zero variant often triggers `GetEntitySpawnData()` for path data
+4. **Sprite Selection**: Variant can index into sprite tables for different visuals
+
+### Code Example: Message Box Variant
+
+```c
+// From InitPathFollowingEntity @ 0x80042be0
+void InitPathFollowingEntity(Entity* entity, EntityDef* def) {
+    // ...
+    uint variant = def->variant;  // Read +0x0C
+    
+    if (variant != 0) {
+        // Set up path movement callback
+        entity->callback[7] = EntityPathMovementUpdate;
+        GetEntitySpawnData(g_GameState, variant, &entity->pathData, &entity->pathLength);
+        // Calculate position along path...
+    }
+}
+```
+
+For **Message Boxes**, the variant selects which pre-rendered text sprite to display:
+- `variant=0` → "Press X to jump" tutorial
+- `variant=1` → Different tutorial text
+- `variant=14` → Checkpoint message
+
+### Code Example: Platform Direction
+
+For **moving platforms**, variant often encodes direction:
+```c
+// Pseudocode from platform init
+if (variant == 1) {
+    velocity_y = -PLATFORM_SPEED;  // Move up
+} else if (variant == 2) {
+    velocity_y = +PLATFORM_SPEED;  // Move down
+}
+```
+
+### Variant as Path/Spawn Reference
+
+Many entities use variant as an **index into path tables**:
+- Path table at `0x8009bc08` (200 entries)
+- Path table at `0x8009bf28` (61 entries)
+
+When variant is non-zero, `GetEntitySpawnData()` looks up path waypoints.
+
+---
 
 ## Entity Type Callback Table
 
