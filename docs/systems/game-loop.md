@@ -186,51 +186,62 @@ int main(void) {
 
 ## Mode Callback System
 
-The game uses a mode callback system stored in GameState offsets 0-8 for dispatching
+The game uses a mode callback system stored in GameState offsets 0x00-0x07 for dispatching
 level-specific logic each frame.
 
 ### GameState Mode Fields
 
 | Offset | Type | Purpose |
 |--------|------|---------|
-| +0x00 | s16 | Base offset for callback parameter |
-| +0x02 | s16 | Current callback table index (or -1 for single callback) |
-| +0x04 | ptr | Callback pointer OR table base |
+| +0x00 | int | `mode_base_offset` - Always 0xFFFF0000 (-0x10000) |
+| +0x04 | ptr | `mode_callback_ptr` - Current mode callback (e.g., `GameModeCallback`) |
 
-### Callback Dispatch Logic
+**Updated 2026-01-20**: Previously thought to be a table-index system, this is actually
+a direct callback pointer with a fixed base offset for all standard gameplay.
+
+### Callback Dispatch Logic (main @ 0x80082ae0)
 
 ```c
-// From main loop (@ 0x80082ae0)
-iVar2 = (int)g_GameStatePtr[1];  // Callback index at +0x02
-if (iVar2 != 0) {
-    if (iVar2 < 1) {
-        // Negative index: Direct callback pointer at +0x04
-        pcVar12 = *(code **)(g_GameStatePtr + 2);
+// Simplified from actual decompilation
+int mode = gameState->mode;  // Combined mode word
+if (mode != 0) {
+    if (mode <= 0) {
+        // Standard case: Direct callback via mode_callback_ptr
+        callback = gameState->mode_callback_ptr;  // e.g., GameModeCallback
+        offset = gameState->mode_base_offset;     // 0xFFFF0000
     } else {
-        // Positive index: Table-based lookup
-        // Table at offset stored in +0x04, index * 8 bytes per entry
-        iVar7 = iVar2 * 8 + *(int *)((int)g_GameStatePtr + (int)g_GameStatePtr[2]);
-        unaff_s4 = *(undefined4 *)(iVar7 + -8);  // Parameter offset
-        pcVar12 = *(code **)(iVar7 + -4);        // Callback function
+        // Alternate case: Table-based lookup (mode > 0)
+        // entry = table_base + mode * 8
+        // callback = entry->callback
+        // offset = entry->param_offset + mode_base_offset
     }
-    iVar7 = (int)*g_GameStatePtr;  // Base offset from +0x00
-    if (0 < iVar2 << 0x10) {
-        iVar7 = (short)unaff_s4 + iVar7;  // Adjust for table entry
-    }
-    (*pcVar12)((int)g_GameStatePtr + iVar7);  // Call with adjusted offset
+    (*callback)((int)gameState + offset);
 }
 ```
 
+The standard gameplay path uses `mode <= 0` with:
+- `mode_base_offset = 0xFFFF0000` (-0x10000)
+- `mode_callback_ptr = GameModeCallback` (0x8007e654)
+
 ### Mode Callback Initialization
 
-In `InitGameState` the mode callback is initialized to 0x8007e654:
+In `InitGameState` @ 0x8007cd34:
 ```c
-state[0] = 0xFFFF0000;           // Base offset in high word
-state[1] = &LAB_8007e654;        // Initial mode handler (indirect pointer)
+gameState->mode_base_offset = 0xFFFF0000;  // -0x10000 (always this value)
+gameState->mode_callback_ptr = GameModeCallback;  // 0x8007e654
 ```
 
-The initial mode handler at 0x8007e654 manages level loading transitions,
-checkpoint handling, and respawn logic.
+The same initialization is repeated in `SetupAndStartLevel` @ 0x8007d8a0 after loading
+level data, ensuring consistent dispatch.
+
+### GameModeCallback (0x8007e654)
+
+The primary mode handler manages:
+- Level loading transitions
+- Checkpoint handling (save/restore)
+- Player respawn logic
+- Pause menu invocation
+- Death sequence handling
 
 ## Game State Tick Specification
 

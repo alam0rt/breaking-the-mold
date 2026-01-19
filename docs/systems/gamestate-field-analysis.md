@@ -271,3 +271,194 @@ Called via complex pointer indirection in main() game loop.
 | InitPlayerSpawnPosition | 0x80024720 | 0x116, 0x118 (spawn position) |
 | LoadTileDataToVRAM | 0x80025240 | 0x104, 0x108, 0x110, 0x114 (tile and palette render state) |
 | AddPreInitEntitiesToList | 0x800250c8 | 0x110, 0x114, 0x1C (adds palette anim entities to tick list) |
+| CheckCheatCodeInput | 0x800820b4 | 0x140, 0x17C-0x18C, 0x18F, 0x18D, 0x148, 0x84 |
+
+## Deep Analysis: GameState Usage Patterns (2026-01-20)
+
+This section documents patterns discovered through comprehensive decompilation analysis
+of all functions that reference `g_GameState`.
+
+### 1. Mode Callback Dispatch System
+
+From `main()` and `InitGameState()`:
+
+```c
+gameState->mode_base_offset = 0xFFFF0000;  // -0x10000
+gameState->mode_callback_ptr = GameModeCallback;
+```
+
+**Dispatch pattern in main():**
+- When `mode > 0`: Uses vtable lookup via `mode_base_offset`
+- When `mode <= 0`: Uses direct `mode_callback_ptr` call
+
+This allows switching between a table-driven mode system and direct callbacks.
+
+### 2. Dual Entity List System
+
+| Offset | Field | Purpose |
+|--------|-------|---------|
+| 0x1C | `tick_list_head` | Active entities for gameplay tick |
+| 0x20 | `render_list_head` | Active entities for rendering |
+| 0x134 | `checkpoint_entity_list` | Backup for checkpoint respawn |
+
+**Checkpoint algorithm (SaveCheckpointState → RestoreCheckpointEntities):**
+1. On Ma-Bird activation: `tick_list → checkpoint_entity_list`, clear `tick_list`
+2. Entities spawned after checkpoint go to fresh `tick_list`
+3. On death: Swap lists back, destroy post-checkpoint entities
+4. Player is re-added to list after restore
+
+### 3. Double-Buffered Background Color System
+
+**Discovered in `RenderEntities` @ 0x80020e80:**
+
+| Offset | Field | Purpose |
+|--------|-------|---------|
+| 0x130 | `bg_color_change_flag` | Triggers update when non-zero |
+| 0x131 | `bg_color_r_pending` | Pending R value |
+| 0x132 | `bg_color_g_pending` | Pending G value |
+| 0x133 | `bg_color_b_pending` | Pending B value |
+| 0x199 | `bg_color_r` | Current/default R (0x40) |
+| 0x19A | `bg_color_g` | Current/default G (0x40) |
+| 0x19B | `bg_color_b` | Current/default B (0x40) |
+
+When `bg_color_change_flag` is set, RGB is copied to **two locations** in the BLB header buffer:
+- `blbHeaderBufferBase + 0x1D-0x1F` (primary buffer)
+- `blbHeaderBufferBase + 0x505D-0x505F` (secondary buffer)
+
+This implements double-buffering for the PSX's alternating frame buffers.
+
+### 4. Cheat Code System
+
+**From `CheckCheatCodeInput` @ 0x800820b4:**
+
+- 8-entry circular buffer at offset 0x17C-0x18B (16 bytes total)
+- Index wraps: `cheat_input_index` (0x18C) cycles 0-7
+- 22 cheats total (indices 0x00-0x15)
+- Uses `g_CheatCodeTable` for pattern matching
+
+**Key cheats discovered:**
+| Index | Effect | GameState Field |
+|-------|--------|-----------------|
+| 0x0C | Next stage | `direct_level_load = stage + 1` |
+| 0x0D | Skip to menu | `direct_level_load = 99` |
+| 0x0F | Frame-step toggle | `debug_pause_enable ^= 1` |
+| 0x13 | Re-add player | `player_readd_flag = 1` |
+
+### 5. Demo Mode System
+
+**From `SetupAndStartLevel` @ 0x8007d8a0:**
+
+When `demo_return_flag` (0x152) is set:
+1. Sets deterministic RNG: `srand(1)`
+2. Sets custom BG colors: R=0x40, G=0x20, B=0x80 (purple tint)
+3. Creates special UI sprite at z=30000
+4. Uses `GetWorldPositionX/Y` function pointers for sprite positioning
+5. Enables demo playback via `EnableDemoPlaybackMode`
+
+### 6. Special Level Handling
+
+**Level 98 (0x62) - Credits/Ending:**
+```c
+if (param_2 == 0x62) {
+    AdvancePlaybackSequence(...);  // Called twice
+    bVar5 = 99;  // Redirect to menu
+}
+```
+
+**Level 99 (0x63) - Menu:**
+- Loaded by `InitGameState` at startup
+- Target of level 98 redirect
+- Clears hamster count on entry
+
+### 7. Level Flags Bitmask (COMPLETE)
+
+**Updated 2026-01-20**: All flags fully documented via Ghidra decompilation.
+
+Level flags are stored at `TileHeader+0x18` (accessed via `GetLevelFlags` @ 0x8007b47c).
+These 16-bit flags control player type, camera behavior, and cheat restrictions.
+
+#### Complete Flag Reference
+
+| Bit | Hex | Name | Purpose | Verified By |
+|-----|-----|------|---------|-------------|
+| 0 | 0x0001 | MENU_CURSOR | Creates menu cursor entity | `SpawnPlayerAndEntities` |
+| 1 | 0x0002 | BOSS_DEFEATED_INIT | Initial boss defeated state | `SpawnPlayerAndEntities` |
+| 2 | 0x0004 | **LEVEL_GLIDE** | Glide player mode (no gravity) | `SpawnPlayerAndEntities` |
+| 3 | 0x0008 | FAST_CAMERA_SCROLL | Camera speed = 0xC000 (faster) | `SpawnPlayerAndEntities` |
+| 4 | 0x0010 | **LEVEL_SOAR** | SOAR player mode (Bird-Man) | `SpawnPlayerAndEntities` |
+| 5 | 0x0020 | ENTITY_POOL_ENABLE | Enables 256-entry entity pool | `SpawnPlayerAndEntities` |
+| 6 | 0x0040 | Unknown | - | - |
+| 7 | 0x0080 | SLOW_CAMERA_SCROLL | Camera speed = 0x8000 (slowest) | `SpawnPlayerAndEntities` |
+| 8 | 0x0100 | **LEVEL_RUNN** | RUNN player mode (auto-run) | `SpawnPlayerAndEntities` |
+| 9 | 0x0200 | **LEVEL_MENU** | Menu screen (no player entity) | `SpawnPlayerAndEntities` |
+| 10 | 0x0400 | **LEVEL_FINN** | FINN player mode (swamp boat) | `SpawnPlayerAndEntities` |
+| 11 | 0x0800 | AUTO_SCROLL | Auto-scroll level | `GetLevelAutoScrollFlag` |
+| 12 | 0x1000 | NO_CAMERA | Disables camera entity creation | `SpawnPlayerAndEntities` |
+| 13 | 0x2000 | **LEVEL_BOSS** | Boss fight mode | `SpawnPlayerAndEntities` |
+| 14 | 0x4000 | SHOW_HUD | Show HUD elements | `GetLevelShowHUDFlag` |
+| 15 | 0x8000 | DEBUG_FLAG | Debug mode flag | `GetLevelDebugFlag` |
+
+#### IsNormalPlatformLevel Check
+
+The function `IsNormalPlatformLevel` @ 0x8008200c returns TRUE only if **ALL** special
+level flags are clear:
+
+```c
+bool IsNormalPlatformLevel(GameState* gameState) {
+    u16 flags = GetLevelFlags(gameState + 0x84);
+    return !(flags & (0x400 | 0x200 | 0x2000 | 0x100 | 0x10 | 0x04));
+    // FINN | MENU | BOSS | RUNN | SOAR | GLIDE must all be 0
+}
+```
+
+This determines if the level uses standard platformer controls vs special vehicle/boss modes.
+
+#### Player Type Selection (SpawnPlayerAndEntities)
+
+The flag check cascade in `SpawnPlayerAndEntities` @ 0x8007df38 determines which
+player entity to create:
+
+| Priority | Flag | Player Entity | Allocation Size |
+|----------|------|---------------|-----------------|
+| 1 | 0x400 | `CreateFinnPlayerEntity` | 0x114 bytes |
+| 2 | 0x200 | `InitMenuEntity` | 0x140 bytes |
+| 3 | 0x2000 | `CreateBossPlayerEntity` | 0x158 bytes |
+| 4 | 0x100 | `CreateRunnPlayerEntity` | 0x110 bytes |
+| 5 | 0x10 | `CreateSoarPlayerEntity` | 0x128 bytes |
+| 6 | 0x04 | `CreateGlidePlayerEntity` | 0x11C bytes |
+| 7 | (none) | `CreatePlayerEntity` | 0x1B4 bytes |
+
+#### Cheat Restrictions
+
+Multiple cheats (0x10, 0x11, 0x14, 0x15) use `IsNormalPlatformLevel` to restrict effects:
+- `ApplyRandomRGBEffect` (cheat 0x10) - Only on normal platformer levels
+- Entity byte 0x1AF/0x1B0/0x1B1 modifications (cheats 0x11/0x14/0x15) - Same restriction
+
+This prevents RGB/visual cheats from breaking vehicle/boss levels.
+
+### 8. Password Level List Population
+
+**From `InitGameState` @ 0x8007cd34:**
+
+```c
+// Build password-selectable level list (max 10 entries)
+for (level = 0; level < level_count; level++) {
+    if ((flag & 1) != 0 && asset_index != 0) {
+        password_levels[count++] = level;
+        if (count >= 10) break;
+    }
+}
+```
+
+Criteria for password levels:
+- Level flag bit 0 is set (flag & 1)
+- Level has non-zero asset index
+
+### 9. Frame Counter vs Checkpoint Score
+
+The `frame_counter` field (0x10C) has dual purpose:
+- During gameplay: Incremented each frame by `EntityTickLoopWithCamera`
+- At checkpoint: Saved to `checkpoint_saved_score` (0x138)
+- On restore: Restored from `checkpoint_saved_score`
+
+This may track elapsed time rather than literal frames for score/ranking purposes.

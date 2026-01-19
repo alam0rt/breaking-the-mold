@@ -1,6 +1,6 @@
 # Knowledge Gaps & Missing Understanding
 
-**Last Updated**: January 19, 2026  
+**Last Updated**: January 20, 2026  
 **Purpose**: Track what we still don't understand about Skullmonkeys
 
 This document consolidates all known gaps in our understanding of the game's internals.
@@ -10,35 +10,36 @@ Items here have been verified as "unknown" after checking existing documentation
 
 ## Critical Gaps (Block Full Understanding)
 
-### 1. GameState Structure Corruption
+### 1. GameState Structure Corruption - ✅ RESOLVED (2026-01-20)
 **Location**: Ghidra struct `GameState` @ 0x8009DC40  
-**Issue**: During LevelDataContext field addition, struct grew from 416 to 509 bytes  
-**Impact**: Fields at offset 0x104+ may have incorrect offsets in Ghidra decompilation  
-**Action Required**: Rebuild GameState struct in Ghidra with correct 416-byte size
+**Resolution**: Rebuilt GameState struct with correct 416-byte size via `ghidra_fix_gamestate.py`
 
-**Verified Fields (from tracing session 2026-01-19):**
+**Verified Fields (from comprehensive decompilation analysis 2026-01-20):**
+- 0x00-0x07: mode_base_offset/mode_callback_ptr (mode dispatch system)
+- 0x08-0x18: layer list heads (static, scrolling, parallax, standard)
 - 0x1C: tick_list_head
 - 0x20: render_list_head  
 - 0x44/0x46: camera_x/y
+- 0x84-0x103: LevelDataContext (128 bytes reserved)
 - 0x10C: frame_counter
-- 0x11A: countdown_timer
+- 0x130-0x133: bg_color double-buffer system (NEW DISCOVERY)
 - 0x134: checkpoint_entity_list
 - 0x14C: hud_entity_ptr
 - 0x150-0x160: pause/menu system
 - 0x17C-0x18C: cheat_input_buffer
 
-### 2. Unknown GameState Fields
+### 2. Unknown GameState Fields - MOSTLY RESOLVED
 **Location**: `docs/systems/gamestate-field-analysis.md`
 
 | Offset Range | Status | Notes |
 |--------------|--------|-------|
 | ~~0x3C-0x43~~ | ✅ RESOLVED | `previous_spawn_list` (0x3C) + `blb_header_ptr` (0x40) |
-| 0x7A | Unknown | In level/layer state region |
-| 0x106 | Unknown | In render/frame state region |
+| 0x7A | ✅ RESOLVED | Padding to 4-byte alignment |
+| 0x106 | ✅ RESOLVED | Padding to 4-byte alignment |
 | 0x11B | Unknown | Near screen shake |
-| 0x127-0x129 | Unknown | In special mode region |
-| 0x130-0x133 | Partial | bg_color_change fields need verification |
-| 0x191-0x198 | Unknown | Between debug_pause and bg colors |
+| 0x127-0x129 | ✅ RESOLVED | Layer 1 tints (R/G/B) |
+| 0x130-0x133 | ✅ RESOLVED | bg_color_change_flag + pending RGB (double-buffer system) |
+| 0x191-0x198 | ✅ RESOLVED | Padding fields + _reserved_194/198 |
 
 ---
 
@@ -149,6 +150,10 @@ These were gaps that have been resolved:
 
 | Gap | Resolution Date | Documentation |
 |-----|-----------------|---------------|
+| **GameState struct rebuild** | 2026-01-20 | `systems/gamestate-field-analysis.md`, `scripts/ghidra_fix_gamestate.py` |
+| **Mode callback dispatch** | 2026-01-20 | `systems/game-loop.md` |
+| **Background color double-buffer** | 2026-01-20 | `systems/gamestate-field-analysis.md` (section 3) |
+| **Demo mode system** | 2026-01-20 | `systems/gamestate-field-analysis.md` (section 5) |
 | **Tile slope height table** | 2026-01-19 | `tile-collision-quick-ref.md`, `systems/collision-complete.md` |
 | Tile collision attributes | 2026-01-15 | `systems/collision-complete.md` |
 | Animation framework | 2026-01-15 | `systems/animation-framework.md` |
@@ -156,6 +161,29 @@ These were gaps that have been resolved:
 | Entity type identification | 2026-01-13 | `systems/entity-identification.md` |
 | Cheat code buffer | 2026-01-19 | `systems/gamestate-field-analysis.md` |
 | Checkpoint system | 2026-01-19 | `systems/checkpoint-system.md` |
+
+### GameState Deep Analysis Discovery (2026-01-20)
+
+Key patterns discovered through comprehensive function decompilation:
+
+1. **Mode Callback Dispatch**: Uses `mode_base_offset = 0xFFFF0000` with direct `mode_callback_ptr`
+   - When mode > 0: vtable lookup (unused in normal gameplay)
+   - When mode <= 0: direct callback (standard path)
+
+2. **Double-Buffered Background Colors**: RenderEntities writes to two BLB header locations
+   - `blbHeaderBufferBase + 0x1D-0x1F` (primary)
+   - `blbHeaderBufferBase + 0x505D-0x505F` (secondary)
+
+3. **Demo Mode**: Sets deterministic RNG (`srand(1)`), purple BG tint, special sprite at z=30000
+
+4. **Special Level Handling**:
+   - Level 98 (credits): redirects to menu after double AdvancePlaybackSequence
+   - Level 99 (menu): loaded at init, clears hamster count on entry
+
+5. ~~**Level Flags Bitmask**: Flags 0x04/0x10/0x100/0x200/0x400/0x2000 disable cheat effects~~
+   **RESOLVED 2026-01-20**: All 16 level flag bits documented in `gamestate-field-analysis.md` §7.
+   - 0x04=GLIDE, 0x10=SOAR, 0x100=RUNN, 0x200=MENU, 0x400=FINN, 0x2000=BOSS
+   - `IsNormalPlatformLevel` checks all 6 for cheat restrictions
 
 ### Slope Height Table Discovery (2026-01-19)
 
