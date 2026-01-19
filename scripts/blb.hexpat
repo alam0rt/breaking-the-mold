@@ -78,14 +78,54 @@
 //   Entry[16]: 0x047DC800 (Victory "YOU WIN" - 12 assets)
 //
 // =============================================================================
-// RENDERING PIPELINE (from render_level.py)
+// SEGMENT STRUCTURE PATTERNS (VERIFIED 2026-01-20 via extracted data)
 // =============================================================================
-// 1. Each level has PRIMARY, SECONDARY, and TERTIARY segments
-// 2. SECONDARY contains: Tile Header (100), Tile Pixels (300), Palette Indices (301),
-//    Tile Flags (302), Palette Container (400)
-// 3. TERTIARY contains: Stage Header (100), Tilemap Container (200), Layer Entries (201),
-//    Sprite Container (600), Audio (500-503)
-// 
+//
+// PRIMARY SEGMENT - Shared Level Assets (loaded once per level)
+// -----------------------------------------------------------------------------
+// Always exactly [600, 601, 602]:
+//   600: Geometry/Sprites - Level-wide sprites shared across all stages (500KB-1MB)
+//   601: Audio Samples   - SPU ADPCM sound bank for the level (80KB-300KB)  
+//   602: Audio Settings  - 4 bytes per sample (volume/pan), size = 601_sample_count × 4
+//
+// SECONDARY SEGMENT - Tile Graphics (shared across stages)
+// -----------------------------------------------------------------------------
+// Always has: [100, 300, 400, 401, 301, 302]
+//   100: Tile Header      - BG color, spawn position, tile counts (36 bytes)
+//   300: Tile Pixels      - 8bpp indexed tile graphics
+//   301: Palette Indices  - Which palette each tile uses (1 byte/tile)
+//   302: Tile Flags       - Size/transparency flags (1 byte/tile)
+//   400: Palette Container - 256-color CLUTs (sub-TOC)
+//   401: Palette Animation - Color cycling config (4 bytes/palette)
+//
+// Optional in secondary:
+//   101: VRAM Slot Config - 8 levels only (BOIL, CLOU, FINN, FOOD, GLID, HEAD, MEGA, WEED)
+//   601/602: Audio        - Most levels duplicate audio here; boss levels (GLEN, HEAD, KLOG, WIZZ) omit
+//
+// TERTIARY (STAGE) SEGMENT - Per-Stage Data
+// -----------------------------------------------------------------------------
+// Always has: [100, 200, 201, 401, 500, 501, 302]
+//   100: Tile Header      - Per-stage variant
+//   200: Tilemap Container - Layer tile indices (sub-TOC)
+//   201: Layer Entries    - Layer dimensions/parallax (92 bytes each)
+//   302: Tile Flags       - Per-stage variant
+//   401: Palette Animation - Per-stage variant
+//   500: Tile Attributes  - Collision map (1 byte/tile)
+//   501: Entities         - Entity placements (24-byte structs)
+//
+// Standard extras: [502, 503, 600]
+//   502: VRAM Rects       - Texture page definitions
+//   503: Anim Offsets     - Sprite animation timing (ToolX data)
+//   600: Sprites          - Stage-specific sprites (enemies, items)
+//
+// Special/Optional:
+//   101: VRAM Slot Config - Same 8 levels as secondary
+//   504: Vehicle Data     - ONLY in FINN/RUNN (path waypoints)
+//   700: Extra Audio      - 9 levels (BOIL, BRG1, CAVE, FOOD, GLID, MENU, SCIE, TMPL, WEED)
+//
+// Boss/Special levels (GLEN, HEAD, KLOG, WIZZ) lack 502/503 - simplified rendering.
+// MENU lacks 500 (no collision needed for menu screen).
+//
 // Stage/Secondary Pairing:
 //   - Stage 0 uses base secondary tiles
 //   - Stage N uses stage (N-1)'s secondary sub-block for tiles

@@ -38,9 +38,52 @@ Each level consists of three data segments:
 
 | Segment | Scope | Asset Types | Contents |
 |---------|-------|-------------|----------|
-| **Primary** | Per-level (shared) | 600, 601, 602 | Level geometry, collision, palettes |
+| **Primary** | Per-level (shared) | 600, 601, 602 | Level geometry, audio samples |
 | **Secondary** | Per-level base + per-stage variants | 100-401 | Tiles, tile metadata, palettes |
-| **Tertiary** | Per-stage | 500-700 | Sprites, entities, layers, audio |
+| **Tertiary** | Per-stage | 100-700 | Stage data, entities, sprites, audio |
+
+### Segment Asset Patterns (Verified 2026-01-20)
+
+**PRIMARY** - Always exactly `[600, 601, 602]`:
+| Asset | Name | Size Range | Description |
+|-------|------|------------|-------------|
+| 600 | Sprites/Geometry | 500KB-1MB | Sprites shared across all stages |
+| 601 | Audio Samples | 80KB-300KB | SPU ADPCM sound bank |
+| 602 | Audio Settings | Variable | 4 bytes per sample (volume/pan) |
+
+**SECONDARY** - Core `[100, 300, 400, 401, 301, 302]` + optional:
+| Asset | Name | Description |
+|-------|------|-------------|
+| 100 | Tile Header | BG color, spawn position, tile counts (36 bytes) |
+| 101 | VRAM Config | Optional: 8 levels only (bank_a_count, bank_b_count) |
+| 300 | Tile Pixels | 8bpp indexed tile graphics |
+| 301 | Palette Indices | Which palette each tile uses (1 byte/tile) |
+| 302 | Tile Flags | Size/transparency flags (1 byte/tile) |
+| 400 | Palettes | 256-color CLUTs (sub-TOC container) |
+| 401 | Palette Anim | Color cycling config |
+| 601/602 | Audio | Most levels; boss levels omit |
+
+**TERTIARY** - Core `[100, 200, 201, 401, 500, 501, 302]` + extras:
+| Asset | Name | Description |
+|-------|------|-------------|
+| 100 | Tile Header | Per-stage variant |
+| 200 | Tilemaps | Layer tile indices (sub-TOC container) |
+| 201 | Layer Entries | Layer dimensions, parallax (92 bytes each) |
+| 302 | Tile Flags | Per-stage variant |
+| 401 | Palette Anim | Per-stage variant |
+| 500 | Tile Collision | Collision map (1 byte/tile) |
+| 501 | Entities | Entity placements (24-byte structs) |
+| 502 | VRAM Rects | Standard: Texture page definitions |
+| 503 | Anim Offsets | Standard: Sprite animation timing |
+| 504 | Vehicle Data | **FINN/RUNN only**: Path waypoints |
+| 600 | Stage Sprites | Standard: Stage-specific sprites |
+| 700 | Extra Audio | **9 levels**: Additional sound bank |
+
+**Special Cases:**
+- Boss/special levels (GLEN, HEAD, KLOG, WIZZ) lack 502/503
+- MENU lacks 500 (no collision needed)
+- Asset 101 in only 8 levels: BOIL, CLOU, FINN, FOOD, GLID, HEAD, MEGA, WEED
+- Asset 700 in only 9 levels: BOIL, BRG1, CAVE, FOOD, GLID, MENU, SCIE, TMPL, WEED
 
 ### Sector Interleaving
 
