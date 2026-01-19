@@ -809,6 +809,158 @@ To add a new entity type → sprite mapping, you must:
 2. Extract the sprite ID constant
 3. Verify the sprite exists in the level's tertiary container
 
+## Common Entity Callback Patterns
+
+**Verified via Ghidra analysis 2026-01-25** - Systematic review of all entity callbacks revealed these patterns:
+
+### Tick Callback Patterns
+
+All tick callbacks follow `void callback(Entity* entity, void* param2, short param3)` signature.
+
+| Pattern | Example Function | Description |
+|---------|-----------------|-------------|
+| **Basic Tick** | `EntityUpdateCallback` @ 0x8001cb88 | Animation update only |
+| **Tick + Collision** | `EntityUpdateWithCollisionWrapper` @ 0x80019d54 | Tick + collision check |
+| **Tick + Timer** | `TimedEntityTickCallback` @ 0x80043464 | Decrement +0x104, trigger on 0 |
+| **Tick + Path** | `EntityPathMovementUpdate` @ 0x80042ffc | Path interpolation |
+| **Tick + Parent Cleanup** | `EntityOffscreenParentCleanupTick` @ 0x80045750 | Clean up if parent offscreen |
+
+**Timer Locations**: Entity timers at +0x104, +0x110, +0x112, +0x80 (8-bit decrements)
+
+### Event Handler Patterns
+
+Event handlers use `int callback(Entity* entity, short event, short param, int source)` signature.
+
+| Event Code | Name | Description |
+|------------|------|-------------|
+| 0x1001 | HIT | Entity was hit/attacked |
+| 0x1002 | RELEASE | Contact released |
+| 0x1008 | ATTACH | Attached to something |
+| 0x1009 | TRIGGER | Trigger activated |
+| 0x1017 | TELEPORT_CHECK | Teleporter availability check |
+| 2 | CONTACT | General contact event |
+| 3 | COLLECTED | Item collected |
+
+**Event Handler Variants**:
+- `EntityEventPassthrough_Event2` @ 0x80042fd0 - Only passes event 2
+- `HazardEventHandler_0x1001` @ 0x80042f3c - Transitions on hit
+- `EntityEventHandlerWalkWithTimer` @ 0x80046420 - Walk + timer decrement
+
+### Init/State Callback Patterns
+
+State init functions set up vtables and sprites:
+
+```c
+void InitSomethingState(Entity* entity) {
+    entity[0] = 0xFFFF0000;           // Tick marker
+    entity[1] = TickCallback;         // Tick function
+    entity[2] = 0xFFFF0000;           // Event marker  
+    entity[3] = EventHandler;         // Event function
+    SetEntitySpriteId(entity, SPRITE_ID, 1);
+    entity[0x26] = 0xFFFF0000;        // Animation end marker
+    entity[0x27] = NextStateCallback; // Animation complete callback
+}
+```
+
+### Destroy Callback Pattern
+
+All destroy callbacks follow this pattern:
+
+```c
+void EntityDestroyCallback_0xXXXXXXXX(Entity* entity, uint flags) {
+    entity[0x18] = 0xXXXXXXXX;       // VTable address (type identifier)
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(blbHeaderBufferBase, entity, 0, 0);
+    }
+}
+```
+
+**VTable Addresses by Entity Category**:
+| Range | Category |
+|-------|----------|
+| 0x80011048-0x800111c8 | Sound entities (stop SPU voice first) |
+| 0x80011068-0x80011188 | Standard game entities |
+| 0x800111e8-0x80011248 | Enemy/path-following entities |
+| 0x80011328-0x80011368 | Background/particle entities |
+
+### Entity Type Systems
+
+**Platform/Hazard System** (0x8004239c - 0x80043750):
+- `InitPlatformEntityState` - Timer-based activation
+- `PlatformTimerTickCallback` - Wait for timer or event
+- `HazardTimerTickCallback` - Countdown to active state
+
+**Teleporter System** (0x8004453c - 0x80045314):
+- `TeleporterTickCallback` - Scale based on player distance
+- `TeleporterActivateTickCallback` - Entry animation with fade
+- `TeleporterTransitionTickCallback` - Wobble effect during transport
+
+**Collectible System** (0x80045fac - 0x800465e0):
+- `CollectibleScaledTickCallback` - Visibility based on game mode
+- `InitItemRevealState` - Sparkle reveal animation
+
+**Sound Emitter System** (0x8004591c - 0x8004598c):
+- `SoundEmitterDestroyCallback` - Stop SPU voice on destroy
+- `SoundEmitterWithPanningTick` - Update panning based on position
+
+**Boss System** (0x80047288+):
+- `InitKloggBossEntity` - Klogg boss setup with sprites from g_KloggBossSprites
+- `KloggEventHandlerWithTrigger` - Multi-hit event handling
+- `InitKloggChaseState` - Chase state with child entity management
+
+**Menu System** (0x8007621c - 0x80076ad8):
+- `MenuEntityDestroyCallback` @ 0x80019864 - Frees CLUT slot + heap memory
+- `OptionsMenuDestroyCallback` @ 0x80076ad8 - Stage-specific cleanup (background/audio)
+- `MenuLogoAnimEventHandler` @ 0x8007683c - Cycles through g_MenuLogoSprites on event
+- `HUDDigitDisplayTickCallback` @ 0x8007811c - Displays digit (value % 10), hide if zero
+
+**Password Entry System** (0x80076300 - 0x8007662c):
+- `PasswordDigitSelectActive` @ 0x8007621c - Shows cursor on current slot
+- `PasswordDigitSelectInactive` @ 0x80076300 - Hides cursor, shows digit
+- `PasswordDigitInputHandler` @ 0x8007662c - Stores digit at +0x140 buffer, advances
+- `PasswordBackspaceHandler` @ 0x8007650c - Decrements slot index
+- `PasswordSubmitEventHandler` @ 0x80076378 - DecodePassword → SeekToLevelInSequence on success
+
+**Ending/Credits Sequence** (0x800798b0 - 0x80079c24):
+State machine flow: Reveal → Delay → Scroll → Scroll2 → Complete → FadeOut
+- `EndingCreditsRevealTick` @ 0x800798b0 - Reveals credit entries one at a time
+- `EndingCreditsDelayTick` @ 0x80079984 - 60-frame pause, plays sound on complete
+- `EndingCreditsScrollTick` @ 0x80079a08 - Decrements +0x136 counter, increments scroll Y
+- `EndingCreditsScrollTick2` @ 0x80079a90 - Decrements +0x142 counter
+- `EndingCreditsCompleteTick` @ 0x80079b18 - Stops SPU voice, transition to fadeout or idle
+- `EndingCreditsFadeOutTick` @ 0x80079c24 - Applies easing curve from DAT_8009cbbc
+
+### Tilemap/Parallax Rendering Functions
+
+These are NOT entity callbacks but core rendering infrastructure:
+
+| Address | Name | Description |
+|---------|------|-------------|
+| 0x8001652c | `RenderTilemapLayerWithScroll` | Renders tilemap layer with H/V scroll |
+| 0x80017af8 | `RenderTilemapPrimitivesWithBounds` | Bounds-check + DR_OFFSET + AddPrim |
+| 0x800181fc | `RenderTilemapWithWrapAround` | Handles level wrap-around at edges |
+| 0x800188e0 | `SubmitPrimitiveBufferToGPU` | Iterates prim buffer, submits by type |
+| 0x8001a33c | `WorldToScreenX` | Simple: worldX + GameState+0x44 |
+| 0x8001a358 | `WorldToScreenYWithParallax` | Fixed-point 16.16 parallax scale |
+| 0x8001ab14 | `UpdateParallaxLayerPosition` | Complex parallax calc with callbacks |
+| 0x8001bec0 | `IsPositionOffscreenLeft` | Returns true if screenX < -16 |
+
+### CLUT/Palette Animation Functions
+
+Menu/visual effects use animated color lookup tables:
+
+| Address | Name | Description |
+|---------|------|-------------|
+| 0x8001991c | `CLUTPaletteCycleTickCallback` | Rotates palette entries via memmove |
+| 0x80019a14 | `CLUTColorLerpTickCallback` | Interpolates RGB 5:5:5 per channel |
+
+**CLUT Animation Entity Fields**:
+- +0x1c, +0x20: Source/destination color buffers
+- +0x30: Frame index (0-based)
+- +0x39: Timer decrement (8-bit)
+- +0x48+: Target VRAM rect for UploadTextureOrClut
+
 ## Related Documentation
 
 - [Entity Types Reference](../reference/entity-types.md) - Full callback table (121 entries)

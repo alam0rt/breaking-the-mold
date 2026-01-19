@@ -26,7 +26,7 @@ Asset IDs are decimal numbers stored as hex in the TOC:
 | 501 | 0x1F5 | Tert | RAW | ctx[14] +0x38 | Entity placement data |
 | 502 | 0x1F6 | Tert | RAW | ctx[15] +0x3C | VRAM rectangles |
 | 503 | 0x1F7 | Tert | RAW | ctx[12] +0x30 | Animation offset table |
-| 504 | 0x1F8 | Tert | RAW | ctx[13] +0x34 | Vehicle path data |
+| 504 | 0x1F8 | Tert | RAW | ctx[13] +0x34 | Trigger zone data (FINN/RUNN) |
 | 600 | 0x258 | Pri/Tert | CONTAINER | ctx[16-17] | Geometry/Sprites |
 | 601 | 0x259 | Pri/Sec | CONTAINER | ctx[18-19] | Audio samples |
 | 602 | 0x25A | Pri/Sec | RAW | ctx[20] +0x50 | Palette/Audio metadata |
@@ -211,12 +211,44 @@ ToolX animation sequence data.
 ...     var    Frame data sections
 ```
 
-### Asset 504 - Vehicle Path Data
+### Asset 504 - Trigger Zone Data (FINN/RUNN levels only)
 
-64-byte waypoint entries (FINN/RUNN only).
+Extended trigger zones for special level modes. Used by `CheckTriggerZoneCollision` to detect when player enters specific areas and trigger events (checkpoints, spawns, pickups, etc.).
 
-- FINN: 78 entries (swimming rails)
-- RUNN: 1 entry (runner path)
+**Storage**: Pointer at GameState+0x74, count at GameState+0x78 (from Asset 100 field 0x16).
+
+**Entry structure** (16 bytes minimum, accessed in 8-short increments):
+```
+Offset  Size  Type    Description
+------  ----  ----    -----------
+0x00    2     s16     x1 (bbox left)
+0x02    2     s16     y1 (bbox top)
+0x04    2     s16     x2 (bbox right)
+0x06    2     s16     y2 (bbox bottom)
+0x08    4     u32     trigger_type (0x00, 0x51, 0x52, 0x65, 0x66, 0x79, 0x7a, etc.)
+0x0C    4     var     trigger_data (type-specific payload)
+```
+
+**Extended entries** (64 bytes observed in extracted data):
+The JSON extraction shows additional fields beyond the 16-byte core:
+- Center position (x, y)
+- Flags (often 0x8000)
+- Extended parameters for spawn offsets, state transitions
+
+**Trigger types** (from `FinnCheckTriggerZones`):
+| Type | Purpose |
+|------|---------|
+| 0x00 | State transition |
+| 0x51 | Spawn group 1, offset 1 |
+| 0x52 | Spawn group 2, offset 1 |
+| 0x65 | Spawn group 1, offset 0 |
+| 0x66 | Spawn group 2, offset 0 |
+| 0x79 | Spawn group 1, offset 2 |
+| 0x7a | Spawn group 2, offset 2 |
+
+**Levels**:
+- **FINN**: 78 entries (maze arena with tile-based wall collision + trigger zones for checkpoints/events)
+- **RUNN**: 1 entry (auto-runner with simple trigger)
 
 ---
 
