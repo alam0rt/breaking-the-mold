@@ -107,11 +107,12 @@ This index provides quick navigation to all documentation organized by category.
 |----------|-------------|--------|
 | [enemy-ai-overview.md](systems/enemy-ai-overview.md) | **Enemy AI patterns and behaviors** | ✅ Good (50%) |
 | [enemies/README.md](systems/enemies/README.md) | **Individual enemy type documentation** | ✅ Good (10 types) |
+| [bosses.md](systems/bosses.md) | **Complete boss reference (5 bosses, 76 functions)** | ✅ Complete |
 | [boss-ai/boss-system-analysis.md](systems/boss-ai/boss-system-analysis.md) | Boss AI system architecture | ✅ Complete |
 | [boss-ai/boss-behaviors.md](systems/boss-ai/boss-behaviors.md) | **Boss behaviors and attack patterns** | ✅ Good (55%) |
-| [boss-ai/boss-shriney-guard.md](systems/boss-ai/boss-shriney-guard.md) | Shriney Guard (tutorial boss) | ⚠️ Estimated |
-| [boss-ai/boss-glenn-yntis.md](systems/boss-ai/boss-glenn-yntis.md) | Glenn Yntis (mid-game boss) | ⚠️ Estimated |
-| [boss-ai/boss-monkey-mage.md](systems/boss-ai/boss-monkey-mage.md) | Monkey Mage (late-game boss) | ⚠️ Estimated |
+| [boss-ai/boss-shriney-guard.md](systems/boss-ai/boss-shriney-guard.md) | Shriney Guard (tutorial boss) | ✅ Complete |
+| [boss-ai/boss-glenn-yntis.md](systems/boss-ai/boss-glenn-yntis.md) | Glenn Yntis (mid-game boss) | ✅ Complete |
+| [boss-ai/boss-monkey-mage.md](systems/boss-ai/boss-monkey-mage.md) | Monkey Mage (late-game boss) | ✅ Complete |
 
 ### Audio
 

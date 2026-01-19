@@ -1,7 +1,7 @@
 # Complete Tile Collision Attribute Reference
 
 **Status**: ✅ Fully documented from Ghidra analysis (2026-01-15)  
-**Source**: PlayerProcessTileCollision @ 0x8005a914, GetTileAttributeAtPosition @ 0x800241f4
+**Source**: PlayerProcessTileCollision @ 0x8005a914, GetTileAttributeAtPosition @ 0x800241f4, GetSlopeHeightAtSubpixel @ 0x80081c0c
 
 This document provides the complete mapping of all tile collision attributes extracted from the decompiled code.
 
@@ -11,34 +11,94 @@ This document provides the complete mapping of all tile collision attributes ext
 
 Each tile has a **1-byte collision attribute** stored in Asset 500. The attribute determines:
 - Whether the tile is solid or passable
+- The slope height profile (for solid tiles 0x02-0x3B)
 - What trigger event occurs when player touches it
-- Special effects (wind zones, conveyor belts, etc.)
+- Special effects (wind zones, color tinting, etc.)
 
 ---
 
 ## Attribute Ranges
 
-### Range 1: Empty (0x00)
-**No collision** - player passes through freely.
+### Range 1: Empty (0x00-0x01, 0x14, 0x27-0x28)
+**No collision** - player passes through freely. Height = 0 in slope table.
 
-### Range 2: Solid (0x01-0x3B)
-**Solid floor/wall** - player cannot pass through. Used for:
-- Ground tiles
-- Wall tiles  
-- Platforms
-- Slopes (specific values within range)
+### Range 2: Flat Solid (0x02-0x11)
+**Flat platforms with variable heights**:
+- 0x02: Full height (16px)
+- 0x03-0x11: Decreasing heights (15px → 1px)
 
-From PlayerCallback @ 0x800638d0:
-```c
-if (attr == 0 || attr > 0x3B) {
-    // Not solid
-} else {
-    // Solid (0x01-0x3B)
-}
-```
+### Range 3: Slopes (0x12-0x26, 0x29-0x3B)
+**Sloped solid tiles** with subpixel collision:
+- **45°**: 0x12 (down-right), 0x13 (up-right)
+- **22.5°**: 0x15-0x18 (2-tile sequences)
+- **11.25°**: 0x19-0x1E (3-tile sequences)
+- **5.6°**: 0x1F-0x26 (4-tile sequences)
+- **2.8°**: 0x29-0x38 (8-tile sequences)
+- **~53°**: 0x3A-0x3B (steep special)
 
-### Range 3: Triggers (0x3C+)
+**Note**: Attributes 0x15-0x26 are **dual-purpose** - they provide both slope heights AND color tinting!
+
+### Range 4: Triggers (0x3C+)
 **Trigger zones** - player can pass through, but code in `PlayerProcessTileCollision` handles special effects.
+
+### Range 5: Semi-Solid Platforms (0xB5-0xB7, 0xC9, 0xCB, 0xDD-0xDF)
+**One-way platforms** - solid from above, passable from below when `player[0x128]` flag is set.
+
+---
+
+## Slope Height Table (g_SlopeHeightTable @ 0x8009d228)
+
+Each solid tile attribute has 16 height values (one per subpixel position).
+
+**Lookup formula**: `height = g_SlopeHeightTable[(attr & 0xFF) * 16 + (x_pixel & 0xF)]`
+
+### Complete Slope Mapping
+
+| Attr | Hex | Pattern | Description |
+|------|-----|---------|-------------|
+| 0-1 | 0x00-0x01 | All 0 | Empty (passthrough) |
+| 2 | 0x02 | All 16 | Full height solid |
+| 3-17 | 0x03-0x11 | 15,14,...,1 | Flat partial heights |
+| **18** | **0x12** | **16→1** | **45° slope DOWN-RIGHT** |
+| **19** | **0x13** | **1→16** | **45° slope UP-RIGHT** |
+| 20 | 0x14 | All 0 | Empty |
+| **21** | **0x15** | **16→9** | **22.5° DOWN (part 1)** |
+| **22** | **0x16** | **8→1** | **22.5° DOWN (part 2)** |
+| **23** | **0x17** | **1→8** | **22.5° UP (part 1)** |
+| **24** | **0x18** | **9→16** | **22.5° UP (part 2)** |
+| 25-30 | 0x19-0x1E | varies | 11.25° slopes (3-tile) |
+| 31-38 | 0x1F-0x26 | varies | 5.6° slopes (4-tile) |
+| 39-40 | 0x27-0x28 | All 0 | Empty |
+| 41-56 | 0x29-0x38 | varies | 2.8° slopes (8-tile) |
+| 57 | 0x39 | All 8 | Half-height flat |
+| **58** | **0x3A** | **15→3** | **~53° steep DOWN** |
+| **59** | **0x3B** | **3→15** | **~53° steep UP** |
+
+### Slope Direction Guide
+
+- **DOWN-RIGHT (↘)**: Height decreases left-to-right (player walks downhill going right)
+- **UP-RIGHT (↗)**: Height increases left-to-right (player walks uphill going right)
+
+---
+
+## Color Tinting Zones (0x15-0x28)
+
+**Dual-Purpose**: These attributes provide BOTH slope collision AND color tinting!
+
+**Function**: `HandleGenericTriggerZone` @ 0x8007ee6c
+
+| Value Range | Hex Range | Name | Effect |
+|-------------|-----------|------|--------|
+| 21-40 | 0x15-0x28 | Color Zone 0-19 | Applies RGB tint from lookup table |
+
+**Source table**: `g_TriggerZoneColorTable` @ 0x8009D9C0 (60 bytes = 20 RGB triplets)
+
+**Outputs to player**:
+- `player[0x15d]` = R component
+- `player[0x15e]` = G component  
+- `player[0x15f]` = B component
+
+**Usage**: Underwater caves with sloped floors, tinted areas with ramps.
 
 ---
 
@@ -236,7 +296,48 @@ default:
     }
 ```
 
-Calls generic handler with 3 output parameters at player offsets 0x15d/0x15e/0x15f.
+Calls generic handler which checks for color zones (0x15-0x28) - see "Color Tinting Zones" section above.
+
+### Semi-Solid Override Attributes
+
+**Function**: `CheckTileCollisionOverride` @ 0x8005a5c4
+
+These attributes are overridden to empty (0x65) when `player[0x128]` flag is set:
+
+| Value Range | Hex Range | Name | Purpose |
+|-------------|-----------|------|---------|
+| 181-183 | 0xB5-0xB7 | Semi-solid Type A | One-way platforms (from below) |
+| 201 | 0xC9 | Semi-solid Type B | Special pass-through |
+| 203 | 0xCB | Semi-solid Type C | Special pass-through |
+| 221-223 | 0xDD-0xDF | Semi-solid Type D | One-way platforms (from below) |
+
+**Code**:
+```c
+bool CheckTileCollisionOverride(Entity* player, char* attr) {
+    char a = *attr;
+    
+    // Check for semi-solid attributes
+    bool is_semi_solid = 
+        (a >= 0xB5 && a <= 0xB7) ||  // Type A
+        (a == 0xC9) ||                // Type B
+        (a == 0xCB) ||                // Type C
+        (a >= 0xDD && a <= 0xDF);     // Type D
+    
+    if (is_semi_solid) {
+        if (player[0x128] == 0) {
+            return true;  // Treat as solid
+        } else {
+            *attr = 'e';  // 0x65 = empty, pass through
+            return false;
+        }
+    }
+    return false;  // Not semi-solid
+}
+```
+
+**Field**: `player[0x128]` = Semi-solid passthrough flag
+- When 0: Player collides with semi-solid tiles normally
+- When non-zero: Player passes through semi-solid tiles (jumping from below)
 
 ---
 
@@ -375,6 +476,10 @@ Entities can be on multiple layers: `mask = 0x0003` collides with both player an
 
 | Offset | Type | Name | Purpose |
 |--------|------|------|---------|
+| 0x128 | u8 | semi_solid_pass | If set, pass through semi-solid tiles (0xB5-0xB7, 0xC9, 0xCB, 0xDD-0xDF) |
+| 0x15d | u8 | tint_r | Color zone R component |
+| 0x15e | u8 | tint_g | Color zone G component |
+| 0x15f | u8 | tint_b | Color zone B component |
 | 0x1ae | u8 | disable_triggers | If set, default trigger handler skipped |
 
 ---

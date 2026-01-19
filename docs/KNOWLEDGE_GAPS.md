@@ -59,22 +59,30 @@ Items here have been verified as "unknown" after checking existing documentation
 - How password validation occurs in menu system
 
 ### 4. Boss AI State Machines
-**Location**: `docs/systems/boss-ai/`  
-**Known**: Boss entity types (49-51), basic attack patterns  
-**Unknown**:
-- Complete state machine transitions for each boss
-- Boss damage thresholds and phase triggers
-- Boss hitbox dimensions during each attack phase
-- How boss music/audio is coordinated with phases
+**Location**: `docs/systems/bosses.md`  
+**Status**: ✅ MOSTLY RESOLVED (2026-01-20)  
+**Known**: Boss entity types (71, 100-103), complete function inventory
 
-**Bosses Needing Analysis**:
-| Boss | File | Completeness |
-|------|------|--------------|
-| Shriney Guard | boss-shriney-guard.md | ~40% (estimated) |
-| Joe-Head-Joe | boss-behaviors.md | ~60% (some tracing) |
-| Glenn Yntis | boss-glenn-yntis.md | ~30% (estimated) |
-| Monkey Mage | boss-monkey-mage.md | ~30% (estimated) |
-| Klogg | boss-klogg.md | ~50% (recent analysis) |
+**Resolution Summary (76 functions named):**
+| Boss | Functions Named | Coverage |
+|------|-----------------|----------|
+| Shriney Guard | 15 | ~100% |
+| Joe-Head-Joe | 23 | ~92% |
+| Glenn Yntis | 8 | ~100% |
+| Monkey Mage | 11 | ~92% |
+| Klogg | 13 | ~87% |
+| Shared | 5 | ~100% |
+
+**Key Discoveries:**
+- HP stored in `g_pPlayerState[0x1D]` (all bosses)
+- Common event codes: 0x1001 (upper hit), 0x1002 (lower hit)
+- VTables: Klogg=0x80011268, JHJ=0x80011288, Shriney=0x800112a8, Glenn=0x800112c8, MM=0x80011308
+- Attack pattern table: Joe-Head-Joe @ 0x8009bb28 (90 bytes, 5 phases × 18 patterns)
+
+**Still Unknown (minor):**
+- Exact hitbox dimensions during attack phases
+- Boss music coordination details
+- Some intermediate state transitions
 
 ### 5. FINN/RUNN Vehicle Mechanics
 **Location**: `docs/systems/player/player-finn.md`  
@@ -142,12 +150,26 @@ These were gaps that have been resolved:
 
 | Gap | Resolution Date | Documentation |
 |-----|-----------------|---------------|
+| **Tile slope height table** | 2026-01-19 | `tile-collision-quick-ref.md`, `systems/collision-complete.md` |
 | Tile collision attributes | 2026-01-15 | `systems/collision-complete.md` |
 | Animation framework | 2026-01-15 | `systems/animation-framework.md` |
 | Camera smooth scrolling | 2026-01-15 | `systems/camera.md` |
 | Entity type identification | 2026-01-13 | `systems/entity-identification.md` |
 | Cheat code buffer | 2026-01-19 | `systems/gamestate-field-analysis.md` |
 | Checkpoint system | 2026-01-19 | `systems/checkpoint-system.md` |
+
+### Slope Height Table Discovery (2026-01-19)
+
+**Key Finding**: `g_SlopeHeightTable` @ 0x8009d228 contains subpixel collision heights.
+
+- **Format**: 256 tile types × 16 height values = 4096 bytes
+- **Lookup**: `height = table[(attr & 0xFF) * 16 + (x_pixel & 0xF)]`
+- **Function**: `GetSlopeHeightAtSubpixel` @ 0x80081c0c (renamed from `GetLevelSoundTableEntry`)
+
+**Slope Types Documented**:
+- 45°, 22.5° (2-tile), 11.25° (3-tile), 5.6° (4-tile), 2.8° (8-tile), ~53° (special)
+- Both up-right (↗) and down-right (↘) variants
+- Dual-purpose: attributes 0x15-0x28 provide BOTH slope heights AND color tinting
 | Input system | 2026-01-17 | `systems/input-system-complete.md` |
 | HUD system | 2026-01-17 | `systems/hud-system-complete.md` |
 | Menu system | 2026-01-17 | `systems/menu-system-complete.md` |
@@ -161,6 +183,7 @@ These were gaps that have been resolved:
 | GameState 0x19C boss_defeated | 2026-01-20 | Boss AI tracing analysis |
 | GameState 0x19D boss_facing | 2026-01-20 | Boss AI tracing analysis |
 | 98 PlayerCallback functions | 2026-01-20 | Ghidra MCP renaming session |
+| Boss AI state machines (76 functions) | 2026-01-20 | `systems/bosses.md` - complete reference |
 
 ---
 
