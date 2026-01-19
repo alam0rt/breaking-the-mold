@@ -114,7 +114,7 @@ def register_all_handlers():
     from . import tile_attributes
     from . import palette_indices
     from . import palette_anim
-    from . import unknown_101
+    from . import vram_slot_config
     from . import vram_rects
     from . import anim_offsets
     from . import vehicle_data

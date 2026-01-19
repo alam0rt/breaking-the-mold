@@ -63,7 +63,7 @@ UNREFERENCED_SECTORS = [
 ASSET_NAMES_FALLBACK = {
     # Level assets (100-799)
     100: "tile_header",
-    101: "unknown_101",
+    101: "vram_slot_config",
     200: "tilemap_container",
     201: "layer_entries",
     300: "tile_pixels",

@@ -450,18 +450,25 @@ struct TileHeader {
 // =============================================================================
 // VRAM Slot Configuration - Asset 101 (0x65) - 12 bytes
 // =============================================================================
-// VERIFIED 2026-01-13 via Ghidra (GetAsset101Entry @ 0x8007b3fc, InitVRAMSlotTable @ 0x80013b1c)
+// VERIFIED 2026-01-20 via Ghidra (GetAsset101Entry @ 0x8007b3fc, InitVRAMSlotTable @ 0x80013b1c)
+// and extracted data analysis (56 occurrences across 14 levels).
 //
 // Controls texture page slot allocation for the level's sprites/tiles.
 // Only present in ~14 levels that need custom VRAM layouts.
+// When absent, engine defaults to bank_a=0, bank_b=2 (6 texture slots).
 //
-// GetAsset101Entry(ctx, index) returns field at index 0 or 1.
-// InitVRAMSlotTable allocates (bank_a_count + bank_b_count) * 3 texture slots.
+// Runtime behavior:
+//   GetAsset101Entry(ctx, 0) returns bank_a_count
+//   GetAsset101Entry(ctx, 1) returns bank_b_count
+//   InitVRAMSlotTable allocates (bank_a_count + bank_b_count) * 3 texture slots.
+//   Bank A slots start at VRAM y=0xF0, Bank B at y=0x1F0.
 //
-// Observations:
-//   - bank_a_count: 1-4 (higher for complex levels like MEGA, EGGS)
-//   - bank_b_count: 0-1 (only FOOD and HEAD have 1 - special rendering)
-//   - reserved: always 0
+// Observed values (from extracted data):
+//   bank_a=1, bank_b=1: HEAD only (Joe-Head-Joe boss level)
+//   bank_a=2, bank_b=0: Most levels (38 occurrences)
+//   bank_a=2, bank_b=1: FOOD only (special rendering)
+//   bank_a=3, bank_b=0: EVIL stage1/secondary1 (more sprites)
+//   bank_a=4, bank_b=0: BOIL, EGGS, MEGA (max sprite complexity)
 
 struct VRAMSlotConfig {
     u32 bank_a_count [[name("Bank A Count"), comment("Texture slots in upper VRAM (y=0xF0), values 1-4"), color("80CCFF")]];
