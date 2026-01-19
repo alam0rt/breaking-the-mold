@@ -13,7 +13,7 @@ Asset IDs are decimal numbers stored as hex in the TOC:
 | Asset | Hex | Segment | Structure | LevelDataContext | Description |
 |-------|-----|---------|-----------|------------------|-------------|
 | 100 | 0x064 | Sec/Tert | RAW | ctx[1] +0x04 | Tile header (36 bytes) |
-| 101 | 0x065 | Tert | RAW | ctx[2] +0x08 | Segment variant flag |
+| 101 | 0x065 | Tert | RAW | ctx[2] +0x08 | VRAM slot config (12 bytes) |
 | 200 | 0x0C8 | Tert | RAW | ctx[3] +0x0C | Tilemap container header |
 | 201 | 0x0C9 | Tert | RAW | ctx[4] +0x10 | Layer entries (92 bytes each) |
 | 300 | 0x12C | Sec | RAW | ctx[5] +0x14 | Tile pixel data (8bpp) |

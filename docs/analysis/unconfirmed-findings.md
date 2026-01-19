@@ -51,12 +51,38 @@ Common patterns:
 - (1, 216, 253, 2) - Cycle last 40 colors at medium speed
 - (1, 17, 253, 1) - Skip first 17 colors, cycle rest
 
-### Asset 101: Segment Variant Flag (12 bytes) - NEEDS VERIFICATION
+### Asset 101: VRAM Slot Configuration (12 bytes) - CONFIRMED ✓
 
-**Pattern**: Always 12 bytes, first u32 contains value 1-4, rest zeros
-**Distribution**: value=2 (42 occurrences), value=4 (10), value=3 (2), value=1 (2)
-**Theory**: Secondary segment count or tile set variant identifier
-**Status**: Handler implemented, but meaning of variant values unclear
+**VERIFIED 2026-01-20** via Ghidra (GetAsset101Entry @ 0x8007b3fc, InitVRAMSlotTable @ 0x80013b1c)
+
+Controls texture page slot allocation for the level's sprites/tiles.
+Only present in 56 segments across ~14 levels that need custom VRAM layouts.
+
+**Structure (12 bytes):**
+```
+Offset  Size  Field
+0x00    u32   bank_a_count  (texture slots in upper VRAM at y=0xF0, values 1-4)
+0x04    u32   bank_b_count  (texture slots in lower VRAM at y=0x1F0, values 0-1)
+0x08    u32   reserved      (always 0)
+```
+
+**Runtime Behavior:**
+- `GetAsset101Entry(ctx, 0)` returns bank_a_count
+- `GetAsset101Entry(ctx, 1)` returns bank_b_count
+- `InitVRAMSlotTable` creates `(bank_a_count + bank_b_count) * 3` texture page slots
+- When Asset 101 is absent, defaults to bank_a=0, bank_b=2 (6 slots)
+
+**Observed Values (from extracted data):**
+| bank_a | bank_b | Total Slots | Count | Levels |
+|--------|--------|-------------|-------|--------|
+| 1 | 1 | 6 | 2 | HEAD (boss level) |
+| 2 | 0 | 6 | 38 | Most levels with custom VRAM |
+| 2 | 1 | 9 | 4 | FOOD (special rendering) |
+| 3 | 0 | 9 | 2 | EVIL stage1/secondary1 |
+| 4 | 0 | 12 | 10 | BOIL, EGGS, MEGA (complex levels) |
+
+**Levels WITHOUT Asset 101 (use default 6 slots):**
+CAVE, CRYS, CSTL, GLEN, KLOG, MENU, PHRO, RUNN, SEVN, SOAR, TMPL, WIZZ
 
 ### Asset 502: VRAM Rectangles (16-byte entries) - CONFIRMED ✓
 
