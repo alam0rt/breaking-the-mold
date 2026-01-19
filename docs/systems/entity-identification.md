@@ -56,7 +56,29 @@ Airborne enemies that move in flight patterns:
 | 28 | 89 | Platform A | Horizontal moving platform |
 | 48 | 106-108 | Platform B | Vertical moving platform |
 | 42 | 85 | Portal | Level exit/entrance |
-| 45 | 119 | Message Box | Save point / message display |
+| 45 | 119 | Message Box | Tutorial/info display (see below) |
+
+### Message Box System (BLB 45)
+
+The message box entity is a **two-component system**:
+
+1. **Box Sprite** - The visual frame/container rendered by `InitPathFollowingEntity`
+2. **Text Sprite** - Selected via the **variant** field which indexes into a sprite collection
+
+**How it works:**
+- `EntityType045_MessageBox_Init` calls `InitPathFollowingEntity` with sprite ID `0x8009b6bc`
+- The variant field (offset 0xC in entity def) selects which text message to display
+- Text is pre-rendered as sprites in Asset 600, not runtime text rendering
+
+**SCIE Stage 0 Examples:**
+| Position | Variant | Likely Content |
+|----------|---------|----------------|
+| x=24 | 0 | First tutorial message |
+| x=55 | 14 | Different message |
+| x=96 | 1 | Second tutorial message |
+
+**Init Function:** `EntityType045_MessageBox_Init` @ 0x80080f1c
+**Sprite Table:** 0x8009b6bc (multiple packed sprite IDs)
 
 ### Bosses (Layer 3)
 

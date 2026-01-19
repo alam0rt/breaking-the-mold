@@ -313,8 +313,9 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x80056518 | ClayballTickCallback | Clayball tick callback |
-| 0x800561d4 | ClayballInitCallback | Clayball init callback |
+| 0x800560a8 | InitGenericSpriteEntity | Base init for 12+ entity types (was InitClayballEntity) |
+| 0x80056518 | GenericSpriteEntityTickCallback | Generic sprite entity tick (was ClayballTickCallback) |
+| 0x800561d4 | GenericSpriteEntityInitCallback | Generic sprite entity init (was ClayballInitCallback) |
 | 0x8001b47c | CollisionCheckWrapper | Collision check wrapper |
 | 0x800226f8 | CheckEntityCollision | Main collision detection |
 | 0x8001b3f0 | CheckBBoxOverlap | Bounding box overlap test |

@@ -12,8 +12,8 @@ All item data verified via Ghidra decompilation and runtime tracing.
 
 **Technical Details:**
 - Entity Type: 2 (BLB type 2, no remapping)
-- Callback: `ClayballTickCallback` @ 0x80056518
-- Init: `ClayballInitCallback` @ 0x800561D4
+- Callback: `GenericSpriteEntityTickCallback` @ 0x80056518 (renamed from ClayballTickCallback)
+- Init: `GenericSpriteEntityInitCallback` @ 0x800561D4 (renamed from ClayballInitCallback)
 - Storage: `g_pPlayerState[0x12]` (u8, orb/clay count)
 - Collection Logic: Type mask = 2, special fast path via `CheckEntityCollision` @ 0x800226f8
 - Count: 5,727 total across all levels
@@ -24,6 +24,10 @@ All item data verified via Ghidra decompilation and runtime tracing.
   3. `CheckEntityCollision` checks player at GameState+0x2c directly (optimization)
   4. On collision: Calls GameState callback with message 3 (COLLECTED)
   5. Clayball disappears, score increments
+
+**Note:** The "Clayball" callback names were misleading - these are generic sprite entity 
+callbacks used by 12+ entity types including enemies and collectibles. The sprite hash 
+parameter determines the actual visual and behavior.
 
 **Verified:** 2025-01-13 via Ghidra decompilation of 0x80056518
 
@@ -302,8 +306,9 @@ either a cut feature, regional difference (NTSC may vary), or embellished docume
 
 | Address | Name | Purpose |
 |---------|------|--------|
-| 0x80056518 | ClayballTickCallback | Clayball entity tick - collection logic |
-| 0x800561D4 | ClayballInitCallback | Clayball entity initialization |
+| 0x80056518 | GenericSpriteEntityTickCallback | Generic sprite entity tick (was ClayballTickCallback) |
+| 0x800561D4 | GenericSpriteEntityInitCallback | Generic sprite entity init (was ClayballInitCallback) |
+| 0x800560A8 | InitGenericSpriteEntity | Base init for 12+ entity types (was InitClayballEntity) |
 | 0x800226f8 | CheckEntityCollision | Main collision detection (type mask routing) |
 | 0x8001b47c | CollisionCheckWrapper | Wraps CheckEntityCollision with entity bbox |
 | 0x8006de98 | CreateHaloEntity | Create halo powerup visual effect |

@@ -44,20 +44,22 @@ For each entity type:
 
 | Type | Address | Function Name | Init Function | Purpose |
 |------|---------|---------------|---------------|---------|
-| 5 | 0x8007f7b0 | EntityType005_FlyingEnemy_Init | InitClayballEntity | Flying enemy variant |
-| 6 | 0x8007f830 | EntityType006_FlyingEnemyAlt_Init | InitClayballEntity | Flying enemy (alternate sprite) |
+| 5 | 0x8007f7b0 | EntityType005_FlyingEnemy_Init | InitGenericSpriteEntity | Flying enemy variant |
+| 6 | 0x8007f830 | EntityType006_FlyingEnemyAlt_Init | InitGenericSpriteEntity | Flying enemy (alternate sprite) |
 | 7 | 0x80080408 | EntityType007_ItemCollectible_Init | InitRandomColorDecorEntity | Colored decoration/collectible |
 | 9 | 0x800804e8 | EntityType009_Collectible_Init | InitPlatformDecorEntity | Platform decoration |
 | 11 | 0x80080478 | EntityType011_Collectible_Init | InitTransparentDecorEntity | Transparent decoration |
-| 12 | 0x8007f8b0 | EntityType012_Collectible_Init | InitClayballEntity | Clayball collectible variant |
+| 12 | 0x8007f8b0 | EntityType012_Collectible_Init | InitGenericSpriteEntity | Clayball collectible variant |
 
-**Pattern**: Types 5/6/12 use `InitClayballEntity` with different sprite params. Types 7/9/11 use decoration initializers.
+**Pattern**: Types 5/6/12 use `InitGenericSpriteEntity` (renamed from InitClayballEntity) with different sprite hash params. Types 7/9/11 use decoration initializers.
+
+**Note**: `InitGenericSpriteEntity` @ 0x800560a8 is a base init function used by 12+ entity types. The sprite hash parameter determines the actual visual/behavior.
 
 ---
 
 ### Types 17-23 - ✅ RESOLVED (2026-01-20 via Ghidra)
 
-All use `InitClayballEntity` with different sprite/behavior parameters:
+All use `InitGenericSpriteEntity` with different sprite/behavior parameters:
 
 | Type | Address | Init Params | Purpose |
 |------|---------|-------------|---------|
