@@ -16,10 +16,12 @@
 #define WALK_SPEED_FAST     0x30000    // 3.0 px/frame
 #define SPEED_MODIFIER      0x8000     // +0.5 px/frame boost
 
-// Vertical movement
-#define JUMP_VELOCITY       0xFFFDC000 // -2.25 px/frame (upward)
+// Vertical movement (16.16 fixed-point)
+// Verified from EntityFallingGravityWithCollision @ 0x8003dad8
+#define JUMP_VELOCITY       0xFFFDC000 // -2.25 px/frame (upward, negative = up)
 #define JUMP_APEX_VELOCITY  0xFFD8     // -0.625 px/frame (peak)
-#define GRAVITY             0xFFFA0000 // -6.0 px/frame² (downward)
+#define GRAVITY             0x8000     // 0.5 px/frame² (added each frame)
+#define TERMINAL_VELOCITY   0x80000    // 8.0 px/frame max fall speed
 #define LANDING_CUSHION     0xFFFFEE00 // -0.07 px/frame (soft land)
 
 // Timers
@@ -30,15 +32,15 @@
 ### Godot Constants
 
 ```gdscript
-# Movement (pixels per second)
-const WALK_SPEED_NORMAL = 2.0 * 60   # 120 px/sec
-const WALK_SPEED_FAST = 3.0 * 60     # 180 px/sec
-const SPEED_BOOST = 0.5 * 60         # 30 px/sec
+# Movement (pixels per frame, use directly)
+const WALK_SPEED_NORMAL = 2.0        # px/frame (0x20000 / 0x10000)
+const WALK_SPEED_FAST = 3.0          # px/frame (0x30000 / 0x10000)
+const SPEED_BOOST = 0.5              # px/frame (0x8000 / 0x10000)
 
-# Vertical
-const JUMP_VELOCITY = -2.25 * 60     # -135 px/sec
-const GRAVITY = 6.0 * 60 * 60        # 21,600 px/sec²
-const MAX_FALL_SPEED = 8.0 * 60      # 480 px/sec
+# Vertical (pixels per frame)
+const JUMP_VELOCITY = -2.25          # px/frame (0xFFFDC000 = -2.25)
+const GRAVITY = 0.5                  # px/frame² (0x8000 / 0x10000)
+const MAX_FALL_SPEED = 8.0           # px/frame (0x80000 / 0x10000)
 
 # Timers
 const LANDING_FRAMES = 5
