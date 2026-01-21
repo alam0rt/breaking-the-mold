@@ -122,6 +122,70 @@ To verify findings, provide the developer with methods to trace or dump data at 
 - `config/splat.pal.yaml` - Splat configuration
 - `symbol_addrs.txt` - Known function/variable symbols
 
+## Splat Segment Configuration
+
+### Handling Rodata Warnings
+
+When `make` produces warnings like:
+```
+Rodata segment 'XXXX' may belong to the text segment 'YYYY'
+    Based on the usage from the function func_XXXXXXXX to the symbol jtbl_YYYYYYYY
+```
+
+Follow this process to fix them:
+
+1. **Analyze the rodata in Ghidra**: Use MCP tools to examine the symbol mentioned in the warning:
+   ```
+   mcp_ghidra_xrefs_list(to_addr="0xYYYYYYYY")  # See what uses this data
+   mcp_ghidra_functions_get(address="0xXXXXXXXX")  # Identify the function
+   ```
+
+2. **Identify the system**: Determine what subsystem the function belongs to:
+   - PSY-Q library functions (CdInit, FntPrint, SpuSetCommonAttr, etc.) → `LIBS`
+   - Game code (entity callbacks, player logic, etc.) → game segment name
+   - Use function names, calling patterns, and memory regions to classify
+
+3. **Match rodata to text segments**: In `config/splat.pal.yaml`, rodata and asm segments with the same name are linked together. Either:
+   - Name the rodata segment to match its corresponding text segment
+   - Extend an existing named segment to include the rodata range
+
+4. **Rebuild and verify**:
+   ```bash
+   make clean && make
+   ```
+   The warning should disappear. If new warnings appear, repeat the process.
+
+### Segment Naming Convention
+
+Following the pattern from other PSX decompilation projects (e.g., soul-re):
+
+- `LIBS` - PSY-Q SDK library code and data (libcd, libgpu, libspu, libetc)
+- `core/early` - Early initialization code (memset, RLE decode)
+- `core/graphics` - Graphics initialization and rendering
+- `entity/core` - Entity system base functions
+- `player/main` - Player state machine and physics
+- Game-specific segments as needed
+
+### Example: Adding LIBS Segments
+
+```yaml
+# PSY-Q library rodata (libcd strings, jump tables)
+- [0x2940, rodata, LIBS]
+# Main game code
+- [0x39F0, asm]
+# PSY-Q SDK libraries (libcd, libgpu, libspu, etc.)
+- [0x73800, asm, LIBS]
+```
+
+### Address Conversion
+
+To convert between VRAM addresses and ROM offsets:
+```bash
+# VRAM to ROM: rom = (vram - 0x80010000) + 0x800
+# ROM to VRAM: vram = 0x80010000 + (rom - 0x800)
+./scripts/addr2offset.sh 0x80083000  # Outputs ROM offset
+```
+
 ## PCSX-Redux Emulator & MCP Integration
 
 An MCP server (`scripts/pcsx_mcp_server.py`) provides tools to interact with PCSX-Redux's REST API.

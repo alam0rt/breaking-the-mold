@@ -62,16 +62,19 @@ segments:
   vram: 0x80010000
   bss_size: 0x8278
   subsegments:
-      # .rdata: 0x80010000 - 0x800131EF (size: 0x31F0)
-  - [0x800, rodata]
-  - [0xE2C, rodata, entity_lists]
-  - [0x1F28, rodata, fmv_callbacks]
-  - [0x2044, rodata, fmv_jumptables]
-  - [0x2940, rodata, spu_audio]
-  - [0x34F4, rodata, debug_menu]
-  - [0x3970, rodata, heap_init]
-      # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
+      # .text: 0x80010000 - 0x800907CF
+      # Early code: memset_entrypoint, DecodeRLESprite
+  - [0x800, asm, core/early]
+      # .rodata: jump tables and strings interspersed
+  - [0xE2C, rodata]
+  - [0x1F28, rodata]
+  - [0x2044, rodata]
+      # PSY-Q library rodata (libcd strings, FntPrint, SpuSetCommonAttr jump tables)
+  - [0x2940, rodata, LIBS]
+      # .text continues: main game code
   - [0x39F0, asm]
+      # PSY-Q SDK libraries (libcd, libgpu, libspu, etc.) - starts at StSetRing
+  - [0x73800, asm, LIBS]
   - [0x80FEC, data]
       # .sdata: 0x800A5954 - 0x800A611F (size: 0x7CC)
   - [0x96154, sdata]

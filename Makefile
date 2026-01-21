@@ -281,7 +281,7 @@ expected: $(TARGET)
 	@echo "Copied original to expected/$(VERSION)/"
 
 # Check if build matches original
-check: $(BUILD_DIR)/$(PROJECT).bin $(TARGET)
+check: all $(TARGET)
 	@echo "Comparing build to original..."
 	@sha1sum $(BUILD_DIR)/$(PROJECT).bin $(TARGET)
 	@if cmp -s $(BUILD_DIR)/$(PROJECT).bin $(TARGET); then \
