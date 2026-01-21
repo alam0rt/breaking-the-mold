@@ -7,6 +7,7 @@ options:
   base_path: ..
   platform: psx
   compiler: PSYQ
+  migrate_rodata_to_functions: false
 
   asm_path: asm/pal
   src_path: src
@@ -71,54 +72,6 @@ segments:
   - [0x3970, rodata, heap_init]
       # .text: 0x800131F0 - 0x800907CF (size: 0x7D5E0)
   - [0x39F0, asm]
-  - [0x110B0, c, LoadBLBHeader]
-  - [0x11174, asm]
-  - [0x11680, c, Game/ENGINE, entity_lists]
-  - [0x13BBC, asm, entity_lists]
-      # LoadGameAssetLocations: 0x800389DC - 0x80038B97
-  - [0x291DC, c, LoadGameAssetLocations]
-      # CdBLB: CD/BLB loading subsystem 0x80038B98 - 0x8003914F
-  - [0x29398, c, CdBLB]
-      # FMV/streaming subsystem (PlayMovieFromCD, etc) - pairs with fmv_callbacks rodata
-  - [0x29950, asm, fmv_callbacks]
-      # func_8007A62C: 0x8007A62C - 0x8007A87F (Level data parser)
-  - [0x6AE2C, c, LevelDataParser]
-  - [0x6B080, asm]
-      # StateAccessors: 0x8007A9C4 - 0x8007AA27
-      # GetLevelAssetIndex, GetLevelDisplayName, getLevelName
-  - [0x6B1C4, c, StateAccessors]
-      # ASM gap: GetLevelFlagByIndex, GetCurrentLevelAssetIndex, GetCurrentLevelDisplayName,
-      # GetCurrentLevelName, GetCurrentSectorOrderUnk1, GetCurrentSectorOrderUnk2
-  - [0x6B228, asm]
-      # CreditsAccessors: 0x8007ABCC - 0x8007ACDB
-      # GetCurrentSectorOffset, GetCurrentSectorCount
-  - [0x6B3CC, c, CreditsAccessors]
-      # GetAssetCount: 0x8007ACDC - 0x8007ACEF
-  - [0x6B4DC, c, GetAssetCount]
-      # MovieAccessors: 0x8007ACF0 - 0x8007AE13
-      # GetMovieReservedByIndex, GetMovieShortNameByIndex, GetCurrentMovieReserved,
-      # GetCurrentMovieShortName, GetCurrentMovieFilename
-  - [0x6B4F0, asm]
-      # BLBHeaderAccessors: 0x8007AE14 - 0x8007AE9B
-      # GetMovieUnknown00, GetMovieSectorCount
-  - [0x6B614, c, BLBHeaderAccessors]
-      # ASM: GetCurrentModeReservedData (has jumptable), GetCurrentLevelFlag, GetCurrentTertiaryDataSize
-  - [0x6B69C, asm]
-      # SetupSound: 0x8007B8B8 - 0x8007c084 ?
-  - [0x6C7B8, c, SetupSound]
-      # SPU audio upload (UploadAudioToSPU, etc)
-  - [0x6C888, asm, spu_audio]
-      # main: 0x800828B0 - 0x80082C0F
-  - [0x730B0, c, main]
-      # Debug menu (ProcessDebugMenuInput, etc)
-  - [0x73410, asm, debug_menu]
-      # __main: 0x8008E6E0 - 0x8008E7B7 (constructor init)
-  - [0x7EEE0, c, __main]
-      # Heap initialization (InitHeap, etc)
-  - [0x7EFB8, asm, heap_init]
-      # .text.split: 0x800907D0 - 0x800907EB (size: 0x1C)
-  - [0x80FD0, asm]
-      # .data: 0x800907EC - 0x800A5953 (size: 0x15168)
   - [0x80FEC, data]
       # .sdata: 0x800A5954 - 0x800A611F (size: 0x7CC)
   - [0x96154, sdata]
