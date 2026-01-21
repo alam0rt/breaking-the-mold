@@ -138,7 +138,45 @@ Previous docs incorrectly stated "BLB 25 = Loud Mouth enemy". In reality:
 
 ## Lower Priority Gaps (Nice to Have)
 
-### 7. Entity Initialization Patterns
+### 7. Player Sprite Availability System - ✅ RESOLVED (2026-01-21)
+**Location**: `docs/systems/sprites.md`, `docs/systems/player/player-sprite-ids.md`  
+**Status**: Fully understood via Ghidra + BLB analysis
+
+**KEY DISCOVERY**: Player sprites are in **PRIMARY** segment Asset 600, NOT tertiary!
+
+**Sprite Storage Architecture:**
+| Segment | Asset 600 Contents | ctx Offset |
+|---------|-------------------|------------|
+| PRIMARY | Player + shared sprites (79 in SCIE) | ctx+0x40 |
+| TERTIARY | Level-specific enemy/pickup sprites (20 in SCIE) | ctx+0x70 |
+
+**Sprite Lookup Chain:**
+1. `LookupSpriteById(sprite_id)` @ 0x8007bb10:
+   - Calls `FindSpriteInTOC(g_pLevelDataContext, sprite_id)`
+   - Falls back to `g_pSecondarySpriteBank` @ 0x800a6060 (often NULL)
+
+2. `FindSpriteInTOC(ctx, sprite_id)` @ 0x8007b968:
+   - **First** searches ctx+0x70 (tertiary - level enemies)
+   - **Then** searches ctx+0x40 (primary - player/shared sprites)
+   - TOC format: 12-byte entries [count, sprite_id, offset]
+
+3. `InitPlayerSpriteAvailability(player_entity)` @ 0x80059a70:
+   - Iterates table at `0x8009c3a8` (7 required sprite IDs)
+   - Verifies sprites exist via InitSpriteContextWrapper
+   - Stores available sprites at player+0x180 (up to 7)
+   - Count at +0x19c
+
+**Key Tables:**
+- `g_PlayerSprites` @ 0x8009c174: 55 sprite IDs for all player animations
+- `g_PlayerRequiredSprites` @ 0x8009c3a8: 7 required sprite IDs (all in primary!)
+
+**SCIE Level Verification:**
+- Primary Asset 600: 79 sprites (34 player sprites, all 7 required present)
+- Tertiary Asset 600: 20 sprites (enemies only, 0 player sprites)
+
+**For evil-engine**: Must load PRIMARY Asset 600 for player sprites, NOT tertiary!
+
+### 8. Entity Initialization Patterns
 **Location**: `docs/entity-system.md`, `docs/systems/entities.md`  
 **Known**: Factory pattern, 121 entity types, callback table  
 **Unknown**:
