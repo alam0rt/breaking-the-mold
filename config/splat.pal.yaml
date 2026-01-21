@@ -24,8 +24,11 @@ options:
   o_as_suffix: true
   use_legacy_include_asm: false
 
-  section_order: [".rodata", ".text", ".data", ".sdata", ".bss"]
+  section_order: [".text", ".rodata", ".data", ".sdata", ".bss"]
   auto_link_sections: [".data", ".rodata", ".sdata", ".bss"]
+
+  # Binary has interleaved text/rodata - follow yaml order exactly
+  ld_legacy_generation: true
 
   # Disable section alignment to match original binary layout
   ld_align_section_vram_end: false
@@ -70,7 +73,9 @@ segments:
   - [0x1F28, rodata]
   - [0x2044, rodata]
       # PSY-Q library rodata (libcd strings, FntPrint, SpuSetCommonAttr jump tables)
-  - [0x2940, rodata, LIBS]
+  - [0x2940, rodata, LIBS_1]
+  - [0x34F4, rodata, LIBS_2]
+  - [0x3970, rodata, LIBS_3]
       # .text continues: main game code
   - [0x39F0, asm]
       # PSY-Q SDK libraries (libcd, libgpu, libspu, etc.) - starts at StSetRing
