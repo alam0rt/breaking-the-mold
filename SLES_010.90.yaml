@@ -1,25 +1,24 @@
 name: SLES_010.90
 sha1: 5a14b65cb44813bfed1ee53c6a3f4456bc230f97
 options:
-  basename: game
-  target_path: disks/pal/SLES_010.90
-  elf_path: build/pal/game.elf
-  base_path: ..
+  basename: SLES_010.90
+  target_path: bin/SLES_010.90
+  base_path: .
   platform: psx
   compiler: PSYQ
   migrate_rodata_to_functions: false
 
-  asm_path: asm/pal
+  asm_path: asm
   src_path: src
-  build_path: build/pal
-  # create_asm_dependencies: True
+  nonmatchings_path: nonmatchings
+  build_path: build
+  hasm_in_src_path: true
 
-  ld_script_path: build/pal/game.ld
+  ld_script_path: SLES_010.90.ld
   ld_dependencies: true
 
   find_file_boundaries: true
   gp_value: 0x800A5954
-  # ld_gp_expression: main_SCOMMON_START + 0x7FF0
 
   o_as_suffix: true
   use_legacy_include_asm: false
@@ -39,8 +38,8 @@ options:
   reloc_addrs_path:
   - reloc_addrs.txt
 
-  undefined_funcs_auto_path: undefined_funcs_auto.txt
-  undefined_syms_auto_path: undefined_syms_auto.txt
+  undefined_funcs_auto_path: undefined_funcs.txt
+  undefined_syms_auto_path: undefined_syms.txt
 
   extensions_path: tools/splat_ext
 
@@ -51,9 +50,6 @@ options:
   rodata_string_guesser_level: 2
   data_string_guesser_level: 2
 
-  # Uncomment this line if you need to use the maspsx reorder workaround hack
-  # https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
-  # include_asm_macro_style: maspsx_hack
 segments:
 - name: header
   type: header
@@ -73,49 +69,34 @@ segments:
   - [0x800, asm, core/early]
   
       # --- .rodata blocks (interspersed between text sections) ---
-      # These rodata blocks are associated with nearby code
-  - [0xE2C, rodata]          # Jump tables for early code
-  - [0x1F28, rodata]         # Additional rodata
-  - [0x2044, rodata]         # Additional rodata
+  - [0xE2C, rodata]
+  - [0x1F28, rodata]
+  - [0x2044, rodata]
   
-      # PSY-Q library rodata (libcd strings, FntPrint, SpuSetCommonAttr jump tables)
+      # PSY-Q library rodata
   - [0x2940, rodata, LIBS_1]
   - [0x34F4, rodata, LIBS_2]
   - [0x3970, rodata, LIBS_3]
   
       # --- GAME CODE MODULES ---
-      # Following soul-re pattern: each module is a _c segment that will contain
-      # both .text and function-specific .rodata when we migrate to C
-      # NOTE: Boundaries aligned to function boundaries to avoid splitting functions
+      # Boundaries aligned to function boundaries to avoid splitting functions
       
       # --- core/graphics: Init, VRAM slots, primitives (0x800131F0 - 0x8001A0C7) ---
-      # Contains: GetFrameReadyFlag, InitGraphicsSystem, AllocPrimSlot_*,
-      #           AllocateVRAMSlot, InitHeapConfig, AllocateFromHeap,
-      #           RenderTilemapLayerWithScroll, etc.
   - [0x39F0, asm, core/graphics]
   
       # --- entity/core: Entity system fundamentals (0x8001A0C8 - 0x8002A377) ---
-      # Contains: InitEntityStruct, GetEntityPosition, EntityDestructor_*,
-      #           SpawnEntity*, EntityCollision*, etc.
   - [0xA8C8, asm, entity/core]
   
       # --- entity/behaviors: Entity type behaviors, init, tick (0x8002A378 - 0x80058167) ---
-      # Contains: EntityType*_Init, *TickCallback, ProjectileUpdate,
-      #           HomingProjectile_*, PathFollow*, etc.
   - [0x1AB78, asm, entity/behaviors]
   
       # --- player/main: Player state machine, physics (0x80058168 - 0x80071047) ---
-      # Contains: PlayerCallback_*, PlayerState_*, FinnCallback_*,
-      #           ApplyEntityPositionUpdate, etc.
   - [0x48968, asm, player/main]
   
       # --- level/loader: Level loading, BLB, game flow (0x80071048 - 0x80082FFF) ---
-      # Contains: LoadLevelFromBLB, SpawnPlayerAndEntities, GameModeCallback,
-      #           EntityTypeXXX_Init functions, menu system
   - [0x61848, asm, level/loader]
   
       # --- LIBS: PSY-Q SDK libraries (0x80083000 - end) ---
-      # Contains: libcd, libgpu, libspu, libetc
   - [0x73800, asm, LIBS]
   
       # =========================================================================
