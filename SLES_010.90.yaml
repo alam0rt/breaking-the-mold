@@ -63,51 +63,60 @@ segments:
   bss_size: 0x8278
   subsegments:
       # =========================================================================
-      # .rodata section: 0x80010000 - 0x800131EF (code bytes stored as rodata)
-      # NOTE: Original binary has code at 0x800-0x39EF in rodata section!
+      # .rodata section: 0x80010000 - 0x800131EF
+      # NOTE: Original binary has code bytes stored in rodata section!
+      # These are NOT actual rodata - they're code bytes the linker placed here.
       # =========================================================================
-  - [0x800, rodata]
-  - [0xE2C, rodata]
-  - [0x1F28, rodata]
-  - [0x2044, rodata]
-  
-      # PSY-Q library rodata
-  - [0x2940, rodata, LIBS_1]
-  - [0x34F4, rodata, LIBS_2]
-  - [0x3970, rodata, LIBS_3]
-  
-      # --- GAME CODE MODULES ---
-      # Using _c segments (like soul-re) - generates INCLUDE_ASM stubs in C files
-      
-      # --- core/graphics: Init, VRAM slots, primitives (0x800131F0 - 0x8001A0C7) ---
-  - [0x39F0, asm, core/graphics]
-  
-      # --- entity/core: Entity system fundamentals (0x8001A0C8 - 0x8002A377) ---
-  - [0xA8C8, asm, entity/core]
-  
-      # --- entity/behaviors: Entity type behaviors, init, tick (0x8002A378 - 0x80058167) ---
-  - [0x1AB78, asm, entity/behaviors]
-  
-      # --- player/main: Player state machine, physics (0x80058168 - 0x80071047) ---
-  - [0x48968, asm, player/main]
-  
-      # --- level/loader: Level loading, BLB, game flow (0x80071048 - 0x80082FFF) ---
-  - [0x61848, asm, level/loader]
-  
-      # --- LIBS: PSY-Q SDK libraries (0x80083000 - end) ---
+  - [0x800, rodata]           # Game rodata (0x80010000)
+  - [0xE2C, rodata]           # Game rodata (0x80010624)
+  - [0x1F28, rodata]          # Game rodata (0x80011720)
+  - [0x2044, rodata]          # Game rodata (0x8001183C)
+
+      # PSY-Q library rodata (jump tables, strings)
+  - [0x2940, rodata, LIBCD]   # libcd rodata
+  - [0x34F4, rodata, LIBGPU]  # libgpu rodata
+  - [0x3970, rodata, LIBSPU]  # libspu rodata
+
+      # =========================================================================
+      # .text section: 0x800131F0 - 0x80090FEB
+      # Game code organized by subsystem (soul-re style uppercase names)
+      # =========================================================================
+
+      # --- RENDER: Graphics system, VRAM, tiles, sprites (0x800131F0 - 0x8001A0C7) ---
+      # InitGraphicsSystem, VRAM slots, tile rendering, sprite rendering
+  - [0x39F0, asm, Game/RENDER]
+
+      # --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
+      # InitEntityStruct, animation, collision, state machine, callbacks
+  - [0xA8C8, asm, Game/ENTITY]
+
+      # --- OBJECT: Game objects - enemies, items, decor (0x8002A378 - 0x80058167) ---
+      # HUD, decor entities, collectibles, enemies, projectiles, bosses
+  - [0x1AB78, asm, Game/OBJECT]
+
+      # --- PLAYER: Player character system (0x80058168 - 0x80071047) ---
+      # PlayerTickCallback, state machine, physics, input handling
+  - [0x48968, asm, Game/PLAYER]
+
+      # --- GAMELOOP: Main game flow, menus, level loading (0x80071048 - 0x80082FFF) ---
+      # Tile collision, FINN vehicle, menu system, BLB loading, main()
+  - [0x61848, asm, Game/GAMELOOP]
+
+      # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
+      # libcd, libgpu, libgte, libspu, libetc (don't decompile)
   - [0x73800, asm, LIBS]
-  
+
       # =========================================================================
       # .data section: 0x80090FEC - 0x800A5953
       # =========================================================================
   - [0x80FEC, data]
-  
+
       # =========================================================================
-      # .sdata section: 0x800A5954 - 0x800A611F (GP-relative data)
+      # .sdata section: 0x800A5954 - 0x800A611F (GP-relative small data)
       # =========================================================================
   - [0x96154, sdata]
-  
+
       # Padding to end of file
   - [0x96920, pad]
-  
-- [0x97000]    # End of file (actual size)
+
+- [0x97000]    # End of file (618496 bytes)
