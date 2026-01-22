@@ -36,11 +36,8 @@ SRC_DIR := src
 # GCC Version: 2.7.2-psx matches existing decompiled functions.
 # Note: 2.5.7-psx produces better matches for some functions (e.g., func_8007A62C)
 # but breaks existing matches. May need per-file compiler selection in future.
-# Available versions: 2.5.7-psx, 2.6.0-psx, 2.6.3-psx, 2.7.2-psx, 2.8.0-psx,
-#                     2.8.1-psx, 2.91.66-psx, 2.95.2-psx
-# Download with: ./scripts/build_old_gcc.sh <version>
 GCC_VERSION := 2.7.2-psx
-GCC_DIR := tools/gcc-builds/gcc-$(GCC_VERSION)
+GCC_DIR := tools/gcc-$(GCC_VERSION)
 CC1 := $(GCC_DIR)/cc1
 GCC := $(GCC_DIR)/gcc
 
