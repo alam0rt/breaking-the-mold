@@ -53,6 +53,21 @@ SECTIONS
         build/asm/Game/PLAYER.o(.sdata);
         build/asm/Game/GAMELOOP.o(.sdata);
         build/asm/LIBS.o(.sdata);
+        main_SBSS_START = .;
+        build/asm/data/800.rodata.o(.sbss);
+        build/asm/data/E2C.rodata.o(.sbss);
+        build/asm/data/1F28.rodata.o(.sbss);
+        build/asm/data/2044.rodata.o(.sbss);
+        build/asm/data/LIBCD.rodata.o(.sbss);
+        build/asm/data/LIBGPU.rodata.o(.sbss);
+        build/asm/data/LIBSPU.rodata.o(.sbss);
+        build/asm/Game/RENDER/GetFrameReadyFlag.o(.sbss);
+        build/asm/Game/RENDER.o(.sbss);
+        build/asm/Game/ENTITY.o(.sbss);
+        build/asm/Game/OBJECT.o(.sbss);
+        build/asm/Game/PLAYER.o(.sbss);
+        build/asm/Game/GAMELOOP.o(.sbss);
+        build/asm/LIBS.o(.sbss);
         main_BSS_START = .;
         build/asm/data/800.rodata.o(.bss);
         build/asm/data/E2C.rodata.o(.bss);
@@ -68,8 +83,6 @@ SECTIONS
         build/asm/Game/PLAYER.o(.bss);
         build/asm/Game/GAMELOOP.o(.bss);
         build/asm/LIBS.o(.bss);
-        main_BSS_END = .;
-        main_BSS_SIZE = ABSOLUTE(main_BSS_END - main_BSS_START);
         main_TEXT_START = .;
         build/asm/Game/RENDER/GetFrameReadyFlag.o(.text);
         build/asm/Game/RENDER.o(.text);
@@ -101,7 +114,12 @@ SECTIONS
         build/asm/data/96154.sdata.o(.sdata);
         main_SDATA_END = .;
         main_SDATA_SIZE = ABSOLUTE(main_SDATA_END - main_SDATA_START);
-        . += 0x6E0;
+        build/asm/data/96920.sbss.o(.sbss);
+        main_SBSS_END = .;
+        main_SBSS_SIZE = ABSOLUTE(main_SBSS_END - main_SBSS_START);
+        build/asm/data/96920.bss.o(.bss);
+        main_BSS_END = .;
+        main_BSS_SIZE = ABSOLUTE(main_BSS_END - main_BSS_START);
     }
     __romPos += SIZEOF(.main);
     __romPos = ALIGN(__romPos, 16);

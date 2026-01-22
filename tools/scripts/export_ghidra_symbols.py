@@ -122,7 +122,7 @@ def parse_address_range(range_str: str) -> Tuple[int, int]:
 
 def main():
     parser = argparse.ArgumentParser(description='Export Ghidra symbols in address order')
-    parser.add_argument('--format', choices=['text', 'yaml', 'csv', 'json'], default='text',
+    parser.add_argument('--format', choices=['text', 'yaml', 'csv', 'json', 'symbol_addrs'], default='text',
                         help='Output format (default: text)')
     parser.add_argument('--range', type=str, default=None,
                         help='Address range to export (e.g., 0x80010000-0x80020000)')
@@ -198,6 +198,20 @@ def main():
             })
     
     # Sort by address
+    symbols.sort(key=lambda x: x['address'])
+    
+    # Deduplicate by (name, address) - keep functions over data when both exist
+    seen = {}  # key = (name, address) -> symbol
+    for sym in symbols:
+        key = (sym['name'], sym['address'])
+        if key in seen:
+            # Prefer functions over data
+            if sym['type'] == 'function' and seen[key]['type'] == 'data':
+                seen[key] = sym
+            # Otherwise keep first occurrence
+        else:
+            seen[key] = sym
+    symbols = list(seen.values())
     symbols.sort(key=lambda x: x['address'])
     
     # Infer sizes from next symbol if requested
@@ -278,6 +292,77 @@ def main():
     
     elif args.format == 'json':
         print(json.dumps(symbols, indent=2))
+    
+    elif args.format == 'symbol_addrs':
+        # Output in symbol_addrs.txt format for splat
+        print("// Auto-generated from Ghidra")
+        print(f"// Total: {len(symbols)} symbols")
+        print()
+        for sym in symbols:
+            addr = sym['address']
+            name = sym['name']
+            size = sym.get('size', 0)
+            
+            # Skip auto-generated names like func_XXXXXXXX or FUN_XXXXXXXX
+            if name.startswith('func_') or name.startswith('FUN_') or name.startswith('DAT_'):
+                continue
+            
+            # Generate names for unnamed entries based on type
+            if name == '(unnamed)':
+                dtype = sym.get('data_type', 'undefined')
+                if 'pointer' in dtype or dtype.endswith('*'):
+                    name = f"PTR_{addr:08X}"
+                elif dtype == 'string':
+                    name = f"STR_{addr:08X}"
+                elif dtype in ('byte', 'char', 'undefined1'):
+                    name = f"B_{addr:08X}"
+                elif dtype in ('word', 'short', 'undefined2'):
+                    name = f"W_{addr:08X}"
+                elif dtype in ('dword', 'int', 'long', 'undefined4'):
+                    name = f"D_{addr:08X}"
+                else:
+                    name = f"DAT_{addr:08X}"
+            
+            # Sanitize illegal filename characters (replace ?? with void, etc.)
+            name = name.replace('??', 'void')
+            # Replace illegal filename/C identifier characters with underscores
+            # Keep only: a-z A-Z 0-9 _
+            import re
+            name = re.sub(r'[^a-zA-Z0-9_]+', '_', name)
+            
+            if sym['type'] == 'function':
+                if size > 0:
+                    print(f"{name} = 0x{addr:08X}; // size:0x{size:X}")
+                else:
+                    print(f"{name} = 0x{addr:08X};")
+            else:
+                # Map Ghidra types to splat-compatible types
+                dtype = sym.get('data_type', '')
+                splat_type = None
+                if dtype:
+                    # Pointers
+                    if 'pointer' in dtype.lower() or dtype.endswith('*'):
+                        splat_type = 'u32'  # Pointers are 32-bit on PSX
+                    # Strings
+                    elif dtype == 'string' or dtype == 'TerminatedCString':
+                        splat_type = 'asciz'
+                    # Sized types
+                    elif dtype in ('byte', 'char', 'undefined1'):
+                        splat_type = 'u8'
+                    elif dtype in ('word', 'short', 'undefined2'):
+                        splat_type = 'u16'
+                    elif dtype in ('dword', 'int', 'long', 'undefined4'):
+                        splat_type = 'u32'
+                    elif dtype == 'qword' or dtype == 'undefined8':
+                        splat_type = 'u64'
+                    # Skip undefined/unknown types
+                    elif dtype.startswith('undefined'):
+                        splat_type = None
+                
+                if splat_type:
+                    print(f"{name} = 0x{addr:08X}; // type:{splat_type}")
+                else:
+                    print(f"{name} = 0x{addr:08X};")
 
 if __name__ == "__main__":
     main()

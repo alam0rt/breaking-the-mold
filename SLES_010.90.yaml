@@ -24,8 +24,8 @@ options:
   o_as_suffix: true
   use_legacy_include_asm: false
 
-  section_order: [".rodata", ".text", ".data", ".sdata", ".bss"]
-  auto_link_sections: [".data", ".rodata", ".sdata", ".bss"]
+  section_order: [".rodata", ".text", ".data", ".sdata", ".sbss", ".bss"]
+  auto_link_sections: [".data", ".rodata", ".sdata", ".sbss", ".bss"]
 
   # Follow YAML order exactly (don't reorder by section type)
   ld_legacy_generation: true
@@ -117,7 +117,12 @@ segments:
       # =========================================================================
   - [0x96154, sdata]
 
-      # Padding to end of file
-  - [0x96920, pad]
+      # =========================================================================
+      # .sbss section: 0x800A6120 - 0x800AD953 (GP-relative uninitialized data)
+      # .bss section: 0x800AD954 - 0x800AE397 (regular uninitialized data)
+      # Total bss_size: 0x8278
+      # =========================================================================
+  - { start: 0x96920, type: sbss, vram: 0x800A6120 }
+  - { start: 0x96920, type: bss, vram: 0x800AD954 }
 
 - [0x97000]    # End of file (618496 bytes)
