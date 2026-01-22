@@ -3,6 +3,7 @@ sha1: 5a14b65cb44813bfed1ee53c6a3f4456bc230f97
 options:
   basename: SLES_010.90
   target_path: bin/SLES_010.90
+  elf_path: build/SLES_010.90.elf
   base_path: .
   platform: psx
   compiler: PSYQ
@@ -23,10 +24,10 @@ options:
   o_as_suffix: true
   use_legacy_include_asm: false
 
-  section_order: [".text", ".rodata", ".data", ".sdata", ".bss"]
+  section_order: [".rodata", ".text", ".data", ".sdata", ".bss"]
   auto_link_sections: [".data", ".rodata", ".sdata", ".bss"]
 
-  # Binary has interleaved text/rodata - follow yaml order exactly
+  # Follow YAML order exactly (don't reorder by section type)
   ld_legacy_generation: true
 
   # Disable section alignment to match original binary layout
@@ -62,13 +63,10 @@ segments:
   bss_size: 0x8278
   subsegments:
       # =========================================================================
-      # .text section: 0x80010000 - 0x800907CF (interleaved with .rodata)
+      # .rodata section: 0x80010000 - 0x800131EF (code bytes stored as rodata)
+      # NOTE: Original binary has code at 0x800-0x39EF in rodata section!
       # =========================================================================
-      
-      # --- CORE/EARLY: RLE decode, memset entrypoint (0x80010000 - 0x800131EF) ---
-  - [0x800, asm, core/early]
-  
-      # --- .rodata blocks (interspersed between text sections) ---
+  - [0x800, rodata]
   - [0xE2C, rodata]
   - [0x1F28, rodata]
   - [0x2044, rodata]
@@ -79,7 +77,7 @@ segments:
   - [0x3970, rodata, LIBS_3]
   
       # --- GAME CODE MODULES ---
-      # Boundaries aligned to function boundaries to avoid splitting functions
+      # Using _c segments (like soul-re) - generates INCLUDE_ASM stubs in C files
       
       # --- core/graphics: Init, VRAM slots, primitives (0x800131F0 - 0x8001A0C7) ---
   - [0x39F0, asm, core/graphics]
