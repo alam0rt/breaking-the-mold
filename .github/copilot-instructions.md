@@ -284,7 +284,7 @@ trace.play()
 ### Disk Images
 
 Available disk images for testing:
-- `disks/pal/SLES_010.90` - PAL version (default)
+- `bin/SLES_010.90` - PAL version executable (default)
 - `disks/blb/*.blb` - Extracted BLB asset files for analysis
 
 ### Key Memory Addresses (PAL / SLES-01090)

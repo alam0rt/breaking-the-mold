@@ -29,6 +29,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.rodata);
         build/asm/data/LIBGPU.rodata.o(.rodata);
         build/asm/data/LIBSPU.rodata.o(.rodata);
+        build/asm/Game/RENDER/GetFrameReadyFlag.o(.rodata);
         build/asm/Game/RENDER.o(.rodata);
         build/asm/Game/ENTITY.o(.rodata);
         build/asm/Game/OBJECT.o(.rodata);
@@ -45,6 +46,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.sdata);
         build/asm/data/LIBGPU.rodata.o(.sdata);
         build/asm/data/LIBSPU.rodata.o(.sdata);
+        build/asm/Game/RENDER/GetFrameReadyFlag.o(.sdata);
         build/asm/Game/RENDER.o(.sdata);
         build/asm/Game/ENTITY.o(.sdata);
         build/asm/Game/OBJECT.o(.sdata);
@@ -59,6 +61,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.bss);
         build/asm/data/LIBGPU.rodata.o(.bss);
         build/asm/data/LIBSPU.rodata.o(.bss);
+        build/asm/Game/RENDER/GetFrameReadyFlag.o(.bss);
         build/asm/Game/RENDER.o(.bss);
         build/asm/Game/ENTITY.o(.bss);
         build/asm/Game/OBJECT.o(.bss);
@@ -68,6 +71,7 @@ SECTIONS
         main_BSS_END = .;
         main_BSS_SIZE = ABSOLUTE(main_BSS_END - main_BSS_START);
         main_TEXT_START = .;
+        build/asm/Game/RENDER/GetFrameReadyFlag.o(.text);
         build/asm/Game/RENDER.o(.text);
         build/asm/Game/ENTITY.o(.text);
         build/asm/Game/OBJECT.o(.text);
@@ -84,6 +88,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.data);
         build/asm/data/LIBGPU.rodata.o(.data);
         build/asm/data/LIBSPU.rodata.o(.data);
+        build/asm/Game/RENDER/GetFrameReadyFlag.o(.data);
         build/asm/Game/RENDER.o(.data);
         build/asm/Game/ENTITY.o(.data);
         build/asm/Game/OBJECT.o(.data);

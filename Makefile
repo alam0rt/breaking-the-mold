@@ -67,7 +67,8 @@ MASPSX := python3 tools/maspsx/maspsx.py
 # PSY-Q 4.6 -> --aspsx-version=2.86
 # PSY-Q 4.7 -> --aspsx-version=2.86 (same as 4.6)
 ASPSX_VERSION := 2.86
-MASPSX_FLAGS := --aspsx-version=$(ASPSX_VERSION) --run-assembler --gnu-as-path=$(AS)
+# -G8 tells maspsx that symbols <=8 bytes should use GP-relative addressing
+MASPSX_FLAGS := --aspsx-version=$(ASPSX_VERSION) --run-assembler --gnu-as-path=$(AS) -G8
 
 # Python (from Nix environment)
 PYTHON := python3
