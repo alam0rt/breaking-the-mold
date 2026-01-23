@@ -67,7 +67,7 @@ segments:
       # NOTE: Original binary has code bytes stored in rodata section!
       # These are NOT actual rodata - they're code bytes the linker placed here.
       # =========================================================================
-  - [0x800, rodata]           # Game rodata (0x80010000)
+  - [0x800, c, Game/EARLY/bootstrap]
   - [0xE2C, rodata]           # Game rodata (0x80010624)
   - [0x1F28, rodata]          # Game rodata (0x80011720)
   - [0x2044, rodata]          # Game rodata (0x8001183C)
@@ -104,7 +104,7 @@ segments:
   - [0x61848, asm, Game/GAMELOOP]
 
       # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
-      # libcd, libgpu, libgte, libspu, libetc (don't decompile)
+      # libcd, libgpu, libgte, libspu, libetc
   - [0x73800, asm, LIBS]
 
       # =========================================================================

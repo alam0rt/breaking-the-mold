@@ -83,7 +83,7 @@ subsegments:
   - [0x3970, rodata, LIBS_3]
     # Main game code - CHANGE THIS TO C
   - [0x39F0, c, game]       # <-- Changed from asm
-    # PSY-Q libraries (keep as asm - don't decompile)
+    # PSY-Q libraries (libcd, libgpu, libgte, libspu, libetc)
   - [0x73800, asm, LIBS]
 ```
 

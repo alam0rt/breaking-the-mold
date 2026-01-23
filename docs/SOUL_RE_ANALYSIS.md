@@ -174,7 +174,7 @@ src/
 ├── menu/
 │   └── menu.c          # Menu system
 └── libs/
-    └── psyq_stubs.s    # PSY-Q library stubs (don't decompile)
+    └── psyq_stubs.s    # PSY-Q library stubs
 ```
 
 ### Migration Steps

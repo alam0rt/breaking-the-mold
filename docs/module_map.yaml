@@ -173,7 +173,7 @@ segments:
         count: 2
 
   LIBS:
-    description: "PSY-Q SDK libraries (don't decompile)"
+    description: "PSY-Q SDK libraries (libcd, libgpu, libgte, libspu, libetc)"
     start: 0x80083000
     end: 0x80090FEC
     function_count: 559

@@ -21,8 +21,9 @@ SECTIONS
     .main 0x80010000 : AT(main_ROM_START) SUBALIGN(2)
     {
         FILL(0x00000000);
+        main_TEXT_START = .;
+        build/src/Game/EARLY/bootstrap.o(.text);
         main_RODATA_START = .;
-        build/asm/data/800.rodata.o(.rodata);
         build/asm/data/E2C.rodata.o(.rodata);
         build/asm/data/1F28.rodata.o(.rodata);
         build/asm/data/2044.rodata.o(.rodata);
@@ -36,10 +37,8 @@ SECTIONS
         build/asm/Game/PLAYER.o(.rodata);
         build/asm/Game/GAMELOOP.o(.rodata);
         build/asm/LIBS.o(.rodata);
-        main_RODATA_END = .;
-        main_RODATA_SIZE = ABSOLUTE(main_RODATA_END - main_RODATA_START);
         main_SDATA_START = .;
-        build/asm/data/800.rodata.o(.sdata);
+        build/src/Game/EARLY/bootstrap.o(.sdata);
         build/asm/data/E2C.rodata.o(.sdata);
         build/asm/data/1F28.rodata.o(.sdata);
         build/asm/data/2044.rodata.o(.sdata);
@@ -54,7 +53,7 @@ SECTIONS
         build/asm/Game/GAMELOOP.o(.sdata);
         build/asm/LIBS.o(.sdata);
         main_SBSS_START = .;
-        build/asm/data/800.rodata.o(.sbss);
+        build/src/Game/EARLY/bootstrap.o(.sbss);
         build/asm/data/E2C.rodata.o(.sbss);
         build/asm/data/1F28.rodata.o(.sbss);
         build/asm/data/2044.rodata.o(.sbss);
@@ -69,7 +68,7 @@ SECTIONS
         build/asm/Game/GAMELOOP.o(.sbss);
         build/asm/LIBS.o(.sbss);
         main_BSS_START = .;
-        build/asm/data/800.rodata.o(.bss);
+        build/src/Game/EARLY/bootstrap.o(.bss);
         build/asm/data/E2C.rodata.o(.bss);
         build/asm/data/1F28.rodata.o(.bss);
         build/asm/data/2044.rodata.o(.bss);
@@ -83,7 +82,6 @@ SECTIONS
         build/asm/Game/PLAYER.o(.bss);
         build/asm/Game/GAMELOOP.o(.bss);
         build/asm/LIBS.o(.bss);
-        main_TEXT_START = .;
         build/src/Game/RENDER/GetFrameReadyFlag.o(.text);
         build/asm/Game/RENDER.o(.text);
         build/asm/Game/ENTITY.o(.text);
@@ -94,7 +92,7 @@ SECTIONS
         main_TEXT_END = .;
         main_TEXT_SIZE = ABSOLUTE(main_TEXT_END - main_TEXT_START);
         main_DATA_START = .;
-        build/asm/data/800.rodata.o(.data);
+        build/src/Game/EARLY/bootstrap.o(.data);
         build/asm/data/E2C.rodata.o(.data);
         build/asm/data/1F28.rodata.o(.data);
         build/asm/data/2044.rodata.o(.data);
@@ -111,6 +109,9 @@ SECTIONS
         build/asm/data/80FEC.data.o(.data);
         main_DATA_END = .;
         main_DATA_SIZE = ABSOLUTE(main_DATA_END - main_DATA_START);
+        build/src/Game/EARLY/bootstrap.o(.rodata);
+        main_RODATA_END = .;
+        main_RODATA_SIZE = ABSOLUTE(main_RODATA_END - main_RODATA_START);
         build/asm/data/96154.sdata.o(.sdata);
         main_SDATA_END = .;
         main_SDATA_SIZE = ABSOLUTE(main_SDATA_END - main_SDATA_START);
