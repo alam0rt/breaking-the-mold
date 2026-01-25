@@ -144,7 +144,7 @@ ENTITY_TYPES = {
     93: {"name": "Straight Projectile", "callback": "0x800802ac", "sprite_id": 0x168254b5, "category": "Object"},
     94: {"name": "Indexed Sprite Entity", "callback": "0x80081428", "sprite_id": 0x8c30008c, "category": "Object", "notes": "Variable sprite from table @ 0x8009b430. Uses InitIndexedSpriteEntity"},
     95: {"name": "Sound Emitter (Panning)", "callback": "0x800814a4", "sprite_id": 0x8c30008c, "category": "Audio", "verified": True, "notes": "INVISIBLE - plays positional audio that pans with camera. Uses InitCameraTrackingEntity + SoundEmitterWithPanningTick"},
-    96: {"name": "Special Collectible", "callback": "0x8007f638", "sprite_id": 0x9299c307, "category": "Collectible"},
+    96: {"name": "Path Platform Enemy (Hazard)", "callback": "0x8007f638", "sprite_id": 0xB12C0854, "category": "Hazard", "verified": True, "notes": "Spiky platform - uses g_SpriteList_Type062_Platform[1]. Sends 0x1000 collision (dir=2, unstompable). Touch = death/halo loss. InitPathFollowingEnemy @ 0x8003c5b8"},
     97: {"name": "Level Event B", "callback": "0x8008134c", "sprite_id": 0x8c30008c, "category": "Trigger"},
     98: {"name": "Level Event C", "callback": "0x8008134c", "sprite_id": 0x8c30008c, "category": "Trigger"},
     99: {"name": "Level State Collectible", "callback": "0x8007f4d0", "sprite_id": 0x6c289c1c, "category": "Collectible", "notes": "table @ 0x8009b53c"},
