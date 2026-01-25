@@ -22,7 +22,7 @@ Collection triggers a HUD message via `GameState+0x14C` (hud_entity_ptr).
 | 0x14 | `phoenix_hands` | 7 | Phoenix Hand | `AddPhoenixHands` | 0x1013,6 |
 | 0x15 | `phart_heads` | 7 | Phart Head | `AddPhartHeads` | 0x1013,7 |
 | 0x16 | `universe_enemas` | 7 | Universe Enema | `AddUniverseEnemas` | 0x1013,8 |
-| 0x17 | `powerup_flags` | - | Halo (0x01), Yellow Bird (0x02) | direct set | 0x1013,3 |
+| 0x17 | `powerup_flags` | - | Shield/Halo (0x01 via first orb), Yellow Bird/Glide (0x02 via Type 75) | direct set | 0x1013,3 |
 | 0x18 | `shrink_mode` | 1 | Shrink Pickup | direct set | - |
 | 0x19 | `icon_1970_count` | 3 | 1970 Icon | `Add1970Icons` | 0x1013,4 |
 | 0x1a | `hamster_count` | 3 | Hamster Shields | `AdjustPlayerStats` | 0x1013,5 |
@@ -47,12 +47,13 @@ Collection triggers a HUD message via `GameState+0x14C` (hud_entity_ptr).
 - **PlayerState**: `orb_count` (+0x12)
 - **Sound**: 0x4a806042
 
-### 3. Halo (1-Hit Shield)
-- **Callback**: `CollectibleHaloTickCallback` @ 0x8002dac8
-- **Effect**: `powerup_flags |= 0x02` (Yellow Bird / Halo)
-- **PlayerState**: `powerup_flags` (+0x17)
+### 3. Yellow Bird / Glidey Bird (Glide Ability)
+- **Callback**: `CollectibleYellowBirdTickCallback` @ 0x8002dac8
+- **Effect**: `powerup_flags |= 0x02` (Yellow Bird / Glide bit)
+- **PlayerState**: `powerup_flags` (+0x17), bit 0x02
 - **Sound**: 0x6082c120
-- **Notes**: Protects from one hit, cleared on damage
+- **Notes**: Grants glide ability (hold X while falling)
+- **IMPORTANT**: This is NOT the shield "Halo". The shield is bit 0x01, granted by first Clay Orb.
 
 ### 4. Extra Life
 - **Callback**: `CollectibleExtraLifeTickCallback` @ 0x8002e870
@@ -87,8 +88,18 @@ Collection triggers a HUD message via `GameState+0x14C` (hud_entity_ptr).
 - **PlayerState**: `universe_enemas` (+0x16)
 - **Max**: 7
 - **Sound**: 0xc88a346a
-- **Animation**: Bobbing + rotation via frame counter
-- **Use**: Screen-clear bomb
+- **Animation**: Pulsing scale effect via frame counter
+- **Use**: Screen-clear bomb (R1 button)
+
+#### Universe Enema Activation (R1)
+When player presses R1 with `g_pPlayerState[0x16] > 0`:
+1. `UniverseEnemaActivate` @ 0x8006c0d8 broadcasts message 0x1018 (freeze entities)
+2. Sets screen effect flag at GameState+0x149
+3. Plays activation sprite 0x6c22083a
+4. `UniverseEnemaKillAllEnemies` @ 0x8006c278 iterates collision list:
+   - Sends message 0x1002 to entities with killable flag (entity+0x12 & 0x04)
+   - Decrements `g_pPlayerState[0x16]`
+5. Clears screen effect flag
 
 ### 8. Super Willie (R2 Weapon)
 - **Callback**: `CollectibleSuperWillieTickCallback` @ 0x8002f7e4
@@ -106,21 +117,25 @@ Collection triggers a HUD message via `GameState+0x14C` (hud_entity_ptr).
 - **Sound**: 0x408a6461 (normal), 0x428a6465 (when 3rd collected)
 - **Spawns**: Sparkle particles every 8 frames
 
-### 10. Health Up / Swirly Q
-- **Callback**: `CollectibleHealthUpTickCallback` @ 0x8002f690
+### 10. Hamster Shield (Type 70)
+- **Callback**: `CollectibleHamsterShieldTickCallback` @ 0x8002f690
 - **Effect**: `AdjustPlayerStats(+1)` - increments BOTH fields:
-  - `total_swirly_qs` (+0x1b) - global count, max 48 (0x30) for secret ending
-  - `hamster_count` (+0x1a) - current shields, max 3
+  - `hamster_count` (+0x1a) - orbiting hamster shields, max 3 (kill enemies on contact)
+  - `total count` (+0x1b) - global count, max 48 for secret ending tracking
 - **PlayerState**: Both +0x1a and +0x1b
-- **Sound**: 0x42906465 (normal), 0xc2906565 (when 3rd hamster)
+- **Sound**: 0x42906465 (normal), 0xc2906565 (when 3rd hamster - shields full)
 - **HUD**: Message 0x1013, param 5
+- **Entity Type**: 70 (Layer 1, BLB type 5)
+- **Sprite**: 0x80e85ea0
+- **Manual**: "Three furry hamsters circle Klaymen, protecting him by killing the first three enemies they touch"
 
-### 11. Swirly Q (Bonus Portal)
+### 11. Swirly Q (Type 2) - Bonus Portal Counter
 - **Callback**: (uses `AddSwirlys`)
 - **Effect**: `AddSwirlys(+1)`
 - **PlayerState**: `swirly_q_count` (+0x13)
 - **Max**: 20
 - **Special**: 3 opens bonus portal via `SpawnSwirlPortalEntity`
+- **Note**: Different from Type 70 - this increments the portal counter (+0x13), not hamster shields
 
 ---
 
@@ -232,6 +247,25 @@ All Add functions notify HUD via callback at `GameState+0x14C`:
 | `Add1970Icons` | 0x80026884 | +0x19 | 3 |
 | `AdjustPlayerStats` | 0x80026954 | +0x1a, +0x1b | 3, 48 |
 | `AddSuperWillies` | 0x80026a48 | +0x1c | 7 |
+
+---
+
+## Entity Type → Collectible Mapping (Verified January 2026)
+
+| Type | Name | Sprite ID | Storage | Max | Init Function |
+|------|------|-----------|---------|-----|---------------|
+| **2** | Green Bullets (Swirly Q) | `0xe8628689` | +0x13 | 20 | `InitGreenBulletsCollectible` |
+| **7** | Clayball (Orb) | `0xb8700ca1` | +0x12 | 100→life | `InitClayballWithRandomColor` |
+| **11** | Extra Life (Klaymen's Head) | `0xa9240484` | +0x11 | 99 | `InitTransparentDecorEntity` |
+| **23** | Phoenix Hand (The Bird) | `0x9158a0f6` | +0x14 | 7 | `InitPhoenixHandCollectible` |
+| **25** | Phart Head | `0x8c510186` | +0x15 | 7 | `InitPhartHeadCollectible` |
+| **61** | Universe Enema (Sparkle) | `0x6a351094` | +0x16 | 7 | `InitUniverseEnemaCollectible` |
+| **69** | 1970 Icon | `0x88a28194` | +0x19 | 3 | `Init1970IconEntity` |
+| **70** | Hamster Shield | `0x80e85ea0` | +0x1A, +0x1B | 3, 48 | `InitHamsterShieldCollectible` |
+| **72** | Super Willie (The Head) | `0x902c0002` | +0x1c | 7 | `InitSuperWillieCollectible` |
+| **75** | Yellow Bird (Glidey Bird) | `0xc87ca082` | +0x17 (bit 2) | - | `InitYellowBirdCollectible` |
+
+**Note**: Type 75 grants GLIDE ability (bit 0x02), NOT the shield. The shield Halo (bit 0x01) is granted by the FIRST Clay Orb collected.
 
 ---
 
