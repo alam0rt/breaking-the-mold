@@ -52,7 +52,7 @@ Items marked with:
 
 | Official Name | Manual Description | Weakness | Internal Type | Levels | Status |
 |---------------|-------------------|----------|---------------|--------|--------|
-| **Flapper** | Fly using hand fans, regenerate quickly | Quick butt-bounce | 5 or 6? | ? | ❓ |
+| **Flapper** | Fly using hand fans, regenerate quickly | Quick butt-bounce | 26, 27 | CLOU | ✅ |
 | **JX1137 Test Pilot** | Monkey with rocketpack | ? | ? | ? | ❓ |
 | **Super Bomber Monk** | Pilots dropping bombs on Drivey Runn | Virtually impossible | ? | RUNN | ❓ |
 | **Evil Engine Royal Guard** | Elite flying golden monkeys | Standard attacks | ? | EVIL | ❓ |
@@ -70,7 +70,7 @@ Items marked with:
 
 | Official Name | Manual Description | Weakness | Internal Type | Levels | Status |
 |---------------|-------------------|----------|---------------|--------|--------|
-| **Egg-Beater** | Razor-sharp propellers on head | Weapons only (no butt-bounce) | ? | ? | ❓ |
+| **Egg-Beater** | Razor-sharp propellers on head | Weapons only (no butt-bounce) | 10 | CLOU, CRYS, SOAR | ✅ |
 | **Castle Trooper** | Guards in stained glass windows with spears | Jump past or weapons (no bounce) | ? | CSTL | ❓ |
 | **Pipe-Cleaners** | Big-mouthed worms, flick tongue from pipes | Jump or weapons (tough hide) | ? | ? | ❓ |
 
@@ -105,44 +105,63 @@ Items marked with:
 
 ### Core Collectibles
 
-| Official Name | Manual Description | Button | Max | Internal Type | Status |
-|---------------|-------------------|--------|-----|---------------|--------|
-| **Clay** (Orange Balls) | Floating orbs, 100 = extra life | Auto | - | 2 (Clayball) | ⏳ |
-| **Klaymen's Head** (1up) | Instant extra life | Auto | - | ? | ❓ |
-| **Swirly Qs** | 3 = bonus room access | Auto | 3 | ? | ❓ |
-| **1970s Icons** | 3 total in game, unlock secret room | Auto | 3 | 95 | ⏳ |
+| Official Name | Manual Description | Button | Max | Internal Type | Sprite ID | Status |
+|---------------|-------------------|--------|-----|---------------|-----------|--------|
+| **Clay** (Orange Balls) | Floating orbs, 100 = extra life | Auto | - | 7 | Random | ✅ |
+| **Klaymen's Head** (1up) | Instant extra life | Auto | - | 11 | 0xa9240484 | ✅ |
+| **Swirly Qs** | 3 = bonus room access | Auto | 3 | ? | ? | ❓ |
+| **1970s Icons** | 3 total in game, unlock secret room | Auto | 3 | 95 | ? | ⏳ |
 
 ### Offensive Weapons
 
-| Official Name | Manual Description | Button | Max | Internal Type | Status |
-|---------------|-------------------|--------|-----|---------------|--------|
-| **Green Bullets** (Energy Balls) | Standard ammo for projectile attack | Circle | 9-20 | 3 or 4? | ❓ |
-| **Phoenix Hand** (The Bird) | Seeks and destroys nearest enemy | L1 | 7 | ? | ❓ |
-| **Universe Enema** (Super Power) | Destroys all enemies on screen | R1 | 7 | ? | ❓ |
-| **Phart Head** (Fart Clone) | Gas clone, acts as continue point | L2 | 7 | 25 | ⏳ |
+| Official Name | Manual Description | Button | Max | Internal Type | Sprite ID | Status |
+|---------------|-------------------|--------|-----|---------------|-----------|--------|
+| **Green Bullets** (Energy Balls) | Standard ammo for projectile attack | Circle | 9-20 | 2 | 0xb8700ca1 | ✅ |
+| **Phoenix Hand** (The Bird) | Seeks and destroys nearest enemy | L1 | 7 | 23 | 0x9158a0f6 | ✅ |
+| **Universe Enema** (Super Power) | Destroys all enemies on screen | R1 | 7 | ? | ? | ❓ |
+| **Phart Head** (Fart Clone) | Gas clone, acts as continue point | L2 | 7 | 25 | 0x8c510186 | ✅ |
 
 ### Defensive Items
 
-| Official Name | Manual Description | Button | Max | Internal Type | Status |
-|---------------|-------------------|--------|-----|---------------|--------|
-| **Halo** | Absorbs one hit, extra = clay | Auto | 1 | 8? | ❓ |
-| **Hamster Shield** | 3 hamsters circle, kill 3 enemies | Auto | 3 | ? | ❓ |
-| **Glidey Bird** (Yellow Bird) | Allows gliding when holding X | Auto | 1 | ? | ❓ |
-| **Super Willie** (The Head) | Spins to auto-collect all items | R2 | 7 | ? | ❓ |
+| Official Name | Manual Description | Button | Max | Internal Type | Sprite ID | Status |
+|---------------|-------------------|--------|-----|---------------|-----------|--------|
+| **Halo** | Absorbs one hit, extra = clay | Auto | 1 | ? | ? | ❓ |
+| **Hamster Shield** | 3 hamsters circle, kill 3 enemies | Auto | 3 | ? | ? | ❓ |
+| **Glidey Bird** (Yellow Bird) | Allows gliding when holding X | Auto | 1 | ? | ? | ❓ |
+| **Super Willie** (The Head) | Spins to auto-collect all items | R2 | 7 | ? | ? | ❓ |
+
+### Boss-Specific Items
+
+| Official Name | Manual Description | Location | Internal Type | Sprite ID | Status |
+|---------------|-------------------|----------|---------------|-----------|--------|
+| **Klogg Catchable Ball** | Catch with pot, return to Klogg | KLOG | 8 | 0x0c34aa22 | ✅ |
+| **Klogg Spiky Ball** | Cannot catch, must dodge | KLOG | ? | ? | ❓ |
 
 ---
 
 ## Environmental Items
+
+### Platforms
+
+| Official Name | Manual Description | Internal Types | Sprite IDs | Status |
+|---------------|-------------------|----------------|------------|--------|
+| **Moving Platform A** | Hovering/path-following platform | 5 | 0x88783718 | ✅ |
+| **Moving Platform B** | Different visual platform | 6 | 0x8818a018 | ✅ |
+| **Moving Platform C** | MOSS-style platform | 12 | 0x9299c307 | ✅ |
+| **Clock Platform A** | Temporary platform, timer countdown | 19 | 0x93043811 | ✅ |
+| **Clock Platform B** | Temporary platform, timer countdown | 20 | 0xd2801814 | ✅ |
+| **Clock Platform C** | Temporary platform, timer countdown | 21 | 0x12800031 | ✅ |
+| **Virtual Platforms** | Spotlight activators for temp platforms | ? | ? | ❓ |
+
+### Interactive Objects
 
 | Official Name | Manual Description | Internal Type | Status |
 |---------------|-------------------|---------------|--------|
 | **Ma Bird** | Checkpoint, butt-bounce to activate | 45 (Message)? | ⏳ |
 | **Green Hearts** | Shrink Klaymen | ? | ❓ |
 | **Yellow Chevrons** | Restore normal height | ? | ❓ |
-| **Clocks** | Temporary platforms, explode after 2 sec | ? | ❓ |
 | **Treasure Balls** | Butt-bounce to reveal hidden items | ? | ❓ |
 | **Teleport Balls** | End of level exits (tan=normal, red=hard) | 42-44 (Portal) | ⏳ |
-| **Virtual Platforms** | Spotlight activators for temp platforms | ? | ❓ |
 
 ---
 
@@ -150,26 +169,35 @@ Items marked with:
 
 This is what we're trying to complete. Fill in as entities are visually verified.
 
-| Internal Type | Init Function | Official Name | Category | Verified |
-|---------------|---------------|---------------|----------|----------|
-| 2 | Clayball_Init | **Clay** (Orange Balls) | Collectible | ⏳ |
-| 5 | FlyingEnemy_Init | Flapper OR Flying Ynt Centurion? | Enemy | ❓ |
-| 6 | FlyingEnemyAlt_Init | Flapper OR Flying Ynt Centurion? | Enemy | ❓ |
-| 8 | ItemPickup_Init | **Halo**? | Collectible | ❓ |
-| 17-23 | EnemyCluster_Init | Ground enemies (which is which?) | Enemy | ❓ |
-| 25 | GroundPatrolEnemy_Init | **Phart Head** (L2) | Collectible | ⏳ |
-| 26 | PathEnemy_Init | Worker Ynt? Swarm-o-Ynts? | Enemy | ❓ |
-| 27 | PathEnemy_Init | Worker Ynt? Swarm-o-Ynts? | Enemy | ❓ |
-| 29 | Enemy_Init | ? | Enemy | ❓ |
-| 42-44 | Portal_Init | **Teleport Balls** | Interactive | ⏳ |
-| 45 | MessageBox_Init | **Ma Bird** (Checkpoint) | Interactive | ⏳ |
-| 61 | Sparkle_Init | Collection effect | Effect | ⏳ |
-| 71 | MonkeyMageBoss_Init | **Monkey Mage** | Boss | ✅ |
-| 95 | 1970sBonus_Init | **1970s Icons** | Collectible | ⏳ |
-| 100 | GlennYntis_Init | **Glenn Yntis** | Boss | ✅ |
-| 101 | ShrineyGuard_Init | **Shriney Guard** | Boss | ✅ |
-| 102 | JoeHeadJoe_Init | **Joe-Head-Joe** | Boss | ✅ |
-| 103 | Klogg_Init | **Klogg** | Boss | ✅ |
+| Internal Type | Init Function | Official Name | Category | Sprite ID | Verified |
+|---------------|---------------|---------------|----------|-----------|----------|
+| 2 | EntityType002_GreenBullets_Init | **Green Bullets** | Collectible | 0xb8700ca1 | ✅ |
+| 5 | EntityType005_MovingPlatformA_Init | **Moving Platform A** | Platform | 0x88783718 | ✅ |
+| 6 | EntityType006_MovingPlatformB_Init | **Moving Platform B** | Platform | 0x8818a018 | ✅ |
+| 7 | EntityType007_Clayball_Init | **Clay** (Orange Balls) | Collectible | Random | ✅ |
+| 8 | EntityType008_KloggCatchableBall_Init | **Klogg Catchable Ball** | Boss Item | 0x0c34aa22 | ✅ |
+| 10 | EntityType010_EggBeater_Init | **Egg-Beater** | Enemy | g_SpriteList | ✅ |
+| 11 | EntityType011_ExtraLife_Init | **Klaymen's Head** (1-Up) | Collectible | 0xa9240484 | ✅ |
+| 12 | EntityType012_MovingPlatformC_Init | **Moving Platform C** | Platform | 0x9299c307 | ✅ |
+| 17-18 | EntityCallback_Type17/18 | ? | ? | ? | ❓ |
+| 19 | EntityType019_ClockPlatformA_Init | **Clock Platform A** | Platform | 0x93043811 | ✅ |
+| 20 | EntityType020_ClockPlatformB_Init | **Clock Platform B** | Platform | 0xd2801814 | ✅ |
+| 21 | EntityType021_ClockPlatformC_Init | **Clock Platform C** | Platform | 0x12800031 | ✅ |
+| 22 | EntityCallback_Type22 | ? | ? | ? | ❓ |
+| 23 | EntityType023_PhoenixHand_Init | **Phoenix Hand** (The Bird) | Collectible | 0x9158a0f6 | ✅ |
+| 25 | EntityType025_PhartHead_Init | **Phart Head** (L2) | Collectible | 0x8c510186 | ✅ |
+| 26 | EntityType026_Flapper_Init | **Flapper** | Enemy | ? | ✅ |
+| 27 | EntityType027_FlapperVariant_Init | **Flapper** (variant) | Enemy | ? | ✅ |
+| 29 | Enemy_Init | ? | Enemy | ? | ❓ |
+| 42-44 | Portal_Init | **Teleport Balls** | Interactive | 0xb01c25f0 | ⏳ |
+| 45 | MessageBox_Init | **Ma Bird** (Checkpoint) | Interactive | 0xa89d0ad0 | ⏳ |
+| 61 | Sparkle_Init | Collection effect | Effect | 0x6a351094 | ⏳ |
+| 71 | MonkeyMageBoss_Init | **Monkey Mage** | Boss | ? | ✅ |
+| 95 | 1970sBonus_Init | **1970s Icons** | Collectible | ? | ⏳ |
+| 100 | GlennYntis_Init | **Glenn Yntis** | Boss | ? | ✅ |
+| 101 | ShrineyGuard_Init | **Shriney Guard** | Boss | ? | ✅ |
+| 102 | JoeHeadJoe_Init | **Joe-Head-Joe** | Boss | ? | ✅ |
+| 103 | Klogg_Init | **Klogg** | Boss | ? | ✅ |
 
 ---
 
@@ -193,11 +221,19 @@ python3 tools/scripts/entity_sprite_report.py
 
 1. **Layer-Dependent Remapping**: BLB entity types remap differently per layer. Internal type 25 is Phart Head collectible on Layer 2, but may be different on Layer 1.
 
-2. **Enemy Types 17-23**: These 7 types likely correspond to the 7+ ground enemy variants (Clay Keeper, Loud Mouth, Mental Monkey, Tempest, Jumpy, Triple Laser, El Barfo).
+2. **Types 5, 6, 12 are Platforms**: Previously mislabeled as "flying enemies" - these are moving platforms with different visual styles.
 
-3. **Flying Types 5-6**: One is likely Flapper (butt-bounceable), other is Flying Ynt Centurion (weapon-only due to spikes).
+3. **Types 19-21 are Clock Platforms**: Temporary platforms with timer countdown. All use `InitClockPlatformWithTimer` helper with indicator sprite 0x82886816.
 
-4. **Level-Specific Enemies**: Some enemies only appear in specific level themes:
+4. **Type 7 is Clayball**: Collectible orbs, not decoration. Uses `InitClayballWithRandomColor`.
+
+5. **Type 8 is Klogg Catchable Ball**: Special KLOG boss fight projectile, NOT a general collectible. The spiky ball variant (cannot catch) is a different type.
+
+6. **Type 10 is Egg-Beater**: Flying enemy with propeller, requires weapons (no butt-bounce).
+
+7. **Type 11 is Extra Life (1-Up)**: Klaymen's Head collectible, calls `AddPlayerLives(+1)`. NOT Phart Head.
+
+8. **Level-Specific Enemies**: Some enemies only appear in specific level themes:
    - CSTL: Castle Trooper
    - FOOD: Pop-Corn Skulls, Fork Shooter Monkey
    - SNOW: Sno-Blo

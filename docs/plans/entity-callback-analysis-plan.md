@@ -34,10 +34,10 @@ python3 tools/scripts/entity_sprite_report.py
 
 | Category | Identified | Total | Coverage |
 |----------|-----------|-------|----------|
-| Unique Callbacks | ~25 | 82 | ~30% |
-| Entity Types | ~30 | 121 | ~25% |
-| Sprite IDs | ~30 | ~100+ | ~30% |
-| **Visually Verified** | 5 | 121 | **~4%** |
+| Unique Callbacks | ~35 | 82 | ~43% |
+| Entity Types | ~45 | 121 | ~37% |
+| Sprite IDs | ~40 | ~100+ | ~40% |
+| **Visually Verified** | 18 | 121 | **~15%** |
 
 ### Verification Status Legend
 
@@ -50,12 +50,22 @@ python3 tools/scripts/entity_sprite_report.py
 | Type | Callback | Name | Sprite ID | Levels | Status |
 |------|----------|------|-----------|--------|--------|
 | 0, 3, 4 | 0x8007efd0 | Pickup/Collectible | ? | ? | ❓ |
-| 2 | 0x80080328 | Clayball | 0xb8700ca1 | SCIE+ | ⏳ |
-| 8 | 0x80081504 | Item | 0x0c34aa22 | ? | ⏳ |
+| 2 | 0x80080328 | Green Bullets | 0xb8700ca1 | SCIE+ | ✅ |
+| 5 | 0x8007f7b0 | **Moving Platform A** | 0x88783718 | Various | ✅ |
+| 6 | 0x8007f830 | **Moving Platform B** | 0x8818a018 | Various | ✅ |
+| 7 | 0x80080408 | **Clayball** (Orange Balls) | Random | All levels | ✅ |
+| 8 | 0x80081504 | **Klogg Catchable Ball** | 0x0c34aa22 | KLOG only | ✅ |
+| 10 | 0x8007f244 | **Egg-Beater** | g_SpriteList | CLOU, CRYS, SOAR | ✅ |
+| 11 | 0x80080478 | **Extra Life** (Klaymen's Head) | 0xa9240484 | Various | ✅ |
+| 12 | 0x8007f8b0 | **Moving Platform C** | 0x9299c307 | MOSS | ✅ |
+| 19 | 0x8007fa30 | **Clock Platform A** | 0x93043811 | Various | ✅ |
+| 20 | 0x8007faac | **Clock Platform B** | 0xd2801814 | Various | ✅ |
+| 21 | 0x8007fb28 | **Clock Platform C** | 0x12800031 | Various | ✅ |
+| 23 | 0x80080558 | **Phoenix Hand** (The Bird) | 0x9158a0f6 | Various | ✅ |
 | 24 | 0x8007f460 | SpecialAmmo | ? | ? | ❓ |
-| 25 | 0x800805c8 | **Phart Head** | 0x8c510186 | SCIE | ⏳ |
-| 26 | 0x8007f2cc | **Path Enemy** | ? | ? | ❓ |
-| 27 | 0x8007f354 | **Path Enemy Variant** | ? | ? | ❓ |
+| 25 | 0x800805c8 | **Phart Head** | 0x8c510186 | SCIE | ✅ |
+| 26 | 0x8007f2cc | **Flapper** | ? | CLOU | ✅ |
+| 27 | 0x8007f354 | **Flapper Variant** | ? | CLOU | ✅ |
 | 28 | 0x80080638 | PlatformA | ? | ? | ❓ |
 | 29 | 0x800806a8 | **Ground Patrol Enemy** | ? | ? | ❓ |
 | 42-44 | 0x80080ddc | Portal | 0xb01c25f0 | ? | ⏳ |

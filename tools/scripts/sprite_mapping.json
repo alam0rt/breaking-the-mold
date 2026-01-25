@@ -1,0 +1,3290 @@
+{
+  "description": "Sprite ID mapping for Skullmonkeys (SLES-01090)",
+  "note": "Use hex IDs to match Ghidra decompiled code, decimal to match extracted filenames",
+  "sprite_count": 136,
+  "hex_to_decimal": {
+    "0x3d348056": 1026850902,
+    "0xe8628689": 3898771081,
+    "0xd305d045": 3540373573,
+    "0x52a08394": 1386251156,
+    "0x08208902": 136349954,
+    "0x000ac607": 706055,
+    "0x1cf99931": 486119729,
+    "0x292e8480": 690914432,
+    "0x3838801a": 943226906,
+    "0x393c80c2": 960266434,
+    "0x1e089010": 503877648,
+    "0xd02dc3d5": 3492660181,
+    "0x5d2ce434": 1563223092,
+    "0x5a204c30": 1512066096,
+    "0x0e0ac230": 235586096,
+    "0xc8099196": 3356070294,
+    "0x54608016": 1415610390,
+    "0x0b2084d0": 186680528,
+    "0xfa20cd14": 4196453652,
+    "0x282b8491": 673940625,
+    "0x88b9833c": 2293859132,
+    "0x5838cc16": 1480117270,
+    "0x4260c8b5": 1113639093,
+    "0x1c3aa013": 473604115,
+    "0x8d01c734": 2365703988,
+    "0x512c8430": 1361871920,
+    "0x53af8200": 1404011008,
+    "0x1b301085": 456134789,
+    "0x98004092": 2550153362,
+    "0x00e2f188": 14872968,
+    "0x0a3a4051": 171589713,
+    "0x524ec094": 1380892820,
+    "0xb868d0c6": 3093876934,
+    "0xb468d0c6": 3026768070,
+    "0xd167c005": 3513237509,
+    "0x1c395196": 473518486,
+    "0x1df99931": 502896945,
+    "0xf936c015": 4181114901,
+    "0x80282799": 2150115225,
+    "0x52ee0118": 1391329560,
+    "0x49289c14": 1227398164,
+    "0x542a8850": 1412073552,
+    "0xfa700ce7": 4201647335,
+    "0x23683294": 594031252,
+    "0x1a28c11a": 438878490,
+    "0x092b8480": 153846912,
+    "0x1a2ab594": 439006612,
+    "0x0ad0f813": 181467155,
+    "0x5900c41e": 1493222430,
+    "0x00388110": 3703056,
+    "0x91a9d01d": 2443825181,
+    "0x68c0f413": 1757475859,
+    "0xca1b20cb": 3390775499,
+    "0x8c510186": 2354119046,
+    "0x0aabc010": 179027984,
+    "0x6c351094": 1815416980,
+    "0x1ef99931": 519674161,
+    "0x28c080df": 683704543,
+    "0x48608484": 1214284932,
+    "0xb8700ca1": 3094351009,
+    "0x9389b8c4": 2475276484,
+    "0xbe68d0c6": 3194540230,
+    "0x902c0002": 2418802690,
+    "0x9158a0f6": 2438504694,
+    "0x29c0e211": 700506641,
+    "0x48204012": 1210073106,
+    "0xa9240484": 2837709956,
+    "0x6a351094": 1781862548,
+    "0x2ad0f011": 718336017,
+    "0x9b0ab1c6": 2601169350,
+    "0x18298210": 405373456,
+    "0x88a28194": 2292351380,
+    "0x69c04050": 1774207056,
+    "0x69c8f473": 1774777459,
+    "0x8ab92024": 2327388196,
+    "0x80e85ea0": 2162712224,
+    "0x98f8221e": 2566398494,
+    "0x91106183": 2433769859,
+    "0x400c9a1d": 1074567709,
+    "0x5ad9815f": 1524203871,
+    "0x657c322c": 1702638124,
+    "0xf175320e": 4050989582,
+    "0x5a89815f": 1518960991,
+    "0x5ab9815f": 1522106719,
+    "0x620ec210": 1645134352,
+    "0x64bb1cbe": 1689984190,
+    "0x880161a7": 2281791911,
+    "0x611c5804": 1629247492,
+    "0x2cda4604": 752502276,
+    "0xb4011101": 3019968769,
+    "0xe6830101": 3867345153,
+    "0xec000027": 3959423015,
+    "0x60b8bc9c": 1622719644,
+    "0xe7443a6f": 3880008303,
+    "0x60181a0c": 1612192268,
+    "0x09406d8a": 155217290,
+    "0xe4834384": 3833807748,
+    "0x60b98cbd": 1622772925,
+    "0x980861a3": 2550686115,
+    "0x1d1811b3": 488116659,
+    "0x1e1000b3": 504365235,
+    "0x04084011": 67649553,
+    "0x02098010": 34177040,
+    "0x9918a8e2": 2568530146,
+    "0x88783718": 2289579800,
+    "0x44ca1c10": 1154096144,
+    "0x392cb014": 959229972,
+    "0x8818a018": 2283315224,
+    "0x80b92212": 2159616530,
+    "0x09ce0610": 164496912,
+    "0x61581a0c": 1633163788,
+    "0xe398d28d": 3818443405,
+    "0xbb781481": 3145208961,
+    "0x400c991d": 1074567453,
+    "0x00ce0610": 13501968,
+    "0x400c989d": 1074567325,
+    "0x0bbb70ac": 196833452,
+    "0xe00e991d": 3759053085,
+    "0x28ce0610": 684590608,
+    "0x75189608": 1964545544,
+    "0x40189a1d": 1075354141,
+    "0xe00e989d": 3759052957,
+    "0x5822c080": 1478672512,
+    "0x61981a0c": 1637358092,
+    "0x0ace0610": 181274128,
+    "0x18ce0610": 416155152,
+    "0x0cce0610": 214828560,
+    "0x40c22c10": 1086467088,
+    "0x404c5919": 1078745369,
+    "0x80729081": 2154991745,
+    "0x88329285": 2285015685,
+    "0x33808e1b": 864063003,
+    "0x63848e59": 1669631577,
+    "0x10094096": 269041814,
+    "0x39900619": 965740057,
+    "0xe289c059": 3800678489
+  },
+  "sprites": {
+    "706055": {
+      "hex": "0x000ac607",
+      "decimal": 706055,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_706055_anim00_f07.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_706055_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_706055_anim00_f09.png"
+      ]
+    },
+    "3703056": {
+      "hex": "0x00388110",
+      "decimal": 3703056,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 84,
+      "sample_file": "PHRO/primary/sprites/sprite_3703056_anim00_f22.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3703056_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_3703056_anim00_f09.png"
+      ]
+    },
+    "13501968": {
+      "hex": "0x00ce0610",
+      "decimal": 13501968,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/stage1/sprites/sprite_13501968_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_13501968_anim00_f00.png"
+      ]
+    },
+    "14872968": {
+      "hex": "0x00e2f188",
+      "decimal": 14872968,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 40,
+      "sample_file": "PHRO/primary/sprites/sprite_14872968_anim00_f05.png",
+      "files": [
+        "MENU/primary/sprites/sprite_14872968_anim00_f00.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f01.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f02.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f03.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f04.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f05.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f06.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f07.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f08.png",
+        "MENU/primary/sprites/sprite_14872968_anim00_f09.png"
+      ]
+    },
+    "34177040": {
+      "hex": "0x02098010",
+      "decimal": 34177040,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/primary/sprites/sprite_34177040_anim00_f00.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_34177040_anim00_f00.png"
+      ]
+    },
+    "67649553": {
+      "hex": "0x04084011",
+      "decimal": 67649553,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 21,
+      "sample_file": "TMPL/primary/sprites/sprite_67649553_anim00_f13.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_67649553_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f03.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f04.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f05.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f06.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f07.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f08.png",
+        "TMPL/primary/sprites/sprite_67649553_anim00_f09.png"
+      ]
+    },
+    "136349954": {
+      "hex": "0x08208902",
+      "decimal": 136349954,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 84,
+      "sample_file": "PHRO/primary/sprites/sprite_136349954_anim00_f08.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_136349954_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_136349954_anim00_f09.png"
+      ]
+    },
+    "153846912": {
+      "hex": "0x092b8480",
+      "decimal": 153846912,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 24,
+      "sample_file": "PHRO/primary/sprites/sprite_153846912_anim00_f07.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_153846912_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_153846912_anim00_f07.png",
+        "SCIE/primary/sprites/sprite_153846912_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_153846912_anim00_f01.png"
+      ]
+    },
+    "155217290": {
+      "hex": "0x09406d8a",
+      "decimal": 155217290,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 2,
+      "sample_file": "PHRO/stage0/sprites/sprite_155217290_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_155217290_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_155217290_anim00_f00.png"
+      ]
+    },
+    "164496912": {
+      "hex": "0x09ce0610",
+      "decimal": 164496912,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/stage1/sprites/sprite_164496912_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_164496912_anim00_f00.png"
+      ]
+    },
+    "171589713": {
+      "hex": "0x0a3a4051",
+      "decimal": 171589713,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 51,
+      "sample_file": "PHRO/primary/sprites/sprite_171589713_anim00_f01.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_171589713_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_171589713_anim00_f09.png"
+      ]
+    },
+    "179027984": {
+      "hex": "0x0aabc010",
+      "decimal": 179027984,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 12,
+      "sample_file": "PHRO/primary/sprites/sprite_179027984_anim00_f01.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_179027984_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_179027984_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_179027984_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_179027984_anim00_f03.png",
+        "SCIE/primary/sprites/sprite_179027984_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_179027984_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_179027984_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_179027984_anim00_f03.png",
+        "TMPL/primary/sprites/sprite_179027984_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_179027984_anim00_f01.png"
+      ]
+    },
+    "181274128": {
+      "hex": "0x0ace0610",
+      "decimal": 181274128,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/stage1/sprites/sprite_181274128_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_181274128_anim00_f00.png"
+      ]
+    },
+    "181467155": {
+      "hex": "0x0ad0f813",
+      "decimal": 181467155,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_181467155_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_181467155_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_181467155_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_181467155_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_181467155_anim00_f00.png"
+      ]
+    },
+    "186680528": {
+      "hex": "0x0b2084d0",
+      "decimal": 186680528,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_186680528_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_186680528_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_186680528_anim00_f09.png"
+      ]
+    },
+    "196833452": {
+      "hex": "0x0bbb70ac",
+      "decimal": 196833452,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 12,
+      "sample_file": "TMPL/stage1/sprites/sprite_196833452_anim00_f03.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f03.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f04.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f05.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f06.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f07.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f08.png",
+        "TMPL/stage1/sprites/sprite_196833452_anim00_f09.png"
+      ]
+    },
+    "214828560": {
+      "hex": "0x0cce0610",
+      "decimal": 214828560,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/stage1/sprites/sprite_214828560_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_214828560_anim00_f00.png"
+      ]
+    },
+    "235586096": {
+      "hex": "0x0e0ac230",
+      "decimal": 235586096,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 51,
+      "sample_file": "PHRO/primary/sprites/sprite_235586096_anim00_f02.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_235586096_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_235586096_anim00_f09.png"
+      ]
+    },
+    "269041814": {
+      "hex": "0x10094096",
+      "decimal": 269041814,
+      "levels": [
+        "MENU"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 1,
+      "sample_file": "MENU/primary/sprites/sprite_269041814_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_269041814_anim00_f00.png"
+      ]
+    },
+    "405373456": {
+      "hex": "0x18298210",
+      "decimal": 405373456,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 9,
+      "sample_file": "PHRO/primary/sprites/sprite_405373456_anim00_f01.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_405373456_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_405373456_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_405373456_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_405373456_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_405373456_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_405373456_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_405373456_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_405373456_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_405373456_anim00_f02.png"
+      ]
+    },
+    "416155152": {
+      "hex": "0x18ce0610",
+      "decimal": 416155152,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/stage1/sprites/sprite_416155152_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_416155152_anim00_f00.png"
+      ]
+    },
+    "438878490": {
+      "hex": "0x1a28c11a",
+      "decimal": 438878490,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 51,
+      "sample_file": "PHRO/primary/sprites/sprite_438878490_anim00_f12.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_438878490_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_438878490_anim00_f09.png"
+      ]
+    },
+    "439006612": {
+      "hex": "0x1a2ab594",
+      "decimal": 439006612,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 21,
+      "sample_file": "PHRO/primary/sprites/sprite_439006612_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_439006612_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_439006612_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_439006612_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_439006612_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_439006612_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_439006612_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_439006612_anim00_f06.png",
+        "SCIE/primary/sprites/sprite_439006612_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_439006612_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_439006612_anim00_f02.png"
+      ]
+    },
+    "456134789": {
+      "hex": "0x1b301085",
+      "decimal": 456134789,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 84,
+      "sample_file": "PHRO/primary/sprites/sprite_456134789_anim00_f20.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_456134789_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_456134789_anim00_f09.png"
+      ]
+    },
+    "473518486": {
+      "hex": "0x1c395196",
+      "decimal": 473518486,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 39,
+      "sample_file": "PHRO/primary/sprites/sprite_473518486_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_473518486_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_473518486_anim00_f09.png"
+      ]
+    },
+    "473604115": {
+      "hex": "0x1c3aa013",
+      "decimal": 473604115,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 42,
+      "sample_file": "PHRO/primary/sprites/sprite_473604115_anim00_f07.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_473604115_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_473604115_anim00_f09.png"
+      ]
+    },
+    "486119729": {
+      "hex": "0x1cf99931",
+      "decimal": 486119729,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "PHRO/primary/sprites/sprite_486119729_anim00_f07.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_486119729_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_486119729_anim00_f09.png"
+      ]
+    },
+    "488116659": {
+      "hex": "0x1d1811b3",
+      "decimal": 488116659,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 17,
+      "sample_file": "TMPL/primary/sprites/sprite_488116659_anim00_f16.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_488116659_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f03.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f04.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f05.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f06.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f07.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f08.png",
+        "TMPL/primary/sprites/sprite_488116659_anim00_f09.png"
+      ]
+    },
+    "502896945": {
+      "hex": "0x1df99931",
+      "decimal": 502896945,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "PHRO/primary/sprites/sprite_502896945_anim00_f09.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_502896945_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_502896945_anim00_f09.png"
+      ]
+    },
+    "503877648": {
+      "hex": "0x1e089010",
+      "decimal": 503877648,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 51,
+      "sample_file": "PHRO/primary/sprites/sprite_503877648_anim00_f06.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_503877648_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_503877648_anim00_f09.png"
+      ]
+    },
+    "504365235": {
+      "hex": "0x1e1000b3",
+      "decimal": 504365235,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "TMPL/primary/sprites/sprite_504365235_anim00_f22.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_504365235_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f03.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f04.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f05.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f06.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f07.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f08.png",
+        "TMPL/primary/sprites/sprite_504365235_anim00_f09.png"
+      ]
+    },
+    "519674161": {
+      "hex": "0x1ef99931",
+      "decimal": 519674161,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "PHRO/primary/sprites/sprite_519674161_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_519674161_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_519674161_anim00_f09.png"
+      ]
+    },
+    "594031252": {
+      "hex": "0x23683294",
+      "decimal": 594031252,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 15,
+      "sample_file": "PHRO/primary/sprites/sprite_594031252_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_594031252_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_594031252_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_594031252_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_594031252_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_594031252_anim00_f04.png",
+        "SCIE/primary/sprites/sprite_594031252_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_594031252_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_594031252_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_594031252_anim00_f03.png",
+        "SCIE/primary/sprites/sprite_594031252_anim00_f04.png"
+      ]
+    },
+    "673940625": {
+      "hex": "0x282b8491",
+      "decimal": 673940625,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 24,
+      "sample_file": "PHRO/primary/sprites/sprite_673940625_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_673940625_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_673940625_anim00_f07.png",
+        "SCIE/primary/sprites/sprite_673940625_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_673940625_anim00_f01.png"
+      ]
+    },
+    "683704543": {
+      "hex": "0x28c080df",
+      "decimal": 683704543,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_683704543_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_683704543_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_683704543_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_683704543_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_683704543_anim00_f00.png"
+      ]
+    },
+    "684590608": {
+      "hex": "0x28ce0610",
+      "decimal": 684590608,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/stage1/sprites/sprite_684590608_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_684590608_anim00_f00.png"
+      ]
+    },
+    "690914432": {
+      "hex": "0x292e8480",
+      "decimal": 690914432,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 9,
+      "sample_file": "PHRO/primary/sprites/sprite_690914432_anim00_f01.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_690914432_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_690914432_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_690914432_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_690914432_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_690914432_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_690914432_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_690914432_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_690914432_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_690914432_anim00_f02.png"
+      ]
+    },
+    "700506641": {
+      "hex": "0x29c0e211",
+      "decimal": 700506641,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_700506641_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_700506641_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_700506641_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_700506641_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_700506641_anim00_f00.png"
+      ]
+    },
+    "718336017": {
+      "hex": "0x2ad0f011",
+      "decimal": 718336017,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_718336017_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_718336017_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_718336017_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_718336017_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_718336017_anim00_f00.png"
+      ]
+    },
+    "752502276": {
+      "hex": "0x2cda4604",
+      "decimal": 752502276,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 6,
+      "sample_file": "PHRO/stage0/sprites/sprite_752502276_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_752502276_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_752502276_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_752502276_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_752502276_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_752502276_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_752502276_anim00_f05.png"
+      ]
+    },
+    "864063003": {
+      "hex": "0x33808e1b",
+      "decimal": 864063003,
+      "levels": [
+        "MENU"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "MENU/primary/sprites/sprite_864063003_anim00_f33.png",
+      "files": [
+        "MENU/primary/sprites/sprite_864063003_anim00_f00.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f01.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f02.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f03.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f04.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f05.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f06.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f07.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f08.png",
+        "MENU/primary/sprites/sprite_864063003_anim00_f09.png"
+      ]
+    },
+    "943226906": {
+      "hex": "0x3838801a",
+      "decimal": 943226906,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 39,
+      "sample_file": "PHRO/primary/sprites/sprite_943226906_anim00_f06.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_943226906_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_943226906_anim00_f09.png"
+      ]
+    },
+    "959229972": {
+      "hex": "0x392cb014",
+      "decimal": 959229972,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 3,
+      "sample_file": "TMPL/primary/sprites/sprite_959229972_anim00_f01.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_959229972_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_959229972_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_959229972_anim00_f02.png"
+      ]
+    },
+    "960266434": {
+      "hex": "0x393c80c2",
+      "decimal": 960266434,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 84,
+      "sample_file": "PHRO/primary/sprites/sprite_960266434_anim00_f14.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_960266434_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_960266434_anim00_f09.png"
+      ]
+    },
+    "965740057": {
+      "hex": "0x39900619",
+      "decimal": 965740057,
+      "levels": [
+        "MENU"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 1,
+      "sample_file": "MENU/primary/sprites/sprite_965740057_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_965740057_anim00_f00.png"
+      ]
+    },
+    "1026850902": {
+      "hex": "0x3d348056",
+      "decimal": 1026850902,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_1026850902_anim00_f03.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1026850902_anim00_f09.png"
+      ]
+    },
+    "1074567325": {
+      "hex": "0x400c989d",
+      "decimal": 1074567325,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 20,
+      "sample_file": "TMPL/stage1/sprites/sprite_1074567325_anim00_f09.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f05.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f06.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f07.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f08.png",
+        "SCIE/stage0/sprites/sprite_1074567325_anim00_f09.png"
+      ]
+    },
+    "1074567453": {
+      "hex": "0x400c991d",
+      "decimal": 1074567453,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 26,
+      "sample_file": "TMPL/stage1/sprites/sprite_1074567453_anim00_f07.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f05.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f06.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f07.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f08.png",
+        "SCIE/stage0/sprites/sprite_1074567453_anim00_f09.png"
+      ]
+    },
+    "1074567709": {
+      "hex": "0x400c9a1d",
+      "decimal": 1074567709,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 17,
+      "sample_file": "PHRO/stage0/sprites/sprite_1074567709_anim00_f14.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_1074567709_anim00_f09.png"
+      ]
+    },
+    "1075354141": {
+      "hex": "0x40189a1d",
+      "decimal": 1075354141,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 10,
+      "sample_file": "TMPL/stage1/sprites/sprite_1075354141_anim00_f03.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1075354141_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1075354141_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1075354141_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_1075354141_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_1075354141_anim00_f04.png",
+        "TMPL/stage1/sprites/sprite_1075354141_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_1075354141_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_1075354141_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_1075354141_anim00_f03.png",
+        "TMPL/stage1/sprites/sprite_1075354141_anim00_f04.png"
+      ]
+    },
+    "1078745369": {
+      "hex": "0x404c5919",
+      "decimal": 1078745369,
+      "levels": [
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 13,
+      "sample_file": "SCIE/stage0/sprites/sprite_1078745369_anim00_f04.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f05.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f06.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f07.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f08.png",
+        "SCIE/stage0/sprites/sprite_1078745369_anim00_f09.png"
+      ]
+    },
+    "1086467088": {
+      "hex": "0x40c22c10",
+      "decimal": 1086467088,
+      "levels": [
+        "SCIE"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 3,
+      "sample_file": "SCIE/primary/sprites/sprite_1086467088_anim00_f00.png",
+      "files": [
+        "SCIE/primary/sprites/sprite_1086467088_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1086467088_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_1086467088_anim00_f02.png"
+      ]
+    },
+    "1113639093": {
+      "hex": "0x4260c8b5",
+      "decimal": 1113639093,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "PHRO/primary/sprites/sprite_1113639093_anim00_f05.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1113639093_anim00_f09.png"
+      ]
+    },
+    "1154096144": {
+      "hex": "0x44ca1c10",
+      "decimal": 1154096144,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 3,
+      "sample_file": "TMPL/primary/sprites/sprite_1154096144_anim00_f01.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_1154096144_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1154096144_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_1154096144_anim00_f02.png"
+      ]
+    },
+    "1210073106": {
+      "hex": "0x48204012",
+      "decimal": 1210073106,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 9,
+      "sample_file": "PHRO/primary/sprites/sprite_1210073106_anim00_f00.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1210073106_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1210073106_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1210073106_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_1210073106_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1210073106_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_1210073106_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_1210073106_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1210073106_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_1210073106_anim00_f02.png"
+      ]
+    },
+    "1214284932": {
+      "hex": "0x48608484",
+      "decimal": 1214284932,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "PHRO/primary/sprites/sprite_1214284932_anim00_f08.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1214284932_anim00_f09.png"
+      ]
+    },
+    "1227398164": {
+      "hex": "0x49289c14",
+      "decimal": 1227398164,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 15,
+      "sample_file": "PHRO/primary/sprites/sprite_1227398164_anim00_f02.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1227398164_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1227398164_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1227398164_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1227398164_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1227398164_anim00_f04.png",
+        "SCIE/primary/sprites/sprite_1227398164_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1227398164_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_1227398164_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_1227398164_anim00_f03.png",
+        "SCIE/primary/sprites/sprite_1227398164_anim00_f04.png"
+      ]
+    },
+    "1361871920": {
+      "hex": "0x512c8430",
+      "decimal": 1361871920,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_1361871920_anim00_f05.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1361871920_anim00_f09.png"
+      ]
+    },
+    "1380892820": {
+      "hex": "0x524ec094",
+      "decimal": 1380892820,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 84,
+      "sample_file": "PHRO/primary/sprites/sprite_1380892820_anim00_f09.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1380892820_anim00_f09.png"
+      ]
+    },
+    "1386251156": {
+      "hex": "0x52a08394",
+      "decimal": 1386251156,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 88,
+      "sample_file": "PHRO/primary/sprites/sprite_1386251156_anim00_f09.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1386251156_anim00_f09.png"
+      ]
+    },
+    "1391329560": {
+      "hex": "0x52ee0118",
+      "decimal": 1391329560,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 33,
+      "sample_file": "PHRO/primary/sprites/sprite_1391329560_anim00_f08.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1391329560_anim00_f09.png"
+      ]
+    },
+    "1404011008": {
+      "hex": "0x53af8200",
+      "decimal": 1404011008,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 39,
+      "sample_file": "PHRO/primary/sprites/sprite_1404011008_anim00_f00.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1404011008_anim00_f09.png"
+      ]
+    },
+    "1412073552": {
+      "hex": "0x542a8850",
+      "decimal": 1412073552,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 51,
+      "sample_file": "PHRO/primary/sprites/sprite_1412073552_anim00_f14.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1412073552_anim00_f09.png"
+      ]
+    },
+    "1415610390": {
+      "hex": "0x54608016",
+      "decimal": 1415610390,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 81,
+      "sample_file": "PHRO/primary/sprites/sprite_1415610390_anim00_f21.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1415610390_anim00_f09.png"
+      ]
+    },
+    "1478672512": {
+      "hex": "0x5822c080",
+      "decimal": 1478672512,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 6,
+      "sample_file": "TMPL/stage1/sprites/sprite_1478672512_anim00_f00.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_1478672512_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_1478672512_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_1478672512_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_1478672512_anim00_f03.png",
+        "TMPL/stage1/sprites/sprite_1478672512_anim00_f04.png",
+        "TMPL/stage1/sprites/sprite_1478672512_anim00_f05.png"
+      ]
+    },
+    "1480117270": {
+      "hex": "0x5838cc16",
+      "decimal": 1480117270,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 69,
+      "sample_file": "PHRO/primary/sprites/sprite_1480117270_anim00_f03.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1480117270_anim00_f09.png"
+      ]
+    },
+    "1493222430": {
+      "hex": "0x5900c41e",
+      "decimal": 1493222430,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 9,
+      "sample_file": "PHRO/primary/sprites/sprite_1493222430_anim00_f02.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1493222430_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1493222430_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1493222430_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_1493222430_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1493222430_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_1493222430_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_1493222430_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1493222430_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_1493222430_anim00_f02.png"
+      ]
+    },
+    "1512066096": {
+      "hex": "0x5a204c30",
+      "decimal": 1512066096,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 102,
+      "sample_file": "PHRO/primary/sprites/sprite_1512066096_anim00_f28.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1512066096_anim00_f09.png"
+      ]
+    },
+    "1518960991": {
+      "hex": "0x5a89815f",
+      "decimal": 1518960991,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 21,
+      "sample_file": "PHRO/stage0/sprites/sprite_1518960991_anim00_f06.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1518960991_anim00_f06.png",
+        "SCIE/stage0/sprites/sprite_1518960991_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1518960991_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1518960991_anim00_f02.png"
+      ]
+    },
+    "1522106719": {
+      "hex": "0x5ab9815f",
+      "decimal": 1522106719,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 21,
+      "sample_file": "PHRO/stage0/sprites/sprite_1522106719_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1522106719_anim00_f06.png",
+        "SCIE/stage0/sprites/sprite_1522106719_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1522106719_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1522106719_anim00_f02.png"
+      ]
+    },
+    "1524203871": {
+      "hex": "0x5ad9815f",
+      "decimal": 1524203871,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 30,
+      "sample_file": "PHRO/stage0/sprites/sprite_1524203871_anim00_f09.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_1524203871_anim00_f09.png"
+      ]
+    },
+    "1563223092": {
+      "hex": "0x5d2ce434",
+      "decimal": 1563223092,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 108,
+      "sample_file": "PHRO/primary/sprites/sprite_1563223092_anim00_f33.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_1563223092_anim00_f09.png"
+      ]
+    },
+    "1612192268": {
+      "hex": "0x60181a0c",
+      "decimal": 1612192268,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 3,
+      "sample_file": "PHRO/stage0/sprites/sprite_1612192268_anim00_f02.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1612192268_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1612192268_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1612192268_anim00_f02.png"
+      ]
+    },
+    "1622719644": {
+      "hex": "0x60b8bc9c",
+      "decimal": 1622719644,
+      "levels": [
+        "PHRO",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 38,
+      "sample_file": "PHRO/stage0/sprites/sprite_1622719644_anim00_f11.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_1622719644_anim00_f09.png"
+      ]
+    },
+    "1622772925": {
+      "hex": "0x60b98cbd",
+      "decimal": 1622772925,
+      "levels": [
+        "PHRO",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 6,
+      "sample_file": "PHRO/stage0/sprites/sprite_1622772925_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1622772925_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1622772925_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1622772925_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_1622772925_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_1622772925_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_1622772925_anim00_f02.png"
+      ]
+    },
+    "1629247492": {
+      "hex": "0x611c5804",
+      "decimal": 1629247492,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 27,
+      "sample_file": "PHRO/stage0/sprites/sprite_1629247492_anim00_f22.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_1629247492_anim00_f09.png"
+      ]
+    },
+    "1633163788": {
+      "hex": "0x61581a0c",
+      "decimal": 1633163788,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 12,
+      "sample_file": "TMPL/stage1/sprites/sprite_1633163788_anim00_f01.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1633163788_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1633163788_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1633163788_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_1633163788_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_1633163788_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_1633163788_anim00_f05.png",
+        "TMPL/stage1/sprites/sprite_1633163788_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_1633163788_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_1633163788_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_1633163788_anim00_f03.png"
+      ]
+    },
+    "1637358092": {
+      "hex": "0x61981a0c",
+      "decimal": 1637358092,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 6,
+      "sample_file": "TMPL/stage1/sprites/sprite_1637358092_anim00_f00.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1637358092_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1637358092_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1637358092_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_1637358092_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_1637358092_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_1637358092_anim00_f02.png"
+      ]
+    },
+    "1645134352": {
+      "hex": "0x620ec210",
+      "decimal": 1645134352,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 20,
+      "sample_file": "PHRO/stage0/sprites/sprite_1645134352_anim00_f02.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_1645134352_anim00_f09.png"
+      ]
+    },
+    "1669631577": {
+      "hex": "0x63848e59",
+      "decimal": 1669631577,
+      "levels": [
+        "MENU"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 7,
+      "sample_file": "MENU/primary/sprites/sprite_1669631577_anim00_f06.png",
+      "files": [
+        "MENU/primary/sprites/sprite_1669631577_anim00_f00.png",
+        "MENU/primary/sprites/sprite_1669631577_anim00_f01.png",
+        "MENU/primary/sprites/sprite_1669631577_anim00_f02.png",
+        "MENU/primary/sprites/sprite_1669631577_anim00_f03.png",
+        "MENU/primary/sprites/sprite_1669631577_anim00_f04.png",
+        "MENU/primary/sprites/sprite_1669631577_anim00_f05.png",
+        "MENU/primary/sprites/sprite_1669631577_anim00_f06.png"
+      ]
+    },
+    "1689984190": {
+      "hex": "0x64bb1cbe",
+      "decimal": 1689984190,
+      "levels": [
+        "PHRO",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 22,
+      "sample_file": "PHRO/stage0/sprites/sprite_1689984190_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_1689984190_anim00_f09.png"
+      ]
+    },
+    "1702638124": {
+      "hex": "0x657c322c",
+      "decimal": 1702638124,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 8,
+      "sample_file": "PHRO/stage0/sprites/sprite_1702638124_anim00_f01.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_1702638124_anim00_f07.png"
+      ]
+    },
+    "1757475859": {
+      "hex": "0x68c0f413",
+      "decimal": 1757475859,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_1757475859_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_1757475859_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1757475859_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1757475859_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1757475859_anim00_f00.png"
+      ]
+    },
+    "1774207056": {
+      "hex": "0x69c04050",
+      "decimal": 1774207056,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_1774207056_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_1774207056_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1774207056_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1774207056_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1774207056_anim00_f00.png"
+      ]
+    },
+    "1774777459": {
+      "hex": "0x69c8f473",
+      "decimal": 1774777459,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_1774777459_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_1774777459_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1774777459_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1774777459_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1774777459_anim00_f00.png"
+      ]
+    },
+    "1781862548": {
+      "hex": "0x6a351094",
+      "decimal": 1781862548,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 32,
+      "sample_file": "PHRO/primary/sprites/sprite_1781862548_anim00_f02.png",
+      "files": [
+        "MENU/primary/sprites/sprite_1781862548_anim00_f00.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f01.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f02.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f03.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f04.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f05.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f06.png",
+        "MENU/primary/sprites/sprite_1781862548_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_1781862548_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1781862548_anim00_f01.png"
+      ]
+    },
+    "1815416980": {
+      "hex": "0x6c351094",
+      "decimal": 1815416980,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_1815416980_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_1815416980_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_1815416980_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_1815416980_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_1815416980_anim00_f00.png"
+      ]
+    },
+    "1964545544": {
+      "hex": "0x75189608",
+      "decimal": 1964545544,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 14,
+      "sample_file": "TMPL/stage1/sprites/sprite_1964545544_anim00_f05.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f05.png",
+        "SCIE/stage0/sprites/sprite_1964545544_anim00_f06.png",
+        "TMPL/stage1/sprites/sprite_1964545544_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_1964545544_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_1964545544_anim00_f02.png"
+      ]
+    },
+    "2150115225": {
+      "hex": "0x80282799",
+      "decimal": 2150115225,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_2150115225_anim00_f06.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_2150115225_anim00_f09.png"
+      ]
+    },
+    "2154991745": {
+      "hex": "0x80729081",
+      "decimal": 2154991745,
+      "levels": [
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 15,
+      "sample_file": "SCIE/stage0/sprites/sprite_2154991745_anim00_f02.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f05.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f06.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f07.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f08.png",
+        "SCIE/stage0/sprites/sprite_2154991745_anim00_f09.png"
+      ]
+    },
+    "2159616530": {
+      "hex": "0x80b92212",
+      "decimal": 2159616530,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/primary/sprites/sprite_2159616530_anim00_f00.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_2159616530_anim00_f00.png"
+      ]
+    },
+    "2162712224": {
+      "hex": "0x80e85ea0",
+      "decimal": 2162712224,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_2162712224_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2162712224_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2162712224_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2162712224_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2162712224_anim00_f00.png"
+      ]
+    },
+    "2281791911": {
+      "hex": "0x880161a7",
+      "decimal": 2281791911,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 20,
+      "sample_file": "PHRO/stage0/sprites/sprite_2281791911_anim00_f01.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_2281791911_anim00_f09.png"
+      ]
+    },
+    "2283315224": {
+      "hex": "0x8818a018",
+      "decimal": 2283315224,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 1,
+      "sample_file": "TMPL/primary/sprites/sprite_2283315224_anim00_f00.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_2283315224_anim00_f00.png"
+      ]
+    },
+    "2285015685": {
+      "hex": "0x88329285",
+      "decimal": 2285015685,
+      "levels": [
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 1,
+      "sample_file": "SCIE/stage0/sprites/sprite_2285015685_anim00_f00.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_2285015685_anim00_f00.png"
+      ]
+    },
+    "2289579800": {
+      "hex": "0x88783718",
+      "decimal": 2289579800,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 2,
+      "sample_file": "TMPL/primary/sprites/sprite_2289579800_anim00_f00.png",
+      "files": [
+        "SCIE/primary/sprites/sprite_2289579800_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2289579800_anim00_f00.png"
+      ]
+    },
+    "2292351380": {
+      "hex": "0x88a28194",
+      "decimal": 2292351380,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_2292351380_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2292351380_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2292351380_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2292351380_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2292351380_anim00_f00.png"
+      ]
+    },
+    "2293859132": {
+      "hex": "0x88b9833c",
+      "decimal": 2293859132,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_2293859132_anim00_f00.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_2293859132_anim00_f09.png"
+      ]
+    },
+    "2327388196": {
+      "hex": "0x8ab92024",
+      "decimal": 2327388196,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_2327388196_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2327388196_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2327388196_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2327388196_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2327388196_anim00_f00.png"
+      ]
+    },
+    "2354119046": {
+      "hex": "0x8c510186",
+      "decimal": 2354119046,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_2354119046_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2354119046_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2354119046_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2354119046_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2354119046_anim00_f00.png"
+      ]
+    },
+    "2365703988": {
+      "hex": "0x8d01c734",
+      "decimal": 2365703988,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 39,
+      "sample_file": "PHRO/primary/sprites/sprite_2365703988_anim00_f08.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_2365703988_anim00_f09.png"
+      ]
+    },
+    "2418802690": {
+      "hex": "0x902c0002",
+      "decimal": 2418802690,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_2418802690_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2418802690_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2418802690_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2418802690_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2418802690_anim00_f00.png"
+      ]
+    },
+    "2433769859": {
+      "hex": "0x91106183",
+      "decimal": 2433769859,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 20,
+      "sample_file": "PHRO/stage0/sprites/sprite_2433769859_anim00_f09.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f07.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f08.png",
+        "PHRO/stage0/sprites/sprite_2433769859_anim00_f09.png"
+      ]
+    },
+    "2438504694": {
+      "hex": "0x9158a0f6",
+      "decimal": 2438504694,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 24,
+      "sample_file": "PHRO/primary/sprites/sprite_2438504694_anim00_f02.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2438504694_anim00_f00.png",
+        "MENU/primary/sprites/sprite_2438504694_anim00_f01.png",
+        "MENU/primary/sprites/sprite_2438504694_anim00_f02.png",
+        "MENU/primary/sprites/sprite_2438504694_anim00_f03.png",
+        "MENU/primary/sprites/sprite_2438504694_anim00_f04.png",
+        "MENU/primary/sprites/sprite_2438504694_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_2438504694_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2438504694_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2438504694_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2438504694_anim00_f03.png"
+      ]
+    },
+    "2443825181": {
+      "hex": "0x91a9d01d",
+      "decimal": 2443825181,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 10,
+      "sample_file": "PHRO/primary/sprites/sprite_2443825181_anim00_f01.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2443825181_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2443825181_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2443825181_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2443825181_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_2443825181_anim00_f04.png",
+        "SCIE/primary/sprites/sprite_2443825181_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2443825181_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_2443825181_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_2443825181_anim00_f03.png",
+        "SCIE/primary/sprites/sprite_2443825181_anim00_f04.png"
+      ]
+    },
+    "2475276484": {
+      "hex": "0x9389b8c4",
+      "decimal": 2475276484,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_2475276484_anim00_f05.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_2475276484_anim00_f09.png"
+      ]
+    },
+    "2550153362": {
+      "hex": "0x98004092",
+      "decimal": 2550153362,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 27,
+      "sample_file": "PHRO/primary/sprites/sprite_2550153362_anim00_f05.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_2550153362_anim00_f08.png",
+        "SCIE/primary/sprites/sprite_2550153362_anim00_f00.png"
+      ]
+    },
+    "2550686115": {
+      "hex": "0x980861a3",
+      "decimal": 2550686115,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 2,
+      "sample_file": "PHRO/stage0/sprites/sprite_2550686115_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_2550686115_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_2550686115_anim00_f00.png"
+      ]
+    },
+    "2566398494": {
+      "hex": "0x98f8221e",
+      "decimal": 2566398494,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 3,
+      "sample_file": "PHRO/primary/sprites/sprite_2566398494_anim00_f00.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2566398494_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2566398494_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2566398494_anim00_f00.png"
+      ]
+    },
+    "2568530146": {
+      "hex": "0x9918a8e2",
+      "decimal": 2568530146,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 5,
+      "sample_file": "TMPL/primary/sprites/sprite_2568530146_anim00_f01.png",
+      "files": [
+        "TMPL/primary/sprites/sprite_2568530146_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2568530146_anim00_f01.png",
+        "TMPL/primary/sprites/sprite_2568530146_anim00_f02.png",
+        "TMPL/primary/sprites/sprite_2568530146_anim00_f03.png",
+        "TMPL/primary/sprites/sprite_2568530146_anim00_f04.png"
+      ]
+    },
+    "2601169350": {
+      "hex": "0x9b0ab1c6",
+      "decimal": 2601169350,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 3,
+      "sample_file": "PHRO/primary/sprites/sprite_2601169350_anim00_f00.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_2601169350_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2601169350_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2601169350_anim00_f00.png"
+      ]
+    },
+    "2837709956": {
+      "hex": "0xa9240484",
+      "decimal": 2837709956,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/primary/sprites/sprite_2837709956_anim00_f00.png",
+      "files": [
+        "MENU/primary/sprites/sprite_2837709956_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_2837709956_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_2837709956_anim00_f00.png",
+        "TMPL/primary/sprites/sprite_2837709956_anim00_f00.png"
+      ]
+    },
+    "3019968769": {
+      "hex": "0xb4011101",
+      "decimal": 3019968769,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 8,
+      "sample_file": "PHRO/stage0/sprites/sprite_3019968769_anim00_f00.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_3019968769_anim00_f07.png"
+      ]
+    },
+    "3026768070": {
+      "hex": "0xb468d0c6",
+      "decimal": 3026768070,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 21,
+      "sample_file": "PHRO/primary/sprites/sprite_3026768070_anim00_f02.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_3026768070_anim00_f06.png",
+        "SCIE/primary/sprites/sprite_3026768070_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_3026768070_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_3026768070_anim00_f02.png"
+      ]
+    },
+    "3093876934": {
+      "hex": "0xb868d0c6",
+      "decimal": 3093876934,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 15,
+      "sample_file": "PHRO/primary/sprites/sprite_3093876934_anim00_f02.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3093876934_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3093876934_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3093876934_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3093876934_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3093876934_anim00_f04.png",
+        "SCIE/primary/sprites/sprite_3093876934_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_3093876934_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_3093876934_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_3093876934_anim00_f03.png",
+        "SCIE/primary/sprites/sprite_3093876934_anim00_f04.png"
+      ]
+    },
+    "3094351009": {
+      "hex": "0xb8700ca1",
+      "decimal": 3094351009,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 32,
+      "sample_file": "PHRO/primary/sprites/sprite_3094351009_anim00_f04.png",
+      "files": [
+        "MENU/primary/sprites/sprite_3094351009_anim00_f00.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f01.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f02.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f03.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f04.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f05.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f06.png",
+        "MENU/primary/sprites/sprite_3094351009_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3094351009_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3094351009_anim00_f01.png"
+      ]
+    },
+    "3145208961": {
+      "hex": "0xbb781481",
+      "decimal": 3145208961,
+      "levels": [
+        "TMPL"
+      ],
+      "segments": [
+        "stage1"
+      ],
+      "file_count": 8,
+      "sample_file": "TMPL/stage1/sprites/sprite_3145208961_anim00_f07.png",
+      "files": [
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f03.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f04.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f05.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f06.png",
+        "TMPL/stage1/sprites/sprite_3145208961_anim00_f07.png"
+      ]
+    },
+    "3194540230": {
+      "hex": "0xbe68d0c6",
+      "decimal": 3194540230,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 15,
+      "sample_file": "PHRO/primary/sprites/sprite_3194540230_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3194540230_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3194540230_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3194540230_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3194540230_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3194540230_anim00_f04.png",
+        "SCIE/primary/sprites/sprite_3194540230_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_3194540230_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_3194540230_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_3194540230_anim00_f03.png",
+        "SCIE/primary/sprites/sprite_3194540230_anim00_f04.png"
+      ]
+    },
+    "3356070294": {
+      "hex": "0xc8099196",
+      "decimal": 3356070294,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 36,
+      "sample_file": "PHRO/primary/sprites/sprite_3356070294_anim00_f04.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_3356070294_anim00_f09.png"
+      ]
+    },
+    "3390775499": {
+      "hex": "0xca1b20cb",
+      "decimal": 3390775499,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 18,
+      "sample_file": "PHRO/primary/sprites/sprite_3390775499_anim00_f02.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3390775499_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3390775499_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3390775499_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3390775499_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3390775499_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3390775499_anim00_f05.png",
+        "SCIE/primary/sprites/sprite_3390775499_anim00_f00.png",
+        "SCIE/primary/sprites/sprite_3390775499_anim00_f01.png",
+        "SCIE/primary/sprites/sprite_3390775499_anim00_f02.png",
+        "SCIE/primary/sprites/sprite_3390775499_anim00_f03.png"
+      ]
+    },
+    "3492660181": {
+      "hex": "0xd02dc3d5",
+      "decimal": 3492660181,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 51,
+      "sample_file": "PHRO/primary/sprites/sprite_3492660181_anim00_f01.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_3492660181_anim00_f09.png"
+      ]
+    },
+    "3513237509": {
+      "hex": "0xd167c005",
+      "decimal": 3513237509,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 20,
+      "sample_file": "PHRO/primary/sprites/sprite_3513237509_anim00_f03.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_3513237509_anim00_f09.png"
+      ]
+    },
+    "3540373573": {
+      "hex": "0xd305d045",
+      "decimal": 3540373573,
+      "levels": [
+        "PHRO",
+        "SCIE"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 44,
+      "sample_file": "PHRO/primary/sprites/sprite_3540373573_anim00_f17.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_3540373573_anim00_f09.png"
+      ]
+    },
+    "3759052957": {
+      "hex": "0xe00e989d",
+      "decimal": 3759052957,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 14,
+      "sample_file": "TMPL/stage1/sprites/sprite_3759052957_anim00_f01.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f04.png",
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f05.png",
+        "SCIE/stage0/sprites/sprite_3759052957_anim00_f06.png",
+        "TMPL/stage1/sprites/sprite_3759052957_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_3759052957_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_3759052957_anim00_f02.png"
+      ]
+    },
+    "3759053085": {
+      "hex": "0xe00e991d",
+      "decimal": 3759053085,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 10,
+      "sample_file": "TMPL/stage1/sprites/sprite_3759053085_anim00_f00.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_3759053085_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_3759053085_anim00_f01.png",
+        "SCIE/stage0/sprites/sprite_3759053085_anim00_f02.png",
+        "SCIE/stage0/sprites/sprite_3759053085_anim00_f03.png",
+        "SCIE/stage0/sprites/sprite_3759053085_anim00_f04.png",
+        "TMPL/stage1/sprites/sprite_3759053085_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_3759053085_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_3759053085_anim00_f02.png",
+        "TMPL/stage1/sprites/sprite_3759053085_anim00_f03.png",
+        "TMPL/stage1/sprites/sprite_3759053085_anim00_f04.png"
+      ]
+    },
+    "3800678489": {
+      "hex": "0xe289c059",
+      "decimal": 3800678489,
+      "levels": [
+        "MENU"
+      ],
+      "segments": [
+        "stage3"
+      ],
+      "file_count": 1,
+      "sample_file": "MENU/stage3/sprites/sprite_3800678489_anim00_f00.png",
+      "files": [
+        "MENU/stage3/sprites/sprite_3800678489_anim00_f00.png"
+      ]
+    },
+    "3818443405": {
+      "hex": "0xe398d28d",
+      "decimal": 3818443405,
+      "levels": [
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "stage0",
+        "stage1"
+      ],
+      "file_count": 4,
+      "sample_file": "TMPL/stage1/sprites/sprite_3818443405_anim00_f01.png",
+      "files": [
+        "SCIE/stage0/sprites/sprite_3818443405_anim00_f00.png",
+        "SCIE/stage0/sprites/sprite_3818443405_anim00_f01.png",
+        "TMPL/stage1/sprites/sprite_3818443405_anim00_f00.png",
+        "TMPL/stage1/sprites/sprite_3818443405_anim00_f01.png"
+      ]
+    },
+    "3833807748": {
+      "hex": "0xe4834384",
+      "decimal": 3833807748,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/stage0/sprites/sprite_3833807748_anim00_f02.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_3833807748_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_3833807748_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_3833807748_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_3833807748_anim00_f03.png"
+      ]
+    },
+    "3867345153": {
+      "hex": "0xe6830101",
+      "decimal": 3867345153,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 8,
+      "sample_file": "PHRO/stage0/sprites/sprite_3867345153_anim00_f07.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_3867345153_anim00_f07.png"
+      ]
+    },
+    "3880008303": {
+      "hex": "0xe7443a6f",
+      "decimal": 3880008303,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 4,
+      "sample_file": "PHRO/stage0/sprites/sprite_3880008303_anim00_f01.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_3880008303_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_3880008303_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_3880008303_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_3880008303_anim00_f03.png"
+      ]
+    },
+    "3898771081": {
+      "hex": "0xe8628689",
+      "decimal": 3898771081,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 32,
+      "sample_file": "PHRO/primary/sprites/sprite_3898771081_anim00_f02.png",
+      "files": [
+        "MENU/primary/sprites/sprite_3898771081_anim00_f00.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f01.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f02.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f03.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f04.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f05.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f06.png",
+        "MENU/primary/sprites/sprite_3898771081_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_3898771081_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_3898771081_anim00_f01.png"
+      ]
+    },
+    "3959423015": {
+      "hex": "0xec000027",
+      "decimal": 3959423015,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 8,
+      "sample_file": "PHRO/stage0/sprites/sprite_3959423015_anim00_f07.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f05.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f06.png",
+        "PHRO/stage0/sprites/sprite_3959423015_anim00_f07.png"
+      ]
+    },
+    "4050989582": {
+      "hex": "0xf175320e",
+      "decimal": 4050989582,
+      "levels": [
+        "PHRO"
+      ],
+      "segments": [
+        "stage0"
+      ],
+      "file_count": 6,
+      "sample_file": "PHRO/stage0/sprites/sprite_4050989582_anim00_f01.png",
+      "files": [
+        "PHRO/stage0/sprites/sprite_4050989582_anim00_f00.png",
+        "PHRO/stage0/sprites/sprite_4050989582_anim00_f01.png",
+        "PHRO/stage0/sprites/sprite_4050989582_anim00_f02.png",
+        "PHRO/stage0/sprites/sprite_4050989582_anim00_f03.png",
+        "PHRO/stage0/sprites/sprite_4050989582_anim00_f04.png",
+        "PHRO/stage0/sprites/sprite_4050989582_anim00_f05.png"
+      ]
+    },
+    "4181114901": {
+      "hex": "0xf936c015",
+      "decimal": 4181114901,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 84,
+      "sample_file": "PHRO/primary/sprites/sprite_4181114901_anim00_f10.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_4181114901_anim00_f09.png"
+      ]
+    },
+    "4196453652": {
+      "hex": "0xfa20cd14",
+      "decimal": 4196453652,
+      "levels": [
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 123,
+      "sample_file": "PHRO/primary/sprites/sprite_4196453652_anim00_f12.png",
+      "files": [
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f00.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f01.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f02.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f03.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f04.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f05.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f06.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f07.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f08.png",
+        "PHRO/primary/sprites/sprite_4196453652_anim00_f09.png"
+      ]
+    },
+    "4201647335": {
+      "hex": "0xfa700ce7",
+      "decimal": 4201647335,
+      "levels": [
+        "MENU",
+        "PHRO",
+        "SCIE",
+        "TMPL"
+      ],
+      "segments": [
+        "primary"
+      ],
+      "file_count": 40,
+      "sample_file": "PHRO/primary/sprites/sprite_4201647335_anim00_f08.png",
+      "files": [
+        "MENU/primary/sprites/sprite_4201647335_anim00_f00.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f01.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f02.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f03.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f04.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f05.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f06.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f07.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f08.png",
+        "MENU/primary/sprites/sprite_4201647335_anim00_f09.png"
+      ]
+    }
+  }
+}

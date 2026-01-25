@@ -120,34 +120,34 @@ struct EntityTypeEntry {
 
 Extracted from ROM at 0x8009d5f8:
 
-| Type | Flags | Callback | Function Name |
-|------|-------|----------|---------------|
-| 0 | 0xFFFF0000 | 0x8007efd0 | EntityCallback_Type00 |
-| 1 | 0xFFFF0000 | 0x8007f730 | EntityCallback_Type01 |
-| 2 | 0xFFFF0000 | 0x80080328 | EntityCallback_Type02 (Clayball) |
-| 3 | 0xFFFF0000 | 0x8007efd0 | EntityCallback_Type03 |
-| 4 | 0xFFFF0000 | 0x8007efd0 | EntityCallback_Type04 |
-| 5 | 0xFFFF0000 | 0x8007f7b0 | EntityCallback_Type05 |
-| 6 | 0xFFFF0000 | 0x8007f830 | EntityCallback_Type06 |
-| 7 | 0xFFFF0000 | 0x80080408 | EntityCallback_Type07 |
-| 8 | 0xFFFF0000 | 0x80081504 | EntityCallback_Type08 (Item) |
-| 9 | 0xFFFF0000 | 0x800804e8 | EntityCallback_Type09 |
-| 10 | 0xFFFF0000 | 0x8007f244 | EntityCallback_Type10 |
-| 11 | 0xFFFF0000 | 0x80080478 | EntityCallback_Type11 |
-| 12 | 0xFFFF0000 | 0x8007f8b0 | EntityCallback_Type12 |
-| 13 | 0x00000000 | 0x00000000 | (unused) |
-| 14 | 0x00000000 | 0x00000000 | (unused) |
-| 15 | 0x00000000 | 0x00000000 | (unused) |
-| 16 | 0x00000000 | 0x00000000 | (unused) |
-| 17 | 0xFFFF0000 | 0x8007f930 | EntityCallback_Type17 |
-| 18 | 0xFFFF0000 | 0x8007f9b0 | EntityCallback_Type18 |
-| 19 | 0xFFFF0000 | 0x8007fa30 | EntityCallback_Type19 |
-| 20 | 0xFFFF0000 | 0x8007faac | EntityCallback_Type20 |
-| 21 | 0xFFFF0000 | 0x8007fb28 | EntityCallback_Type21 |
-| 22 | 0xFFFF0000 | 0x80080398 | EntityCallback_Type22 |
-| 23 | 0xFFFF0000 | 0x80080558 | EntityCallback_Type23 |
-| 24 | 0xFFFF0000 | 0x8007f460 | EntityCallback_Type24 (SpecialAmmo) |
-| 25 | 0xFFFF0000 | 0x800805c8 | EntityCallback_Type25 (EnemyA) |
+| Type | Flags | Callback | Function Name | Category |
+|------|-------|----------|---------------|----------|
+| 0 | 0xFFFF0000 | 0x8007efd0 | EntityCallback_Type00 | ? |
+| 1 | 0xFFFF0000 | 0x8007f730 | EntityCallback_Type01 | ? |
+| 2 | 0xFFFF0000 | 0x80080328 | EntityType002_GreenBullets_Init | Collectible ✅ |
+| 3 | 0xFFFF0000 | 0x8007efd0 | EntityCallback_Type03 | ? |
+| 4 | 0xFFFF0000 | 0x8007efd0 | EntityCallback_Type04 | ? |
+| 5 | 0xFFFF0000 | 0x8007f7b0 | EntityType005_MovingPlatformA_Init | Platform ✅ |
+| 6 | 0xFFFF0000 | 0x8007f830 | EntityType006_MovingPlatformB_Init | Platform ✅ |
+| 7 | 0xFFFF0000 | 0x80080408 | EntityType007_Clayball_Init | Collectible ✅ |
+| 8 | 0xFFFF0000 | 0x80081504 | EntityType008_KloggCatchableBall_Init | Boss Projectile ✅ |
+| 9 | 0xFFFF0000 | 0x800804e8 | EntityCallback_Type09 | ? |
+| 10 | 0xFFFF0000 | 0x8007f244 | EntityType010_EggBeater_Init | Enemy ✅ |
+| 11 | 0xFFFF0000 | 0x80080478 | EntityType011_ExtraLife_Init | Collectible ✅ |
+| 12 | 0xFFFF0000 | 0x8007f8b0 | EntityType012_MovingPlatformC_Init | Platform ✅ |
+| 13 | 0x00000000 | 0x00000000 | (unused) | - |
+| 14 | 0x00000000 | 0x00000000 | (unused) | - |
+| 15 | 0x00000000 | 0x00000000 | (unused) | - |
+| 16 | 0x00000000 | 0x00000000 | (unused) | - |
+| 17 | 0xFFFF0000 | 0x8007f930 | EntityCallback_Type17 | ? |
+| 18 | 0xFFFF0000 | 0x8007f9b0 | EntityCallback_Type18 | ? |
+| 19 | 0xFFFF0000 | 0x8007fa30 | EntityType019_ClockPlatformA_Init | Platform ✅ |
+| 20 | 0xFFFF0000 | 0x8007faac | EntityType020_ClockPlatformB_Init | Platform ✅ |
+| 21 | 0xFFFF0000 | 0x8007fb28 | EntityType021_ClockPlatformC_Init | Platform ✅ |
+| 22 | 0xFFFF0000 | 0x80080398 | EntityCallback_Type22 | ? |
+| 23 | 0xFFFF0000 | 0x80080558 | EntityType023_PhoenixHand_Init | Collectible ✅ |
+| 24 | 0xFFFF0000 | 0x8007f460 | EntityCallback_Type24 (SpecialAmmo) | Collectible |
+| 25 | 0xFFFF0000 | 0x800805c8 | EntityType025_PhartHead_Init | Collectible ✅ |
 | 26 | 0xFFFF0000 | 0x8007f2cc | EntityCallback_Type26 |
 | 27 | 0xFFFF0000 | 0x8007f354 | EntityCallback_Type27 (EnemyB) |
 | 28 | 0xFFFF0000 | 0x80080638 | EntityCallback_Type28 (PlatformA) |
@@ -270,17 +270,26 @@ Entity types observed in extracted BLB data. BLB types are remapped by `RemapEnt
 
 | BLB Type | Name | Count | Description | Sprite ID |
 |----------|------|-------|-------------|-----------|
-| 2 | Clayball | 5,727 | Collectible coins | 0x09406d8a |
-| 3 | Ammo | 308 | Standard bullet pickup | - |
-| 8 | Item | 144 | Generic item pickup | 0x0c34aa22 |
+| 2 | Green Bullets | 5,727 | Collectible ammunition/bullets | 0xe8628689 |
+| 3 | Ammo | 308 | Standard bullet pickup | (uses sprite list) |
+| 7 | Random Color Decor | - | Decorative collectible with randomized color | 0xb8700ca1 |
+| 8 | Item | 144 | Generic item pickup; **In KLOG: catchable ball for Klogg boss** | 0x0c34aa22 |
 | 24 | SpecialAmmo | 227 | Special ammunition | - |
 
 ### Enemies
 
 | BLB Type | Name | Count | Description | Sprite ID |
 |----------|------|-------|-------------|-----------|
+| 5 | Flapper | - | Flying enemy with fans, regenerates quickly | 0x88783718 |
+| 6 | Flying Ynt Centurion | - | Flying enemy with spikes, weapon-only | 0x8818a018 |
 | 25 | EnemyA | 152 | Enemy type 1 | 0x1e1000b3 |
 | 27 | EnemyB | 60 | Enemy type 2 | 0x182d840c |
+
+### Boss Entities
+
+| BLB Type | Name | Description | Sprite ID |
+|----------|------|-------------|-----------|
+| 1 | Boss Entity Start | Boss initialization entity | 0x98f8221e |
 
 ### Platforms & Objects
 

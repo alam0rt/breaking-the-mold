@@ -44,17 +44,26 @@ Entity type → sprite ID mapping is **HARDCODED** in game code, not stored in B
 
 ### Collectibles
 
-| Internal Type | BLB Type | Name | Sprite ID | Hex | Count |
-|---------------|----------|------|-----------|-----|-------|
-| 2 | 2 | Clayball | 0x09406d8a | 0x09406D8A | 5,727 |
-| 8 | 8 | Item Pickup | 0x0c34aa22 | 0x0C34AA22 | 144 |
+| Internal Type | BLB Type | Name | Sprite ID | Hex | Count | Verified |
+|---------------|----------|------|-----------|-----|-------|----------|
+| 2 | 2 | Green Bullets | 0xe8628689 | 0xE8628689 | 5,727 | ✅ Ghidra 2026-01-25 |
+| 7 | 7 | Random Color Decor | 0xb8700ca1 | 0xB8700CA1 | - | ✅ Ghidra 2026-01-25 |
+| 8 | 8 | Item Pickup | 0x0c34aa22 | 0x0C34AA22 | 144 | ✅ |
+
+### Boss Entities
+
+| Internal Type | BLB Type | Name | Sprite ID | Hex | Verified |
+|---------------|----------|------|-----------|-----|----------|
+| 1 | 1 | Boss Entity Start | 0x98f8221e | 0x98F8221E | ✅ Ghidra 2026-01-25 |
 
 ### Enemies
 
-| Internal Type | BLB Type | Name | Sprite ID | Hex | Count |
-|---------------|----------|------|-----------|-----|-------|
-| 25 | 25 | EnemyA | 0x1e1000b3 | 0x1E1000B3 | 152 |
-| 27 | 27 | EnemyB | 0x182d840c | 0x182D840C | 60 |
+| Internal Type | BLB Type | Name | Sprite ID | Hex | Count | Verified |
+|---------------|----------|------|-----------|-----|-------|----------|
+| 5 | 5 | Flapper | 0x88783718 | 0x88783718 | - | ✅ Ghidra 2026-01-25 |
+| 6 | 6 | Flying Ynt Centurion | 0x8818a018 | 0x8818A018 | - | ✅ Ghidra 2026-01-25 |
+| 25 | 25 | EnemyA | 0x1e1000b3 | 0x1E1000B3 | 152 | |
+| 27 | 27 | EnemyB | 0x182d840c | 0x182D840C | 60 | |
 
 ### Interactive Objects
 

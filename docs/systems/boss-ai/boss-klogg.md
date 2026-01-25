@@ -45,10 +45,10 @@ The Klogg fight abandons platforming entirely for an **Arkanoid/Breakout** style
 
 ## Ball Types
 
-| Ball Type | Visual | Player Action | Effect |
-|-----------|--------|---------------|--------|
-| **Regular Ball** | Normal ball | Catch with pot | Reflects back to Klogg, deals damage |
-| **Spiky Ball** | Spikes/hazard | **AVOID** | Damages player on contact |
+| Ball Type | Visual | Player Action | Effect | Entity Type |
+|-----------|--------|---------------|--------|-------------|
+| **Regular Ball** | Normal ball | Catch with pot | Reflects back to Klogg, deals damage | **Type 8** |
+| **Spiky Ball** | Spikes/hazard | **AVOID** | Damages player on contact | Unknown |
 
 ### Ball Behavior
 
