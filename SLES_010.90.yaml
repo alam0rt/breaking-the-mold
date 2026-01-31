@@ -67,7 +67,7 @@ segments:
       # NOTE: Original binary has code bytes stored in rodata section!
       # These are NOT actual rodata - they're code bytes the linker placed here.
       # =========================================================================
-  - [0x800, c, Game/EARLY/bootstrap]
+  - [0x800, asm, Game/INIT]
   - [0xE2C, rodata]           # Game rodata (0x80010624)
   - [0x1F28, rodata]          # Game rodata (0x80011720)
   - [0x2044, rodata]          # Game rodata (0x8001183C)
@@ -84,8 +84,8 @@ segments:
 
       # --- RENDER: Graphics system, VRAM, tiles, sprites (0x800131F0 - 0x8001A0C7) ---
       # InitGraphicsSystem, VRAM slots, tile rendering, sprite rendering
-  - [0x39F0, c, Game/RENDER/GetFrameReadyFlag]      # GetFrameReadyFlag (0x800131F0)
-  - [0x3A00, asm, Game/RENDER]          # Rest of RENDER module
+  - [0x39F0, c, Game/RENDER]      # (0x800131F0)
+  - [0x3A48, asm, Game/RENDER]          # Rest of RENDER module
 
       # --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
       # InitEntityStruct, animation, collision, state machine, callbacks

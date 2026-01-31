@@ -1,3 +1,8 @@
+memset_entrypoint = 0x80010000; // type:func
+DecodeRLESprite = 0x80010068; // type:func
+early_stub = 0x8001031C; // type:func
+
+
 __main = 0x8008E6E0;
 LoadGameAssetLocations = 0x800389DC; // Renamed from LoadGameDataAssetPointers
 D_800A515C = 0x800A515C; // type:s32
@@ -7,6 +12,8 @@ func_800907D0 = 0x800907D0;
 // Game/RENDER - Frame buffer management
 // =============================================================================
 GetFrameReadyFlag = 0x800131F0; // size:0x10
+TriggerBufferSwapIfReady = 0x80013200; // type:func
+SetVideoModePAL = 0x80013240; // type:func
 g_FrameReady = 0x800A595A; // type:u8
 
 // PSY-Q libcd functions (linked from library)
@@ -186,7 +193,6 @@ ClayballInitCallback = 0x800561D4; // type:func // Clayball entity init - sets u
 InitClockPlatformWithTimer = 0x80056958; // type:func // Clock platform init - countdown timer + indicator sprite
 ClockPlatformWaitTick = 0x80056C8C; // type:func // Clock platform tick - decrement timer at Entity+0x124
 ClockPlatformEventHandler = 0x80056E58; // type:func // Clock platform event handler
-InitGenericSpriteEntity = 0x800560A8; // type:func // Generic sprite entity init
 InitTransparentDecorEntity = 0x8002E7BC; // type:func // Transparent decor/collectible init
 CollectibleExtraLifeTickCallback = 0x8002E870; // type:func // Extra life tick - adds +1 life on collect
 InitPathFollowingEnemy = 0x800560A8; // type:func // Path-following enemy init (e.g., Egg-Beater)

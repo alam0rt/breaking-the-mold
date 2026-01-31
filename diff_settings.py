@@ -22,11 +22,11 @@ def apply(config, args):
     config["arch"] = "mipsel"
     
     # Base directory for source files
-    config["baseimg"] = "disks/pal/SLES_010.90"  # Original binary
-    config["myimg"] = "build/pal/game.bin"        # Your build
+    config["baseimg"] = "bin/SLES_010.90"  # Original binary
+    config["myimg"] = "build/SLES_010.90.bin"        # Your build
     
     # Map file from linker (shows symbol addresses)
-    config["mapfile"] = "build/pal/game.map"
+    config["mapfile"] = "build/SLES_010.90.map"
     
     # PSX load address: code starts at file offset 0x800, loaded to VRAM 0x80010000
     # This tells asm-differ how to translate VRAM addresses to file offsets

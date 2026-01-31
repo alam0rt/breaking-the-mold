@@ -57,6 +57,28 @@
           exec ${pkgs.gdb}/bin/gdb "$@"
         '';
 
+        # RAM address <-> File offset converters
+        # RAM base: 0x80010000, File header: 0x800
+        ram2off = pkgs.writeShellScriptBin "ram2off" ''
+          if [ -z "$1" ]; then
+            echo "Usage: ram2off <RAM_ADDR>"
+            echo "Convert PSX RAM address to file offset"
+            echo "Example: ram2off 80010068"
+            exit 1
+          fi
+          ${pkgs.bc}/bin/bc <<< "obase=16; ibase=16; ''${1^^} - 80010000 + 800"
+        '';
+
+        off2ram = pkgs.writeShellScriptBin "off2ram" ''
+          if [ -z "$1" ]; then
+            echo "Usage: off2ram <FILE_OFFSET>"
+            echo "Convert file offset to PSX RAM address"
+            echo "Example: off2ram 39F0"
+            exit 1
+          fi
+          ${pkgs.bc}/bin/bc <<< "obase=16; ibase=16; ''${1^^} + 80010000 - 800"
+        '';
+
       in
       {
         devShells.default = pkgs.mkShell {
@@ -102,6 +124,10 @@
             # Debugging
             gdb
             ghidra-gdb
+
+            # Address conversion utilities
+            ram2off
+            off2ram
 
             # openGL on nix
             pkgs.nixgl.nixGLIntel
