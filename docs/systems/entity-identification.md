@@ -2,6 +2,14 @@
 
 This document maps Skullmonkeys entity types to their in-game names and behaviors.
 
+> ⚠️ **CORRECTNESS-CRITICAL: BLB entity type → behavior mapping is LAYER-DEPENDENT.**
+> The same BLB type produces different entities on different layers. For example,
+> **BLB 25 on Layer 1 = Pickup (internal 0)**, but **BLB 25 on Layer 2 = Spawner (internal 79)**.
+> Never look up behavior from BLB type alone — always route through
+> `RemapEntityTypesForLevel @ 0x8008150c` with the entity's layer from Asset 501 offset +0x14.
+> See [ENTITY_REMAPPING_CORRECTION.md](../reference/ENTITY_REMAPPING_CORRECTION.md) for
+> the full tables and [entity-types.md](../reference/entity-types.md) for the callback table.
+
 ## Entity Type System Overview
 
 Entities in Skullmonkeys use a two-stage type system:
@@ -13,6 +21,10 @@ The `RemapEntityTypesForLevel` function (0x8008150c) converts BLB types to inter
 - **Layer 1**: Foreground/decoration entities
 - **Layer 2**: Main gameplay entities (collectibles, enemies, platforms)
 - **Layer 3**: Special/effect entities (bosses, flying enemies)
+
+**Layer is encoded in the low byte of Asset 501 offset +0x14**; the high byte holds
+render/grouping flags (see `analysis/unconfirmed-findings.md`). Use
+`layer = raw_layer & 0xFF` before looking up the remapping table.
 
 ### Entity Definition Structure
 

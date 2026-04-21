@@ -85,6 +85,40 @@ Each level consists of three data segments:
 - Asset 101 in only 8 levels: BOIL, CLOU, FINN, FOOD, GLID, HEAD, MEGA, WEED
 - Asset 700 in only 9 levels: BOIL, BRG1, CAVE, FOOD, GLID, MENU, SCIE, TMPL, WEED
 
+### Asset Size Relationships (Derivable)
+
+Several asset sizes are determined by other assets, so a BLB parser can use these
+as sanity checks:
+
+| Relationship | Meaning |
+|--------------|---------|
+| `Asset 501 size / 24` | Entity count — matches Asset 100 field_0x1E |
+| `Asset 302 size` | = Asset 100 total_tiles (16×16 + 8×8 + extra), 1 byte/tile |
+| `Asset 401 size` | = Asset 400 palette_count × 4 bytes/palette |
+| `Asset 602 size` | = Asset 601 sample_count × 4 bytes/sample |
+| `Asset 502 count` | = Asset 100 field_0x1C |
+
+**Entity struct size: 24 bytes** — every entity record in Asset 501 is exactly 24
+bytes, so `Asset 501 size` is always a multiple of 24. See
+[asset-types.md § Asset 501](asset-types.md) for the field layout (including the
+layer-dependent entity-type remapping warning).
+
+### Co-occurrence Groups
+
+Certain assets always appear together in a BLB segment, which reflects their
+logical coupling. Use these as a parser invariant:
+
+| Group | Assets | Context |
+|-------|--------|---------|
+| **Tile-graphics** | 100, 302, 401 | 208 segments (per-stage secondary) |
+| **Audio** | 601, 602 | 117 segments (always paired; 602 = per-sample metadata for 601) |
+| **Core-level** | 200, 201, 300, 301, 400, 501 | 104 segments (tiles + palettes + entities) |
+| **VRAM/animation** | 502, 503 | 94 segments (texture rects + sprite animation offsets) |
+
+If you see one of these assets without its group-mates, treat it as a parse error
+unless the level is a known exception (boss/special levels omit 502/503; MENU
+lacks 500).
+
 ### Sector Interleaving
 
 Level data sectors are interleaved for streaming:

@@ -3,6 +3,30 @@
 This document contains observations and guesses about the Skullmonkeys data structures
 that have not been fully verified through decompilation or runtime tracing.
 
+## Risk Classification
+
+Each unconfirmed section is tagged with a decomp risk level. Use these when
+planning work — see [`../DECOMP_STRATEGY.md`](../DECOMP_STRATEGY.md) for how
+these gate each Tier.
+
+| Tag | Meaning | Policy |
+|-----|---------|--------|
+| 🔴 **BLOCKER** | Wrong assumption will break byte-match or produce garbage output | Must be resolved before the dependent Tier starts |
+| 🟡 **CORRECTNESS** | Wrong assumption produces wrong runtime behavior but still compiles | Must be resolved before shipping the feature; may land with a TODO |
+| 🟢 **POLISH** | Cosmetic / non-functional (visual effects, unused fields, rarely-hit paths) | Can ship with a TODO comment; revisit later |
+| ✅ **VERIFIED / CONFIRMED** | Proven via Ghidra decomp or runtime trace | No action; treat as fact |
+
+**Quick index of currently-unverified items:**
+
+| Section | Tag | Blocks |
+|---------|-----|--------|
+| Entity Layer Field upper-byte flags (line 180) | 🟡 CORRECTNESS | Entity rendering for types 9, 81 |
+| TileHeader field_18 bits 3, 6, 12 (line 167) | 🟡 CORRECTNESS | Level-mode selection |
+| TileHeader field_20 (line 172) | 🟢 POLISH | Possibly visual/music variation |
+| Asset 504 entry type semantics (line 404) | 🟢 POLISH | FINN/RUNN vehicle paths only |
+| Stage completion container field meanings (line 308) | 🟢 POLISH | Victory screens only |
+| Tentative Asset 600 entry structure details (line 622) | 🟡 CORRECTNESS | Sprite lookup |
+
 ---
 
 ## Asset Pattern Discoveries (2026-01-10) - VERIFIED ✓
@@ -160,7 +184,7 @@ Both in stage segments, 93 of 94 locations shared:
   - Used by LoadEntitiesFromAsset501 @ 0x80024dc4 as loop bound
   - Matches Asset 501 size / 24 exactly for all levels
 
-**Tentative Fields (Patterns observed, no Ghidra accessor found):**
+**Tentative Fields (Patterns observed, no Ghidra accessor found):** 🟡 CORRECTNESS for field_18, 🟢 POLISH for field_20
 - **field_18 (0x18)** = Level flags bitfield (updated analysis 2026-01-11)
   - Bit 1 (0x02): SEVN, FINN - special gameplay mode
   - Bit 2 (0x04): FINN only - FlynnBoy-specific
@@ -177,7 +201,12 @@ Both in stage segments, 93 of 94 locations shared:
 
 ---
 
-## Entity Layer Field Discovery (2026-01-11) - PARTIALLY VERIFIED
+## Entity Layer Field Discovery (2026-01-11) - PARTIALLY VERIFIED 🟡 CORRECTNESS
+
+**Risk:** Low byte (layer 1/2/3) is verified and used by `RemapEntityTypesForLevel`.
+Upper-byte flag semantics remain unverified — affects entity types 9 and 81 in CSTL.
+Safe to decomp entity spawn with `layer = raw & 0xFF`, but render/grouping behavior
+for the high byte will need a follow-up pass.
 
 The Entity structure's layer field (offset 0x14) is NOT just a simple layer index.
 
@@ -401,7 +430,11 @@ ls /tmp/gap_containers/
 
 ---
 
-## Asset 504 Analysis (2026-01-07) - UNCONFIRMED
+## Asset 504 Analysis (2026-01-07) - UNCONFIRMED 🟢 POLISH
+
+**Risk:** Only appears in FINN (swimming) and RUNN (runner) vehicle modes.
+Non-critical for decomp of the standard platforming path. Verify before
+shipping FINN/RUNN support, but safe to defer to Tier 6 (Polish).
 
 Asset 504 appears **only in vehicle/driving levels**:
 - **FINN** (Level 4) - Submarine level: 4992 bytes (155 paired entries)

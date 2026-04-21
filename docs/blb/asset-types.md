@@ -181,10 +181,25 @@ See [Entities](../systems/entities.md) for full structure.
 0x0A    u16    y_center
 0x0C    u16    variant
 0x0E    4      padding
-0x12    u16    entity_type
-0x14    u16    layer (with flags)
+0x12    u16    entity_type    (BLB type — NOT the runtime callback index)
+0x14    u16    layer+flags    (low byte = layer 1/2/3, high byte = render flags)
 0x16    u16    padding
 ```
+
+**Entry count** = `Asset 501 size / 24` = `Asset 100 field_0x1E`.
+
+> ⚠️ **CORRECTNESS-CRITICAL: entity_type is LAYER-DEPENDENT.**
+> The `entity_type` field at +0x12 is the **BLB type**, which is remapped to an
+> **internal type** at runtime by `RemapEntityTypesForLevel @ 0x8008150c` using the
+> layer (low byte of +0x14). The same BLB type on different layers spawns different entities:
+>
+> | BLB Type | Layer 1 → internal | Layer 2 → internal |
+> |----------|--------------------|--------------------|
+> | 25 (0x19) | 0 (Pickup) | 79 (Spawner) |
+> | 27 (0x1B) | 4 (Pickup) | 97 (Grid/Helper) |
+>
+> Any tool/decomp that maps BLB type → behavior **must apply this remapping per-entity**.
+> Full tables: [`reference/ENTITY_REMAPPING_CORRECTION.md`](../reference/ENTITY_REMAPPING_CORRECTION.md).
 
 ### Asset 502 - VRAM Rectangles (16 bytes each)
 

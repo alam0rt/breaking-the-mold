@@ -12,6 +12,13 @@ Entity types are 16-bit IDs stored in Asset 501 (entity placement data). The gam
 - **Callback Table**: 121 entries at `g_EntityTypeCallbackTable` (0x8009d5f8)
 - **Variant**: Entity-specific parameter that modifies behavior (see below)
 
+> ⚠️ **CORRECTNESS-CRITICAL: The BLB → internal remapping is LAYER-DEPENDENT.**
+> `RemapEntityTypesForLevel @ 0x8008150c` uses the entity's layer (low byte of +0x14)
+> to select which remapping table applies. The same BLB type on different layers
+> produces different internal types (e.g. BLB 25 → 0 on Layer 1, 79 on Layer 2).
+> Never index the callback table from BLB type directly.
+> Tables: [ENTITY_REMAPPING_CORRECTION.md](ENTITY_REMAPPING_CORRECTION.md).
+
 ---
 
 ## Entity Definition Structure (Asset 501)

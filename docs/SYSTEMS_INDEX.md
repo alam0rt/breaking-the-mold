@@ -10,10 +10,12 @@ This index provides quick navigation to all documentation organized by category.
 
 ## Quick Links
 
+- **[Decomp Strategy](DECOMP_STRATEGY.md)** - Dependency-ordered priority queue for code decomp (NEW)
 - **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand (~85% complete)
 - **[BLB Format Overview](blb/README.md)** - Start here for file format
 - **[Decompilation Guide](decompilation-guide.md)** - How to add new functions
 - **[GameState Fields](systems/gamestate-field-analysis.md)** - GameState structure analysis
+- **[Player Callback Inventory](reference/player-callback-inventory.md)** - 128 player-related functions (NEW)
 
 ---
 
@@ -68,7 +70,9 @@ This index provides quick navigation to all documentation organized by category.
 
 | Document | Description | Status |
 |----------|-------------|--------|
-| [collision-complete.md](systems/collision-complete.md) | Complete tile collision reference | ✅ Complete |
+| [collision-complete.md](systems/collision-complete.md) | **Canonical** tile collision reference | ✅ Complete |
+| [collision.md](systems/collision.md) | Pointer → collision-complete.md | 🔗 Index |
+| [tile-collision-complete.md](systems/tile-collision-complete.md) | ⚠️ Superseded → collision-complete.md | 🔗 Stub |
 | [player/player-physics.md](systems/player/player-physics.md) | Player physics constants (verified) | ✅ Complete |
 | [camera.md](systems/camera.md) | Camera smooth scrolling system | ✅ Complete |
 
@@ -149,6 +153,8 @@ This index provides quick navigation to all documentation organized by category.
 | [cheat-codes.md](reference/cheat-codes.md) | All 22 cheat codes | ✅ Complete |
 | [level-data-context.md](reference/level-data-context.md) | LevelDataContext structure | ✅ Complete |
 | [game-functions.md](reference/game-functions.md) | Key function addresses | ✅ Complete |
+| [player-callback-inventory.md](reference/player-callback-inventory.md) | **All 128 player-related functions with cluster analysis (NEW)** | ✅ Complete |
+| [ENTITY_REMAPPING_CORRECTION.md](reference/ENTITY_REMAPPING_CORRECTION.md) | ⚠️ Layer-dependent entity type mapping (correctness-critical) | ✅ Complete |
 | [pal-jp-comparison.md](reference/pal-jp-comparison.md) | Regional version differences | ✅ Complete |
 | [source-structure.md](reference/source-structure.md) | **Compilation unit analysis (NEW)** | ✅ Complete |
 | [data-section-map.md](reference/data-section-map.md) | **Data section memory map (UPDATED)** | ✅ Complete |
