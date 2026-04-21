@@ -14,9 +14,15 @@
     nixgl.url = "github:nix-community/nixGL";
     pcsx-redux.url = "github:grumpycoders/pcsx-redux";
     #pcsx-redux.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    
+    # PSX loader for Ghidra (from lab313ru) - pinned to last Ghidra 11.x compatible version
+    ghidra-psx-ldr-src = {
+      url = "github:lab313ru/ghidra_psx_ldr/2025.09.06";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nixgl, pcsx-redux }:
+  outputs = { self, nixpkgs, flake-utils, nixgl, pcsx-redux, ghidra-psx-ldr-src }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -24,6 +30,19 @@
           config.allowUnfree = true;
           overlays = [ nixgl.overlay ];
         };
+
+        # Ghidra with PSX loader extension
+        ghidra-psx-ldr = pkgs.ghidra.buildGhidraExtension {
+          pname = "ghidra-psx-ldr";
+          version = "2025.09.06";
+          src = ghidra-psx-ldr-src;
+          preBuild = ''
+            rm -f data/languages/mips32le.sla
+            ${pkgs.ghidra}/lib/ghidra/support/sleigh data/languages/mips32le.slaspec data/languages/mips32le.sla
+          '';
+          meta.description = "Sony PlayStation PSX executables loader for Ghidra";
+        };
+        ghidraWithPsx = pkgs.ghidra.withExtensions (exts: [ ghidra-psx-ldr ]);
 
         pythonEnv = pkgs.python3.withPackages (ps: with ps; [
           pycparser
@@ -41,6 +60,13 @@
           coverage
           pip
           virtualenv
+          jpype1      # Required for pyghidra
+        ]);
+
+        # PyGhidra environment with Ghidra path configured
+        pyghidraEnv = pkgs.python3.withPackages (ps: with ps; [
+          jpype1
+          pip
         ]);
 
         # Cross-compilation toolchain for MIPS (PSX uses MIPS R3000)
@@ -53,7 +79,7 @@
 
         # GDB wrapper for Ghidra debugger with required Python paths
         ghidra-gdb = pkgs.writeShellScriptBin "ghidra-gdb" ''
-          export PYTHONPATH="${pkgs.ghidra}/lib/ghidra/Ghidra/Debug/Debugger-agent-gdb/pypkg/src:${pkgs.ghidra}/lib/ghidra/Ghidra/Debug/Debugger-rmi-trace/pypkg/src''${PYTHONPATH:+:$PYTHONPATH}"
+          export PYTHONPATH="${ghidraWithPsx}/lib/ghidra/Ghidra/Debug/Debugger-agent-gdb/pypkg/src:${ghidraWithPsx}/lib/ghidra/Ghidra/Debug/Debugger-rmi-trace/pypkg/src''${PYTHONPATH:+:$PYTHONPATH}"
           exec ${pkgs.gdb}/bin/gdb "$@"
         '';
 
@@ -98,6 +124,9 @@
             # Python
             pythonEnv
             uv
+
+            # Java (required for PyGhidra)
+            temurin-bin-21
 
             # Utilities
             git
@@ -159,6 +188,27 @@
               pip install -q -r tools/requirements-python.txt
             fi
 
+            # Install PyGhidra for headless Ghidra API access
+            # (installed in venv to avoid Nix packaging complexity)
+            pip install -q pyghidra
+
+            # Set Ghidra install directory (required for PyGhidra)
+            # Point to base Ghidra, extensions are loaded from user config
+            export GHIDRA_INSTALL_DIR="${pkgs.ghidra}/lib/ghidra"
+            
+            # Install PSX loader extension to user's Ghidra config
+            # Must COPY (not symlink) due to Ghidra's case-sensitive path validation
+            GHIDRA_VERSION=$(${pkgs.ghidra}/lib/ghidra/support/launch.sh --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1 || echo "11.4.2")
+            GHIDRA_EXT_DIR="$HOME/.config/ghidra/ghidra_''${GHIDRA_VERSION}_NIX/Extensions"
+            PSX_EXT_SRC="${ghidra-psx-ldr}/lib/ghidra/Ghidra/Extensions/ghidra-psx-ldr"
+            if [ ! -d "$GHIDRA_EXT_DIR/ghidra-psx-ldr" ] || [ -L "$GHIDRA_EXT_DIR/ghidra-psx-ldr" ]; then
+              mkdir -p "$GHIDRA_EXT_DIR"
+              rm -rf "$GHIDRA_EXT_DIR/ghidra-psx-ldr"  # Remove old symlink if exists
+              cp -r "$PSX_EXT_SRC" "$GHIDRA_EXT_DIR/"
+              chmod -R u+w "$GHIDRA_EXT_DIR/ghidra-psx-ldr"
+              echo "  Installed PSX loader extension to $GHIDRA_EXT_DIR"
+            fi
+
             # Ensure bin directory exists for downloaded tools
             mkdir -p bin
 
@@ -184,6 +234,11 @@
 
             echo "Toolchain:"
             echo "  MIPS binutils: $(mipsel-unknown-linux-gnu-as --version | head -1)"
+            if [ -n "$GHIDRA_INSTALL_DIR" ]; then
+              echo "  PyGhidra: $GHIDRA_INSTALL_DIR"
+            else
+              echo "  PyGhidra: ⚠️  Set GHIDRA_INSTALL_DIR to enable"
+            fi
             echo ""
             echo "Ready! Run 'make help' for available commands."
             echo ""

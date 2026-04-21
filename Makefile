@@ -174,6 +174,10 @@ help:
 	@echo "  snapshot         - Capture RAM snapshot (web API)"
 	@echo "  mcp-server       - Start MCP server for Copilot"
 	@echo ""
+	@echo "Ghidra Integration:"
+	@echo "  ghidra-export    - Export symbols from Ghidra (PyGhidra)"
+	@echo "  ghidra-export-all- Export and save to symbol_addrs_new.txt"
+	@echo ""
 	@echo "Decompilation:"
 	@echo "  diff FUNC=name   - Compare function with asm-differ"
 	@echo "  decompile FUNC=f - Decompile function with m2c"
@@ -511,6 +515,47 @@ debug:
 	@echo "4. In 'Modules' tab: right-click top line -> 'Map Module to <your project>'"
 	@echo ""
 	@echo "You're now debugging! Use Ghidra's debugger controls (F5=continue, F10=step, etc.)"
+
+# Export symbols from Ghidra using PyGhidra (headless, more accurate)
+# Requires: GHIDRA_INSTALL_DIR set, PyGhidra installed
+# Usage: make ghidra-export [FORMAT=text|yaml|json|symbol_addrs]
+GHIDRA_PROJECT_DIR ?= $(HOME)/ghidra_projects
+GHIDRA_PROJECT_NAME ?= skullmonkeys
+GHIDRA_PROGRAM ?= SLES_010.90
+EXPORT_FORMAT ?= symbol_addrs
+
+.PHONY: ghidra-export ghidra-export-all
+ghidra-export:
+	@if [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
+		echo "Error: GHIDRA_INSTALL_DIR not set"; \
+		echo "Set it in your shell or flake.nix will auto-detect common paths"; \
+		exit 1; \
+	fi
+	python3 tools/scripts/pyghidra_export_symbols.py \
+		--project $(GHIDRA_PROJECT_DIR) \
+		--name $(GHIDRA_PROJECT_NAME) \
+		--program $(GHIDRA_PROGRAM) \
+		--format $(EXPORT_FORMAT) \
+		--functions-only \
+		-v
+
+# Export symbols and automatically update symbol_addrs.txt
+ghidra-export-all:
+	@if [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
+		echo "Error: GHIDRA_INSTALL_DIR not set"; \
+		exit 1; \
+	fi
+	@echo "Exporting symbols from Ghidra..."
+	python3 tools/scripts/pyghidra_export_symbols.py \
+		--project $(GHIDRA_PROJECT_DIR) \
+		--name $(GHIDRA_PROJECT_NAME) \
+		--program $(GHIDRA_PROGRAM) \
+		--format symbol_addrs \
+		-o symbol_addrs_new.txt \
+		-v
+	@echo ""
+	@echo "New symbols saved to symbol_addrs_new.txt"
+	@echo "Review and merge into symbol_addrs.txt manually"
 
 # -----------------------------------------------------------------------------
 # Asset Extraction

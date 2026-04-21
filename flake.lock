@@ -36,6 +36,23 @@
         "type": "github"
       }
     },
+    "ghidra-psx-ldr-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1757183147,
+        "narHash": "sha256-Eh8I80i/p8upV+YSxAkNvOSJKmXSKyB63XiRLYKn3ao=",
+        "owner": "lab313ru",
+        "repo": "ghidra_psx_ldr",
+        "rev": "2385947adb6391a080159443b05f04bd9cabb698",
+        "type": "github"
+      },
+      "original": {
+        "owner": "lab313ru",
+        "ref": "2025.09.06",
+        "repo": "ghidra_psx_ldr",
+        "type": "github"
+      }
+    },
     "nix-github-actions": {
       "inputs": {
         "nixpkgs": [
@@ -145,6 +162,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "ghidra-psx-ldr-src": "ghidra-psx-ldr-src",
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs_2",
         "pcsx-redux": "pcsx-redux"
