@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/input_state.h"
 #include "Game/level_data_context.h"
 
 /* =============================================================================
@@ -146,7 +147,7 @@ typedef struct {
     /* 0x134 */ void *checkpoint_entity_list;    /* Saved entity tick list for checkpoint respawn */
     /* 0x138 */ u32  checkpoint_saved_score;     /* Saves frame_counter at checkpoint */
     /* 0x13C */ void *entity_defs_backup;        /* Backed up entity defs ptr in ClearEntitiesAndFadeToBlack */
-    /* 0x140 */ void *input_state_ptr;           /* Input state pointer, also stored in player entity[0x40] */
+    /* 0x140 */ InputState *input_state_ptr;     /* Input state pointer, also stored in player entity[0x40] */
     /* 0x144 */ u8   level_clear_pending;        /* Level clear pending flag (triggers ClearEntitiesAndFadeToBlack) */
     /* 0x145 */ u8   level_transition_complete;  /* Set after ClearEntitiesAndFadeToBlack runs */
     /* 0x146 */ u8   advance_level_flag;         /* Advance to next level (calls AdvanceLevelSequence) */

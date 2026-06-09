@@ -43,13 +43,7 @@ extern GameState g_GameState;
  * Stored in GameState+0x7C at runtime.
  * ============================================================================= */
 
-typedef struct {
-    u16 flags;          /* Entity flags (usually 0x0000 or 0xFFFF) */
-    u16 padding;        /* Always 0xFFFF */
-    void* callback;     /* InitEntity_XXXXXXXX function pointer */
-} EntityTypeEntry;
-
-extern EntityTypeEntry g_EntityTypeCallbackTable[121];
+extern EntityTypeCallback g_EntityTypeCallbackTable[121];
 
 /* =============================================================================
  * PLAYER SPRITE TABLES
@@ -189,7 +183,7 @@ extern u32 g_SkipVSync;            /* 0x800A594C - Skip VSync flag */
 extern u32 g_GameFlags;            /* 0x800A5950 */
 
 /* Active game state pointer */
-extern GameState* g_GameStatePtr;  /* 0x800A5960 */
+extern GameState* g_pGameState;    /* 0x800A5960 */
 
 /* Input state pointers */
 extern void* g_pPlayerState;       /* 0x800A5754 - Player persistent state */

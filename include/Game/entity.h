@@ -111,7 +111,7 @@ struct Entity {
     
     /* Entity Info (0x10-0x17) */
     /* 0x10 */ s16             allocSize;        /* Total allocation size for this entity */
-    /* 0x12 */ s16             flags12;          /* Entity flags */
+    /* 0x12 */ s16             collisionMask;    /* Entity collision mask flags */
     /* 0x14 */ u8              active;           /* Active flag (init to 1) */
     /* 0x15 */ u8              pad15;            /* Padding (extended types may use) */
     /* 0x16 */ u8              pad16;            /* Padding (extended types may use) */
@@ -182,8 +182,8 @@ struct Entity {
     /* Flags (0x74-0x77) */
     /* 0x74 */ u8              facing;           /* Facing direction (0=left, 1=right) */
     /* 0x75 */ u8              flipY;            /* Vertical flip flag */
-    /* 0x76 */ u8              stateFlags;       /* Entity state flags */
-    /* 0x77 */ u8              boundsDirty;      /* Bounds need recalculation */
+    /* 0x76 */ u8              textureDirty;     /* Texture needs upload (set when sprite changes) */
+    /* 0x77 */ u8              boundsValid;      /* Screen bounds are valid (1=valid, skip recalculation) */
     
     /* Movement Callbacks (0x78-0x7F) */
     /* 0x78 */ EntityCallback  moveCallbackY;    /* Y movement callback */
@@ -303,5 +303,46 @@ typedef struct {
 
 /* Generic alias for code that doesn't know the specific table type */
 typedef MenuCallbackTable EntityCallbackTable;
+
+/* -----------------------------------------------------------------------------
+ * EntityTypeCallback (8 bytes)
+ *
+ * Maps an entity type index to its init callback.
+ * Table of 121 entries at 0x8009D5F8 (stored in GameState+0x7C).
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ u32  state_flags;  /* Flags/state mask (usually 0x0000FFFF or 0xFFFFFFFF) */
+    /* 0x04 */ void *callback;    /* InitEntity_XXXXXXXX function pointer */
+} EntityTypeCallback;  /* Size: 0x08 */
+
+/* -----------------------------------------------------------------------------
+ * EntityDefinition (24 bytes)
+ *
+ * Spawn-time entity descriptor from Asset 501.
+ * Raw 24-byte structs loaded into GameState+0x28 (entity_spawn_list).
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ u16  x1;          /* Bounding box left (world tiles) */
+    /* 0x02 */ u16  y1;          /* Bounding box top */
+    /* 0x04 */ u16  x2;          /* Bounding box right */
+    /* 0x06 */ u16  y2;          /* Bounding box bottom */
+    /* 0x08 */ u16  xCenter;     /* Center X spawn position */
+    /* 0x0A */ u16  yCenter;     /* Center Y spawn position */
+    /* 0x0C */ u16  variant;     /* Entity variant / subtype parameter */
+    /* 0x0E */ u32  padding0E;   /* Padding / unused */
+    /* 0x12 */ u16  entityType;  /* Entity type index into EntityTypeCallback table */
+    /* 0x14 */ u16  layer;       /* Layer assignment */
+    /* 0x16 */ u16  padding16;   /* Padding */
+} EntityDefinition;  /* Size: 0x18 (24 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * CheatCode (16 bytes)
+ *
+ * 8-button sequence for cheat detection.
+ * Table g_CheatCodeTable compared against GameState+0x17C circular buffer.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ u16  btn[8];      /* Ordered button sequence (PSX button masks) */
+} CheatCode;  /* Size: 0x10 (16 bytes) */
 
 #endif /* ENTITY_H */
