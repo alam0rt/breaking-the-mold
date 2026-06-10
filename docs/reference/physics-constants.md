@@ -306,10 +306,11 @@ const GRAVITY = 6.0 * 60 * 60  # 21,600 px/sec²
 
 | Offset | Size | Type | Field | Description |
 |--------|------|------|-------|-------------|
-| `+0x104` | 4 | s32 | `velocity_x` | X velocity (16.16 fixed) |
-| `+0x108` | 4 | s32 | `velocity_y` | Y velocity (16.16 fixed) |
-| `+0x110` | 4 | s32 | `gravity_accel` | Vertical acceleration |
-| `+0x118` | 4 | s32 | `cushion_vel` | Landing deceleration |
+| `+0x104` | 4 | s32 | `input_state_marker` | CORRECTED: FSM marker for input-state slot (NOT velocity_x — that's the RUNN layout; verified via callback-install-map: 54 PlayerState_* handler installs at +0x108) |
+| `+0x108` | 4 | ptr | `input_state_callback` | CORRECTED: input-handler callback (Idle/Walk/JumpInputHandler etc.) |
+| `+0x110` | 4 | s32 | `velocity_y` | CORRECTED (was "gravity_accel"): Y velocity 16.16 — jump ascent clamps it at -0x48000 (-4.5 px/f) |
+| `+0x114` | 4 | s32 | `velocity_x` | X velocity 16.16 — set ±max_velocity on left/right input (PlayerCallback_JumpInputAndCounters @ 0x800602E0) |
+| `+0x118` | 4 | s32 | `cushion_vel` | Landing deceleration (set -0x1200) |
 | `+0x11C` | 1 | u8 | `landing_timer` | Landing state countdown |
 | `+0x124` | 4 | u32 | `max_velocity` | Velocity clamp value |
 | `+0x136` | 2 | s16 | `apex_velocity` | Jump apex velocity |

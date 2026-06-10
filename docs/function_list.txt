@@ -1438,7 +1438,7 @@
 0x80077AF0 |  1272 | Game/GAMELOOP   | menu            | MenuInputHandler
 0x80077FE8 |   308 | Game/GAMELOOP   | -               | InitHUDDigitDisplay
 0x8007811C |   228 | Game/GAMELOOP   | -               | HUDDigitDisplayTickCallback
-0x80078200 |  5180 | Game/GAMELOOP   | -               | CreateBossPlayerEntity
+0x80078200 |  5180 | Game/GAMELOOP   | -               | CreateResultsScreenEntity
 0x8007963C |   364 | Game/GAMELOOP   | -               | EndingTickCallback
 0x800797A8 |   264 | Game/GAMELOOP   | -               | TriggerEndingSequence
 0x800798B0 |   212 | Game/GAMELOOP   | -               | EndingCreditsRevealTick

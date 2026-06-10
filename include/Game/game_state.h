@@ -23,7 +23,7 @@
  * Player type selection based on level flags (SpawnPlayerAndEntities):
  *   0x0400 -> FINN vehicle
  *   0x0200 -> Menu entity
- *   0x2000 -> Boss player
+ *   0x2000 -> Results/ending screen (CreateResultsScreenEntity; credits variant when boss_player_type set - formerly mislabeled "Boss player")
  *   0x0100 -> RUNN vehicle
  *   0x0010 -> SOAR flying
  *   0x0004 -> GLIDE platformer

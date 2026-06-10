@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "Game/game_state.h"
+#include "Game/player_state.h"
 
 /* =============================================================================
  * PRIMARY GAME STRUCTURES
@@ -186,7 +187,7 @@ extern u32 g_GameFlags;            /* 0x800A5950 */
 extern GameState* g_pGameState;    /* 0x800A5960 */
 
 /* Input state pointers */
-extern void* g_pPlayerState;       /* 0x800A5754 - Player persistent state */
+extern PlayerState* g_pPlayerState; /* 0x800A5754 - Player persistent state */
 extern void* g_pPlayer1Input;      /* 0x800A5764 - Player 1 input */
 extern void* g_pPlayer2Input;      /* 0x800A5768 - Player 2 input */
 extern void* g_pCurrentInputState; /* 0x800A576C - Active input */

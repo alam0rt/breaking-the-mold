@@ -283,7 +283,7 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x80070D68 | CreateSoarPlayerEntity | SOAR level player |
 | 0x80073934 | CreateRunnPlayerEntity | RUNN level player |
 | 0x80074100 | CreateFinnPlayerEntity | FINN level player |
-| 0x80078200 | CreateBossPlayerEntity | Boss fight player |
+| 0x80078200 | CreateResultsScreenEntity | Results/ending screen (was: "Boss fight player") |
 | 0x80044F7C | CreateCameraEntity | Camera entity creation |
 | 0x8007A33C | SetSequenceIndexByMode | Init playback sequence |
 

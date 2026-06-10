@@ -102,12 +102,28 @@ typedef struct Entity Entity;
 
 typedef void (*EntityCallback)(Entity *entity);
 
+/* Coordinate-transform callback for the moveX/moveY FSM slots: receives
+ * (entity + markerLo [+ table entry arg], coordinate) and returns the
+ * transformed coordinate. Verified in EntityBroadcastPointCollision
+ * @ 0x8001B72C. */
+typedef s16 (*EntityCoordCallback)(void *target, s16 coord);
+
+/* FSM marker encoding (applies to ALL marker+callback pairs; decoded from
+ * DispatchEventToCollidingEntity @ 0x800226F8 and EntityBroadcastPointCollision
+ * @ 0x8001B72C):
+ *   hi s16 == 0 : no callback installed
+ *   hi s16 <  0 : call the fn field directly with (entity + lo s16)
+ *   hi s16 >  0 : index into an 8-byte slot table located at
+ *                 *(entity + (s16)fn-field); entry = {s16 arg, fn};
+ *                 call fn(entity + lo + arg)
+ * 0xFFFF0000 is therefore "direct call, offset 0" - the common case. */
+
 struct Entity {
     /* State Machine - Tick System (0x00-0x0F) */
-    /* 0x00 */ s32             tickMarker;       /* 0xFFFF0000 = direct call, else countdown */
+    /* 0x00 */ s32             tickMarker;       /* FSM marker (see encoding above) */
     /* 0x04 */ EntityCallback  tickCallback;     /* Per-frame update function */
-    /* 0x08 */ s32             eventMarker;      /* Event callback marker */
-    /* 0x0C */ EntityCallback  eventCallback;    /* Event handler function */
+    /* 0x08 */ s32             eventMarker;      /* FSM marker (init 0xFFFF0000) */
+    /* 0x0C */ EntityCallback  eventCallback;    /* Event handler (init StubReturnZero) */
     
     /* Entity Info (0x10-0x17) */
     /* 0x10 */ s16             allocSize;        /* Total allocation size for this entity */
@@ -124,19 +140,17 @@ struct Entity {
     /* Render Callback (0x20-0x23) */
     /* 0x20 */ EntityCallback  renderCallback;   /* Render function */
     
-    /* Movement Callback X (0x24-0x2B) */
-    /* 0x24 */ s16             moveMarkerX;      /* Movement marker X */
-    /* 0x26 */ s16             moveCountX;       /* Movement count X */
-    /* 0x28 */ s16             moveOffsetX;      /* Movement offset X */
-    /* 0x2A */ u8              pad2A;            /* Padding */
-    /* 0x2B */ u8              pad2B;            /* Padding */
-    
-    /* Movement Callback Y (0x2C-0x33) */
-    /* 0x2C */ s16             moveMarkerY;      /* Movement marker Y */
-    /* 0x2E */ s16             moveCountY;       /* Movement count Y */
-    /* 0x30 */ s16             moveOffsetY;      /* Movement offset Y */
-    /* 0x32 */ u8              pad32;            /* Padding */
-    /* 0x33 */ u8              pad33;            /* Padding */
+    /* Movement / coordinate-transform FSM slots (0x24-0x33).
+     * Two more standard [marker, fn] pairs (NOT s16 triplets as previously
+     * documented). The callbacks transform worldX/worldY before collision
+     * and rendering (e.g. platform riding). 93 install sites each - see
+     * docs/analysis/callback-install-map.md. Verified via
+     * EntityBroadcastPointCollision @ 0x8001B72C and InitEntityStruct's
+     * word-sized zeroing of +0x28/+0x30. */
+    /* 0x24 */ s32                 moveMarkerX;   /* FSM marker (see encoding above) */
+    /* 0x28 */ EntityCoordCallback moveCallbackX; /* worldX transform callback */
+    /* 0x2C */ s32                 moveMarkerY;   /* FSM marker */
+    /* 0x30 */ EntityCoordCallback moveCallbackY; /* worldY transform callback */
     
     /* Sprite Context (0x34-0x37) */
     /* 0x34 */ void           *spriteContext;    /* Sprite render context pointer */
@@ -180,14 +194,20 @@ struct Entity {
     /* 0x72 */ s16             targetY;          /* Target Y for movement */
     
     /* Flags (0x74-0x77) */
-    /* 0x74 */ u8              facing;           /* Facing direction (0=left, 1=right) */
+    /* 0x74 */ u8              facing;           /* Facing direction: 0=right, 1=left (VERIFIED via
+                                                  * PlayerCallback_JumpInputAndCounters @ 0x800602E0:
+                                                  * Left button sets velocityX=-max AND facing=1) */
     /* 0x75 */ u8              flipY;            /* Vertical flip flag */
     /* 0x76 */ u8              textureDirty;     /* Texture needs upload (set when sprite changes) */
     /* 0x77 */ u8              boundsValid;      /* Screen bounds are valid (1=valid, skip recalculation) */
     
-    /* Movement Callbacks (0x78-0x7F) */
-    /* 0x78 */ EntityCallback  moveCallbackY;    /* Y movement callback */
-    /* 0x7C */ EntityCallback  moveCallbackX;    /* X movement callback */
+    /* UNVERIFIED pointers (0x78-0x7F).
+     * Previously documented as moveCallbackY/moveCallbackX, but a full-binary
+     * scan found ZERO function-pointer installs at these offsets (the real
+     * movement callbacks are the FSM pairs at +0x24/+0x2C). Not set by
+     * InitEntityStruct. Semantics unknown - rename when verified. */
+    /* 0x78 */ void           *unknownPtr78;
+    /* 0x7C */ void           *unknownPtr7C;
 };  /* Size: 0x80 (128 bytes) */
 
 /* -----------------------------------------------------------------------------

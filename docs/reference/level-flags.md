@@ -21,7 +21,7 @@
 | 10 | 0x0400 | LEVEL_FINN | FINN player mode (swamp boat) |
 | 11 | 0x0800 | AUTO_SCROLL | Level auto-scrolls |
 | 12 | 0x1000 | NO_CAMERA | Disables camera entity creation |
-| 13 | 0x2000 | LEVEL_BOSS | Boss fight mode |
+| 13 | 0x2000 | LEVEL_RESULTS | Results/ending screen (formerly "LEVEL_BOSS" - CreateResultsScreenEntity body disproved boss-fight role) |
 | 14 | 0x4000 | SHOW_HUD | Display HUD elements |
 | 15 | 0x8000 | DEBUG | Debug mode enabled |
 
@@ -33,7 +33,7 @@ The game uses 7 different player entity types based on level flags:
 |----------|------|-------------|----------|------|--------|
 | 1 | 0x400 | FINN | `CreateFinnPlayerEntity` | 0x114 | 0×-80 |
 | 2 | 0x200 | MENU | `InitMenuEntity` | 0x140 | 0×0 |
-| 3 | 0x2000 | BOSS | `CreateBossPlayerEntity` | 0x158 | 0×0 |
+| 3 | 0x2000 | RESULTS (formerly "BOSS") | `CreateResultsScreenEntity` | 0x158 | 0×0 |
 | 4 | 0x100 | RUNN | `CreateRunnPlayerEntity` | 0x110 | 40×-48 |
 | 5 | 0x010 | SOAR | `CreateSoarPlayerEntity` | 0x128 | 40×-96 |
 | 6 | 0x004 | GLIDE | `CreateGlidePlayerEntity` | 0x11C | 0×0 |
@@ -66,7 +66,7 @@ Based on flags 0x0080 and 0x0008:
 Returns TRUE only when ALL these flags are **clear**:
 - 0x0400 (FINN)
 - 0x0200 (MENU)
-- 0x2000 (BOSS)
+- 0x2000 (RESULTS, formerly BOSS)
 - 0x0100 (RUNN)
 - 0x0010 (SOAR)
 - 0x0004 (GLIDE)

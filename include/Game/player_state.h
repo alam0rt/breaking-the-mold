@@ -45,7 +45,7 @@ typedef struct {
     /* 0x1A */ u8  hamster_count;    /* Hamster collectible count */
     /* 0x1B */ u8  total_swirly_qs;  /* Total Swirly-Qs accumulated */
     /* 0x1C */ u8  super_willies;    /* Super Willies powerup count */
-    /* 0x1D */ u8  unknown_1d;       /* Unknown — purpose unconfirmed */
+    /* 0x1D */ u8  boss_hp;          /* Boss HP (set 3-5 by boss init, decremented on hits, cleared on death) */
 } PlayerState;  /* Size: 0x1E (30 bytes) */
 
 #endif /* PLAYER_STATE_H */

@@ -427,7 +427,7 @@ player entity to create:
 |----------|------|---------------|-----------------|
 | 1 | 0x400 | `CreateFinnPlayerEntity` | 0x114 bytes |
 | 2 | 0x200 | `InitMenuEntity` | 0x140 bytes |
-| 3 | 0x2000 | `CreateBossPlayerEntity` | 0x158 bytes |
+| 3 | 0x2000 | `CreateResultsScreenEntity` | 0x158 bytes |
 | 4 | 0x100 | `CreateRunnPlayerEntity` | 0x110 bytes |
 | 5 | 0x10 | `CreateSoarPlayerEntity` | 0x128 bytes |
 | 6 | 0x04 | `CreateGlidePlayerEntity` | 0x11C bytes |

@@ -56,7 +56,7 @@ Each boss and sub-entity has a vtable pointer at entity+0x18:
 | `BossRandomAttackChoice` | 0x8004ba74 | Random attack pattern selection |
 | `BossHPBarTickCallback` | 0x8004992c | HP bar HUD update |
 | `BossCollision_SpawnDebrisAndLayers` | 0x800734fc | Death explosion effects |
-| `CreateBossPlayerEntity` | 0x80078200 | Boss-specific player setup |
+| `CreateResultsScreenEntity` | 0x80078200 | Results/ending screen builder (formerly "boss player setup" - body disproved: password display, tally HUD, credits ticks) |
 | `EntityEventHandler_SetFlag0x110` | 0x80043ef0 | Set entity flag on event 0x1009 |
 | `EntityMoveHorizontalByFacing` | 0x8004f8ac | Simple ±10 pixel horizontal move |
 | `GenericEntityDestroyCallback` | 0x8004faf4 | Generic entity destroy (vtable 0x800115a8) |
