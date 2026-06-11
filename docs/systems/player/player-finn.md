@@ -161,8 +161,8 @@ When hitting solid tiles, velocity is halved and reversed: `vel = -(vel >> 1)`
 **Main Tick Callback**: 0x8006EFC8 (`FinnMainTickHandler`)
 
 The main player callback at 0x8006EFC8 is the active state handler that:
-1. Manages secondary entity (wake/shadow) at +0x114
-2. Handles random state timing at +0x112 (counter decrements, resets to 0x14 via rand())
+1. Manages secondary entity (wake/shadow) at +0x104 (CORRECTED: was +0x114; verified in CreateFinnPlayerEntity @ 0x80074100 - InitEntitySprite return stored at +0x104)
+2. Random state timing claim at +0x112 SUSPECT: the verified sound-handle word at +0x110 covers 0x110-0x113 (re-verify which entity/offset the timer lives at)
 3. Calls movement/collision subsystems:
    - `FinnCheckTriggerZones` @ 0x80070128 - Trigger zone collision detection
    - `FinnHandleInput` @ 0x8006fbd0 - Tank control input handling

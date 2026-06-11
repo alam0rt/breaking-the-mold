@@ -1082,8 +1082,8 @@ Fields beyond the 128-byte base are entity-type-specific:
 | 0xDA | 2 | current_frame | Current animation frame index |
 | 0xDE | 2 | target_frame | Target animation frame |
 | 0xE0 | 2 | pending_flags | Pending state change flags |
-| 0xEC | 2 | frame_countdown | Animation frame timer |
-| 0xF0-0xF5 | 6 | rgb | Current/pending RGB modulation |
+| 0xEC | 2 | frame_rate_divisor | CORRECTED: frame duration divisor (countdown is at 0xEE) - see UpdateEntityRender @ 0x8001D988 |
+| 0xF0-0xF2 | 3 | anim_state | CORRECTED x2: current anim direction/loop/active bytes (ApplyPendingSpriteState @ 0x8001D554) - NOT rgb; 0xF3-0xF5 are the pending equivalents |
 | 0xF6 | 1 | visibility | Rendering flag |
 | 0x1AF | 1 | cheat_effect_1 | Cheat code effect flag (from cheat 0x11) |
 | 0x1B0 | 1 | cheat_effect_2 | Cheat code effect flag (from cheat 0x14) |

@@ -201,13 +201,17 @@ struct Entity {
     /* 0x76 */ u8              textureDirty;     /* Texture needs upload (set when sprite changes) */
     /* 0x77 */ u8              boundsValid;      /* Screen bounds are valid (1=valid, skip recalculation) */
     
-    /* UNVERIFIED pointers (0x78-0x7F).
-     * Previously documented as moveCallbackY/moveCallbackX, but a full-binary
-     * scan found ZERO function-pointer installs at these offsets (the real
-     * movement callbacks are the FSM pairs at +0x24/+0x2C). Not set by
-     * InitEntityStruct. Semantics unknown - rename when verified. */
-    /* 0x78 */ void           *unknownPtr78;
-    /* 0x7C */ void           *unknownPtr7C;
+    /* Sprite-render sub-struct base (0x78-0x7F). Previously documented as
+     * moveCallbackY/moveCallbackX - wrong (zero fn installs; real move
+     * callbacks are the FSM pairs at +0x24/+0x2C).
+     * VERIFIED via UpdateEntityRender @ 0x8001D988: +0x78 is the frame
+     * metadata table (0x24 bytes/frame: +0xA width, +0xC height/duration)
+     * and &entity->pFrameTable is passed as the base of an embedded
+     * sprite-render context to RenderSprite/GetFrameMetadata/
+     * DecodeRLESpriteChecked. The animation state continues at 0x80-0xFF
+     * in sprite entities (alloc >= 0x100) - see PlayerEntity in Ghidra. */
+    /* 0x78 */ void           *pFrameTable;     /* Frame metadata table (0x24/frame) */
+    /* 0x7C */ void           *spriteSubField7C;/* Part of sprite sub-struct; role unobserved */
 };  /* Size: 0x80 (128 bytes) */
 
 /* -----------------------------------------------------------------------------

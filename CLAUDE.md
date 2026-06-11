@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Decompilation of **Skullmonkeys** (PAL, SLES-01090) for PlayStation 1. The goal is a byte-matching reproduction of the original binary from C source. Expected SHA1 of `build/SLES_010.90.bin` is in `SLES_010.90.yaml`.
 
+**This is a clean-room reverse engineering project.** The code is not derived from any existing codebase — no original source, symbols, or debug info exist. Every symbol name (functions, globals, struct fields) is a guess inferred from behavior, and documentation (docs/, Ghidra plate comments, this file) can be incorrect even when it claims to be verified. Always double-check claims against the actual code/disassembly (and runtime traces where possible) before making any claims or decisions based on a name or doc.
+
 ## Environment
 
 The dev environment is provided by Nix (`flake.nix`). Enter it with `nix develop` (or `direnv allow`). It provides the MIPS cross-toolchain (`mipsel-unknown-linux-gnu-*`), Python venv, PCSX-Redux (wrapped via nixGL), Ghidra with the PSX loader, `luacheck`, plus helpers `ram2off` / `off2ram`. The shell hook auto-creates `.venv` and pip-installs `tools/requirements-python.txt` and `pyghidra`.
@@ -80,7 +82,7 @@ Switching compilers (e.g. 2.5.7-psx) may improve some functions but break others
 
 PCSX-Redux exposes a Web Server (must be enabled manually: Configuration → Emulation → Enable Web Server) and a Lua API. `scripts/pcsx_mcp_server.py` bridges the web API as MCP tools (`read_ram`, `read_u8/16/32`, `read_string`, `write_ram`, `read_vram`, `pause`/`resume`/`reset`, `read_disc_file`, `patch_disc_file`, `upload_symbols`).
 
-`scripts/game_watcher.lua` hooks key engine functions (e.g. `PlayerTickCallback @0x80059E10`, `EntitySetState @0x8001EAAC`, `SetEntitySpriteId @0x8001D080`, `CheckEntityCollision @0x800226F8`, `LoadLevelFromBLB @0x8007E474`) and streams JSONL traces to `game_watcher/logs/trace_*.jsonl`. Configure sampling/throttling/boot-override at the top of the script. Use traces to verify decomp output, derive physics constants, and document state machines (see `docs/systems/player/`).
+`scripts/game_watcher.lua` hooks key engine functions (e.g. `PlayerTickCallback @0x80059E10`, `EntitySetState @0x8001EAAC`, `SetEntitySpriteId @0x8001D080`, `DispatchEventToCollidingEntity @0x800226F8` (formerly `CheckEntityCollision`), `LoadLevelFromBLB @0x8007E474`) and streams JSONL traces to `game_watcher/logs/trace_*.jsonl`. Configure sampling/throttling/boot-override at the top of the script. Use traces to verify decomp output, derive physics constants, and document state machines (see `docs/systems/player/`).
 
 ## Decompilation Conventions
 

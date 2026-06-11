@@ -33,13 +33,22 @@ typedef struct {
     /* 0x00 */ s32  mode_base_offset;            /* Always 0xFFFF0000, sets entity callback mode */
     /* 0x04 */ void *mode_callback_ptr;          /* GameModeCallback function pointer */
     
-    /* Layer list heads (0x08-0x18) - from ClearTickAndRenderLists @ 0x80020c54
-       Each layer type has its own linked list for z-sorting with entities */
-    /* 0x08 */ void *layer_list_static;          /* Static layer list head (AddLayerToRenderList_Static) */
-    /* 0x0C */ void *layer_list_scrolling;       /* Scrolling layer list head (AddLayerToRenderList_Scrolling) */
-    /* 0x10 */ void *layer_list_parallax;        /* Parallax layer list head (AddLayerToRenderList_Parallax) */
-    /* 0x14 */ void *layer_list_standard;        /* Standard layer list head (AddLayerToRenderList_Standard) */
-    /* 0x18 */ void *layer_render_context_ptr;   /* Layer render context pointer */
+    /* GameState event FSM slot (0x08-0x0F).
+     * CORRECTED: previously documented as layer list heads. VERIFIED via
+     * TriggerCollectible100CTickCallback @ 0x8002F03C, which runs the
+     * standard tagged-union FSM dispatch on +0x08/+0x0A/+0x0C with event
+     * id 3. GameState mirrors the Entity FSM header: tick pair @ +0x00
+     * (mode callback), event pair @ +0x08. */
+    /* 0x08 */ s32  event_marker;                /* FSM marker (see entity.h encoding) */
+    /* 0x0C */ void *event_callback;             /* Event handler (gsBase+lo, eventId, arg, srcEntity) */
+
+    /* UNKNOWN (0x10-0x18). The old layer-list-head claim is DISPROVED:
+     * AddLayerToRenderList_Medium @ 0x80021778 inserts layers into the
+     * shared entity lists at +0x1C (tick) and +0x20 (render), not here.
+     * Re-derive these three fields from their actual readers. */
+    /* 0x10 */ void *unknown10;
+    /* 0x14 */ void *unknown14;
+    /* 0x18 */ void *unknown18;
     
     /* Entity lists (0x1C-0x33) */
     /* 0x1C */ EntityListNode *tick_list_head;   /* Z-sorted entity tick list (iterated by EntityTickLoop) */
