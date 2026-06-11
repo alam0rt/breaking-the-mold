@@ -195,7 +195,11 @@
             # Set Ghidra install directory (required for PyGhidra)
             # Point to base Ghidra, extensions are loaded from user config
             export GHIDRA_INSTALL_DIR="${pkgs.ghidra}/lib/ghidra"
-            
+
+            # Allow the Ghidra MCP plugin to run inline scripts (run_script_inline).
+            # The gate is checked inside the Ghidra process; loopback-only, no auth token.
+            export GHIDRA_MCP_ALLOW_SCRIPTS=1
+
             # Install PSX loader extension to user's Ghidra config
             # Must COPY (not symlink) due to Ghidra's case-sensitive path validation
             GHIDRA_VERSION=$(${pkgs.ghidra}/lib/ghidra/support/launch.sh --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1 || echo "11.4.2")

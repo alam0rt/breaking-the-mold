@@ -180,9 +180,9 @@ RemoveFromUpdateQueue = 0x80021E50; // size:0x8C // Remove entity from +0x24
 RemoveEntityFromAllLists = 0x80022074; // size:0x1A4 // Remove from all lists + destructor
 ClearTickList = 0x80022218; // size:0x120 // Free all entries in +0x1C
 ClearEntityDefList = 0x80022338; // size:0x80 // Free all entries in +0x28
-CheckEntityCollision = 0x800226F8; // size:0x128 // Iterate +0x24 list for collision detection
+DispatchEventToCollidingEntity = 0x800226F8; // size:0x128 // Walk GameState+0x24 list (or +0x2C single target when mask==2), find first bbox overlap matching collision mask, invoke that entity's event callback. Formerly CheckEntityCollision
 CheckBBoxOverlap = 0x8001B3F0; // size:0x8C // Bounding box overlap test (entity+0x48/0x4C vs bbox)
-CollisionCheckWrapper = 0x8001B47C; // size:0x24 // Wraps CheckEntityCollision with entity bbox
+CollisionCheckWrapper = 0x8001B47C; // size:0x24 // Wraps DispatchEventToCollidingEntity with entity bbox
 UpdateCameraPosition = 0x80023DBC; // size:0x380 // Camera scroll based on player at +0x30
 LoadEntitiesFromAsset501 = 0x80024DC4; // size:0x304 // Load 24-byte entity defs to GameState+0x28
 AddPreInitEntitiesToList = 0x800250C8; // size:0x178 // Pre-init entities to ctx+0x1C
