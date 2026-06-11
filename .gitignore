@@ -93,3 +93,8 @@ result-*
 *.bak
 *.orig
 .cache/
+
+.agent
+.pi
+.mcp.json
+.claude
