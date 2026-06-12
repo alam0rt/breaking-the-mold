@@ -70,12 +70,17 @@ segments:
   - [0x800, asm, Game/INIT]
   - [0xB1C, c, system/early_stub]
   - [0xB24, asm, Game/INIT_TABLES]
-  - [0xE2C, rodata]           # Game rodata (0x80010624)
-  - [0x1F28, rodata]          # Game rodata (0x80011720)
-  - [0x2044, rodata]          # Game rodata (0x8001183C)
+  - [0xE2C, rodata, Game/OBJECT]     # OBJECT rodata: switch tables/entity callback tables (0x80010624)
+    # NOTE: splat suggests internal splits at 0x2044 and 0x2940 because
+    # some jump tables are interleaved with shared callback tables. Keep
+    # these broad owner-paired ranges until the corresponding text files are
+    # split further; duplicate rodata owner names overwrite generated files.
+  - [0x1E28, rodata, Game/PLAYER]    # PLAYER rodata: callback tables/switch tables (0x80011628)
+  - [0x2554, rodata, Game/GAMELOOP]  # GAMELOOP rodata: shared vehicle callback tables + switch tables (0x80011D54)
 
-      # PSY-Q library rodata (jump tables, strings)
-  - [0x2940, rodata, LIBCD]   # libcd rodata
+    # PSY-Q library rodata (jump tables, strings)
+  - [0x2F58, rodata, assets/blb_memory] # BLB entity callback table (0x80012758)
+  - [0x2F78, rodata, LIBCD]   # libcd rodata
   - [0x34F4, rodata, LIBGPU]  # libgpu rodata
   - [0x3970, rodata, LIBSPU]  # libspu rodata
 
@@ -114,9 +119,11 @@ segments:
   - [0x73754, asm, libs/bios_trampolines]
   - [0x73794, c, libs/memmove]
 
-      # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
-      # libcd, libgpu, libgte, libspu, libetc
-  - [0x73800, asm, LIBS]
+        # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
+        # libcd, libgpu, libgte, libspu, libetc
+  - [0x73800, asm, LIBCD]
+  - [0x79AE4, asm, LIBGPU]
+  - [0x80260, asm, LIBSPU]
   - [0x80F24, c, libs/libspu_voice]
   - [0x80FD0, asm, LIBS_80FD0]
 
