@@ -15,9 +15,9 @@
     pcsx-redux.url = "github:grumpycoders/pcsx-redux";
     #pcsx-redux.inputs.nixpkgs.follows = "nixpkgs-unstable";
     
-    # PSX loader for Ghidra (from lab313ru) - pinned to last Ghidra 11.x compatible version
+    # PSX loader for Ghidra (from lab313ru) - master supports the Ghidra 12.x loader API
     ghidra-psx-ldr-src = {
-      url = "github:lab313ru/ghidra_psx_ldr/2025.09.06";
+      url = "github:lab313ru/ghidra_psx_ldr";
       flake = false;
     };
   };
@@ -34,7 +34,7 @@
         # Ghidra with PSX loader extension
         ghidra-psx-ldr = pkgs.ghidra.buildGhidraExtension {
           pname = "ghidra-psx-ldr";
-          version = "2025.09.06";
+          version = "2026.06.11";
           src = ghidra-psx-ldr-src;
           preBuild = ''
             rm -f data/languages/mips32le.sla

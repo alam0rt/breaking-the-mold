@@ -39,16 +39,15 @@
     "ghidra-psx-ldr-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1757183147,
-        "narHash": "sha256-Eh8I80i/p8upV+YSxAkNvOSJKmXSKyB63XiRLYKn3ao=",
+        "lastModified": 1781138367,
+        "narHash": "sha256-c+RpQP6TuiJjFAOiKTcV8C/9JgUQ2sWg+WtzeNHQ0QQ=",
         "owner": "lab313ru",
         "repo": "ghidra_psx_ldr",
-        "rev": "2385947adb6391a080159443b05f04bd9cabb698",
+        "rev": "cc48cfb942765994d1657d575fd89dbcbc2c3402",
         "type": "github"
       },
       "original": {
         "owner": "lab313ru",
-        "ref": "2025.09.06",
         "repo": "ghidra_psx_ldr",
         "type": "github"
       }
