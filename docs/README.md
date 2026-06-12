@@ -42,6 +42,13 @@ Game engine subsystems and runtime behavior:
 | [level-loading.md](systems/level-loading.md) | Stage loading state machine |
 | [game-loop.md](systems/game-loop.md) | Main loop and mode callbacks |
 
+### Architecture (`architecture/`)
+
+| Document | Description |
+|----------|-------------|
+| [memory-layout.md](architecture/memory-layout.md) | Section organization and PSY-Q memory layout |
+| [source-directory-hypothesis.md](architecture/source-directory-hypothesis.md) | Ghidra-backed high-level source tree / architecture hypothesis |
+
 ### Reference (`reference/`)
 Technical reference material:
 

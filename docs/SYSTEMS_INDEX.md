@@ -26,6 +26,7 @@ This index provides quick navigation to all documentation organized by category.
 | Document | Description | Status |
 |----------|-------------|--------|
 | [memory-layout.md](architecture/memory-layout.md) | **Section organization, PSY-Q layout (NEW)** | ✅ Complete |
+| [source-directory-hypothesis.md](architecture/source-directory-hypothesis.md) | Ghidra-backed high-level source tree / architecture hypothesis | 🔬 Research |
 
 ---
 
