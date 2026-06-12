@@ -68,6 +68,8 @@ segments:
       # These are NOT actual rodata - they're code bytes the linker placed here.
       # =========================================================================
   - [0x800, asm, Game/INIT]
+  - [0xB1C, c, system/early_stub]
+  - [0xB24, asm, Game/INIT_TABLES]
   - [0xE2C, rodata]           # Game rodata (0x80010624)
   - [0x1F28, rodata]          # Game rodata (0x80011720)
   - [0x2044, rodata]          # Game rodata (0x8001183C)
@@ -85,6 +87,10 @@ segments:
       # --- RENDER: Graphics system, VRAM, tiles, sprites (0x800131F0 - 0x8001A0C7) ---
       # InitGraphicsSystem, VRAM slots, tile rendering, sprite rendering
   - [0x39F0, asm, Game/RENDER]      # (0x800131F0 - 0x8001A0C7, all stubs via INCLUDE_ASM)
+  - [0x5C34, c, render/stub_vibrate_off]
+  - [0x5C3C, asm, Game/RENDER_5C3C]
+  - [0x954C, c, render/empty_stub_18d4c]
+  - [0x9554, asm, Game/RENDER_9554]
 
       # --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
       # InitEntityStruct, animation, collision, state machine, callbacks
@@ -97,15 +103,22 @@ segments:
       # --- PLAYER: Player character system (0x80058168 - 0x80071047) ---
       # PlayerTickCallback, state machine, physics, input handling
   - [0x48968, asm, Game/PLAYER]
+  - [0x617D8, c, entity/destructor_spu_at10c]
 
       # --- GAMELOOP: Main game flow, menus, level loading (0x80071048 - 0x80082FFF) ---
       # Tile collision, FINN vehicle, menu system, BLB loading, main()
   - [0x61848, asm, Game/GAMELOOP]
+  - [0x73690, c, world/static_game_state]
+  - [0x736E0, c, system/empty_callbacks]
+  - [0x736F0, c, assets/blb_memory]
+  - [0x73754, asm, libs/bios_trampolines]
   - [0x73794, c, libs/memmove]
 
       # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
       # libcd, libgpu, libgte, libspu, libetc
   - [0x73800, asm, LIBS]
+  - [0x80F24, c, libs/libspu_voice]
+  - [0x80FD0, asm, LIBS_80FD0]
 
       # =========================================================================
       # .data section: 0x80090FEC - 0x800A5953
