@@ -30,7 +30,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.rodata);
         build/asm/data/LIBGPU.rodata.o(.rodata);
         build/asm/data/LIBSPU.rodata.o(.rodata);
-        build/src/Game/RENDER.o(.rodata);
+        build/asm/Game/RENDER.o(.rodata);
         build/asm/Game/ENTITY.o(.rodata);
         build/asm/Game/OBJECT.o(.rodata);
         build/asm/Game/PLAYER.o(.rodata);
@@ -44,7 +44,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.sdata);
         build/asm/data/LIBGPU.rodata.o(.sdata);
         build/asm/data/LIBSPU.rodata.o(.sdata);
-        build/src/Game/RENDER.o(.sdata);
+        build/asm/Game/RENDER.o(.sdata);
         build/asm/Game/ENTITY.o(.sdata);
         build/asm/Game/OBJECT.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
@@ -58,7 +58,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.sbss);
         build/asm/data/LIBGPU.rodata.o(.sbss);
         build/asm/data/LIBSPU.rodata.o(.sbss);
-        build/src/Game/RENDER.o(.sbss);
+        build/asm/Game/RENDER.o(.sbss);
         build/asm/Game/ENTITY.o(.sbss);
         build/asm/Game/OBJECT.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
@@ -72,13 +72,13 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.bss);
         build/asm/data/LIBGPU.rodata.o(.bss);
         build/asm/data/LIBSPU.rodata.o(.bss);
-        build/src/Game/RENDER.o(.bss);
+        build/asm/Game/RENDER.o(.bss);
         build/asm/Game/ENTITY.o(.bss);
         build/asm/Game/OBJECT.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
         build/asm/Game/GAMELOOP.o(.bss);
         build/asm/LIBS.o(.bss);
-        build/src/Game/RENDER.o(.text);
+        build/asm/Game/RENDER.o(.text);
         build/asm/Game/ENTITY.o(.text);
         build/asm/Game/OBJECT.o(.text);
         build/asm/Game/PLAYER.o(.text);
@@ -94,7 +94,7 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.data);
         build/asm/data/LIBGPU.rodata.o(.data);
         build/asm/data/LIBSPU.rodata.o(.data);
-        build/src/Game/RENDER.o(.data);
+        build/asm/Game/RENDER.o(.data);
         build/asm/Game/ENTITY.o(.data);
         build/asm/Game/OBJECT.o(.data);
         build/asm/Game/PLAYER.o(.data);

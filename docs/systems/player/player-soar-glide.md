@@ -1,8 +1,10 @@
 # SOAR and GLIDE Player Modes
 
 **Status**: ✅ DOCUMENTED from C Code  
-**Last Updated**: January 15, 2026  
-**Source**: SLES_010.90.c lines 34434-35454, 41323-41348
+**Last Updated**: June 12, 2026  
+**Source**: Ghidra `SLES_010.90` decompilation and xrefs; older line references below are retained only as historical context.
+
+> **Clean-room caveat:** names are inferred from behavior. SOAR shares a large platform/RUNN callback cluster, so field names below describe observed roles in that shared code rather than original source names.
 
 ---
 
@@ -102,14 +104,17 @@ Entity* CreateSoarPlayerEntity(Entity* buffer, void* inputController,
     // Configure
     buffer[4] = 1000;  // Z-order
     buffer[0x40] = inputController;
-    buffer[0x46] = 0;
-    buffer[0x119] = 0;
-    buffer[0x11a] = 0;
-    buffer[0x11e] = 0;
-    buffer[0x11b] = 0;
-    buffer[0x47] = 0;
-    buffer[0x48] = 0;
-    buffer[0x122] = 0x40;  // Field = 64
+    soar->gravityHoldTimer = 0;
+    soar->forcedGravityTimer = 0;
+    soar->jumpTransitionLock = 0;
+    soar->jumpHoldTimer = 0;
+    soar->pendingLevelLoadId = 0;
+    soar->inputEnabled = 0;
+    soar->stateReturnTimer = 0;
+    soar->levelLoadTimer = 0;
+    soar->rgb[0] = 0x40;
+    soar->rgb[1] = 0x40;
+    soar->rgb[2] = 0x40;
     
     // Set callbacks (continues with more initialization...)
     
@@ -120,18 +125,27 @@ Entity* CreateSoarPlayerEntity(Entity* buffer, void* inputController,
 **Sprite Table**: DAT_8009cabc  
 **Vtable**: DAT_80011d34
 
-### Soar Mechanics
+### Soar / Platform Timer-Gate Fields
 
-**Key Fields**:
-- +0x122: 0x40 (64 - some parameter)
-- Multiple fields zeroed
-- Larger entity than GLIDE
+The SOAR player reuses platform/RUNN tick and input helpers, so offsets `+0x118..+0x120` are now documented as shared platform/flight timer-gate fields rather than six unknown flags:
 
-**Likely Behavior**:
-- Flying/soaring through air
-- Full directional control
-- No gravity or reduced gravity
-- Vertical and horizontal movement
+| Offset | Field | Evidence-backed role |
+|--------|-------|----------------------|
+| `+0x118` | `gravityHoldTimer` | Set to `5` by `PlatformStateInit_BounceWithGravity @ 0x800727EC`; decremented by `PlatformEntityProcessInput @ 0x800720C4` while applying/capping vertical gravity response. |
+| `+0x119` | `forcedGravityTimer` | Auxiliary gravity countdown decremented by `PlatformEntityProcessInput` when non-zero. No non-zero producer found in the checked SOAR/platform range, so the name is conservative. |
+| `+0x11A` | `jumpTransitionLock` | If clear, jump/confirm input enters `PlatformStateInit_BounceWithGravity`; if set, the same input refreshes `jumpHoldTimer` instead. |
+| `+0x11B` | `jumpHoldTimer` | Set to `10` while jump is held under the lock; decremented by `PlatformTick_MainWithSoundAndTimers @ 0x800713F4`; checked by `SoarState_SelectNextByInput @ 0x80071FD8`. |
+| `+0x11C` | `pendingLevelLoadId` | Trigger-zone code stores the direct-level-load id here; copied to `GameState.direct_level_load` when `levelLoadTimer` reaches zero. |
+| `+0x11D` | `inputEnabled` | Set by `PlatformState_EnablePlayerInput @ 0x80072CAC`; the main platform tick only calls `PlatformEntityProcessInput` while this is non-zero. |
+| `+0x11E` | `stateReturnTimer` | Countdown to `EntityEnterAnimatedIdleState`; trigger-zone reset paths set it to `0x5A` frames. |
+| `+0x120` | `levelLoadTimer` | Fade/direct-level-load countdown; set to `0x20` by `PlatformStateInit_FadeAndTimer @ 0x800730F8`. |
+| `+0x122..+0x124` | `rgb[3]` | Runtime tint bytes; initialized to `0x40,0x40,0x40` and updated by generic trigger-zone color handling. |
+
+Important state transitions:
+
+- `SoarStateInit_BeginFlightMode @ 0x80072A98` clears the timer/gate fields, sets `jumpTransitionLock = 1`, disables input, and queues `SoarState_BeginFlight`.
+- `SoarState_BeginFlight @ 0x80072BA0` restores scale, sets `nFlightSpeed = 0x50000`, clears `jumpTransitionLock` and `inputEnabled`, then installs `PlatformState_EnablePlayerInput` as the finalizer hook.
+- `PlatformState_EnablePlayerInput` sets `inputEnabled = 1` and sends player event `0x100F`, after which the shared platform tick starts honoring controller input.
 
 ---
 

@@ -471,14 +471,14 @@ typedef struct {
     /* 0x110 */ u8          _pad110[2];
     /* 0x112 */ u8          stateTimer;   /* State transition timer */
     /* 0x113 */ u8          _pad113[5];
-    /* 0x118 */ u8          flag118;      /* Movement flags (all zeroed at init; */
-    /* 0x119 */ u8          flag119;      /*   6 flags suggest a 6-state flight */
-    /* 0x11A */ u8          flag11A;      /*   control scheme) */
-    /* 0x11B */ u8          flag11B;
-    /* 0x11C */ u8          flag11C;
-    /* 0x11D */ u8          flag11D;
-    /* 0x11E */ u16         counter11E;   /* Frame counter / timer */
-    /* 0x120 */ u16         counter120;   /* Secondary counter */
+    /* 0x118 */ u8          gravityHoldTimer;     /* Set to 5 by bounce/gravity entry; decremented while applying gravity response */
+    /* 0x119 */ u8          forcedGravityTimer;   /* Auxiliary gravity countdown; no non-zero producer found in checked SOAR/platform range */
+    /* 0x11A */ u8          jumpTransitionLock;   /* 0 = jump enters bounce/gravity state; 1 = jump refreshes jumpHoldTimer */
+    /* 0x11B */ u8          jumpHoldTimer;        /* 10-frame jump/confirm hold timer; decremented by platform tick */
+    /* 0x11C */ u8          pendingLevelLoadId;   /* Copied to GameState.direct_level_load when levelLoadTimer reaches 0 */
+    /* 0x11D */ u8          inputEnabled;         /* Enables PlatformEntityProcessInput from main platform tick */
+    /* 0x11E */ u16         stateReturnTimer;     /* Countdown to EntityEnterAnimatedIdleState; trigger zones set 0x5A */
+    /* 0x120 */ u16         levelLoadTimer;       /* Fade/level-load countdown; set to 0x20 by PlatformStateInit_FadeAndTimer */
     /* 0x122 */ u8          rgb[3];       /* Entity RGB tint (init 0x40,0x40,0x40) */
     /* 0x125 */ u8          _pad125[3];
 } SoarPlayerEntity;  /* Size: 0x128 (296 bytes) */

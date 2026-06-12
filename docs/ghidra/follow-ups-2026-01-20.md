@@ -61,7 +61,7 @@ the init function:
 | +0x112 | s16  | 0x14       | `stateTimer`                             |
 | +0x113 | u8   | 0          | flag                                     |
 | +0x114 | s32  | 0xFFFFFFFF | `field_0x114`                            |
-| +0x119 | u8   | 0          | `flag119`                                |
+| +0x119 | u8   | 0          | Same offset as SOAR `forcedGravityTimer` under current shared typing; verify before cloning. |
 
 Allocation is 0x11C bytes (Soar is 0x128, so Glide is 12 bytes smaller — some
 Soar tail fields are missing or repurposed in Glide).

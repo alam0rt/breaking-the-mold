@@ -29,15 +29,21 @@ Clean-room Ghidra MCP pass over placeholder/bad struct field names in `SLES_010.
 | `PlayerEntity` | `+0x134/+0x135` | `specialMoveQueued/specialMoveMode` | Input/state branches queue and select special movement mode. |
 | `FinnPlayerEntity` | `+0x104/+0x108` | `wakeEntity_or_velocityX/velocityY_or_stateCallback` | Fields are intentionally named as overlays: wake pointer during creation, velocity/FSM storage during movement. |
 | `FinnPlayerEntity` | `+0x10C..+0x10F` | `rotationAngle/rotationSpriteBucket/rotationVelocity` | `FinnHandleInput` and `FinnUpdateRotationSprite` derive 16-way sprite bucket from heading angle. |
+| `SoarPlayerEntity` | `+0x118/+0x119` | `gravityHoldTimer/forcedGravityTimer` | `PlatformStateInit_BounceWithGravity @ 0x800727EC` sets `gravityHoldTimer` to 5; `PlatformEntityProcessInput @ 0x800720C4` decrements these while applying/capping vertical gravity response. No non-zero `forcedGravityTimer` producer was found in the checked SOAR/platform range. |
+| `SoarPlayerEntity` | `+0x11A/+0x11B` | `jumpTransitionLock/jumpHoldTimer` | Jump input enters `PlatformStateInit_BounceWithGravity` when the lock is clear; when set, input refreshes a 10-frame hold timer used by `SoarState_SelectNextByInput @ 0x80071FD8`. |
+| `SoarPlayerEntity` | `+0x11C/+0x11D` | `pendingLevelLoadId/inputEnabled` | Trigger-zone code stores the pending direct level id at `+0x11C`; `PlatformState_EnablePlayerInput @ 0x80072CAC` sets `inputEnabled`, and the main platform tick only calls input processing while it is non-zero. |
+| `SoarPlayerEntity` | `+0x11E/+0x120` | `stateReturnTimer/levelLoadTimer` | `PlatformTick_MainWithSoundAndTimers @ 0x800713F4` decrements both; `stateReturnTimer` transitions back to animated idle, and `levelLoadTimer` copies `pendingLevelLoadId` to `GameState.direct_level_load` when it reaches zero. |
 | `LayerEntry` | `+0x18/+0x1A` | `auto_scroll_speed_x/auto_scroll_speed_y` | Copied into layer contexts and used by autonomous wrapped-scroll update functions. |
 | `LayerEntry` | `+0x1C/+0x1D` | `reverse_scroll_x/reverse_scroll_y` | Direction flags for autonomous wrapped scroll. |
 | `LayerEntry` | `+0x22/+0x24` | `auto_scroll_enable_y/auto_scroll_enable_x` | Enables autonomous scroll axes. |
 | `LevelDataContext` | `+0x64` | `sector_read_callback` | `InitLevelDataContext @ 0x8007A1BC` stores it; `LoadAssetContainer @ 0x8007B074` calls it as `(sectorOffset, sectorCount, dst)`. Normally `BLB_ReadSectorsWrapper @ 0x80020848`. |
 
+## Resolved misidentifications
+
+- `/game/SpriteTypeCallbackEntry[481]` was a stale/misidentified Ghidra hypothesis, not a uniform sprite-type dispatch table. The packed region beginning at `0x80010344` is mixed callback/vtable data. `0x80010344` is now typed/labeled as `BasicEntityVtableShort_SubmitPrimitiveBuffer`; the old datatype was renamed to `/game/ObsoleteSpriteTypeCallbackEntry` and should not be used for lifecycle naming.
+
 ## Remaining ambiguous fields
 
-- `SoarPlayerEntity+0x118..+0x11D` are still flight-mode flags. Current trace confirms initialization, `flag11B` gating one input-driven state transition, and `flag11A/flag11D` clearing during flight begin, but not enough to assign stable semantic names.
-- `SpriteTypeCallbackEntry.callback_0/callback_1/callback_3` still need call-site-specific names; broad decompile search mostly hit comments/table references, not enough evidence for precise roles.
 - `LevelDataContext+0x64` is now resolved as `sector_read_callback`; no longer considered ambiguous.
 
 ## Placeholder audit after cleanup
@@ -45,9 +51,9 @@ Clean-room Ghidra MCP pass over placeholder/bad struct field names in `SLES_010.
 Ghidra still intentionally contains generic names where evidence is weak:
 
 - Padding/reserved fields in `Entity`, `GameState`, `SpriteHeader`, and vtables remain named as padding/reserved/unused rather than guessed.
-- `SoarPlayerEntity` flight flags remain `flag118..flag11D`, `counter11E`, and `counter120` because current evidence only proves initialization and a few branch uses.
+- `SoarPlayerEntity.forcedGravityTimer` is named conservatively; current scan found decrement/use sites but no non-zero producer in the checked SOAR/platform range.
 - `SpriteContext+0x12` is named `spriteLookupByte`, but the semantic meaning of the source lookup-entry byte is still unknown because no runtime reader was found after it is copied into cache metadata.
-- `SpriteTypeCallbackEntry.callback_0`, `callback_1`, and `callback_3` remain generic until slot-specific call sites prove lifecycle roles.
+- `/game/ObsoleteSpriteTypeCallbackEntry` remains only as a tombstone datatype so future passes do not revive the bad table-wide sprite-dispatch interpretation.
 - Ghidra generated/export snapshot docs may preserve old names for historical comparison; current headers and Ghidra datatypes should be preferred.
 
 The unresolved Ghidra fields above now have comments explaining why they remain generic, so future passes do not accidentally promote weak guesses into authoritative names.

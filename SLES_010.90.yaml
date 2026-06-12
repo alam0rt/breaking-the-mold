@@ -84,7 +84,7 @@ segments:
 
       # --- RENDER: Graphics system, VRAM, tiles, sprites (0x800131F0 - 0x8001A0C7) ---
       # InitGraphicsSystem, VRAM slots, tile rendering, sprite rendering
-  - [0x39F0, c, Game/RENDER]      # (0x800131F0 - 0x8001A0C7, all stubs via INCLUDE_ASM)
+  - [0x39F0, asm, Game/RENDER]      # (0x800131F0 - 0x8001A0C7, all stubs via INCLUDE_ASM)
 
       # --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
       # InitEntityStruct, animation, collision, state machine, callbacks

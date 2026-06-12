@@ -100,18 +100,11 @@ typedef struct {
     /* 0x13 */ u8    is_valid;          /* Non-zero = context is fully initialized */
 } SpriteContext;  /* Size: 0x14 (20 bytes) */
 
-/* -----------------------------------------------------------------------------
- * SpriteTypeCallbackEntry (16 bytes)
- *
- * Per-sprite-type callback table for rendering dispatch.
- * Array of 481 entries at 0x8009D5F8+... (see game category in Ghidra).
- * Indexed by sprite type to select the appropriate render pipeline.
- * ----------------------------------------------------------------------------- */
-typedef struct {
-    /* 0x00 */ void *callback_0;    /* Primary callback (setup/decode) */
-    /* 0x04 */ void *callback_1;    /* Secondary callback */
-    /* 0x08 */ void *tick_callback; /* Per-frame tick callback */
-    /* 0x0C */ void *callback_3;    /* Tertiary callback (cleanup/post) */
-} SpriteTypeCallbackEntry;  /* Size: 0x10 (16 bytes) */
+/* NOTE: Ghidra once had a /game/SpriteTypeCallbackEntry[481] hypothesis for
+ * the packed table region starting at 0x80010344. A 2026-06-12 xref pass showed
+ * that region is not a uniform sprite-type dispatch table; it is mixed
+ * BasicEntityVtableShort, BasicEntityVtable, EntityCallbackTableBase, and
+ * type-specific EntityCallbackSlot data. Keep sprite asset structs here; see
+ * include/Game/entity.h for callback/vtable layouts. */
 
 #endif /* SPRITE_H */
