@@ -107,9 +107,14 @@ typedef struct {
     /* 0x70 */ s16  tile_collision_width;        /* Tile collision map width (tiles) */
     /* 0x72 */ s16  tile_collision_height;       /* Tile collision map height (tiles) */
     
-    /* Level/layer state (0x74-0x7B) - from InitLayersAndTileState @ 0x80024778 */
-    /* 0x74 */ void *animated_tile_data_ptr;     /* LevelDataContext+0x3C (AnimOffsets/ctx[12] for animated tiles) */
-    /* 0x78 */ u16  scroll_limit_height;         /* TileHeader+0x1C (vertical scroll limit, 0 for bosses) */
+    /* Trigger zone system (0x74-0x7B) - from InitLayersAndTileState @ 0x80024778.
+     * CORRECTED: previously mislabeled animated_tile_data_ptr/scroll_limit_height.
+     * VERIFIED via CheckTriggerZoneCollision @ 0x800245BC, which iterates +0x74
+     * as a TriggerZone[] (16-byte AABB+attr records, see Game/trigger_zone.h)
+     * bounded by the count at +0x78. Populated from LevelDataContext+0x3C
+     * (zone definitions) and TileHeader+0x1C (zone count, 0 for bosses). */
+    /* 0x74 */ void *trigger_zone_data_ptr;      /* TriggerZone[] from LevelDataContext+0x3C */
+    /* 0x78 */ u16  trigger_zone_count;          /* Zone count from TileHeader+0x1C */
     /* 0x7A */ u16  _pad_7A;                     /* Padding to 4-byte alignment */
     
     /* Entity callback system (0x7C-0x83) */

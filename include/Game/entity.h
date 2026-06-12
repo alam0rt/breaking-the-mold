@@ -2,6 +2,7 @@
 #define ENTITY_H
 
 #include "common.h"
+#include "Game/input_state.h"
 
 /* =============================================================================
  * ENTITY HIERARCHY
@@ -17,8 +18,21 @@
  * 
  * 3. Entity (0x80 bytes) - InitEntityStruct @ 0x8001a0c8
  *    Full game entity with callbacks, physics, bounds. vtable @ +0x18
- * 
- * Extended types (Player 0x3E8, HUD 0x7530) build on Entity with extra fields.
+ *
+ * Extended hierarchy (allocation sizes from SpawnPlayerAndEntities @ 0x8007DF38):
+ *
+ *   Entity (0x80)
+ *   └── SpriteEntity (0x100)  - Entity + animation state machine
+ *       ├── PlayerEntity     (0x1B4) - main platformer player
+ *       ├── FinnPlayerEntity (0x114) - vehicle/boat player
+ *       ├── RunnPlayerEntity (0x110) - auto-scroller runner
+ *       ├── SoarPlayerEntity (0x128) - flying player
+ *       ├── GlidePlayerEntity (0x11C alloc) - glide variant; distinct struct
+ *       │                                     TBD, currently uses SoarPlayerEntity
+ *       └── PathEnemyEntity  (0x120, 0x130 alloc) - path-following enemy
+ *
+ * All extended types share the Entity base (0x00-0x7F) and the SpriteEntity
+ * animation fields (0x80-0xFF); type-specific fields begin at 0x100.
  * ============================================================================= */
 
 /* -----------------------------------------------------------------------------
@@ -215,6 +229,267 @@ struct Entity {
 };  /* Size: 0x80 (128 bytes) */
 
 /* -----------------------------------------------------------------------------
+ * SpriteEntity (0x100 = 256 bytes)
+ *
+ * Entity extended with the full sprite animation state machine. This is the
+ * common base for every animated game object: the player variants, enemies,
+ * pickups, bosses, particles, etc. Initialized by InitEntitySprite
+ * @ 0x8001C720 (152 xrefs), which clears 0x44C bytes total - the extra
+ * space past 0x100 is workspace claimed by the extended types.
+ *
+ * Layout mirrors Ghidra /Skullmonkeys/SpriteEntity exactly. The animation
+ * fields start at 0x88; 0x80-0x87 is unobserved (zeroed at init, no reader
+ * identified yet). Gaps are reproduced as explicit _pad arrays so
+ * sizeof(SpriteEntity) == 0x100.
+ *
+ * Frame flow (UpdateEntityRender @ 0x8001D988, SetEntitySpriteId @ 0x8001D080):
+ *   pending* fields are latched by SetEntitySpriteId and committed into the
+ *   current* fields on the next tick; frameCountdown counts down from
+ *   frameRateDivisor and advances currentFrame toward targetFrame, looping
+ *   back to loopFrame when animLoopFlag is set.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ Entity   base;               /* Entity header (FSM, physics, bounds) */
+
+    /* 0x80 */ u8       _pad80[8];          /* Unobserved (zeroed by InitEntitySprite) */
+
+    /* Frame metadata (0x88-0x93) */
+    /* 0x88 */ u16      frameCount;         /* Total frame count in current sprite */
+    /* 0x8A */ u8       texPageByte;        /* Texture page byte */
+    /* 0x8B */ u8       _pad8B;
+    /* 0x8C */ void    *pFrameData;         /* Current frame data pointer */
+    /* 0x90 */ void    *pSpriteAsset;       /* Sprite asset base pointer */
+    /* 0x94 */ u8       _pad94[4];
+
+    /* Next-state FSM pair (0x98-0x9F) */
+    /* 0x98 */ s32      nextStateMarker;    /* FSM marker for next state transition */
+    /* 0x9C */ void    *nextStateCallback;  /* Next state handler */
+    /* 0xA0 */ u8       _padA0[16];
+
+    /* Pixel buffer / frame scale (0xB0-0xBB) */
+    /* 0xB0 */ void    *pPixelBuffer;       /* Decoded pixel data buffer */
+    /* 0xB4 */ u32      frameScaleX;        /* Per-frame X scale (16.16 fixed) */
+    /* 0xB8 */ u32      frameScaleY;        /* Per-frame Y scale (16.16 fixed) */
+
+    /* Pending sprite change (0xBC-0xCB) - latched by SetEntitySpriteId */
+    /* 0xBC */ u32      pendingSpriteId;    /* Sprite ID queued for change */
+    /* 0xC0 */ s16      pendingFrame;       /* Pending start frame */
+    /* 0xC2 */ s16      _padC2;
+    /* 0xC4 */ s16      pendingLoopFrame;   /* Pending loop start frame */
+    /* 0xC6 */ s16      _padC6;
+    /* 0xC8 */ s16      pendingTargetFrame; /* Pending target/end frame */
+    /* 0xCA */ s16      _padCA;
+
+    /* Current sprite state (0xCC-0xDF) */
+    /* 0xCC */ u32      currentSpriteId;    /* Active sprite bank ID (hash) */
+    /* 0xD0 */ u32      displayedSpriteId;  /* Last rendered sprite ID */
+    /* 0xD4 */ u8       _padD4[4];
+    /* 0xD8 */ u16      curSpriteFrameCount;/* Frame count of current sprite */
+    /* 0xDA */ s16      currentFrame;       /* Current animation frame index */
+    /* 0xDC */ s16      loopFrame;          /* Frame to loop back to */
+    /* 0xDE */ s16      targetFrame;        /* Target frame (stop/loop point) */
+
+    /* Animation control (0xE0-0xFD) */
+    /* 0xE0 */ u16      animChangeFlags;    /* Flags for pending animation changes */
+    /* 0xE2 */ u8       _padE2[8];
+    /* 0xEA */ u16      nextFrame;          /* Next frame to display */
+    /* 0xEC */ u16      frameRateDivisor;   /* Frame rate divisor (speed control) */
+    /* 0xEE */ u16      frameCountdown;     /* Countdown to next frame advance */
+    /* 0xF0 */ u8       animDirection;      /* 0=forward, 1=reverse */
+    /* 0xF1 */ u8       animLoopFlag;       /* Loop animation on completion */
+    /* 0xF2 */ u8       animActive;         /* Animation currently playing */
+    /* 0xF3 */ u8       pendingDirection;   /* Pending direction change */
+    /* 0xF4 */ u8       pendingLoopFlag;    /* Pending loop mode */
+    /* 0xF5 */ u8       pendingAnimActive;  /* Pending active state */
+    /* 0xF6 */ u8       visibility;         /* Visibility flag (0=visible) */
+    /* 0xF7 */ u8       staticSpriteFlag;   /* 0=animated, 1=static sprite mode */
+    /* 0xF8 */ u8       needsDecodeFlag;    /* Sprite needs RLE decode */
+    /* 0xF9 */ u8       decodeStateFlag;    /* Decode in progress */
+    /* 0xFA */ u8       cachedFacing;       /* Cached facing for flip detection */
+    /* 0xFB */ u8       cachedFlipY;        /* Cached vertical flip */
+    /* 0xFC */ u8       bufferClearedFlag;  /* Pixel buffer has been cleared */
+    /* 0xFD */ u8       alwaysRenderFlag;   /* Force render even if offscreen */
+    /* 0xFE */ u8       _padFE[2];
+} SpriteEntity;  /* Size: 0x100 (256 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * PlayerEntity (0x1B4 = 436 bytes)
+ *
+ * The standard platformer player (also reused by the GLIDE variant via
+ * CreateGlidePlayerEntity @ 0x8006EDB8 with a 0x11C allocation).
+ * Created by CreatePlayerEntity; allocated 0x1B4 from
+ * SpawnPlayerAndEntities @ 0x8007DF38, but allocSize is set to 0x3E8 -
+ * the tail is scratch space.
+ *
+ * Field offsets/names mirror Ghidra /Skullmonkeys/PlayerEntity. Unnamed
+ * gaps are explicit _pad arrays. velocityX/Y_fixed are the 16.16
+ * fixed-point physics velocities, distinct from the s16 velocity fields
+ * in the Entity base (Ghidra names them velocityX/velocityY).
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x000 */ SpriteEntity sprite;            /* Entity + animation state machine */
+
+    /* Input system (0x100-0x10B) */
+    /* 0x100 */ InputState *pInput;             /* Controller input pointer */
+    /* 0x104 */ s32      inputStateMarker;      /* Input FSM marker */
+    /* 0x108 */ void    *inputStateCallback;    /* Input handler callback */
+    /* 0x10C */ u8       _pad10C[4];
+
+    /* Physics (0x110-0x11F) */
+    /* 0x110 */ s32      velocityY_fixed;       /* Y velocity (16.16 fixed) */
+    /* 0x114 */ s32      velocityX_fixed;       /* X velocity (16.16 fixed) */
+    /* 0x118 */ s32      cushionVelY;           /* Landing cushion velocity */
+    /* 0x11C */ u8       landingTimer;          /* Landing recovery timer */
+    /* 0x11D */ u8       _pad11D;
+    /* 0x11E */ u8       counter11E;            /* General-purpose counter */
+    /* 0x11F */ u8       jumpHoldCounter;       /* Jump button hold duration */
+
+    /* Speed parameters (0x120-0x133) */
+    /* 0x120 */ s32      altSpeed;              /* Alternate movement speed */
+    /* 0x124 */ s32      maxVelocity;           /* Maximum velocity cap */
+    /* 0x128 */ u8       invincibilityTimer;    /* Invincibility countdown (damage flash) */
+    /* 0x129 */ u8       _pad129[11];
+
+    /* State flags (0x134-0x143) */
+    /* 0x134 */ u8       flag134;               /* State flag (purpose TBD) */
+    /* 0x135 */ u8       flag135;               /* State flag (purpose TBD) */
+    /* 0x136 */ s16      apexVelocity;          /* Jump apex velocity threshold */
+    /* 0x138 */ u8       _pad138[4];
+    /* 0x13C */ u8       timer13C;              /* Multi-purpose timer */
+    /* 0x13D */ u8       _pad13D[7];
+
+    /* Powerup system (0x144-0x14F) */
+    /* 0x144 */ s16      powerupTimer;          /* Powerup duration countdown */
+    /* 0x146 */ u8       _pad146[6];
+    /* 0x14C */ void    *hudEntity;             /* HUD entity pointer (0x7530 alloc) */
+    /* 0x150 */ u8       _pad150[6];
+
+    /* Jump/movement (0x156-0x163) */
+    /* 0x156 */ s16      jumpParam;             /* Jump force parameter */
+    /* 0x158 */ u8       _pad158;
+    /* 0x159 */ u8       pendingStateChange;    /* Queued state transition flag */
+    /* 0x15A */ u8       currentRGB[3];         /* Current entity RGB tint */
+    /* 0x15D */ u8       baseRGB[3];            /* Base/default RGB tint */
+    /* 0x160 */ s16      pushX;                 /* External push force X */
+    /* 0x162 */ s16      pushY;                 /* External push force Y */
+    /* 0x164 */ u8       _pad164[4];
+
+    /* Linked entities (0x168-0x173) */
+    /* 0x168 */ void    *haloEntity;            /* Halo visual effect entity */
+    /* 0x16C */ void    *glideEntity;           /* Glide cape entity */
+    /* 0x170 */ u8       groundedFlag;          /* On ground (0=airborne, 1=grounded) */
+    /* 0x171 */ u8       _pad171[3];
+
+    /* Audio / rendering (0x174-0x17D) */
+    /* 0x174 */ s32      soundHandle;           /* Active SPU sound handle */
+    /* 0x178 */ u8       disableScale;          /* Disable scale effects */
+    /* 0x179 */ u8       _pad179[4];
+    /* 0x17D */ u8       rgbCooldown;           /* RGB effect cooldown timer */
+    /* 0x17E */ u8       _pad17E[40];
+
+    /* Scroll/camera (0x1A6-0x1A9) */
+    /* 0x1A6 */ s16      scrollFlagX;           /* Camera scroll influence X */
+    /* 0x1A8 */ s16      scrollFlagY;           /* Camera scroll influence Y */
+    /* 0x1AA */ u8       _pad1AA[4];
+
+    /* Damage/effects (0x1AE-0x1B3) */
+    /* 0x1AE */ u8       damageFlag;            /* Taking damage flag */
+    /* 0x1AF */ u8       particleFlag;          /* Particle effect active */
+    /* 0x1B0 */ u8       shrinkFlag;            /* Shrink powerup active */
+    /* 0x1B1 */ u8       _pad1B1[2];
+    /* 0x1B3 */ u8       gameMode;              /* Current game mode identifier */
+} PlayerEntity;  /* Size: 0x1B4 (436 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * FinnPlayerEntity (0x114 = 276 bytes)
+ *
+ * Tank-control vehicle player for water/fish levels (level flag 0x0400).
+ * Created by CreateFinnPlayerEntity @ 0x80074100. Spawns a secondary
+ * wake/shadow sprite with the same sprite ID at z-order 0x3E9.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ InputState   *pInput;       /* Controller input pointer */
+    /* 0x104 */ SpriteEntity *pWakeEntity;  /* Secondary sprite (wake/shadow visual) */
+    /* 0x108 */ u32           state108;     /* Internal state counter/timer */
+    /* 0x10C */ u8            flag10C;      /* Rotation/movement mode flag */
+    /* 0x10D */ u8            _pad10D[3];
+    /* 0x110 */ s32           soundHandle;  /* Active SPU voice handle */
+} FinnPlayerEntity;  /* Size: 0x114 (276 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * RunnPlayerEntity (0x110 = 272 bytes)
+ *
+ * Auto-scroller runner player for RUNN levels (level flag 0x0100).
+ * Created by CreateRunnPlayerEntity @ 0x80073934. No secondary sprite.
+ * Controls: Triangle=adjust left, X=adjust right, D-Pad=jump.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ InputState *pInput;     /* Controller input pointer */
+    /* 0x104 */ s32         velocityX;  /* Runner X velocity (16.16 fixed) */
+    /* 0x108 */ s32         velocityY;  /* Runner Y velocity (16.16 fixed) */
+    /* 0x10C */ s32         spuVoice;   /* SPU voice handle (init -1) */
+} RunnPlayerEntity;  /* Size: 0x110 (272 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * SoarPlayerEntity (0x128 = 296 bytes)
+ *
+ * Flying player for SOAR levels (level flag 0x0010). Created by
+ * CreateSoarPlayerEntity @ 0x80070D68; spawns a secondary sprite (z=2000)
+ * and a particle entity (z=0x3D4). RGB tint inits to gray (0x40,0x40,0x40);
+ * camera is offset -0x80 in Y for the aerial view.
+ *
+ * NOTE: CreateGlidePlayerEntity @ 0x8006EDB8 currently reuses this layout
+ * in Ghidra with a smaller 0x11C allocation; a distinct GlidePlayerEntity
+ * struct is TBD (see docs/ghidra/follow-ups-2026-01-20.md).
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ InputState *pInput;       /* Controller input pointer */
+    /* 0x104 */ s32         nFlightSpeed; /* Current flight speed (0 at init) */
+    /* 0x108 */ u8          _pad108[4];
+    /* 0x10C */ s32         handle10C;    /* SPU handle (init -1) */
+    /* 0x110 */ u8          _pad110[2];
+    /* 0x112 */ u8          stateTimer;   /* State transition timer */
+    /* 0x113 */ u8          _pad113[5];
+    /* 0x118 */ u8          flag118;      /* Movement flags (all zeroed at init; */
+    /* 0x119 */ u8          flag119;      /*   6 flags suggest a 6-state flight */
+    /* 0x11A */ u8          flag11A;      /*   control scheme) */
+    /* 0x11B */ u8          flag11B;
+    /* 0x11C */ u8          flag11C;
+    /* 0x11D */ u8          flag11D;
+    /* 0x11E */ u16         counter11E;   /* Frame counter / timer */
+    /* 0x120 */ u16         counter120;   /* Secondary counter */
+    /* 0x122 */ u8          rgb[3];       /* Entity RGB tint (init 0x40,0x40,0x40) */
+    /* 0x125 */ u8          _pad125[3];
+} SoarPlayerEntity;  /* Size: 0x128 (296 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * PathEnemyEntity (0x120 = 288 bytes; allocated 0x130)
+ *
+ * Enemy that follows predefined waypoint paths (entity types 076 and 084).
+ * Created via EntityType076_PathEnemy_Init @ 0x8007F3DC ->
+ * InitPathFollowingEnemy @ 0x8003C5B8. Waypoints come from the spawn
+ * definition's variant field; if first==last waypoint the path loops
+ * (loop flag set, count decremented). Frame-counter modulo staggers
+ * multiple enemies sharing one path.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8       _pad100[4];
+    /* 0x104 */ s32      eventStateMarker;   /* Event state FSM marker */
+    /* 0x108 */ void    *eventStateCallback; /* Event state handler */
+    /* 0x10C */ u8       _pad10C[4];
+    /* 0x110 */ s16      pathOriginX;        /* Path origin X (base offset) */
+    /* 0x112 */ s16      pathOriginY;        /* Path origin Y (base offset) */
+    /* 0x114 */ void    *pWaypoints;         /* Waypoint array (s16 pairs: X, Y) */
+    /* 0x118 */ u8       _pad118[4];
+    /* 0x11C */ s16      waypointCount;      /* Number of waypoints in path */
+    /* 0x11E */ u16      pathTimer;          /* Current path interpolation time */
+} PathEnemyEntity;  /* Size: 0x120 (288 bytes) */
+
+/* -----------------------------------------------------------------------------
  * Entity List Node
  * Used for tick/render/collision linked lists in GameState
  * ----------------------------------------------------------------------------- */
@@ -267,6 +542,47 @@ typedef struct {
     /* 0x10 */ EntityCallbackSlot tick;         /* Per-frame update */
     /* 0x18 */ EntityCallbackSlot texture;      /* Texture upload */
 } EntityCallbackTableBase;  /* Size: 0x20 */
+
+/* -----------------------------------------------------------------------------
+ * BasicEntityVtable (0x18 = 24 bytes)
+ *
+ * Callback table for BasicEntity objects (sprite contexts, UI elements).
+ * Same head layout as EntityCallbackTableBase but with only render +
+ * cleanup slots. The two leading words are never accessed; they exist so
+ * the slot offsets line up with the shared dispatch code.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ u32 unused_00;                    /* Always 0 (dispatch alignment) */
+    /* 0x04 */ u32 unused_04;                    /* Always 0 */
+    /* 0x08 */ EntityCallbackSlot render;        /* Render/draw callback */
+    /* 0x10 */ EntityCallbackSlot freeResource;  /* Resource cleanup callback */
+} BasicEntityVtable;  /* Size: 0x18 (24 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * BasicEntityVtableShort (0x10 = 16 bytes)
+ *
+ * Minimal vtable with only a render callback (no cleanup needed).
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ u32 unused_00;
+    /* 0x04 */ u32 unused_04;
+    /* 0x08 */ EntityCallbackSlot render;        /* Render callback only */
+} BasicEntityVtableShort;  /* Size: 0x10 (16 bytes) */
+
+/* -----------------------------------------------------------------------------
+ * FSMStateSlot (8 bytes)
+ *
+ * A single tagged FSM state: [marker, handler] pair passed to
+ * EntitySetState(entity, &slot.marker, slot.fn) and the other FSM
+ * dispatchers. marker is almost always 0xFFFF0000 ("direct call,
+ * offset 0" - see the marker encoding above). 184 such slots live in
+ * .sdata (e.g. fsmSlot_PlayerStateCallback_2 @ 0x800A5D30); GameState
+ * and Entity both begin with embedded slots of this shape.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x00 */ s32   marker;  /* FSM marker (see encoding above; usually 0xFFFF0000) */
+    /* 0x04 */ void *fn;      /* State handler function pointer */
+} FSMStateSlot;  /* Size: 0x08 */
 
 /* -----------------------------------------------------------------------------
  * MenuCallbackTable (0x58 = 88 bytes)

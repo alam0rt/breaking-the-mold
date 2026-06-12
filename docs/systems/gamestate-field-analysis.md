@@ -96,16 +96,18 @@ z_order comparisons.
 
 **Source:** `InitTileAttributeState` @ 0x80024cf4, `GetTileAttributeAtPosition` @ 0x800241f4
 
-### Level/Layer State (0x74-0x7F)
+### Trigger Zones / Entity Callbacks (0x74-0x7F)
 | Offset | Name | Type | Purpose |
 |--------|------|------|---------|
-| 0x74 | level_context_field_3C | ptr | LevelDataContext+0x3C ptr |
-| 0x78 | tile_header_field_1C | s16 | TileHeader field 0x1C |
+| 0x74 | trigger_zone_data_ptr | ptr | TriggerZone[] array (16-byte AABB+attr records, from LevelDataContext+0x3C) |
+| 0x78 | trigger_zone_count | u16 | Trigger zone count (from TileHeader+0x1C, 0 for bosses) |
 | 0x7A | (padding) | s16 | Alignment padding (4-byte boundary) |
 | 0x7C | entity_callback_table | ptr | Entity type callbacks (121 × 8 bytes) |
 | 0x80 | entity_type_count | int | 0x79 = 121 entity types |
 
-**Source:** `InitLayersAndTileState` @ 0x80024778
+**Source:** `InitLayersAndTileState` @ 0x80024778 (writes), `CheckTriggerZoneCollision`
+@ 0x800245BC (reads +0x74 as zone array bounded by +0x78). See
+`include/Game/trigger_zone.h` for the zone record layout.
 
 ### LevelDataContext (0x84-0x103)
 128-byte embedded structure containing level asset pointers.
