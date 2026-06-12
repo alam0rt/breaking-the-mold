@@ -70,13 +70,11 @@ segments:
   - [0x800, asm, Game/INIT]
   - [0xB1C, c, system/early_stub]
   - [0xB24, asm, Game/INIT_TABLES]
-  - [0xE2C, rodata, Game/OBJECT]     # OBJECT rodata: switch tables/entity callback tables (0x80010624)
-    # NOTE: splat suggests internal splits at 0x2044 and 0x2940 because
-    # some jump tables are interleaved with shared callback tables. Keep
-    # these broad owner-paired ranges until the corresponding text files are
-    # split further; duplicate rodata owner names overwrite generated files.
-  - [0x1E28, rodata, Game/PLAYER]    # PLAYER rodata: callback tables/switch tables (0x80011628)
-  - [0x2554, rodata, Game/GAMELOOP]  # GAMELOOP rodata: shared vehicle callback tables + switch tables (0x80011D54)
+  - [0xE2C, rodata, Game/OBJECT]           # OBJECT rodata: switch/entity callback tables (0x80010624)
+  - [0x1E28, rodata, Game/PLAYER_EARLY]    # PLAYER early rodata (0x80011628)
+  - [0x2044, rodata, Game/PLAYER]          # PLAYER aligned rodata split (0x80011844)
+  - [0x2554, rodata, Game/GAMELOOP_EARLY]  # GAMELOOP early rodata (0x80011D54)
+  - [0x2940, rodata, Game/GAMELOOP]        # GAMELOOP aligned rodata split (0x80012140)
 
     # PSY-Q library rodata (jump tables, strings)
   - [0x2F58, rodata, assets/blb_memory] # BLB entity callback table (0x80012758)
@@ -107,12 +105,14 @@ segments:
 
       # --- PLAYER: Player character system (0x80058168 - 0x80071047) ---
       # PlayerTickCallback, state machine, physics, input handling
-  - [0x48968, asm, Game/PLAYER]
+  - [0x48968, asm, Game/PLAYER_EARLY]
+  - [0x4AE30, asm, Game/PLAYER]
   - [0x617D8, c, entity/destructor_spu_at10c]
 
       # --- GAMELOOP: Main game flow, menus, level loading (0x80071048 - 0x80082FFF) ---
       # Tile collision, FINN vehicle, menu system, BLB loading, main()
-  - [0x61848, asm, Game/GAMELOOP]
+  - [0x61848, asm, Game/GAMELOOP_EARLY]
+  - [0x6D9D0, asm, Game/GAMELOOP]
   - [0x73690, c, world/static_game_state]
   - [0x736E0, c, system/empty_callbacks]
   - [0x736F0, c, assets/blb_memory]

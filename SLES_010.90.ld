@@ -27,7 +27,9 @@ SECTIONS
         build/asm/Game/INIT_TABLES.o(.text);
         main_RODATA_START = .;
         build/asm/data/Game/OBJECT.rodata.o(.rodata);
+        build/asm/data/Game/PLAYER_EARLY.rodata.o(.rodata);
         build/asm/data/Game/PLAYER.rodata.o(.rodata);
+        build/asm/data/Game/GAMELOOP_EARLY.rodata.o(.rodata);
         build/asm/data/Game/GAMELOOP.rodata.o(.rodata);
         build/asm/data/assets/blb_memory.rodata.o(.rodata);
         build/asm/data/LIBCD.rodata.o(.rodata);
@@ -51,7 +53,9 @@ SECTIONS
         build/src/system/early_stub.o(.sdata);
         build/asm/Game/INIT_TABLES.o(.sdata);
         build/asm/Game/OBJECT.o(.sdata);
+        build/asm/Game/PLAYER_EARLY.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
+        build/asm/Game/GAMELOOP_EARLY.o(.sdata);
         build/asm/Game/GAMELOOP.o(.sdata);
         build/src/assets/blb_memory.o(.sdata);
         build/asm/LIBCD.o(.sdata);
@@ -75,7 +79,9 @@ SECTIONS
         build/src/system/early_stub.o(.sbss);
         build/asm/Game/INIT_TABLES.o(.sbss);
         build/asm/Game/OBJECT.o(.sbss);
+        build/asm/Game/PLAYER_EARLY.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
+        build/asm/Game/GAMELOOP_EARLY.o(.sbss);
         build/asm/Game/GAMELOOP.o(.sbss);
         build/src/assets/blb_memory.o(.sbss);
         build/asm/LIBCD.o(.sbss);
@@ -99,7 +105,9 @@ SECTIONS
         build/src/system/early_stub.o(.bss);
         build/asm/Game/INIT_TABLES.o(.bss);
         build/asm/Game/OBJECT.o(.bss);
+        build/asm/Game/PLAYER_EARLY.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
+        build/asm/Game/GAMELOOP_EARLY.o(.bss);
         build/asm/Game/GAMELOOP.o(.bss);
         build/src/assets/blb_memory.o(.bss);
         build/asm/LIBCD.o(.bss);
@@ -125,8 +133,10 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.text);
         build/asm/Game/ENTITY.o(.text);
         build/asm/Game/OBJECT.o(.text);
+        build/asm/Game/PLAYER_EARLY.o(.text);
         build/asm/Game/PLAYER.o(.text);
         build/src/entity/destructor_spu_at10c.o(.text);
+        build/asm/Game/GAMELOOP_EARLY.o(.text);
         build/asm/Game/GAMELOOP.o(.text);
         build/src/world/static_game_state.o(.text);
         build/src/system/empty_callbacks.o(.text);
@@ -145,7 +155,9 @@ SECTIONS
         build/src/system/early_stub.o(.data);
         build/asm/Game/INIT_TABLES.o(.data);
         build/asm/Game/OBJECT.o(.data);
+        build/asm/Game/PLAYER_EARLY.o(.data);
         build/asm/Game/PLAYER.o(.data);
+        build/asm/Game/GAMELOOP_EARLY.o(.data);
         build/asm/Game/GAMELOOP.o(.data);
         build/src/assets/blb_memory.o(.data);
         build/asm/LIBCD.o(.data);
