@@ -1,6 +1,6 @@
 # C Migration Guide for Skullmonkeys (SLES-01090)
 
-Based on the [splat General-Workflow](https://github.com/ethteck/splat/blob/main/docs/General-Workflow.md) and project-specific configuration.
+Based on the [splat General Workflow](https://github.com/ethteck/splat/wiki/General-Workflow) and project-specific configuration.
 
 ## Prerequisites
 
@@ -8,17 +8,28 @@ Before migrating to C:
 - ✅ Build matches original binary (SHA1 verified)
 - ✅ `ld_legacy_generation: true` set (required for interleaved text/rodata)
 - ✅ Symbol addresses exported from Ghidra
-- ⚠️ `migrate_rodata_to_functions: false` (keep disabled until rodata is paired)
+- ⚠️ `migrate_rodata_to_functions: false` in `SLES_010.90.yaml` (keep disabled until rodata is paired)
 
 ## Overview
 
 The migration workflow is:
 1. **Pair rodata with text segments** (optional but recommended)
-2. **Change `asm` to `c`** in splat.yaml
+2. **Change `asm` to `c`** in `SLES_010.90.yaml`
 3. **Create C file** with `INCLUDE_ASM` macros
 4. **Decompile functions** one by one
 5. **Migrate data/rodata** to C when fully decompiled
 6. **Update segment types** from `data`/`rodata` to `.data`/`.rodata`
+
+## Splat Wiki Cross-Check (2026-06-13)
+
+Relevant points from the upstream workflow for this repo:
+
+- Pair `rodata` with its owning text segment before converting large `asm` segments to `c`. Splat's "Rodata segment may belong to text segment" messages are useful hints, but they are heuristic; verify questionable cases against disassembly.
+- If one text segment appears to own multiple `rodata` segments, either the `rodata` was split too aggressively or the text segment is missing a split. If multiple text segments appear to own one `rodata` segment, split the text or verify that splat produced a false positive.
+- Keep `data`/`rodata` as extracted assembly while functions are still included with `INCLUDE_ASM`; switch to `.data`/`.rodata` only after the data has actually been migrated into the compiled C object. With `auto_link_sections` enabled, fully migrated data subsegments can sometimes be omitted and splat will link the compiled sections.
+- `bss` migration is trickier because it has no ROM bytes to compare directly; migrate only when symbol order, sizes, and section ownership are understood.
+- The wiki's macro guidance matches this repo's split between `include/labels.inc`, `include/macro.inc`, and `include/include_asm.h`. If asm-differ ever struggles with jump-table `jlabel`s, the wiki suggests marking `jlabel` as a function, but that should only be tried as a controlled clean-build experiment.
+- The page is workflow-focused; it does not explain compiler scheduling/register-allocation quirks like the CLUT slot-install `la` hoist in `docs/compiler-quirks.md`.
 
 ---
 
@@ -45,7 +56,7 @@ python3 scripts/decompile.py GetAssetCount --full
 
 ---
 
-## Step 2: Update splat.yaml
+## Step 2: Update `SLES_010.90.yaml`
 
 ### 2.1 Create a Named Segment
 
@@ -93,41 +104,18 @@ subsegments:
 
 ```bash
 make clean
-python3 -m splat split config/splat.pal.yaml
+python3 -m splat split SLES_010.90.yaml
 ```
 
 This generates:
 - `src/game.c` - C file with `INCLUDE_ASM` macros for each function
-- `asm/pal/nonmatchings/game/*.s` - Individual function assembly files
+- `asm/nonmatchings/game/*.s` - Individual function assembly files
 
 ---
 
-## Step 4: Create Include Header
+## Step 4: Include Header
 
-Create `include/include_asm.h` with the `INCLUDE_ASM` macro:
-
-```c
-#ifndef INCLUDE_ASM_H
-#define INCLUDE_ASM_H
-
-#ifndef INCLUDE_ASM
-#define INCLUDE_ASM(path, func) \
-    __asm__( \
-        ".include \"macro.inc\"\n" \
-        ".include \"" path "/" #func ".s\"\n" \
-    )
-#endif
-
-/* For rodata that needs explicit inclusion */
-#ifndef INCLUDE_RODATA
-#define INCLUDE_RODATA(path, sym) \
-    __asm__( \
-        ".include \"" path "/" #sym ".s\"\n" \
-    )
-#endif
-
-#endif /* INCLUDE_ASM_H */
-```
+This repo already has `include/include_asm.h` with `INCLUDE_ASM` and `INCLUDE_RODATA` macros. Do not replace it unless intentionally testing a toolchain workaround. The current macro emits `.section .text`, sets `noat`/`noreorder`, includes `FOLDER/NAME.s`, then restores assembler settings. It includes `include/labels.inc` by default, or `include/macro.inc` when `INCLUDE_ASM_USE_MACRO_INC` is enabled.
 
 ---
 
@@ -138,8 +126,8 @@ Splat generates a C file like this:
 ```c
 #include "common.h"
 
-INCLUDE_ASM("asm/pal/nonmatchings/game", func_800131F0);
-INCLUDE_ASM("asm/pal/nonmatchings/game", func_80013240);
+INCLUDE_ASM("asm/nonmatchings/game", func_800131F0);
+INCLUDE_ASM("asm/nonmatchings/game", func_80013240);
 // ... more functions
 ```
 
@@ -157,14 +145,14 @@ python3 scripts/decompile.py func_800131F0 --decompile
 python3 tools/m2c/m2c.py \
     --context ctx.c \
     --target mipsel-gcc-c \
-    asm/pal/nonmatchings/game/func_800131F0.s
+    asm/nonmatchings/game/func_800131F0.s
 ```
 
 ### 6.2 Replace INCLUDE_ASM with Decompiled Code
 
 **Before:**
 ```c
-INCLUDE_ASM("asm/pal/nonmatchings/game", func_800131F0);
+INCLUDE_ASM("asm/nonmatchings/game", func_800131F0);
 ```
 
 **After:**
@@ -203,7 +191,7 @@ const char* g_SomeString = "Hello";
 
 ### 7.2 Update Segment Type
 
-**In splat.yaml:**
+**In `SLES_010.90.yaml`:**
 ```yaml
 # Before: extract as assembly
 - [0x42200, data, game]
@@ -278,7 +266,7 @@ Based on analysis, these are good starting points:
 make clean && make && make check
 
 # Just splat
-python3 -m splat split config/splat.pal.yaml
+python3 -m splat split SLES_010.90.yaml
 
 # Decompile helper
 python3 scripts/decompile.py <function_name> --full
