@@ -6,6 +6,9 @@
 /* =============================================================================
  * Sprite system structures for Skullmonkeys (PAL SLES-01090)
  *
+ * Clean-room RE note: names are inferred working labels. The BLB pattern and
+ * Ghidra decompiler traces should be rechecked when changing layout semantics.
+ *
  * Sprite data is loaded from Asset 600 in the BLB container.
  * The container begins with a SpriteTOCEntry table, followed by
  * per-sprite SpriteHeader + SpriteFrameEntry arrays + RLE pixel data.

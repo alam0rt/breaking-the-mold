@@ -6,6 +6,8 @@
 /* =============================================================================
  * PlayerState (30 bytes)
  *
+ * Clean-room RE note: names are inferred from usage, not original symbols.
+ *
  * Persistent player inventory, lives, and collectible counts.
  * Pointed to by g_pPlayerState (0x800A5754) and restored on checkpoint
  * respawn.

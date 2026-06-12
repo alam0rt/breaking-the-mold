@@ -11,6 +11,11 @@
 # https://github.com/ethteck/splat
 splat64>=0.34.1,<1.0.0
 
+# splat runtime deps it imports but does not declare
+n64img
+pygfxd
+crunch64
+
 # spimdisasm - MIPS disassembler used by splat
 spimdisasm>=1.35.0,<2.0.0
 

@@ -8,6 +8,9 @@
 
 /* =============================================================================
  * GameState
+ *
+ * Clean-room RE note: field names are inferred from Ghidra decompilation/xrefs,
+ * not original source symbols. Recheck evidence before relying on a name.
  * 
  * Central game state structure at 0x8009DC40 (PAL).
  * Initialized by InitGameState @ 0x8007CD34.

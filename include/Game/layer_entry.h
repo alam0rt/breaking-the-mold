@@ -5,6 +5,9 @@
 
 /* =============================================================================
  * LayerEntry - Asset 201 (0xC9)
+ *
+ * Clean-room RE note: field names are inferred from Ghidra traces and BLB data,
+ * not original source symbols.
  * 
  * Layer metadata from Asset 201. Each level can have multiple layers,
  * each 92 bytes (0x5C). Layers are rendered back-to-front with z-ordering

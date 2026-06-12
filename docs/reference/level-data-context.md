@@ -38,7 +38,7 @@ struct LevelDataContext {
     /* 0x5C */ void*    blbHeaderBuffer;      // → 0x800AE3E0
     /* 0x60 */ u8       slidingWindowIndex;   // Playback index
     /* 0x61 */ u8[3]    padding61;
-    /* 0x64 */ void*    loaderCallback;       // → 0x80020848
+   /* 0x64 */ void*    sector_read_callback; // → BLB_ReadSectorsWrapper @ 0x80020848
     /* 0x68 */ void*    primaryDataBuffer;    // Primary TOC buffer
     /* 0x6C */ void*    secondaryDataBuffer;  // Secondary buffer
     
@@ -81,7 +81,7 @@ For code using `ctx[N]` notation:
 | [22] | 0x58 | - | SPU audio size |
 | [23] | 0x5C | - | Header buffer |
 | [24] | 0x60 | - | Playback index |
-| [25] | 0x64 | - | Loader callback |
+| [25] | 0x64 | - | Sector read callback |
 | [26] | 0x68 | - | Primary buffer |
 | [27] | 0x6C | - | Secondary buffer |
 | [28] | 0x70 | 600 | Primary geometry |
@@ -93,7 +93,7 @@ For code using `ctx[N]` notation:
 
 `InitLevelDataContext` @ 0x8007A1BC:
 - Sets `blbHeaderBuffer` [0x17]
-- Sets `loaderCallback` [0x19]
+- Sets `sector_read_callback` [0x19]
 - Sets `slidingWindowIndex` to 0xFF [0x18]
 
 ## Population Flow
@@ -113,7 +113,7 @@ For code using `ctx[N]` notation:
 ctx base:      0x8009DCC4
 header:        0x800AE3E0
 headerOffset:  0x0E (14)
-loadCallback:  0x80020848
+sector_read_callback: 0x80020848
 tocPtr:        0x800AF3E0 (3 entries)
 asset258:      0x800AF408 (524,212 bytes geometry)
 asset259:      0x8012F3BC (126,256 bytes audio)

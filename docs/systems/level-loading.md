@@ -79,7 +79,7 @@ void LoadAssetContainer(int *pLevelDataCtx, int subBlockIndex, char containerTyp
     }
     
     // Load via callback and parse TOC
-    loaderCallback(sectorOffset, sectorCount, buffer);
+    sector_read_callback(sectorOffset, sectorCount, buffer);
     
     // Populate ctx pointers based on asset type IDs
     for (entry in TOC) {
@@ -142,7 +142,7 @@ levelEntry = header + (levelIndex * 0x70);
 |--------|-------|-------------|
 | +0x5C | blbHeaderBuffer | Header pointer (0x800AE3E0) |
 | +0x60 | slidingWindowIndex | Current state index (init 0xFF) |
-| +0x64 | loaderCallback | CD read function (0x80020848) |
+| +0x64 | sector_read_callback | BLB sector read function (`BLB_ReadSectorsWrapper @ 0x80020848`) |
 | +0x68 | primaryDataBuffer | Primary TOC buffer |
 | +0x6C | secondaryDataBuffer | Secondary TOC buffer |
 | +0x70 | primaryLevel600 | Primary Asset 600 pointer |
@@ -164,13 +164,13 @@ sectorOffset = *(u16 *)(addr + 0x00);
 sectorCount = *(u16 *)(addr + 0x02);  // Actually at 0xECE
 ```
 
-## Loader Callback Chain
+## Sector Read Callback Chain
 
 ```
 LoadAssetContainer / LevelDataParser
-    └─► loaderCallback(sectorOffset, sectorCount, buffer)
+        └─► sector_read_callback(sectorOffset, sectorCount, buffer)
             │ (function pointer at ctx+0x64)
-            └─► 0x80020848 (thin wrapper)
+            └─► BLB_ReadSectorsWrapper @ 0x80020848 (thin wrapper)
                     └─► CdBLB_ReadSectors(g_GameBLBSector + offset, count, buffer)
                             └─► PSY-Q: CdIntToPos → CdControl → CdRead
 ```

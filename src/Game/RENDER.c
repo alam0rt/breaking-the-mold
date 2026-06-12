@@ -74,8 +74,11 @@ INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80015134);
 
 INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80015424);
 
-void func_80015434(void) {
-}
+/* Empty function. NOTE: cannot live here as decompiled C - gcc 2.7.2 at -O2
+ * defers tiny inline-candidate functions to end-of-file, which breaks the
+ * address-order layout this file must preserve (verified: the 8-byte body
+ * relocated to 0x8001A0B8 and shifted everything after 0x80015434). */
+INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80015434);
 
 INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_8001543C);
 
@@ -167,8 +170,8 @@ INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80018CD8);
 
 INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80018D00);
 
-void func_80018D4C(void) {
-}
+/* Empty function. See func_80015434 note re: -O2 deferred output. */
+INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80018D4C);
 
 INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80018D54);
 

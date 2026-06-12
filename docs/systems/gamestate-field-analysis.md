@@ -19,25 +19,29 @@ was traced through Ghidra decompilation to determine its purpose.
 
 **Source:** `InitGameState`, `SetupAndStartLevel`
 
-### Layer Render System (0x08-0x1B)
+### Event FSM / Reserved / Post-Render Context (0x08-0x1B)
 
-**UPDATED 2026-01-19**: Layer list heads fully documented from Ghidra struct.
+**UPDATED 2026-06-12**: The old layer-list-head interpretation for `0x08-0x18`
+was stale. `GameState+0x08/+0x0C` mirrors the entity event FSM slot,
+`+0x10/+0x14` currently have no confirmed readers, and `+0x18` is a
+post-render callback context. Layer contexts are inserted into the shared
+entity tick/render lists at `+0x1C/+0x20`, not separate list heads here.
 
 | Offset | Name | Type | Purpose |
 |--------|------|------|---------|
-| 0x08 | layer_list_static | ptr | Static layer list head (AddLayerToRenderList_Static) |
-| 0x0C | layer_list_scrolling | ptr | Scrolling layer list head (AddLayerToRenderList_Scrolling) |
-| 0x10 | layer_list_parallax | ptr | Parallax layer list head (AddLayerToRenderList_Parallax) |
-| 0x14 | layer_list_standard | ptr | Standard layer list head (AddLayerToRenderList_Standard) |
-| 0x18 | layer_render_context_ptr | ptr | Layer render context with callback at +0x1C |
+| 0x08 | event_marker | s32 | GameState event FSM marker; same tagged-union encoding as `Entity` |
+| 0x0C | event_callback | ptr | GameState event handler callback |
+| 0x10 | reserved10 | ptr | Reserved/no confirmed decompiler reader; not a layer-list head |
+| 0x14 | reserved14 | ptr | Reserved/no confirmed decompiler reader; not a layer-list head |
+| 0x18 | postRenderCallbackContext | ptr | Context whose callback at `ctx+0x1C` is invoked after rendering |
 
-Each layer type has its own linked list for z-sorting with entities. During rendering,
-the game iterates these lists interleaved with the entity render list (0x20) based on
-z_order comparisons.
+**Source:** `TriggerCollectible100CTickCallback` dispatches through `+0x08/+0x0C`.
+`main @ 0x800828B0` calls through `postRenderCallbackContext+0x1C` after
+`RenderEntities` and `DrawSync(0)`.
 
-**Source:** `ClearTickAndRenderLists` @ 0x80020C54, `main()` game loop
-
-**Verified in Ghidra**: 2026-01-19 - all 4 layer list fields confirmed
+**Disproved:** The January layer-list-head names were based on stale Ghidra
+datatypes. `AddLayerToRenderList_Medium @ 0x80021778` and related layer setup
+insert layer render contexts into the shared entity lists at `+0x1C/+0x20`.
 
 ### Entity Lists (0x1C-0x33)
 | Offset | Name | Type | Purpose |

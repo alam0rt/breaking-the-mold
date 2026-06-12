@@ -68,7 +68,7 @@ typedef struct {
     /* 0x61 */ u8   pad61;
     /* 0x62 */ u8   pad62;
     /* 0x63 */ u8   pad63;
-    /* 0x64 */ u32  loader_callback;        /* Sector loader callback function */
+    /* 0x64 */ u32  sector_read_callback;   /* BLB sector read callback: (sectorOffset, sectorCount, dst) */
 
     /* Loaded Data Pointers (indices 26-31, set by LevelDataParser) */
     /* 0x68 */ u32  primary_data;           /* Primary asset container base */

@@ -6,6 +6,10 @@
 
 /* =============================================================================
  * ENTITY HIERARCHY
+ *
+ * Clean-room RE note: all struct/field names are inferred working labels,
+ * not original source names. Keep names conservative when fields are overlaid
+ * or only partially traced.
  * 
  * The game uses THREE different entity struct layouts, each with its own
  * vtable location and field organization:

@@ -68,7 +68,7 @@ When defining structs, consider whether a field can hold both pointers AND integ
 |--------|--------|-------|---------------|------------|--------|
 | GameState | 4 | mode_callback_ptr | pointer | int | Can be callback table offset |
 | GameState | 8 | unknown08 | pointer | int | Unknown dual-purpose field |
-| LevelDataContext | 100 | loaderCallback | pointer | int | May not always be valid |
+| LevelDataContext | 100 | sector_read_callback | pointer | int | Stored callback pointer; use care when the context is passed as raw words |
 
 ### Related Functions
 - `main()` at `0x800828b0` - Uses GameState callback dispatch

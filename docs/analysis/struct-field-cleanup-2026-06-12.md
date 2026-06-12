@@ -26,13 +26,14 @@ Clean-room Ghidra MCP pass over placeholder/bad struct field names in `SLES_010.
 | `LayerEntry` | `+0x18/+0x1A` | `auto_scroll_speed_x/auto_scroll_speed_y` | Copied into layer contexts and used by autonomous wrapped-scroll update functions. |
 | `LayerEntry` | `+0x1C/+0x1D` | `reverse_scroll_x/reverse_scroll_y` | Direction flags for autonomous wrapped scroll. |
 | `LayerEntry` | `+0x22/+0x24` | `auto_scroll_enable_y/auto_scroll_enable_x` | Enables autonomous scroll axes. |
+| `LevelDataContext` | `+0x64` | `sector_read_callback` | `InitLevelDataContext @ 0x8007A1BC` stores it; `LoadAssetContainer @ 0x8007B074` calls it as `(sectorOffset, sectorCount, dst)`. Normally `BLB_ReadSectorsWrapper @ 0x80020848`. |
 
 ## Remaining ambiguous fields
 
 - `SoarPlayerEntity+0x118..+0x11D` are still flight-mode flags. Current trace confirms initialization, `flag11B` gating one input-driven state transition, and `flag11A/flag11D` clearing during flight begin, but not enough to assign stable semantic names.
 - `SpriteContext+0x12` still has no confirmed reader in the decompiler-wide placeholder search.
 - `SpriteTypeCallbackEntry.callback_0/callback_1/callback_3` still need call-site-specific names; broad decompile search mostly hit comments/table references, not enough evidence for precise roles.
-- `LevelDataContext.loader_callback` still needs a focused load-path trace before renaming.
+- `LevelDataContext+0x64` is now resolved as `sector_read_callback`; no longer considered ambiguous.
 
 ## Placeholder audit after cleanup
 
@@ -43,6 +44,8 @@ Ghidra still intentionally contains generic names where evidence is weak:
 - `SpriteContext+0x12` remains `unknown_12` because no runtime reader was found in the decompiler-wide placeholder search.
 - `SpriteTypeCallbackEntry.callback_0`, `callback_1`, and `callback_3` remain generic until slot-specific call sites prove lifecycle roles.
 - Ghidra generated/export snapshot docs may preserve old names for historical comparison; current headers and Ghidra datatypes should be preferred.
+
+The unresolved Ghidra fields above now have comments explaining why they remain generic, so future passes do not accidentally promote weak guesses into authoritative names.
 
 ## Documentation/source synchronization
 

@@ -1,6 +1,6 @@
 # Knowledge Gaps & Missing Understanding
 
-**Last Updated**: January 20, 2026  
+**Last Updated**: June 12, 2026  
 **Purpose**: Track what we still don't understand about Skullmonkeys
 
 This document consolidates all known gaps in our understanding of the game's internals.
@@ -23,13 +23,15 @@ Previous docs incorrectly stated "BLB 25 = Loud Mouth enemy". In reality:
 
 ## Critical Gaps (Block Full Understanding)
 
-### 1. GameState Structure Corruption - ✅ RESOLVED (2026-01-20)
+### 1. GameState Structure Corruption - ✅ RESOLVED / CORRECTED (2026-06-12)
 **Location**: Ghidra struct `GameState` @ 0x8009DC40  
-**Resolution**: Rebuilt GameState struct with correct 416-byte size via `ghidra_fix_gamestate.py`
+**Resolution**: Rebuilt GameState struct with correct 416-byte size via `ghidra_fix_gamestate.py`; later Ghidra MCP cleanup corrected stale field names at `0x08-0x18`.
 
-**Verified Fields (from comprehensive decompilation analysis 2026-01-20):**
+**Verified/corrected fields:**
 - 0x00-0x07: mode_base_offset/mode_callback_ptr (mode dispatch system)
-- 0x08-0x18: layer list heads (static, scrolling, parallax, standard)
+- 0x08-0x0F: GameState event FSM slot (`event_marker`, `event_callback`)
+- 0x10-0x14: reserved/no confirmed readers; **not** layer-list heads
+- 0x18: `postRenderCallbackContext`, called through `ctx+0x1C` after rendering
 - 0x1C: tick_list_head
 - 0x20: render_list_head  
 - 0x44/0x46: camera_x/y
@@ -41,11 +43,14 @@ Previous docs incorrectly stated "BLB 25 = Loud Mouth enemy". In reality:
 - 0x150-0x160: pause/menu system
 - 0x17C-0x18C: cheat_input_buffer
 
-### 2. Unknown GameState Fields - ✅ FULLY RESOLVED (2026-01-20)
+### 2. Unknown GameState Fields - ✅ MOSTLY RESOLVED (2026-06-12)
 **Location**: `docs/systems/gamestate-field-analysis.md`
 
 | Offset Range | Status | Resolution |
 |--------------|--------|------------|
+| 0x08-0x0F | ✅ RESOLVED | GameState event FSM slot |
+| 0x10-0x14 | ⚠️ RESERVED | No confirmed readers; stale layer-list-head names disproved |
+| 0x18 | ✅ RESOLVED | `postRenderCallbackContext` |
 | ~~0x3C-0x43~~ | ✅ RESOLVED | `previous_spawn_list` (0x3C) + `blb_header_ptr` (0x40) |
 | ~~0x7A~~ | ✅ RESOLVED | Alignment padding (4-byte boundary) |
 | ~~0x106~~ | ✅ RESOLVED | Alignment padding after tile_render_state_count |

@@ -34,7 +34,7 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8007CFC0 | RespawnAfterDeath | Respawn player without full reload |
 | 0x8007DD0C | DisplayTransitionSprite | Show transition sprite (0x8ab92024) |
 | 0x80038BA0 | CdBLB_ReadSectors | Low-level CD read |
-| 0x80020848 | LoaderCallback | CD read wrapper |
+| 0x80020848 | BLB_ReadSectorsWrapper | Sector-read callback wrapper used by LevelDataContext+0x64 |
 
 ## Asset Accessors
 
