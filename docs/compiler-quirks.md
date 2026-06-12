@@ -4,6 +4,15 @@ Findings from the first real matching session (2026-06-12), decompiling the
 tail of the `Game/RENDER` module (`func_80019F2C` / `func_80019F88`). These
 constraints shape how every future function must be decompiled.
 
+Update 2026-06-13 after refreshing submodules and reading the upstream
+`maspsx` README: the README directly explains the `INCLUDE_ASM` reordering
+failure as a non-zero `-G` + `__asm__` ordering issue and documents an
+optional `__maspsx_include_asm_hack*` / `# maspsx-keep` workaround. It also
+documents ASPSX-version differences, `$gp` support, and div/rem expansion.
+It does **not** explain the remaining cc1 scheduling/register-allocation diffs
+such as the CLUT slot-install `la` hoist in Quirk 5; those still look like
+compiler-source-shape/permuter problems rather than maspsx post-processing.
+
 ## Which compiler?
 
 The repo's standard pipeline is `cpp → tools/gcc-2.7.2-psx/cc1 → maspsx
@@ -62,6 +71,15 @@ functions in source order*. Therefore:
 Verified empirically: a test file with four functions of increasing size
 (empty → loop) interleaved with asm blocks put *all* `.ent` blocks after
 the last asm block, on both 2.7.2 and cc1-psx-26.
+
+Upstream `maspsx` now documents this under its `INCLUDE_ASM` reordering
+workaround: with non-zero `-G`, some GCC versions reorder function bodies
+after data definitions and after top-level `__asm__` blocks. Their workaround
+wraps each include in a function whose name starts with
+`__maspsx_include_asm_hack` and marks every asm line with `# maspsx-keep` so
+`maspsx` can preserve the include in place. The current repo still uses the
+classic top-level-asm `INCLUDE_ASM`, so the tail-only migration rule above is
+the active safe rule until that workaround is adopted and clean-verified.
 
 ## Quirk 2: GP-relative (-G8) vs absolute addressing of small globals
 
@@ -147,8 +165,10 @@ one register differ.
 
 ## Tooling gotchas (decomp-permuter)
 
-- `pycparser` must be **2.21** (`pip install pycparser==2.21`); newer
-  versions removed `pycparser.plyparser` which the vendored permuter imports.
+- Older `decomp-permuter` revisions needed `pycparser==2.21`; after the
+  2026-06-13 submodule refresh (`efc5c5e`) the upstream tool uses m2c's
+  vendored parser / pycparser-3 compatibility fixes, so do not re-add that
+  pin unless bisecting an older revision.
 - The permuter expects `mips-linux-gnu-as` / `mips-linux-gnu-objdump` on
   PATH; shim them to `mipsel-unknown-linux-gnu-*`.
 - The generated `nonmatchings/<func>/compile.sh` only runs cc1 (emits .s);
