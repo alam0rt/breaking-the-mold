@@ -1,0 +1,4 @@
+compiler_type = "gcc"
+compiler_command = "tools/permuter_cc1_maspsx.sh -I include -I psyq -D_LANGUAGE_C"
+assembler_command = "tools/permuter_as.sh"
+objdump_command = "mipsel-unknown-linux-gnu-objdump -dr"
