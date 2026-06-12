@@ -19,8 +19,8 @@
 typedef struct {
     /* 0x00 */ u8  initialized;      /* Non-zero once struct has been set up */
     /* 0x01 */ u8  active;           /* Player active flag */
-    /* 0x02 */ u16 unknown02;        /* Unknown — observed non-zero in some modes */
-    /* 0x04 */ u8  unknown04;        /* Unknown */
+    /* 0x02 */ u16 results_total_tally; /* Cumulative value displayed on results screens */
+    /* 0x04 */ u8  world_index_tally;   /* World-index/progression tally displayed on results screens */
     /* 0x05 */ u8  total_1ups;       /* Total 1-UPs collected */
     /* 0x06 */ u8  clayball_flag_0;  /* Clayball collection state, slot 0 */
     /* 0x07 */ u8  clayball_flag_1;

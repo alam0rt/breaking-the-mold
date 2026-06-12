@@ -2,7 +2,7 @@
 
 **Project**: Evil Engine - Skullmonkeys Reverse Engineering  
 **Version**: 2.1  
-**Last Updated**: January 19, 2026
+**Last Updated**: June 12, 2026
 
 This index provides quick navigation to all documentation organized by category.
 
@@ -189,6 +189,7 @@ This index provides quick navigation to all documentation organized by category.
 | Document | Description | Status |
 |----------|-------------|--------|
 | [unconfirmed-findings.md](analysis/unconfirmed-findings.md) | Observations awaiting verification | 🔬 Research |
+| [struct-field-cleanup-2026-06-12.md](analysis/struct-field-cleanup-2026-06-12.md) | Ghidra-backed cleanup of placeholder struct field names | 🔬 Research |
 | [function-batches-to-analyze.md](analysis/function-batches-to-analyze.md) | Remaining function batches | 📋 Planned |
 | [password-extraction-guide.md](analysis/password-extraction-guide.md) | Password table extraction method | 📋 Planned |
 

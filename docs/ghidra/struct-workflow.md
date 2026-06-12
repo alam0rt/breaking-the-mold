@@ -68,8 +68,8 @@ python3 scripts/decompile.py --export-struct PlayerState > include/player.h
 typedef struct {
     /* 0x00 */ u8       lives;  // Number of lives (initialized to 1)
     /* 0x01 */ u8       continues;  // Number of continues (initialized to 1)
-    /* 0x02 */ u16      unknown02;  // Unknown 16-bit value (cleared)
-    /* 0x10 */ u8       unknown10;  // Unknown flag (set to 1)
+    /* 0x02 */ u16      results_total_tally;  // Cumulative results-screen value
+    /* 0x04 */ u8       world_index_tally;    // World/progression tally
     /* 0x11 */ u8       health;  // Health counter (initialized to 5)
 } PlayerState;  // Size: 0x12 (18 bytes)
 ```
@@ -89,8 +89,8 @@ Created struct "PlayerState" in category "/Skullmonkeys"
 Added fields:
   0x00: u8 lives         (comment: "Number of lives (initialized to 1)")
   0x01: u8 continues     (comment: "Number of continues (initialized to 1)")
-  0x02: u16 unknown02    (comment: "Unknown 16-bit value (cleared)")
-  0x10: u8 unknown10     (comment: "Unknown flag (set to 1)")
+  0x02: u16 results_total_tally  (comment: "Cumulative results-screen value")
+  0x04: u8 world_index_tally     (comment: "World/progression tally")
   0x11: u8 health        (comment: "Health counter (initialized to 5)")
 ```
 

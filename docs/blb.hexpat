@@ -655,13 +655,13 @@ struct LayerEntry {
     u32 scroll_x [[name("Scroll X"), format("format_parallax"), comment("X parallax (1.0 = camera, 0.5 = parallax)")]];
     u32 scroll_y [[name("Scroll Y"), format("format_parallax"), comment("Y parallax factor")]];
     
-    // Stored at render context +0x30/+0x32 (0x18-0x1B)
-    u16 render_field_30 [[name("Render 0x30"), comment("Stored at renderCtx+0x30")]];
-    u16 render_field_32 [[name("Render 0x32"), comment("Stored at renderCtx+0x32")]];
-    
-    // Stored at render context +0x3A/+0x3B (0x1C-0x1D)
-    u8 render_field_3a [[name("Render 0x3A"), comment("Stored at renderCtx+0x3A")]];
-    u8 render_field_3b [[name("Render 0x3B"), comment("Stored at renderCtx+0x3B")]];
+    // Autonomous wrapped scroll parameters (0x18-0x1D)
+    // VERIFIED via Ghidra MCP trace 2026-06-12: copied into layer render context
+    // and consumed by UpdateParallaxScrollWithWrap_* functions.
+    u16 auto_scroll_speed_x [[name("Auto X Speed"), comment("Autonomous wrapped X scroll speed")]];
+    u16 auto_scroll_speed_y [[name("Auto Y Speed"), comment("Autonomous wrapped Y scroll speed")]];
+    u8 reverse_scroll_x [[name("Reverse X"), comment("Reverse autonomous X scroll direction")]];
+    u8 reverse_scroll_y [[name("Reverse Y"), comment("Reverse autonomous Y scroll direction")]];
     
     // Scroll enable flags (0x1E-0x21) - VERIFIED via Ghidra
     // Set corresponding GameState flags when non-zero
@@ -670,10 +670,9 @@ struct LayerEntry {
     u8 scroll_up_enable [[name("Scroll U"), comment("If !=0, set GameState+0x58 (enable scroll up)")]];
     u8 scroll_down_enable [[name("Scroll D"), comment("If !=0, set GameState+0x5A (enable scroll down)")]];
     
-    // Render mode selection (0x22-0x25) - VERIFIED via Ghidra
-    // Used to select which render function is called
-    u16 render_mode_h [[name("Render Mode H"), comment("If !=0, affects render path (uVar15)")]];
-    u16 render_mode_v [[name("Render Mode V"), comment("If !=0, affects render path (uVar17)")]];
+    // Autonomous scroll enable flags (0x22-0x25) - VERIFIED via Ghidra
+    u16 auto_scroll_enable_y [[name("Auto Y Enable"), comment("Enable autonomous Y scrolling")]];
+    u16 auto_scroll_enable_x [[name("Auto X Enable"), comment("Enable autonomous X scrolling")]];
     
     // Layer type (0x26)
     u8 layer_type [[name("Type"), comment("Layer type (0=normal, 3=skip render)")]];
@@ -767,27 +766,28 @@ fn format_anim_entry(auto e) {
 };
 
 // Frame metadata (36 bytes = 0x24)
-// VERIFIED via Ghidra: DecodeRLESprite (0x80010068), FUN_8001d748, GetFrameMetadata (0x8007bebc)
+// VERIFIED via Ghidra MCP trace 2026-06-12: UpdateSpriteFrameData (0x8001D748),
+// DecodeRLESprite (0x80010068), GetFrameMetadata (0x8007BEBC).
 struct SpriteFrameMetadata {
-    u16 callback_id [[name("Callback"), comment("0=none, triggers FUN_8001c4a4 for SFX/particles")]];
-    u16 reserved_02 [[hidden]];
-    u16 flip_flags [[name("Flip"), comment("0=normal, non-zero=horizontal mirror (verified in DecodeRLESprite)")]];
-    s16 render_x [[name("X")]];
-    s16 render_y [[name("Y")]];
+    u32 callback_id [[name("Callback"), comment("0=none, triggers frame callback/SFX/particles")]];
+    u16 frame_delay [[name("Delay"), comment("Per-frame timing; copied to entity+0xEC and doubled by entity+0xFE")]];
+    s16 origin_x [[name("Origin X")]];
+    s16 origin_y [[name("Origin Y")]];
     u16 render_width [[name("W")]];
     u16 render_height [[name("H")]];
-    u16 frame_delay [[name("Delay"), comment("Per-frame timing (verified: copied to entity+0xE6)")]];
-    u16 reserved_10 [[hidden]];
-    s16 hitbox_x [[name("Hit X"), comment("Hitbox offset (verified in FUN_8001d748)")]];
+    s16 frame_delta_x [[name("Delta X"), comment("Raw signed X motion delta; copied to entity+0xE6")]];
+    s16 frame_delta_y [[name("Delta Y"), comment("Raw signed Y motion delta; copied to entity+0xE8")]];
+    s16 hitbox_x [[name("Hit X"), comment("Hitbox offset (verified in UpdateSpriteFrameData)")]];
     s16 hitbox_y [[name("Hit Y")]];
     u16 hitbox_width [[name("Hit W")]];
     u16 hitbox_height [[name("Hit H")]];
-    u8 pad_1a[6] [[hidden]];
+    u16 reserved_1a [[hidden]];
+    u32 flags [[name("Flags"), comment("Frame behavior flags; bit 0 triggers positioned sound")]];
     type::Hex<u32> rle_offset [[name("RLE Off"), comment("Offset to RLE data")]];
 } [[format("format_frame_meta"), color("FF80CC"), static]];
 
 fn format_frame_meta(auto f) {
-    return std::format("{}x{} @ ({},{}) RLE=0x{:X}", f.render_width, f.render_height, f.render_x, f.render_y, f.rle_offset);
+    return std::format("{}x{} origin=({},{}) delta=({},{}) RLE=0x{:X}", f.render_width, f.render_height, f.origin_x, f.origin_y, f.frame_delta_x, f.frame_delta_y, f.rle_offset);
 };
 
 // Sprite header (12 bytes)

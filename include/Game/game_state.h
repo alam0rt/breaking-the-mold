@@ -42,13 +42,15 @@ typedef struct {
     /* 0x08 */ s32  event_marker;                /* FSM marker (see entity.h encoding) */
     /* 0x0C */ void *event_callback;             /* Event handler (gsBase+lo, eventId, arg, srcEntity) */
 
-    /* UNKNOWN (0x10-0x18). The old layer-list-head claim is DISPROVED:
+    /* Reserved / post-render callback context (0x10-0x18). The old
+     * layer-list-head claim is DISPROVED:
      * AddLayerToRenderList_Medium @ 0x80021778 inserts layers into the
      * shared entity lists at +0x1C (tick) and +0x20 (render), not here.
-     * Re-derive these three fields from their actual readers. */
-    /* 0x10 */ void *unknown10;
-    /* 0x14 */ void *unknown14;
-    /* 0x18 */ void *unknown18;
+     * +0x18 is read by main @ 0x800828B0 after RenderEntities/DrawSync as
+     * a callback context: (**(code **)(ctx + 0x1C))(ctx, 0). */
+    /* 0x10 */ void *reserved10;
+    /* 0x14 */ void *reserved14;
+    /* 0x18 */ void *postRenderCallbackContext;
     
     /* Entity lists (0x1C-0x33) */
     /* 0x1C */ EntityListNode *tick_list_head;   /* Z-sorted entity tick list (iterated by EntityTickLoop) */

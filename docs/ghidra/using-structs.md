@@ -41,13 +41,14 @@ If parsing fails, create structs manually:
 
 2. **Add Fields**
    - Use the field offsets from headers
-   - Example for PlayerState:
+     - Example for PlayerState:
      ```
      Offset  Type    Name
-     0x00    u8      lives
-     0x01    u8      continues
-     0x02    s16     unknown02
-     0x11    u8      health
+         0x00    u8      initialized
+         0x01    u8      active
+         0x02    u16     results_total_tally
+         0x04    u8      world_index_tally
+         0x11    u8      lives
      ...
      ```
 

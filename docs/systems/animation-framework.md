@@ -1,7 +1,7 @@
 # Animation Framework Architecture
 
-**Status**: ✅ Fully verified via Ghidra analysis (2026-01-16)
-**SpriteFrameEntry struct**: Corrected field order - frame_delay at +0x04, flip_flags at +0x0E
+**Status**: ✅ Updated via Ghidra MCP trace (2026-06-12)
+**SpriteFrameEntry struct**: Corrected field order - frame_delay at +0x04, frameDeltaX/Y at +0x0E/+0x10. The previous `flip_flags`/`unknown_10` interpretation was stale.
 
 Skullmonkeys uses a sophisticated **5-layer animation system** with data-driven sequences, double-buffered state changes, frame-accurate timing, and multi-priority callback dispatch.
 
@@ -34,12 +34,13 @@ Layer 5: Callback Dispatch (3-Level Priority)
 | +0x08 | s16 | origin_y | Sprite Y offset (for velocity calc → entity+0xE8) |
 | +0x0A | u16 | width | Render width |
 | +0x0C | u16 | height | Render height |
-| +0x0E | u16 | flip_flags | Mirror decode (0=normal, 1=H-flip) |
-| +0x10 | u32 | unknown_10 | Unknown (accessed as piVar9[4]) |
-| +0x14 | s16 | hitbox_x | Collision X offset |
-| +0x16 | s16 | hitbox_y | Collision Y offset |
-| +0x18 | u16 | hitbox_w | Collision width |
-| +0x1A | u16 | hitbox_h | Collision height |
+| +0x0E | s16 | frameDeltaX | Raw signed X motion delta |
+| +0x10 | s16 | frameDeltaY | Raw signed Y motion delta |
+| +0x12 | s16 | hitbox_x | Collision X offset |
+| +0x14 | s16 | hitbox_y | Collision Y offset |
+| +0x16 | u16 | hitbox_w | Collision width |
+| +0x18 | u16 | hitbox_h | Collision height |
+| +0x1A | u16 | reserved_1A | Reserved/unused frame word |
 | +0x1C | u32 | flags | Bit 0: play positioned sound (PlayEntityPositionSound) |
 | +0x20 | u32 | rle_offset | RLE pixel data offset |
 
@@ -65,7 +66,7 @@ Layer 5: Callback Dispatch (3-Level Priority)
 | +0xF0 | u8 | direction | 0=forward, 1=backward |
 | +0xF1 | u8 | loop_flag | 1=loop to +0xDC |
 | +0xF2 | u8 | anim_active | 1=tick enabled |
-| +0xFE | u8 | slow_motion | 1=double frame_delay |
+| +0xFE | u8 | doubleFrameDelay | 1=double frame_delay |
 
 ### Key Functions
 
@@ -77,13 +78,13 @@ void UpdateSpriteFrameData(Entity* entity) {
     
     // Copy frame_delay to entity timer
     entity->frame_timer = frame->frame_delay;
-    if (entity->slow_motion) {
+    if (entity->doubleFrameDelay) {
         entity->frame_timer *= 2;  // Double delay for slow-mo
     }
     
     // Calculate velocity deltas (for moving sprites)
-    entity->velocity_x_per_frame = (frame->render_x << 16) / entity->frame_timer;
-    entity->velocity_y_per_frame = (frame->render_y << 16) / entity->frame_timer;
+    entity->frameMotionX = (frame->frameDeltaX << 16) / entity->frame_timer;
+    entity->frameMotionY = (frame->frameDeltaY << 16) / entity->frame_timer;
     
     // Copy render bounds and UVs to entity
     entity->render_x = frame->render_x;

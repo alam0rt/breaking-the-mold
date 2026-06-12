@@ -254,7 +254,8 @@ const GRAVITY = 6.0 * 60 * 60  # 21,600 px/sec²
 
 | Index | Hex | Field | Description | Source |
 |-------|-----|-------|-------------|--------|
-| `[0x04]` | - | `world_index` | Cumulative world counter | TileHeader+0x20 |
+| `[0x02]` | - | `results_total_tally` | Cumulative value shown on results screens | `CreateResultsScreenEntity` |
+| `[0x04]` | - | `world_index_tally` | Cumulative world/progression counter shown on results screens | TileHeader world index |
 | `[0x06-0x0F]` | - | `collectible_flags` | Zone collection flags (10 zones) | Line 17810 |
 | `[0x11]` | - | `powerup_flag_1` | Unknown boolean | Lines 10524, 10556 |
 | `[0x12]` | - | `powerup_flag_2` | Unknown boolean | Lines 10439, 10471 |
@@ -262,7 +263,7 @@ const GRAVITY = 6.0 * 60 * 60  # 21,600 px/sec²
 | `[0x14]` | - | `special_ability_1` | Reset on level load | Lines 10166, 31111 |
 | `[0x15]` | - | `special_ability_2` | Reset on level load | Lines 10167, 31104 |
 | `[0x16]` | - | `special_ability_3` | Reset on level load, affects damage | Lines 10170, 31097, 33064 |
-| `[0x18]` | - | `unknown_flag` | Reset on init | Line 10081 |
+| `[0x18]` | - | `shrink_mode` | Shrink powerup active flag | PlayerState struct |
 | `[0x1A]` | - | `max_green_bullets` | Ammo capacity (default: 3) | Line 42542 |
 | `[0x1C]` | - | `special_ability_4` | Reset on level load | Lines 10173, 31092 |
 

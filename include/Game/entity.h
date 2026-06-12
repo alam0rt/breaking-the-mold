@@ -225,7 +225,7 @@ struct Entity {
      * DecodeRLESpriteChecked. The animation state continues at 0x80-0xFF
      * in sprite entities (alloc >= 0x100) - see PlayerEntity in Ghidra. */
     /* 0x78 */ void           *pFrameTable;     /* Frame metadata table (0x24/frame) */
-    /* 0x7C */ void           *spriteSubField7C;/* Part of sprite sub-struct; role unobserved */
+    /* 0x7C */ void           *pPaletteData;    /* Palette/CLUT data uploaded by UploadEntityTextureIfDirty */
 };  /* Size: 0x80 (128 bytes) */
 
 /* -----------------------------------------------------------------------------
@@ -256,7 +256,7 @@ typedef struct {
     /* Frame metadata (0x88-0x93) */
     /* 0x88 */ u16      frameCount;         /* Total frame count in current sprite */
     /* 0x8A */ u8       texPageByte;        /* Texture page byte */
-    /* 0x8B */ u8       _pad8B;
+    /* 0x8B */ u8       spriteContextValid; /* Embedded sprite context valid/decode-enabled byte */
     /* 0x8C */ void    *pFrameData;         /* Current frame data pointer */
     /* 0x90 */ void    *pSpriteAsset;       /* Sprite asset base pointer */
     /* 0x94 */ u8       _pad94[4];
@@ -266,10 +266,10 @@ typedef struct {
     /* 0x9C */ void    *nextStateCallback;  /* Next state handler */
     /* 0xA0 */ u8       _padA0[16];
 
-    /* Pixel buffer / frame scale (0xB0-0xBB) */
+    /* Pixel buffer / per-frame motion (0xB0-0xBB) */
     /* 0xB0 */ void    *pPixelBuffer;       /* Decoded pixel data buffer */
-    /* 0xB4 */ u32      frameScaleX;        /* Per-frame X scale (16.16 fixed) */
-    /* 0xB8 */ u32      frameScaleY;        /* Per-frame Y scale (16.16 fixed) */
+    /* 0xB4 */ s32      frameMotionX;       /* Per-frame X motion vector (16.16 fixed) */
+    /* 0xB8 */ s32      frameMotionY;       /* Per-frame Y motion vector (16.16 fixed) */
 
     /* Pending sprite change (0xBC-0xCB) - latched by SetEntitySpriteId */
     /* 0xBC */ u32      pendingSpriteId;    /* Sprite ID queued for change */
@@ -291,7 +291,9 @@ typedef struct {
 
     /* Animation control (0xE0-0xFD) */
     /* 0xE0 */ u16      animChangeFlags;    /* Flags for pending animation changes */
-    /* 0xE2 */ u8       _padE2[8];
+    /* 0xE2 */ u8       _padE2[4];
+    /* 0xE6 */ s16      frameDeltaX;        /* Raw signed X delta from current frame metadata */
+    /* 0xE8 */ s16      frameDeltaY;        /* Raw signed Y delta from current frame metadata */
     /* 0xEA */ u16      nextFrame;          /* Next frame to display */
     /* 0xEC */ u16      frameRateDivisor;   /* Frame rate divisor (speed control) */
     /* 0xEE */ u16      frameCountdown;     /* Countdown to next frame advance */
@@ -309,7 +311,8 @@ typedef struct {
     /* 0xFB */ u8       cachedFlipY;        /* Cached vertical flip */
     /* 0xFC */ u8       bufferClearedFlag;  /* Pixel buffer has been cleared */
     /* 0xFD */ u8       alwaysRenderFlag;   /* Force render even if offscreen */
-    /* 0xFE */ u8       _padFE[2];
+    /* 0xFE */ u8       doubleFrameDelay;   /* Non-zero doubles frame_delay when loading frame metadata */
+    /* 0xFF */ u8       unusedFF;
 } SpriteEntity;  /* Size: 0x100 (256 bytes) */
 
 /* -----------------------------------------------------------------------------
@@ -341,7 +344,7 @@ typedef struct {
     /* 0x118 */ s32      cushionVelY;           /* Landing cushion velocity */
     /* 0x11C */ u8       landingTimer;          /* Landing recovery timer */
     /* 0x11D */ u8       _pad11D;
-    /* 0x11E */ u8       counter11E;            /* General-purpose counter */
+    /* 0x11E */ u8       bounceLockTimer;       /* Bounce/quick-turn lockout timer */
     /* 0x11F */ u8       jumpHoldCounter;       /* Jump button hold duration */
 
     /* Speed parameters (0x120-0x133) */
@@ -351,8 +354,8 @@ typedef struct {
     /* 0x129 */ u8       _pad129[11];
 
     /* State flags (0x134-0x143) */
-    /* 0x134 */ u8       flag134;               /* State flag (purpose TBD) */
-    /* 0x135 */ u8       flag135;               /* State flag (purpose TBD) */
+    /* 0x134 */ u8       specialMoveQueued;     /* Queued special/teleport movement input */
+    /* 0x135 */ u8       specialMoveMode;       /* Special movement branch selector */
     /* 0x136 */ s16      apexVelocity;          /* Jump apex velocity threshold */
     /* 0x138 */ u8       _pad138[4];
     /* 0x13C */ u8       timer13C;              /* Multi-purpose timer */
@@ -409,12 +412,13 @@ typedef struct {
  * ----------------------------------------------------------------------------- */
 typedef struct {
     /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ InputState   *pInput;       /* Controller input pointer */
-    /* 0x104 */ SpriteEntity *pWakeEntity;  /* Secondary sprite (wake/shadow visual) */
-    /* 0x108 */ u32           state108;     /* Internal state counter/timer */
-    /* 0x10C */ u8            flag10C;      /* Rotation/movement mode flag */
-    /* 0x10D */ u8            _pad10D[3];
-    /* 0x110 */ s32           soundHandle;  /* Active SPU voice handle */
+    /* 0x100 */ InputState   *pInput;                      /* Controller input pointer */
+    /* 0x104 */ void         *wakeEntity_or_velocityX;     /* Wake child pointer during init; X velocity accumulator during movement */
+    /* 0x108 */ void         *velocityY_or_stateCallback;  /* Y velocity accumulator or callback/FSM overlay */
+    /* 0x10C */ s16           rotationAngle;               /* FINN heading angle */
+    /* 0x10E */ u8            rotationSpriteBucket;        /* Cached 16-way heading sprite bucket */
+    /* 0x10F */ s8            rotationVelocity;            /* Signed angular velocity */
+    /* 0x110 */ s32           soundHandle_or_inputFlags;   /* Active SPU voice handle or packed input flags */
 } FinnPlayerEntity;  /* Size: 0x114 (276 bytes) */
 
 /* -----------------------------------------------------------------------------

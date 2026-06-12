@@ -44,8 +44,8 @@ typedef struct {
     /* 0x0C */ u32  sprite_id;    /* Sprite identifier (matches TOC) */
     /* 0x10 */ u16  frame_count;  /* Number of animation frames */
     /* 0x12 */ u16  padding_12;
-    /* 0x14 */ u16  unknown_flag; /* Purpose unconfirmed */
-    /* 0x16 */ u16  clut_garbage; /* CLUT field (may be stale/unused data) */
+    /* 0x14 */ u16  format_flags;      /* Sprite format flags; not the palette pointer */
+    /* 0x16 */ u16  unused_clut_word;  /* Stale/unused CLUT word; palette data is loaded separately */
 } SpriteHeader;  /* Size: 0x18 (24 bytes) */
 
 /* -----------------------------------------------------------------------------
@@ -64,12 +64,13 @@ typedef struct {
     /* 0x08 */ s16  origin_y;       /* Render origin Y */
     /* 0x0A */ u16  width;          /* Pixel width of this frame */
     /* 0x0C */ u16  height;         /* Pixel height of this frame */
-    /* 0x0E */ u16  flip_flags;     /* Horizontal/vertical flip flags */
-    /* 0x10 */ u32  unknown_10;     /* Purpose unconfirmed */
-    /* 0x14 */ s16  hitbox_x;       /* Hitbox X offset from origin */
-    /* 0x16 */ s16  hitbox_y;       /* Hitbox Y offset from origin */
-    /* 0x18 */ u16  hitbox_width;   /* Hitbox width */
-    /* 0x1A */ u16  hitbox_height;  /* Hitbox height */
+    /* 0x0E */ s16  frameDeltaX;    /* Raw signed X motion delta */
+    /* 0x10 */ s16  frameDeltaY;    /* Raw signed Y motion delta */
+    /* 0x12 */ s16  hitbox_x;       /* Hitbox X offset from origin */
+    /* 0x14 */ s16  hitbox_y;       /* Hitbox Y offset from origin */
+    /* 0x16 */ u16  hitbox_width;   /* Hitbox width */
+    /* 0x18 */ u16  hitbox_height;  /* Hitbox height */
+    /* 0x1A */ u16  reserved_1A;    /* Reserved/unused frame word */
     /* 0x1C */ u32  flags;          /* Frame behavior flags */
     /* 0x20 */ u32  rle_offset;     /* Byte offset into SpriteHeader's RLE data */
 } SpriteFrameEntry;  /* Size: 0x24 (36 bytes) */

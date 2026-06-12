@@ -2,6 +2,8 @@
 
 This documentation covers the reverse engineering of **Skullmonkeys** (PAL SLES-01090) for the PlayStation 1, with a focus on the BLB archive format and game data structures.
 
+> **Clean-room naming caveat:** Function names, struct names, and field names are inferred labels from reverse engineering, not original source symbols. Ghidra datatypes are the current working source of truth for decompiler analysis, but every name should still be treated as a hypothesis backed by specific code/data evidence.
+
 ## Quick Start
 
 - **[Decompilation Guide](decompilation-guide.md)** - How to add new functions to the decompilation
@@ -59,6 +61,7 @@ Ongoing research and unverified findings:
 |----------|-------------|
 | [gap-analysis.md](analysis/gap-analysis.md) | Documentation gap analysis (historical) |
 | [unconfirmed-findings.md](analysis/unconfirmed-findings.md) | Observations awaiting verification |
+| [struct-field-cleanup-2026-06-12.md](analysis/struct-field-cleanup-2026-06-12.md) | Ghidra-backed cleanup of placeholder struct field names |
 
 ### Project Status
 

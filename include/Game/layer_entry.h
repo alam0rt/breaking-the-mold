@@ -48,11 +48,11 @@ typedef struct {
     /* 0x10 */ u32 scroll_x;           /* X parallax factor */
     /* 0x14 */ u32 scroll_y;           /* Y parallax factor */
     
-    /* Render context fields (0x18-0x1D) */
-    /* 0x18 */ u16 render_field_30;    /* Stored at renderCtx+0x30 */
-    /* 0x1A */ u16 render_field_32;    /* Stored at renderCtx+0x32 */
-    /* 0x1C */ u8  render_field_3a;    /* Stored at renderCtx+0x3A */
-    /* 0x1D */ u8  render_field_3b;    /* Stored at renderCtx+0x3B */
+    /* Auto-scroll parameters (0x18-0x1D), copied into layer render context */
+    /* 0x18 */ u16 auto_scroll_speed_x; /* Autonomous wrapped X scroll speed */
+    /* 0x1A */ u16 auto_scroll_speed_y; /* Autonomous wrapped Y scroll speed */
+    /* 0x1C */ u8  reverse_scroll_x;    /* Reverse autonomous X scroll direction */
+    /* 0x1D */ u8  reverse_scroll_y;    /* Reverse autonomous Y scroll direction */
     
     /* Scroll enable flags (0x1E-0x21) - VERIFIED via Ghidra */
     /* 0x1E */ u8  scroll_left_enable; /* If !=0, set GameState+0x59 */
@@ -60,9 +60,9 @@ typedef struct {
     /* 0x20 */ u8  scroll_up_enable;   /* If !=0, set GameState+0x58 */
     /* 0x21 */ u8  scroll_down_enable; /* If !=0, set GameState+0x5A */
     
-    /* Render mode selection (0x22-0x25) - VERIFIED via Ghidra */
-    /* 0x22 */ u16 render_mode_h;      /* If !=0, affects render path */
-    /* 0x24 */ u16 render_mode_v;      /* If !=0, affects render path */
+    /* Auto-scroll enable flags (0x22-0x25) - VERIFIED via Ghidra */
+    /* 0x22 */ u16 auto_scroll_enable_y; /* Enable autonomous Y scrolling */
+    /* 0x24 */ u16 auto_scroll_enable_x; /* Enable autonomous X scrolling */
     
     /* Layer type and flags (0x26-0x2B) */
     /* 0x26 */ u8  layer_type;         /* Layer type (0=normal, 3=skip render) */
