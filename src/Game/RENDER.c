@@ -225,6 +225,105 @@ INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80019CF8);
 
 INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80019D74);
 
-INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80019F2C);
+/* =============================================================================
+ * CLUT effect descriptors (palette cycle / color lerp)
+ *
+ * Decompiled functions live at the END of this file: gcc 2.7.2 at -O2
+ * buffers all compiled function bodies and emits them after the streamed
+ * INCLUDE_ASM blocks, so only a contiguous tail of this module can be
+ * decompiled in-place. Decompile backwards from the end.
+ * ============================================================================= */
 
-INCLUDE_ASM("asm/nonmatchings/Game/RENDER", func_80019F88);
+/* Tick-slot install pattern: {markerLo=0, markerHi=-1, fn} written as a
+ * local struct then copied into the descriptor head as two words
+ * (matches the FSM marker encoding in include/Game/entity.h).
+ * The local is wrapped in PaddedTickSlot: the original stack frames have
+ * the slot at sp+4 with a 4-byte hole below, which only reproduces when
+ * the slot sits at offset 4 of a larger local. */
+typedef struct {
+    /* 0x00 */ s16 markerLo;
+    /* 0x02 */ s16 markerHi;
+    /* 0x04 */ void (*fn)();
+} TickSlot;
+
+typedef struct {
+    /* 0x00 */ s32 pad;
+    /* 0x04 */ TickSlot t;
+} PaddedTickSlot;
+
+/* 256-entry 15-bit CLUT (one full palette). Halfword alignment forces the
+ * compiler's runtime aligned/unaligned dual-path block copy, matching the
+ * original. */
+typedef struct {
+    u16 entries[256];
+} CLUT256;
+
+/* Palette effect descriptor (palette cycling and color lerp).
+ * Field offsets verified against func_80019F2C/func_80019F88 asm. */
+typedef struct {
+    /* 0x00 */ TickSlot tick;        /* Per-frame tick callback slot */
+    /* 0x08 */ u8       pad08[0x14];
+    /* 0x1C */ CLUT256 *srcClut;     /* Source CLUT (0 = effect disabled) */
+    /* 0x20 */ CLUT256 *workBuf;     /* Working CLUT buffer (lazily allocated) */
+    /* 0x24 */ u32      targetClut;  /* Lerp target CLUT */
+    /* 0x28 */ u8       pad28[6];
+    /* 0x2E */ u16      totalFrames; /* Lerp duration in frames */
+    /* 0x30 */ u16      currentFrame;
+    /* 0x32 */ u16      unk32;
+    /* 0x34 */ u8       pad34;
+    /* 0x35 */ u8       param35;
+    /* 0x36 */ u8       param36;
+    /* 0x37 */ u8       param37;
+    /* 0x38 */ u8       param38;
+    /* 0x39 */ u8       param39;     /* Mirror of param38 */
+} CLUTEffectDesc;
+
+void func_8001991C(); /* palette-cycle tick callback (asm above) */
+void func_80019A14(); /* color-lerp tick callback (asm above) */
+s32 func_800143F0(s32 heap, s32 size, s32 count, u8 flag); /* AllocateFromHeap */
+extern s32 D_800A5954[]; /* g_pBlbHeapBase (array decl avoids gp-rel access) */
+
+/* Install the CLUT palette-cycle tick callback with its parameters.
+ * Ghidra: SetTexturePageParams @ 0x80019F2C. */
+void func_80019F2C(CLUTEffectDesc *desc, u8 arg1, u8 arg2, u8 arg3, u8 arg4) {
+    PaddedTickSlot u;
+
+    if (desc->srcClut != 0) {
+        desc->param35 = arg2;
+        desc->param36 = arg3;
+        desc->param37 = arg4;
+        desc->param38 = arg1;
+        desc->param39 = arg1;
+        u.t.markerLo = 0;
+        u.t.markerHi = -1;
+        u.t.fn = func_8001991C;
+        desc->tick = u.t;
+    }
+}
+
+/* Init a CLUT color-lerp effect: store lerp parameters, install the lerp
+ * tick callback, lazily allocate the 512-byte working CLUT and copy the
+ * source palette into it.
+ * Ghidra: InitCLUTColorLerpEffect @ 0x80019F88. */
+void func_80019F88(CLUTEffectDesc *desc, u32 targetClut, u16 numFrames, u8 flag, u8 channels, u8 easing) {
+    PaddedTickSlot u;
+
+    if (desc->srcClut != 0) {
+        desc->targetClut = targetClut;
+        desc->totalFrames = numFrames;
+        desc->currentFrame = 0;
+        desc->unk32 = 0;
+        desc->param35 = channels;
+        desc->param36 = easing;
+        desc->param38 = flag;
+        desc->param39 = flag;
+        u.t.markerLo = 0;
+        u.t.markerHi = -1;
+        u.t.fn = func_80019A14;
+        desc->tick = u.t;
+        if (desc->workBuf == 0) {
+            desc->workBuf = (CLUT256 *)func_800143F0(D_800A5954[0], 2, 0x100, 0);
+        }
+        *desc->workBuf = *desc->srcClut;
+    }
+}
