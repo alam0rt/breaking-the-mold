@@ -7,6 +7,7 @@ This documentation covers the reverse engineering of **Skullmonkeys** (PAL SLES-
 ## Quick Start
 
 - **[Decompilation Guide](decompilation-guide.md)** - How to add new functions to the decompilation
+- **[Compiler Quirks](compiler-quirks.md)** - Required compiler version, codegen quirks, and matching workarounds (read before decompiling!)
 - **[BLB File Format Overview](blb/README.md)** - Start here for understanding the game's data format
 - **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand
 - **[Systems Index](SYSTEMS_INDEX.md)** - Complete documentation index
@@ -34,9 +35,11 @@ Game engine subsystems and runtime behavior:
 | [sprites.md](systems/sprites.md) | RLE sprite format and lookup system |
 | [animation-framework.md](systems/animation-framework.md) | **5-layer animation system with sequences** |
 | [entities.md](systems/entities.md) | Entity system and spawn data |
+| [fsm-callback-patterns.md](systems/fsm-callback-patterns.md) | Ghidra-backed FSM/callback slot architecture |
 | [entity-identification.md](systems/entity-identification.md) | **Entity type identification guide** |
-| [player-system.md](systems/player-system.md) | **Player mechanics, powerups, death** |
-| [player-physics.md](systems/player-physics.md) | **Player physics constants and movement** |
+| [player-system.md](systems/player/player-system.md) | **Player mechanics, powerups, death** |
+| [player-state-fsm.md](systems/player/player-state-fsm.md) | Ghidra-backed normal player FSM slot table |
+| [player-physics.md](systems/player/player-physics.md) | **Player physics constants and movement** |
 | [audio.md](systems/audio.md) | SPU audio sample system |
 | [rendering-order.md](systems/rendering-order.md) | Layer/entity z-ordering and priorities |
 | [level-loading.md](systems/level-loading.md) | Stage loading state machine |

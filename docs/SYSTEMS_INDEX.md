@@ -55,6 +55,7 @@ This index provides quick navigation to all documentation organized by category.
 | Document | Description | Status |
 |----------|-------------|--------|
 | [game-loop.md](systems/game-loop.md) | Main loop and mode callbacks | ✅ Complete |
+| [fsm-callback-patterns.md](systems/fsm-callback-patterns.md) | Ghidra-backed FSM/callback slot architecture | 🔬 Research |
 | [level-loading.md](systems/level-loading.md) | Stage loading state machine | ✅ Complete |
 | [rendering-order.md](systems/rendering-order.md) | Layer/entity z-ordering | ✅ Complete |
 
@@ -92,6 +93,7 @@ This index provides quick navigation to all documentation organized by category.
 |----------|-------------|--------|
 | [player-system.md](systems/player/player-system.md) | Player mechanics overview | ✅ Complete |
 | [player-physics.md](systems/player/player-physics.md) | Physics constants (verified) | ✅ Complete |
+| [player-state-fsm.md](systems/player/player-state-fsm.md) | Ghidra-backed normal player FSM slot table | 🔬 Research |
 | [player-animation.md](systems/player/player-animation.md) | Player-specific animations | ✅ Complete |
 | [player-normal.md](systems/player/player-normal.md) | Normal platforming mode | ✅ Complete |
 | [player-finn.md](systems/player/player-finn.md) | FINN vehicle mechanics | ⚠️ Partial |

@@ -9,9 +9,15 @@ Clean-room Ghidra MCP pass over placeholder/bad struct field names in `SLES_010.
 | Struct | Offset | New name | Evidence |
 |--------|--------|----------|----------|
 | `Entity` / sprite-derived structs | `+0x7C` | `pPaletteData` | `UploadEntityTextureIfDirty @ 0x8001E5B8` passes it to `UploadCLUTToVRAM(entity->spriteContext, entity->pPaletteData)`. |
+| `SpriteContext` / `SpriteEntity` | `+0x12` / `+0x8A` | `spriteLookupByte` | `InitSpriteContext @ 0x8007BC3C` stores the low byte of sprite lookup entry word `+0x08`; `LoadSpriteFramesToVRAM @ 0x80018DDC` copies it into level sprite-cache slot `+0x14`. No confirmed reader found in the checked cache/render paths. |
 | `SpriteEntity` | `+0x8B` | `spriteContextValid` | Embedded 20-byte sprite context valid/decode byte; set by sprite context init and checked by decode helpers. |
+| `SpriteEntity` | `+0x94` | `sequenceTable` | `StartAnimationSequence @ 0x8001E790` stores the callback sequence table and immediately calls `StepAnimationSequence @ 0x8001E7B8`. |
+| `SpriteEntity` | `+0x98/+0x9C` | `queuedStateMarker/queuedStateCallback` | `EntityProcessCallbackQueue @ 0x8001E928` consumes this queued pair into the active pair, clears it, and dispatches the state. |
+| `SpriteEntity` | `+0xA0/+0xA4` | `activeStateMarker/activeStateCallback` | `EntityProcessCallbackQueue` and `StepAnimationSequence` copy the next state/sequence entry here immediately before dispatch. |
+| `SpriteEntity` | `+0xA8/+0xAC` | `exitCallbackMarker/exitCallback` | `EntitySetCallback @ 0x8001EC18` installs this finalizer hook; existing hooks are dispatched before replacement/state changes/sequence steps. Callers use it for sound teardown, flag cleanup, hitbox restore, delayed effects, and input re-enable. |
 | `SpriteEntity` | `+0xB4/+0xB8` | `frameMotionX/frameMotionY` | `UpdateSpriteFrameData @ 0x8001D748` computes 16.16 per-frame motion from frame deltas and frame timer. |
 | `SpriteEntity` | `+0xE6/+0xE8` | `frameDeltaX/frameDeltaY` | Raw signed frame metadata deltas copied by `UpdateSpriteFrameData`. |
+| `SpriteEntity` | `+0xE2/+0xE4` | `sequenceStep/sequenceLength` | Sequence index and length maintained by `StartAnimationSequence` / `StepAnimationSequence`. |
 | `SpriteEntity` | `+0xFE` | `doubleFrameDelay` | Non-zero doubles the frame delay loaded from `SpriteFrameEntry+0x04`. |
 | `SpriteFrameEntry` | `+0x0E/+0x10` | `frameDeltaX/frameDeltaY` | Replaces stale `flip_flags` / `unknown_10` interpretation. Hitbox fields start at `+0x12`. |
 | `SpriteHeader` | `+0x14/+0x16` | `format_flags/unused_clut_word` | Palette pointer is not here; palette data reaches entities through `Entity+0x7C`. |
@@ -31,7 +37,6 @@ Clean-room Ghidra MCP pass over placeholder/bad struct field names in `SLES_010.
 ## Remaining ambiguous fields
 
 - `SoarPlayerEntity+0x118..+0x11D` are still flight-mode flags. Current trace confirms initialization, `flag11B` gating one input-driven state transition, and `flag11A/flag11D` clearing during flight begin, but not enough to assign stable semantic names.
-- `SpriteContext+0x12` still has no confirmed reader in the decompiler-wide placeholder search.
 - `SpriteTypeCallbackEntry.callback_0/callback_1/callback_3` still need call-site-specific names; broad decompile search mostly hit comments/table references, not enough evidence for precise roles.
 - `LevelDataContext+0x64` is now resolved as `sector_read_callback`; no longer considered ambiguous.
 
@@ -41,7 +46,7 @@ Ghidra still intentionally contains generic names where evidence is weak:
 
 - Padding/reserved fields in `Entity`, `GameState`, `SpriteHeader`, and vtables remain named as padding/reserved/unused rather than guessed.
 - `SoarPlayerEntity` flight flags remain `flag118..flag11D`, `counter11E`, and `counter120` because current evidence only proves initialization and a few branch uses.
-- `SpriteContext+0x12` remains `unknown_12` because no runtime reader was found in the decompiler-wide placeholder search.
+- `SpriteContext+0x12` is named `spriteLookupByte`, but the semantic meaning of the source lookup-entry byte is still unknown because no runtime reader was found after it is copied into cache metadata.
 - `SpriteTypeCallbackEntry.callback_0`, `callback_1`, and `callback_3` remain generic until slot-specific call sites prove lifecycle roles.
 - Ghidra generated/export snapshot docs may preserve old names for historical comparison; current headers and Ghidra datatypes should be preferred.
 

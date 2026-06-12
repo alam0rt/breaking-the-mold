@@ -1260,7 +1260,7 @@ struct SpriteContext {
     u16   max_width;        // [3] +0x0C: Maximum width across all frames
     u16   max_height;       //     +0x0E: Maximum height across all frames
     u16   frame_count;      // [4] +0x10: Number of frames
-    u8    unknown_12;       //     +0x12: Unknown byte
+   u8    spriteLookupByte; //     +0x12: Low byte from sprite lookup entry+0x08; copied to cache metadata, no confirmed reader
     u8    valid_flag;       //     +0x13: 1 = initialized, 0 = invalid
 };
 ```

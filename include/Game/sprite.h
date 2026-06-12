@@ -13,8 +13,10 @@
  * The container begins with a SpriteTOCEntry table, followed by
  * per-sprite SpriteHeader + SpriteFrameEntry arrays + RLE pixel data.
  *
- * At runtime, each loaded sprite gets a SpriteContext allocated for it.
- * The Entity+0x34 (spriteContext) pointer references this struct.
+ * At runtime, a 20-byte SpriteContext is embedded at the sprite-render
+ * sub-struct base (`Entity+0x78` / `SpriteEntity+0x78`) and is also used as
+ * a stack-local lookup context. Do not confuse this with the `Entity+0x34`
+ * render context pointer, which points to a larger GPU render descriptor.
  *
  * See docs/blb/README.md and scripts/blb.hexpat for format details.
  * ============================================================================= */
@@ -81,8 +83,8 @@ typedef struct {
 /* -----------------------------------------------------------------------------
  * SpriteContext (20 bytes)
  *
- * Runtime sprite management context, allocated per loaded sprite.
- * Referenced by Entity+0x34 (spriteContext).
+ * Runtime sprite asset lookup context. Embedded at Entity+0x78 and used as
+ * a stack-local by InitSpriteContext/LoadSpriteFramesToVRAM.
  *
  * frame_metadata points into the SpriteFrameEntry array.
  * rle_data points to the RLE-compressed pixel buffer.
@@ -94,7 +96,7 @@ typedef struct {
     /* 0x0C */ u16   max_width;         /* Maximum frame width across all frames */
     /* 0x0E */ u16   max_height;        /* Maximum frame height across all frames */
     /* 0x10 */ u16   total_frame_count; /* Total number of frames */
-    /* 0x12 */ u8    unknown_12;        /* Purpose unconfirmed */
+    /* 0x12 */ u8    spriteLookupByte;  /* Low byte copied from sprite lookup entry+0x08; propagated to cache metadata, no confirmed reader */
     /* 0x13 */ u8    is_valid;          /* Non-zero = context is fully initialized */
 } SpriteContext;  /* Size: 0x14 (20 bytes) */
 

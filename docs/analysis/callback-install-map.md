@@ -3,13 +3,14 @@
 Extracted from SLES_010.90: every `sw` instruction whose Ghidra-propagated references include a function entry point, excluding sp-based spill stores. The store offset is read directly from the instruction, so marker/fn pairing is exact.
 Generated Thu Jun 11 07:49:51 AEST 2026. CLEAN-ROOM: targets and installer names are inferred labels; each line is a lead, not a fact.
 
-Entity FSM slot pairs (marker @ off-4, fn @ off): +0x04 tickCallback, +0x0C eventCallback, +0x20 renderCallback, +0x28 moveCallbackX, +0x30 moveCallbackY, +0x9C queued next-state (extended entities), +0x108 extended event slot. Other offsets = type-specific extended fields or non-Entity structs (check base register / installer context).
+Entity FSM slot pairs (marker @ off-4, fn @ off): +0x04 tickCallback, +0x0C eventCallback, +0x20 renderCallback, +0x28 moveCallbackX, +0x30 moveCallbackY, +0x9C queuedStateCallback (extended entities), +0xA4 activeStateCallback, +0xAC exitCallback/finalizer, +0x108 extended event slot. Other offsets = type-specific extended fields or non-Entity structs (check base register / installer context).
 
 ## Findings
 
 1. **Entity has five base FSM slots, not three.** The install histogram revealed [marker, fn] pairs at +0x24/+0x28 and +0x2C/+0x30 (93 installs each). Verified by `EntityBroadcastPointCollision @ 0x8001B72C`, which runs the standard tagged-union dispatch on both pairs to transform worldX/worldY before collision broadcast. `InitEntityStruct`'s zeroing pattern matches (it zeroes the +0x28/+0x30 words as units).
-2. **`include/Game/entity.h` is wrong about offsets 0x24-0x33 and 0x78-0x7F.** The header models 0x24-0x33 as s16 triplets (moveMarker/moveCount/moveOffset x X/Y) - actually two marker+fn pairs. Its `moveCallbackY/X` at +0x78/+0x7C received ZERO installs in the whole binary; those fields' semantics are unknown. The Ghidra Entity struct has been corrected; entity.h has not been modified (repo rule), so treat its movement fields as stale until updated.
+2. **Resolved 2026-06-12: `include/Game/entity.h` now models offsets 0x24-0x33 as two marker+fn pairs.** The old header modeled 0x24-0x33 as s16 triplets (moveMarker/moveCount/moveOffset x X/Y), but the install histogram and `EntityBroadcastPointCollision @ 0x8001B72C` show they are actually `moveMarkerX/moveCallbackX` and `moveMarkerY/moveCallbackY`. The previous `moveCallbackY/X` interpretation at +0x78/+0x7C was wrong; those fields are now documented as frame table / palette data in the Entity sprite-render sub-struct.
 3. **The marker+fn stack-pair idiom** (build pair on stack, reload, store both) is the dominant install pattern (1434 spill stores excluded). Ghidra's reference propagation already resolves the final store, which is what v3 keys on; v1/v2 of this map mis-attributed marker stores as fn installs because of register reuse in this idiom.
+4. **Resolved 2026-06-12: SpriteEntity callback queue fields are named.** `StartAnimationSequence @ 0x8001E790`, `StepAnimationSequence @ 0x8001E7B8`, `EntityProcessCallbackQueue @ 0x8001E928`, `EntitySetState @ 0x8001EAAC`, and `EntitySetCallback @ 0x8001EC18` confirm `+0x98/+0x9C` as queued state, `+0xA0/+0xA4` as active state, and `+0xA8/+0xAC` as an exit/finalizer hook installed by `EntitySetCallback`.
 
 Total: 1186 installs (1434 sp spill stores excluded).
 

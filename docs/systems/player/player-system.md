@@ -2,20 +2,24 @@
 
 This document describes how the player (Klaymen) works in Skullmonkeys, including powerups, death handling, and key mechanics.
 
+> **2026-06-12 note:** Some older sections below use broad or stale callback names. For the current Ghidra-backed normal player state-slot inventory, see [player-state-fsm.md](player-state-fsm.md).
+
 ## Player State Structure
 
-The global player state is at `g_pPlayerState` (0x8009DC20). This structure persists across levels and tracks:
+The persistent player state struct lives at `0x8009B1D8`; `g_pPlayerState @ 0x800A597C` points to it. This structure persists across levels and tracks:
 
 | Offset | Type | Field | Description |
 |--------|------|-------|-------------|
 | 0x00 | u8 | initialized | State initialized (1) |
 | 0x01 | u8 | active | Player is active (1) |
+| 0x02 | u16 | results_total_tally | Cumulative value displayed on results screens |
+| 0x04 | u8 | world_index_tally | World/progression tally displayed on results screens |
 | 0x05 | u8 | total_1ups | Total 1-ups collected (returned on reset) |
 | 0x06-0x0F | u8[10] | clayball_flags | Per-stage clayball collection flags |
 | 0x10 | u8 | level_complete | Level complete flag |
 | 0x11 | u8 | lives | Current lives (default: 5) |
 | 0x12 | u8 | orb_count | Clay/orb count (100 → 1up) |
-| 0x13 | u8 | **green_bullets** | **Green Bullets** (projectile ammo, max 20, Circle) |
+| 0x13 | u8 | swirly_q_count | Swirly-Qs collected this level |
 | 0x14 | u8 | phoenix_hands | Phoenix Hand count (max 7, L1) |
 | 0x15 | u8 | phart_heads | Phart Head count (max 7, L2) |
 | 0x16 | u8 | universe_enemas | Universe Enema count (max 7, R1) |
@@ -25,7 +29,7 @@ The global player state is at `g_pPlayerState` (0x8009DC20). This structure pers
 | 0x1A | u8 | **hamster_count** | **Hamsters** (orbiting shield, max 3 hits) |
 | 0x1B | u8 | total_swirly_qs | Total Swirly Qs (secret ending, need 48+) |
 | 0x1C | u8 | super_willies | Super Willie count (max 7, R2) |
-| 0x1D | u8 | unknown_1d | Cleared on death |
+| 0x1D | u8 | boss_hp | Boss HP scratch field (set by boss init, decremented on hits) |
 
 ### Powerup Flags (offset 0x17)
 

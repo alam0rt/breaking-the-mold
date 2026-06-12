@@ -18,6 +18,7 @@ The entity system has four key aspects:
 **See also:**
 - [Entity Types Reference](../reference/entity-types.md) - Callback table and variant system
 - [Entity Identification Guide](entity-identification.md) - BLB→Internal type mapping
+- [FSM / Callback Dispatch Patterns](fsm-callback-patterns.md) - Ghidra-backed marker+callback slot architecture
 
 ## Entity Composition Architecture (January 2026 Update)
 

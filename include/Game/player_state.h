@@ -9,7 +9,8 @@
  * Clean-room RE note: names are inferred from usage, not original symbols.
  *
  * Persistent player inventory, lives, and collectible counts.
- * Pointed to by g_pPlayerState (0x800A5754) and restored on checkpoint
+ * Pointed to by g_pPlayerState @ 0x800A597C (points to 0x8009B1D8)
+ * and restored on checkpoint
  * respawn.
  *
  * Field powerup_flags (0x17): restored to player entity +0x18 on respawn

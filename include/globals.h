@@ -187,7 +187,7 @@ extern u32 g_GameFlags;            /* 0x800A5950 */
 extern GameState* g_pGameState;    /* 0x800A5960 */
 
 /* Input state pointers */
-extern PlayerState* g_pPlayerState; /* 0x800A5754 - Player persistent state */
+extern PlayerState* g_pPlayerState; /* 0x800A597C - Player persistent state pointer (points to 0x8009B1D8) */
 extern void* g_pPlayer1Input;      /* 0x800A5764 - Player 1 input */
 extern void* g_pPlayer2Input;      /* 0x800A5768 - Player 2 input */
 extern void* g_pCurrentInputState; /* 0x800A576C - Active input */

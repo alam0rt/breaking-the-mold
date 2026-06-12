@@ -259,16 +259,25 @@ typedef struct {
 
     /* Frame metadata (0x88-0x93) */
     /* 0x88 */ u16      frameCount;         /* Total frame count in current sprite */
-    /* 0x8A */ u8       texPageByte;        /* Texture page byte */
+    /* 0x8A */ u8       spriteLookupByte;   /* Low byte from sprite lookup entry+0x08; copied to cache metadata */
     /* 0x8B */ u8       spriteContextValid; /* Embedded sprite context valid/decode-enabled byte */
     /* 0x8C */ void    *pFrameData;         /* Current frame data pointer */
     /* 0x90 */ void    *pSpriteAsset;       /* Sprite asset base pointer */
-    /* 0x94 */ u8       _pad94[4];
+    /* 0x94 */ void    *sequenceTable;      /* Animation callback sequence table; entries are [marker, fn] */
 
-    /* Next-state FSM pair (0x98-0x9F) */
-    /* 0x98 */ s32      nextStateMarker;    /* FSM marker for next state transition */
-    /* 0x9C */ void    *nextStateCallback;  /* Next state handler */
-    /* 0xA0 */ u8       _padA0[16];
+    /* Animated state / callback queue (0x98-0xAF).
+     * Verified through StartAnimationSequence @ 0x8001E790,
+     * StepAnimationSequence @ 0x8001E7B8, EntityProcessCallbackQueue
+     * @ 0x8001E928, EntitySetState @ 0x8001EAAC, and
+     * EntitySetCallback @ 0x8001EC18. EntitySetCallback installs the
+     * exit/finalizer hook at +0xA8/+0xAC; replacing it or changing state
+     * dispatches the existing hook first. */
+    /* 0x98 */ s32      queuedStateMarker;   /* Queued next-state marker consumed by EntityProcessCallbackQueue */
+    /* 0x9C */ void    *queuedStateCallback; /* Queued next-state callback */
+    /* 0xA0 */ s32      activeStateMarker;   /* Currently dispatched state/sequence marker */
+    /* 0xA4 */ void    *activeStateCallback; /* Currently dispatched state/sequence callback */
+    /* 0xA8 */ s32      exitCallbackMarker;  /* Exit/finalizer marker run before replacement/state changes */
+    /* 0xAC */ void    *exitCallback;        /* Exit/finalizer callback (cleanup/follow-up hook) */
 
     /* Pixel buffer / per-frame motion (0xB0-0xBB) */
     /* 0xB0 */ void    *pPixelBuffer;       /* Decoded pixel data buffer */
@@ -295,7 +304,8 @@ typedef struct {
 
     /* Animation control (0xE0-0xFD) */
     /* 0xE0 */ u16      animChangeFlags;    /* Flags for pending animation changes */
-    /* 0xE2 */ u8       _padE2[4];
+    /* 0xE2 */ u16      sequenceStep;       /* Current index into sequenceTable */
+    /* 0xE4 */ u16      sequenceLength;     /* Number of entries in sequenceTable */
     /* 0xE6 */ s16      frameDeltaX;        /* Raw signed X delta from current frame metadata */
     /* 0xE8 */ s16      frameDeltaY;        /* Raw signed Y delta from current frame metadata */
     /* 0xEA */ u16      nextFrame;          /* Next frame to display */
