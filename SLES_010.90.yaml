@@ -101,6 +101,7 @@ segments:
       # --- GAMELOOP: Main game flow, menus, level loading (0x80071048 - 0x80082FFF) ---
       # Tile collision, FINN vehicle, menu system, BLB loading, main()
   - [0x61848, asm, Game/GAMELOOP]
+  - [0x73794, c, libs/memmove]
 
       # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
       # libcd, libgpu, libgte, libspu, libetc

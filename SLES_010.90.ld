@@ -35,6 +35,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.rodata);
         build/asm/Game/PLAYER.o(.rodata);
         build/asm/Game/GAMELOOP.o(.rodata);
+        build/src/libs/memmove.o(.rodata);
         build/asm/LIBS.o(.rodata);
         main_SDATA_START = .;
         build/asm/Game/INIT.o(.sdata);
@@ -49,6 +50,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
         build/asm/Game/GAMELOOP.o(.sdata);
+        build/src/libs/memmove.o(.sdata);
         build/asm/LIBS.o(.sdata);
         main_SBSS_START = .;
         build/asm/Game/INIT.o(.sbss);
@@ -63,6 +65,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
         build/asm/Game/GAMELOOP.o(.sbss);
+        build/src/libs/memmove.o(.sbss);
         build/asm/LIBS.o(.sbss);
         main_BSS_START = .;
         build/asm/Game/INIT.o(.bss);
@@ -77,12 +80,14 @@ SECTIONS
         build/asm/Game/OBJECT.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
         build/asm/Game/GAMELOOP.o(.bss);
+        build/src/libs/memmove.o(.bss);
         build/asm/LIBS.o(.bss);
         build/asm/Game/RENDER.o(.text);
         build/asm/Game/ENTITY.o(.text);
         build/asm/Game/OBJECT.o(.text);
         build/asm/Game/PLAYER.o(.text);
         build/asm/Game/GAMELOOP.o(.text);
+        build/src/libs/memmove.o(.text);
         build/asm/LIBS.o(.text);
         main_TEXT_END = .;
         main_TEXT_SIZE = ABSOLUTE(main_TEXT_END - main_TEXT_START);
@@ -99,6 +104,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.data);
         build/asm/Game/PLAYER.o(.data);
         build/asm/Game/GAMELOOP.o(.data);
+        build/src/libs/memmove.o(.data);
         build/asm/LIBS.o(.data);
         build/asm/data/80FEC.data.o(.data);
         main_DATA_END = .;
