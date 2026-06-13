@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Pre-commit hook (tracked; enabled via `git config core.hooksPath tools/git-hooks`).
+# Ensures a clean rebuild still byte-matches the original ROM before committing.
+#   make clean && make && make check
+# On a SHA1 mismatch, report which functions/files diverged via check-diff.sh.
+#
+# Must run inside the Nix dev shell (mipsel toolchain, cpp, splat). Skip in an
+# emergency with: git commit --no-verify
+set -uo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+echo "[pre-commit] make clean"
+make clean
+
+echo "[pre-commit] make"
+if ! make; then
+  echo "[pre-commit] build failed — aborting commit." >&2
+  exit 1
+fi
+
+echo "[pre-commit] make check"
+if make check; then
+  echo "[pre-commit] ✓ byte-match verified"
+  exit 0
+fi
+
+echo
+echo "[pre-commit] ✗ byte-match FAILED — locating divergence:"
+echo
+bash tools/check-diff.sh || true
+echo
+echo "[pre-commit] commit aborted. Re-run after matching, or bypass with: git commit --no-verify" >&2
+exit 1
