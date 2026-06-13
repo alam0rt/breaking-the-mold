@@ -1,5 +1,12 @@
 #include "common.h"
 
+extern void *D_800A5954;
+extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
+extern void FreeMultiAllocResource(void *ptr, s32 type);
+extern u8 D_800104AC[];
+extern u8 D_8001042C[];
+extern u8 D_800103CC[];
+
 typedef struct AnimEntity {
     u8 pad00[0xC0];
     /* 0xC0 */ u32 pendingFrame;
@@ -109,9 +116,27 @@ void SetAnimationActive(AnimEntity *entity, u8 value) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntitySetRenderFlags);
+void EntitySetRenderFlags(AnimEntity *entity, u8 value) {
+    u16 flags = entity->animChangeFlags;
+    u16 newFlags = flags | 0x80;
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8001D268);
+    *(u8 *)((u8 *)entity + 0xF4) = value;
+    entity->animChangeFlags = newFlags;
+    if ((newFlags & 3) == 0) {
+        entity->animChangeFlags = flags | 0x81;
+    }
+}
+
+void func_8001D268(AnimEntity *entity, u8 value) {
+    u16 flags = entity->animChangeFlags;
+    u16 newFlags = flags | 0x40;
+
+    *(u8 *)((u8 *)entity + 0xF3) = value;
+    entity->animChangeFlags = newFlags;
+    if ((newFlags & 3) == 0) {
+        entity->animChangeFlags = flags | 0x41;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", TickEntityAnimation);
 
@@ -139,7 +164,18 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntitySetCallback);
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerRenderContext_Standard);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructor_FreeMultiAlloc);
+void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
+    u8 *resource;
+    resource = *(u8 **)((u8 *)entity + 0x1C);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001042C;
+    if (resource) {
+        FreeMultiAllocResource(resource, 3);
+    }
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWithWrap_Standard);
 
@@ -157,7 +193,18 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWit
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerScrollContext);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", FreeResourceType4);
+void FreeResourceType4(void *entity, s32 flags) {
+    u8 *resource;
+    resource = *(u8 **)((u8 *)entity + 0x20);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800103CC;
+    if (resource) {
+        FreeFromHeap(D_800A5954, resource, 0, 0);
+    }
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityTick_AnimationFrameAdvance);
 
@@ -171,103 +218,251 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityApplyMovementCall
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructor_FreeWithChildRef);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800200DC);
+typedef struct EntityAccessorView {
+    u8 pad00[0x1C];
+    s32 field_1C;       /* 0x1C */
+    s32 field_20;       /* 0x20 */
+    s32 field_24;       /* 0x24 */
+    u8 pad28[0x2C - 0x28];
+    s32 field_2C;       /* 0x2C */
+    s16 field_30;       /* 0x30 */
+    s16 field_32;       /* 0x32 */
+    s32 field_34;       /* 0x34 */
+    u8 pad38[0x3A - 0x38];
+    u8 field_3A;        /* 0x3A */
+    u8 field_3B;        /* 0x3B */
+    u8 pad3C[0x50 - 0x3C];
+    s32 field_50;       /* 0x50 */
+    s32 field_54;       /* 0x54 */
+    s32 field_58;       /* 0x58 */
+    s32 field_5C;       /* 0x5C */
+    u8 pad60[0x68 - 0x60];
+    s16 field_68;       /* 0x68 */
+    s16 field_6A;       /* 0x6A */
+    u8 pad6C[0x70 - 0x6C];
+    u16 field_70;       /* 0x70 */
+    u16 field_72;       /* 0x72 */
+    u8 field_74;        /* 0x74 */
+    u8 field_75;        /* 0x75 */
+    u8 pad76[0x98 - 0x76];
+    s32 field_98;       /* 0x98 */
+    s32 field_9C;       /* 0x9C */
+    u8 padA0[0xB0 - 0xA0];
+    s32 field_B0;       /* 0xB0 */
+    u8 padB4[0xCC - 0xB4];
+    s32 field_CC;       /* 0xCC */
+    u8 padD0[0xDA - 0xD0];
+    s16 field_DA;       /* 0xDA */
+    u8 padDC[0xF6 - 0xDC];
+    u8 field_F6;        /* 0xF6 */
+} EntityAccessorView;
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800200E8);
+s32 func_800200DC(EntityAccessorView *e) {
+    return e->field_20;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800200F0);
+void func_800200E8(EntityAccessorView *e, u8 value) {
+    e->field_3B = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800200F8);
+void func_800200F0(EntityAccessorView *e, u8 value) {
+    e->field_3A = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020100);
+void func_800200F8(EntityAccessorView *e, s16 value) {
+    e->field_32 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020108);
+void func_80020100(EntityAccessorView *e, s16 value) {
+    e->field_30 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020110);
+void func_80020108(EntityAccessorView *e, s32 value) {
+    e->field_24 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020118);
+void func_80020110(EntityAccessorView *e, s32 value) {
+    e->field_20 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020124);
+s32 func_80020118(EntityAccessorView *e) {
+    return e->field_1C;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002012C);
+void func_80020124(EntityAccessorView *e, u8 value) {
+    e->field_3B = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020134);
+void func_8002012C(EntityAccessorView *e, u8 value) {
+    e->field_3A = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002013C);
+void func_80020134(EntityAccessorView *e, s16 value) {
+    e->field_32 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020144);
+void func_8002013C(EntityAccessorView *e, s16 value) {
+    e->field_30 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002014C);
+void func_80020144(EntityAccessorView *e, s32 value) {
+    e->field_24 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020154);
+void func_8002014C(EntityAccessorView *e, s32 value) {
+    e->field_20 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020160);
+s32 func_80020154(EntityAccessorView *e) {
+    return e->field_1C;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020168);
+void func_80020160(EntityAccessorView *e, u8 value) {
+    e->field_3B = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020170);
+void func_80020168(EntityAccessorView *e, u8 value) {
+    e->field_3A = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020178);
+void func_80020170(EntityAccessorView *e, s16 value) {
+    e->field_32 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020180);
+void func_80020178(EntityAccessorView *e, s16 value) {
+    e->field_30 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020188);
+void func_80020180(EntityAccessorView *e, s32 value) {
+    e->field_24 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020190);
+void func_80020188(EntityAccessorView *e, s32 value) {
+    e->field_20 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002019C);
+s32 func_80020190(EntityAccessorView *e) {
+    return e->field_1C;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201A8);
+s32 func_8002019C(EntityAccessorView *e) {
+    return e->field_B0;
+}
+
+void func_800201A8(EntityAccessorView *e, u8 value) {
+    e->field_F6 = value;
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201B0);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201D0);
+s16 func_800201D0(EntityAccessorView *e) {
+    return e->field_DA;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201DC);
+s32 func_800201DC(EntityAccessorView *e) {
+    return e->field_CC;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201E8);
+u16 func_800201E8(EntityAccessorView *e) {
+    return e->field_70;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201F4);
+u16 func_800201F4(EntityAccessorView *e) {
+    return e->field_72;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020200);
+void func_80020200(EntityAccessorView *e, u16 value) {
+    e->field_72 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020208);
+s32 func_80020208(EntityAccessorView *e) {
+    return e->field_5C;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020214);
+s32 func_80020214(EntityAccessorView *e) {
+    return e->field_58;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020220);
+void func_80020220(EntityAccessorView *e, s32 value) {
+    e->field_5C = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020228);
+void func_80020228(EntityAccessorView *e, s32 value) {
+    e->field_58 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020230);
+void func_80020230(EntityAccessorView *e, s32 value) {
+    e->field_58 = value;
+    e->field_5C = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002023C);
+s32 func_8002023C(EntityAccessorView *e) {
+    return e->field_54;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020248);
+s32 func_80020248(EntityAccessorView *e) {
+    return e->field_50;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020254);
+void func_80020254(EntityAccessorView *e, s32 value) {
+    e->field_54 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002025C);
+void func_8002025C(EntityAccessorView *e, s32 value) {
+    e->field_50 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020264);
+void func_80020264(EntityAccessorView *e, s32 value) {
+    e->field_50 = value;
+    e->field_54 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020270);
+u8 func_80020270(EntityAccessorView *e) {
+    return e->field_75;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002027C);
+u8 func_8002027C(EntityAccessorView *e) {
+    return e->field_74;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", StubReturnZero);
+s32 StubReturnZero(void) {
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020290);
+void func_80020290(EntityAccessorView *e, s16 x, s16 y) {
+    e->field_68 = x;
+    e->field_6A = y;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8002029C);
+void func_8002029C(EntityAccessorView *e, s16 value) {
+    e->field_6A = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800202A4);
+void func_800202A4(EntityAccessorView *e, s16 value) {
+    e->field_68 = value;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800202AC);
+typedef struct Vec4s16 {
+    s16 x;  /* 0x0 */
+    s16 y;  /* 0x2 */
+    s16 w;  /* 0x4 */
+    s16 h;  /* 0x6 */
+} Vec4s16;
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800203AC);
+void func_800202AC(EntityAccessorView *e, Vec4s16 *v) {
+    v->x = (v->x << 16) / e->field_58;
+    v->w = (v->w << 16) / e->field_58;
+    v->y = (v->y << 16) / e->field_5C;
+    v->h = (v->h << 16) / e->field_5C;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800203E8);
+s32 func_800203AC(EntityAccessorView *e, s32 value) {
+    return (value << 16) / e->field_5C;
+}
+
+s32 func_800203E8(EntityAccessorView *e, s32 value) {
+    return (value << 16) / e->field_58;
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020424);
 
@@ -275,11 +470,17 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", GetEntityYPosition);
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", GetEntityXPosition);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020588);
+s16 func_80020588(EntityAccessorView *e) {
+    return e->field_6A;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020594);
+s16 func_80020594(EntityAccessorView *e) {
+    return e->field_68;
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800205A0);
+s32 func_800205A0(EntityAccessorView *e) {
+    return e->field_34;
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800205AC);
 
@@ -293,7 +494,9 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020724);
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InvokeEntityRenderCallback);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800207C8);
+u16 func_800207C8(EntityAccessorView *e) {
+    return e->field_2C;
+}
 
 void func_800207D4(void) {
 }
@@ -301,9 +504,18 @@ void func_800207D4(void) {
 void func_800207DC(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructor_Simple);
+void FreeEntityNoTeardown_80020818(void *entity, s32 size);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", FreeEntityNoTeardown_80020818);
+void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    if (flags & 1) {
+        FreeEntityNoTeardown_80020818(entity, 0x1C);
+    }
+}
+
+void FreeEntityNoTeardown_80020818(void *entity, s32 size) {
+    FreeFromHeap(D_800A5954, entity, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", BLB_ReadSectorsWrapper);
 
