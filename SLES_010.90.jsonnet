@@ -113,7 +113,7 @@ local bss(start, kind, vram) = {
         rodata('1E28', 'Game/BOSS'),
         rodata('2044', 'Game/PLAYER'),
         rodata('2554', 'Game/PLAYER_STATES'),
-        rodata('2940', 'Game/VEHICLE'),
+        rodata('2940', 'Game/VEHICLE/vehicle'),
         rodata('2F58', 'Game/MAIN'),           // main game callbacks
         rodata('2F78', 'LIBCD'),
         rodata('34F4', 'LIBGPU'),
@@ -128,7 +128,7 @@ local bss(start, kind, vram) = {
         c('909C', 'Game/ENGINE/sprite_accessors'),
         c('954C', 'Game/ENGINE/empty_stub_18d4c'),
         asm('9554', 'Game/ENGINE_9554'),       // menu entity init, sprite object
-        asm('A8C8', 'Game/ENGINE_ENTITY'),     // entity system core
+        c('A8C8', 'Game/ENGINE/entity_system'),  // entity system core
         c('D880', 'Game/ENGINE/sprite_setters'),
         c('D8C0', 'Game/ENGINE/animation_setters'),
 
@@ -156,7 +156,7 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 6: Game/VEHICLE — vehicle modes (FINN/RUNN/SOAR), tile collision
         // -----------------------------------------------------------------
-        asm('6D9D0', 'Game/VEHICLE'),
+        c('6D9D0', 'Game/VEHICLE/vehicle'),
         c('73690', 'Game/VEHICLE/static_game_state'),
         c('736E0', 'Game/VEHICLE/empty_callbacks'),
 

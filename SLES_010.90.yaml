@@ -90,7 +90,7 @@
   -
     - 10560
     - "rodata"
-    - "Game/VEHICLE"
+    - "Game/VEHICLE/vehicle"
   -
     - 12120
     - "rodata"
@@ -133,8 +133,8 @@
     - "Game/ENGINE_9554"
   -
     - 43208
-    - "asm"
-    - "Game/ENGINE_ENTITY"
+    - "c"
+    - "Game/ENGINE/entity_system"
   -
     - 55424
     - "c"
@@ -165,8 +165,8 @@
     - "Game/PLAYER_STATES"
   -
     - 448976
-    - "asm"
-    - "Game/VEHICLE"
+    - "c"
+    - "Game/VEHICLE/vehicle"
   -
     - 472720
     - "c"

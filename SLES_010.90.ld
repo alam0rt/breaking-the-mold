@@ -30,7 +30,7 @@ SECTIONS
         build/asm/data/Game/BOSS.rodata.o(.rodata);
         build/asm/data/Game/PLAYER.rodata.o(.rodata);
         build/asm/data/Game/PLAYER_STATES.rodata.o(.rodata);
-        build/asm/data/Game/VEHICLE.rodata.o(.rodata);
+        build/asm/data/Game/VEHICLE/vehicle.rodata.o(.rodata);
         build/asm/data/Game/MAIN.rodata.o(.rodata);
         build/asm/data/LIBCD.rodata.o(.rodata);
         build/asm/data/LIBGPU.rodata.o(.rodata);
@@ -40,7 +40,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_accessors.o(.rodata);
         build/src/Game/ENGINE/empty_stub_18d4c.o(.rodata);
         build/asm/Game/ENGINE_9554.o(.rodata);
-        build/asm/Game/ENGINE_ENTITY.o(.rodata);
+        build/src/Game/ENGINE/entity_system.o(.rodata);
         build/src/Game/ENGINE/sprite_setters.o(.rodata);
         build/src/Game/ENGINE/animation_setters.o(.rodata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.rodata);
@@ -58,7 +58,7 @@ SECTIONS
         build/asm/Game/BOSS.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
         build/asm/Game/PLAYER_STATES.o(.sdata);
-        build/asm/Game/VEHICLE.o(.sdata);
+        build/src/Game/VEHICLE/vehicle.o(.sdata);
         build/asm/Game/MAIN.o(.sdata);
         build/asm/LIBCD.o(.sdata);
         build/asm/LIBGPU.o(.sdata);
@@ -68,7 +68,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_accessors.o(.sdata);
         build/src/Game/ENGINE/empty_stub_18d4c.o(.sdata);
         build/asm/Game/ENGINE_9554.o(.sdata);
-        build/asm/Game/ENGINE_ENTITY.o(.sdata);
+        build/src/Game/ENGINE/entity_system.o(.sdata);
         build/src/Game/ENGINE/sprite_setters.o(.sdata);
         build/src/Game/ENGINE/animation_setters.o(.sdata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sdata);
@@ -86,7 +86,7 @@ SECTIONS
         build/asm/Game/BOSS.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
         build/asm/Game/PLAYER_STATES.o(.sbss);
-        build/asm/Game/VEHICLE.o(.sbss);
+        build/src/Game/VEHICLE/vehicle.o(.sbss);
         build/asm/Game/MAIN.o(.sbss);
         build/asm/LIBCD.o(.sbss);
         build/asm/LIBGPU.o(.sbss);
@@ -96,7 +96,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_accessors.o(.sbss);
         build/src/Game/ENGINE/empty_stub_18d4c.o(.sbss);
         build/asm/Game/ENGINE_9554.o(.sbss);
-        build/asm/Game/ENGINE_ENTITY.o(.sbss);
+        build/src/Game/ENGINE/entity_system.o(.sbss);
         build/src/Game/ENGINE/sprite_setters.o(.sbss);
         build/src/Game/ENGINE/animation_setters.o(.sbss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sbss);
@@ -114,7 +114,7 @@ SECTIONS
         build/asm/Game/BOSS.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
         build/asm/Game/PLAYER_STATES.o(.bss);
-        build/asm/Game/VEHICLE.o(.bss);
+        build/src/Game/VEHICLE/vehicle.o(.bss);
         build/asm/Game/MAIN.o(.bss);
         build/asm/LIBCD.o(.bss);
         build/asm/LIBGPU.o(.bss);
@@ -124,7 +124,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_accessors.o(.bss);
         build/src/Game/ENGINE/empty_stub_18d4c.o(.bss);
         build/asm/Game/ENGINE_9554.o(.bss);
-        build/asm/Game/ENGINE_ENTITY.o(.bss);
+        build/src/Game/ENGINE/entity_system.o(.bss);
         build/src/Game/ENGINE/sprite_setters.o(.bss);
         build/src/Game/ENGINE/animation_setters.o(.bss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.bss);
@@ -140,7 +140,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_accessors.o(.text);
         build/src/Game/ENGINE/empty_stub_18d4c.o(.text);
         build/asm/Game/ENGINE_9554.o(.text);
-        build/asm/Game/ENGINE_ENTITY.o(.text);
+        build/src/Game/ENGINE/entity_system.o(.text);
         build/src/Game/ENGINE/sprite_setters.o(.text);
         build/src/Game/ENGINE/animation_setters.o(.text);
         build/asm/Game/OBJECT.o(.text);
@@ -148,7 +148,7 @@ SECTIONS
         build/asm/Game/PLAYER.o(.text);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.text);
         build/asm/Game/PLAYER_STATES.o(.text);
-        build/asm/Game/VEHICLE.o(.text);
+        build/src/Game/VEHICLE/vehicle.o(.text);
         build/src/Game/VEHICLE/static_game_state.o(.text);
         build/src/Game/VEHICLE/empty_callbacks.o(.text);
         build/src/Game/MAIN/blb_memory.o(.text);
@@ -169,7 +169,7 @@ SECTIONS
         build/asm/Game/BOSS.o(.data);
         build/asm/Game/PLAYER.o(.data);
         build/asm/Game/PLAYER_STATES.o(.data);
-        build/asm/Game/VEHICLE.o(.data);
+        build/src/Game/VEHICLE/vehicle.o(.data);
         build/asm/Game/MAIN.o(.data);
         build/asm/LIBCD.o(.data);
         build/asm/LIBGPU.o(.data);
@@ -179,7 +179,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_accessors.o(.data);
         build/src/Game/ENGINE/empty_stub_18d4c.o(.data);
         build/asm/Game/ENGINE_9554.o(.data);
-        build/asm/Game/ENGINE_ENTITY.o(.data);
+        build/src/Game/ENGINE/entity_system.o(.data);
         build/src/Game/ENGINE/sprite_setters.o(.data);
         build/src/Game/ENGINE/animation_setters.o(.data);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.data);
