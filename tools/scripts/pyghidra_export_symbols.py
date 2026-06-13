@@ -34,6 +34,8 @@ import json
 import os
 import re
 import sys
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from typing import Optional, Tuple, List, Dict, Any
 
@@ -333,10 +335,396 @@ def export_symbols(
     return symbols
 
 
+MCP_JSON_BEGIN = "__GHIDRA_EXPORT_JSON_BEGIN__"
+MCP_JSON_END = "__GHIDRA_EXPORT_JSON_END__"
+
+
+def _java_bool(value: bool) -> str:
+    return "true" if value else "false"
+
+
+def _build_mcp_export_script_template(
+    addr_min: int,
+    addr_max: int,
+    include_functions: bool,
+    include_data: bool,
+) -> str:
+    """Compatibility wrapper for the raw MCP export script builder below."""
+    return _build_mcp_export_script(addr_min, addr_max, include_functions, include_data)
+
+    return f'''import ghidra.app.script.GhidraScript;
+import ghidra.program.model.address.Address;
+import ghidra.program.model.data.DataType;
+import ghidra.program.model.listing.Data;
+import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionIterator;
+import ghidra.program.model.listing.Listing;
+import ghidra.program.model.symbol.Symbol;
+import ghidra.program.model.symbol.SymbolIterator;
+import ghidra.program.model.symbol.SymbolTable;
+import ghidra.program.model.symbol.SymbolType;
+
+public class ExportSymbolsForSplat extends GhidraScript {{
+    private static final long ADDR_MIN = 0x{addr_min:X}L;
+    private static final long ADDR_MAX = 0x{addr_max:X}L;
+    private static final boolean INCLUDE_FUNCTIONS = {_java_bool(include_functions)};
+    private static final boolean INCLUDE_DATA = {_java_bool(include_data)};
+    private boolean first = true;
+
+    private boolean inRange(Address address) {{
+        long value = address.getOffset();
+        return Long.compareUnsigned(value, ADDR_MIN) >= 0 && Long.compareUnsigned(value, ADDR_MAX) <= 0;
+    }}
+
+    private String esc(Object object) {{
+        if (object == null) {{
+            return "";
+        }}
+        String s = object.toString();
+        StringBuilder out = new StringBuilder(s.length() + 16);
+        for (int i = 0; i < s.length(); i++) {{
+            char c = s.charAt(i);
+            switch (c) {{
+                case '\\\\': out.append("\\\\\\\\"); break;
+                case '\"': out.append("\\\\\""); break;
+                case '\\b': out.append("\\\\b"); break;
+                case '\\f': out.append("\\\\f"); break;
+                case '\\n': out.append("\\\\n"); break;
+                case '\\r': out.append("\\\\r"); break;
+                case '\\t': out.append("\\\\t"); break;
+                default:
+                    if (c < 0x20) {{
+                        out.append(String.format("\\\\u%04x", (int)c));
+                    }} else {{
+                        out.append(c);
+                    }}
+            }}
+        }}
+        return out.toString();
+    }}
+
+    private void emit(String objectJson) {{
+        if (!first) {{
+            println(",");
+        }}
+        println(objectJson);
+        first = false;
+    }}
+
+    @Override
+    public void run() throws Exception {{
+        Listing listing = currentProgram.getListing();
+
+        println("{MCP_JSON_BEGIN}");
+        println("[");
+
+        if (INCLUDE_FUNCTIONS) {{
+            FunctionIterator functions = currentProgram.getFunctionManager().getFunctions(true);
+            while (functions.hasNext() && !monitor.isCancelled()) {{
+                Function func = functions.next();
+                Address address = func.getEntryPoint();
+                if (!inRange(address)) {{
+                    continue;
+                }}
+
+                long size = func.getBody() == null ? 0 : func.getBody().getNumAddresses();
+                String signature = "";
+                try {{
+                    signature = func.getSignature().getPrototypeString();
+                }} catch (Exception ignored) {{
+                }}
+                String returnType = "";
+                try {{
+                    returnType = String.valueOf(func.getReturnType());
+                }} catch (Exception ignored) {{
+                }}
+                String callingConvention = "";
+                try {{
+                    callingConvention = String.valueOf(func.getCallingConventionName());
+                }} catch (Exception ignored) {{
+                }}
+
+                emit("{{\"type\":\"function\","
+                    + "\"address\":" + Long.toUnsignedString(address.getOffset()) + ","
+                    + "\"name\":\"" + esc(func.getName()) + "\"," 
+                    + "\"size\":" + size + ","
+                    + "\"signature\":\"" + esc(signature) + "\"," 
+                    + "\"return_type\":\"" + esc(returnType) + "\"," 
+                    + "\"calling_convention\":\"" + esc(callingConvention) + "\"," 
+                    + "\"is_external\":" + func.isExternal() + ","
+                    + "\"is_thunk\":" + func.isThunk()
+                    + "}}");
+            }}
+        }}
+
+        if (INCLUDE_DATA) {{
+            SymbolTable symbolTable = currentProgram.getSymbolTable();
+            SymbolIterator symbols = symbolTable.getAllSymbols(true);
+            while (symbols.hasNext() && !monitor.isCancelled()) {{
+                Symbol symbol = symbols.next();
+                if (symbol.getSymbolType() == SymbolType.FUNCTION) {{
+                    continue;
+                }}
+                Address address = symbol.getAddress();
+                if (address == null || !address.isMemoryAddress() || !inRange(address)) {{
+                    continue;
+                }}
+
+                Data data = listing.getDataAt(address);
+                String dataType = "undefined";
+                long size = 0;
+                if (data != null) {{
+                    DataType dt = data.getDataType();
+                    dataType = dt == null ? "undefined" : dt.toString();
+                    size = data.getLength();
+                }}
+
+                emit("{{\"type\":\"data\","
+                    + "\"address\":" + Long.toUnsignedString(address.getOffset()) + ","
+                    + "\"name\":\"" + esc(symbol.getName()) + "\"," 
+                    + "\"size\":" + size + ","
+                    + "\"data_type\":\"" + esc(dataType) + "\""
+                    + "}}");
+            }}
+        }}
+
+        println("");
+        println("]");
+        println("{MCP_JSON_END}");
+    }}
+}}
+'''
+
+
+def _build_mcp_export_script(
+    addr_min: int,
+    addr_max: int,
+    include_functions: bool,
+    include_data: bool,
+) -> str:
+    """Build a Java GhidraScript that exports symbols in one MCP call.
+
+    This raw f-string keeps the Java source quote escapes intact.
+    """
+    return rf'''import ghidra.app.script.GhidraScript;
+import ghidra.program.model.address.Address;
+import ghidra.program.model.data.DataType;
+import ghidra.program.model.listing.Data;
+import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionIterator;
+import ghidra.program.model.listing.Listing;
+import ghidra.program.model.symbol.Symbol;
+import ghidra.program.model.symbol.SymbolIterator;
+import ghidra.program.model.symbol.SymbolTable;
+import ghidra.program.model.symbol.SymbolType;
+
+public class ExportSymbolsForSplat extends GhidraScript {{
+    private static final long ADDR_MIN = 0x{addr_min:X}L;
+    private static final long ADDR_MAX = 0x{addr_max:X}L;
+    private static final boolean INCLUDE_FUNCTIONS = {_java_bool(include_functions)};
+    private static final boolean INCLUDE_DATA = {_java_bool(include_data)};
+    private boolean first = true;
+
+    private boolean inRange(Address address) {{
+        long value = address.getOffset();
+        return Long.compareUnsigned(value, ADDR_MIN) >= 0 && Long.compareUnsigned(value, ADDR_MAX) <= 0;
+    }}
+
+    private String esc(Object object) {{
+        if (object == null) {{
+            return "";
+        }}
+        String s = object.toString();
+        StringBuilder out = new StringBuilder(s.length() + 16);
+        for (int i = 0; i < s.length(); i++) {{
+            char c = s.charAt(i);
+            switch (c) {{
+                case '\\': out.append("\\\\"); break;
+                case '"': out.append("\\\""); break;
+                case '\b': out.append("\\b"); break;
+                case '\f': out.append("\\f"); break;
+                case '\n': out.append("\\n"); break;
+                case '\r': out.append("\\r"); break;
+                case '\t': out.append("\\t"); break;
+                default:
+                    if (c < 0x20) {{
+                        out.append(String.format("\\u%04x", (int)c));
+                    }} else {{
+                        out.append(c);
+                    }}
+            }}
+        }}
+        return out.toString();
+    }}
+
+    private void emit(String objectJson) {{
+        if (!first) {{
+            println(",");
+        }}
+        println(objectJson);
+        first = false;
+    }}
+
+    @Override
+    public void run() throws Exception {{
+        Listing listing = currentProgram.getListing();
+
+        println("{MCP_JSON_BEGIN}");
+        println("[");
+
+        if (INCLUDE_FUNCTIONS) {{
+            FunctionIterator functions = currentProgram.getFunctionManager().getFunctions(true);
+            while (functions.hasNext() && !monitor.isCancelled()) {{
+                Function func = functions.next();
+                Address address = func.getEntryPoint();
+                if (!inRange(address)) {{
+                    continue;
+                }}
+
+                long size = func.getBody() == null ? 0 : func.getBody().getNumAddresses();
+                String signature = "";
+                try {{
+                    signature = func.getSignature().getPrototypeString();
+                }} catch (Exception ignored) {{
+                }}
+                String returnType = "";
+                try {{
+                    returnType = String.valueOf(func.getReturnType());
+                }} catch (Exception ignored) {{
+                }}
+                String callingConvention = "";
+                try {{
+                    callingConvention = String.valueOf(func.getCallingConventionName());
+                }} catch (Exception ignored) {{
+                }}
+
+                emit("{{\"type\":\"function\"," 
+                    + "\"address\":" + Long.toUnsignedString(address.getOffset()) + ","
+                    + "\"name\":\"" + esc(func.getName()) + "\"," 
+                    + "\"size\":" + size + ","
+                    + "\"signature\":\"" + esc(signature) + "\"," 
+                    + "\"return_type\":\"" + esc(returnType) + "\"," 
+                    + "\"calling_convention\":\"" + esc(callingConvention) + "\"," 
+                    + "\"is_external\":" + func.isExternal() + ","
+                    + "\"is_thunk\":" + func.isThunk()
+                    + "}}");
+            }}
+        }}
+
+        if (INCLUDE_DATA) {{
+            SymbolTable symbolTable = currentProgram.getSymbolTable();
+            SymbolIterator symbols = symbolTable.getAllSymbols(true);
+            while (symbols.hasNext() && !monitor.isCancelled()) {{
+                Symbol symbol = symbols.next();
+                if (symbol.getSymbolType() == SymbolType.FUNCTION) {{
+                    continue;
+                }}
+                Address address = symbol.getAddress();
+                if (address == null || !address.isMemoryAddress() || !inRange(address)) {{
+                    continue;
+                }}
+
+                Data data = listing.getDataAt(address);
+                String dataType = "undefined";
+                long size = 0;
+                if (data != null) {{
+                    DataType dt = data.getDataType();
+                    dataType = dt == null ? "undefined" : dt.toString();
+                    size = data.getLength();
+                }}
+
+                emit("{{\"type\":\"data\"," 
+                    + "\"address\":" + Long.toUnsignedString(address.getOffset()) + ","
+                    + "\"name\":\"" + esc(symbol.getName()) + "\"," 
+                    + "\"size\":" + size + ","
+                    + "\"data_type\":\"" + esc(dataType) + "\""
+                    + "}}");
+            }}
+        }}
+
+        println("");
+        println("]");
+        println("{MCP_JSON_END}");
+    }}
+}}
+'''
+
+
+def export_symbols_mcp(
+    mcp_url: str,
+    program_name: str,
+    addr_range: Tuple[int, int] = (0, 0xFFFFFFFF),
+    include_functions: bool = True,
+    include_data: bool = True,
+    include_auto_names: bool = False,
+    verbose: bool = False,
+) -> List[Dict[str, Any]]:
+    """Export symbols from the currently running Ghidra MCP server."""
+    addr_min, addr_max = addr_range
+    code = _build_mcp_export_script(addr_min, addr_max, include_functions, include_data)
+
+    base = mcp_url.rstrip('/')
+    query = ''
+    if program_name:
+        query = '?' + urllib.parse.urlencode({'program': program_name})
+    url = f'{base}/run_script_inline{query}'
+
+    if verbose:
+        target = program_name or '<current program>'
+        print(f"Exporting symbols via Ghidra MCP from {target} at {base}", file=sys.stderr)
+
+    request = urllib.request.Request(
+        url,
+        data=json.dumps({'code': code}).encode('utf-8'),
+        headers={'Content-Type': 'application/json'},
+        method='POST',
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            text = response.read().decode('utf-8', errors='replace')
+    except Exception as e:
+        raise RuntimeError(
+            f"Failed to export via Ghidra MCP at {base}. Is Ghidra running with the MCP plugin enabled? {e}"
+        ) from e
+
+    start = text.find(MCP_JSON_BEGIN)
+    end = text.find(MCP_JSON_END)
+    if start < 0 or end < 0 or end <= start:
+        raise RuntimeError(f"Ghidra MCP export did not return JSON markers. Response tail:\n{text[-4000:]}")
+
+    json_text = text[start + len(MCP_JSON_BEGIN):end].strip()
+    symbols = json.loads(json_text)
+
+    for sym in symbols:
+        sym['address'] = int(sym['address'])
+        sym['rom_offset'] = vram_to_rom(sym['address'])
+
+    if not include_auto_names:
+        filtered = []
+        for sym in symbols:
+            name = sym.get('name', '')
+            if sym.get('type') == 'function':
+                if name.startswith('FUN_') or name.startswith('func_'):
+                    continue
+            else:
+                if name.startswith('DAT_') or name.startswith('PTR_') or name.startswith('s_'):
+                    continue
+            filtered.append(sym)
+        symbols = filtered
+
+    symbols.sort(key=lambda x: x['address'])
+
+    if verbose:
+        print(f"Total: {len(symbols)} symbols", file=sys.stderr)
+
+    return symbols
+
+
 def format_symbol_addrs(symbols: List[Dict], include_size: bool = True) -> str:
     """Format symbols as symbol_addrs.txt for splat."""
     lines = [
-        "// Auto-generated from Ghidra via PyGhidra",
+        "// Auto-generated from Ghidra export",
         f"// Total: {len(symbols)} symbols",
         ""
     ]
@@ -368,7 +756,7 @@ def format_symbol_addrs(symbols: List[Dict], include_size: bool = True) -> str:
 def format_yaml(symbols: List[Dict]) -> str:
     """Format symbols as YAML for splat config."""
     lines = [
-        "# Auto-generated from Ghidra via PyGhidra",
+        "# Auto-generated from Ghidra export",
         "# Copy relevant sections to your splat YAML config",
         "subsegments:"
     ]
@@ -399,7 +787,7 @@ def format_yaml(symbols: List[Dict]) -> str:
 def format_text(symbols: List[Dict]) -> str:
     """Format symbols as human-readable text."""
     lines = [
-        f"# Ghidra symbols export (PyGhidra)",
+        f"# Ghidra symbols export",
         f"# Total: {len(symbols)} symbols",
         f"# {'='*78}",
         f"# {'Address':<12} {'ROM':<8} {'Size':<8} {'Type':<10} Name",
@@ -465,6 +853,10 @@ Examples:
                         help='Verbose output')
     parser.add_argument('--output', '-o', type=str, default=None,
                         help='Output file (default: stdout)')
+    parser.add_argument('--use-mcp', action='store_true',
+                        help='Export from the running Ghidra MCP server instead of opening the project with PyGhidra')
+    parser.add_argument('--mcp-url', default=os.environ.get('GHIDRA_MCP_URL', 'http://127.0.0.1:8089'),
+                        help='Ghidra MCP base URL for --use-mcp (default: %(default)s)')
     
     args = parser.parse_args()
     
@@ -478,16 +870,27 @@ Examples:
     include_data = not args.functions_only
     
     try:
-        symbols = export_symbols(
-            project_path=args.project,
-            project_name=args.name,
-            program_name=args.program,
-            addr_range=addr_range,
-            include_functions=include_functions,
-            include_data=include_data,
-            include_auto_names=args.include_auto,
-            verbose=args.verbose
-        )
+        if args.use_mcp:
+            symbols = export_symbols_mcp(
+                mcp_url=args.mcp_url,
+                program_name=args.program,
+                addr_range=addr_range,
+                include_functions=include_functions,
+                include_data=include_data,
+                include_auto_names=args.include_auto,
+                verbose=args.verbose
+            )
+        else:
+            symbols = export_symbols(
+                project_path=args.project,
+                project_name=args.name,
+                program_name=args.program,
+                addr_range=addr_range,
+                include_functions=include_functions,
+                include_data=include_data,
+                include_auto_names=args.include_auto,
+                verbose=args.verbose
+            )
     except ImportError as e:
         print(f"ERROR: PyGhidra not installed. Run: pip install pyghidra", file=sys.stderr)
         print(f"       Also ensure GHIDRA_INSTALL_DIR is set or Ghidra was recently run.", file=sys.stderr)

@@ -535,14 +535,16 @@ debug:
 # Export symbols from Ghidra using PyGhidra (headless, more accurate)
 # Requires: GHIDRA_INSTALL_DIR set, PyGhidra installed
 # Usage: make ghidra-export [FORMAT=text|yaml|json|symbol_addrs]
-GHIDRA_PROJECT_DIR ?= $(HOME)/ghidra_projects
+GHIDRA_PROJECT_DIR ?= $(if $(wildcard /mnt/share/sam/ghidra/skullmonkeys.gpr),/mnt/share/sam/ghidra,$(HOME)/ghidra_projects)
 GHIDRA_PROJECT_NAME ?= skullmonkeys
 GHIDRA_PROGRAM ?= SLES_010.90
 EXPORT_FORMAT ?= symbol_addrs
+GHIDRA_MCP_URL ?= http://127.0.0.1:8089
+GHIDRA_EXPORT_BACKEND ?= mcp
 
 .PHONY: ghidra-export ghidra-export-all
 ghidra-export:
-	@if [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
+	@if [ "$(GHIDRA_EXPORT_BACKEND)" = "pyghidra" ] && [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
 		echo "Error: GHIDRA_INSTALL_DIR not set"; \
 		echo "Set it in your shell or flake.nix will auto-detect common paths"; \
 		exit 1; \
@@ -553,11 +555,12 @@ ghidra-export:
 		--program $(GHIDRA_PROGRAM) \
 		--format $(EXPORT_FORMAT) \
 		--functions-only \
+		$(if $(filter mcp,$(GHIDRA_EXPORT_BACKEND)),--use-mcp --mcp-url $(GHIDRA_MCP_URL),) \
 		-v
 
 # Export symbols and automatically update symbol_addrs.txt
 ghidra-export-all:
-	@if [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
+	@if [ "$(GHIDRA_EXPORT_BACKEND)" = "pyghidra" ] && [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
 		echo "Error: GHIDRA_INSTALL_DIR not set"; \
 		exit 1; \
 	fi
@@ -568,6 +571,7 @@ ghidra-export-all:
 		--program $(GHIDRA_PROGRAM) \
 		--format symbol_addrs \
 		-o symbol_addrs_new.txt \
+		$(if $(filter mcp,$(GHIDRA_EXPORT_BACKEND)),--use-mcp --mcp-url $(GHIDRA_MCP_URL),) \
 		-v
 	@echo ""
 	@echo "New symbols saved to symbol_addrs_new.txt"
