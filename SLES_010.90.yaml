@@ -68,7 +68,7 @@
     - "system/early_stub"
   -
     - 2852
-    - "asm"
+    - "rodata"
     - "Game/INIT_TABLES"
   -
     - 3628
@@ -119,7 +119,7 @@
     - "asm"
     - "Game/RENDER_5C3C"
   -
-    - 37848
+    - 37020
     - "c"
     - "render/sprite_accessors"
   -

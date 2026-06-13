@@ -24,8 +24,8 @@ SECTIONS
         main_TEXT_START = .;
         build/asm/Game/INIT.o(.text);
         build/src/system/early_stub.o(.text);
-        build/asm/Game/INIT_TABLES.o(.text);
         main_RODATA_START = .;
+        build/asm/data/Game/INIT_TABLES.rodata.o(.rodata);
         build/asm/data/Game/OBJECT.rodata.o(.rodata);
         build/asm/data/Game/PLAYER_EARLY.rodata.o(.rodata);
         build/asm/data/Game/PLAYER.rodata.o(.rodata);
@@ -52,7 +52,7 @@ SECTIONS
         main_SDATA_START = .;
         build/asm/Game/INIT.o(.sdata);
         build/src/system/early_stub.o(.sdata);
-        build/asm/Game/INIT_TABLES.o(.sdata);
+        build/asm/data/Game/INIT_TABLES.rodata.o(.sdata);
         build/asm/Game/OBJECT.o(.sdata);
         build/asm/Game/PLAYER_EARLY.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
@@ -79,7 +79,7 @@ SECTIONS
         main_SBSS_START = .;
         build/asm/Game/INIT.o(.sbss);
         build/src/system/early_stub.o(.sbss);
-        build/asm/Game/INIT_TABLES.o(.sbss);
+        build/asm/data/Game/INIT_TABLES.rodata.o(.sbss);
         build/asm/Game/OBJECT.o(.sbss);
         build/asm/Game/PLAYER_EARLY.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
@@ -106,7 +106,7 @@ SECTIONS
         main_BSS_START = .;
         build/asm/Game/INIT.o(.bss);
         build/src/system/early_stub.o(.bss);
-        build/asm/Game/INIT_TABLES.o(.bss);
+        build/asm/data/Game/INIT_TABLES.rodata.o(.bss);
         build/asm/Game/OBJECT.o(.bss);
         build/asm/Game/PLAYER_EARLY.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
@@ -158,7 +158,7 @@ SECTIONS
         main_DATA_START = .;
         build/asm/Game/INIT.o(.data);
         build/src/system/early_stub.o(.data);
-        build/asm/Game/INIT_TABLES.o(.data);
+        build/asm/data/Game/INIT_TABLES.rodata.o(.data);
         build/asm/Game/OBJECT.o(.data);
         build/asm/Game/PLAYER_EARLY.o(.data);
         build/asm/Game/PLAYER.o(.data);
@@ -187,7 +187,6 @@ SECTIONS
         main_DATA_SIZE = ABSOLUTE(main_DATA_END - main_DATA_START);
         build/asm/Game/INIT.o(.rodata);
         build/src/system/early_stub.o(.rodata);
-        build/asm/Game/INIT_TABLES.o(.rodata);
         main_RODATA_END = .;
         main_RODATA_SIZE = ABSOLUTE(main_RODATA_END - main_RODATA_START);
         build/asm/data/96154.sdata.o(.sdata);

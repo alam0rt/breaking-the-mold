@@ -1,6 +1,8 @@
 D_80012B96 = 0x80012B96;
+MenuEntityDestroyCallback = 0x80019864;
 CLUTPaletteCycleTickCallback = 0x8001991C;
 CLUTColorLerpTickCallback = 0x80019A14;
+EntityDestructor_Simple2 = 0x80025930;
 EntityTick_ScaleFadeOut = 0x80026C50;
 EntityTick_ScaleFadeIn = 0x80026CD8;
 EntityTick_PlatformRideIdle = 0x80026F34;
@@ -12,6 +14,8 @@ EntityTick_DigitDisplayUpdate = 0x80027418;
 EntityTick_HUDItemUpdate = 0x80027860;
 PlatformOscillateWithBobbingTick = 0x80027BB8;
 PlatformOscillateWithRotationTick = 0x80027E9C;
+EntityDestructor_RemoveFromRenderList = 0x80028068;
+TriggerFadeTransition = 0x800280F8;
 MovieFrameDecodeCallback = 0x80039E5C;
 StubMovieStreamCallback = 0x80039F9C;
 TimedCollectibleTickCallback = 0x8003AEA0;

@@ -2425,3 +2425,5 @@ Callback_8009c270 = 0x8009C270; // size:0x1
 Callback_8009c2a8 = 0x8009C2A8; // size:0x1
 // Data aliases required by current C sources
 g_GameStateBase = 0x8009DC40; // type:GameState // Main game state structure
+D_80010344 = 0x80010344; // PrimObject vtable (INIT_TABLES)
+D_8001039C = 0x8001039C; // PrimObject base vtable (INIT_TABLES)
