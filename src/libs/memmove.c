@@ -1,6 +1,6 @@
 #include "common.h"
 
-void *func_80082F94(u8 *dst, u8 *src, s32 len) {
+void *memmove(u8 *dst, u8 *src, s32 len) {
     u8 *dstEnd;
     u8 *srcEnd;
 
