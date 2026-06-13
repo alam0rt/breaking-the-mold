@@ -98,84 +98,10 @@ PrimObject *InitSpriteObject(void *arg, s16 id) {
     return p;
 }
 
-void SubmitPrimitiveBufferToGPU(PrimObject *buf) {
-    u16 ofs[2];
-    s32 idx;
-    u8 frame;
-    u16 i;
-    u8 **list;
-    u8 *prim;
-    void *p;
-    s16 x;
-    s16 y;
-
-    if (buf->enabled == 0) {
-        return;
-    }
-
-    idx = D_800A5954[0]->frameIdx;
-    frame = idx;
-    ofs[0] = 0;
-    ofs[1] = idx << 8;
-    SetDrawOffset(&buf->envA[idx], ofs);
-    AddPrim(D_800A5954[0]->gpu->ot, (u8 *)(idx * 12 + (s32)buf + 0x14));
-
-    i = 0;
-    while (1) {
-        list = buf->primList;
-        if (list == NULL) {
-            break;
-        }
-        prim = list[i];
-        if (prim == NULL) {
-            break;
-        }
-
-        switch (prim[7] & 0xFC) {
-        case 0x20:
-            p = AllocPrim20_Pool3(D_800A5954[0]);
-            memcpy(p, buf->primList[i], 0x14);
-            AddPrim(D_800A5954[0]->gpu->ot, p);
-            break;
-        case 0x28:
-            p = AllocPrim24(D_800A5954[0]);
-            memcpy(p, buf->primList[i], 0x18);
-            AddPrim(D_800A5954[0]->gpu->ot, p);
-            break;
-        case 0x30:
-            p = AllocPrim28(D_800A5954[0]);
-            memcpy(p, buf->primList[i], 0x1C);
-            AddPrim(D_800A5954[0]->gpu->ot, p);
-            break;
-        case 0x38:
-            p = AllocPrim36(D_800A5954[0]);
-            memcpy(p, buf->primList[i], 0x24);
-            AddPrim(D_800A5954[0]->gpu->ot, p);
-            break;
-        }
-        i++;
-    }
-
-    x = buf->x;
-    if (buf->x < 0) {
-        ofs[0] = x - 0x8000;
-    } else {
-        ofs[0] = x;
-    }
-
-    y = buf->y;
-    if (buf->y + (frame << 8) < 0) {
-        ofs[1] = y + ((frame << 8) - 0x8000);
-    } else {
-        ofs[1] = y + (frame << 8);
-    }
-
-    SetDrawOffset(&buf->envB[frame], ofs);
-    AddPrim(D_800A5954[0]->gpu->ot, (u8 *)(frame * 12 + (s32)buf + 0x2C));
-    SetDrawTPage(&buf->tpagePrim[frame], 0, 0,
-                 GetTPage(0, buf->tpageMode, 0, 0));
-    AddPrim(D_800A5954[0]->gpu->ot, &buf->tpagePrim[frame]);
-}
+/* SubmitPrimitiveBufferToGPU @ 0x800188E0 - matches as C except an 8-instruction
+ * register-coloring diff; shelved as asm via maspsx-keep INCLUDE_ASM (mid-file,
+ * before the accessors below) until the match lands. */
+INCLUDE_ASM("asm/nonmatchings/render/sprite_accessors", SubmitPrimitiveBufferToGPU);
 
 
 void func_80018BD8(RenderSprite *spr, u8 value) {
