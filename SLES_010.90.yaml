@@ -1,148 +1,213 @@
-name: SLES_010.90
-sha1: 5a14b65cb44813bfed1ee53c6a3f4456bc230f97
-options:
-  basename: SLES_010.90
-  target_path: bin/SLES_010.90
-  elf_path: build/SLES_010.90.elf
-  base_path: .
-  platform: psx
-  compiler: PSYQ
-  migrate_rodata_to_functions: false
+# GENERATED FILE - DO NOT EDIT.
+# Source: SLES_010.90.jsonnet
+# Regenerate with: make config
 
-  asm_path: asm
-  src_path: src
-  nonmatchings_path: nonmatchings
-  build_path: build
-  hasm_in_src_path: true
-
-  ld_script_path: SLES_010.90.ld
-  ld_dependencies: true
-
-  find_file_boundaries: true
-  gp_value: 0x800A5954
-
-  o_as_suffix: true
-  use_legacy_include_asm: false
-
-  section_order: [".rodata", ".text", ".data", ".sdata", ".sbss", ".bss"]
-  auto_link_sections: [".data", ".rodata", ".sdata", ".sbss", ".bss"]
-
-  # Follow YAML order exactly (don't reorder by section type)
-  ld_legacy_generation: true
-
-  # Disable section alignment to match original binary layout
-  ld_align_section_vram_end: false
-  ld_align_segment_vram_end: false
-
-  symbol_addrs_path:
-  - symbol_addrs.txt
-  reloc_addrs_path:
-  - reloc_addrs.txt
-
-  undefined_funcs_auto_path: undefined_funcs.txt
-  undefined_syms_auto_path: undefined_syms.txt
-
-  extensions_path: tools/splat_ext
-
-  subalign: 2
-
-  string_encoding: ASCII
-  data_string_encoding: ASCII
-  rodata_string_guesser_level: 2
-  data_string_guesser_level: 2
-
-segments:
-- name: header
-  type: header
-  start: 0x0
-
-- name: main
-  type: code
-  start: 0x800
-  vram: 0x80010000
-  bss_size: 0x8278
-  subsegments:
-      # =========================================================================
-      # .rodata section: 0x80010000 - 0x800131EF
-      # NOTE: Original binary has code bytes stored in rodata section!
-      # These are NOT actual rodata - they're code bytes the linker placed here.
-      # =========================================================================
-  - [0x800, asm, Game/INIT]
-  - [0xB1C, c, system/early_stub]
-  - [0xB24, asm, Game/INIT_TABLES]
-  - [0xE2C, rodata, Game/OBJECT]           # OBJECT rodata: switch/entity callback tables (0x80010624)
-  - [0x1E28, rodata, Game/PLAYER_EARLY]    # PLAYER early rodata (0x80011628)
-  - [0x2044, rodata, Game/PLAYER]          # PLAYER aligned rodata split (0x80011844)
-  - [0x2554, rodata, Game/GAMELOOP_EARLY]  # GAMELOOP early rodata (0x80011D54)
-  - [0x2940, rodata, Game/GAMELOOP]        # GAMELOOP aligned rodata split (0x80012140)
-
-    # PSY-Q library rodata (jump tables, strings)
-  - [0x2F58, rodata, assets/blb_memory] # BLB entity callback table (0x80012758)
-  - [0x2F78, rodata, LIBCD]   # libcd rodata
-  - [0x34F4, rodata, LIBGPU]  # libgpu rodata
-  - [0x3970, rodata, LIBSPU]  # libspu rodata
-
-      # =========================================================================
-      # .text section: 0x800131F0 - 0x80090FEB
-      # Game code organized by subsystem (soul-re style uppercase names)
-      # =========================================================================
-
-      # --- RENDER: Graphics system, VRAM, tiles, sprites (0x800131F0 - 0x8001A0C7) ---
-      # InitGraphicsSystem, VRAM slots, tile rendering, sprite rendering
-  - [0x39F0, asm, Game/RENDER]      # (0x800131F0 - 0x8001A0C7, all stubs via INCLUDE_ASM)
-  - [0x5C34, c, render/stub_vibrate_off]
-  - [0x5C3C, asm, Game/RENDER_5C3C]
-  - [0x954C, c, render/empty_stub_18d4c]
-  - [0x9554, asm, Game/RENDER_9554]
-
-      # --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
-      # InitEntityStruct, animation, collision, state machine, callbacks
-  - [0xA8C8, asm, Game/ENTITY]
-
-      # --- OBJECT: Game objects - enemies, items, decor (0x8002A378 - 0x80058167) ---
-      # HUD, decor entities, collectibles, enemies, projectiles, bosses
-  - [0x1AB78, asm, Game/OBJECT]
-
-      # --- PLAYER: Player character system (0x80058168 - 0x80071047) ---
-      # PlayerTickCallback, state machine, physics, input handling
-  - [0x48968, asm, Game/PLAYER_EARLY]
-  - [0x4AE30, asm, Game/PLAYER]
-  - [0x617D8, c, entity/destructor_spu_at10c]
-
-      # --- GAMELOOP: Main game flow, menus, level loading (0x80071048 - 0x80082FFF) ---
-      # Tile collision, FINN vehicle, menu system, BLB loading, main()
-  - [0x61848, asm, Game/GAMELOOP_EARLY]
-  - [0x6D9D0, asm, Game/GAMELOOP]
-  - [0x73690, c, world/static_game_state]
-  - [0x736E0, c, system/empty_callbacks]
-  - [0x736F0, c, assets/blb_memory]
-  - [0x73754, asm, libs/bios_trampolines]
-  - [0x73794, c, libs/memmove]
-
-        # --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
-        # libcd, libgpu, libgte, libspu, libetc
-  - [0x73800, asm, LIBCD]
-  - [0x79AE4, asm, LIBGPU]
-  - [0x80260, asm, LIBSPU]
-  - [0x80F24, c, libs/libspu_voice]
-  - [0x80FD0, asm, LIBS_80FD0]
-
-      # =========================================================================
-      # .data section: 0x80090FEC - 0x800A5953
-      # =========================================================================
-  - [0x80FEC, data]
-
-      # =========================================================================
-      # .sdata section: 0x800A5954 - 0x800A611F (GP-relative small data)
-      # =========================================================================
-  - [0x96154, sdata]
-
-      # =========================================================================
-      # .sbss section: 0x800A6120 - 0x800AD953 (GP-relative uninitialized data)
-      # .bss section: 0x800AD954 - 0x800AE397 (regular uninitialized data)
-      # Total bss_size: 0x8278
-      # =========================================================================
-  - { start: 0x96920, type: sbss, vram: 0x800A6120 }
-  - { start: 0x96920, type: bss, vram: 0x800AD954 }
-
-- [0x97000]    # End of file (618496 bytes)
+"name": "SLES_010.90"
+"options":
+  "asm_path": "asm"
+  "auto_link_sections":
+  - ".data"
+  - ".rodata"
+  - ".sdata"
+  - ".sbss"
+  - ".bss"
+  "base_path": "."
+  "basename": "SLES_010.90"
+  "build_path": "build"
+  "compiler": "PSYQ"
+  "data_string_encoding": "ASCII"
+  "data_string_guesser_level": 2
+  "elf_path": "build/SLES_010.90.elf"
+  "extensions_path": "tools/splat_ext"
+  "find_file_boundaries": true
+  "gp_value": 2148161876
+  "hasm_in_src_path": true
+  "ld_align_section_vram_end": false
+  "ld_align_segment_vram_end": false
+  "ld_dependencies": true
+  "ld_legacy_generation": true
+  "ld_script_path": "SLES_010.90.ld"
+  "migrate_rodata_to_functions": false
+  "nonmatchings_path": "nonmatchings"
+  "o_as_suffix": true
+  "platform": "psx"
+  "reloc_addrs_path":
+  - "reloc_addrs.txt"
+  "rodata_string_guesser_level": 2
+  "section_order":
+  - ".rodata"
+  - ".text"
+  - ".data"
+  - ".sdata"
+  - ".sbss"
+  - ".bss"
+  "src_path": "src"
+  "string_encoding": "ASCII"
+  "subalign": 2
+  "symbol_addrs_path":
+  - "symbol_addrs.txt"
+  "target_path": "bin/SLES_010.90"
+  "undefined_funcs_auto_path": "undefined_funcs.txt"
+  "undefined_syms_auto_path": "undefined_syms.txt"
+  "use_legacy_include_asm": false
+"segments":
+- "name": "header"
+  "start": 0
+  "type": "header"
+- "bss_size": 33400
+  "name": "main"
+  "start": 2048
+  "subsegments":
+  -
+    - 2048
+    - "asm"
+    - "Game/INIT"
+  -
+    - 2844
+    - "c"
+    - "system/early_stub"
+  -
+    - 2852
+    - "asm"
+    - "Game/INIT_TABLES"
+  -
+    - 3628
+    - "rodata"
+    - "Game/OBJECT"
+  -
+    - 7720
+    - "rodata"
+    - "Game/PLAYER_EARLY"
+  -
+    - 8260
+    - "rodata"
+    - "Game/PLAYER"
+  -
+    - 9556
+    - "rodata"
+    - "Game/GAMELOOP_EARLY"
+  -
+    - 10560
+    - "rodata"
+    - "Game/GAMELOOP"
+  -
+    - 12120
+    - "rodata"
+    - "assets/blb_memory"
+  -
+    - 12152
+    - "rodata"
+    - "LIBCD"
+  -
+    - 13556
+    - "rodata"
+    - "LIBGPU"
+  -
+    - 14704
+    - "rodata"
+    - "LIBSPU"
+  -
+    - 14832
+    - "asm"
+    - "Game/RENDER"
+  -
+    - 23604
+    - "c"
+    - "render/stub_vibrate_off"
+  -
+    - 23612
+    - "asm"
+    - "Game/RENDER_5C3C"
+  -
+    - 38220
+    - "c"
+    - "render/empty_stub_18d4c"
+  -
+    - 38228
+    - "asm"
+    - "Game/RENDER_9554"
+  -
+    - 43208
+    - "asm"
+    - "Game/ENTITY"
+  -
+    - 109432
+    - "asm"
+    - "Game/OBJECT"
+  -
+    - 297320
+    - "asm"
+    - "Game/PLAYER_EARLY"
+  -
+    - 306736
+    - "asm"
+    - "Game/PLAYER"
+  -
+    - 399320
+    - "c"
+    - "entity/destructor_spu_at10c"
+  -
+    - 399432
+    - "asm"
+    - "Game/GAMELOOP_EARLY"
+  -
+    - 448976
+    - "asm"
+    - "Game/GAMELOOP"
+  -
+    - 472720
+    - "c"
+    - "world/static_game_state"
+  -
+    - 472800
+    - "c"
+    - "system/empty_callbacks"
+  -
+    - 472816
+    - "c"
+    - "assets/blb_memory"
+  -
+    - 472916
+    - "asm"
+    - "libs/bios_trampolines"
+  -
+    - 472980
+    - "c"
+    - "libs/memmove"
+  -
+    - 473088
+    - "asm"
+    - "LIBCD"
+  -
+    - 498404
+    - "asm"
+    - "LIBGPU"
+  -
+    - 524896
+    - "asm"
+    - "LIBSPU"
+  -
+    - 528164
+    - "c"
+    - "libs/libspu_voice"
+  -
+    - 528336
+    - "asm"
+    - "LIBS_80FD0"
+  -
+    - 528364
+    - "data"
+  -
+    - 614740
+    - "sdata"
+  - "start": 616736
+    "type": "sbss"
+    "vram": 2148163872
+  - "start": 616736
+    "type": "bss"
+    "vram": 2148194644
+  "type": "code"
+  "vram": 2147549184
+-
+  - 618496
+"sha1": "5a14b65cb44813bfed1ee53c6a3f4456bc230f97"

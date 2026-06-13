@@ -14,11 +14,14 @@
 # Project name (matches binary name, like soul-re)
 PROJECT := SLES_010.90
 
-# Splat configuration file (in repo root, named after binary)
+# Splat configuration source and generated YAML file.
+# Edit the Jsonnet file; Make renders YAML before invoking splat.
+SPLAT_CONFIG_SRC := $(PROJECT).jsonnet
 SPLAT_CONFIG := $(PROJECT).yaml
+JSONNET := jsonnet
 
-# Expected SHA1 hash (extracted from splat config)
-EXPECTED_SHA1 := $(shell grep '^sha1:' $(SPLAT_CONFIG) | cut -d' ' -f2)
+# Expected SHA1 hash (extracted from Jsonnet source)
+EXPECTED_SHA1 := $(shell $(JSONNET) -S -e '(import "$(SPLAT_CONFIG_SRC)").sha1' 2>/dev/null || grep -E '^"?sha1"?:' $(SPLAT_CONFIG) 2>/dev/null | sed -E 's/.*"([0-9a-fA-F]{40})".*/\1/' | head -1)
 
 # Build output directory
 BUILD_DIR := build
@@ -78,10 +81,6 @@ SPLAT := $(PYTHON) -m splat split
 
 # m2c - MIPS to C decompiler
 M2C := $(PYTHON) tools/m2c/m2c.py
-SPLAT := $(PYTHON) -m splat split
-
-# m2c - MIPS to C decompiler
-M2C := $(PYTHON) tools/m2c/m2c.py
 
 # -----------------------------------------------------------------------------
 # Compiler Flags
@@ -134,13 +133,13 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract expected diff context check tools help lint lint-lua check-lua lint-fix
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua check-lua lint-fix
 
 # Default target - uses recursive make if ASM files don't exist
-all:
+all: $(SPLAT_CONFIG)
 	@if [ ! -d "$(ASM_DIR)" ]; then \
 		echo "ASM directory missing, running splat..."; \
-		$(SPLAT) $(SPLAT_CONFIG); \
+		$(SPLAT) $(SPLAT_CONFIG) && touch $(LD_SCRIPT); \
 	fi
 	@$(MAKE) --no-print-directory build
 	@echo "Build complete!"
@@ -158,6 +157,7 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all              - Build the project (default, byte-matching)"
+	@echo "  config           - Render $(SPLAT_CONFIG) from $(SPLAT_CONFIG_SRC)"
 	@echo "  extract          - Extract/disassemble binary using splat"
 	@echo "  expected         - Copy original binary to expected/"
 	@echo "  check            - Verify build matches original (quick)"
@@ -199,15 +199,31 @@ help:
 # Extraction (splat)
 # -----------------------------------------------------------------------------
 
+config: $(SPLAT_CONFIG)
+
+$(SPLAT_CONFIG): $(SPLAT_CONFIG_SRC) Makefile
+	@echo "Rendering splat config from $<..."
+	@tmp="$@.tmp"; \
+	rm -f "$$tmp"; \
+	{ \
+		echo "# GENERATED FILE - DO NOT EDIT."; \
+		echo "# Source: $<"; \
+		echo "# Regenerate with: make config"; \
+		echo ""; \
+		$(JSONNET) -S -e 'std.manifestYamlDoc(import "$<")'; \
+	} > "$$tmp" && mv "$$tmp" "$@"
+
 extract: $(SPLAT_CONFIG)
 	@echo "Extracting binary using splat..."
 	$(SPLAT) $(SPLAT_CONFIG)
+	@touch $(LD_SCRIPT)
 	@echo "Extraction complete. ASM files in $(ASM_DIR)/"
 
 # Generate linker script and ASM files if they don't exist
 $(LD_SCRIPT): $(SPLAT_CONFIG) $(BASEROM)
 	@echo "Running splat to generate linker script and ASM..."
 	$(SPLAT) $(SPLAT_CONFIG)
+	@touch $(LD_SCRIPT)
 
 # -----------------------------------------------------------------------------
 # Compilation Rules
