@@ -3,11 +3,14 @@
 #include "Game/game_state.h"
 
 extern GameState *D_800A5960;
+extern void *D_800A5954;
+extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
 extern void InitEntityStruct(Entity *entity, s16 allocSize);
 extern void ClearSpriteContextWrapper(void *ctx);
 extern void ZeroEntityField(void *field);
 extern void InitEntityAnimationState(SpriteEntity *entity);
 extern u8 D_8001044C[];
+extern void CalculateEntityScreenBounds(Entity *entity);
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityStruct);
 
@@ -92,18 +95,7 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckEntityPointCollis
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityBroadcastPointCollision);
 
-extern void CalculateEntityScreenBounds(Entity *entity);
-extern s32 CheckBoxCollision(GameState *gs, u32 packedTL, u32 packedBR, u16 mask);
-
-s32 CheckEntityBoxCollision(Entity *entity, u16 mask) {
-    CalculateEntityScreenBounds(entity);
-    return CheckBoxCollision(
-        D_800A5960,
-        (u16)entity->screenX1 | ((u16)entity->screenY1 << 16),
-        (u16)entity->screenX2 | ((u16)entity->screenY2 << 16),
-        mask
-    ) & 0xFF;
-}
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckEntityBoxCollision);
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffScreen);
 
@@ -144,7 +136,13 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityAnimationSta
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", DestroyEntityAndFreeMemory);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", AllocateEntityPixelBuffer);
+void AllocateEntityPixelBuffer(SpriteEntity *entity) {
+    void *heap = D_800A5954;
+    s16 *ctx = (s16 *)entity->base.spriteContext;
+    s32 size = (s32)ctx[2] * (s32)ctx[3];
+    *(s32 *)&entity->_padD4[0] = size;
+    entity->pPixelBuffer = AllocateFromHeap(heap, 1, size, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityUpdateCallback);
 
