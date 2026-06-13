@@ -118,6 +118,7 @@ local bss(start, kind, vram) = {
         asm('39F0', 'Game/RENDER'),  // all stubs via INCLUDE_ASM
         c('5C34', 'render/stub_vibrate_off'),
         asm('5C3C', 'Game/RENDER_5C3C'),
+        c('93D8', 'render/sprite_accessors'),
         c('954C', 'render/empty_stub_18d4c'),
         asm('9554', 'Game/RENDER_9554'),
 

@@ -119,6 +119,10 @@
     - "asm"
     - "Game/RENDER_5C3C"
   -
+    - 37848
+    - "c"
+    - "render/sprite_accessors"
+  -
     - 38220
     - "c"
     - "render/empty_stub_18d4c"

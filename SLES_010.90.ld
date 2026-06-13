@@ -38,6 +38,7 @@ SECTIONS
         build/asm/Game/RENDER.o(.rodata);
         build/src/render/stub_vibrate_off.o(.rodata);
         build/asm/Game/RENDER_5C3C.o(.rodata);
+        build/src/render/sprite_accessors.o(.rodata);
         build/src/render/empty_stub_18d4c.o(.rodata);
         build/asm/Game/RENDER_9554.o(.rodata);
         build/asm/Game/ENTITY.o(.rodata);
@@ -64,6 +65,7 @@ SECTIONS
         build/asm/Game/RENDER.o(.sdata);
         build/src/render/stub_vibrate_off.o(.sdata);
         build/asm/Game/RENDER_5C3C.o(.sdata);
+        build/src/render/sprite_accessors.o(.sdata);
         build/src/render/empty_stub_18d4c.o(.sdata);
         build/asm/Game/RENDER_9554.o(.sdata);
         build/asm/Game/ENTITY.o(.sdata);
@@ -90,6 +92,7 @@ SECTIONS
         build/asm/Game/RENDER.o(.sbss);
         build/src/render/stub_vibrate_off.o(.sbss);
         build/asm/Game/RENDER_5C3C.o(.sbss);
+        build/src/render/sprite_accessors.o(.sbss);
         build/src/render/empty_stub_18d4c.o(.sbss);
         build/asm/Game/RENDER_9554.o(.sbss);
         build/asm/Game/ENTITY.o(.sbss);
@@ -116,6 +119,7 @@ SECTIONS
         build/asm/Game/RENDER.o(.bss);
         build/src/render/stub_vibrate_off.o(.bss);
         build/asm/Game/RENDER_5C3C.o(.bss);
+        build/src/render/sprite_accessors.o(.bss);
         build/src/render/empty_stub_18d4c.o(.bss);
         build/asm/Game/RENDER_9554.o(.bss);
         build/asm/Game/ENTITY.o(.bss);
@@ -129,6 +133,7 @@ SECTIONS
         build/asm/Game/RENDER.o(.text);
         build/src/render/stub_vibrate_off.o(.text);
         build/asm/Game/RENDER_5C3C.o(.text);
+        build/src/render/sprite_accessors.o(.text);
         build/src/render/empty_stub_18d4c.o(.text);
         build/asm/Game/RENDER_9554.o(.text);
         build/asm/Game/ENTITY.o(.text);
@@ -166,6 +171,7 @@ SECTIONS
         build/asm/Game/RENDER.o(.data);
         build/src/render/stub_vibrate_off.o(.data);
         build/asm/Game/RENDER_5C3C.o(.data);
+        build/src/render/sprite_accessors.o(.data);
         build/src/render/empty_stub_18d4c.o(.data);
         build/asm/Game/RENDER_9554.o(.data);
         build/asm/Game/ENTITY.o(.data);
