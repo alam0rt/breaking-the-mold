@@ -558,7 +558,8 @@ ghidra-export:
 		$(if $(filter mcp,$(GHIDRA_EXPORT_BACKEND)),--use-mcp --mcp-url $(GHIDRA_MCP_URL),) \
 		-v
 
-# Export symbols and automatically update symbol_addrs.txt
+# Export function symbols for manual review/merge into symbol_addrs.txt.
+# Struct/type exports should live in a separate type-header workflow.
 ghidra-export-all:
 	@if [ "$(GHIDRA_EXPORT_BACKEND)" = "pyghidra" ] && [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
 		echo "Error: GHIDRA_INSTALL_DIR not set"; \
@@ -570,6 +571,7 @@ ghidra-export-all:
 		--name $(GHIDRA_PROJECT_NAME) \
 		--program $(GHIDRA_PROGRAM) \
 		--format symbol_addrs \
+		--functions-only \
 		-o symbol_addrs_new.txt \
 		$(if $(filter mcp,$(GHIDRA_EXPORT_BACKEND)),--use-mcp --mcp-url $(GHIDRA_MCP_URL),) \
 		-v

@@ -85,6 +85,65 @@ def sanitize_name(name: str) -> str:
     return name or "unnamed"
 
 
+def is_auto_generated_symbol_name(name: str) -> bool:
+    """Return true for Ghidra/spimdisasm-style auto names that are not useful globals.
+
+    These labels are often local branch targets, switch cases, raw pointers, or
+    placeholder data names. Feeding them to splat as global symbols can create
+    duplicate symbol definitions or replace curated names with noise.
+    """
+    if not name:
+        return True
+
+    raw = name.strip()
+    sanitized = sanitize_name(raw)
+    lower = sanitized.lower()
+
+    if sanitized in {"switchD", "unnamed"}:
+        return True
+
+    auto_prefixes = (
+        "FUN_",
+        "func_",
+        "DAT_",
+        "PTR_",
+        "LAB_",
+        "SUB_",
+        "caseD_",
+        "switchD_",
+        "s_",
+    )
+    if sanitized.startswith(auto_prefixes):
+        return True
+
+    if lower.startswith(("null_", "undefined", "default")):
+        return True
+
+    return False
+
+
+def uniquify_symbol_name(name: str, addr: int, used_names: Dict[str, int]) -> Optional[str]:
+    """Return a splat-safe unique symbol name, or None for exact duplicates."""
+    if name not in used_names:
+        used_names[name] = addr
+        return name
+
+    if used_names[name] == addr:
+        return None
+
+    base = name
+    candidate = f"{base}_{addr:08X}"
+    suffix = 2
+    while candidate in used_names:
+        if used_names[candidate] == addr:
+            return None
+        candidate = f"{base}_{addr:08X}_{suffix}"
+        suffix += 1
+
+    used_names[candidate] = addr
+    return candidate
+
+
 def ghidra_type_to_splat(ghidra_type: str) -> Optional[str]:
     """Convert Ghidra type to splat-compatible type annotation."""
     if not ghidra_type:
@@ -212,9 +271,8 @@ def export_symbols(
                 name = func.getName()
                 
                 # Skip auto-generated names unless requested
-                if not include_auto_names:
-                    if name.startswith('FUN_') or name.startswith('func_'):
-                        continue
+                if not include_auto_names and is_auto_generated_symbol_name(name):
+                    continue
                 
                 # Get function size from body
                 body = func.getBody()
@@ -285,9 +343,8 @@ def export_symbols(
                 name = symbol.getName()
                 
                 # Skip auto-generated names unless requested
-                if not include_auto_names:
-                    if name.startswith('DAT_') or name.startswith('PTR_') or name.startswith('s_'):
-                        continue
+                if not include_auto_names and is_auto_generated_symbol_name(name):
+                    continue
                 
                 # Get the data at this address if it exists
                 data = listing.getDataAt(symbol.getAddress())
@@ -728,13 +785,18 @@ def format_symbol_addrs(symbols: List[Dict], include_size: bool = True) -> str:
         f"// Total: {len(symbols)} symbols",
         ""
     ]
+    used_names: Dict[str, int] = {}
     
     for sym in symbols:
         addr = sym['address']
         name = sanitize_name(sym['name'])
         
         # Skip remaining auto-generated names
-        if name.startswith('FUN_') or name.startswith('func_') or name.startswith('DAT_'):
+        if is_auto_generated_symbol_name(name):
+            continue
+
+        name = uniquify_symbol_name(name, addr, used_names)
+        if name is None:
             continue
         
         if sym['type'] == 'function':
