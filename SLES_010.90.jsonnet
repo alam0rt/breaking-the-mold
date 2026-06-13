@@ -133,7 +133,7 @@ local bss(start, kind, vram) = {
         // InitEntityStruct, animation, collision, state machine, callbacks.
         asm('A8C8', 'Game/ENTITY'),
         c('D880', 'entity/sprite_setters'),  // SetEntitySpriteId + SetAnimationSpriteFlags
-        asm('D8C0', 'Game/ENTITY_b'),
+        c('D8C0', 'entity/animation_setters'),
 
         // --- OBJECT: Game objects - enemies, items, decor (0x8002A378 - 0x80058167) ---
         // HUD, decor entities, collectibles, enemies, projectiles, bosses.

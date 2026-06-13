@@ -141,8 +141,8 @@
     - "entity/sprite_setters"
   -
     - 55488
-    - "asm"
-    - "Game/ENTITY_b"
+    - "c"
+    - "entity/animation_setters"
   -
     - 109432
     - "asm"

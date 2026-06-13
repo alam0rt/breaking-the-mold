@@ -254,19 +254,137 @@ register allocator naturally re-picks `$v0` for the `la` because it
 is the lowest free caller-saved temp; nothing in the source
 controls that prioritization.
 
-**Working theory:** the original was built with a slightly different
-PSY-Q-era cc1 patch level — likely one in which sched1 had a stronger
-preference for retaining the constant-load result (`li $v0, -1` from
-the branch delay slot at offset `0x20`) by *deferring* its only use
+**Working theory (DISPROVEN 2026-06-13):** the original was built with a
+slightly different PSY-Q-era cc1 patch level — likely one in which sched1 had
+a stronger preference for retaining the constant-load result (`li $v0, -1`
+from the branch delay slot at offset `0x20`) by *deferring* its only use
 until the `la` had been scheduled into a different free temp. The
-decompals/old-gcc 0.17 release does not contain that exact build.
-This matches what we've observed in other PSX decomps where some
-functions stay non-matching at 200–250 score on otherwise-correct
-source.
+decompals/old-gcc 0.17 release does not contain that exact build. This
+matches what we've observed in other PSX decomps where some functions stay
+non-matching at 200–250 score on otherwise-correct source.
 
-**Recommendation:**
+**Update 2026-06-13 — ruled out:** ran the real PSY-Q 4.0 SN Systems
+`CC1PSX.EXE` (`GNU C 2.7.2.SN32.3.7.0002 [AL 1.1, MM 40] Sony Playstation
+compiled by CC`, dated 14.5.97) extracted from the original Programmer Tools
+CD 2.0. See [tools/gcc-2.7.2-sn32/](../tools/gcc-2.7.2-sn32/) — it's a Win32
+PE binary driven through wine via a thin [cc1 wrapper script](../tools/gcc-2.7.2-sn32/cc1).
+Output is **byte-for-byte identical** (`cmp -s` reports identical .o) to our
+standard `tools/gcc-2.7.2-psx/cc1` on both source orderings:
 
-1. Accept 225 as a known floor and `INCLUDE_ASM` the two CLUT
+| source order            | gcc-2.7.2-psx | gcc-2.7.2-sn32 | identical? |
+|-------------------------|---------------|----------------|------------|
+| `markerHi; fn; markerLo;` (current) | 420 | 420 | ✓ |
+| `markerLo; markerHi; fn;` (old)     | 1180 | 1180 | ✓ |
+
+(Scores measured by `tools/decomp-permuter/src/scorer.py` with the
+`PERM_RANDOMIZE` wrapper removed — strictly larger numbers than the
+`@PERM_RANDOMIZE`-aware `140`/`225` floors quoted earlier, but the *ratio*
+and the `psx == sn32` equality are the meaningful signal.)
+
+So the floor is **not** caused by a missing GCC patch level: the actual
+PSY-Q 4.0 cc1 produces the same code as the decompals rebuild we already
+ship. The remaining differences with the target must come from one of:
+
+1. A still-later SN build that did ship in the game (e.g. Programmer Tools CD
+   3.x, 4.x, or 5.x — the version that ships ASPSX 2.86, which we already
+   know was used since `--aspsx-version=2.86` is required for matching).
+2. Different cc1 flags (none of the obvious knobs help — see flag sweep above).
+3. A source shape we haven't reached yet despite 80+ permuter-bombed variants.
+
+**Update 2026-06-14 — library version pinned to PSY-Q 4.0.** Ran every
+PSY-Q library signature pack from [lab313ru/psx_psyq_signatures](https://github.com/lab313ru/psx_psyq_signatures)
+against the four LIB segments in `bin/SLES_010.90` using
+[tools/psyq-version-detect.py](../tools/psyq-version-detect.py):
+
+| PSY-Q version | matched sigs / total |
+|---------------|---------------------|
+| **4.0**       | **108 / 1228** (peak) |
+| 3.7           | 87 / 1088 |
+| 4.6           | 73 / 2167 |
+| 4.7           | 69 / 2170 |
+| 4.1           | 47 / 1328 |
+| (everything else) | < 50 |
+
+Pairwise discrimination via [tools/psyq-version-compare.py](../tools/psyq-version-compare.py)
+is even clearer:
+
+- **4.0 vs 4.1:** 43 shared, **61 only-in-4.0**, **0 only-in-4.1**
+- **4.0 vs 3.7:** 84 shared, **20 only-in-4.0**, **0 only-in-3.7**
+
+The game's library code is therefore strictly closer to PSY-Q 4.0 than to
+3.7 (older) or 4.1 (newer). Discriminators span every LIB (LIBAPI, LIBC,
+LIBCD `BIOS.OBJ`/`CDREAD*.OBJ`/`ISO9660.OBJ`/`SYS.OBJ`, LIBETC `INTR*.OBJ`,
+LIBGPU `EXT.OBJ`/`PRIM.OBJ`/`SYS.OBJ`, LIBGTE `COR_0[1-6].OBJ`/`MSC00.OBJ`,
+LIBSPU `SPU.OBJ`/`S_SV*.OBJ`) — not just a handful of small thunks.
+
+So the **library binaries** in Skullmonkeys are from PSY-Q 4.0 (May 1997).
+That doesn't fully pin the build environment though:
+
+- The compiler binary in PSY-Q 4.0 (`GNU/CC1PSX.EXE` =
+  `2.7.2.SN32.3.7.0002`, build 14.5.97) is byte-identical in output to our
+  `tools/gcc-2.7.2-psx/cc1`, so cc1 is not what's different.
+- PSY-Q 4.0's bundled ASPSX is 2.56, but our `--aspsx-version=2.86`
+  maspsx setting is what matches the binary. Re-testing
+  `func_80019F88` with `--aspsx-version` 2.50/2.56/2.66/2.77/2.81/2.86
+  produced **identical scores** for both `gcc-2.7.2-psx` and
+  `gcc-2.7.2-sn32` — for this function, none of the ASPSX-version-gated
+  knobs (`expand_li`, `sltu_at`, `gp_allow_offset`, `gp_allow_la`) fire,
+  so the aspsx contradiction has no observable effect here.
+
+**Bottom line:** the libraries are PSY-Q 4.0, the cc1 produces identical
+code to PSY-Q 4.0's, and aspsx version is invisible at the 140 floor.
+The remaining 140-floor gap is a pure cc1 source-shape problem — there is
+no missing-toolchain-version explanation left to chase.
+
+Reproducer for any future cc1 binary: drop the new `cc1` next to a
+`tools/gcc-2.7.2-XXX/` folder and rerun
+`tools/compiler-sweep.sh nonmatchings/func_80019F88-rand/base.c
+nonmatchings/func_80019F88-rand/target.o`.
+
+### Update 2026-06-14: 225 floor manually broken to 140 (no permuter)
+
+A targeted source-shape sweep (`tools/floor-140.sh`,
+`tools/floor-padded.sh`, `tools/floor-sub140*.sh`) found two source
+mutations that combine to drop the score from 420 → 140 *without* the
+permuter and without any toolchain change:
+
+1. **Natural marker order `lo, hi, fn`** (was `hi, fn, lo` per old
+   `@hack`): 420 → 225. The earlier "`hi; fn; lo;` required for 225"
+   guidance in `base.c` was wrong — see grid in `tools/floor-padded.sh`,
+   any of `{lo,hi,fn}`, `{hi,lo,fn}` reaches 225; `{hi,fn,lo}` is
+   strictly worse at 420.
+2. **`desc->flag39 = flag;` moved to *after* the three marker writes**:
+   225 → 140. The store ends up at the spot where the target keeps the
+   tail of the la-fix sequence, so the `differences` algorithm's
+   insertion/deletion count drops by one pair.
+
+Both changes together match the candidate that the permuter previously
+discovered as `output-140-1/source.c`; the new `nonmatchings/func_80019F88-rand/base.c`
+now hardcodes this best-known shape as the seed. Combined sweep results
+(see scripts; first column is score):
+
+```
+  140  lo,hi,fn natural order + flag39 after markers  <- accepted best
+  200  lo,hi,fn + BOTH flags after markers
+  225  lo,hi,fn natural order (old)
+  225  hi,lo,fn order
+  225  marker writes in nested scope
+  300  cb-var TickCallback fn intermediate
+  345..505  various other desc-field reorders
+  420  hi,fn,lo (the @hack the old base.c documented)
+  760..1200 other orderings (worse)
+```
+
+The remaining 140-floor diff is now exactly the 5-instruction la-fix
+window (target loads `fn` into `$v1` then stores Lo/Hi; ours stores Hi
+first, then loads `fn` into `$v0`, then Lo). None of: `static const fn`,
+named `TickCallback fn = …` temps, address-taken markers, volatile
+intermediates, register-asm pinning to `$3`, inline-`la`-via-array,
+or struct/union casts moved below 140 — see `tools/floor-sub140c.sh`.
+
+### Recommendation
+
+1. Accept 140 as the current floor and `INCLUDE_ASM` the two CLUT
    functions for now. Document them as Quirk-5 instances.
 2. If/when a missing GCC patch level (a 2.7.2 build with slightly
    different sched1) surfaces in another decomp project, retest both
@@ -274,8 +392,9 @@ source.
 3. When decompiling new "tick-slot install" functions (greppable
    pattern: `li $v0, -1` in a branch delay slot followed by stores
    to `sp+lo/sp+hi/sp+fn` and a struct copy into `$s0` / first arg)
-   expect the same 225 floor and don't permuter-bomb them past a
-   few thousand iterations.
+   expect the same 140-floor pattern. Start with the `lo,hi,fn` natural
+   marker order and the `flag39`-style trailing byte-write moved to
+   between `markers` and `desc->tick = local.slot;`.
 
 The `func_80019F88-rand` candidate tree and `compiler-sweep.sh` are
 the reproducer if anyone wants to retry on a future toolchain.

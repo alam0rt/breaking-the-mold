@@ -43,7 +43,7 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.rodata);
         build/asm/Game/ENTITY.o(.rodata);
         build/src/entity/sprite_setters.o(.rodata);
-        build/asm/Game/ENTITY_b.o(.rodata);
+        build/src/entity/animation_setters.o(.rodata);
         build/src/entity/destructor_spu_at10c.o(.rodata);
         build/src/world/static_game_state.o(.rodata);
         build/src/system/empty_callbacks.o(.rodata);
@@ -72,7 +72,7 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.sdata);
         build/asm/Game/ENTITY.o(.sdata);
         build/src/entity/sprite_setters.o(.sdata);
-        build/asm/Game/ENTITY_b.o(.sdata);
+        build/src/entity/animation_setters.o(.sdata);
         build/src/entity/destructor_spu_at10c.o(.sdata);
         build/src/world/static_game_state.o(.sdata);
         build/src/system/empty_callbacks.o(.sdata);
@@ -101,7 +101,7 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.sbss);
         build/asm/Game/ENTITY.o(.sbss);
         build/src/entity/sprite_setters.o(.sbss);
-        build/asm/Game/ENTITY_b.o(.sbss);
+        build/src/entity/animation_setters.o(.sbss);
         build/src/entity/destructor_spu_at10c.o(.sbss);
         build/src/world/static_game_state.o(.sbss);
         build/src/system/empty_callbacks.o(.sbss);
@@ -130,7 +130,7 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.bss);
         build/asm/Game/ENTITY.o(.bss);
         build/src/entity/sprite_setters.o(.bss);
-        build/asm/Game/ENTITY_b.o(.bss);
+        build/src/entity/animation_setters.o(.bss);
         build/src/entity/destructor_spu_at10c.o(.bss);
         build/src/world/static_game_state.o(.bss);
         build/src/system/empty_callbacks.o(.bss);
@@ -146,7 +146,7 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.text);
         build/asm/Game/ENTITY.o(.text);
         build/src/entity/sprite_setters.o(.text);
-        build/asm/Game/ENTITY_b.o(.text);
+        build/src/entity/animation_setters.o(.text);
         build/asm/Game/OBJECT.o(.text);
         build/asm/Game/PLAYER_EARLY.o(.text);
         build/asm/Game/PLAYER.o(.text);
@@ -186,7 +186,7 @@ SECTIONS
         build/asm/Game/RENDER_9554.o(.data);
         build/asm/Game/ENTITY.o(.data);
         build/src/entity/sprite_setters.o(.data);
-        build/asm/Game/ENTITY_b.o(.data);
+        build/src/entity/animation_setters.o(.data);
         build/src/entity/destructor_spu_at10c.o(.data);
         build/src/world/static_game_state.o(.data);
         build/src/system/empty_callbacks.o(.data);
