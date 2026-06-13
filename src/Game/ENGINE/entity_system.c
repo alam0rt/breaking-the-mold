@@ -3,6 +3,13 @@
 #include "Game/game_state.h"
 
 extern GameState *D_800A5960;
+extern void *D_800A5954;
+
+extern void CalculateEntityScreenBounds(Entity *entity);
+extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
+extern s32 CheckBoxCollision(GameState *gs, s32 packedTL, s32 packedBR, u16 mask);
+extern s32 DispatchEventToCollidingEntity(GameState *gs, s32 packedTL, s32 packedBR, u16 mask1, u16 mask2, s32 arg, Entity *entity);
+extern s32 BroadcastBoxCollision(GameState *gs, s32 packedTL, s32 packedBR, u16 mask1, u16 mask2, s32 arg, Entity *entity);
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityStruct);
 
@@ -59,11 +66,21 @@ void SetEntityFacingDirection(Entity *entity, u8 direction) {
     entity->textureDirty = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", func_8001AAE4);
+void func_8001AAE4(Entity *entity, u8 direction) {
+    if (direction == 2) {
+        direction = entity->flipY == 0;
+    }
+    entity->flipY = direction;
+    entity->textureDirty = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", UpdateParallaxLayerPosition);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", func_8001B344);
+void func_8001B344(Entity *entity) {
+    if (entity->textureDirty) {
+        entity->textureDirty = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckPointInBox);
 
