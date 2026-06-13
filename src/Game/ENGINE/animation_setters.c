@@ -156,7 +156,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UploadEntityTextur
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", FindFrameIndexByValue);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", StartAnimationSequence);
+extern void StepAnimationSequence(void *entity);
+
+void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame) {
+    *(s16 *)&entity[0xE2] = 0;
+    *(s16 *)&entity[0xE4] = startFrame;
+    *(s32 *)&entity[0x94] = animData;
+    StepAnimationSequence(entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", StepAnimationSequence);
 
@@ -515,7 +522,10 @@ s32 func_800203E8(EntityAccessorView *e, s32 value) {
     return (value << 16) / e->field_58;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_80020424);
+void *func_80020424(void *dst, void *src) {
+    __builtin_memcpy(dst, (u8 *)src + 0x38, 8);
+    return dst;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", GetEntityYPosition);
 
