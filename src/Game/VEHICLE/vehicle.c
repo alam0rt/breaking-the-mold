@@ -71,15 +71,36 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType076_PathEnemy_Ini
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType024_118_SpecialAmmo_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType099_LevelStateCollectible_Init);
+extern void *InitLevelStateCollectible(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType109_TimedCollectible_Init);
+void EntityType099_LevelStateCollectible_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitLevelStateCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitAnimatedTimedCollectible(void *entity, void *spawnData);
+
+void EntityType109_TimedCollectible_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitAnimatedTimedCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType084_PathEnemyAlt_Init);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType096_PathPlatformEnemy_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType120_ChildSprite_Init);
+extern void *InitEntityWithChildSprite(void *entity, void *spawnData);
+
+void EntityType120_ChildSprite_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x11C, 1, 0);
+    entity = InitEntityWithChildSprite(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType001_BossEntity_Init);
 
@@ -140,7 +161,14 @@ void EntityType002_GreenBullets_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType022_EnemyCluster_Init);
+extern void *InitDecorEntityWithHUDIcon(void *entity, void *spawnData);
+
+void EntityType022_EnemyCluster_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x128, 1, 0);
+    entity = InitDecorEntityWithHUDIcon(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType007_Clayball_Init);
 
@@ -229,7 +257,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80080810);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPathDecor1Entity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType072_SuperWillie_Init);
+extern void *InitSuperWillieCollectible(void *entity, void *spawnData);
+
+void EntityType072_SuperWillie_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitSuperWillieCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitYellowBirdCollectible(void *entity, void *spawnData);
 
@@ -303,7 +338,14 @@ void EntityType042_thru_060_SnoBlo_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType047_048_SoundPlatform_Init);
+extern void *InitSoundEmittingEnemy(void *entity, void *spawnData);
+
+void EntityType047_048_SoundPlatform_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitSoundEmittingEnemy(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType080_TimerMenu_Init);
 
@@ -318,15 +360,50 @@ void EntityType045_BounceClay_Init(void *list, void *spawnData) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType065_Password_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType071_Boss_MonkeyMage_Init);
+extern void *InitMonkeyMageBoss(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType100_Boss_GlennYntis_Init);
+void EntityType071_Boss_MonkeyMage_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x148, 1, 0);
+    entity = InitMonkeyMageBoss(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType101_Boss_ShrineyGuard_Init);
+extern void *InitGlennYntisBoss(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType102_Boss_JoeHeadJoe_Init);
+void EntityType100_Boss_GlennYntis_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x11C, 1, 0);
+    entity = InitGlennYntisBoss(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType103_Boss_Klogg_Init);
+extern void *InitShrineyGuardBoss(void *entity, void *spawnData);
+
+void EntityType101_Boss_ShrineyGuard_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitShrineyGuardBoss(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitJoeHeadJoeBoss(void *entity, void *spawnData);
+
+void EntityType102_Boss_JoeHeadJoe_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x11C, 1, 0);
+    entity = InitJoeHeadJoeBoss(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitKloggBoss(void *entity, void *spawnData);
+
+void EntityType103_Boss_Klogg_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x118, 1, 0);
+    entity = InitKloggBoss(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType079_EnemySpawner_Init);
 
