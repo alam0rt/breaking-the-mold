@@ -62,7 +62,7 @@
   -
     - 2048
     - "asm"
-    - "Game/INIT"
+    - "Game/ENGINE_boot"
   -
     - 2844
     - "c"
@@ -70,7 +70,7 @@
   -
     - 2852
     - "rodata"
-    - "Game/INIT_TABLES"
+    - "Game/ENGINE"
   -
     - 3628
     - "rodata"
@@ -94,7 +94,7 @@
   -
     - 12120
     - "rodata"
-    - "assets/blb_memory"
+    - "Game/BLB"
   -
     - 12152
     - "rodata"
@@ -110,7 +110,7 @@
   -
     - 14832
     - "asm"
-    - "Game/RENDER"
+    - "Game/ENGINE"
   -
     - 23604
     - "c"
@@ -118,7 +118,7 @@
   -
     - 23612
     - "asm"
-    - "Game/RENDER_5C3C"
+    - "Game/ENGINE_5C3C"
   -
     - 37020
     - "c"
@@ -130,11 +130,11 @@
   -
     - 38228
     - "asm"
-    - "Game/RENDER_9554"
+    - "Game/ENGINE_9554"
   -
     - 43208
     - "asm"
-    - "Game/ENTITY"
+    - "Game/ENGINE_ENTITY"
   -
     - 55424
     - "c"
@@ -182,7 +182,7 @@
   -
     - 472916
     - "asm"
-    - "libs/bios_trampolines"
+    - "Game/BLB"
   -
     - 472980
     - "c"
@@ -206,7 +206,7 @@
   -
     - 528336
     - "asm"
-    - "LIBS_80FD0"
+    - "LIBSPU_tail"
   -
     - 528364
     - "data"

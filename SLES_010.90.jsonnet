@@ -95,103 +95,94 @@ local bss(start, kind, vram) = {
       bss_size: Hex('8278'),
 
       subsegments: [
-        // =====================================================================
-        // ORIGINAL COMPILATION UNITS (derived from rodata cross-references)
-        //
-        // The PSX linker places .rodata and .text from each .obj in the same
-        // link order. By matching rodata ownership to text segments (via Ghidra
-        // xrefs), we identified 10 original compilation units:
-        //
-        //  #  Rodata Segment        Text Segments (same .obj)
-        //  1  Game/INIT_TABLES      Game/INIT, system/early_stub, Game/RENDER,
-        //                           render/stub_vibrate_off, Game/RENDER_5C3C,
-        //                           render/sprite_accessors, render/empty_stub_18d4c,
-        //                           Game/RENDER_9554, Game/ENTITY,
-        //                           entity/sprite_setters, entity/animation_setters
-        //  2  Game/OBJECT           Game/OBJECT
-        //  3  Game/PLAYER_EARLY     Game/PLAYER_EARLY
-        //  4  Game/PLAYER           Game/PLAYER, entity/destructor_spu_at10c
-        //  5  Game/GAMELOOP_EARLY   Game/GAMELOOP_EARLY
-        //  6  Game/GAMELOOP         Game/GAMELOOP, world/static_game_state,
-        //                           system/empty_callbacks
-        //  7  assets/blb_memory     assets/blb_memory, libs/bios_trampolines,
-        //                           libs/memmove
-        //  8  LIBCD                 LIBCD
-        //  9  LIBGPU               LIBGPU
-        // 10  LIBSPU               LIBSPU, libs/libspu_voice, LIBS_80FD0
-        //
-        // Unit 1 is proven: none of its text segments have independent rodata,
-        // and INIT_TABLES (entity vtables) is referenced by functions across
-        // all of them. TODO: migrate to unified segment names per unit.
-        // =====================================================================
+        // =================================================================
+        // Segments named per original compilation unit (10 units total).
+        // Rodata and text segments sharing a name belong to the same .obj.
+        // C segments retain their src/ paths (preserving matched code).
+        // =================================================================
 
-        // =====================================================================
-        // .rodata section: 0x80010000 - 0x800131EF
-        // NOTE: Original binary has code bytes stored in rodata section!
-        // These are NOT actual rodata - they are code bytes the linker placed here.
-        // =====================================================================
-        asm('800', 'Game/INIT'),
+        // -----------------------------------------------------------------
+        // UNIT 1: Game/ENGINE — render/entity engine core (~107KB)
+        // Boot code, graphics init, sprite/tilemap rendering, entity
+        // lifecycle, resource management, vtable definitions.
+        // -----------------------------------------------------------------
+        asm('800', 'Game/ENGINE_boot'),        // hand-written memset, RLE decode
         c('B1C', 'system/early_stub'),
-        rodata('B24', 'Game/INIT_TABLES'),  // entity vtable table (not code)
-        rodata('E2C', 'Game/OBJECT'),  // OBJECT switch/entity callback tables (0x80010624)
-        rodata('1E28', 'Game/PLAYER_EARLY'),  // PLAYER early rodata (0x80011628)
-        rodata('2044', 'Game/PLAYER'),  // PLAYER aligned rodata split (0x80011844)
-        rodata('2554', 'Game/GAMELOOP_EARLY'),  // GAMELOOP early rodata (0x80011D54)
-        rodata('2940', 'Game/GAMELOOP'),  // GAMELOOP aligned rodata split (0x80012140)
+        rodata('B24', 'Game/ENGINE'),          // entity vtables (16 archetype tables)
+        rodata('E2C', 'Game/OBJECT'),
+        rodata('1E28', 'Game/PLAYER_EARLY'),
+        rodata('2044', 'Game/PLAYER'),
+        rodata('2554', 'Game/GAMELOOP_EARLY'),
+        rodata('2940', 'Game/GAMELOOP'),
+        rodata('2F58', 'Game/BLB'),            // BLB callback table
+        rodata('2F78', 'LIBCD'),
+        rodata('34F4', 'LIBGPU'),
+        rodata('3970', 'LIBSPU'),
 
-        // PSY-Q library rodata: jump tables, strings.
-        rodata('2F58', 'assets/blb_memory'),  // BLB entity callback table (0x80012758)
-        rodata('2F78', 'LIBCD'),  // libcd rodata
-        rodata('34F4', 'LIBGPU'),  // libgpu rodata
-        rodata('3970', 'LIBSPU'),  // libspu rodata
+        // --- .text ---
 
-        // =====================================================================
-        // .text section: 0x800131F0 - 0x80090FEB
-        // Game code organized by subsystem (soul-re style uppercase names)
-        // =====================================================================
-
-        // --- RENDER: Graphics system, VRAM, tiles, sprites (0x800131F0 - 0x8001A0C7) ---
-        // InitGraphicsSystem, VRAM slots, tile rendering, sprite rendering.
-        asm('39F0', 'Game/RENDER'),  // all stubs via INCLUDE_ASM
+        // UNIT 1 continued (text body)
+        asm('39F0', 'Game/ENGINE'),            // graphics, VRAM, sprites, tiles
         c('5C34', 'render/stub_vibrate_off'),
-        asm('5C3C', 'Game/RENDER_5C3C'),
+        asm('5C3C', 'Game/ENGINE_5C3C'),       // render init, tilemap, sprite context
         c('909C', 'render/sprite_accessors'),
         c('954C', 'render/empty_stub_18d4c'),
-        asm('9554', 'Game/RENDER_9554'),
-
-        // --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
-        // InitEntityStruct, animation, collision, state machine, callbacks.
-        asm('A8C8', 'Game/ENTITY'),
-        c('D880', 'entity/sprite_setters'),  // SetEntitySpriteId + SetAnimationSpriteFlags
+        asm('9554', 'Game/ENGINE_9554'),       // menu entity init, sprite object
+        asm('A8C8', 'Game/ENGINE_ENTITY'),     // entity system core
+        c('D880', 'entity/sprite_setters'),
         c('D8C0', 'entity/animation_setters'),
 
-        // --- OBJECT: Game objects - enemies, items, decor (0x8002A378 - 0x80058167) ---
-        // HUD, decor entities, collectibles, enemies, projectiles, bosses.
+        // -----------------------------------------------------------------
+        // UNIT 2: Game/OBJECT — enemies, items, decor, bosses
+        // -----------------------------------------------------------------
         asm('1AB78', 'Game/OBJECT'),
 
-        // --- PLAYER: Player character system (0x80058168 - 0x80071047) ---
-        // PlayerTickCallback, state machine, physics, input handling.
+        // -----------------------------------------------------------------
+        // UNIT 3: Game/PLAYER_EARLY — player init, early states
+        // -----------------------------------------------------------------
         asm('48968', 'Game/PLAYER_EARLY'),
+
+        // -----------------------------------------------------------------
+        // UNIT 4: Game/PLAYER — player state machine, physics, input
+        // -----------------------------------------------------------------
         asm('4AE30', 'Game/PLAYER'),
         c('617D8', 'entity/destructor_spu_at10c'),
 
-        // --- GAMELOOP: Main game flow, menus, level loading (0x80071048 - 0x80082FFF) ---
-        // Tile collision, FINN vehicle, menu system, BLB loading, main().
+        // -----------------------------------------------------------------
+        // UNIT 5: Game/GAMELOOP_EARLY — tile collision, FINN, menus
+        // -----------------------------------------------------------------
         asm('61848', 'Game/GAMELOOP_EARLY'),
+
+        // -----------------------------------------------------------------
+        // UNIT 6: Game/GAMELOOP — main loop, level loading, game state
+        // -----------------------------------------------------------------
         asm('6D9D0', 'Game/GAMELOOP'),
         c('73690', 'world/static_game_state'),
         c('736E0', 'system/empty_callbacks'),
+
+        // -----------------------------------------------------------------
+        // UNIT 7: Game/BLB — BLB assets, BIOS trampolines, memmove
+        // -----------------------------------------------------------------
         c('736F0', 'assets/blb_memory'),
-        asm('73754', 'libs/bios_trampolines'),
+        asm('73754', 'Game/BLB'),
         c('73794', 'libs/memmove'),
 
-        // --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
-        // libcd, libgpu, libgte, libspu, libetc.
+        // -----------------------------------------------------------------
+        // UNIT 8: LIBCD — PSY-Q CD-ROM library
+        // -----------------------------------------------------------------
         asm('73800', 'LIBCD'),
+
+        // -----------------------------------------------------------------
+        // UNIT 9: LIBGPU — PSY-Q GPU library
+        // -----------------------------------------------------------------
         asm('79AE4', 'LIBGPU'),
+
+        // -----------------------------------------------------------------
+        // UNIT 10: LIBSPU — PSY-Q SPU library
+        // -----------------------------------------------------------------
         asm('80260', 'LIBSPU'),
         c('80F24', 'libs/libspu_voice'),
-        asm('80FD0', 'LIBS_80FD0'),
+        asm('80FD0', 'LIBSPU_tail'),
 
         // =====================================================================
         // .data section: 0x80090FEC - 0x800A5953
