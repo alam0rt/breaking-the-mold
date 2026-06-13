@@ -2,6 +2,11 @@
 #include "Game/game_state.h"
 
 extern u16 GetLevelFlags(LevelDataContext *levelCtx);
+extern void *D_800A5954;
+extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
+extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
+extern void HidePauseMenuHUD(s32 handle);
+extern u8 D_80012120[];
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", InitializeAndLoadLevel);
 
@@ -23,9 +28,18 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RemoveCheckpointEntityById)
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", PauseGameAndShowMenu);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", PauseGameWithFadeOut);
+void PauseGameWithFadeOut(u8 *obj) {
+    PlaySoundEffect(0x4C60F249, 0xA0, 1);
+    obj[0x151] = 1;
+    HidePauseMenuHUD(*(s32 *)&obj[0x14C]);
+    obj[0x160] = 0x16;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SetNextLevelFlagWithFade);
+void SetNextLevelFlagWithFade(u8 *obj) {
+    obj[0x151] = 1;
+    obj[0x160] = 0x16;
+    obj[0x147] = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", UnpauseGameAndRestoreEntities);
 
@@ -254,7 +268,12 @@ void func_80082700(u8 *obj, u8 val) {
     obj[0x198] = val;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", FindSaveSlotForCurrentLevel);
+extern u8 D_800A608C[];
+extern s32 FindSaveSlotByName(u8 *name, u8 *slots);
+
+s32 FindSaveSlotForCurrentLevel(u8 *obj) {
+    return FindSaveSlotByName(&obj[0x84], D_800A608C);
+}
 
 void func_80082730(u8 *obj, u8 a, u8 b) {
     obj[0x19C] = a;
@@ -342,7 +361,9 @@ void func_80082844(void) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpecialEntityDestroyCallback_2120);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", FreeSpecialEntity2120Memory);
+void FreeSpecialEntity2120Memory(void *ptr) {
+    FreeFromHeap(D_800A5954, ptr, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", main);
 
