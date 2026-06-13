@@ -1,4 +1,7 @@
 #include "common.h"
+#include "Game/game_state.h"
+
+extern u16 GetLevelFlags(LevelDataContext *levelCtx);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", InitializeAndLoadLevel);
 
@@ -245,9 +248,13 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082730);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_8008273C);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GetLevelDebugFlag);
+u8 GetLevelDebugFlag(GameState *gameState) {
+    return GetLevelFlags(&gameState->level_context) >> 0xf;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GetLevelShowHUDFlag);
+u8 GetLevelShowHUDFlag(GameState *gameState) {
+    return (GetLevelFlags(&gameState->level_context) >> 0xe) & 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082790);
 
@@ -277,7 +284,9 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082808);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082810);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GetLevelAutoScrollFlag);
+u8 GetLevelAutoScrollFlag(GameState *gameState) {
+    return (GetLevelFlags(&gameState->level_context) >> 0xb) & 1;
+}
 
 void func_8008283C(void) {
 }
