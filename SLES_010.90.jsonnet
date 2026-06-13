@@ -143,7 +143,7 @@ local bss(start, kind, vram) = {
         c('73690', 'world/static_game_state'),
         c('736E0', 'system/empty_callbacks'),
         c('736F0', 'assets/blb_memory'),
-        asm('73754', 'libs/bios_trampolines'),
+        c('73754', 'libs/bios_trampolines'),
         c('73794', 'libs/memmove'),
 
         // --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
