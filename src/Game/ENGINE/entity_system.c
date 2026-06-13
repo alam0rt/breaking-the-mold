@@ -3,13 +3,11 @@
 #include "Game/game_state.h"
 
 extern GameState *D_800A5960;
-extern void *D_800A5954;
-
-extern void CalculateEntityScreenBounds(Entity *entity);
-extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
-extern s32 CheckBoxCollision(GameState *gs, s32 packedTL, s32 packedBR, u16 mask);
-extern s32 DispatchEventToCollidingEntity(GameState *gs, s32 packedTL, s32 packedBR, u16 mask1, u16 mask2, s32 arg, Entity *entity);
-extern s32 BroadcastBoxCollision(GameState *gs, s32 packedTL, s32 packedBR, u16 mask1, u16 mask2, s32 arg, Entity *entity);
+extern void InitEntityStruct(Entity *entity, s16 allocSize);
+extern void ClearSpriteContextWrapper(void *ctx);
+extern void ZeroEntityField(void *field);
+extern void InitEntityAnimationState(SpriteEntity *entity);
+extern u8 D_8001044C[];
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityStruct);
 
@@ -94,7 +92,18 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckEntityPointCollis
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityBroadcastPointCollision);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckEntityBoxCollision);
+extern void CalculateEntityScreenBounds(Entity *entity);
+extern s32 CheckBoxCollision(GameState *gs, u32 packedTL, u32 packedBR, u16 mask);
+
+s32 CheckEntityBoxCollision(Entity *entity, u16 mask) {
+    CalculateEntityScreenBounds(entity);
+    return CheckBoxCollision(
+        D_800A5960,
+        (u16)entity->screenX1 | ((u16)entity->screenY1 << 16),
+        (u16)entity->screenX2 | ((u16)entity->screenY2 << 16),
+        mask
+    ) & 0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffScreen);
 
@@ -118,7 +127,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", PlayEntityPositionSoun
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", UpdateEntitySoundPanning);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitFullEntityWithAnimation);
+SpriteEntity *InitFullEntityWithAnimation(SpriteEntity *entity, s16 allocSize) {
+    InitEntityStruct(&entity->base, allocSize);
+    entity->base.collisionVtable = D_8001044C;
+    ClearSpriteContextWrapper(&entity->base.pFrameTable);
+    ZeroEntityField(&entity->pFrameData);
+    InitEntityAnimationState(entity);
+    return entity;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntitySprite);
 
