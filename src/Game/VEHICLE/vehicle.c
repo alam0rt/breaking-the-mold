@@ -56,9 +56,40 @@ void SetNextLevelFlagWithFade(u8 *obj) {
     obj[0x147] = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", UnpauseGameAndRestoreEntities);
+extern void ResumeAllVoicePitches(void);
+extern void ClearTickList(void *entity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ClearEntitiesAndFadeToBlack);
+void UnpauseGameAndRestoreEntities(void *entity) {
+    ResumeAllVoicePitches();
+    *(u32 *)((u8 *)entity + 0x10C) = *(u32 *)((u8 *)entity + 0x154);
+    *(u8 *)((u8 *)entity + 0x63) = *(u8 *)((u8 *)entity + 0x158);
+    *(u8 *)((u8 *)entity + 0x151) = 0;
+    *(u8 *)((u8 *)entity + 0x150) = 0;
+    ClearTickList(entity);
+    *(u32 *)((u8 *)entity + 0x1C) = *(u32 *)((u8 *)entity + 0x15C);
+    *(u32 *)((u8 *)entity + 0x15C) = 0;
+    if (*(u8 *)((u8 *)entity + 0x18D)) {
+        AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
+        *(u8 *)((u8 *)entity + 0x18D) = 0;
+    }
+}
+
+extern void RemoveFromTickList(void *entity, void *arg);
+extern void FreeEntityLists(void *entity);
+
+void ClearEntitiesAndFadeToBlack(void *entity) {
+    void *field2c = *(void **)((u8 *)entity + 0x2C);
+    *(u8 *)((u8 *)entity + 0x145) = 1;
+    *(u8 *)((u8 *)entity + 0x130) = 1;
+    *(u8 *)((u8 *)entity + 0x131) = 0;
+    *(u8 *)((u8 *)entity + 0x132) = 0;
+    *(u8 *)((u8 *)entity + 0x133) = 0;
+    RemoveFromTickList(entity, field2c);
+    FreeEntityLists(entity);
+    AddEntityToSortedRenderList(entity, *(void **)((u8 *)entity + 0x2C));
+    *(u32 *)((u8 *)entity + 0x13C) = *(u32 *)((u8 *)entity + 0x28);
+    *(u32 *)((u8 *)entity + 0x28) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", HandleGenericTriggerZone);
 
