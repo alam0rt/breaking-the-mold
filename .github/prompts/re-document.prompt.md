@@ -1,0 +1,92 @@
+---
+mode: agent
+description: 'Run one (or many) iterations of the Skullmonkeys Ghidra re-document skill. Pass `large batch` or a number to loop.'
+tools:
+  - mcp_ghidra_get_current_program_info
+  - mcp_ghidra_list_open_programs
+  - mcp_ghidra_run_script_inline
+  - mcp_ghidra_check_tools
+  - mcp_ghidra_decompile_function
+  - mcp_ghidra_batch_decompile
+  - mcp_ghidra_force_decompile
+  - mcp_ghidra_disassemble_function
+  - mcp_ghidra_get_function_tags
+  - mcp_ghidra_list_function_tags
+  - mcp_ghidra_create_function_tag
+  - mcp_ghidra_add_function_tag
+  - mcp_ghidra_batch_add_function_tags
+  - mcp_ghidra_batch_remove_function_tags
+  - mcp_ghidra_search_functions_by_tag
+  - mcp_ghidra_rename_function
+  - mcp_ghidra_rename_function_by_address
+  - mcp_ghidra_set_function_prototype
+  - mcp_ghidra_batch_rename_function_components
+  - mcp_ghidra_get_function_by_address
+  - mcp_ghidra_get_function_variables
+  - mcp_ghidra_set_parameter_type
+  - mcp_ghidra_set_local_variable_type
+  - mcp_ghidra_set_variables
+  - mcp_ghidra_get_plate_comment
+  - mcp_ghidra_set_plate_comment
+  - mcp_ghidra_set_decompiler_comment
+  - mcp_ghidra_set_disassembly_comment
+  - mcp_ghidra_batch_set_comments
+  - mcp_ghidra_clear_function_comments
+  - mcp_ghidra_analyze_function_completeness
+  - mcp_ghidra_analyze_function_complete
+  - mcp_ghidra_analyze_for_documentation
+  - mcp_ghidra_analyze_control_flow
+  - mcp_ghidra_analyze_dataflow
+  - mcp_ghidra_analyze_data_region
+  - mcp_ghidra_batch_analyze_completeness
+  - mcp_ghidra_search_functions_enhanced
+  - mcp_ghidra_get_function_pcode
+  - mcp_ghidra_inspect_memory_content
+  - mcp_ghidra_get_function_callers
+  - mcp_ghidra_get_function_callees
+  - mcp_ghidra_get_function_xrefs
+  - mcp_ghidra_get_xrefs_to
+  - mcp_ghidra_get_xrefs_from
+  - mcp_ghidra_get_bulk_xrefs
+  - mcp_ghidra_list_functions
+  - mcp_ghidra_list_functions_enhanced
+  - mcp_ghidra_search_functions
+  - mcp_ghidra_list_globals
+  - mcp_ghidra_list_data_items
+  - mcp_ghidra_list_strings
+  - mcp_ghidra_search_strings
+  - mcp_ghidra_get_function_count
+  - mcp_ghidra_list_segments
+  - mcp_ghidra_rename_or_label
+  - mcp_ghidra_create_label
+  - mcp_ghidra_rename_label
+  - mcp_ghidra_batch_create_labels
+  - mcp_ghidra_rename_data
+  - mcp_ghidra_rename_global_variable
+  - mcp_ghidra_can_rename_at_address
+  - mcp_ghidra_audit_global
+  - mcp_ghidra_audit_globals_in_function
+  - mcp_ghidra_set_global
+  - mcp_ghidra_apply_data_type
+  - mcp_ghidra_apply_data_classification
+  - mcp_ghidra_get_struct_layout
+  - mcp_ghidra_list_data_types
+  - mcp_ghidra_search_data_types
+  - mcp_ghidra_validate_data_type
+  - mcp_ghidra_create_struct
+  - mcp_ghidra_add_struct_field
+  - mcp_ghidra_apply_function_documentation
+  - mcp_ghidra_get_function_documentation
+  - mcp_ghidra_get_function_signature
+  - mcp_ghidra_find_similar_functions
+  - read_file
+  - file_search
+  - grep_search
+  - manage_todo_list
+---
+
+Read the full skill file at [.claude/commands/re-document.md](.claude/commands/re-document.md), then execute it.
+
+If the user asked for a "large batch" or a specific count, loop the skill until you hit that count, `remaining == 0`, or you complete a `[BULK]` family pass. Print one `[DONE]` / `[BULK]` line per unit of work, then a final summary.
+
+${input:request:large batch}
