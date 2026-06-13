@@ -272,7 +272,14 @@ void EntityType092_SwitchClayballC_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType093_BonusClayball_Init);
+extern void *InitBonusClayballEntity(void *entity, void *spawnData, u32 hash, s32 arg3);
+
+void EntityType093_BonusClayball_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitBonusClayballEntity(entity, spawnData, 0x10882010, 0);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitGreenBulletsCollectible(void *entity, void *spawnData);
 
@@ -421,15 +428,40 @@ void EntityType119_Checkpoint_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType030_CollectibleAlt_Init);
+extern void *InitCollectibleEntity_Alt(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType031_032_033_ScaledMovingPlatform_Init);
+void EntityType030_CollectibleAlt_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x104, 1, 0);
+    AddEntityToSortedRenderList(list, InitCollectibleEntity_Alt(entity, spawnData));
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType034_035_036_TriggerPlatform_Init);
+extern u8 D_8009DA9C[];
+extern u8 D_8009DAA8[];
+extern void *InitScaledPlatformEntity(void *entity, void *spawnData, u8 *data);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType037_038_DirectionalScaled_Init);
+void EntityType031_032_033_ScaledMovingPlatform_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x110, 1, 0);
+    AddEntityToSortedRenderList(list, InitScaledPlatformEntity(entity, spawnData, D_8009DA9C));
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType046_Object_Init);
+void EntityType034_035_036_TriggerPlatform_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x110, 1, 0);
+    AddEntityToSortedRenderList(list, InitScaledPlatformEntity(entity, spawnData, D_8009DAA8));
+}
+
+extern void *InitDirectionalScaledEntity(void *entity, void *spawnData, s32 arg2);
+
+void EntityType037_038_DirectionalScaled_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x108, 1, 0);
+    AddEntityToSortedRenderList(list, InitDirectionalScaledEntity(entity, spawnData, 0));
+}
+
+extern void *InitScaledMovingEntity(void *entity, void *spawnData);
+
+void EntityType046_Object_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x108, 1, 0);
+    AddEntityToSortedRenderList(list, InitScaledMovingEntity(entity, spawnData));
+}
 
 extern void *InitFloatingPlatformEntity(void *entity, void *spawnData);
 
@@ -476,7 +508,12 @@ void EntityType047_048_SoundPlatform_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType080_TimerMenu_Init);
+extern void *InitTimerBasedMenuEntity(void *entity, void *spawnData);
+
+void EntityType080_TimerMenu_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x2C, 1, 0);
+    AddToZOrderList(list, InitTimerBasedMenuEntity(entity, spawnData));
+}
 
 extern void *InitBouncableClayEntity(void *entity, void *spawnData);
 
@@ -545,13 +582,33 @@ void EntityType082_PathHazard_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType085_104_105_TriggerZone_Init);
+extern void *InitTriggerZoneEntity(void *entity, void *spawnData);
+
+void EntityType085_104_105_TriggerZone_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x110, 1, 0);
+    AddEntityToSortedRenderList(list, InitTriggerZoneEntity(entity, spawnData));
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType089_097_098_110_111_GridHelper_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType094_IndexedSprite_Init);
+extern void *InitIndexedSpriteEntity(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType095_SoundEmitterPanning_Init);
+void EntityType094_IndexedSprite_Init(void *list, void *spawnData) {
+    s32 *ptr = (s32 *)spawnData;
+    void *entity;
+    if ((u32)(ptr[3] - 0xB5) >= 0x28) {
+        ptr[3] = 0xB5;
+    }
+    entity = AllocateFromHeap(D_800A5954, 0x104, 1, 0);
+    AddEntityToSortedRenderList(list, InitIndexedSpriteEntity(entity, spawnData));
+}
+
+extern void *InitCameraTrackingEntity(void *entity, void *spawnData);
+
+void EntityType095_SoundEmitterPanning_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x28, 1, 0);
+    AddToZOrderList(list, InitCameraTrackingEntity(entity, spawnData));
+}
 
 void EntityType008_KloggCatchableBall_Init(void) {
 }
