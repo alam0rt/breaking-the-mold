@@ -234,19 +234,36 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", IsNormalPlatformLevel);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", CheckCheatCodeInput);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800826C0);
+void func_800826C0(u8 *obj, u8 *outA, u8 *outB, u8 *outC) {
+    *outA = obj[0x199];
+    *outB = obj[0x19A];
+    *outC = obj[0x19B];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800826E4);
+void func_800826E4(u8 *obj, u8 a, u8 b, u8 c) {
+    obj[0x199] = a;
+    obj[0x19A] = b;
+    obj[0x19B] = c;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800826F4);
+u8 func_800826F4(u8 *obj) {
+    return obj[0x198];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082700);
+void func_80082700(u8 *obj, u8 val) {
+    obj[0x198] = val;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", FindSaveSlotForCurrentLevel);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082730);
+void func_80082730(u8 *obj, u8 a, u8 b) {
+    obj[0x19C] = a;
+    obj[0x19D] = b;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_8008273C);
+u8 func_8008273C(u8 *obj) {
+    return obj[0x19C];
+}
 
 u8 GetLevelDebugFlag(GameState *gameState) {
     return GetLevelFlags(&gameState->level_context) >> 0xf;
@@ -256,33 +273,62 @@ u8 GetLevelShowHUDFlag(GameState *gameState) {
     return (GetLevelFlags(&gameState->level_context) >> 0xe) & 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082790);
+u8 func_80082790(u8 *obj) {
+    return obj[0x14A];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_8008279C);
+void func_8008279C(u8 *obj, u8 val) {
+    obj[0x152] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827A4);
+void func_800827A4(u8 *obj, u8 val) {
+    obj[0x170] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827AC);
+u8 func_800827AC(u8 *obj) {
+    return obj[0x161];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827B8);
+void func_800827B8(u8 *obj, u8 val) {
+    obj[0x161] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827C0);
+void func_800827C0(u8 *obj, s32 val32, s16 val16) {
+    *(s32 *)&obj[0x164] = val32;
+    *(s16 *)&obj[0x168] = val16;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827CC);
+s32 func_800827CC(u8 *obj) {
+    return *(s32 *)&obj[0x14C];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827D8);
+u8 func_800827D8(u8 *obj) {
+    return obj[0x14B];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827E4);
+void func_800827E4(u8 *obj, u8 val) {
+    obj[0x14B] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827EC);
+void func_800827EC(u8 *obj, u8 val) {
+    obj[0x144] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_800827F4);
+u8 func_800827F4(u8 *obj) {
+    return obj[0x149];
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082800);
+void func_80082800(u8 *obj, u8 val) {
+    obj[0x149] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082808);
+void func_80082808(u8 *obj, u8 val) {
+    obj[0x148] = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082810);
+void func_80082810(u8 *obj, u8 val) {
+    obj[0x146] = val;
+}
 
 u8 GetLevelAutoScrollFlag(GameState *gameState) {
     return (GetLevelFlags(&gameState->level_context) >> 0xb) & 1;
