@@ -61,23 +61,80 @@ void EntityType000_003_004_PickupVariant_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType086_087_088_InvisibleHazard_Init);
+extern u8 D_8009DA18[];
+extern u8 D_8009DA34[];
+extern u8 D_8009DA50[];
+extern u8 D_8009DA5C[];
+extern u8 D_8009DA68[];
+extern u8 D_8009DA78[];
+extern u8 D_8009DA84[];
+extern u8 D_8009DA90[];
+extern void *InitCollectibleVariant(void *entity, void *spawnData);
+extern void *InitPathFollowingEnemy(void *entity, void *spawnData, u8 *data, s32 arg3, s32 arg4, s32 arg5);
+extern void *InitSpecialPickupEntity(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType106_107_108_FallingPlatform_Init);
+void EntityType086_087_088_InvisibleHazard_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = CreateCollectibleWithFlags(entity, spawnData, D_8009DA18, 0, 0);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType112_113_114_AnimatedDecor_Init);
+void EntityType106_107_108_FallingPlatform_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitCollectibleVariant(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType115_116_117_ParallaxDecor_Init);
+void EntityType112_113_114_AnimatedDecor_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = CreateCollectibleWithFlags(entity, spawnData, D_8009D9FC, 1, 0);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType010_EggBeater_Init);
+void EntityType115_116_117_ParallaxDecor_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = CreateCollectibleWithFlags(entity, spawnData, D_8009DA34, 0, 1);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType026_FlyingEnemy_Init);
+void EntityType010_EggBeater_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitPathFollowingEnemy(entity, spawnData, D_8009DA50, 0, 0, 1);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType027_FlyingEnemyVariant_Init);
+void EntityType026_FlyingEnemy_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitPathFollowingEnemy(entity, spawnData, D_8009DA5C, 1, 0, 1);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType076_PathEnemy_Init);
+void EntityType027_FlyingEnemyVariant_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitPathFollowingEnemy(entity, spawnData, D_8009DA68, 0, 1, 1);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType024_118_SpecialAmmo_Init);
+void EntityType076_PathEnemy_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitPathFollowingEnemy(entity, spawnData, D_8009DA78, 1, 0, 0);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+void EntityType024_118_SpecialAmmo_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitSpecialPickupEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitLevelStateCollectible(void *entity, void *spawnData);
 
@@ -97,9 +154,19 @@ void EntityType109_TimedCollectible_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType084_PathEnemyAlt_Init);
+void EntityType084_PathEnemyAlt_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitPathFollowingEnemy(entity, spawnData, D_8009DA84, 0, 0, 1);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType096_PathPlatformEnemy_Init);
+void EntityType096_PathPlatformEnemy_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x130, 1, 0);
+    entity = InitPathFollowingEnemy(entity, spawnData, D_8009DA90, 1, 0, 1);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitEntityWithChildSprite(void *entity, void *spawnData);
 
@@ -571,7 +638,12 @@ void EntityType103_Boss_Klogg_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType079_EnemySpawner_Init);
+extern void *InitEnemySpawnerEntity(void *entity, void *spawnData);
+
+void EntityType079_EnemySpawner_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x30, 1, 0);
+    AddToZOrderList(list, InitEnemySpawnerEntity(entity, spawnData));
+}
 
 extern void *InitPathFollowingHazard(void *entity, void *spawnData);
 
