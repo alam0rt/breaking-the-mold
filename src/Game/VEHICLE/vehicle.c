@@ -20,6 +20,8 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", DestroyEntityAndFreeResourc
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GameModeCallback);
 
+extern void AddToZOrderList(u8 *obj, s32 zOrder);
+
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SaveCheckpointState);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RestoreCheckpointEntities);
@@ -129,7 +131,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType092_SwitchClaybal
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType093_BonusClayball_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType002_GreenBullets_Init);
+extern void *InitGreenBulletsCollectible(void *entity, void *spawnData);
+
+void EntityType002_GreenBullets_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitGreenBulletsCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType022_EnemyCluster_Init);
 
@@ -139,21 +148,80 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80080420);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnRandomColorDecorEntity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType011_ExtraLife_Init);
+extern void *InitTransparentDecorEntity(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType009_Collectible_Init);
+void EntityType011_ExtraLife_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitTransparentDecorEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType023_PhoenixHand_Init);
+extern void *AllocateFromHeap(void *heap, s32 size, s32 align, s32 flags);
+extern void *InitPlatformDecorEntity(void *entity, void *spawnData);
+extern void AddEntityToSortedRenderList(void *list, void *entity);
+extern void AddToUpdateQueue(void *list, void *entity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType025_PhartHeadCollectible_Init);
+void EntityType009_Collectible_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x124, 1, 0);
+    entity = InitPlatformDecorEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType028_GreenHeart_Init);
+extern void *InitPhoenixHandCollectible(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType029_ScaleReset_Init);
+void EntityType023_PhoenixHand_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitPhoenixHandCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType061_UniverseEnema_Init);
+extern void *InitPhartHeadCollectible(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType069_1970Icon_Init);
+void EntityType025_PhartHeadCollectible_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x124, 1, 0);
+    entity = InitPhartHeadCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitSingleFrameDecorEntity(void *entity, void *spawnData);
+
+void EntityType028_GreenHeart_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitSingleFrameDecorEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitScaleResetCollectible(void *entity, void *spawnData);
+
+void EntityType029_ScaleReset_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitScaleResetCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitUniverseEnemaCollectible(void *entity, void *spawnData);
+
+void EntityType061_UniverseEnema_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitUniverseEnemaCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *Init1970IconEntity(void *entity, void *spawnData);
+
+void EntityType069_1970Icon_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = Init1970IconEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType070_HamsterShield_Init);
 
@@ -163,7 +231,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPathDecor1Entity);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType072_SuperWillie_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType075_YellowBird_Init);
+extern void *InitYellowBirdCollectible(void *entity, void *spawnData);
+
+void EntityType075_YellowBird_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitYellowBirdCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType081_PathDecor2_Init);
 
@@ -171,7 +246,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80080960);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPathDecor2Entity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType083_InteractiveDecor_Init);
+extern void *InitInteractiveDecorEntity(void *entity, void *spawnData);
+
+void EntityType083_InteractiveDecor_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitInteractiveDecorEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType119_Checkpoint_Init);
 
@@ -185,19 +267,54 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType037_038_Direction
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType046_Object_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType039_052_FloatingEnemy_Init);
+extern void *InitFloatingPlatformEntity(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType040_Mechanism_Init);
+void EntityType039_052_FloatingEnemy_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitFloatingPlatformEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType041_ClayKeeperEnemy_Init);
+extern void *InitPathFollowingEntity_Alt(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType042_thru_060_SnoBlo_Init);
+void EntityType040_Mechanism_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitPathFollowingEntity_Alt(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitWalkingCollectibleEnemy(void *entity, void *spawnData);
+
+void EntityType041_ClayKeeperEnemy_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x11C, 1, 0);
+    entity = InitWalkingCollectibleEnemy(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
+
+extern void *InitSnoBloEnemy(void *entity, void *spawnData);
+
+void EntityType042_thru_060_SnoBlo_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitSnoBloEnemy(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType047_048_SoundPlatform_Init);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType080_TimerMenu_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType045_BounceClay_Init);
+extern void *InitBouncableClayEntity(void *entity, void *spawnData);
+
+void EntityType045_BounceClay_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitBouncableClayEntity(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType065_Password_Init);
 
@@ -213,7 +330,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType103_Boss_Klogg_In
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType079_EnemySpawner_Init);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType082_PathHazard_Init);
+extern void *InitPathFollowingHazard(void *entity, void *spawnData);
+
+void EntityType082_PathHazard_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x114, 1, 0);
+    entity = InitPathFollowingHazard(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType085_104_105_TriggerZone_Init);
 
