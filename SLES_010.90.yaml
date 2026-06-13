@@ -22,6 +22,7 @@
   "find_file_boundaries": true
   "gp_value": 2148161876
   "hasm_in_src_path": true
+  "include_asm_macro_style": "maspsx_hack"
   "ld_align_section_vram_end": false
   "ld_align_segment_vram_end": false
   "ld_dependencies": true
@@ -135,8 +136,6 @@
     - "asm"
     - "Game/ENTITY"
   -
-    # SetEntitySpriteId (0x8001D080, 0x30 bytes) +
-    # SetAnimationSpriteFlags (0x8001D0B0, 0x10 bytes)
     - 55424
     - "c"
     - "entity/sprite_setters"

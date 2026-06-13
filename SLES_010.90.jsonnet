@@ -47,6 +47,13 @@ local bss(start, kind, vram) = {
     o_as_suffix: true,
     use_legacy_include_asm: false,
 
+    // Generate the maspsx-keep INCLUDE_ASM macro so matched C and INCLUDE_ASM
+    // can interleave anywhere in a file (lifts the cc1 tail-only constraint;
+    // see docs/compiler-quirks.md Quirk 1). Without this, splat regenerates
+    // include/include_asm.h as the classic top-level-asm macro on every
+    // extract, which floats included asm above compiled C and breaks the match.
+    include_asm_macro_style: 'maspsx_hack',
+
     section_order: ['.rodata', '.text', '.data', '.sdata', '.sbss', '.bss'],
     auto_link_sections: ['.data', '.rodata', '.sdata', '.sbss', '.bss'],
 
@@ -125,6 +132,8 @@ local bss(start, kind, vram) = {
         // --- ENTITY: Entity system core (0x8001A0C8 - 0x8002A377) ---
         // InitEntityStruct, animation, collision, state machine, callbacks.
         asm('A8C8', 'Game/ENTITY'),
+        c('D880', 'entity/sprite_setters'),  // SetEntitySpriteId + SetAnimationSpriteFlags
+        asm('D8C0', 'Game/ENTITY_b'),
 
         // --- OBJECT: Game objects - enemies, items, decor (0x8002A378 - 0x80058167) ---
         // HUD, decor entities, collectibles, enemies, projectiles, bosses.
@@ -143,7 +152,7 @@ local bss(start, kind, vram) = {
         c('73690', 'world/static_game_state'),
         c('736E0', 'system/empty_callbacks'),
         c('736F0', 'assets/blb_memory'),
-        c('73754', 'libs/bios_trampolines'),
+        asm('73754', 'libs/bios_trampolines'),
         c('73794', 'libs/memmove'),
 
         // --- LIBS: PSY-Q SDK libraries (0x80083000 - 0x80090FEB) ---
