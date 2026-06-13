@@ -44,6 +44,26 @@ GCC_DIR := tools/gcc-$(GCC_VERSION)
 CC1 := $(GCC_DIR)/cc1
 GCC := $(GCC_DIR)/gcc
 
+# Per-subdirectory compiler/aspsx overrides
+# ---------------------------------------------------------------------------
+# Borrowed from Vatuu/silent-hill-decomp: their Makefile picks compiler and
+# aspsx-version per source path. We pre-stage the alternates here so a stuck
+# file/subdir can opt in to a different toolchain by adding a target-specific
+# override below the main compile rule, e.g.:
+#
+#     $(BUILD_DIR)/src/<subdir>/%.o: CC1 := tools/gcc-2.5.7-psx/cc1
+#     $(BUILD_DIR)/src/<subdir>/%.o: ASPSX_VERSION := 2.77
+#
+# Known alternates that match individual functions in past experiments:
+#   tools/gcc-2.5.7-psx/cc1     - matches func_8007A62C (breaks others)
+#   tools/gcc-2.7.2-cdk/cc1     - Sony "CDK" 970404 build (SH uses for libkpad)
+#   tools/gcc-2.8.1-psx/cc1     - matches some 2.8-era code (breaks 2.6/2.7 code)
+#   bin/cc1-psx-26              - real Sony GNU C 2.6.3 Sony PSX build
+CC1_257  := tools/gcc-2.5.7-psx/cc1
+CC1_CDK  := tools/gcc-2.7.2-cdk/cc1
+CC1_281  := tools/gcc-2.8.1-psx/cc1
+CC1_SONY := bin/cc1-psx-26
+
 # MIPS cross-toolchain (from Nix environment)
 # Note: Nix provides mipsel-unknown-linux-gnu-*, not mipsel-linux-gnu-*
 # The binutils (as, ld, objcopy) are version-independent for linking
@@ -71,7 +91,11 @@ MASPSX := python3 tools/maspsx/maspsx.py
 # PSY-Q 4.7 -> --aspsx-version=2.86 (same as 4.6)
 ASPSX_VERSION := 2.86
 # -G8 tells maspsx that symbols <=8 bytes should use GP-relative addressing
-MASPSX_FLAGS := --aspsx-version=$(ASPSX_VERSION) --run-assembler --gnu-as-path=$(AS) -G8
+# MASPSX_EXTRA_FLAGS lets per-target overrides add e.g. --expand-div without
+# rewriting the whole MASPSX_FLAGS variable. Uses '=' (recursive) so per-target
+# changes to ASPSX_VERSION / MASPSX_EXTRA_FLAGS take effect at recipe time.
+MASPSX_EXTRA_FLAGS :=
+MASPSX_FLAGS = --aspsx-version=$(ASPSX_VERSION) --run-assembler --gnu-as-path=$(AS) -G8 $(MASPSX_EXTRA_FLAGS)
 
 # Python (from Nix environment)
 PYTHON := python3
@@ -264,6 +288,25 @@ $(BUILD_DIR)/%.o: %.bin | $(BUILD_DIR)/
 	@mkdir -p $(dir $@)
 	@echo "BIN $<"
 	@$(OBJCOPY) -I binary -O elf32-tradlittlemips -B mips $< $@
+
+# ---------------------------------------------------------------------------
+# Per-subdir / per-file toolchain overrides
+# ---------------------------------------------------------------------------
+# Add target-specific variable assignments here when a subsystem needs a
+# different cc1, ASPSX version, or maspsx knob. Pattern mirrors
+# Vatuu/silent-hill-decomp. Examples (uncomment + adapt when needed):
+#
+#   # Use Sony CDK 970404 build for libsd/libetc-like glue
+#   $(BUILD_DIR)/src/libs/%.o: CC1 := $(CC1_CDK)
+#   $(BUILD_DIR)/src/libs/%.o: ASPSX_VERSION := 2.77
+#
+#   # PSY-Q libsd-style divisions need expanded div sequences
+#   $(BUILD_DIR)/src/libs/libsd/%.o: MASPSX_EXTRA_FLAGS := --expand-div
+#
+#   # A single file that only matches with 2.5.7
+#   $(BUILD_DIR)/src/system/foo.o: CC1 := $(CC1_257)
+#
+# No overrides are active by default.
 
 # -----------------------------------------------------------------------------
 # Linking

@@ -135,6 +135,16 @@
     - "asm"
     - "Game/ENTITY"
   -
+    # SetEntitySpriteId (0x8001D080, 0x30 bytes) +
+    # SetAnimationSpriteFlags (0x8001D0B0, 0x10 bytes)
+    - 55424
+    - "c"
+    - "entity/sprite_setters"
+  -
+    - 55488
+    - "asm"
+    - "Game/ENTITY_b"
+  -
     - 109432
     - "asm"
     - "Game/OBJECT"
