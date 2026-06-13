@@ -110,11 +110,11 @@ local bss(start, kind, vram) = {
         c('B1C', 'system/early_stub'),
         rodata('B24', 'Game/ENGINE'),          // entity vtables (16 archetype tables)
         rodata('E2C', 'Game/OBJECT'),
-        rodata('1E28', 'Game/PLAYER_EARLY'),
+        rodata('1E28', 'Game/BOSS'),
         rodata('2044', 'Game/PLAYER'),
-        rodata('2554', 'Game/GAMELOOP_EARLY'),
-        rodata('2940', 'Game/GAMELOOP'),
-        rodata('2F58', 'Game/BLB'),            // BLB callback table
+        rodata('2554', 'Game/PLAYER_STATES'),
+        rodata('2940', 'Game/VEHICLE'),
+        rodata('2F58', 'Game/MAIN'),           // main game callbacks
         rodata('2F78', 'LIBCD'),
         rodata('34F4', 'LIBGPU'),
         rodata('3970', 'LIBSPU'),
@@ -138,9 +138,9 @@ local bss(start, kind, vram) = {
         asm('1AB78', 'Game/OBJECT'),
 
         // -----------------------------------------------------------------
-        // UNIT 3: Game/PLAYER_EARLY — player init, early states
+        // UNIT 3: Game/BOSS — boss state machines (ShrineyGuard, JoeHeadJoe, Klogg)
         // -----------------------------------------------------------------
-        asm('48968', 'Game/PLAYER_EARLY'),
+        asm('48968', 'Game/BOSS'),
 
         // -----------------------------------------------------------------
         // UNIT 4: Game/PLAYER — player state machine, physics, input
@@ -149,22 +149,22 @@ local bss(start, kind, vram) = {
         c('617D8', 'entity/destructor_spu_at10c'),
 
         // -----------------------------------------------------------------
-        // UNIT 5: Game/GAMELOOP_EARLY — tile collision, FINN, menus
+        // UNIT 5: Game/PLAYER_STATES — player platform state machine
         // -----------------------------------------------------------------
-        asm('61848', 'Game/GAMELOOP_EARLY'),
+        asm('61848', 'Game/PLAYER_STATES'),
 
         // -----------------------------------------------------------------
-        // UNIT 6: Game/GAMELOOP — main loop, level loading, game state
+        // UNIT 6: Game/VEHICLE — vehicle modes (FINN/RUNN/SOAR), tile collision
         // -----------------------------------------------------------------
-        asm('6D9D0', 'Game/GAMELOOP'),
+        asm('6D9D0', 'Game/VEHICLE'),
         c('73690', 'world/static_game_state'),
         c('736E0', 'system/empty_callbacks'),
 
         // -----------------------------------------------------------------
-        // UNIT 7: Game/BLB — BLB assets, BIOS trampolines, memmove
+        // UNIT 7: Game/MAIN — main(), menus, passwords, audio, level loading
         // -----------------------------------------------------------------
         c('736F0', 'assets/blb_memory'),
-        asm('73754', 'Game/BLB'),
+        asm('73754', 'Game/MAIN'),
         c('73794', 'libs/memmove'),
 
         // -----------------------------------------------------------------

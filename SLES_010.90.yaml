@@ -78,7 +78,7 @@
   -
     - 7720
     - "rodata"
-    - "Game/PLAYER_EARLY"
+    - "Game/BOSS"
   -
     - 8260
     - "rodata"
@@ -86,15 +86,15 @@
   -
     - 9556
     - "rodata"
-    - "Game/GAMELOOP_EARLY"
+    - "Game/PLAYER_STATES"
   -
     - 10560
     - "rodata"
-    - "Game/GAMELOOP"
+    - "Game/VEHICLE"
   -
     - 12120
     - "rodata"
-    - "Game/BLB"
+    - "Game/MAIN"
   -
     - 12152
     - "rodata"
@@ -150,7 +150,7 @@
   -
     - 297320
     - "asm"
-    - "Game/PLAYER_EARLY"
+    - "Game/BOSS"
   -
     - 306736
     - "asm"
@@ -162,11 +162,11 @@
   -
     - 399432
     - "asm"
-    - "Game/GAMELOOP_EARLY"
+    - "Game/PLAYER_STATES"
   -
     - 448976
     - "asm"
-    - "Game/GAMELOOP"
+    - "Game/VEHICLE"
   -
     - 472720
     - "c"
@@ -182,7 +182,7 @@
   -
     - 472916
     - "asm"
-    - "Game/BLB"
+    - "Game/MAIN"
   -
     - 472980
     - "c"
