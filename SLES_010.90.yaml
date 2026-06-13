@@ -66,7 +66,7 @@
   -
     - 2844
     - "c"
-    - "system/early_stub"
+    - "Game/ENGINE/early_stub"
   -
     - 2852
     - "rodata"
@@ -114,7 +114,7 @@
   -
     - 23604
     - "c"
-    - "render/stub_vibrate_off"
+    - "Game/ENGINE/stub_vibrate_off"
   -
     - 23612
     - "asm"
@@ -122,11 +122,11 @@
   -
     - 37020
     - "c"
-    - "render/sprite_accessors"
+    - "Game/ENGINE/sprite_accessors"
   -
     - 38220
     - "c"
-    - "render/empty_stub_18d4c"
+    - "Game/ENGINE/empty_stub_18d4c"
   -
     - 38228
     - "asm"
@@ -138,11 +138,11 @@
   -
     - 55424
     - "c"
-    - "entity/sprite_setters"
+    - "Game/ENGINE/sprite_setters"
   -
     - 55488
     - "c"
-    - "entity/animation_setters"
+    - "Game/ENGINE/animation_setters"
   -
     - 109432
     - "asm"
@@ -158,7 +158,7 @@
   -
     - 399320
     - "c"
-    - "entity/destructor_spu_at10c"
+    - "Game/PLAYER/destructor_spu_at10c"
   -
     - 399432
     - "asm"
@@ -170,15 +170,15 @@
   -
     - 472720
     - "c"
-    - "world/static_game_state"
+    - "Game/VEHICLE/static_game_state"
   -
     - 472800
     - "c"
-    - "system/empty_callbacks"
+    - "Game/VEHICLE/empty_callbacks"
   -
     - 472816
     - "c"
-    - "assets/blb_memory"
+    - "Game/MAIN/blb_memory"
   -
     - 472916
     - "asm"
@@ -186,7 +186,7 @@
   -
     - 472980
     - "c"
-    - "libs/memmove"
+    - "Game/MAIN/memmove"
   -
     - 473088
     - "asm"
@@ -202,7 +202,7 @@
   -
     - 528164
     - "c"
-    - "libs/libspu_voice"
+    - "LIBSPU/libspu_voice"
   -
     - 528336
     - "asm"

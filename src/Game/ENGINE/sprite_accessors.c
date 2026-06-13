@@ -101,7 +101,7 @@ PrimObject *InitSpriteObject(void *arg, s16 id) {
 /* SubmitPrimitiveBufferToGPU @ 0x800188E0 - matches as C except an 8-instruction
  * register-coloring diff; shelved as asm via maspsx-keep INCLUDE_ASM (mid-file,
  * before the accessors below) until the match lands. */
-INCLUDE_ASM("asm/nonmatchings/render/sprite_accessors", SubmitPrimitiveBufferToGPU);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/sprite_accessors", SubmitPrimitiveBufferToGPU);
 
 
 void func_80018BD8(RenderSprite *spr, u8 value) {

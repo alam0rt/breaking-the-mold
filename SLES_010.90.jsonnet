@@ -107,7 +107,7 @@ local bss(start, kind, vram) = {
         // lifecycle, resource management, vtable definitions.
         // -----------------------------------------------------------------
         asm('800', 'Game/ENGINE_boot'),        // hand-written memset, RLE decode
-        c('B1C', 'system/early_stub'),
+        c('B1C', 'Game/ENGINE/early_stub'),
         rodata('B24', 'Game/ENGINE'),          // entity vtables (16 archetype tables)
         rodata('E2C', 'Game/OBJECT'),
         rodata('1E28', 'Game/BOSS'),
@@ -123,14 +123,14 @@ local bss(start, kind, vram) = {
 
         // UNIT 1 continued (text body)
         asm('39F0', 'Game/ENGINE'),            // graphics, VRAM, sprites, tiles
-        c('5C34', 'render/stub_vibrate_off'),
+        c('5C34', 'Game/ENGINE/stub_vibrate_off'),
         asm('5C3C', 'Game/ENGINE_5C3C'),       // render init, tilemap, sprite context
-        c('909C', 'render/sprite_accessors'),
-        c('954C', 'render/empty_stub_18d4c'),
+        c('909C', 'Game/ENGINE/sprite_accessors'),
+        c('954C', 'Game/ENGINE/empty_stub_18d4c'),
         asm('9554', 'Game/ENGINE_9554'),       // menu entity init, sprite object
         asm('A8C8', 'Game/ENGINE_ENTITY'),     // entity system core
-        c('D880', 'entity/sprite_setters'),
-        c('D8C0', 'entity/animation_setters'),
+        c('D880', 'Game/ENGINE/sprite_setters'),
+        c('D8C0', 'Game/ENGINE/animation_setters'),
 
         // -----------------------------------------------------------------
         // UNIT 2: Game/OBJECT — enemies, items, decor, bosses
@@ -146,7 +146,7 @@ local bss(start, kind, vram) = {
         // UNIT 4: Game/PLAYER — player state machine, physics, input
         // -----------------------------------------------------------------
         asm('4AE30', 'Game/PLAYER'),
-        c('617D8', 'entity/destructor_spu_at10c'),
+        c('617D8', 'Game/PLAYER/destructor_spu_at10c'),
 
         // -----------------------------------------------------------------
         // UNIT 5: Game/PLAYER_STATES — player platform state machine
@@ -157,15 +157,15 @@ local bss(start, kind, vram) = {
         // UNIT 6: Game/VEHICLE — vehicle modes (FINN/RUNN/SOAR), tile collision
         // -----------------------------------------------------------------
         asm('6D9D0', 'Game/VEHICLE'),
-        c('73690', 'world/static_game_state'),
-        c('736E0', 'system/empty_callbacks'),
+        c('73690', 'Game/VEHICLE/static_game_state'),
+        c('736E0', 'Game/VEHICLE/empty_callbacks'),
 
         // -----------------------------------------------------------------
         // UNIT 7: Game/MAIN — main(), menus, passwords, audio, level loading
         // -----------------------------------------------------------------
-        c('736F0', 'assets/blb_memory'),
+        c('736F0', 'Game/MAIN/blb_memory'),
         asm('73754', 'Game/MAIN'),
-        c('73794', 'libs/memmove'),
+        c('73794', 'Game/MAIN/memmove'),
 
         // -----------------------------------------------------------------
         // UNIT 8: LIBCD — PSY-Q CD-ROM library
@@ -181,7 +181,7 @@ local bss(start, kind, vram) = {
         // UNIT 10: LIBSPU — PSY-Q SPU library
         // -----------------------------------------------------------------
         asm('80260', 'LIBSPU'),
-        c('80F24', 'libs/libspu_voice'),
+        c('80F24', 'LIBSPU/libspu_voice'),
         asm('80FD0', 'LIBSPU_tail'),
 
         // =====================================================================

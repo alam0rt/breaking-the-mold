@@ -308,7 +308,7 @@ $(BUILD_DIR)/%.o: %.bin | $(BUILD_DIR)/
 #   $(BUILD_DIR)/src/system/foo.o: CC1 := $(CC1_257)
 #
 # No overrides are active by default.
-$(BUILD_DIR)/src/entity/animation_setters.o: MASPSX_EXTRA_FLAGS := --expand-div
+$(BUILD_DIR)/src/Game/ENGINE/animation_setters.o: MASPSX_EXTRA_FLAGS := --expand-div
 
 # -----------------------------------------------------------------------------
 # Linking

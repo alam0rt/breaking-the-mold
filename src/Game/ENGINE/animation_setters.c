@@ -142,31 +142,31 @@ void func_8001D268(AnimEntity *entity, u8 value) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", TickEntityAnimation);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TickEntityAnimation);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", AdvanceAnimationFrame);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", AdvanceAnimationFrame);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", ApplyPendingSpriteState);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", ApplyPendingSpriteState);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateSpriteFrameData);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateSpriteFrameData);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateEntityRender);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateEntityRender);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UploadEntityTextureIfDirty);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UploadEntityTextureIfDirty);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", FindFrameIndexByValue);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", FindFrameIndexByValue);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", StartAnimationSequence);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", StartAnimationSequence);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", StepAnimationSequence);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", StepAnimationSequence);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityProcessCallbackQueue);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityProcessCallbackQueue);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntitySetState);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntitySetState);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntitySetCallback);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntitySetCallback);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerRenderContext_Standard);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderContext_Standard);
 
 void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     u8 *resource;
@@ -181,9 +181,9 @@ void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWithWrap_Standard);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateParallaxScrollWithWrap_Standard);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerRenderContext_Medium);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderContext_Medium);
 
 void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     u8 *resource;
@@ -198,9 +198,9 @@ void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWithWrap_Medium);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateParallaxScrollWithWrap_Medium);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerRenderContext_Small);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderContext_Small);
 
 void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     u8 *resource;
@@ -215,9 +215,9 @@ void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWithWrap_Small);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateParallaxScrollWithWrap_Small);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerScrollContext);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerScrollContext);
 
 void FreeResourceType4(void *entity, s32 flags) {
     u8 *resource;
@@ -232,18 +232,18 @@ void FreeResourceType4(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityTick_AnimationFrameAdvance);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityTick_AnimationFrameAdvance);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_8001FC40);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_8001FC40);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateEntityScreenPositionWithPalette);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateEntityScreenPositionWithPalette);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitPlayerEntity);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitPlayerEntity);
 
 extern u8 D_8001044C[];
 extern u8 D_8001046C[];
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityApplyMovementCallbacks);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityApplyMovementCallbacks);
 
 void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
     u8 *child;
@@ -404,7 +404,7 @@ void func_800201A8(EntityAccessorView *e, u8 value) {
     e->field_F6 = value;
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800201B0);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_800201B0);
 
 s16 func_800201D0(EntityAccessorView *e) {
     return e->field_DA;
@@ -515,11 +515,11 @@ s32 func_800203E8(EntityAccessorView *e, s32 value) {
     return (value << 16) / e->field_58;
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020424);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_80020424);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", GetEntityYPosition);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", GetEntityYPosition);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", GetEntityXPosition);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", GetEntityXPosition);
 
 s16 func_80020588(EntityAccessorView *e) {
     return e->field_6A;
@@ -533,17 +533,17 @@ s32 func_800205A0(EntityAccessorView *e) {
     return e->field_34;
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_800205AC);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_800205AC);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", TransformYCoord);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TransformYCoord);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020668);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_80020668);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", TransformXCoord);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TransformXCoord);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", func_80020724);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_80020724);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InvokeEntityRenderCallback);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InvokeEntityRenderCallback);
 
 u16 func_800207C8(EntityAccessorView *e) {
     return e->field_2C;
@@ -596,7 +596,7 @@ void *InitEntityWithTable(void *entity) {
     return entity;
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", LoadBLBHeader);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", LoadBLBHeader);
 
 void DestroyEntity(u8 *entity, s32 flags) {
     *(s32 *)(entity + 0x18) = (s32)D_800104CC;
@@ -625,13 +625,13 @@ void RemoveFromUpdateQueue(u8 *entity) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", RemoveFromZOrderList);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", RemoveFromZOrderList);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityTickLoopWithCamera);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityTickLoopWithCamera);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", DeferredEntityRemoval);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", DeferredEntityRemoval);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityRemoval);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityRemoval);
 
 typedef struct EntityListNode {
     struct EntityListNode *next;  /* 0x00 */
@@ -657,6 +657,6 @@ void EntityTickLoop(EntityListHead *list) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", RenderEntities);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", RenderEntities);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructCallback);
+INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityDestructCallback);
