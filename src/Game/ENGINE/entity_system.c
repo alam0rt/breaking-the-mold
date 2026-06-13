@@ -5,16 +5,32 @@
 extern GameState *D_800A5960;
 extern void *D_800A5954;
 extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
+extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
 extern void InitEntityStruct(Entity *entity, s16 allocSize);
 extern void ClearSpriteContextWrapper(void *ctx);
 extern void ZeroEntityField(void *field);
 extern void InitEntityAnimationState(SpriteEntity *entity);
 extern u8 D_8001044C[];
+extern u8 D_8001046C[];
+extern u8 D_800104AC[];
 extern void CalculateEntityScreenBounds(Entity *entity);
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityStruct);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", FreeWithCallback);
+void FreeWithCallback(Entity *entity, s32 flags) {
+    void *ctx = entity->spriteContext;
+    entity->collisionVtable = D_8001046C;
+    if (ctx != NULL) {
+        void *sub = ((void **)ctx)[3]; /* ctx + 0xC */
+        s16 offset = *(s16 *)((u8 *)sub + 0x10);
+        void (*func)(void *, s32) = *(void (**)(void *, s32))((u8 *)sub + 0x14);
+        func((void *)((u8 *)ctx + offset), 3);
+    }
+    entity->collisionVtable = D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 s32 ScaleXByEntityScale(Entity *entity, s16 value) {
     if (entity->scalePowerupX == 0x10000) {
@@ -53,7 +69,10 @@ s32 WorldToScreenYWithParallax(Entity *entity, s16 value) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CreateEntityRenderContext);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", GetEntityScreenBounds);
+void GetEntityScreenBounds(Entity *entity, s16 *out) {
+    CalculateEntityScreenBounds(entity);
+    __builtin_memcpy(out, &entity->screenX1, 8);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CalculateEntityScreenBounds);
 
@@ -134,7 +153,27 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityWithSprite);
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityAnimationState);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", DestroyEntityAndFreeMemory);
+void DestroyEntityAndFreeMemory(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = D_8001044C;
+    if (entity->pPixelBuffer != NULL) {
+        FreeFromHeap(D_800A5954, entity->pPixelBuffer, 0, 0);
+    }
+    FreeFromHeap(D_800A5954, entity->pSpriteAsset, 4, 0);
+    {
+        void *ctx = entity->base.spriteContext;
+        entity->base.collisionVtable = D_8001046C;
+        if (ctx != NULL) {
+            void *sub = ((void **)ctx)[3];
+            s16 offset = *(s16 *)((u8 *)sub + 0x10);
+            void (*func)(void *, s32) = *(void (**)(void *, s32))((u8 *)sub + 0x14);
+            func((void *)((u8 *)ctx + offset), 3);
+        }
+    }
+    entity->base.collisionVtable = D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 void AllocateEntityPixelBuffer(SpriteEntity *entity) {
     void *heap = D_800A5954;
@@ -143,6 +182,10 @@ void AllocateEntityPixelBuffer(SpriteEntity *entity) {
     *(s32 *)&entity->_padD4[0] = size;
     entity->pPixelBuffer = AllocateFromHeap(heap, 1, size, 0);
 }
+
+extern void TickEntityAnimation(SpriteEntity *entity);
+extern void ApplyPendingSpriteState(SpriteEntity *entity);
+extern void UpdateSpriteFrameData(SpriteEntity *entity);
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityUpdateCallback);
 
@@ -167,4 +210,9 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", AllocSpriteRenderConte
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CreateMultiFrameRenderContext);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", AllocateSpriteContext);
+extern void *InitSpriteContextDefaults(void *ctx, s16 spriteId);
+
+void AllocateSpriteContext(Entity *entity, s16 spriteId) {
+    void *ctx = AllocateFromHeap(D_800A5954, 0x3C, 1, 0);
+    entity->spriteContext = InitSpriteContextDefaults(ctx, spriteId);
+}
