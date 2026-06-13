@@ -4,6 +4,8 @@
 .direnv
 output
 tools/gcc-builds
+tools/gcc-2.7.2-sn32/wineprefix
+tools/gcc-2.7.2-sn32/work
 bin/*
 nonmatchings/
 

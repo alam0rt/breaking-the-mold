@@ -96,6 +96,36 @@ local bss(start, kind, vram) = {
 
       subsegments: [
         // =====================================================================
+        // ORIGINAL COMPILATION UNITS (derived from rodata cross-references)
+        //
+        // The PSX linker places .rodata and .text from each .obj in the same
+        // link order. By matching rodata ownership to text segments (via Ghidra
+        // xrefs), we identified 10 original compilation units:
+        //
+        //  #  Rodata Segment        Text Segments (same .obj)
+        //  1  Game/INIT_TABLES      Game/INIT, system/early_stub, Game/RENDER,
+        //                           render/stub_vibrate_off, Game/RENDER_5C3C,
+        //                           render/sprite_accessors, render/empty_stub_18d4c,
+        //                           Game/RENDER_9554, Game/ENTITY,
+        //                           entity/sprite_setters, entity/animation_setters
+        //  2  Game/OBJECT           Game/OBJECT
+        //  3  Game/PLAYER_EARLY     Game/PLAYER_EARLY
+        //  4  Game/PLAYER           Game/PLAYER, entity/destructor_spu_at10c
+        //  5  Game/GAMELOOP_EARLY   Game/GAMELOOP_EARLY
+        //  6  Game/GAMELOOP         Game/GAMELOOP, world/static_game_state,
+        //                           system/empty_callbacks
+        //  7  assets/blb_memory     assets/blb_memory, libs/bios_trampolines,
+        //                           libs/memmove
+        //  8  LIBCD                 LIBCD
+        //  9  LIBGPU               LIBGPU
+        // 10  LIBSPU               LIBSPU, libs/libspu_voice, LIBS_80FD0
+        //
+        // Unit 1 is proven: none of its text segments have independent rodata,
+        // and INIT_TABLES (entity vtables) is referenced by functions across
+        // all of them. TODO: migrate to unified segment names per unit.
+        // =====================================================================
+
+        // =====================================================================
         // .rodata section: 0x80010000 - 0x800131EF
         // NOTE: Original binary has code bytes stored in rodata section!
         // These are NOT actual rodata - they are code bytes the linker placed here.

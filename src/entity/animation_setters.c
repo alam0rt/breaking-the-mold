@@ -3,9 +3,13 @@
 extern void *D_800A5954;
 extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 extern void FreeMultiAllocResource(void *ptr, s32 type);
+extern void FreeResourceType2(void *ptr, s32 type);
+extern void FreeResourceType3(void *ptr, s32 type);
 extern u8 D_800104AC[];
 extern u8 D_8001042C[];
 extern u8 D_800103CC[];
+extern u8 D_8001040C[];
+extern u8 D_800103EC[];
 
 typedef struct AnimEntity {
     u8 pad00[0xC0];
@@ -181,13 +185,35 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWit
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerRenderContext_Medium);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructor_FreeResourceType2);
+void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
+    u8 *resource;
+    resource = *(u8 **)((u8 *)entity + 0x1C);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001040C;
+    if (resource) {
+        FreeResourceType2(resource, 3);
+    }
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWithWrap_Medium);
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitLayerRenderContext_Small);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructor_FreeResourceType3);
+void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
+    u8 *resource;
+    resource = *(u8 **)((u8 *)entity + 0x1C);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800103EC;
+    if (resource) {
+        FreeResourceType3(resource, 3);
+    }
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateParallaxScrollWithWrap_Small);
 
@@ -214,9 +240,34 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", UpdateEntityScreenPosit
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitPlayerEntity);
 
+extern u8 D_8001044C[];
+extern u8 D_8001046C[];
+
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityApplyMovementCallbacks);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityDestructor_FreeWithChildRef);
+void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
+    u8 *child;
+    u8 *childRef;
+    u8 *resource;
+
+    resource = *(u8 **)((u8 *)entity + 0xB0);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001044C;
+    if (resource) {
+        FreeFromHeap(D_800A5954, resource, 0, 0);
+    }
+    FreeFromHeap(D_800A5954, *(void **)((u8 *)entity + 0x90), 4, 0);
+    child = *(u8 **)((u8 *)entity + 0x34);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001046C;
+    if (child) {
+        childRef = *(u8 **)(child + 0xC);
+        ((void (*)(void *, s32))*(s32 *)(childRef + 0x14))(
+            (void *)(child + *(s16 *)(childRef + 0x10)), 3);
+    }
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 typedef struct EntityAccessorView {
     u8 pad00[0x1C];
@@ -517,15 +568,62 @@ void FreeEntityNoTeardown_80020818(void *entity, s32 size) {
     FreeFromHeap(D_800A5954, entity, 0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", BLB_ReadSectorsWrapper);
+extern u8 CdBLB_ReadSectors(u16 arg0, u16 arg1);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", InitEntityWithTable);
+u8 BLB_ReadSectorsWrapper(u32 sector, u32 count) {
+    return CdBLB_ReadSectors((u16)sector, (u16)count);
+}
+
+extern void InitMenuEntityWithVtable(void *entity, s32 arg);
+extern void *PassThroughFunction(void *ptr);
+extern u8 D_800104CC[];
+extern u8 D_800104EC[];
+extern void RemoveEntityFromAllLists(void *entity, void *child);
+extern void RemoveEntityFromUpdateQueue(void *entity);
+extern void RemoveFromRenderList(void *entity);
+extern void RemoveFromTickList(void *entity, void *child);
+void RemoveFromUpdateQueue(u8 *entity);
+extern void RemoveFromZOrderList(void *entity);
+extern void ClearEntityDefList(void *entity);
+extern void FreeEntityLists(void *entity);
+extern void builtin_delete(void *ptr);
+extern void ConditionalDelete(void *ptr, s32 type);
+
+void *InitEntityWithTable(void *entity) {
+    InitMenuEntityWithVtable(entity, 0);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104CC;
+    PassThroughFunction((void *)((u8 *)entity + 0x84));
+    return entity;
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", LoadBLBHeader);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", DestroyEntity);
+void DestroyEntity(u8 *entity, s32 flags) {
+    *(s32 *)(entity + 0x18) = (s32)D_800104CC;
+    RemoveFromUpdateQueue(entity);
+    RemoveFromZOrderList(entity);
+    ClearEntityDefList(entity);
+    FreeEntityLists(entity);
+    if (*(s32 *)(entity + 0x3C) != 0) {
+        builtin_delete(*(void **)(entity + 0x3C));
+    }
+    ConditionalDelete(entity + 0x84, 2);
+    *(s32 *)(entity + 0x18) = (s32)D_800104EC;
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", RemoveFromUpdateQueue);
+void RemoveFromUpdateQueue(u8 *entity) {
+    u8 *heap = (u8 *)D_800A5954;
+
+    *(s16 *)(heap + 0xA08A) = 0;
+    if (*(s32 *)(entity + 0x108) != 0) {
+        FreeFromHeap(heap, *(void **)(entity + 0x108), 0, 0);
+        *(s32 *)(entity + 0x108) = 0;
+        *(s16 *)(entity + 0x104) = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", RemoveFromZOrderList);
 
@@ -535,7 +633,29 @@ INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", DeferredEntityRemoval);
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityRemoval);
 
-INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", EntityTickLoop);
+typedef struct EntityListNode {
+    struct EntityListNode *next;  /* 0x00 */
+    u8 *entity;                  /* 0x04 */
+} EntityListNode;
+
+typedef struct EntityListHead {
+    u8 pad[0x1C];
+    EntityListNode *head;        /* 0x1C */
+} EntityListHead;
+
+void EntityTickLoop(EntityListHead *list) {
+    EntityListNode *node;
+
+    node = list->head;
+    while (node) {
+        u8 *entity = node->entity;
+        u8 *vtable = *(u8 **)(entity + 0x18);
+        s16 offset = *(s16 *)(vtable + 0x10);
+        void (*fn)(void *) = (void (*)(void *))*(s32 *)(vtable + 0x14);
+        fn((void *)(entity + offset));
+        node = node->next;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity/animation_setters", RenderEntities);
 

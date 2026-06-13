@@ -157,7 +157,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua check-lua lint-fix
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua check-lua lint-fix decompme
 
 # Default target - uses recursive make if ASM files don't exist
 all: $(SPLAT_CONFIG)
@@ -207,6 +207,7 @@ help:
 	@echo "  decompile FUNC=f - Decompile function with m2c"
 	@echo "  context          - Generate ctx.c for m2c"
 	@echo "  permuter FUNC=f  - Run decomp-permuter"
+	@echo "  decompme FUNC=f  - Create a decomp.me scratch from nonmatchings/<FUNC>/"
 	@echo ""
 	@echo "Tools:"
 	@echo "  tools            - Download GCC toolchain"
@@ -307,6 +308,7 @@ $(BUILD_DIR)/%.o: %.bin | $(BUILD_DIR)/
 #   $(BUILD_DIR)/src/system/foo.o: CC1 := $(CC1_257)
 #
 # No overrides are active by default.
+$(BUILD_DIR)/src/entity/animation_setters.o: MASPSX_EXTRA_FLAGS := --expand-div
 
 # -----------------------------------------------------------------------------
 # Linking
@@ -409,6 +411,16 @@ ifndef FUNC
 	@exit 1
 endif
 	$(PYTHON) tools/decomp-permuter/permuter.py nonmatchings/$(FUNC) --best-only -j4
+
+# Create a decomp.me scratch from nonmatchings/<FUNC>/
+# Usage: make decompme FUNC=FunctionName
+# Env vars: DECOMPME_COMPILER (default psyq4.0), DECOMPME_FLAGS, DECOMPME_API
+decompme:
+ifndef FUNC
+	@echo "Usage: make decompme FUNC=FunctionName"
+	@exit 1
+endif
+	$(PYTHON) tools/decompme.py $(FUNC) $(DECOMPME_ARGS)
 
 # -----------------------------------------------------------------------------
 # Cleanup
