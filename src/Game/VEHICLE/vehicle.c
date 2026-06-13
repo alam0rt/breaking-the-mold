@@ -1,7 +1,7 @@
 #include "common.h"
 #include "Game/game_state.h"
 
-extern u16 GetLevelFlags(LevelDataContext *levelCtx);
+extern s32 GetLevelFlags();
 extern void *D_800A5954;
 extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
 extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
@@ -16,7 +16,20 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", DisplayTransitionSprite);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPlayerAndEntities);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", DestroyEntityAndFreeResources);
+extern u8 D_80012100[];
+extern void DestroyEntity(void *entity, s32 arg);
+
+void DestroyEntityAndFreeResources(void *entity, s32 flags) {
+    void *buckets = *(void **)((u8 *)entity + 0x16C);
+    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80012100;
+    if (buckets) {
+        FreeFromHeap(D_800A5954, buckets, 0, 0);
+    }
+    DestroyEntity(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(D_800A5954, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GameModeCallback);
 
@@ -591,7 +604,12 @@ void EntityType045_BounceClay_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType065_Password_Init);
+extern void *InitPasswordEntity(void *entity, void *spawnData);
+
+void EntityType065_Password_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    AddEntityToSortedRenderList(list, InitPasswordEntity(entity, spawnData));
+}
 
 extern void *InitMonkeyMageBoss(void *entity, void *spawnData);
 
@@ -687,7 +705,17 @@ void EntityType008_KloggCatchableBall_Init(void) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RemapEntityTypesForLevel);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", LoadLevelSpriteAssets);
+extern void *D_800A595C;
+extern u8 D_8009DAB4[];
+extern void LoadSpriteHashArrayToVRAM(void *heap, u8 *data);
+extern void LoadSpriteFramesToVRAM(void *heap, u32 hash);
+
+void LoadLevelSpriteAssets(void *arg) {
+    LoadSpriteHashArrayToVRAM(D_800A595C, D_8009DAB4);
+    if (GetLevelFlags((u8 *)arg + 0x84) & 4) {
+        LoadSpriteFramesToVRAM(D_800A595C, 0x168254B5);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GetSlopeHeightAtSubpixel);
 
@@ -703,7 +731,21 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", FlushDepthBuckets);
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ClearEntityPoolArray);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", IsNormalPlatformLevel);
+s32 IsNormalPlatformLevel(void *arg) {
+    s32 result = 0;
+    u8 *ptr = (u8 *)arg + 0x84;
+    if (GetLevelFlags(ptr) & 0x400) goto end;
+    if (GetLevelFlags(ptr) & 0x200) goto end;
+    if (GetLevelFlags(ptr) & 0x2000) goto end;
+    if (GetLevelFlags(ptr) & 0x100) goto end;
+    if (GetLevelFlags(ptr) & 0x10) goto end;
+    {
+        u32 tmp = GetLevelFlags(ptr) & 0x4;
+        result = tmp < 1u;
+    }
+end:
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", CheckCheatCodeInput);
 
@@ -744,11 +786,11 @@ u8 func_8008273C(u8 *obj) {
 }
 
 u8 GetLevelDebugFlag(GameState *gameState) {
-    return GetLevelFlags(&gameState->level_context) >> 0xf;
+    return (u16)GetLevelFlags(&gameState->level_context) >> 0xf;
 }
 
 u8 GetLevelShowHUDFlag(GameState *gameState) {
-    return (GetLevelFlags(&gameState->level_context) >> 0xe) & 1;
+    return ((u16)GetLevelFlags(&gameState->level_context) >> 0xe) & 1;
 }
 
 u8 func_80082790(u8 *obj) {
@@ -809,7 +851,7 @@ void func_80082810(u8 *obj, u8 val) {
 }
 
 u8 GetLevelAutoScrollFlag(GameState *gameState) {
-    return (GetLevelFlags(&gameState->level_context) >> 0xb) & 1;
+    return ((u16)GetLevelFlags(&gameState->level_context) >> 0xb) & 1;
 }
 
 void func_8008283C(void) {
