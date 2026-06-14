@@ -38,6 +38,19 @@ extern s32 GetWorldPositionY(Entity *entity, s16 localY);
  * emits the matching %gp_rel store. See memories/repo/gp-rel-extern-blocker.md. */
 u8 D_800A6045; /* menu select/confirm SFX debounce flag */
 
+/* Same gp-rel unlock as D_800A6045: the cursor's idle FSM state pair
+ * (marker 0xFFFF0000 + &SetupMenuIdleAnimation) lives in the .sdata blob;
+ * tentative defs let maspsx emit the matching single-instruction gp_rel
+ * loads in InitMenuCursorEntity. */
+u32   D_800A6050; /* FSM marker (0xFFFF0000 = direct call) */
+void *D_800A6054; /* FSM handler = &SetupMenuIdleAnimation */
+
+/* Cursor entity vtable + sprite table -- both outside gp range, addressed
+ * absolute (lui/lo), so plain externs are correct here. */
+extern u8 D_800120AC[];
+extern u8 D_8009CBDC[];
+extern void EntitySetState(Entity *entity, u32 marker, void *fn);
+
 /* Forward decls for in-TU helpers used by Setup*Animation before their
  * own definitions appear below. */
 void MenuSetEntityIdle2(Entity *entity);
@@ -76,16 +89,15 @@ typedef struct {
  * marker 0xFFFF0000 = direct call), then EntitySetState to the FSM
  * slot at D_800A6050/D_800A6054 to enter the cursor's idle tick state.
  *
- * SHELVED: gp-rel-extern blocker. Original loads D_800A6050/D_800A6054 via
- * single-instruction `lw $aN, %gp_rel(D_800A6050)($gp)`. Our cc1+maspsx
- * cannot emit gp_rel addressing for `extern u32 D_800A6050` (the symbol is
- * owned by undefined_syms.txt, not defined in menu.o's .sdata). cc1 emits
- * the bare symbol form and maspsx leaves it for GNU as, which resolves to
- * 2-instruction `lui $aN, %hi(...); lw $aN, %lo(...)($aN)`. Net: function
- * grows by 8 bytes (2 gp_rel sites × 4 bytes each), shifting every byte
- * after it including all .data — symbol D_8009CBDC slides to 0x8009CBE4,
- * causing 29k+ vtable byte diffs cascading through libgpu etc.
- * See memories/repo/gp-rel-extern-blocker.md. */
+ * GP-REL PART SOLVED, Family-B remainder: the D_800A6050/D_800A6054
+ * reads now match exactly (R_MIPS_GPREL16, via the .comm tentative defs
+ * above). What remains is the GetWorldPositionX/Y slot-marshal: the C
+ * draft picks $v0 for the fn pointer and $v1 for the -1 marker, while the
+ * original swaps them ($v1=fn, $v0=-1 held live across both installs),
+ * and the frame comes out 0x28 vs the original's 0x30 (slot at sp+0x18
+ * vs sp+0x1C). Identical regalloc-swap + frame class as InitMenuButtonEntity
+ * and AttachCursorToButton -- permuter territory, not a gp_rel issue.
+ * (Draft kept in git history; tentative defs above are ready for the match.) */
 INCLUDE_ASM("asm/nonmatchings/menu", InitMenuCursorEntity);
 
 /* Generic tick callback that drives a countdown timer at entity+0x100:
