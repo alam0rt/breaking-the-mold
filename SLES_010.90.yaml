@@ -208,6 +208,10 @@
     - "c"
     - "Game/PLAYER_STATES/player_states"
   -
+    - 447740
+    - "c"
+    - "Game/MAIN/gamestate"
+  -
     - 448976
     - "c"
     - "Game/VEHICLE/vehicle"

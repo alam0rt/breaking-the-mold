@@ -186,8 +186,9 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 5: Game/PLAYER_STATES — player platform state machine (~50KB blob)
         // -----------------------------------------------------------------
-        c('61848', 'Game/PLAYER_STATES/player_states'),
-        // PROPOSED: this blob is really ~9 source files in link order:
+        c('61848', 'Game/PLAYER_STATES/player_states'),  // 0x80071048 (tail to be split: vehicle/menu/...)
+        c('6D4FC', 'Game/MAIN/gamestate'),               // 0x8007CCFC InitGameState/respawn/level-start [carved]
+        // PROPOSED: remaining ~8 sub-files of the player_states blob, in link order:
         //   c('61848', 'Game/PLAYER_STATES/vehicle'),  // 0x80071048 Runn/Soar/Finn modes + platforms [R]
         //   asm('65798', 'Game/UI/menu'),              // 0x80074F98 cursor/buttons/options/lvl-select [N]
         //   asm('667F4', 'Game/UI/password'),          // 0x80075FF4 password entry UI                 [N]

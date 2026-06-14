@@ -58,6 +58,7 @@ SECTIONS
         build/asm/Game/PLAYER/finn.o(.rodata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.rodata);
         build/src/Game/PLAYER_STATES/player_states.o(.rodata);
+        build/src/Game/MAIN/gamestate.o(.rodata);
         build/src/Game/VEHICLE/static_game_state.o(.rodata);
         build/src/Game/VEHICLE/empty_callbacks.o(.rodata);
         build/src/Game/MAIN/blb_memory.o(.rodata);
@@ -101,6 +102,7 @@ SECTIONS
         build/asm/Game/PLAYER/finn.o(.sdata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sdata);
         build/src/Game/PLAYER_STATES/player_states.o(.sdata);
+        build/src/Game/MAIN/gamestate.o(.sdata);
         build/src/Game/VEHICLE/static_game_state.o(.sdata);
         build/src/Game/VEHICLE/empty_callbacks.o(.sdata);
         build/src/Game/MAIN/blb_memory.o(.sdata);
@@ -144,6 +146,7 @@ SECTIONS
         build/asm/Game/PLAYER/finn.o(.sbss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sbss);
         build/src/Game/PLAYER_STATES/player_states.o(.sbss);
+        build/src/Game/MAIN/gamestate.o(.sbss);
         build/src/Game/VEHICLE/static_game_state.o(.sbss);
         build/src/Game/VEHICLE/empty_callbacks.o(.sbss);
         build/src/Game/MAIN/blb_memory.o(.sbss);
@@ -187,6 +190,7 @@ SECTIONS
         build/asm/Game/PLAYER/finn.o(.bss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.bss);
         build/src/Game/PLAYER_STATES/player_states.o(.bss);
+        build/src/Game/MAIN/gamestate.o(.bss);
         build/src/Game/VEHICLE/static_game_state.o(.bss);
         build/src/Game/VEHICLE/empty_callbacks.o(.bss);
         build/src/Game/MAIN/blb_memory.o(.bss);
@@ -219,6 +223,7 @@ SECTIONS
         build/asm/Game/PLAYER/finn.o(.text);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.text);
         build/src/Game/PLAYER_STATES/player_states.o(.text);
+        build/src/Game/MAIN/gamestate.o(.text);
         build/src/Game/VEHICLE/vehicle.o(.text);
         build/src/Game/VEHICLE/static_game_state.o(.text);
         build/src/Game/VEHICLE/empty_callbacks.o(.text);
@@ -268,6 +273,7 @@ SECTIONS
         build/asm/Game/PLAYER/finn.o(.data);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.data);
         build/src/Game/PLAYER_STATES/player_states.o(.data);
+        build/src/Game/MAIN/gamestate.o(.data);
         build/src/Game/VEHICLE/static_game_state.o(.data);
         build/src/Game/VEHICLE/empty_callbacks.o(.data);
         build/src/Game/MAIN/blb_memory.o(.data);
