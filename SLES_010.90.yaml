@@ -208,8 +208,36 @@
     - "c"
     - "Game/PLAYER_STATES/player_states"
   -
+    - 415640
+    - "asm"
+    - "Game/UI/menu"
+  -
+    - 419828
+    - "asm"
+    - "Game/UI/password"
+  -
+    - 428008
+    - "asm"
+    - "Game/UI/hud_results"
+  -
+    - 433724
+    - "asm"
+    - "Game/UI/ending"
+  -
+    - 436668
+    - "asm"
+    - "Game/MAIN/level"
+  -
+    - 438704
+    - "asm"
+    - "Game/MAIN/blb_accessors"
+  -
+    - 444344
+    - "asm"
+    - "Game/AUDIO/sound"
+  -
     - 447740
-    - "c"
+    - "asm"
     - "Game/MAIN/gamestate"
   -
     - 448976
