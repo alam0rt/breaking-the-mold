@@ -296,7 +296,7 @@ typedef struct {
     /* Current sprite state (0xCC-0xDF) */
     /* 0xCC */ u32      currentSpriteId;    /* Active sprite bank ID (hash) */
     /* 0xD0 */ u32      displayedSpriteId;  /* Last rendered sprite ID */
-    /* 0xD4 */ u8       _padD4[4];
+    /* 0xD4 */ s32      pixelBufferSize;
     /* 0xD8 */ u16      curSpriteFrameCount;/* Frame count of current sprite */
     /* 0xDA */ s16      currentFrame;       /* Current animation frame index */
     /* 0xDC */ s16      loopFrame;          /* Frame to loop back to */

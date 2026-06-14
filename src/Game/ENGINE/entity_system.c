@@ -184,7 +184,7 @@ void AllocateEntityPixelBuffer(SpriteEntity *entity) {
     void *heap = D_800A5954;
     s16 *ctx = (s16 *)entity->base.spriteContext;
     s32 size = (s32)ctx[2] * (s32)ctx[3];
-    *(s32 *)&entity->_padD4[0] = size;
+    entity->pixelBufferSize = size;
     entity->pPixelBuffer = AllocateFromHeap(heap, 1, size, 0);
 }
 
@@ -209,7 +209,17 @@ void ApplyAnimationPositionOffsets(SpriteEntity *entity) {
     entity->frameDeltaY = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntitySpriteAndPixelBuffer);
+void InitEntitySpriteAndPixelBuffer(SpriteEntity *entity, s16 width, s16 height, s16 depth, u8 flags) {
+    typedef struct { u8 pad00[4]; s16 width; s16 height; } SpriteContext;
+    void *ctx = AllocateFromHeap(D_800A5954, 0x3C, 1, 0);
+    SpriteContext *sc;
+    s32 size;
+    entity->base.spriteContext = PrepareSpriteVRAMSlotForContext(ctx, width, (s16)((height + 3) & 0xFFFCu), depth, flags);
+    sc = (SpriteContext *)entity->base.spriteContext;
+    size = (s32)sc->width * (s32)sc->height;
+    entity->pixelBufferSize = size;
+    entity->pPixelBuffer = AllocateFromHeap(D_800A5954, 1, size, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", AllocSpriteRenderContext);
 

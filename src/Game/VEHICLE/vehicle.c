@@ -806,7 +806,11 @@ void LoadLevelSpriteAssets(void *arg) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GetSlopeHeightAtSubpixel);
+extern u8 D_8009D228[][16];
+
+u8 GetSlopeHeightAtSubpixel(void *unused, u32 tileType, u32 subpixel) {
+    return D_8009D228[tileType & 0xFF][subpixel & 0xF];
+}
 
 void SetPlayerVehicleSpeed(void *entity, s32 speed) {
     void *other;

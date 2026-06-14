@@ -163,6 +163,78 @@ Frame-indexed acceleration curves in `.data`:
 
 ---
 
+## Ghidra Verification (2026-06-14)
+
+All structures below have been verified via MCP and annotated in the Ghidra database.
+
+### Entity State Table — VERIFIED
+
+- **Address:** `0x800A598C` (labeled `g_apfnEntityStateTable`)
+- **Format confirmed:** 8-byte entries `{0xFFFF0000, callback_ptr}`, groups terminated by ASCII `"END2"`
+- **15 active groups** (not 19 as initially estimated — groups 3, 16-18 are empty):
+  - Group 1: Platform ride (3 entries: PlatformRideComplete, PlatformRideStartUp, PlatformRideStartDown)
+  - Group 2: Decor (7: DecorSetSpriteActive/Idle, DecorStartAnimation/Alt, DecorSetRandomTimer, DecorStartWithRandomTimer, DecorPlaySoundAndAnimate)
+  - Group 4: Enemy AI (17: StartAnimSequence4A/B/C, EnemyStartMovingWithSound, LaserMonkeyIdleState, ...)
+  - Group 5: Entity visibility (10: EntityHideAndDisable, EntityShowAndActivate, PlatformShow/Hide, ...)
+  - Group 6: Animation frames (4: StartAnimSequence13Frames, StartAnimSequence7Frames, EnemySetWalkSprite, EnemySetIdleSprite)
+  - Group 7: Boss/complex enemies (32 entries, 0x800479D0-0x8004EAC8)
+  - Group 8: Collectible/pickup (13 entries)
+  - Group 9: Vehicle (4 entries)
+  - Group 10: **Player states** (65+ entries, 0x80066CE0-0x8006EA0C — confirmed PlayerStateInit_Idle, PlayerState_HideAndClearBounce, PlayerState_SetupBounceRight/Up, etc.)
+  - Group 11: 3 entries (0x8006FDF4-0x80070094)
+  - Group 12: Boss patterns (10 entries)
+  - Group 13-14: Boss sub-states (3+4 entries)
+  - Group 15: Single entry (0x800750CC)
+
+### Entity Type Dispatch Table — VERIFIED
+
+- **Address:** `0x8009D5F8` (labeled `g_EntityTypeInitTable`)
+- **121 entries**, 8 bytes each: `{0xFFFF0000, init_func_ptr}`
+- **82 unique init functions** across 121 slots (many types share handlers)
+- **9 unused slots:** types 13-16, 56, 73-74, 77-78 (all NULL)
+- **Shared handlers:** e.g. EntityType000_003_004_PickupVariant_Init used by types 0,3,4; EntityType042_thru_060_SnoBlo_Init by types 42-44,53-55,60
+- **Boss types:** 100=GlennYntis, 101=ShrineyGuard, 102=JoeHeadJoe, 103=Klogg
+
+### Physics Tables — VERIFIED (16.16 fixed-point)
+
+| Label | Address | Entries | Range | Purpose |
+|-------|---------|---------|-------|---------|
+| `g_WobbleTable` | `0x8009B038` | 15 | ±8.0 | Oscillation dx/dy pairs |
+| `g_SpeedRampTable` | `0x8009B074` | 18 | 1.0→9.0 | Running acceleration curve |
+| `g_GravityRampTable` | `0x8009B0BC` | 18 | 1.0→10.0 (caps) | Freefall terminal velocity |
+| `g_FloatRampTable` | `0x8009B104` | 16 | 1.0→8.0 | Glide/float descent (gentler) |
+
+### Vtable Patterns — VERIFIED
+
+**Entity Object Class VTable** (`0x80010650`):
+- 12 classes (A-L), 32 bytes each
+- Per-class: `[NULL, NULL, NULL, destructor_fn, NULL, UpdateEntityRender, NULL, UploadEntityTextureIfDirty]`
+- All classes share UpdateEntityRender (0x8001D988) and UploadEntityTextureIfDirty (0x8001E5B8)
+- Destructors differ per class (EntityDestructor_Vtable0x80010870_A through _L)
+
+**Ending Entity VTables** (`0x80011ED4`-`0x80012034`):
+- **Correction:** Originally documented as "menu vtables" — actually ending-sequence entity vtables
+- 5 variants with same 32-byte structure
+- Destructors: EndingEntityDestroyCallback_2034_V1 through V5
+
+**PrimObject Render VTable** (`0x80010344`):
+- Non-uniform stride, mixed render callback types
+- Core entries: SubmitPrimitiveBufferToGPU, RenderTilemapWithWrapAround, RenderTilemapPrimitivesWithBounds, RenderTilemapLayerWithScroll, RenderSpriteOrScaledQuad
+- Entity entries share UpdateEntityRender + UpdateParallaxLayerPosition
+
+### Depth Bucket System — VERIFIED (pre-documented in Ghidra)
+
+- `AddToDepthBucket` (0x80081EC0): z>>1 clamped to [0,255], prepend to singly-linked list at `gameState[+0x16C][bucket]`
+- `FlushDepthBuckets` (0x80081F1C): iterate 256 buckets, SetPolyGT4 each prim, AddPrim to OT at `g_pBlbHeapBase[+0xA084]+0x70`
+- `FlushDepthBucketsGlobal` (0x80033D14): wrapper calling FlushDepthBuckets with global GameState
+
+### Debug/Cheat System — VERIFIED
+
+- `CheckCheatCodeInput` (0x800820B4): Confirmed — calls ApplyRandomRGBEffect, ResetPlayerUnlocksByLevel, PlaySoundEffect, GetLevelFlags
+- `ProcessDebugMenuInput` (0x80082C10): Confirmed — hidden debug menu input handler
+
+---
+
 ## Decomp Priority Recommendations
 
 1. **Entity state table parser** — understanding the `{flags, callback} + END2` format unlocks naming for ~200 state functions
