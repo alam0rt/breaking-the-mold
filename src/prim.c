@@ -23,6 +23,11 @@ typedef struct Globals {
     void *gpu;
 } Globals;
 
+/*
+ * Pool 0: 20-byte primitive slot (large pool, cap 200). Stride matches
+ * PSY-Q SPRT or POLY_F3; given the sprite-heavy renderer this is most
+ * likely the main SPRT pool used by world / actor draws.
+ */
 void *AllocPrim20(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x1014);
@@ -35,6 +40,11 @@ void *AllocPrim20(Globals *g) {
     return pool + count * 20;
 }
 
+/*
+ * Pool 1: 8-byte primitive slot (cap 200). PSY-Q DR_TPAGE is the only
+ * common 8-byte packet; this pool almost certainly holds the tpage /
+ * drawmode switches AddPrim'd between sprite batches.
+ */
 void *AllocPrim8(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x1658);
@@ -47,6 +57,11 @@ void *AllocPrim8(Globals *g) {
     return pool + count * 8;
 }
 
+/*
+ * Pool 2: 40-byte primitive slot (cap 100). Stride matches PSY-Q
+ * POLY_FT4 (textured quad) or POLY_GT3; the FT4 reading fits a 2D
+ * platformer's tilemap / large-sprite quads.
+ */
 void *AllocPrim40(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x25FC);
@@ -59,6 +74,13 @@ void *AllocPrim40(Globals *g) {
     return pool + count * 40;
 }
 
+/*
+ * Pool 3: second 20-byte primitive slot (cap 100). Same stride as Pool 0
+ * but a separate buffer + count, suggesting a distinct usage class
+ * (e.g. UI/HUD sprites kept apart from world sprites, or SPRT vs.
+ * POLY_F3). The "_Pool3" suffix is purely to disambiguate from
+ * AllocPrim20 - it does not reflect any original naming.
+ */
 void *AllocPrim20_Pool3(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x2DD0);
@@ -71,6 +93,11 @@ void *AllocPrim20_Pool3(Globals *g) {
     return pool + count * 20;
 }
 
+/*
+ * Pool 4: 24-byte primitive slot (cap 100). Stride matches PSY-Q
+ * POLY_F4 (flat-shaded untextured quad) - the usual primitive for
+ * solid-color fills, fade rects, and HUD backdrops.
+ */
 void *AllocPrim24(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x3734);
@@ -83,6 +110,10 @@ void *AllocPrim24(Globals *g) {
     return pool + count * 24;
 }
 
+/*
+ * Pool 5: 28-byte primitive slot (cap 100). Stride matches PSY-Q
+ * POLY_G3 (gouraud-shaded untextured triangle); could also be LINE_F4.
+ */
 void *AllocPrim28(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x4228);
@@ -95,6 +126,11 @@ void *AllocPrim28(Globals *g) {
     return pool + count * 28;
 }
 
+/*
+ * Pool 6: 36-byte primitive slot (cap 100). Stride matches PSY-Q
+ * POLY_G4 (gouraud-shaded untextured quad) - used for shaded
+ * backgrounds, palette-tinted overlays, or gradient fills.
+ */
 void *AllocPrim36(Globals *g) {
     u8 *pool = (u8 *)g->gpu;
     s16 count = *(s16 *)(pool + 0x503C);

@@ -82,6 +82,13 @@ extern void *AllocPrim28(GameGlobals *g);
 extern void *AllocPrim36(GameGlobals *g);
 extern void memcpy(void *dst, void *src, s32 len);
 
+/*
+ * Initialize a PrimObject - the per-sprite slot in the GPU primitive
+ * buffer that SubmitPrimitiveBufferToGPU walks each frame. Wires up
+ * the base + override vtables (D_8001039C then D_80010344 - the double
+ * store is needed to byte-match), zeroes scratch coords, enables the
+ * slot, and stamps the caller's id.
+ */
 PrimObject *InitSpriteObject(void *arg, s16 id) {
     PrimObject *p = arg;
 
@@ -104,97 +111,134 @@ PrimObject *InitSpriteObject(void *arg, s16 id) {
 INCLUDE_ASM("asm/nonmatchings/spracc", SubmitPrimitiveBufferToGPU);
 
 
+/* Setter for the u8 at +0x54 (tail of the render context) - likely a
+ * per-sprite visibility / sort-bucket flag. */
 void func_80018BD8(RenderSprite *spr, u8 value) {
     spr->unk54 = value;
 }
 
+/* Pack-write both vramX (+0x10) and vramY (+0x12) in a single 32-bit
+ * store - used to stamp this sprite's assigned VRAM rect origin. */
 void func_80018BE0(RenderSprite *spr, s32 value) {
     *(s32 *)&spr->vramX = value;
 }
 
+/* Getter: PSX CLUT id (16-bit palette handle for 4/8-bit textures). */
 u16 func_80018BE8(RenderSprite *spr) {
     return spr->clut;
 }
 
+/* Getter: paired bytes at +0x30/+0x31. These are written together with
+ * tpage in func_80018CD8, so most likely the texture sub-rect U/V (or
+ * extra draw-mode bits) stored beside the GPU tpage handle. */
 void func_80018BF4(RenderSprite *spr, u8 *out30, u8 *out31) {
     *out30 = spr->unk30;
     *out31 = spr->unk31;
 }
 
+/* Getter: PSX GPU tpage handle (page index + color mode + ABR blend bits). */
 u16 func_80018C0C(RenderSprite *spr) {
     return spr->tpage;
 }
 
+/* Getter: u8 at +0x37 - one of the paired bytes immediately after the
+ * RGB tint triple; role TBD (probably a per-sprite blend/draw parameter). */
 u8 func_80018C18(RenderSprite *spr) {
     return spr->unk37;
 }
 
+/* Getter: u8 at +0x38 - second half of the +0x37/+0x38 paired bytes. */
 u8 func_80018C24(RenderSprite *spr) {
     return spr->unk38;
 }
 
+/* Setter for u8 at +0x37 (see func_80018C18). */
 void func_80018C30(RenderSprite *spr, u8 value) {
     spr->unk37 = value;
 }
 
+/* Setter for u8 at +0x38 (see func_80018C24). */
 void func_80018C38(RenderSprite *spr, u8 value) {
     spr->unk38 = value;
 }
 
+/* Setter: sprite draw rectangle width/height in pixels - normally
+ * pushed in from the current frame's metadata (+0xA / +0xC in the
+ * 0x24-byte per-frame entry). */
 void func_80018C40(RenderSprite *spr, s16 w, s16 h) {
     spr->width = w;
     spr->height = h;
 }
 
+/* Getter: u16 at +0x28 - small render-context word adjacent to tpage/clut. */
 u16 func_80018C4C(RenderSprite *spr) {
     return spr->unk28;
 }
 
+/* Setter for the u16 at +0x28 (see func_80018C4C). */
 void func_80018C58(RenderSprite *spr, u16 value) {
     spr->unk28 = value;
 }
 
+/* Getter: s32 at +0x20 - second of the paired 32-bit slots +0x1C/+0x20
+ * (often used as a current/target or min/max pair, see func_80018C88). */
 s32 func_80018C60(RenderSprite *spr) {
     return spr->unk20;
 }
 
+/* Getter: s32 at +0x1C - first of the +0x1C/+0x20 paired 32-bit slots. */
 s32 func_80018C6C(RenderSprite *spr) {
     return spr->unk1C;
 }
 
+/* Setter for the s32 at +0x20. */
 void func_80018C78(RenderSprite *spr, s32 value) {
     spr->unk20 = value;
 }
 
+/* Setter for the s32 at +0x1C. */
 void func_80018C80(RenderSprite *spr, s32 value) {
     spr->unk1C = value;
 }
 
+/* Seed both paired s32 slots at +0x1C and +0x20 to the same value -
+ * the classic "current = target = X" reset for an interpolation /
+ * accumulator pair. */
 void func_80018C88(RenderSprite *spr, s32 value) {
     spr->unk1C = value;
     spr->unk20 = value;
 }
 
+/* Setter for the u8 at +0x33 - the lone byte sitting just before the
+ * RGB tint triple; specific role TBD. */
 void func_80018C94(RenderSprite *spr, u8 value) {
     spr->unk33 = value;
 }
 
+/* Getter: sprite tint RGB at +0x34..+0x36 (the per-vertex color the GPU
+ * modulates the textured quad with). */
 void func_80018C9C(RenderSprite *spr, u8 *outR, u8 *outG, u8 *outB) {
     *outR = spr->r;
     *outG = spr->g;
     *outB = spr->b;
 }
 
+/* Setter: sprite tint RGB at +0x34..+0x36 (see func_80018C9C). */
 void func_80018CC0(RenderSprite *spr, u8 r, u8 g, u8 b) {
     spr->r = r;
     spr->g = g;
     spr->b = b;
 }
 
+/* Setter: CLUT id (see func_80018BE8). */
 void func_80018CD0(RenderSprite *spr, u16 value) {
     spr->clut = value;
 }
 
+/* Re-arm the sprite's GPU draw state after a frame/texture change:
+ * mark it dirty (re-upload pending), refresh the paired bytes at
+ * +0x30/+0x31, and overwrite tpage while preserving the ABR
+ * (semi-transparency mode) bits 0x60 from the previous tpage. */
 void func_80018CD8(RenderSprite *spr, u16 tpage, u8 val30, u8 val31) {
     spr->dirty = 1;
     spr->unk30 = val30;
@@ -202,6 +246,10 @@ void func_80018CD8(RenderSprite *spr, u16 tpage, u8 val30, u8 val31) {
     spr->tpage = (tpage & 0xFF9F) | (spr->tpage & 0x60);
 }
 
+/* Build the GPU tpage handle from this sprite's assigned VRAM rect:
+ * snaps (vramX, vramY) to its 64x256 PSX texture-page origin, with
+ * the color mode taken from spr->unk32 (4/8/16-bit) and the
+ * caller-supplied blend mode (abr). */
 void SetSpriteTPageFromVRAMCoords(RenderSprite *spr, u8 abr) {
     s32 x = spr->vramX;
     s32 y = spr->vramY;

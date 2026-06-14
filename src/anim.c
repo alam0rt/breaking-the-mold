@@ -29,6 +29,11 @@ typedef struct AnimEntity {
     /* 0xF5 */ u8 pendingAnimActive;
 } AnimEntity;
 
+/* Pending-frame setter: queues `value` as the next animation frame index
+ * and raises ANIM_CHG_FRAME (0x008) on animChangeFlags. The latched value
+ * is committed into +0xDA currentFrame on the next entity tick by
+ * ApplyPendingSpriteState. Bit 0x200 is cleared so the value is taken
+ * as a literal index (not a callback-resolved key). */
 void SetAnimationFrameIndex(AnimEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags;
@@ -41,6 +46,10 @@ void SetAnimationFrameIndex(AnimEntity *entity, u32 value) {
     }
 }
 
+/* Pending-frame setter, callback variant: same as SetAnimationFrameIndex
+ * but also sets bit 0x200, telling ApplyPendingSpriteState to resolve
+ * the stored value via FindFrameIndexByValue rather than using it as a
+ * literal index. Lets gameplay code reference frames by symbolic tag. */
 void SetAnimationFrameCallback(AnimEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x208;
@@ -52,6 +61,11 @@ void SetAnimationFrameCallback(AnimEntity *entity, u32 value) {
     }
 }
 
+/* NB: name MISLEADING -- writes to pendingLoopFrame (+0xC4, flag
+ * ANIM_CHG_LOOP_FRAME 0x010), NOT pendingTargetFrame. Likely should be
+ * SetAnimationLoopFrameIndex. Queues the frame the animation loops back
+ * to. If a sprite change is also queued (bit 0x004), the value is mirrored
+ * into pendingFrame so the new sprite starts at this loop point. */
 void SetEntityTargetFrame(AnimEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 orFlags = flags | 0x10;
@@ -73,6 +87,10 @@ void SetEntityTargetFrame(AnimEntity *entity, u32 value) {
     }
 }
 
+/* Pending-loop-frame setter, callback variant: writes pendingLoopFrame
+ * (+0xC4) and sets bits 0x410 (LOOP_FRAME | callback-lookup), so
+ * ApplyPendingSpriteState resolves the value via callback. Mirrors the
+ * sprite-change-primes-pendingFrame branch from SetEntityTargetFrame. */
 void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
 
@@ -93,6 +111,11 @@ void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
     }
 }
 
+/* NB: name MISLEADING -- writes to pendingTargetFrame (+0xC8, flag
+ * ANIM_CHG_TARGET_FRAME 0x020), NOT a sprite ID. The real sprite-id setter
+ * is SetEntitySpriteId @ 0x8001D080 (which uses +0xBC and flag 0x004).
+ * This queues the end/stop frame for the current animation; likely should
+ * be SetAnimationTargetFrameIndex. */
 void SetAnimationSpriteId(AnimEntity *entity, u32 spriteId) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags;
@@ -105,6 +128,10 @@ void SetAnimationSpriteId(AnimEntity *entity, u32 spriteId) {
     }
 }
 
+/* NB: name MISLEADING -- same pendingTargetFrame slot as SetAnimationSpriteId,
+ * but with ANIM_CHG_TARGET_BY_VALUE (0x800) set so the stored value is
+ * treated as a lookup key resolved via callback rather than a literal
+ * frame index. Likely should be SetAnimationTargetFrameByValue. */
 void SetAnimationSpriteCallback(AnimEntity *entity, void *callback) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x820;
@@ -116,6 +143,10 @@ void SetAnimationSpriteCallback(AnimEntity *entity, void *callback) {
     }
 }
 
+/* Pending-anim-active setter: queues an on/off toggle for the animation
+ * state machine (+0xF5 pendingAnimActive, flag ANIM_CHG_ANIM_ACTIVE 0x100).
+ * When committed to +0xF2 animActive, TickEntityAnimation gates the
+ * frame-advance loop on it. */
 void SetAnimationActive(AnimEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x100;
@@ -127,6 +158,9 @@ void SetAnimationActive(AnimEntity *entity, u8 value) {
     }
 }
 
+/* NB: name MISLEADING -- writes to pendingLoopFlag (+0xF4, flag
+ * ANIM_CHG_LOOP_FLAG 0x080), the "loop animation on completion" toggle,
+ * not any render flags. Likely should be SetAnimationLoopFlag. */
 void EntitySetRenderFlags(AnimEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x80;
@@ -138,6 +172,9 @@ void EntitySetRenderFlags(AnimEntity *entity, u8 value) {
     }
 }
 
+/* Pending-direction setter (+0xF3 pendingDirection, flag
+ * ANIM_CHG_DIRECTION 0x040). 0 = forward playback, 1 = reverse.
+ * Unnamed -- likely SetAnimationDirection. */
 void func_8001D268(AnimEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x40;
@@ -149,6 +186,12 @@ void func_8001D268(AnimEntity *entity, u8 value) {
     }
 }
 
+/* Per-entity animation tick. Gated by animActive (+0xF2); decrements
+ * frameCountdown (+0xEE) and, on zero, fires the "anim complete" callback
+ * (message 2) if currentFrame has reached targetFrame, otherwise calls
+ * AdvanceAnimationFrame to step the frame and reloads metadata. First
+ * stage of every sprite-entity's per-tick update, before
+ * ApplyPendingSpriteState / UpdateSpriteFrameData. */
 INCLUDE_ASM("asm/nonmatchings/anim", TickEntityAnimation);
 
 typedef struct AdvAnimState {
@@ -162,6 +205,11 @@ typedef struct AdvAnimState {
     u8 field_F1;
 } AdvAnimState;
 
+/* Steps currentFrame (+0xDA) toward targetFrame (+0xDE) respecting
+ * animDirection (+0xF0) and the animLoopFlag (+0xF1): when the target
+ * is reached it returns to loopFrame (+0xDC) if looping is enabled,
+ * otherwise stops. Wraps at the total frameCount boundary. The actual
+ * frame-index integrator driving every sprite animation. */
 void AdvanceAnimationFrame(AdvAnimState *e) {
     s16 current = e->field_DA;
     s16 target = e->field_DE;
@@ -188,18 +236,51 @@ void AdvanceAnimationFrame(AdvAnimState *e) {
     }
 }
 
+/* Commit half of the request-now/apply-later animation pipeline. Walks
+ * the bits set in animChangeFlags by the SetAnimation* setters and copies
+ * each pending* field into its live counterpart (sprite id, frame, loop
+ * frame, target frame, direction, loop flag, active). Resolves the
+ * callback-lookup variants via FindFrameIndexByValue when bits
+ * 0x200/0x400/0x800 are set, then clears animChangeFlags. */
 INCLUDE_ASM("asm/nonmatchings/anim", ApplyPendingSpriteState);
 
+/* Loads metadata for the now-current frame from the entity's frame
+ * table at +0x78 (0x24 bytes/frame): per-frame width/height/duration,
+ * render-bbox/hitbox deltas, frame timer reset, and the 16.16 per-frame
+ * motion vectors frameMotionX/Y at +0xB4/+0xB8. Runs after
+ * ApplyPendingSpriteState whenever the active frame changes. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateSpriteFrameData);
 
+/* Main per-entity render+update routine (~3 KiB, the biggest function
+ * in the unit). Drives the full sprite pipeline per tick:
+ * TickEntityAnimation -> ApplyPendingSpriteState -> UpdateSpriteFrameData,
+ * evaluates the world->screen transform with parallax and powerup/scale
+ * factors, triggers RLE sprite decode when needed, and submits the
+ * sprite primitive. Installed as the tick slot of every sprite entity's
+ * vtable -- the heart of the per-frame render loop. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateEntityRender);
 
+/* When the textureDirty byte (+0x76) is set, re-uploads the entity's
+ * decoded pixel buffer to VRAM and reloads its CLUT/palette via the
+ * embedded sprite render context. Called once per frame from each
+ * entity's render path (texture slot of the standard vtable). */
 INCLUDE_ASM("asm/nonmatchings/anim", UploadEntityTextureIfDirty);
 
+/* Searches the entity's frame-metadata table for the first frame whose
+ * tag/key (word at +0x00 of each entry) equals `value`, returning its
+ * index, or -1 if not found. When staticSpriteFlag (+0xF7) is set it
+ * walks via GetSpriteFrameDataByIndex instead of indexing pFrameTable
+ * directly. Used by ApplyPendingSpriteState to resolve the callback-
+ * lookup variants of the pending-frame setters. */
 INCLUDE_ASM("asm/nonmatchings/anim", FindFrameIndexByValue);
 
 extern void StepAnimationSequence(void *entity);
 
+/* Begins playback of a scripted animation callback sequence. Zeroes
+ * sequenceStep (+0xE2), records sequenceLength (+0xE4) and the table
+ * pointer (+0x94), then dispatches the first entry via
+ * StepAnimationSequence. Used for death/transformation/cutscene scripts
+ * where a single state plays a series of [marker, fn] entries in turn. */
 void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame) {
     *(s16 *)&entity[0xE2] = 0;
     *(s16 *)&entity[0xE4] = startFrame;
@@ -207,16 +288,48 @@ void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame) {
     StepAnimationSequence(entity);
 }
 
+/* Advances the active animation sequence: drains any pending exit/
+ * finalizer hook (+0xA8), copies the current sequence-table entry into
+ * the active-state slot (+0xA0/+0xA4), invokes it, then bumps
+ * sequenceStep. When the sequence completes the table pointer at +0x94
+ * is cleared. */
 INCLUDE_ASM("asm/nonmatchings/anim", StepAnimationSequence);
 
+/* Per-tick dispatcher for an entity's state-machine callback queue.
+ * Promotes the queued slot at +0x98 into the active slot at +0xA0,
+ * steps an active sequence via StepAnimationSequence, runs the current
+ * activeStateCallback, and dispatches the exit/finalizer hook at +0xA8
+ * around state changes. The actual driver for every sprite-entity FSM. */
 INCLUDE_ASM("asm/nonmatchings/anim", EntityProcessCallbackQueue);
 
+/* Replaces the entity's current state with a new [marker, fn] pair.
+ * Dispatches and clears the existing exit/finalizer hook (+0xA8) first;
+ * if that hook didn't itself install another state, clears the sequence
+ * and queued slots, installs the new pair at +0xA0/+0xA4, and immediately
+ * dispatches the new state-enter handler. The primary state-transition
+ * primitive used by player FSM, enemy AI, bosses, menus, and pickups
+ * (heavily called -- 189 refs from 146 callers). */
 INCLUDE_ASM("asm/nonmatchings/anim", EntitySetState);
 
+/* Installs an exit/finalizer callback into the +0xA8/+0xAC slot. The
+ * existing hook (if any) is dispatched and cleared before replacement.
+ * Used for cleanup that must run before the next state change: stopping
+ * sounds, clearing flags, restoring hitboxes, removing helper entities,
+ * re-enabling input, completing checkpoint/powerup effects. */
 INCLUDE_ASM("asm/nonmatchings/anim", EntitySetCallback);
 
+/* Constructor for a "standard" (large, >128x128) parallax background
+ * layer entity. Initializes the entity header, allocates a tilemap
+ * rendering context via InitTilemapLayerRendering, installs
+ * UpdateParallaxScrollWithWrap_Standard as the per-frame tick, and wires
+ * up the EntityVtable_ResourceType1 destructor slot. */
 INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Standard);
 
+/* Destructor for entities backed by a multi-allocation resource bundle
+ * (sprite/anim/CLUT pack at +0x1C). Calls FreeMultiAllocResource, walks
+ * the destruction-chain vtables (ResourceType1 -> Destroyed), and
+ * optionally frees the entity body from the BLB heap when flag bit 0 is
+ * set. Installed in the destroy slot of the standard layer vtable. */
 void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x1C);
@@ -230,10 +343,22 @@ void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     }
 }
 
+/* Per-frame tick for "standard" parallax background layers. Reads camera
+ * X from g_pGameState, multiplies by the layer's scroll factor, advances
+ * a scroll accumulator with horizontal wrap-around, and re-blits the
+ * visible tiles for the new scroll position. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateParallaxScrollWithWrap_Standard);
 
+/* Constructor for a "medium" (<=128x128) parallax background layer.
+ * Same overall shape as InitLayerRenderContext_Standard but allocates
+ * the medium sprite-context size and installs
+ * UpdateParallaxScrollWithWrap_Medium as the tick callback. */
 INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Medium);
 
+/* Destructor for ResourceType2-backed entities. Mirrors
+ * EntityDestructor_FreeMultiAlloc but calls FreeResourceType2 on the
+ * resource pointer at +0x1C. Installed in the destroy slot of the medium
+ * layer vtable. */
 void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x1C);
@@ -247,10 +372,16 @@ void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     }
 }
 
+/* Medium-layer counterpart to UpdateParallaxScrollWithWrap_Standard. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateParallaxScrollWithWrap_Medium);
 
+/* Constructor for a "small" (<=64x64) parallax background layer.
+ * Installs UpdateParallaxScrollWithWrap_Small as the tick callback. */
 INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Small);
 
+/* Destructor for ResourceType3-backed entities. Calls FreeResourceType3
+ * on the resource pointer at +0x1C; installed in the destroy slot of
+ * the small layer vtable. */
 void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x1C);
@@ -264,10 +395,20 @@ void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     }
 }
 
+/* Small-layer counterpart to UpdateParallaxScrollWithWrap_Standard. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateParallaxScrollWithWrap_Small);
 
+/* Constructor for an animated foreground sprite-layer entity (the
+ * scrolling sprite strips: clouds, boats, banners, etc.). Allocates a
+ * ResourceType4-backed entity, installs EntityTick_AnimationFrameAdvance
+ * as the tick callback, then bootstraps the first frame by copying frame
+ * metadata into +0x24..+0x2F. */
 INCLUDE_ASM("asm/nonmatchings/anim", InitLayerScrollContext);
 
+/* Destructor for ResourceType4 (animated sprite-layer) entities. Frees
+ * the sprite-render allocation at +0x20 directly through the BLB heap
+ * (no per-resource cleanup hook), then vtable-swaps to Destroyed and
+ * optionally frees the entity body. */
 void FreeResourceType4(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x20);
@@ -281,16 +422,51 @@ void FreeResourceType4(void *entity, s32 flags) {
     }
 }
 
+/* Per-frame tick for animated sprite layers (resources using the +0x1C
+ * frame table). Decrements the per-frame timer at +0x31; on rollover,
+ * advances the +0x30 frame index, fires the "anim complete" callback
+ * (message 2) when the new slot is empty, then reloads +0x24..+0x2F
+ * from the next frame entry. The poor cousin of TickEntityAnimation,
+ * specialised for the simpler layer struct. */
 INCLUDE_ASM("asm/nonmatchings/anim", EntityTick_AnimationFrameAdvance);
 
+/* Per-frame screen-position update for sprite-layer entities. If the
+ * +0x20 render context exists and the +0x32 palette-dirty byte is clear,
+ * adds world position +0x2C/+0x2E to scroll offset +0x24/+0x26 and stores
+ * the result as the render context's screen XY; otherwise tails into
+ * UpdateEntityScreenPositionWithPalette which additionally refreshes the
+ * palette pointer. */
 INCLUDE_ASM("asm/nonmatchings/anim", func_8001FC40);
 
+/* Computes the on-screen position from world coords minus camera, writes
+ * it into the layer's render context (+0x20), and indexes into the
+ * palette table at (+0x1C base + +0x30*16) to install the current
+ * palette pointer at render-context +0x10. The palette-aware variant of
+ * func_8001FC40. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateEntityScreenPositionWithPalette);
 
+/* Constructor for the platformer PlayerEntity (the 0x3E8/0x44C alloc).
+ * Runs the base Entity init, clears the sprite sub-struct,
+ * InitEntityAnimationState's it, allocates the sprite/render context
+ * with the well-known player sprite ID 0x21842018 (cf. physics-constants),
+ * installs EntityUpdateCallback as the per-frame tick, and wires the
+ * moveCallbackX/Y FSM slots to GetWorldPositionX/Y. */
 INCLUDE_ASM("asm/nonmatchings/anim", InitPlayerEntity);
 
+/* Runs the entity's moveCallbackX (+0x24/+0x28) and moveCallbackY
+ * (+0x2C/+0x30) FSM slots in turn to transform (x, y) into world
+ * coordinates, then samples the tile attribute at the transformed point
+ * via GetTileAttributeAtPosition. The "what tile am I standing on / about
+ * to hit" query used by player physics, bounce detection, and enemy
+ * ground checks. */
 INCLUDE_ASM("asm/nonmatchings/anim", EntityApplyMovementCallbacks);
 
+/* Composite destructor for entities that own both a sprite/pixel
+ * buffer (+0xB0) and a child entity reference (+0x34). Frees the pixel
+ * buffer, frees the +0x90 frame-table allocation, then dispatches the
+ * child's own destructor through its vtable before vtable-swapping self
+ * to Destroyed and optionally freeing the entity body. Used by the
+ * player entity and other sprite-with-shadow / sprite-with-halo setups. */
 void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
     u8 *child;
     u8 *childRef;
@@ -360,189 +536,255 @@ typedef struct EntityAccessorView {
     u8 field_F6;        /* 0xF6 */
 } EntityAccessorView;
 
+/* First of three identical accessor sets covering the entity FSM/render
+ * slot fields (+0x1C..+0x3B). Each tiny function exists as a standalone
+ * symbol because callers hold its address (slot-installer functions wire
+ * them into vtables / FSM tables so they can be invoked through a
+ * uniform fn-pointer signature). Returns the renderCallback fn ptr at
+ * +0x20. */
 s32 func_800200DC(EntityAccessorView *e) {
     return e->field_20;
 }
 
+/* Setter trampoline: u8 -> entity+0x3B. */
 void func_800200E8(EntityAccessorView *e, u8 value) {
     e->field_3B = value;
 }
 
+/* Setter trampoline: u8 -> entity+0x3A. */
 void func_800200F0(EntityAccessorView *e, u8 value) {
     e->field_3A = value;
 }
 
+/* Setter trampoline: s16 -> entity+0x32 (moveMarkerY low half). */
 void func_800200F8(EntityAccessorView *e, s16 value) {
     e->field_32 = value;
 }
 
+/* Setter trampoline: s16 -> entity+0x30 (moveCallbackY low half). */
 void func_80020100(EntityAccessorView *e, s16 value) {
     e->field_30 = value;
 }
 
+/* Setter trampoline: s32 -> entity+0x24 (moveMarkerX). */
 void func_80020108(EntityAccessorView *e, s32 value) {
     e->field_24 = value;
 }
 
+/* Setter trampoline: s32 -> entity+0x20 (renderCallback fn ptr). */
 void func_80020110(EntityAccessorView *e, s32 value) {
     e->field_20 = value;
 }
 
+/* Getter trampoline: returns entity+0x1C (renderMarker). */
 s32 func_80020118(EntityAccessorView *e) {
     return e->field_1C;
 }
 
+/* Second of three identical accessor sets (see func_800200DC). Setter
+ * trampoline: u8 -> entity+0x3B. */
 void func_80020124(EntityAccessorView *e, u8 value) {
     e->field_3B = value;
 }
 
+/* Setter trampoline: u8 -> entity+0x3A. */
 void func_8002012C(EntityAccessorView *e, u8 value) {
     e->field_3A = value;
 }
 
+/* Setter trampoline: s16 -> entity+0x32. */
 void func_80020134(EntityAccessorView *e, s16 value) {
     e->field_32 = value;
 }
 
+/* Setter trampoline: s16 -> entity+0x30. */
 void func_8002013C(EntityAccessorView *e, s16 value) {
     e->field_30 = value;
 }
 
+/* Setter trampoline: s32 -> entity+0x24. */
 void func_80020144(EntityAccessorView *e, s32 value) {
     e->field_24 = value;
 }
 
+/* Setter trampoline: s32 -> entity+0x20. */
 void func_8002014C(EntityAccessorView *e, s32 value) {
     e->field_20 = value;
 }
 
+/* Getter trampoline: returns entity+0x1C. */
 s32 func_80020154(EntityAccessorView *e) {
     return e->field_1C;
 }
 
+/* Third of three identical accessor sets (see func_800200DC). Setter
+ * trampoline: u8 -> entity+0x3B. */
 void func_80020160(EntityAccessorView *e, u8 value) {
     e->field_3B = value;
 }
 
+/* Setter trampoline: u8 -> entity+0x3A. */
 void func_80020168(EntityAccessorView *e, u8 value) {
     e->field_3A = value;
 }
 
+/* Setter trampoline: s16 -> entity+0x32. */
 void func_80020170(EntityAccessorView *e, s16 value) {
     e->field_32 = value;
 }
 
+/* Setter trampoline: s16 -> entity+0x30. */
 void func_80020178(EntityAccessorView *e, s16 value) {
     e->field_30 = value;
 }
 
+/* Setter trampoline: s32 -> entity+0x24. */
 void func_80020180(EntityAccessorView *e, s32 value) {
     e->field_24 = value;
 }
 
+/* Setter trampoline: s32 -> entity+0x20. */
 void func_80020188(EntityAccessorView *e, s32 value) {
     e->field_20 = value;
 }
 
+/* Getter trampoline: returns entity+0x1C. */
 s32 func_80020190(EntityAccessorView *e) {
     return e->field_1C;
 }
 
+/* Getter: returns the entity's decoded pixel buffer pointer (+0xB0
+ * pPixelBuffer). Used by render code to access the RLE-decoded bitmap. */
 s32 func_8002019C(EntityAccessorView *e) {
     return e->field_B0;
 }
 
+/* Setter: u8 -> entity+0xF6 (visibility byte, 0 = visible).
+ * The render-time "hide this entity this frame" toggle. */
 void func_800201A8(EntityAccessorView *e, u8 value) {
     e->field_F6 = value;
 }
 
+/* Installs an 8-byte [marker, fn] pair into the queued-state slot at
+ * SpriteEntity+0x98 (queuedStateMarker/queuedStateCallback). Promoted
+ * into the active slot by EntityProcessCallbackQueue on the next tick. */
 void func_800201B0(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)&e->field_98 = val;
 }
 
+/* Getter: returns currentFrame at +0xDA (the active animation frame
+ * index). The "what frame am I on" query for gameplay logic. */
 s16 func_800201D0(EntityAccessorView *e) {
     return e->field_DA;
 }
 
+/* Getter: returns currentSpriteId at +0xCC (the active sprite-bank hash). */
 s32 func_800201DC(EntityAccessorView *e) {
     return e->field_CC;
 }
 
+/* Getter: returns targetX at +0x70. */
 u16 func_800201E8(EntityAccessorView *e) {
     return e->field_70;
 }
 
+/* Getter: returns targetY at +0x72. */
 u16 func_800201F4(EntityAccessorView *e) {
     return e->field_72;
 }
 
+/* Setter: u16 -> entity+0x72 (targetY). */
 void func_80020200(EntityAccessorView *e, u16 value) {
     e->field_72 = value;
 }
 
+/* Getter: returns scalePowerupY at +0x5C (16.16 fixed-point shrink/grow
+ * Y scale). */
 s32 func_80020208(EntityAccessorView *e) {
     return e->field_5C;
 }
 
+/* Getter: returns scalePowerupX at +0x58 (16.16 fixed-point shrink/grow
+ * X scale). */
 s32 func_80020214(EntityAccessorView *e) {
     return e->field_58;
 }
 
+/* Setter: s32 -> entity+0x5C (scalePowerupY). */
 void func_80020220(EntityAccessorView *e, s32 value) {
     e->field_5C = value;
 }
 
+/* Setter: s32 -> entity+0x58 (scalePowerupX). */
 void func_80020228(EntityAccessorView *e, s32 value) {
     e->field_58 = value;
 }
 
+/* Setter: writes the same scalar to both scalePowerupX (+0x58) and
+ * scalePowerupY (+0x5C) -- uniform powerup scale. */
 void func_80020230(EntityAccessorView *e, s32 value) {
     e->field_58 = value;
     e->field_5C = value;
 }
 
+/* Getter: returns scaleRender2 at +0x54 (secondary render scale). */
 s32 func_8002023C(EntityAccessorView *e) {
     return e->field_54;
 }
 
+/* Getter: returns scaleRender at +0x50 (primary render scale). */
 s32 func_80020248(EntityAccessorView *e) {
     return e->field_50;
 }
 
+/* Setter: s32 -> entity+0x54 (scaleRender2). */
 void func_80020254(EntityAccessorView *e, s32 value) {
     e->field_54 = value;
 }
 
+/* Setter: s32 -> entity+0x50 (scaleRender). */
 void func_8002025C(EntityAccessorView *e, s32 value) {
     e->field_50 = value;
 }
 
+/* Setter: writes the same scalar to both scaleRender (+0x50) and
+ * scaleRender2 (+0x54) -- uniform render scale. */
 void func_80020264(EntityAccessorView *e, s32 value) {
     e->field_50 = value;
     e->field_54 = value;
 }
 
+/* Getter: returns flipY at +0x75. */
 u8 func_80020270(EntityAccessorView *e) {
     return e->field_75;
 }
 
+/* Getter: returns facing at +0x74 (0 = right, 1 = left). */
 u8 func_8002027C(EntityAccessorView *e) {
     return e->field_74;
 }
 
+/* No-op callback that returns 0. Installed in unused FSM slots (event
+ * handler, state callbacks) so dispatch sites can call unconditionally
+ * without a null check. Default eventCallback for freshly initialised
+ * entities. */
 s32 StubReturnZero(void) {
     return 0;
 }
 
+/* Atomic position setter: writes worldX (+0x68) and worldY (+0x6A) in
+ * one call. */
 void func_80020290(EntityAccessorView *e, s16 x, s16 y) {
     e->field_68 = x;
     e->field_6A = y;
 }
 
+/* Setter: s16 -> entity+0x6A (worldY). */
 void func_8002029C(EntityAccessorView *e, s16 value) {
     e->field_6A = value;
 }
 
+/* Setter: s16 -> entity+0x68 (worldX). */
 void func_800202A4(EntityAccessorView *e, s16 value) {
     e->field_68 = value;
 }
@@ -554,6 +796,11 @@ typedef struct Vec4s16 {
     s16 h;  /* 0x6 */
 } Vec4s16;
 
+/* In-place scales a screen-space Vec4s16 (x,y,w,h) by the entity's
+ * powerup-scale fractions: x/w divided by scalePowerupX (+0x58),
+ * y/h divided by scalePowerupY (+0x5C). The (val << 16) / scale pattern
+ * is the inverse of a 16.16 multiply. Used to project a sprite
+ * rectangle into a shrunken/grown bounding box. */
 void func_800202AC(EntityAccessorView *e, Vec4s16 *v) {
     v->x = (v->x << 16) / e->field_58;
     v->w = (v->w << 16) / e->field_58;
@@ -561,65 +808,112 @@ void func_800202AC(EntityAccessorView *e, Vec4s16 *v) {
     v->h = (v->h << 16) / e->field_5C;
 }
 
+/* Inverse-scale a single Y coordinate by scalePowerupY (+0x5C). */
 s32 func_800203AC(EntityAccessorView *e, s32 value) {
     return (value << 16) / e->field_5C;
 }
 
+/* Inverse-scale a single X coordinate by scalePowerupX (+0x58). */
 s32 func_800203E8(EntityAccessorView *e, s32 value) {
     return (value << 16) / e->field_58;
 }
 
+/* Copies 8 bytes from src+0x38 into dst -- the render-bounds block
+ * (renderOffsetX/Y + renderWidth/Height). Returns dst. "Snapshot the
+ * sprite's render bbox" helper. */
 void *func_80020424(void *dst, void *src) {
     __builtin_memcpy(dst, (u8 *)src + 0x38, 8);
     return dst;
 }
 
+/* The public "where is this entity Y" query. Dispatches through the
+ * moveCallbackY FSM slot (+0x2C/+0x30) so the answer respects any
+ * platform-rider / transform callbacks installed on the entity; falls
+ * back to the raw worldY (+0x6A) if no callback is installed. Adds the
+ * marker low s16 as an offset before calling. */
 INCLUDE_ASM("asm/nonmatchings/anim", GetEntityYPosition);
 
+/* The public "where is this entity X" query. Mirror of GetEntityYPosition
+ * over the moveCallbackX FSM slot (+0x24/+0x28); returns the raw worldX
+ * (+0x68) when no callback is installed. */
 INCLUDE_ASM("asm/nonmatchings/anim", GetEntityXPosition);
 
+/* Getter: returns worldY at +0x6A (raw, no callback dispatch). */
 s16 func_80020588(EntityAccessorView *e) {
     return e->field_6A;
 }
 
+/* Getter: returns worldX at +0x68 (raw, no callback dispatch). */
 s16 func_80020594(EntityAccessorView *e) {
     return e->field_68;
 }
 
+/* Getter: returns spriteContext at +0x34 (entity's BasicEntity render
+ * context, i.e. the +0x10-byte sprite buffer used by the renderer). */
 s32 func_800205A0(EntityAccessorView *e) {
     return e->field_34;
 }
 
+/* Installs an 8-byte [marker, fn] pair into the moveCallbackY FSM slot
+ * at entity+0x2C/+0x30. Subsequent GetEntityYPosition / TransformYCoord
+ * calls will route through this callback. */
 void func_800205AC(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)((u8 *)e + 0x2C) = val;
 }
 
+/* Y-coordinate transformer. Dispatches an arbitrary Y value through the
+ * moveCallbackY FSM slot (+0x2C/+0x30) and returns the transformed value;
+ * if no callback is installed, returns the input unchanged. Used by
+ * collision/render code to project an arbitrary Y into the entity's
+ * local space (e.g. platform-rider offset). */
 INCLUDE_ASM("asm/nonmatchings/anim", TransformYCoord);
 
+/* Installs an 8-byte [marker, fn] pair into the moveCallbackX FSM slot
+ * at entity+0x24/+0x28. Counterpart to func_800205AC for the X axis. */
 void func_80020668(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)((u8 *)e + 0x24) = val;
 }
 
+/* X-coordinate transformer; mirror of TransformYCoord over the
+ * moveCallbackX FSM slot (+0x24/+0x28). */
 INCLUDE_ASM("asm/nonmatchings/anim", TransformXCoord);
 
+/* Installs an 8-byte [marker, fn] pair into the renderCallback FSM slot
+ * at entity+0x1C/+0x20. The function called by
+ * InvokeEntityRenderCallback / the render-list walker each frame. */
 void func_80020724(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)((u8 *)e + 0x1C) = val;
 }
 
+/* Dispatches the entity's render callback through the FSM slot at
+ * +0x1C/+0x20: resolves the marker (direct call or slot-table entry),
+ * adjusts the entity pointer by the encoded offset, and invokes the
+ * stored fn. The per-frame "draw this entity" entry point. */
 INCLUDE_ASM("asm/nonmatchings/anim", InvokeEntityRenderCallback);
 
+/* Getter: returns the low 16 bits of moveMarkerY at +0x2C as u16
+ * (the FSM marker's offset half). */
 u16 func_800207C8(EntityAccessorView *e) {
     return e->field_2C;
 }
 
+/* Empty function (jr ra / nop). Acts as a no-op tick/event slot;
+ * compiled body intentionally bare so dispatch sites that always call
+ * the slot have a safe default. */
 void func_800207D4(void) {
 }
 
+/* Empty function (jr ra / nop). Second of two no-op default slots
+ * adjacent in the rom; likely installed in a different vtable entry. */
 void func_800207DC(void) {
 }
 
 void FreeEntityNoTeardown_80020818(void *entity, s32 size);
 
+/* Minimal entity destructor: swap the vtable at +0x18 to Destroyed and,
+ * if flag bit 0 is set, free the body via FreeEntityNoTeardown_80020818.
+ * Used by entities that hold no owned resources beyond their own struct
+ * (HUD helpers, particle slots, etc.). */
 void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
     *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
@@ -627,6 +921,10 @@ void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
     }
 }
 
+/* Thin shim around FreeFromHeap(g_pBlbHeapBase, entity, 0, 0). The
+ * `size` arg is ignored -- naming reflects that it doesn't run any
+ * destructor chain, just releases the bytes. Tail end of
+ * EntityDestructor_Simple and friends. */
 void FreeEntityNoTeardown_80020818(void *entity, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
