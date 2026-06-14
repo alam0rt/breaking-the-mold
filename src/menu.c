@@ -191,7 +191,12 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButtonWithReset);
  * parent+0x104, zeroes the highlight child's event-callback pair,
  * switches the child back to idle sprite 0x39900619, then re-shows the
  * +0x34 sub-entity by setting its active byte (+0x0A=1). Likely real
- * name: MenuDeactivateButtonWithReset. */
+ * name: MenuDeactivateButtonWithReset.
+ *
+ * SHELVED: same Quirk-5 lui-hoist scheduling diff as MenuDeactivateButton
+ * — original schedules `lui a1` for the 0x39900619 constant immediately
+ * after the prologue, mine after the byte/load pair. Closest C draft in
+ * git history. */
 INCLUDE_ASM("asm/nonmatchings/menu", FINN_ClearSubentityState);
 
 /* Conditional select-SFX helper. If entity+0x108 (the type byte set by
