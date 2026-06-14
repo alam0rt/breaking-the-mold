@@ -3,6 +3,22 @@
 
 extern void EntityProcessCallbackQueue(Entity *entity);
 extern void EntityUpdateCallback(Entity *entity);
+extern void SetEntitySpriteId(Entity *entity, u32 spriteId, s32 flags);
+
+/* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
+ * by the menu set-idle helpers. Wrapped in a padded 2-element array to
+ * reproduce the 4-byte stack hole + 8 bytes of trailing scratch in the
+ * original codegen (cc1 Quirk 3 in docs/compiler-quirks.md). */
+typedef struct {
+    s16  markerLo;
+    s16  markerHi;
+    void (*fn)(Entity *);
+} MenuCallbackSlot;
+
+typedef struct {
+    s32 pad;
+    MenuCallbackSlot s[2];
+} PaddedSlotPair;
 
 /* Allocates+inits the menu cursor SpriteEntity via InitEntityWithSprite
  * using the D_8009CBDC sprite table at z-order 0x7D0 (2000) and the
@@ -85,7 +101,14 @@ INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuButtonAnimation);
 /* Tail-call helper: clears the event-callback pair at +0x08/+0x0C and
  * switches the sprite id to 0x39900619 (the primary "idle"
  * button-highlight sprite) via SetEntitySpriteId. */
-INCLUDE_ASM("asm/nonmatchings/menu", MenuSetEntityIdle);
+void MenuSetEntityIdle(Entity *entity) {
+    PaddedSlotPair u;
+    u.s[0].markerLo = 0;
+    u.s[0].markerHi = 0;
+    u.s[0].fn = NULL;
+    *(MenuCallbackSlot *)((u8 *)entity + 8) = u.s[0];
+    SetEntitySpriteId(entity, 0x39900619, 1);
+}
 
 /* Variant of MenuSetEntityIdle that switches to the alternate idle
  * sprite 0x33808E1B; otherwise identical (clears event pair, calls
