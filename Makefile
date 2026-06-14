@@ -157,7 +157,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp check-lua lint-fix decompme progress setup-hooks
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop
 
 # Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
@@ -200,6 +200,8 @@ help:
 	@echo "  mcp-server       - Start MCP server for Copilot"
 	@echo ""
 	@echo "Ghidra Integration:"
+	@echo "  ghidra-mcp       - Start GhidraMCP headless server (port 8089)"
+	@echo "  ghidra-mcp-stop  - Stop GhidraMCP headless server"
 	@echo "  ghidra-export    - Export symbols from Ghidra (PyGhidra)"
 	@echo "  ghidra-export-all- Export and save to symbol_addrs_new.txt"
 	@echo ""
@@ -623,7 +625,48 @@ GHIDRA_PROJECT_NAME ?= skullmonkeys
 GHIDRA_PROGRAM ?= SLES_010.90
 EXPORT_FORMAT ?= symbol_addrs
 GHIDRA_MCP_URL ?= http://127.0.0.1:8089
+GHIDRA_MCP_PORT ?= 8089
 GHIDRA_EXPORT_BACKEND ?= mcp
+
+# -----------------------------------------------------------------------------
+# GhidraMCP Headless Server
+# Starts the GhidraMCP HTTP server in headless mode (no GUI required).
+# This exposes the Ghidra project over HTTP for use by MCP tools (Copilot, etc).
+# Requires: GHIDRA_INSTALL_DIR set (automatic in nix develop shell)
+# Usage: make ghidra-mcp
+# -----------------------------------------------------------------------------
+.PHONY: ghidra-mcp ghidra-mcp-stop
+ghidra-mcp:
+	@if [ -z "$$GHIDRA_INSTALL_DIR" ]; then \
+		echo "Error: GHIDRA_INSTALL_DIR not set. Run inside 'nix develop' or set manually."; \
+		exit 1; \
+	fi
+	@if ss -tlnp 2>/dev/null | grep -q ":$(GHIDRA_MCP_PORT) "; then \
+		echo "Error: Port $(GHIDRA_MCP_PORT) already in use. Run 'make ghidra-mcp-stop' first."; \
+		exit 1; \
+	fi
+	@echo "Starting GhidraMCP headless server on port $(GHIDRA_MCP_PORT)..."
+	@echo "  Project: $(GHIDRA_PROJECT_DIR)/$(GHIDRA_PROJECT_NAME).gpr"
+	@echo "  Program: /$(GHIDRA_PROGRAM)"
+	@echo "  URL:     $(GHIDRA_MCP_URL)"
+	@echo ""
+	$$GHIDRA_INSTALL_DIR/support/launch.sh fg jdk GhidraMCP-Headless 2G \
+		"-Djava.awt.headless=true -XX:ParallelGCThreads=2 -XX:CICompilerCount=2" \
+		com.xebyte.headless.GhidraMCPHeadlessServer \
+		--project $(GHIDRA_PROJECT_DIR)/$(GHIDRA_PROJECT_NAME).gpr \
+		--program /$(GHIDRA_PROGRAM) \
+		--port $(GHIDRA_MCP_PORT)
+
+ghidra-mcp-stop:
+	@if ss -tlnp 2>/dev/null | grep -q ":$(GHIDRA_MCP_PORT) "; then \
+		pid=$$(ss -tlnp | grep ":$(GHIDRA_MCP_PORT) " | grep -oP 'pid=\K[0-9]+'); \
+		if [ -n "$$pid" ]; then \
+			echo "Stopping GhidraMCP server (PID $$pid)..."; \
+			kill "$$pid"; \
+		fi; \
+	else \
+		echo "No GhidraMCP server running on port $(GHIDRA_MCP_PORT)."; \
+	fi
 
 .PHONY: ghidra-export ghidra-export-all
 ghidra-export:

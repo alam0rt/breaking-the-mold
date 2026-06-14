@@ -694,6 +694,7 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", DeferredEntityRemo
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityRemoval);
 
+// lint:ok - common.h doesn't include entity.h, local definition needed
 typedef struct EntityListNode {
     struct EntityListNode *next;  /* 0x00 */
     u8 *entity;                  /* 0x04 */

@@ -47,6 +47,7 @@ SECTIONS
         build/src/Game/ENGINE/animation_setters.o(.rodata);
         build/src/Game/BOSS/boss.o(.rodata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.rodata);
+        build/src/Game/PLAYER_STATES/player_states.o(.rodata);
         build/src/Game/VEHICLE/static_game_state.o(.rodata);
         build/src/Game/VEHICLE/empty_callbacks.o(.rodata);
         build/src/Game/MAIN/blb_memory.o(.rodata);
@@ -61,7 +62,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.sdata);
         build/asm/data/Game/BOSS.rodata.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
-        build/asm/Game/PLAYER_STATES.o(.sdata);
+        build/asm/data/Game/PLAYER_STATES.rodata.o(.sdata);
         build/src/Game/VEHICLE/vehicle.o(.sdata);
         build/asm/Game/MAIN.o(.sdata);
         build/asm/data/LIBCD.rodata.o(.sdata);
@@ -79,6 +80,7 @@ SECTIONS
         build/src/Game/ENGINE/animation_setters.o(.sdata);
         build/src/Game/BOSS/boss.o(.sdata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sdata);
+        build/src/Game/PLAYER_STATES/player_states.o(.sdata);
         build/src/Game/VEHICLE/static_game_state.o(.sdata);
         build/src/Game/VEHICLE/empty_callbacks.o(.sdata);
         build/src/Game/MAIN/blb_memory.o(.sdata);
@@ -93,7 +95,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.sbss);
         build/asm/data/Game/BOSS.rodata.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
-        build/asm/Game/PLAYER_STATES.o(.sbss);
+        build/asm/data/Game/PLAYER_STATES.rodata.o(.sbss);
         build/src/Game/VEHICLE/vehicle.o(.sbss);
         build/asm/Game/MAIN.o(.sbss);
         build/asm/data/LIBCD.rodata.o(.sbss);
@@ -111,6 +113,7 @@ SECTIONS
         build/src/Game/ENGINE/animation_setters.o(.sbss);
         build/src/Game/BOSS/boss.o(.sbss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sbss);
+        build/src/Game/PLAYER_STATES/player_states.o(.sbss);
         build/src/Game/VEHICLE/static_game_state.o(.sbss);
         build/src/Game/VEHICLE/empty_callbacks.o(.sbss);
         build/src/Game/MAIN/blb_memory.o(.sbss);
@@ -125,7 +128,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.bss);
         build/asm/data/Game/BOSS.rodata.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
-        build/asm/Game/PLAYER_STATES.o(.bss);
+        build/asm/data/Game/PLAYER_STATES.rodata.o(.bss);
         build/src/Game/VEHICLE/vehicle.o(.bss);
         build/asm/Game/MAIN.o(.bss);
         build/asm/data/LIBCD.rodata.o(.bss);
@@ -143,6 +146,7 @@ SECTIONS
         build/src/Game/ENGINE/animation_setters.o(.bss);
         build/src/Game/BOSS/boss.o(.bss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.bss);
+        build/src/Game/PLAYER_STATES/player_states.o(.bss);
         build/src/Game/VEHICLE/static_game_state.o(.bss);
         build/src/Game/VEHICLE/empty_callbacks.o(.bss);
         build/src/Game/MAIN/blb_memory.o(.bss);
@@ -165,7 +169,7 @@ SECTIONS
         build/src/Game/BOSS/boss.o(.text);
         build/asm/Game/PLAYER.o(.text);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.text);
-        build/asm/Game/PLAYER_STATES.o(.text);
+        build/src/Game/PLAYER_STATES/player_states.o(.text);
         build/src/Game/VEHICLE/vehicle.o(.text);
         build/src/Game/VEHICLE/static_game_state.o(.text);
         build/src/Game/VEHICLE/empty_callbacks.o(.text);
@@ -186,7 +190,7 @@ SECTIONS
         build/asm/Game/OBJECT.o(.data);
         build/asm/data/Game/BOSS.rodata.o(.data);
         build/asm/Game/PLAYER.o(.data);
-        build/asm/Game/PLAYER_STATES.o(.data);
+        build/asm/data/Game/PLAYER_STATES.rodata.o(.data);
         build/src/Game/VEHICLE/vehicle.o(.data);
         build/asm/Game/MAIN.o(.data);
         build/asm/data/LIBCD.rodata.o(.data);
@@ -204,6 +208,7 @@ SECTIONS
         build/src/Game/ENGINE/animation_setters.o(.data);
         build/src/Game/BOSS/boss.o(.data);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.data);
+        build/src/Game/PLAYER_STATES/player_states.o(.data);
         build/src/Game/VEHICLE/static_game_state.o(.data);
         build/src/Game/VEHICLE/empty_callbacks.o(.data);
         build/src/Game/MAIN/blb_memory.o(.data);

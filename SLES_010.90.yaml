@@ -169,8 +169,8 @@
     - "Game/PLAYER/destructor_spu_at10c"
   -
     - 399432
-    - "asm"
-    - "Game/PLAYER_STATES"
+    - "c"
+    - "Game/PLAYER_STATES/player_states"
   -
     - 448976
     - "c"

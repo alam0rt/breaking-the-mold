@@ -103,9 +103,27 @@ void func_8001B344(Entity *entity) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckPointInBox);
+s32 CheckPointInBox(Entity *entity, s16 pointX, s16 pointY) {
+    CalculateEntityScreenBounds(entity);
+    if (pointX < entity->screenX1) goto out;
+    if (entity->screenX2 < pointX) goto out;
+    if (pointY < entity->screenY1) goto out;
+    if (entity->screenY2 < pointY) goto out;
+    return 1;
+out:
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckBoxOverlap);
+typedef struct { s16 x; s16 y; } BoxCorner;
+
+s32 CheckBoxOverlap(Entity *entity, BoxCorner minCorner, BoxCorner maxCorner) {
+    CalculateEntityScreenBounds(entity);
+    if (entity->screenX1 > maxCorner.x) return 0;
+    if (entity->screenX2 < minCorner.x) return 0;
+    if (entity->screenY1 > maxCorner.y) return 0;
+    if (entity->screenY2 < minCorner.y) return 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CollisionCheckWrapper);
 

@@ -636,3 +636,154 @@ From `InitSpriteObject` / `SubmitPrimitiveBufferToGPU` (RENDER_5C3C tail):
   --aspsx-version=2.86 --run-assembler -o "$OUTPUT" "$OUTPUT.s"`.
 - `make permuter-import` passes only `$(FILE)`; invoke `import.py` directly
   with the nonmatching asm path as the second argument.
+
+## Quirk 6: Register Allocation Techniques (General)
+
+Collected from SotN, Paper Mario, and our own failed-match post-mortems.
+These apply to GCC 2.6.x–2.7.x on MIPS (graph-coloring register allocator).
+
+### 6a: `>` vs `>=` selects `$at` vs `$v1`
+
+`slti` (set-less-than-immediate) is the only compare+branch primitive on
+MIPS. The compiler transforms comparisons:
+
+| Source | Emitted | Register used |
+|--------|---------|---------------|
+| `if (x >= 0x29)` | `slti v1, x, 0x29; bnez v1, ...` | **$v1** |
+| `if (x > 0x28)` | `slti at, x, 0x29; bnez at, ...` | **$at** |
+
+The `>` form uses `$at` (assembler temporary), the `>=` form uses a
+general-purpose register. If the target uses `$at` in a comparison but
+your code emits `$v1`, try flipping between `>` and `>=` (adjusting the
+constant by 1).
+
+**Applies to:** CheckPointInBox, CheckBoxOverlap — both showed `$at` vs
+`$v1` mismatches on boundary checks.
+
+### 6b: Variable declaration order = allocation priority
+
+GCC 2.7.2's graph coloring assigns registers to locals roughly in
+declaration order (first declared → lowest available register). If the
+target uses `$v0` for variable A and `$v1` for variable B, declaring
+them in the opposite order may swap the assignment.
+
+**Technique:** reorder local variable declarations to match the register
+usage observed in the target. If `$a0` holds a value that later appears
+in `$v0`, it may be because a `move` from `$a0` to a local in a specific
+declaration position caused the allocator to pick `$v0`.
+
+### 6c: `static` function declarations change call-site allocation
+
+Declaring a called function as `static` (even with an empty body above)
+changes how the allocator reserves argument registers (`$a0–$a3`) at
+the call site. If you see register mismatches immediately before a `jal`,
+try adding a `static` forward declaration for the callee (if it could
+plausibly be in the same translation unit).
+
+```c
+static void SomeFunc(Entity *a, s32 b);  // forward decl changes regalloc
+```
+
+### 6d: Signed vs unsigned types change shift/compare flavor
+
+| Target instruction | Likely type needed |
+|--------------------|--------------------|
+| `srl` (shift right logical) | `unsigned` / `u32` |
+| `sra` (shift right arithmetic) | `signed` / `s32` |
+| `slt` (set-less-than) | signed comparison |
+| `sltu` (set-less-than unsigned) | unsigned comparison |
+
+A single cast (`(u32)x >> 4` vs `x >> 4`) can flip between `srl` and
+`sra`. This is the most common cause of "almost matching" functions with
+one instruction different.
+
+**Applies to:** AddToDepthBucket — `srl` vs `sra` was the sole difference.
+
+### 6e: Expression tree shape controls load ordering
+
+Within a single expression, GCC evaluates sub-expressions in a specific
+tree order. Two equivalent comparisons may load operands differently:
+
+```c
+if (a->x < b->x)    // loads a->x first, then b->x
+if (b->x > a->x)    // loads b->x first, then a->x
+```
+
+If the target loads in a different order than your code, try algebraically
+rewriting the comparison (flip operands + operator).
+
+**Applies to:** CheckBoxOverlap — load ordering within comparison pairs
+was the remaining difference.
+
+### 6f: Named temporaries vs inline expressions
+
+Assigning a sub-expression to a named local sometimes forces a register
+to be allocated earlier (creating a longer live range), which can cascade
+the coloring differently:
+
+```c
+// Inline — allocator picks reg late, may reuse
+fn((s32)entity->x + offset);
+
+// Named temp — allocator commits a reg early
+s32 pos = (s32)entity->x + offset;
+fn(pos);
+```
+
+Try both forms when the diff shows a register being "held" longer than
+expected, or conversely freed too early.
+
+### 6g: Division generates overflow checks (break 6/7)
+
+GCC 2.7.2 with `-O2` emits `break 6` (division by zero) and `break 7`
+(signed overflow: `INT_MIN / -1`) checks for signed integer division by
+a *variable* (not a constant). If the target has `break` instructions
+around a `div` and your code doesn't, ensure you're dividing by a variable
+not a constant. Conversely, dividing by a constant produces no checks
+(the compiler strength-reduces to multiply+shift).
+
+**Applies to:** SetupEntityScaleCallbacks — missing `break` instructions
+indicated the division was by a variable, not a constant as initially assumed.
+
+### 6h: `goto` forces $v1 for comparison temps (single-exit pattern)
+
+When a function has multiple early-out conditions that all return the same
+value, using `goto label` instead of `return 0` produces different register
+allocation. With multiple `return 0` statements, the compiler treats each
+as an independent exit — it freely uses `$v0` for `slt` temporaries since
+it just sets `$v0=0` right before returning. With `goto out`, there is a
+single exit point where `$v0` holds the return value, and the compiler keeps
+`$v0=0` **live** across all the branch checks. This forces comparison results
+into `$v1` instead.
+
+```c
+// WRONG: produces slt $v0 for all comparisons
+s32 CheckPointInBox(Entity *e, s16 px, s16 py) {
+    CalculateEntityScreenBounds(e);
+    if (px < e->screenX1) return 0;
+    if (e->screenX2 < px) return 0;
+    if (py < e->screenY1) return 0;
+    if (e->screenY2 < py) return 0;
+    return 1;
+}
+
+// CORRECT: produces slt $v1 for first 3 comparisons, $v0 only for the last
+s32 CheckPointInBox(Entity *e, s16 px, s16 py) {
+    CalculateEntityScreenBounds(e);
+    if (px < e->screenX1) goto out;
+    if (e->screenX2 < px) goto out;
+    if (py < e->screenY1) goto out;
+    if (e->screenY2 < py) goto out;
+    return 1;
+out:
+    return 0;
+}
+```
+
+The `goto` version also enables better delay slot scheduling — the compiler
+can fill branch delay slots with useful work (e.g. sign-extending the next
+variable) rather than redundant `move $v0, $zero` instructions. This
+commonly saves 1-2 instructions in the output.
+
+**Applies to:** CheckPointInBox — the `goto` pattern produced a byte-perfect
+match where multiple `return 0` statements did not.

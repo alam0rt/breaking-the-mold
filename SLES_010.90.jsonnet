@@ -153,7 +153,7 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 5: Game/PLAYER_STATES — player platform state machine
         // -----------------------------------------------------------------
-        asm('61848', 'Game/PLAYER_STATES'),
+        c('61848', 'Game/PLAYER_STATES/player_states'),
 
         // -----------------------------------------------------------------
         // UNIT 6: Game/VEHICLE — vehicle modes (FINN/RUNN/SOAR), tile collision
