@@ -23,6 +23,16 @@ typedef struct {
     MenuCallbackSlot s[2];
 } PaddedSlotPair;
 
+/* Variant with trailing pad: used in activate-button helpers where 3
+ * callee-saved regs are spilled. Sandwiches the slot between two pads so
+ * cc1 puts the slot at sp+0x14 with frame 0x30, same as PaddedSlotPair
+ * in the simpler set-idle helpers. */
+typedef struct {
+    s32 pad;
+    MenuCallbackSlot s;
+    s32 pad2;
+} TripadSlot;
+
 /* Allocates+inits the menu cursor SpriteEntity via InitEntityWithSprite
  * using the D_8009CBDC sprite table at z-order 0x7D0 (2000) and the
  * caller-supplied (x,y). Installs vtable D_800120AC, wires
@@ -154,7 +164,24 @@ INCLUDE_ASM("asm/nonmatchings/menu", AttachCursorToButton);
  * the child sprite to 0x63848E59 (highlight flash), and queues
  * MenuSetEntityIdle2 at +0x98/+0x9C so the highlight settles back to
  * idle on the next callback-queue dispatch. */
+/* Cursor-focus enter handler for a plain menu button. Loads the
+ * highlight child at parent+0x100, sets parent+0x104=1 (active),
+ * installs MenuButtonCallback as the child's event handler, switches
+ * the child sprite to 0x63848E59 (highlight flash), and queues
+ * MenuSetEntityIdle2 at +0x98/+0x9C so the highlight settles back to
+ * idle on the next callback-queue dispatch.
+ *
+ * SHELVED: Quirk-5 lui-hoist scheduling diff. TripadSlot pins the 0x30
+ * frame correctly, but cc1 in the original schedules `lui a1` /
+ * `ori a1` for the sprite-id constant BEFORE the prologue saves to fill
+ * delay slots, while modern cc1 sequences them after the saves. Same
+ * class as MenuDeactivateButton. Closest draft kept in git history. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButton);
+#if 0
+/* See git log for the C draft (TripadSlot u; ...; SetEntitySpriteId(
+ * child, 0x63848E59, 1); ...). Frame matched at 0x30, all loads/stores
+ * matched, only the constant-build hoist differs. */
+#endif
 
 /* Cursor-focus exit handler -- clears parent+0x104, zeroes the
  * highlight child's event-callback pair (+0x08/+0x0C), and switches
