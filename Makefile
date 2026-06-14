@@ -91,11 +91,18 @@ MASPSX := python3 tools/maspsx/maspsx.py
 # PSY-Q 4.7 -> --aspsx-version=2.86 (same as 4.6)
 ASPSX_VERSION := 2.86
 # -G8 tells maspsx that symbols <=8 bytes should use GP-relative addressing
+# --use-comm-section: emit non-static uninitialized globals as GLOBAL .comm
+#   symbols -- this is the DEFAULT ccpsx (real PSY-Q driver) behaviour per the
+#   maspsx README. maspsx's own default (lowering them to local .sbss defs) is
+#   the deviation, which silently breaks any TU that defines such a global
+#   (e.g. menu's D_800A6045). Global here so every file matches the real
+#   toolchain; harmless for files with no common symbols. No opt-out flag
+#   exists, but none is wanted since this matches ccpsx everywhere.
 # MASPSX_EXTRA_FLAGS lets per-target overrides add e.g. --expand-div without
 # rewriting the whole MASPSX_FLAGS variable. Uses '=' (recursive) so per-target
 # changes to ASPSX_VERSION / MASPSX_EXTRA_FLAGS take effect at recipe time.
 MASPSX_EXTRA_FLAGS :=
-MASPSX_FLAGS = --aspsx-version=$(ASPSX_VERSION) --run-assembler --gnu-as-path=$(AS) -G8 $(MASPSX_EXTRA_FLAGS)
+MASPSX_FLAGS = --aspsx-version=$(ASPSX_VERSION) --run-assembler --gnu-as-path=$(AS) -G8 --use-comm-section $(MASPSX_EXTRA_FLAGS)
 
 # Python (from Nix environment)
 PYTHON := python3
@@ -315,11 +322,10 @@ $(BUILD_DIR)/%.o: %.bin | $(BUILD_DIR)/
 # No overrides are active by default.
 $(BUILD_DIR)/src/anim.o: MASPSX_EXTRA_FLAGS := --expand-div
 
-# menu.c defines small globals (e.g. D_800A6045) as tentative defs so cc1+maspsx
-# emit single-instruction %gp_rel stores matching the original. --use-comm-section
-# keeps them as GLOBAL .comm symbols (overridden by the .sdata blob's strong def
-# at link time) instead of local .sbss defs. See gp-rel-extern-blocker memory.
-$(BUILD_DIR)/src/menu.o: MASPSX_EXTRA_FLAGS := --use-comm-section
+# NOTE: --use-comm-section is now applied GLOBALLY (see MASPSX_FLAGS above) since
+# it is the default ccpsx behaviour, so menu.o no longer needs a per-file override.
+# menu.c relies on it for its tentative-def small globals (e.g. D_800A6045) to get
+# single-instruction %gp_rel stores. See gp-rel-extern-blocker memory.
 
 # -----------------------------------------------------------------------------
 # Linking
