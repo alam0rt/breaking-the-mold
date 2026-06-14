@@ -126,16 +126,16 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         asm('800', 'crt0'),                    // hand-written memset, RLE decode
         c('B1C', 'crt0stub'),
-        rodata('B24', 'Game/ENGINE'),          // entity vtables (16 archetype tables)
-        rodata('E2C', 'Game/OBJECT'),
-        rodata('1E28', 'Game/BOSS'),
-        rodata('2044', 'Game/PLAYER'),
-        rodata('2554', 'Game/PLAYER_STATES'),
-        rodata('2940', 'Game/VEHICLE/vehicle'),
-        rodata('2F58', 'Game/MAIN'),           // main game callbacks
-        rodata('2F78', 'LIBCD'),
-        rodata('34F4', 'LIBGPU'),
-        rodata('3970', 'LIBSPU'),
+        rodata('B24', 'gfx'),                  // entity vtables (16 archetype tables)
+        rodata('E2C', 'hud'),
+        rodata('1E28', 'clayball'),
+        rodata('2044', 'playst'),
+        rodata('2554', 'vehicle'),
+        rodata('2940', 'lvlload'),
+        rodata('2F58', 'libc'),                // main game callbacks
+        rodata('2F78', 'libs/libcd'),
+        rodata('34F4', 'libs/libgpu'),
+        rodata('3970', 'libs/libspu'),
 
         // --- .text ---
 

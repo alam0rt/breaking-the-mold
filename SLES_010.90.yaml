@@ -70,43 +70,43 @@
   -
     - 2852
     - "rodata"
-    - "Game/ENGINE"
+    - "gfx"
   -
     - 3628
     - "rodata"
-    - "Game/OBJECT"
+    - "hud"
   -
     - 7720
     - "rodata"
-    - "Game/BOSS"
+    - "clayball"
   -
     - 8260
     - "rodata"
-    - "Game/PLAYER"
+    - "playst"
   -
     - 9556
     - "rodata"
-    - "Game/PLAYER_STATES"
+    - "vehicle"
   -
     - 10560
     - "rodata"
-    - "Game/VEHICLE/vehicle"
+    - "lvlload"
   -
     - 12120
     - "rodata"
-    - "Game/MAIN"
+    - "libc"
   -
     - 12152
     - "rodata"
-    - "LIBCD"
+    - "libs/libcd"
   -
     - 13556
     - "rodata"
-    - "LIBGPU"
+    - "libs/libgpu"
   -
     - 14704
     - "rodata"
-    - "LIBSPU"
+    - "libs/libspu"
   -
     - 14832
     - "c"
