@@ -1,4 +1,7 @@
 #include "common.h"
+#include "Game/entity.h"
+
+extern void EntityProcessCallbackQueue(Entity *entity);
 
 /* Allocates+inits the menu cursor SpriteEntity via InitEntityWithSprite
  * using the D_8009CBDC sprite table at z-order 0x7D0 (2000) and the
@@ -19,7 +22,12 @@ INCLUDE_ASM("asm/nonmatchings/menu", TimerEntityTick);
  * entities. Returns 0 for every event id except 2, which dispatches
  * EntityProcessCallbackQueue to fire the queued state transition
  * (typical "animation finished" hand-off). */
-INCLUDE_ASM("asm/nonmatchings/menu", MenuEntityCallback);
+s32 MenuEntityCallback(Entity *entity, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(entity);
+    }
+    return 0;
+}
 
 /* Sets up the menu-character "idle then loop" state. Seeds entity+0x100
  * with a randomised hold timer (0xF0 + rand()&0x7F frames), installs
