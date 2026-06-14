@@ -89,16 +89,31 @@ typedef struct {
  * marker 0xFFFF0000 = direct call), then EntitySetState to the FSM
  * slot at D_800A6050/D_800A6054 to enter the cursor's idle tick state.
  *
- * GP-REL PART SOLVED, Family-B remainder: the D_800A6050/D_800A6054
- * reads now match exactly (R_MIPS_GPREL16, via the .comm tentative defs
- * above). What remains is the GetWorldPositionX/Y slot-marshal: the C
- * draft picks $v0 for the fn pointer and $v1 for the -1 marker, while the
- * original swaps them ($v1=fn, $v0=-1 held live across both installs),
- * and the frame comes out 0x28 vs the original's 0x30 (slot at sp+0x18
- * vs sp+0x1C). Identical regalloc-swap + frame class as InitMenuButtonEntity
- * and AttachCursorToButton -- permuter territory, not a gp_rel issue.
- * (Draft kept in git history; tentative defs above are ready for the match.) */
-INCLUDE_ASM("asm/nonmatchings/menu", InitMenuCursorEntity);
+ * Same slot-marshal match recipe as InitMenuButtonEntity (TripadSlot frame +
+ * named fn/m1 locals for the fn->$v1 / -1->$v0 coloring + post-vtable-store
+ * scheduling fence); the D_800A6050/6054 reads are gp_rel via the .comm
+ * tentative defs above. */
+Entity *InitMenuCursorEntity(Entity *entity, s16 x, s16 y) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)(Entity *);
+    InitEntityWithSprite(entity, &D_8009CBDC, 0x7D0, x, y);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_800120AC;
+    __asm__ volatile("" ::: "memory");
+    m1 = -1;
+    fn = (void (*)(Entity *))GetWorldPositionX;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x24) = u.s;
+    fn = (void (*)(Entity *))GetWorldPositionY;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x2C) = u.s;
+    EntitySetState(entity, D_800A6050, D_800A6054);
+    return entity;
+}
 
 /* Generic tick callback that drives a countdown timer at entity+0x100:
  * if nonzero, decrements it and on reaching 0 fires
