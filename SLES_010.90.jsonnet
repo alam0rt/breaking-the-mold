@@ -124,7 +124,7 @@ local bss(start, kind, vram) = {
         // Boot code, graphics init, sprite/tilemap rendering, entity
         // lifecycle, resource management, vtable definitions.
         // -----------------------------------------------------------------
-        asm('800', 'Game/ENGINE_boot'),        // hand-written memset, RLE decode
+        asm('800', 'crt0'),                    // hand-written memset, RLE decode
         c('B1C', 'crt0stub'),
         rodata('B24', 'Game/ENGINE'),          // entity vtables (16 archetype tables)
         rodata('E2C', 'Game/OBJECT'),
@@ -142,12 +142,12 @@ local bss(start, kind, vram) = {
         // UNIT 1 continued (text body)
         c('39F0', 'gfx'),                      // graphics init, OT clear, buffer swap
         c('3EC8', 'prim'),                     // AllocPrim20..AllocPrim36 (7 funcs)
-        asm('40F0', 'Game/ENGINE_40F0'),       // AllocateVRAMSlot onward
+        asm('40F0', 'vram'),                   // AllocateVRAMSlot onward
         c('5C34', 'vibrate'),
-        asm('5C3C', 'Game/ENGINE_5C3C'),       // render init, tilemap, sprite context
+        asm('5C3C', 'sprite'),                 // render init, tilemap, sprite context
         c('909C', 'spracc'),
         c('954C', 'nullfn'),
-        asm('9554', 'Game/ENGINE_9554'),       // menu entity init, sprite object
+        asm('9554', 'layer'),                  // menu entity init, sprite object
         c('A8C8', 'entity'),                   // entity system core
         c('D880', 'sprset'),
         c('D8C0', 'anim'),                     // 0x8001D8C0 anim/sprite setters body
