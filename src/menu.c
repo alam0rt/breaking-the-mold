@@ -2,6 +2,7 @@
 #include "Game/entity.h"
 
 extern void EntityProcessCallbackQueue(Entity *entity);
+extern void EntityUpdateCallback(Entity *entity);
 
 /* Allocates+inits the menu cursor SpriteEntity via InitEntityWithSprite
  * using the D_8009CBDC sprite table at z-order 0x7D0 (2000) and the
@@ -16,7 +17,18 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitMenuCursorEntity);
  * EntityProcessCallbackQueue to consume the queued next-state callback
  * (+0x98/+0x9C). Always falls through to EntityUpdateCallback for the
  * regular per-frame sprite/animation/render housekeeping. */
-INCLUDE_ASM("asm/nonmatchings/menu", TimerEntityTick);
+void TimerEntityTick(Entity *entity) {
+    u16 *timer = (u16 *)((u8 *)entity + 0x100);
+    u16 v = *timer;
+    if (v != 0) {
+        v -= 1;
+        *timer = v;
+        if (v == 0) {
+            EntityProcessCallbackQueue(entity);
+        }
+    }
+    EntityUpdateCallback(entity);
+}
 
 /* Minimal event-callback for the Klaymen/runner-style idle helper
  * entities. Returns 0 for every event id except 2, which dispatches
