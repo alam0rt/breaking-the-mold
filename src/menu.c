@@ -6,6 +6,7 @@ extern void EntityUpdateCallback(Entity *entity);
 extern void SetEntitySpriteId(Entity *entity, u32 spriteId, s32 flags);
 extern void SetAnimationFrameIndex(void *animEntity, u32 value);
 extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
+extern void ApplyAudioSettings(void *audioCtx);
 
 /* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
  * by the menu set-idle helpers. Wrapped in a padded 2-element array to
@@ -250,13 +251,54 @@ void func_80075B7C(void) {
  * (PlaySoundEffect(0x686C1C97, 0xA0, 0)). Always recomputes the
  * level-icon entity (+0x114) worldX/worldY from the (x,y) table at
  * +0x108 indexed by new_index*4 so the icon slides to the next slot. */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_IncrementSelection);
+void Menu_IncrementSelection(Entity *entity) {
+    u8 *slider = *(u8 **)((u8 *)entity + 0x110);
+    u8 max = *(u8 *)((u8 *)entity + 0x10C);
+    u8 cur = *slider;
+    if ((s32)cur < (s32)(max - 1)) {
+        *slider = cur + 1;
+        ApplyAudioSettings(*(void **)((u8 *)entity + 0x118));
+        PlaySoundEffect(0x686C1C97, 0xA0, 0);
+    }
+    {
+        u8 idx = **(u8 **)((u8 *)entity + 0x110);
+        u8 *table = *(u8 **)((u8 *)entity + 0x108);
+        u8 *display = *(u8 **)((u8 *)entity + 0x114);
+        *(u16 *)(display + 0x68) = *(u16 *)(table + idx * 4 + 0);
+    }
+    {
+        u8 idx = **(u8 **)((u8 *)entity + 0x110);
+        u8 *table = *(u8 **)((u8 *)entity + 0x108);
+        u8 *display = *(u8 **)((u8 *)entity + 0x114);
+        *(u16 *)(display + 0x6A) = *(u16 *)(table + idx * 4 + 2);
+    }
+}
 
 /* Cycle-down counterpart of Menu_IncrementSelection. If
  * *(u8*)(entity+0x110) > 0, decrements, calls ApplyAudioSettings, and
  * plays the 0x686C1C97 cycle SFX. Always repositions the level-icon
  * entity at +0x114 using the (x,y) lookup at +0x108 + new_index*4. */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_DecrementAndPlaySound);
+void Menu_DecrementAndPlaySound(Entity *entity) {
+    u8 *slider = *(u8 **)((u8 *)entity + 0x110);
+    u8 cur = *slider;
+    if (cur != 0) {
+        *slider = cur - 1;
+        ApplyAudioSettings(*(void **)((u8 *)entity + 0x118));
+        PlaySoundEffect(0x686C1C97, 0xA0, 0);
+    }
+    {
+        u8 idx = **(u8 **)((u8 *)entity + 0x110);
+        u8 *table = *(u8 **)((u8 *)entity + 0x108);
+        u8 *display = *(u8 **)((u8 *)entity + 0x114);
+        *(u16 *)(display + 0x68) = *(u16 *)(table + idx * 4 + 0);
+    }
+    {
+        u8 idx = **(u8 **)((u8 *)entity + 0x110);
+        u8 *table = *(u8 **)((u8 *)entity + 0x108);
+        u8 *display = *(u8 **)((u8 *)entity + 0x114);
+        *(u16 *)(display + 0x6A) = *(u16 *)(table + idx * 4 + 2);
+    }
+}
 
 /* Builds the skull-icon style multi-state button (used on the options
  * screen for difficulty/continues/sound-level selection). Scaffold
