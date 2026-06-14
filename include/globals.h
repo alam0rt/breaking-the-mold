@@ -176,9 +176,9 @@ extern u8 g_GameBLBFile[40];
  * SDATA SECTION (GP-relative globals)
  * ============================================================================= */
 
-/* Frame sync flags */
-extern u32 g_FrameReady;           /* 0x800A5948 - Frame complete flag */
-extern u32 g_SkipVSync;            /* 0x800A594C - Skip VSync flag */
+/* Frame sync flags (sdata, byte-sized — polled by graphics callbacks) */
+extern u8 g_FrameReady;            /* 0x800A595A - set by VSync IRQ when previous frame finished */
+extern u8 g_SwapInFlight;          /* 0x800A595B - nonzero while a buffer swap is in flight */
 
 /* Game flags (bit 0x80 = debug menu enabled) */
 extern u32 g_GameFlags;            /* 0x800A5950 */

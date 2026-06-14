@@ -733,7 +733,24 @@ void ClearAlternateEntitySpawnFlags(void *state) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/entinit", AddToDepthBucket);
+void AddToDepthBucket(void *gameState, void *node) {
+    s32 bucket_idx;
+    void **buckets;
+    u16 bucket;
+    u32 raw = (u32)(*(u16 *)((u8 *)node + 0x26)) >> 1;
+    bucket = raw;
+    if ((s32)raw >= 0x100) {
+        bucket = 0xFF;
+    }
+    buckets = *(void ***)((u8 *)gameState + 0x16C);
+    if (buckets[bucket] != NULL) {
+        *(void **)node = buckets[bucket];
+    } else {
+        *(void **)node = NULL;
+    }
+    bucket_idx = bucket;
+    (*(void ***)((u8 *)gameState + 0x16C))[bucket_idx] = node;
+}
 
 extern void SetPolyGT4(void *prim);
 extern void AddPrim(void *ot, void *prim);

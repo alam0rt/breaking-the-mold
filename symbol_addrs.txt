@@ -2431,6 +2431,8 @@ D_8001039C = 0x8001039C; // PrimObject base vtable (INIT_TABLES)
 
 // Named globals (sdata) - BLB heap base pointer and game state pointer
 g_pBlbHeapBase = 0x800A5954; // size:4
+g_FrameReady = 0x800A595A;   // size:1  byte flag set by VSync, polled by TriggerBufferSwapIfReady
+g_SwapInFlight = 0x800A595B; // size:1  byte flag, nonzero while a buffer swap is queued
 g_pGameState = 0x800A5960; // size:4
 
 // Entity callback table base vtables (rodata in .text)
