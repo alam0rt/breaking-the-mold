@@ -835,7 +835,14 @@ store:
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnEntitiesAlternateSystem);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ClearAlternateEntitySpawnFlags);
+void ClearAlternateEntitySpawnFlags(void *state) {
+    s16 i;
+    u8 *ptr = *(u8 **)((u8 *)state + 0x164);
+    for (i = 0; i < *(u16 *)((u8 *)state + 0x168); i++) {
+        *(s32 *)(ptr + 0x3C) = 0;
+        ptr += 0x40;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", AddToDepthBucket);
 
@@ -877,7 +884,12 @@ loop_end:
     return;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ClearEntityPoolArray);
+void ClearEntityPoolArray(void *state) {
+    s16 i;
+    for (i = 0; i < 256; i++) {
+        ((s32 *)*(s32 *)((u8 *)state + 0x16C))[i] = 0;
+    }
+}
 
 s32 IsNormalPlatformLevel(void *arg) {
     s32 result = 0;

@@ -35,6 +35,8 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.rodata);
         build/asm/data/LIBGPU.rodata.o(.rodata);
         build/asm/data/LIBSPU.rodata.o(.rodata);
+        build/src/Game/ENGINE/prim_alloc.o(.rodata);
+        build/asm/Game/ENGINE_40F0.o(.rodata);
         build/src/Game/ENGINE/stub_vibrate_off.o(.rodata);
         build/asm/Game/ENGINE_5C3C.o(.rodata);
         build/src/Game/ENGINE/sprite_accessors.o(.rodata);
@@ -65,6 +67,8 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.sdata);
         build/asm/LIBGPU.o(.sdata);
         build/asm/LIBSPU.o(.sdata);
+        build/src/Game/ENGINE/prim_alloc.o(.sdata);
+        build/asm/Game/ENGINE_40F0.o(.sdata);
         build/src/Game/ENGINE/stub_vibrate_off.o(.sdata);
         build/asm/Game/ENGINE_5C3C.o(.sdata);
         build/src/Game/ENGINE/sprite_accessors.o(.sdata);
@@ -95,6 +99,8 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.sbss);
         build/asm/LIBGPU.o(.sbss);
         build/asm/LIBSPU.o(.sbss);
+        build/src/Game/ENGINE/prim_alloc.o(.sbss);
+        build/asm/Game/ENGINE_40F0.o(.sbss);
         build/src/Game/ENGINE/stub_vibrate_off.o(.sbss);
         build/asm/Game/ENGINE_5C3C.o(.sbss);
         build/src/Game/ENGINE/sprite_accessors.o(.sbss);
@@ -125,6 +131,8 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.bss);
         build/asm/LIBGPU.o(.bss);
         build/asm/LIBSPU.o(.bss);
+        build/src/Game/ENGINE/prim_alloc.o(.bss);
+        build/asm/Game/ENGINE_40F0.o(.bss);
         build/src/Game/ENGINE/stub_vibrate_off.o(.bss);
         build/asm/Game/ENGINE_5C3C.o(.bss);
         build/src/Game/ENGINE/sprite_accessors.o(.bss);
@@ -143,6 +151,8 @@ SECTIONS
         build/src/LIBSPU/libspu_voice.o(.bss);
         build/asm/LIBSPU_tail.o(.bss);
         build/asm/Game/ENGINE.o(.text);
+        build/src/Game/ENGINE/prim_alloc.o(.text);
+        build/asm/Game/ENGINE_40F0.o(.text);
         build/src/Game/ENGINE/stub_vibrate_off.o(.text);
         build/asm/Game/ENGINE_5C3C.o(.text);
         build/src/Game/ENGINE/sprite_accessors.o(.text);
@@ -182,6 +192,8 @@ SECTIONS
         build/asm/data/LIBCD.rodata.o(.data);
         build/asm/LIBGPU.o(.data);
         build/asm/LIBSPU.o(.data);
+        build/src/Game/ENGINE/prim_alloc.o(.data);
+        build/asm/Game/ENGINE_40F0.o(.data);
         build/src/Game/ENGINE/stub_vibrate_off.o(.data);
         build/asm/Game/ENGINE_5C3C.o(.data);
         build/src/Game/ENGINE/sprite_accessors.o(.data);

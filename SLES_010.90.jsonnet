@@ -122,7 +122,9 @@ local bss(start, kind, vram) = {
         // --- .text ---
 
         // UNIT 1 continued (text body)
-        asm('39F0', 'Game/ENGINE'),            // graphics, VRAM, sprites, tiles
+        asm('39F0', 'Game/ENGINE'),            // graphics init, OT clear, buffer swap
+        c('3EC8', 'Game/ENGINE/prim_alloc'),   // AllocPrim20..AllocPrim36 (7 funcs)
+        asm('40F0', 'Game/ENGINE_40F0'),       // AllocateVRAMSlot onward
         c('5C34', 'Game/ENGINE/stub_vibrate_off'),
         asm('5C3C', 'Game/ENGINE_5C3C'),       // render init, tilemap, sprite context
         c('909C', 'Game/ENGINE/sprite_accessors'),

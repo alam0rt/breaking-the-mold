@@ -112,6 +112,14 @@
     - "asm"
     - "Game/ENGINE"
   -
+    - 16072
+    - "c"
+    - "Game/ENGINE/prim_alloc"
+  -
+    - 16624
+    - "asm"
+    - "Game/ENGINE_40F0"
+  -
     - 23604
     - "c"
     - "Game/ENGINE/stub_vibrate_off"
