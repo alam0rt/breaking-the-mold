@@ -15,6 +15,10 @@ extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z,
                                   s16 x, s16 y);
 extern void AttachCursorToButton(Entity *button);
 extern u8 D_80012034[]; /* menu-button vtable, +0x18 install slot */
+extern u8 D_8001208C[]; /* menu-button-highlight vtable */
+extern u8 D_8009CBE8[]; /* menu-button-highlight sprite table */
+extern s32 GetWorldPositionX(Entity *entity, s16 localX);
+extern s32 GetWorldPositionY(Entity *entity, s16 localY);
 
 /* Forward decls for in-TU helpers used by Setup*Animation before their
  * own definitions appear below. */
@@ -109,7 +113,14 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitRunnLevelEntity);
  * sprite table at z-order 0x7D0 (2000), with sign-extended s16 (x,y)
  * supplied by the caller. Installs vtable D_8001208C and the
  * GetWorldPositionX/Y identity move-callbacks at +0x24/+0x2C so the
- * sprite tracks its own world position. Returns the new entity. */
+ * sprite tracks its own world position. Returns the new entity.
+ *
+ * SHELVED: register allocation diff. cc1 in the original allocates
+ * $v1 for the GetWorldPosition function pointer and reuses $v0 for the
+ * -1 marker (after the vtable store frees $v0). Modern cc1 picks $v0
+ * for fn ptr and $v1 for marker — same body, opposite regs. Tried
+ * statement re-ordering (markerFirst, fnFirst, interleaved); all swap
+ * which regs get the swap. Permuter territory. */
 INCLUDE_ASM("asm/nonmatchings/menu", InitMenuButtonEntity);
 
 /* Event-handler installed on the button-highlight child by
