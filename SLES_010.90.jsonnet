@@ -140,7 +140,7 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 3: Game/BOSS — boss state machines (ShrineyGuard, JoeHeadJoe, Klogg)
         // -----------------------------------------------------------------
-        asm('48968', 'Game/BOSS'),
+        c('48968', 'Game/BOSS/boss'),
 
         // -----------------------------------------------------------------
         // UNIT 4: Game/PLAYER — player state machine, physics, input

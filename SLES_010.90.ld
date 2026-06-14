@@ -43,6 +43,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.rodata);
         build/src/Game/ENGINE/sprite_setters.o(.rodata);
         build/src/Game/ENGINE/animation_setters.o(.rodata);
+        build/src/Game/BOSS/boss.o(.rodata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.rodata);
         build/src/Game/VEHICLE/static_game_state.o(.rodata);
         build/src/Game/VEHICLE/empty_callbacks.o(.rodata);
@@ -56,7 +57,7 @@ SECTIONS
         build/src/Game/ENGINE/early_stub.o(.sdata);
         build/asm/Game/ENGINE.o(.sdata);
         build/asm/Game/OBJECT.o(.sdata);
-        build/asm/Game/BOSS.o(.sdata);
+        build/asm/data/Game/BOSS.rodata.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
         build/asm/Game/PLAYER_STATES.o(.sdata);
         build/src/Game/VEHICLE/vehicle.o(.sdata);
@@ -72,6 +73,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.sdata);
         build/src/Game/ENGINE/sprite_setters.o(.sdata);
         build/src/Game/ENGINE/animation_setters.o(.sdata);
+        build/src/Game/BOSS/boss.o(.sdata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sdata);
         build/src/Game/VEHICLE/static_game_state.o(.sdata);
         build/src/Game/VEHICLE/empty_callbacks.o(.sdata);
@@ -85,7 +87,7 @@ SECTIONS
         build/src/Game/ENGINE/early_stub.o(.sbss);
         build/asm/Game/ENGINE.o(.sbss);
         build/asm/Game/OBJECT.o(.sbss);
-        build/asm/Game/BOSS.o(.sbss);
+        build/asm/data/Game/BOSS.rodata.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
         build/asm/Game/PLAYER_STATES.o(.sbss);
         build/src/Game/VEHICLE/vehicle.o(.sbss);
@@ -101,6 +103,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.sbss);
         build/src/Game/ENGINE/sprite_setters.o(.sbss);
         build/src/Game/ENGINE/animation_setters.o(.sbss);
+        build/src/Game/BOSS/boss.o(.sbss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sbss);
         build/src/Game/VEHICLE/static_game_state.o(.sbss);
         build/src/Game/VEHICLE/empty_callbacks.o(.sbss);
@@ -114,7 +117,7 @@ SECTIONS
         build/src/Game/ENGINE/early_stub.o(.bss);
         build/asm/Game/ENGINE.o(.bss);
         build/asm/Game/OBJECT.o(.bss);
-        build/asm/Game/BOSS.o(.bss);
+        build/asm/data/Game/BOSS.rodata.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
         build/asm/Game/PLAYER_STATES.o(.bss);
         build/src/Game/VEHICLE/vehicle.o(.bss);
@@ -130,6 +133,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.bss);
         build/src/Game/ENGINE/sprite_setters.o(.bss);
         build/src/Game/ENGINE/animation_setters.o(.bss);
+        build/src/Game/BOSS/boss.o(.bss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.bss);
         build/src/Game/VEHICLE/static_game_state.o(.bss);
         build/src/Game/VEHICLE/empty_callbacks.o(.bss);
@@ -148,7 +152,7 @@ SECTIONS
         build/src/Game/ENGINE/sprite_setters.o(.text);
         build/src/Game/ENGINE/animation_setters.o(.text);
         build/asm/Game/OBJECT.o(.text);
-        build/asm/Game/BOSS.o(.text);
+        build/src/Game/BOSS/boss.o(.text);
         build/asm/Game/PLAYER.o(.text);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.text);
         build/asm/Game/PLAYER_STATES.o(.text);
@@ -170,7 +174,7 @@ SECTIONS
         build/src/Game/ENGINE/early_stub.o(.data);
         build/asm/Game/ENGINE.o(.data);
         build/asm/Game/OBJECT.o(.data);
-        build/asm/Game/BOSS.o(.data);
+        build/asm/data/Game/BOSS.rodata.o(.data);
         build/asm/Game/PLAYER.o(.data);
         build/asm/Game/PLAYER_STATES.o(.data);
         build/src/Game/VEHICLE/vehicle.o(.data);
@@ -186,6 +190,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.data);
         build/src/Game/ENGINE/sprite_setters.o(.data);
         build/src/Game/ENGINE/animation_setters.o(.data);
+        build/src/Game/BOSS/boss.o(.data);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.data);
         build/src/Game/VEHICLE/static_game_state.o(.data);
         build/src/Game/VEHICLE/empty_callbacks.o(.data);

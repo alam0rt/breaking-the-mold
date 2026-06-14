@@ -149,8 +149,8 @@
     - "Game/OBJECT"
   -
     - 297320
-    - "asm"
-    - "Game/BOSS"
+    - "c"
+    - "Game/BOSS/boss"
   -
     - 306736
     - "asm"
