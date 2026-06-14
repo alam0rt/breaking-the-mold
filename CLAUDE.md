@@ -62,7 +62,7 @@ Switching compilers (e.g. 2.5.7-psx) may improve some functions but break others
 
 ## Repo Layout (essentials)
 
-- `src/Game/` — decompiled C; non-matching functions stub out via `INCLUDE_ASM(...)` referencing `asm/nonmatchings/`.
+- `src/` — decompiled C, flat layout (Glover convention): `gfx.c`, `entity.c`, `anim.c`, `player.c`, `clayball.c`, `vehicle.c`, `lvlload.c`, `entinit.c`, `main.c`, etc. PSY-Q libraries live under `src/libs/` (`libcd.c`, `libvoice.c`). Non-matching functions stub out via `INCLUDE_ASM(...)` referencing `asm/nonmatchings/<segment>/<func>.s`.
 - `include/` — `common.h` (base types, m2c context source), `Game/`, `globals.h`, `macro.inc`, `labels.inc`, `gte_macros.inc`. **Don't modify unless instructed**; `common.h` is the source for `ctx.c`.
 - `asm/` — splat output; **never edit by hand**. `asm/nonmatchings/` holds per-function asm pulled in via `INCLUDE_ASM`.
 - `SLES_010.90.yaml` / `SLES_010.90.ld` — splat config and generated linker script.
