@@ -193,15 +193,14 @@ local bss(start, kind, vram) = {
         asm('37A88', 'Game/OBJECT/bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
 
         // -----------------------------------------------------------------
-        // UNIT 3: Game/BOSS — boss state machines (ShrineyGuard, JoeHeadJoe, Klogg)
+        // UNIT 3: Game/BOSS — clayball/circular-platform + player primitives
+        // (originally bundled under 'Game/BOSS/boss'; split at the
+        // CreatePlayerEntity boundary per [R] rodata anchor 0x80011628 +
+        // function-name clustering — Clayball/Shriney funcs are in the lower
+        // half, CreatePlayerEntity/CheckCollision* are in the upper half).
         // -----------------------------------------------------------------
-        c('48968', 'Game/BOSS/boss'),
-        // PROPOSED: name is misleading. Rodata anchor 0x80011628 [R] confirms a
-        // real object here, but its code is clayball/circular-platform/Shriney-
-        // sound, NOT the boss FSMs (those are in Game/OBJECT/bosses above).
-        // player.c create/collision primitives likely begin mid-segment:
-        //   c('48968', 'Game/BOSS/clayball_platform'),// 0x80058168 clayball + circular platform     [R]
-        //   asm('49EA4', 'Game/PLAYER/player'),        // 0x800596A4 CreatePlayerEntity, collision    [N]
+        c('48968', 'Game/BOSS/clayball_platform'),  // 0x80058168 clayball + circular platform  [R]
+        c('49EA4', 'Game/PLAYER/player'),           // 0x800596A4 CreatePlayerEntity + collision [N]
 
         // -----------------------------------------------------------------
         // UNIT 4: Game/PLAYER — player state machine, physics, input

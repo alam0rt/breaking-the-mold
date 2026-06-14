@@ -54,7 +54,8 @@ SECTIONS
         build/asm/Game/OBJECT/movie.o(.rodata);
         build/asm/Game/OBJECT/enemies.o(.rodata);
         build/asm/Game/OBJECT/bosses.o(.rodata);
-        build/src/Game/BOSS/boss.o(.rodata);
+        build/src/Game/BOSS/clayball_platform.o(.rodata);
+        build/src/Game/PLAYER/player.o(.rodata);
         build/asm/Game/PLAYER/finn.o(.rodata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.rodata);
         build/src/Game/PLAYER_STATES/player_states.o(.rodata);
@@ -105,7 +106,8 @@ SECTIONS
         build/asm/Game/OBJECT/movie.o(.sdata);
         build/asm/Game/OBJECT/enemies.o(.sdata);
         build/asm/Game/OBJECT/bosses.o(.sdata);
-        build/src/Game/BOSS/boss.o(.sdata);
+        build/src/Game/BOSS/clayball_platform.o(.sdata);
+        build/src/Game/PLAYER/player.o(.sdata);
         build/asm/Game/PLAYER/finn.o(.sdata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sdata);
         build/src/Game/PLAYER_STATES/player_states.o(.sdata);
@@ -156,7 +158,8 @@ SECTIONS
         build/asm/Game/OBJECT/movie.o(.sbss);
         build/asm/Game/OBJECT/enemies.o(.sbss);
         build/asm/Game/OBJECT/bosses.o(.sbss);
-        build/src/Game/BOSS/boss.o(.sbss);
+        build/src/Game/BOSS/clayball_platform.o(.sbss);
+        build/src/Game/PLAYER/player.o(.sbss);
         build/asm/Game/PLAYER/finn.o(.sbss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sbss);
         build/src/Game/PLAYER_STATES/player_states.o(.sbss);
@@ -207,7 +210,8 @@ SECTIONS
         build/asm/Game/OBJECT/movie.o(.bss);
         build/asm/Game/OBJECT/enemies.o(.bss);
         build/asm/Game/OBJECT/bosses.o(.bss);
-        build/src/Game/BOSS/boss.o(.bss);
+        build/src/Game/BOSS/clayball_platform.o(.bss);
+        build/src/Game/PLAYER/player.o(.bss);
         build/asm/Game/PLAYER/finn.o(.bss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.bss);
         build/src/Game/PLAYER_STATES/player_states.o(.bss);
@@ -246,7 +250,8 @@ SECTIONS
         build/asm/Game/OBJECT/movie.o(.text);
         build/asm/Game/OBJECT/enemies.o(.text);
         build/asm/Game/OBJECT/bosses.o(.text);
-        build/src/Game/BOSS/boss.o(.text);
+        build/src/Game/BOSS/clayball_platform.o(.text);
+        build/src/Game/PLAYER/player.o(.text);
         build/asm/Game/PLAYER.o(.text);
         build/asm/Game/PLAYER/finn.o(.text);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.text);
@@ -304,7 +309,8 @@ SECTIONS
         build/asm/Game/OBJECT/movie.o(.data);
         build/asm/Game/OBJECT/enemies.o(.data);
         build/asm/Game/OBJECT/bosses.o(.data);
-        build/src/Game/BOSS/boss.o(.data);
+        build/src/Game/BOSS/clayball_platform.o(.data);
+        build/src/Game/PLAYER/player.o(.data);
         build/asm/Game/PLAYER/finn.o(.data);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.data);
         build/src/Game/PLAYER_STATES/player_states.o(.data);

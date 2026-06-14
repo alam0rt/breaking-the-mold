@@ -190,7 +190,11 @@
   -
     - 297320
     - "c"
-    - "Game/BOSS/boss"
+    - "Game/BOSS/clayball_platform"
+  -
+    - 302756
+    - "c"
+    - "Game/PLAYER/player"
   -
     - 306736
     - "asm"
