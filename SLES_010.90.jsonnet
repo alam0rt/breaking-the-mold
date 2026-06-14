@@ -150,21 +150,20 @@ local bss(start, kind, vram) = {
         c('D8C0', 'Game/ENGINE/animation_setters'),
 
         // -----------------------------------------------------------------
-        // UNIT 2: Game/OBJECT — enemies, items, decor, bosses (~188KB blob)
+        // UNIT 2: Game/OBJECT — split into ~9 source files in link order
+        // (evidence: docs/architecture/compilation-units.md). ROM offset; VRAM
+        // in comment. Boss STATE MACHINES live in OBJECT/bosses below; the
+        // c('48968','Game/BOSS/boss') unit further down is clayball/platform code.
         // -----------------------------------------------------------------
-        asm('1AB78', 'Game/OBJECT'),
-        // PROPOSED: OBJECT is really ~8 source files in link order. ROM offset
-        // shown; VRAM in comment. Boss STATE MACHINES live here (not in the
-        // c('48968','Game/BOSS/boss') unit below — that one is clayball/platform).
-        //   asm('1AB78', 'Game/OBJECT/hud'),          // 0x8002A378 HUD + pause menu                  [R]
-        //   asm('1C7F0', 'Game/OBJECT/entity_dtor'),  // 0x8002BFF0 generic EntityDestructor_Type0-6  [N]
-        //   asm('1CFD8', 'Game/OBJECT/decor'),        // 0x8002C7D8 path/decor entities               [N]
-        //   asm('1DC74', 'Game/OBJECT/collectibles'), // 0x8002D474 pickups (clayball/willie/phart..) [N]
-        //   asm('2150C', 'Game/OBJECT/effects'),      // 0x80030D0C particles/grid/ripple/beam FX     [N]
-        //   asm('291DC', 'Game/OBJECT/cd'),           // 0x800389DC game CD/BLB I/O + audio track     [N]
-        //   asm('29950', 'Game/OBJECT/movie'),        // 0x80039150 STR movie streaming/decode        [N]
-        //   asm('2AB94', 'Game/OBJECT/enemies'),      // 0x8003A394 enemy AI, projectiles, platforms  [N]
-        //   asm('37A88', 'Game/OBJECT/bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
+        asm('1AB78', 'Game/OBJECT/hud'),          // 0x8002A378 HUD + pause menu                   [R]
+        asm('1C7F0', 'Game/OBJECT/entity_dtor'),  // 0x8002BFF0 generic entity destructors         [N]
+        asm('1CFD8', 'Game/OBJECT/decor'),        // 0x8002C7D8 path/decor entities                [N]
+        asm('1DC74', 'Game/OBJECT/collectibles'), // 0x8002D474 pickups (clayball/willie/phart...) [N]
+        asm('2150C', 'Game/OBJECT/effects'),      // 0x80030D0C particles/grid/ripple/beam FX      [N]
+        asm('291DC', 'Game/OBJECT/cd'),           // 0x800389DC game CD/BLB I/O + audio track      [N]
+        asm('29950', 'Game/OBJECT/movie'),        // 0x80039150 STR movie streaming/decode         [N]
+        asm('2AB94', 'Game/OBJECT/enemies'),      // 0x8003A394 enemy AI, projectiles, platforms   [N]
+        asm('37A88', 'Game/OBJECT/bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
 
         // -----------------------------------------------------------------
         // UNIT 3: Game/BOSS — boss state machines (ShrineyGuard, JoeHeadJoe, Klogg)

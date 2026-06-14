@@ -154,7 +154,39 @@
   -
     - 109432
     - "asm"
-    - "Game/OBJECT"
+    - "Game/OBJECT/hud"
+  -
+    - 116720
+    - "asm"
+    - "Game/OBJECT/entity_dtor"
+  -
+    - 118744
+    - "asm"
+    - "Game/OBJECT/decor"
+  -
+    - 121972
+    - "asm"
+    - "Game/OBJECT/collectibles"
+  -
+    - 136460
+    - "asm"
+    - "Game/OBJECT/effects"
+  -
+    - 168412
+    - "asm"
+    - "Game/OBJECT/cd"
+  -
+    - 170320
+    - "asm"
+    - "Game/OBJECT/movie"
+  -
+    - 174996
+    - "asm"
+    - "Game/OBJECT/enemies"
+  -
+    - 227976
+    - "asm"
+    - "Game/OBJECT/bosses"
   -
     - 297320
     - "c"
