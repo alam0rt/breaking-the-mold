@@ -1,7 +1,9 @@
 #include "common.h"
 #include "Game/level_data_context.h"
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelCount);
+u8 GetLevelCount(LevelDataContext *ctx) {
+    return *(u8 *)(ctx->blb_header + 0xF31);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelAssetIndex);
 
@@ -25,7 +27,9 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorOffset);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorCount);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAssetCount);
+u8 GetAssetCount(LevelDataContext *ctx) {
+    return *(u8 *)(ctx->blb_header + 0xF32);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieEntryByIndex);
 
@@ -61,11 +65,17 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelDimensions);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetSpawnPosition);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelFlags);
+u16 GetLevelFlags(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x18);
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTileHeaderWorldIndex);
+u16 GetTileHeaderWorldIndex(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x20);
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTileHeaderField1A);
+u16 GetTileHeaderField1A(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x1A);
+}
 
 void *GetTileHeaderPtr(LevelDataContext *ctx) {
     return (void *)ctx->tile_header;
@@ -101,7 +111,9 @@ u32 GetTileSizeFlags(LevelDataContext *ctx) {
     return ctx->tile_flags;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLayerCount);
+u16 GetLayerCount(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tilemap_container);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetTilemapDataPtr);
 
@@ -121,13 +133,17 @@ void *GetTileAttributeData(LevelDataContext *ctx) {
     return (void *)(ctx->tile_attributes + 8);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetEntityCount);
+u16 GetEntityCount(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x1E);
+}
 
 void *GetEntityDataPtr(LevelDataContext *ctx) {
     return (void *)ctx->entities;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset100Field1C);
+u16 GetAsset100Field1C(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x1C);
+}
 
 u32 GetLevelDataContextField3C(LevelDataContext *ctx) {
     return ctx->vram_rects;
@@ -141,7 +157,9 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetTilemapLayerDataPtr);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilemapLayerIndex);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTileHeaderField16);
+u16 GetTileHeaderField16(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x16);
+}
 
 void *GetVehicleDataPtr(LevelDataContext *ctx) {
     return (void *)ctx->vehicle_data;
