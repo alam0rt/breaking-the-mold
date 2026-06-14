@@ -1,0 +1,3 @@
+#!/bin/sh
+# Pre-commit hook: run decomp linter
+exec make lint-decomp

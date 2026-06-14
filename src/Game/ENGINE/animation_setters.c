@@ -709,7 +709,7 @@ void EntityTickLoop(EntityListHead *list) {
 
     node = list->head;
     while (node) {
-        u8 *entity = node->entity;
+        u8 *entity = (u8 *)node->entity;
         u8 *vtable = *(u8 **)(entity + 0x18);
         s16 offset = *(s16 *)(vtable + 0x10);
         void (*fn)(void *) = (void (*)(void *))*(s32 *)(vtable + 0x14);
