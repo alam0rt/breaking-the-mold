@@ -46,7 +46,25 @@ void SaveCheckpointState(void *entity) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RestoreCheckpointEntities);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RemoveCheckpointEntityById);
+s32 RemoveCheckpointEntityById(s32 gameState, s32 target) {
+    s32 *node = *(s32 **)(gameState + 0x134);
+    s32 *prev = 0;
+
+    while (node != 0) {
+        if (*(s32 *)((s32)node + 4) == target) {
+            if (prev == 0) {
+                *(s32 *)(gameState + 0x134) = *node;
+            } else {
+                *prev = *node;
+            }
+            FreeFromHeap(D_800A5954, (void *)node, 8, 0);
+            return 1;
+        }
+        prev = node;
+        node = *(s32 **)(s32)node;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", PauseGameAndShowMenu);
 
@@ -417,11 +435,14 @@ void EntityType022_EnemyCluster_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType007_Clayball_Init);
+extern void *InitClayballWithRandomColor(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80080420);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnRandomColorDecorEntity);
+void EntityType007_Clayball_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitClayballWithRandomColor(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitTransparentDecorEntity(void *entity, void *spawnData);
 
@@ -498,11 +519,14 @@ void EntityType069_1970Icon_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType070_HamsterShield_Init);
+extern void *InitHamsterShieldCollectible(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80080810);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPathDecor1Entity);
+void EntityType070_HamsterShield_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x120, 1, 0);
+    entity = InitHamsterShieldCollectible(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitSuperWillieCollectible(void *entity, void *spawnData);
 
@@ -522,11 +546,14 @@ void EntityType075_YellowBird_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType081_PathDecor2_Init);
+extern void *InitEntity_PathDecor2(void *entity, void *spawnData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80080960);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPathDecor2Entity);
+void EntityType081_PathDecor2_Init(void *list, void *spawnData) {
+    void *entity = AllocateFromHeap(D_800A5954, 0x124, 1, 0);
+    entity = InitEntity_PathDecor2(entity, spawnData);
+    AddEntityToSortedRenderList(list, entity);
+    AddToUpdateQueue(list, entity);
+}
 
 extern void *InitInteractiveDecorEntity(void *entity, void *spawnData);
 
@@ -717,7 +744,31 @@ void EntityType085_104_105_TriggerZone_Init(void *list, void *spawnData) {
     AddEntityToSortedRenderList(list, InitTriggerZoneEntity(entity, spawnData));
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", EntityType089_097_098_110_111_GridHelper_Init);
+extern void *InitGridLineEntity(void *entity, void *spawnData, s32 spriteId, s32 mirrorFlag, s32 flag);
+
+void EntityType089_097_098_110_111_GridHelper_Init(void *list, void *spawnData) {
+    s32 size = 0x4B0;
+    s32 useMirror = 0;
+    u16 type = *(u16 *)((u8 *)spawnData + 0x12);
+    s32 flag = 0x10000;
+    void *entity;
+
+    if (type == 0x62) {
+        useMirror = 1;
+    } else if (type == 0x61) {
+        size = 0x384;
+    } else if (type == 0x6E) {
+        size = 0x578;
+        flag = 0x20000;
+    } else if (type == 0x6F) {
+        size = 0x640;
+        flag = 0x40000;
+    }
+
+    entity = AllocateFromHeap(D_800A5954, 0x80, 1, 0);
+    entity = InitGridLineEntity(entity, spawnData, size, useMirror, flag);
+    AddEntityToSortedRenderList(list, entity);
+}
 
 extern void *InitIndexedSpriteEntity(void *entity, void *spawnData);
 
@@ -784,7 +835,43 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ClearAlternateEntitySpawnFl
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", AddToDepthBucket);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", FlushDepthBuckets);
+extern void SetPolyGT4(void *prim);
+extern void AddPrim(void *ot, void *prim);
+
+void FlushDepthBuckets(void *entity) {
+    s16 i;
+    void **buckets;
+    void *node;
+    void *next;
+    void *ot;
+
+    i = 0;
+    buckets = *(void ***)((u8 *)entity + 0x16C);
+loop_start:
+    if ((s16)i >= 256) goto loop_end;
+    {
+        void *head = *buckets;
+        if (head == NULL) goto advance;
+        node = head;
+    }
+inner:
+    if (node == NULL) {
+        *buckets = NULL;
+        goto advance;
+    }
+    next = *(void **)node;
+    SetPolyGT4(node);
+    ot = *(void **)((u8 *)*(void **)((u8 *)D_800A5954 + 0xA084) + 0x70);
+    AddPrim(ot, node);
+    node = next;
+    goto inner;
+advance:
+    buckets++;
+    i++;
+    goto loop_start;
+loop_end:
+    return;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ClearEntityPoolArray);
 
