@@ -293,7 +293,14 @@ void func_80075F24(void) {
  * 0..4). Then SetAnimationFrameIndex(entity+0x10C, new_value) to update
  * the displayed icon frame and plays the menu-cycle SFX
  * (PlaySoundEffect(0x686C1C97, 0xA0, 0)). */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_CycleOptionAndPlaySound);
+void Menu_CycleOptionAndPlaySound(Entity *entity) {
+    u8 *counter = *(u8 **)((u8 *)entity + 0x108);
+    u8 v = *counter;
+    if (v < 4) *counter = v + 1; else *counter = 0;
+    SetAnimationFrameIndex(*(void **)((u8 *)entity + 0x10C),
+                           **(u8 **)((u8 *)entity + 0x108));
+    PlaySoundEffect(0x686C1C97, 0xA0, 0);
+}
 
 /* Cycle-down counterpart of Menu_CycleOptionAndPlaySound. Decrements
  * *(u8*)(entity+0x108); if it was already 0, wraps back to 4 so the
