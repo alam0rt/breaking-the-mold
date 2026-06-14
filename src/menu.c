@@ -292,14 +292,46 @@ Entity *InitMenuButtonWithSpritePtr(Entity *entity, void *spriteDef, s16 x, s16 
  * parent+0x100 (with parent+0x104 cleared to "inactive"). Finally
  * installs matching GetWorldPositionX/Y move-callbacks on the parent.
  *
- * SHELVED: stack-marshal of the GetWorldPositionX/Y callback slots
- * doesn't reproduce the original frame layout. Original packs the 4
- * marshals into a 0x38 frame, reusing the s0 save-slot as scratch
- * (s0 holds the -1 marker after the first call); my C version emits
- * a 0x50 frame with separate scratch + 6 callee-saves. Likely needs
- * an explicit u32 -1 constant variable + manual slot reuse, or a
- * dedicated helper struct that pins the layout. Permuter candidate. */
+ * SHELVED: frame + regalloc SOLVED, only constant-load scheduling remains.
+ * The draft below (#if 0) matches the original's frame (0x50, via the 32-byte
+ * pad struct), register allocation ($s0=-1, $s1=child, $s2=parent, $s3=fnX,
+ * $s4=fnY) and all four slot marshals. The only residual diff is *where* cc1
+ * materialises the constant loads: the original front-loads fnX/fnY (and the
+ * g_pBlbHeapBase pointer) into the prologue region BEFORE AllocateFromHeap,
+ * while our cc1 defers fnX/fnY until just before the first install; plus the
+ * `parent+0x100 = child` store lands as an early `sw $s1` instead of the
+ * original's `sw $a1` in the AddEntityToSortedRenderList delay slot. Same
+ * registers, same count -- pure instruction scheduling, same structural class
+ * as the deactivate lui-hoist. decomp-permuter candidate (reorder-only). */
 INCLUDE_ASM("asm/nonmatchings/menu", AttachCursorToButton);
+#if 0
+void AttachCursorToButton(Entity *parent) {
+    Entity *child;
+    struct { s32 pad; MenuCallbackSlot s; s32 pad2[5]; } u; /* 0x20: slot@sp+0x1C, frame 0x50 */
+    s16 m1;
+    void (*fnX)(Entity *);
+    void (*fnY)(Entity *);
+    fnX = (void (*)(Entity *))GetWorldPositionX;
+    fnY = (void (*)(Entity *))GetWorldPositionY;
+    child = AllocateFromHeap(g_pBlbHeapBase, 0x100, 1, 0);
+    InitEntityWithSprite(child, &D_8009CBE8, 0x7D0,
+                         *(u16 *)((u8 *)parent + 0x68) + 0x6A,
+                         *(u16 *)((u8 *)parent + 0x6A) + 0xE);
+    *(s32 *)((u8 *)child + 0x18) = (s32)&D_8001208C;
+    m1 = -1;
+    u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnX;
+    *(MenuCallbackSlot *)((u8 *)child + 0x24) = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnY;
+    *(MenuCallbackSlot *)((u8 *)child + 0x2C) = u.s;
+    *(Entity **)((u8 *)parent + 0x100) = child;
+    AddEntityToSortedRenderList(g_pGameState, child);
+    *((u8 *)parent + 0x104) = 0;
+    u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnX;
+    *(MenuCallbackSlot *)((u8 *)parent + 0x24) = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnY;
+    *(MenuCallbackSlot *)((u8 *)parent + 0x2C) = u.s;
+}
+#endif
 
 /* Cursor-focus enter handler for a plain menu button. Loads the
  * highlight child at parent+0x100, sets parent+0x104=1 (active),
