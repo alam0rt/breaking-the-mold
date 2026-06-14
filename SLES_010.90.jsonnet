@@ -219,15 +219,15 @@ local bss(start, kind, vram) = {
         // player_states keeps c() (has matched C: PlatformEvent_*, func_80071778);
         // the rest are unmatched code so they are asm() (whole-range extraction,
         // robust against anonymous funcs + jump tables) until decomp converts them.
-        c('61848', 'Game/PLAYER_STATES/player_states'),  // 0x80071048 Runn/Soar/Finn vehicle modes + platforms [R]
-        asm('65798', 'Game/UI/menu'),                    // 0x80074F98 cursor/buttons/options/level-select
-        asm('667F4', 'Game/UI/password'),                // 0x80075FF4 password entry UI
-        asm('687E8', 'Game/UI/hud_results'),             // 0x80077FE8 HUD digits + results screen
-        asm('69E3C', 'Game/UI/ending'),                  // 0x8007963C ending / credits
-        asm('6A9BC', 'Game/MAIN/level'),                 // 0x8007A1BC level-data ctx + playback sequence
-        asm('6B1B0', 'Game/MAIN/blb_accessors'),         // 0x8007A9B0 BLB/level/tile/sprite TOC getters
-        asm('6C7B8', 'Game/AUDIO/sound'),                // 0x8007BFB8 SPU upload, SFX, voice, CD audio
-        asm('6D4FC', 'Game/MAIN/gamestate'),             // 0x8007CCFC InitGameState/respawn/level-start
+        c('61848', 'vehicle'),                           // 0x80071048 Runn/Soar/Finn vehicle modes + platforms [R]
+        asm('65798', 'menu'),                            // 0x80074F98 cursor/buttons/options/level-select
+        asm('667F4', 'passwd'),                          // 0x80075FF4 password entry UI
+        asm('687E8', 'results'),                         // 0x80077FE8 HUD digits + results screen
+        asm('69E3C', 'ending'),                          // 0x8007963C ending / credits
+        asm('6A9BC', 'level'),                           // 0x8007A1BC level-data ctx + playback sequence
+        asm('6B1B0', 'blbacc'),                          // 0x8007A9B0 BLB/level/tile/sprite TOC getters
+        asm('6C7B8', 'sound'),                           // 0x8007BFB8 SPU upload, SFX, voice, CD audio
+        asm('6D4FC', 'gstate'),                          // 0x8007CCFC InitGameState/respawn/level-start
 
         // -----------------------------------------------------------------
         // UNIT 6: Game/MAIN — level lifecycle, entity init table, main loop

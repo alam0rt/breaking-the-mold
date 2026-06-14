@@ -214,39 +214,39 @@
   -
     - 399432
     - "c"
-    - "Game/PLAYER_STATES/player_states"
+    - "vehicle"
   -
     - 415640
     - "asm"
-    - "Game/UI/menu"
+    - "menu"
   -
     - 419828
     - "asm"
-    - "Game/UI/password"
+    - "passwd"
   -
     - 428008
     - "asm"
-    - "Game/UI/hud_results"
+    - "results"
   -
     - 433724
     - "asm"
-    - "Game/UI/ending"
+    - "ending"
   -
     - 436668
     - "asm"
-    - "Game/MAIN/level"
+    - "level"
   -
     - 438704
     - "asm"
-    - "Game/MAIN/blb_accessors"
+    - "blbacc"
   -
     - 444344
     - "asm"
-    - "Game/AUDIO/sound"
+    - "sound"
   -
     - 447740
     - "asm"
-    - "Game/MAIN/gamestate"
+    - "gstate"
   -
     - 448976
     - "c"
