@@ -1,5 +1,8 @@
 #include "common.h"
 
+typedef void *(*CallbackFunc)();
+extern CallbackFunc *D_8009F440[];
+
 extern u8 D_8009DF28[];
 extern u8 D_8009DF38[];
 extern u8 D_8009DF39[];
@@ -9,7 +12,15 @@ extern void *D_8009DF1C[];
 extern void *D_8009DF24[];
 extern void *D_8009E230[];
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", StSetRing);
+extern u32 D_800AE3D8[];
+extern u32 D_800AE3DC[];
+extern void StClearRing(void);
+
+void StSetRing(u32 *ring, s32 size) {
+    D_800AE3D8[0] = (u32)ring;
+    D_800AE3DC[0] = (u32)size;
+    StClearRing();
+}
 
 INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", CdInit);
 
@@ -336,7 +347,12 @@ INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", C_011_OBJ_900);
 
 INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", C_011_OBJ_960);
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", mem2mem);
+void mem2mem(s32 *dst, s32 *src, u32 count) {
+    u32 i;
+    for (i = 0; i < count; i++) {
+        *dst++ = *src++;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", dma_execute);
 
@@ -400,7 +416,15 @@ INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", PAD_init);
 
 INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", InitPAD);
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", StartPAD);
+extern void StartPAD2(void);
+extern void ChangeClearPAD(s32 mode);
+extern void EnablePAD(void);
+
+void StartPAD(void) {
+    StartPAD2();
+    ChangeClearPAD(0);
+    EnablePAD();
+}
 
 INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", StopPAD);
 
@@ -454,19 +478,40 @@ INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", VSYNC_OBJ_1D4);
 
 INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", ChangeClearRCnt);
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", ResetCallback);
+void *ResetCallback(void) {
+    CallbackFunc *table = D_8009F440[0];
+    return (void *)table[3]();
+}
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", InterruptCallback);
+void *InterruptCallback(void) {
+    CallbackFunc *table = D_8009F440[0];
+    return (void *)table[2]();
+}
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", DMACallback);
+void *DMACallback(s32 dma, void *func) {
+    CallbackFunc *table = D_8009F440[0];
+    return table[1](dma, func);
+}
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", VSyncCallback);
+void *VSyncCallback(void *func) {
+    CallbackFunc *table = D_8009F440[0];
+    return table[5](4, func);
+}
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", VSyncCallbacks);
+void *VSyncCallbacks(void) {
+    CallbackFunc *table = D_8009F440[0];
+    return (void *)table[5]();
+}
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", StopCallback);
+void *StopCallback(void) {
+    CallbackFunc *table = D_8009F440[0];
+    return (void *)table[4]();
+}
 
-INCLUDE_ASM("asm/nonmatchings/LIBCD/libcd", RestartCallback);
+void *RestartCallback(void) {
+    CallbackFunc *table = D_8009F440[0];
+    return (void *)table[6]();
+}
 
 extern u16 D_8009E3BA[];
 
