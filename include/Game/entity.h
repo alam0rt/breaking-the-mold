@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "Game/input_state.h"
+#include "Game/entity_types.h"
 
 /* =============================================================================
  * ENTITY HIERARCHY
