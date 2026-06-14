@@ -15,6 +15,7 @@ INCLUDE_ASM("asm/nonmatchings/Game/BOSS/boss", ClayballTickWithParticleSpawn);
 
 INCLUDE_ASM("asm/nonmatchings/Game/BOSS/boss", CircularPlatformEventHandler);
 
+/* CircularPlatformUpdateWithMirror @ 8005894C — arg ordering and s16 arithmetic diffs */
 INCLUDE_ASM("asm/nonmatchings/Game/BOSS/boss", CircularPlatformUpdateWithMirror);
 
 extern void *InitEntitySprite(void *entity, void *def, s32 spriteId, s16 x, s16 y, s32 unused);
