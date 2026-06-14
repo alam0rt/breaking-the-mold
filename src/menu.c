@@ -7,6 +7,8 @@ extern void SetEntitySpriteId(Entity *entity, u32 spriteId, s32 flags);
 extern void SetAnimationFrameIndex(void *animEntity, u32 value);
 extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
 extern void ApplyAudioSettings(void *audioCtx);
+extern s32 rand(void);
+extern void InitRunnLevelEntity(Entity *entity);
 
 /* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
  * by the menu set-idle helpers. Wrapped in a padded 2-element array to
@@ -75,7 +77,14 @@ s32 MenuEntityCallback(Entity *entity, u32 event) {
  * TimerEntityTick at the tick slot (+0x00/+0x04) and clears the event
  * pair (+0x08/+0x0C), switches sprite id to 0x0005C699 via
  * SetEntitySpriteId, and queues InitRunnLevelEntity at +0x98/+0x9C so
- * the run animation kicks in when the timer expires. */
+ * the run animation kicks in when the timer expires.
+ *
+ * SHELVED: 4-instruction scheduling diff. cc1 in the original hoists
+ * `li s1, -1` (the marker constant) BEFORE the timer write (between
+ * the rand-bitmask chain and the `sh v0, 0x100(s0)`); modern cc1
+ * places it after. Tried statement reorderings; either shifts the diff
+ * around or grows it. Close enough that decomp-permuter would likely
+ * close it. */
 INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuIdleAnimation);
 
 /* Transition handler that swaps the menu character from idle to its
