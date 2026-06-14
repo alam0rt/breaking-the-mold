@@ -233,6 +233,24 @@ struct Entity {
 };  /* Size: 0x80 (128 bytes) */
 
 /* -----------------------------------------------------------------------------
+ * AnimChangeFlags
+ *
+ * Bitfield values OR'd into SpriteEntity.animChangeFlags by SetEntitySpriteId
+ * @ 0x8001D080. Each flag marks a pending animation parameter that will be
+ * applied on the next tick by ApplyPendingSpriteState @ 0x8001D554.
+ * ----------------------------------------------------------------------------- */
+typedef enum {
+    ANIM_CHG_SPRITE         = 0x0004, /* pendingSpriteId changed */
+    ANIM_CHG_FRAME          = 0x0008, /* pendingFrame changed */
+    ANIM_CHG_LOOP_FRAME     = 0x0010, /* pendingLoopFrame changed */
+    ANIM_CHG_TARGET_FRAME   = 0x0020, /* pendingTargetFrame changed */
+    ANIM_CHG_DIRECTION      = 0x0040, /* pendingDirection changed */
+    ANIM_CHG_LOOP_FLAG      = 0x0080, /* pendingLoopFlag changed */
+    ANIM_CHG_ANIM_ACTIVE    = 0x0100, /* pendingAnimActive changed */
+    ANIM_CHG_TARGET_BY_VALUE = 0x0800  /* target frame lookup by value, not index */
+} AnimChangeFlags;
+
+/* -----------------------------------------------------------------------------
  * SpriteEntity (0x100 = 256 bytes)
  *
  * Entity extended with the full sprite animation state machine. This is the
