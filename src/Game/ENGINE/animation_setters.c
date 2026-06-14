@@ -1,15 +1,20 @@
 #include "common.h"
 
-extern void *D_800A5954;
+extern void *g_pBlbHeapBase;
+extern u8 g_EntityVtable_Destroyed[];
+extern u8 g_EntityVtable_ResourceType1[];
+extern u8 g_EntityVtable_ResourceType2[];
+extern u8 g_EntityVtable_ResourceType3[];
+extern u8 g_EntityVtable_ResourceType4[];
+extern u8 g_EntityVtable_SpriteBase[];
+extern u8 g_EntityVtable_PartialDestroy[];
+extern u8 g_EntityVtable_SimpleDestruct[];
+extern u8 g_EntityVtable_LevelDestroy[];
+
 extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 extern void FreeMultiAllocResource(void *ptr, s32 type);
 extern void FreeResourceType2(void *ptr, s32 type);
 extern void FreeResourceType3(void *ptr, s32 type);
-extern u8 D_800104AC[];
-extern u8 D_8001042C[];
-extern u8 D_800103CC[];
-extern u8 D_8001040C[];
-extern u8 D_800103EC[];
 
 typedef struct { s32 a; s32 b; } S32Pair;
 
@@ -215,13 +220,13 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderCon
 void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x1C);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001042C;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType1;
     if (resource) {
         FreeMultiAllocResource(resource, 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -232,13 +237,13 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderCon
 void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x1C);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001040C;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType2;
     if (resource) {
         FreeResourceType2(resource, 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -249,13 +254,13 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderCon
 void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x1C);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800103EC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType3;
     if (resource) {
         FreeResourceType3(resource, 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -266,13 +271,13 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerScrollCon
 void FreeResourceType4(void *entity, s32 flags) {
     u8 *resource;
     resource = *(u8 **)((u8 *)entity + 0x20);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800103CC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType4;
     if (resource) {
-        FreeFromHeap(D_800A5954, resource, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, resource, 0, 0);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -284,9 +289,6 @@ INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateEntityScreen
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitPlayerEntity);
 
-extern u8 D_8001044C[];
-extern u8 D_8001046C[];
-
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityApplyMovementCallbacks);
 
 void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
@@ -295,21 +297,21 @@ void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
     u8 *resource;
 
     resource = *(u8 **)((u8 *)entity + 0xB0);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001044C;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_SpriteBase;
     if (resource) {
-        FreeFromHeap(D_800A5954, resource, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, resource, 0, 0);
     }
-    FreeFromHeap(D_800A5954, *(void **)((u8 *)entity + 0x90), 4, 0);
+    FreeFromHeap(g_pBlbHeapBase, *(void **)((u8 *)entity + 0x90), 4, 0);
     child = *(u8 **)((u8 *)entity + 0x34);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_8001046C;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_PartialDestroy;
     if (child) {
         childRef = *(u8 **)(child + 0xC);
         ((void (*)(void *, s32))*(s32 *)(childRef + 0x14))(
             (void *)(child + *(s16 *)(childRef + 0x10)), 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -619,14 +621,14 @@ void func_800207DC(void) {
 void FreeEntityNoTeardown_80020818(void *entity, s32 size);
 
 void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104AC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
         FreeEntityNoTeardown_80020818(entity, 0x1C);
     }
 }
 
 void FreeEntityNoTeardown_80020818(void *entity, s32 size) {
-    FreeFromHeap(D_800A5954, entity, 0, 0);
+    FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
 
 extern u8 CdBLB_ReadSectors(u16 arg0, u16 arg1);
@@ -637,8 +639,6 @@ u8 BLB_ReadSectorsWrapper(u32 sector, u32 count) {
 
 extern void InitMenuEntityWithVtable(void *entity, s32 arg);
 extern void *PassThroughFunction(void *ptr);
-extern u8 D_800104CC[];
-extern u8 D_800104EC[];
 extern void RemoveEntityFromAllLists(void *entity, void *child);
 extern void RemoveEntityFromUpdateQueue(void *entity);
 extern void RemoveFromRenderList(void *entity);
@@ -652,7 +652,7 @@ extern void ConditionalDelete(void *ptr, s32 type);
 
 void *InitEntityWithTable(void *entity) {
     InitMenuEntityWithVtable(entity, 0);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)D_800104CC;
+    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_SimpleDestruct;
     PassThroughFunction((void *)((u8 *)entity + 0x84));
     return entity;
 }
@@ -660,7 +660,7 @@ void *InitEntityWithTable(void *entity) {
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", LoadBLBHeader);
 
 void DestroyEntity(u8 *entity, s32 flags) {
-    *(s32 *)(entity + 0x18) = (s32)D_800104CC;
+    *(s32 *)(entity + 0x18) = (s32)g_EntityVtable_SimpleDestruct;
     RemoveFromUpdateQueue(entity);
     RemoveFromZOrderList(entity);
     ClearEntityDefList(entity);
@@ -669,14 +669,14 @@ void DestroyEntity(u8 *entity, s32 flags) {
         builtin_delete(*(void **)(entity + 0x3C));
     }
     ConditionalDelete(entity + 0x84, 2);
-    *(s32 *)(entity + 0x18) = (s32)D_800104EC;
+    *(s32 *)(entity + 0x18) = (s32)g_EntityVtable_LevelDestroy;
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
 void RemoveFromUpdateQueue(u8 *entity) {
-    u8 *heap = (u8 *)D_800A5954;
+    u8 *heap = (u8 *)g_pBlbHeapBase;
 
     *(s16 *)(heap + 0xA08A) = 0;
     if (*(s32 *)(entity + 0x108) != 0) {

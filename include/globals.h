@@ -183,6 +183,9 @@ extern u32 g_SkipVSync;            /* 0x800A594C - Skip VSync flag */
 /* Game flags (bit 0x80 = debug menu enabled) */
 extern u32 g_GameFlags;            /* 0x800A5950 */
 
+/* BLB heap base pointer (first word of sdata, also GP value) */
+extern void* g_pBlbHeapBase;       /* 0x800A5954 */
+
 /* Active game state pointer */
 extern GameState* g_pGameState;    /* 0x800A5960 */
 
@@ -242,5 +245,19 @@ extern u8 blbHeaderBufferBase[];  /* 0x800AE3E0 */
  *   +0xF36: Game mode (u8, 3=level, 6=special)
  *   +0xF92: Current level index being loaded
  */
+
+/* =============================================================================
+ * ENTITY CALLBACK VTABLES (.text section, used as constant pointers)
+ * ============================================================================= */
+
+extern u8 g_EntityVtable_SpriteBase[];       /* 0x8001044C - base sprite entity vtable */
+extern u8 g_EntityVtable_PartialDestroy[];   /* 0x8001046C - partially destroyed vtable */
+extern u8 g_EntityVtable_Destroyed[];        /* 0x800104AC - fully destroyed / menu base */
+extern u8 g_EntityVtable_SimpleDestruct[];   /* 0x800104CC - simple destruct vtable */
+extern u8 g_EntityVtable_LevelDestroy[];     /* 0x800104EC - level/extended destroy */
+extern u8 g_EntityVtable_ResourceType1[];    /* 0x8001042C - resource type 1 teardown */
+extern u8 g_EntityVtable_ResourceType2[];    /* 0x8001040C - resource type 2 teardown */
+extern u8 g_EntityVtable_ResourceType3[];    /* 0x800103EC - resource type 3 teardown */
+extern u8 g_EntityVtable_ResourceType4[];    /* 0x800103CC - resource type 4 teardown */
 
 #endif /* GLOBALS_H */

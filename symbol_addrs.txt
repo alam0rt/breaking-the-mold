@@ -159,6 +159,7 @@ DecodeRLESpriteCore = 0x80010068; // size:0x2B4
 GpuDmaTransferCallback = 0x800127EC; // size:0x1
 GetFrameReadyFlag = 0x800131F0; // size:0x10
 TriggerBufferSwapIfReady = 0x80013200; // size:0x40
+func_80013240 = 0x80013240; // size:0x4
 SetVideoModePAL = 0x80013244; // size:0x4
 SsUtReverbOn = 0x80013248; // size:0x20
 InitGraphicsSystem = 0x80013268; // size:0x228
@@ -2427,3 +2428,18 @@ Callback_8009c2a8 = 0x8009C2A8; // size:0x1
 g_GameStateBase = 0x8009DC40; // type:GameState // Main game state structure
 D_80010344 = 0x80010344; // PrimObject vtable (INIT_TABLES)
 D_8001039C = 0x8001039C; // PrimObject base vtable (INIT_TABLES)
+
+// Named globals (sdata) - BLB heap base pointer and game state pointer
+g_pBlbHeapBase = 0x800A5954; // size:4
+g_pGameState = 0x800A5960; // size:4
+
+// Entity callback table base vtables (rodata in .text)
+g_EntityVtable_SpriteBase = 0x8001044C; // size:0x20
+g_EntityVtable_PartialDestroy = 0x8001046C; // size:0x20
+g_EntityVtable_Destroyed = 0x800104AC; // size:0x20
+g_EntityVtable_SimpleDestruct = 0x800104CC; // size:0x20
+g_EntityVtable_LevelDestroy = 0x800104EC; // size:0x20
+g_EntityVtable_ResourceType1 = 0x8001042C; // size:0x20
+g_EntityVtable_ResourceType2 = 0x8001040C; // size:0x20
+g_EntityVtable_ResourceType3 = 0x800103EC; // size:0x20
+g_EntityVtable_ResourceType4 = 0x800103CC; // size:0x20

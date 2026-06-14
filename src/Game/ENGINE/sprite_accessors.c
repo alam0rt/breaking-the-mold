@@ -68,7 +68,7 @@ typedef struct GameGlobals {
     u8 frameIdx;        /* 0xA088 */
 } GameGlobals;
 
-extern GameGlobals *D_800A5954[]; /* unknown size forces absolute addressing */
+extern GameGlobals *g_pBlbHeapBase[]; /* unknown size forces absolute addressing */
 extern u8 D_80010344[];           /* PrimObject vtable (INIT_TABLES) */
 extern u8 D_8001039C[];           /* PrimObject base vtable (INIT_TABLES) */
 

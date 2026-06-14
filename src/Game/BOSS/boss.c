@@ -1,6 +1,6 @@
 #include "common.h"
+#include "globals.h"
 
-extern void *D_800A5954;
 extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
 extern u8 D_800116E8[];
@@ -65,7 +65,7 @@ void ShrineyGuardDestroyWithSoundCleanup(void *entity, s32 flags) {
     *(u32 *)(e + 0x18) = (u32)D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -73,7 +73,7 @@ void EntityDestroyCallback_Vt800116E8(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -81,7 +81,7 @@ void EntityDestroyCallback_Vt800116E8_800594a0(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -89,7 +89,7 @@ void EntityDestroyCallback_Vt800116E8_80059504(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -97,7 +97,7 @@ void EntityDestroyCallback_Vt800116E8_80059568(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -105,7 +105,7 @@ void EntityDestroyCallback_Vt800116E8_800595cc(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
@@ -123,7 +123,7 @@ void EntityDestructor_Simple11(void *entity, s32 flags) {
 }
 
 void FreeEntityNoTeardown_80059674(void *entity, s32 size) {
-    FreeFromHeap(D_800A5954, entity, 0, 0);
+    FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
 
 INCLUDE_ASM("asm/nonmatchings/Game/BOSS/boss", CreatePlayerEntity);
@@ -139,7 +139,7 @@ void EntityDestructor_WithSPUVoiceStop(void *entity, s32 flags) {
     StopSPUVoice(*(s32 *)(e + 0x174));
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(D_800A5954, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 

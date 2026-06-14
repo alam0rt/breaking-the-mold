@@ -157,12 +157,13 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua check-lua lint-fix decompme
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua check-lua lint-fix decompme progress
 
-# Default target - uses recursive make if ASM files don't exist
+# Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
-	@if [ ! -d "$(ASM_DIR)" ]; then \
-		echo "ASM directory missing, running splat..."; \
+	@if [ ! -d "$(ASM_DIR)" ] || [ "$(SPLAT_CONFIG)" -nt "$(LD_SCRIPT)" ]; then \
+		echo "Config changed or ASM missing, re-extracting..."; \
+		rm -rf $(ASM_DIR) $(BUILD_DIR); \
 		$(SPLAT) $(SPLAT_CONFIG) && touch $(LD_SCRIPT); \
 	fi
 	@$(MAKE) --no-print-directory build
@@ -239,6 +240,8 @@ $(SPLAT_CONFIG): $(SPLAT_CONFIG_SRC) Makefile
 	} > "$$tmp" && mv "$$tmp" "$@"
 
 extract: $(SPLAT_CONFIG)
+	@echo "Cleaning stale asm/ and build/ before extraction..."
+	rm -rf $(ASM_DIR) $(BUILD_DIR)
 	@echo "Extracting binary using splat..."
 	$(SPLAT) $(SPLAT_CONFIG)
 	@touch $(LD_SCRIPT)
@@ -421,6 +424,21 @@ ifndef FUNC
 	@exit 1
 endif
 	$(PYTHON) tools/decompme.py $(FUNC) $(DECOMPME_ARGS)
+
+# -----------------------------------------------------------------------------
+# Progress
+# -----------------------------------------------------------------------------
+
+progress:
+	@PURE_ASM=$$(find $(ASM_DIR) -name '*.s' -not -path '*/nonmatchings/*' -exec grep -h '^\s*[ga]label ' {} + 2>/dev/null | awk '{print $$2}' | sort -u | wc -l); \
+	NM_FUNCS=$$(find $(ASM_DIR)/nonmatchings -name '*.s' -exec grep -h '^\s*[ga]label ' {} + 2>/dev/null | awk '{print $$2}' | sort -u | wc -l); \
+	DECOMPILED=$$(grep -r '^[a-zA-Z_].*(.*).*{' $(SRC_DIR) --include='*.c' 2>/dev/null | grep -v 'INCLUDE_ASM\|extern\|typedef\|struct ' | wc -l); \
+	TOTAL=$$((PURE_ASM + NM_FUNCS + DECOMPILED)); \
+	echo "Decompilation Progress"; \
+	echo "====================="; \
+	echo "Fully decompiled:  $$DECOMPILED / $$TOTAL ($$(python3 -c "print(f'{100*$$DECOMPILED/$$TOTAL:.1f}%')" 2>/dev/null))"; \
+	echo "INCLUDE_ASM stubs: $$NM_FUNCS / $$TOTAL ($$(python3 -c "print(f'{100*$$NM_FUNCS/$$TOTAL:.1f}%')" 2>/dev/null))"; \
+	echo "Pure asm:          $$PURE_ASM / $$TOTAL ($$(python3 -c "print(f'{100*$$PURE_ASM/$$TOTAL:.1f}%')" 2>/dev/null))"
 
 # -----------------------------------------------------------------------------
 # Cleanup

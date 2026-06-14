@@ -57,7 +57,7 @@ SECTIONS
         main_SDATA_START = .;
         build/asm/Game/ENGINE_boot.o(.sdata);
         build/src/Game/ENGINE/early_stub.o(.sdata);
-        build/asm/Game/ENGINE.o(.sdata);
+        build/src/Game/ENGINE.o(.sdata);
         build/asm/Game/OBJECT.o(.sdata);
         build/asm/data/Game/BOSS.rodata.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
@@ -89,7 +89,7 @@ SECTIONS
         main_SBSS_START = .;
         build/asm/Game/ENGINE_boot.o(.sbss);
         build/src/Game/ENGINE/early_stub.o(.sbss);
-        build/asm/Game/ENGINE.o(.sbss);
+        build/src/Game/ENGINE.o(.sbss);
         build/asm/Game/OBJECT.o(.sbss);
         build/asm/data/Game/BOSS.rodata.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
@@ -121,7 +121,7 @@ SECTIONS
         main_BSS_START = .;
         build/asm/Game/ENGINE_boot.o(.bss);
         build/src/Game/ENGINE/early_stub.o(.bss);
-        build/asm/Game/ENGINE.o(.bss);
+        build/src/Game/ENGINE.o(.bss);
         build/asm/Game/OBJECT.o(.bss);
         build/asm/data/Game/BOSS.rodata.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
@@ -150,7 +150,7 @@ SECTIONS
         build/src/LIBCD/libcd.o(.bss);
         build/src/LIBSPU/libspu_voice.o(.bss);
         build/asm/LIBSPU_tail.o(.bss);
-        build/asm/Game/ENGINE.o(.text);
+        build/src/Game/ENGINE.o(.text);
         build/src/Game/ENGINE/prim_alloc.o(.text);
         build/asm/Game/ENGINE_40F0.o(.text);
         build/src/Game/ENGINE/stub_vibrate_off.o(.text);
@@ -182,7 +182,7 @@ SECTIONS
         main_DATA_START = .;
         build/asm/Game/ENGINE_boot.o(.data);
         build/src/Game/ENGINE/early_stub.o(.data);
-        build/asm/Game/ENGINE.o(.data);
+        build/src/Game/ENGINE.o(.data);
         build/asm/Game/OBJECT.o(.data);
         build/asm/data/Game/BOSS.rodata.o(.data);
         build/asm/Game/PLAYER.o(.data);
