@@ -260,7 +260,7 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 8: LIBCD — PSY-Q CD-ROM library
         // -----------------------------------------------------------------
-        c('73800', 'LIBCD/libcd'),
+        c('73800', 'libs/libcd'),
         // PROPOSED: PSY-Q *_OBJ_* symbol prefixes [L] mark real library object
         // boundaries. LIBCD spans several internal objects, and a LIBETC unit
         // (pad+vsync+intr) sits between LIBCD and LIBGPU:
@@ -276,7 +276,7 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 9: LIBGPU — PSY-Q GPU library
         // -----------------------------------------------------------------
-        asm('79AE4', 'LIBGPU'),
+        asm('79AE4', 'libs/libgpu'),
         // PROPOSED: this segment is the PSY-Q libgpu.lib body (~26KB ending at
         // LIBSPU's start at ROM 0x80260). PSY-Q libraries are archives of many
         // small .obj files marked by *_OBJ_* symbols [L]. Known anchors here
@@ -298,9 +298,9 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 10: LIBSPU — PSY-Q SPU library
         // -----------------------------------------------------------------
-        asm('80260', 'LIBSPU'),
-        c('80F24', 'LIBSPU/libspu_voice'),
-        asm('80FD0', 'LIBSPU_tail'),
+        asm('80260', 'libs/libspu'),
+        c('80F24', 'libs/libvoice'),
+        asm('80FD0', 'libs/libspu2'),
         // PROPOSED: LIBSPU is already partially carved (libspu_voice.c is
         // matched C, with asm head/tail pieces around it). Like LIBGPU above,
         // the head asm('80260') and tail asm('80FD0') correspond to multiple

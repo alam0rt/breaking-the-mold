@@ -282,23 +282,23 @@
   -
     - 473088
     - "c"
-    - "LIBCD/libcd"
+    - "libs/libcd"
   -
     - 498404
     - "asm"
-    - "LIBGPU"
+    - "libs/libgpu"
   -
     - 524896
     - "asm"
-    - "LIBSPU"
+    - "libs/libspu"
   -
     - 528164
     - "c"
-    - "LIBSPU/libspu_voice"
+    - "libs/libvoice"
   -
     - 528336
     - "asm"
-    - "LIBSPU_tail"
+    - "libs/libspu2"
   -
     - 528364
     - "data"
