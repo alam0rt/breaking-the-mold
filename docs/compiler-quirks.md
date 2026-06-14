@@ -50,6 +50,11 @@ compilers may diverge.
 
 ## Quirk 1: ALL function bodies are deferred to end-of-file (-O2)
 
+> **Update — root cause confirmed via GCC source:** the deferral is caused
+> by `-G > 0` (we have `-G8`), NOT `-O2`. With `-G 0` function bodies would
+> appear in source order. See "Root cause of Quirk 1" in the GCC source-level
+> validation section at the end of this document.
+
 This cc1 generation buffers every compiled function body and emits them
 *after* all streamed top-level `asm` blocks, regardless of source order.
 `INCLUDE_ASM(...)` expands to a top-level `asm` and streams immediately.
@@ -644,6 +649,14 @@ These apply to GCC 2.6.x–2.7.x on MIPS (graph-coloring register allocator).
 
 ### 6a: `>` vs `>=` selects `$at` vs `$v1`
 
+> **⚠️ Corrected: this is WRONG.** Isolated tests with the actual
+> `bin/cc1-psx-26` compiler show `>` and `>=` produce **byte-identical**
+> code. The CheckPointInBox/CheckBoxOverlap matches that originally motivated
+> this entry were actually due to Quirks 6h (goto) and 6e (load ordering).
+> See "Quirk 6a CORRECTED" in the GCC source-level validation section
+> below. The table that follows is misleading — keep this section as
+> historical record only.
+
 `slti` (set-less-than-immediate) is the only compare+branch primitive on
 MIPS. The compiler transforms comparisons:
 
@@ -787,3 +800,243 @@ commonly saves 1-2 instructions in the output.
 
 **Applies to:** CheckPointInBox — the `goto` pattern produced a byte-perfect
 match where multiple `return 0` statements did not.
+
+---
+
+## GCC 2.7.2 source-level validation (root-cause investigation)
+
+Cross-referenced the empirical quirks above against the actual GCC 2.7.2
+MIPS backend source at `~/projects/mips-gcc-2.7.2/`. Key files:
+- `config/mips/mips.c` — codegen helpers (`mips_move_1word`, `gen_int_relational`)
+- `config/mips/mips.h` — target macros (`ENCODE_SECTION_INFO`, `ASM_OUTPUT_EXTERNAL`)
+- `config/mips/mips.md` — RTL patterns and insns
+
+Each quirk validated by compiling minimal test programs with the actual
+`bin/cc1-psx-26` compiler and reading both the generated asm and the source
+code path that produced it.
+
+### Root cause of Quirk 1 (function deferral): it's `-G`, NOT `-O2`
+
+`mips.c:mips_asm_file_start` (line ~4150) opens a temporary file for the
+text section when `TARGET_GP_OPT` is set (i.e. `-G > 0`, which we have as
+`-G8`). All function bodies stream into this temp file. `mips_asm_file_end`
+(line ~4203) flushes accumulated `.extern symbol, size` declarations
+first, then `.text`, then concatenates the temp-file contents.
+
+The exact comment in `mips.h:3041-3047` explains why:
+
+> If we are optimizing to use the global pointer, create a temporary file
+> to hold all of the text stuff, and write it out to the end. This is
+> needed because the MIPS assembler is evidently one pass, and if it
+> hasn't seen the relevant .comm/.lcomm/.extern/.sdata declaration when
+> the code is processed, it generates a two instruction sequence.
+
+So function bodies appear after all top-level `asm()` blocks because GCC
+deferred ALL text to give the one-pass assembler a chance to learn symbol
+sizes before processing the code.
+
+**Implication:** removing `-G8` would put functions in source order, but
+would break every existing match that depends on GP-relative addressing.
+The `__maspsx_include_asm_hack` wrapper documented in Quirk 1 is the
+correct workaround — it makes INCLUDE_ASM blocks ride along inside the
+deferred function stream.
+
+### Quirk 2 mechanism: GCC emits `.extern X, size` + raw `sw $r, X`
+
+Test compilation of `extern int g_x; void w(int v){g_x=v;}` produces:
+
+```asm
+        .extern g_x, 4         # at top of file
+        ...
+write_x:
+        sw      $4,g_x         # direct SYMBOL_REF, no hi/lo, no $gp
+        j       $31
+```
+
+GCC's `mips_move_1word` (`mips.c:903`) emits the symbol-ref MEM operand
+verbatim. The assembler decides at assembly time whether to expand `sw
+$4,g_x` into:
+- 1 insn `sw $4, %gp_rel(g_x)($gp)` (if g_x size ≤ G_VALUE per `.extern`), or
+- 2 insns `lui $at,%hi(g_x); sw $4, %lo(g_x)($at)` (otherwise).
+
+`mips.h:ENCODE_SECTION_INFO` (line ~2541) sets `SYMBOL_REF_FLAG` only when
+`TARGET_GP_OPT && size <= mips_section_threshold`. This flag is only used
+internally (e.g. for `RTX_COSTS` — line 2696) — the actual address-mode
+selection happens at the assembler level.
+
+#### maspsx limitation around `.extern`
+
+There is a **limitation in `maspsx`** at
+`tools/maspsx/maspsx/__init__.py:467`. When it sees a `.extern X, 4`
+line, it does:
+
+```python
+if line.startswith(".extern"):
+    in_sdata = False
+    continue
+```
+
+It just continues without parsing the size, so the symbol never enters
+`self.sdata_entries` / `self.sbss_entries`. As a result, the later
+`%gp_rel` substitution in `process_lines` (~line 925) sees an unknown
+symbol and emits `lui+sw` instead of `sw $r, %gp_rel(X)($gp)`.
+
+This *initially* looks like why `LoadBLBHeader` fails to match: the
+target uses `sw $s0, %gp_rel(g_pGameState)($gp)` for one store, GCC
+emits `.extern g_pGameState, 4` + raw `sw $s0, g_pGameState`, and
+maspsx never classifies it as small data.
+
+**However, the naive fix (also classify any `.extern X, size<=8` as
+sbss) BREAKS the build.** Tested: adding code to parse `.extern` and
+add small symbols to `sbss_entries` caused linker errors:
+
+```
+relocation truncated to fit: R_MIPS_GPREL16 against `g_pBlbHeapBase'
+```
+
+This occurs in `src/Game/VEHICLE/vehicle.c` where `g_pBlbHeapBase`
+(also `extern void *`, also size 4) is accessed. Even though
+`g_pBlbHeapBase` *is* in `.sdata` at `gp+0` (so the relocation should
+fit), the link fails — likely because the linker tracks small-data
+symbol attributes per-relocation-record and a GPREL16 reloc emitted
+against a symbol the linker doesn't believe is small-data fails the
+check.
+
+In the ORIGINAL binary:
+- `g_pGameState` uses GP-rel for **exactly ONE** store in `LoadBLBHeader`
+  and `lui+lw` everywhere else
+- `g_pBlbHeapBase` uses `lui+lw` **everywhere** (no GP-rel)
+
+So ASPSX wasn't doing a blanket "size ≤ G_VALUE → always GP-rel" — it
+made per-instance decisions we don't fully understand. The most likely
+explanation: the ORIGINAL source declared these pointers differently in
+different translation units (e.g. as a larger struct in some files, as
+`void*` in others), changing the `.extern` size and hence the
+addressing mode per-file.
+
+**Recommendation:** do not patch maspsx. For matching individual
+functions that need GP-rel for small externs, either:
+1. Accept the local mismatch and use INCLUDE_ASM, or
+2. Declare the symbol with unknown size locally (`extern void *X[];`)
+   to suppress the `.extern X, 4` emission — which forces `lui+lw`.
+
+There's no clean way to force GP-rel for a single store without also
+forcing it for all other accesses in the same file.
+
+### Quirk 6a CORRECTED: `>` and `>=` produce IDENTICAL code
+
+Direct test:
+
+```c
+int check_ge(int x) { if (x >= 0x29) return 0; return 1; }
+int check_gt(int x) { if (x >  0x28) return 0; return 1; }
+```
+
+Both compile to the same byte sequence:
+
+```asm
+        slt     $2,$4,41    # ($4 < 41), 41 = 0x29
+        bne     $2,$0,$L4
+        ...
+```
+
+Inspection of `mips.c:gen_int_relational` (line 1735) shows the cmp_info
+table:
+
+```c
+{ LT,   -32769,  32766,  1,  1,  1,  0, 0 },   /* GT  -- const_add=1, reverse_regs=1, invert_const=1 */
+{ LT,   -32768,  32767,  0,  0,  1,  1, 0 },   /* GE  -- const_add=0, reverse_regs=0, invert_const=1 */
+```
+
+For `x > c` (GT): `const_add=1` adjusts cmp1 to c+1; `reverse_regs=1`
+only fires when cmp1 is REG (not CONST_INT); `invert_const=1` inverts on
+constant case. For `x >= c` (GE): identical except cmp1 isn't adjusted.
+
+Both ultimately emit `slt result, x, K` (where K = c+1 for GT, K = c for
+GE) with the same `invert` flag — and `convert_move(reg, gen_rtx(LT,
+cmp0, cmp1))` allocates the result to the SAME pseudo register. After
+register allocation, the destination register is identical.
+
+**Conclusion:** Quirk 6a as originally documented (table showing `$at`
+vs `$v1`) is **WRONG**. The match for CheckPointInBox/CheckBoxOverlap was
+actually due to Quirks 6h (goto) and 6e (load ordering), not the `>`/`>=`
+choice. Keep the trick as a thing to TRY, but the description of the
+mechanism is incorrect.
+
+### Quirk 6e confirmed: `a < b` vs `b > a` flips load order only
+
+```c
+int form_lt(R *a, R *b) { if (a->x < b->x) return 0; return 1; }
+int form_gt(R *a, R *b) { if (b->x > a->x) return 0; return 1; }
+```
+
+Output diff:
+
+```asm
+form_lt:                       form_gt:
+    lw $2,0($4)   # a->x          lw $3,0($5)   # b->x
+    lw $3,0($5)   # b->x          lw $2,0($4)   # a->x
+    slt $2,$2,$3                  slt $2,$2,$3   # IDENTICAL slt
+```
+
+The `slt` itself is byte-identical (`slt $2, $2, $3`). Only the two `lw`
+instructions swap order. This is genuinely useful when a target binary
+loads operands in a specific order — flip the comparison sense and
+operand order in the C source to match.
+
+### Quirk 6h confirmed and explained at insn level
+
+Test case (matching CheckPointInBox shape):
+
+```c
+int returns_only(Box *b, int px, int py) {
+    if (px < b->x1) return 0;
+    if (b->x2 < px) return 0;
+    if (py < b->y1) return 0;
+    if (b->y2 < py) return 0;
+    return 1;
+}
+
+int goto_actual(Box *b, int px, int py) {
+    if (px < b->x1) goto out;
+    if (b->x2 < px) goto out;
+    if (py < b->y1) goto out;
+    if (b->y2 < py) goto out;
+    return 1;
+out:
+    return 0;
+}
+```
+
+`returns_only`: every `slt` writes to **$2** ($v0); each `bne` has
+`move $2,$0` in its delay slot (sets return value to 0 for the early-out).
+
+`goto_actual`: first 3 `slt`s write to **$3** ($v1); first `bne`'s delay
+slot has `move $2,$0` (sets $v0=0 ONCE, kept live across all early-outs);
+final `slt $2,$2,$6` + `xori $2,$2,1` uses $v0 because that's the
+"fall-through to return 1" path that owns $v0.
+
+Mechanism: with single-exit `goto out`, register allocator sees that $v0
+must hold 0 across all early-out branches. It hoists `move $v0,$0` into
+the first branch's delay slot (a free slot anyway) and then keeps $v0
+live-with-value-0 across the rest of the function. Comparison temps are
+forced into $v1 to avoid clobbering $v0.
+
+This also explains the "saves 1-2 instructions" claim: the second/third
+delay slots no longer need `move $v0,$0` (already live), so the assembler
+can pack `lw` for the next check directly into them.
+
+### Practical decompiler workflow updates
+
+Based on these source-level findings:
+
+1. **Always try `goto out` for multi-early-out functions returning a constant**
+   — this is now confirmed as a deterministic codegen technique, not voodoo.
+2. **`>` vs `>=` is a NO-OP at codegen level** — only useful as a side-effect
+   of changing operand evaluation order (which is what 6e actually controls).
+3. **`.extern X, 4` maspsx limitation**: when matching a function that
+   accesses small externs in a way the target uses GP-rel, accept the
+   INCLUDE_ASM stub. Don't try to fix maspsx — the linker rejects naive
+   GPREL16 relocs against symbols it doesn't consider small-data.
+4. **`-G8` is structural** — removing it changes function ordering AND
+   addressing modes globally. Don't touch.
