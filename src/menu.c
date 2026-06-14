@@ -56,7 +56,12 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitMenuButtonEntity);
  * event id 2 triggers EntityProcessCallbackQueue, which consumes the
  * queued MenuSetEntityIdle2 transition that returns the highlight to
  * its resting sprite after the activation flash. */
-INCLUDE_ASM("asm/nonmatchings/menu", MenuButtonCallback);
+s32 MenuButtonCallback(Entity *entity, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(entity);
+    }
+    return 0;
+}
 
 /* Primes a freshly-built button highlight with the press-flash sequence.
  * Installs MenuButtonCallback at +0x08/+0x0C, sets the current sprite
