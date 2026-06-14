@@ -25,6 +25,19 @@ extern u8 D_8009CBE8[]; /* menu-button-highlight sprite table */
 extern s32 GetWorldPositionX(Entity *entity, s16 localX);
 extern s32 GetWorldPositionY(Entity *entity, s16 localY);
 
+/* GP-rel unlock: this small global lives in the shared .sdata blob
+ * (96154.sdata.o) as a strong .globl definition. The ORIGINAL menu.o
+ * referenced it via a single `sb $v0, %gp_rel(D_800A6045)($gp)`. cc1+maspsx
+ * only emit %gp_rel for symbols seen as small-data IN THIS TU
+ * (.comm/.sdata/.sbss); a plain `extern` leaves the bare symbol form, which
+ * GNU as expands to a 2-instruction absolute lui+sb (shelving everything
+ * that touches it). Declaring it as a tentative def here makes cc1 emit
+ * `.comm D_800A6045,1`; with maspsx --use-comm-section (menu.o-only Makefile
+ * override) that stays a GLOBAL common symbol, so the blob's strong def wins
+ * at link time (no extra bytes allocated, value unchanged) while maspsx now
+ * emits the matching %gp_rel store. See memories/repo/gp-rel-extern-blocker.md. */
+u8 D_800A6045; /* menu select/confirm SFX debounce flag */
+
 /* Forward decls for in-TU helpers used by Setup*Animation before their
  * own definitions appear below. */
 void MenuSetEntityIdle2(Entity *entity);
@@ -275,15 +288,11 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateButton);
 /* Plays the confirm/select SFX (PlaySoundEffect(0x90810000, 0xA0, 0))
  * unconditionally and sets the gp-relative debounce byte D_800A6045 to
  * 1 so the *IfEnabled variants below know a sound has already been
- * issued this frame.
- *
- * SHELVED: writes to D_800A6045 which is a loose extern in this TU. cc1
- * emits `sb $v0, D_800A6045` (bare symbol), maspsx's gp_rel rewriter
- * only fires for symbols defined via .comm/.lcomm/.sdata in THIS TU,
- * so the store gets resolved as absolute `lui $at; sb $v0, %lo(...)`
- * (2 instructions instead of 1) and every later instruction shifts by
- * 4 bytes. See memories/repo/gp-rel-extern-blocker.md. */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_PlayConfirmSound);
+ * issued this frame. (Unlocked: see the D_800A6045 .comm note above.) */
+void Menu_PlayConfirmSound(void) {
+    PlaySoundEffect(0x90810000, 0xA0, 0);
+    D_800A6045 = 1;
+}
 
 /* Builds a password-screen button via
  * InitEntitySprite(entity, 0x10094096, 0x3E8, x, y, 0). Sets vtable
@@ -328,21 +337,25 @@ INCLUDE_ASM("asm/nonmatchings/menu", FINN_ClearSubentityState);
  * InitMenuPasswordButton) is nonzero, calls
  * PlaySoundEffect(0x90810000, 0xA0, 0) and copies that type byte into
  * the gp-relative D_800A6045 debounce flag. Lets only "real" buttons
- * (non-zero type) emit the click sound.
- *
- * SHELVED: writes to D_800A6045 (loose extern). Same gp_rel-extern
- * blocker as Menu_PlayConfirmSound. */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_PlaySelectSoundIfEnabled);
+ * (non-zero type) emit the click sound. (Unlocked: D_800A6045 .comm.) */
+void Menu_PlaySelectSoundIfEnabled(Entity *entity) {
+    if (*((u8 *)entity + 0x108) != 0) {
+        PlaySoundEffect(0x90810000, 0xA0, 0);
+        D_800A6045 = *((u8 *)entity + 0x108);
+    }
+}
 
 /* Conditional confirm-SFX helper. If entity+0x109 (the back-flag byte
  * set by InitMenuPasswordButton) is nonzero, calls
  * PlaySoundEffect(0x90810000, 0xA0, 0) and writes 1 to D_800A6045.
  * Used so only the password screen's "back/confirm" button actually
- * fires the confirm sound.
- *
- * SHELVED: writes to D_800A6045 (loose extern). Same gp_rel-extern
- * blocker as Menu_PlayConfirmSound. */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_PlayConfirmSoundIfEnabled);
+ * fires the confirm sound. (Unlocked: D_800A6045 .comm.) */
+void Menu_PlayConfirmSoundIfEnabled(Entity *entity) {
+    if (*((u8 *)entity + 0x109) != 0) {
+        PlaySoundEffect(0x90810000, 0xA0, 0);
+        D_800A6045 = 1;
+    }
+}
 
 /* Builds the level-picker button. Main body:
  * InitEntitySprite(0x10094096, z=0x3E8) -> vtable D_80012034 ->

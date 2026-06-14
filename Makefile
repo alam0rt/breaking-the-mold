@@ -315,6 +315,12 @@ $(BUILD_DIR)/%.o: %.bin | $(BUILD_DIR)/
 # No overrides are active by default.
 $(BUILD_DIR)/src/anim.o: MASPSX_EXTRA_FLAGS := --expand-div
 
+# menu.c defines small globals (e.g. D_800A6045) as tentative defs so cc1+maspsx
+# emit single-instruction %gp_rel stores matching the original. --use-comm-section
+# keeps them as GLOBAL .comm symbols (overridden by the .sdata blob's strong def
+# at link time) instead of local .sbss defs. See gp-rel-extern-blocker memory.
+$(BUILD_DIR)/src/menu.o: MASPSX_EXTRA_FLAGS := --use-comm-section
+
 # -----------------------------------------------------------------------------
 # Linking
 # -----------------------------------------------------------------------------
