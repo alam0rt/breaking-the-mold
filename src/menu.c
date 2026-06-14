@@ -452,7 +452,12 @@ void Menu_DecrementAndPlaySound(Entity *entity) {
  * TPage via GetTPage, sets zOrder 0x4B0, stores it at +0x10C, adds it
  * to the render list, then SetAnimationActive(child,0) and
  * SetAnimationFrameIndex(child, *(u8*)(+0x108)) so the icon starts on
- * the current value frame. */
+ * the current value frame.
+ *
+ * SHELVED: same jal-delay-slot scheduling diff as
+ * InitMenuLevelSelectButton -- original puts +0x108 store in the
+ * AllocateFromHeap delay slot, ours would group it with the vtable
+ * store. Permuter candidate; same fix should work for both. */
 INCLUDE_ASM("asm/nonmatchings/menu", InitMenuSkullIconButton);
 
 /* Skull-icon counterpart of MenuActivateButtonWithReset -- same body:
