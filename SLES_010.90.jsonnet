@@ -125,7 +125,7 @@ local bss(start, kind, vram) = {
         // lifecycle, resource management, vtable definitions.
         // -----------------------------------------------------------------
         asm('800', 'Game/ENGINE_boot'),        // hand-written memset, RLE decode
-        c('B1C', 'Game/ENGINE/early_stub'),
+        c('B1C', 'crt0stub'),
         rodata('B24', 'Game/ENGINE'),          // entity vtables (16 archetype tables)
         rodata('E2C', 'Game/OBJECT'),
         rodata('1E28', 'Game/BOSS'),
@@ -140,18 +140,18 @@ local bss(start, kind, vram) = {
         // --- .text ---
 
         // UNIT 1 continued (text body)
-        c('39F0', 'Game/ENGINE'),              // graphics init, OT clear, buffer swap
-        c('3EC8', 'Game/ENGINE/prim_alloc'),   // AllocPrim20..AllocPrim36 (7 funcs)
+        c('39F0', 'gfx'),                      // graphics init, OT clear, buffer swap
+        c('3EC8', 'prim'),                     // AllocPrim20..AllocPrim36 (7 funcs)
         asm('40F0', 'Game/ENGINE_40F0'),       // AllocateVRAMSlot onward
-        c('5C34', 'Game/ENGINE/stub_vibrate_off'),
+        c('5C34', 'vibrate'),
         asm('5C3C', 'Game/ENGINE_5C3C'),       // render init, tilemap, sprite context
-        c('909C', 'Game/ENGINE/sprite_accessors'),
-        c('954C', 'Game/ENGINE/empty_stub_18d4c'),
+        c('909C', 'spracc'),
+        c('954C', 'nullfn'),
         asm('9554', 'Game/ENGINE_9554'),       // menu entity init, sprite object
-        c('A8C8', 'Game/ENGINE/entity_system'),  // entity system core
-        c('D880', 'Game/ENGINE/sprite_setters'),
-        c('D8C0', 'Game/ENGINE/animation_setters'),     // 0x8001D8C0 anim/sprite setters body
-        c('11048', 'Game/ENGINE/blb_runtime'),          // 0x80020848 BLB load + entity lifecycle [A]
+        c('A8C8', 'entity'),                   // entity system core
+        c('D880', 'sprset'),
+        c('D8C0', 'anim'),                     // 0x8001D8C0 anim/sprite setters body
+        c('11048', 'blb'),                     // 0x80020848 BLB load + entity lifecycle [A]
         // UNIT 1 split applied 2026-06-14: animation_setters had mixed addressing
         // [A] for g_pGameState (LoadBLBHeader @ 0x800208B0 used gp_rel, all 255
         // other references used lui+lw). The BLB-helper cluster

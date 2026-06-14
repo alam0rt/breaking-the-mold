@@ -31,7 +31,7 @@ void *InitEntityWithTable(void *entity) {
     return entity;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", LoadBLBHeader);
+INCLUDE_ASM("asm/nonmatchings/blb", LoadBLBHeader);
 
 void DestroyEntity(u8 *entity, s32 flags) {
     *(s32 *)(entity + 0x18) = (s32)g_EntityVtable_SimpleDestruct;
@@ -60,13 +60,13 @@ void RemoveFromUpdateQueue(u8 *entity) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", RemoveFromZOrderList);
+INCLUDE_ASM("asm/nonmatchings/blb", RemoveFromZOrderList);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", EntityTickLoopWithCamera);
+INCLUDE_ASM("asm/nonmatchings/blb", EntityTickLoopWithCamera);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", DeferredEntityRemoval);
+INCLUDE_ASM("asm/nonmatchings/blb", DeferredEntityRemoval);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", EntityRemoval);
+INCLUDE_ASM("asm/nonmatchings/blb", EntityRemoval);
 
 // lint:ok - common.h doesn't include entity.h, local definition needed
 typedef struct EntityListNode {
@@ -93,6 +93,6 @@ void EntityTickLoop(EntityListHead *list) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", RenderEntities);
+INCLUDE_ASM("asm/nonmatchings/blb", RenderEntities);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/blb_runtime", EntityDestructCallback);
+INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructCallback);

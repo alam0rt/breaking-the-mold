@@ -149,7 +149,7 @@ void func_8001D268(AnimEntity *entity, u8 value) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TickEntityAnimation);
+INCLUDE_ASM("asm/nonmatchings/anim", TickEntityAnimation);
 
 typedef struct AdvAnimState {
     u8 pad_D8[0xD8];
@@ -188,15 +188,15 @@ void AdvanceAnimationFrame(AdvAnimState *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", ApplyPendingSpriteState);
+INCLUDE_ASM("asm/nonmatchings/anim", ApplyPendingSpriteState);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateSpriteFrameData);
+INCLUDE_ASM("asm/nonmatchings/anim", UpdateSpriteFrameData);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateEntityRender);
+INCLUDE_ASM("asm/nonmatchings/anim", UpdateEntityRender);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UploadEntityTextureIfDirty);
+INCLUDE_ASM("asm/nonmatchings/anim", UploadEntityTextureIfDirty);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", FindFrameIndexByValue);
+INCLUDE_ASM("asm/nonmatchings/anim", FindFrameIndexByValue);
 
 extern void StepAnimationSequence(void *entity);
 
@@ -207,15 +207,15 @@ void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame) {
     StepAnimationSequence(entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", StepAnimationSequence);
+INCLUDE_ASM("asm/nonmatchings/anim", StepAnimationSequence);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityProcessCallbackQueue);
+INCLUDE_ASM("asm/nonmatchings/anim", EntityProcessCallbackQueue);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntitySetState);
+INCLUDE_ASM("asm/nonmatchings/anim", EntitySetState);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntitySetCallback);
+INCLUDE_ASM("asm/nonmatchings/anim", EntitySetCallback);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderContext_Standard);
+INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Standard);
 
 void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     u8 *resource;
@@ -230,9 +230,9 @@ void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateParallaxScrollWithWrap_Standard);
+INCLUDE_ASM("asm/nonmatchings/anim", UpdateParallaxScrollWithWrap_Standard);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderContext_Medium);
+INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Medium);
 
 void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     u8 *resource;
@@ -247,9 +247,9 @@ void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateParallaxScrollWithWrap_Medium);
+INCLUDE_ASM("asm/nonmatchings/anim", UpdateParallaxScrollWithWrap_Medium);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerRenderContext_Small);
+INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Small);
 
 void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     u8 *resource;
@@ -264,9 +264,9 @@ void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateParallaxScrollWithWrap_Small);
+INCLUDE_ASM("asm/nonmatchings/anim", UpdateParallaxScrollWithWrap_Small);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitLayerScrollContext);
+INCLUDE_ASM("asm/nonmatchings/anim", InitLayerScrollContext);
 
 void FreeResourceType4(void *entity, s32 flags) {
     u8 *resource;
@@ -281,15 +281,15 @@ void FreeResourceType4(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityTick_AnimationFrameAdvance);
+INCLUDE_ASM("asm/nonmatchings/anim", EntityTick_AnimationFrameAdvance);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_8001FC40);
+INCLUDE_ASM("asm/nonmatchings/anim", func_8001FC40);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", UpdateEntityScreenPositionWithPalette);
+INCLUDE_ASM("asm/nonmatchings/anim", UpdateEntityScreenPositionWithPalette);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InitPlayerEntity);
+INCLUDE_ASM("asm/nonmatchings/anim", InitPlayerEntity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", EntityApplyMovementCallbacks);
+INCLUDE_ASM("asm/nonmatchings/anim", EntityApplyMovementCallbacks);
 
 void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
     u8 *child;
@@ -574,9 +574,9 @@ void *func_80020424(void *dst, void *src) {
     return dst;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", GetEntityYPosition);
+INCLUDE_ASM("asm/nonmatchings/anim", GetEntityYPosition);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", GetEntityXPosition);
+INCLUDE_ASM("asm/nonmatchings/anim", GetEntityXPosition);
 
 s16 func_80020588(EntityAccessorView *e) {
     return e->field_6A;
@@ -594,19 +594,19 @@ void func_800205AC(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)((u8 *)e + 0x2C) = val;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TransformYCoord);
+INCLUDE_ASM("asm/nonmatchings/anim", TransformYCoord);
 
 void func_80020668(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)((u8 *)e + 0x24) = val;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TransformXCoord);
+INCLUDE_ASM("asm/nonmatchings/anim", TransformXCoord);
 
 void func_80020724(EntityAccessorView *e, S32Pair val) {
     *(S32Pair *)((u8 *)e + 0x1C) = val;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InvokeEntityRenderCallback);
+INCLUDE_ASM("asm/nonmatchings/anim", InvokeEntityRenderCallback);
 
 u16 func_800207C8(EntityAccessorView *e) {
     return e->field_2C;

@@ -1,7 +1,7 @@
 build/SLES_010.90.elf: \
     build/asm/header.o \
     build/asm/Game/ENGINE_boot.o \
-    build/src/Game/ENGINE/early_stub.o \
+    build/src/crt0stub.o \
     build/asm/data/Game/ENGINE.rodata.o \
     build/asm/data/Game/OBJECT.rodata.o \
     build/asm/data/Game/BOSS.rodata.o \
@@ -12,17 +12,18 @@ build/SLES_010.90.elf: \
     build/asm/data/LIBCD.rodata.o \
     build/asm/data/LIBGPU.rodata.o \
     build/asm/data/LIBSPU.rodata.o \
-    build/src/Game/ENGINE/prim_alloc.o \
+    build/src/gfx.o \
+    build/src/prim.o \
     build/asm/Game/ENGINE_40F0.o \
-    build/src/Game/ENGINE/stub_vibrate_off.o \
+    build/src/vibrate.o \
     build/asm/Game/ENGINE_5C3C.o \
-    build/src/Game/ENGINE/sprite_accessors.o \
-    build/src/Game/ENGINE/empty_stub_18d4c.o \
+    build/src/spracc.o \
+    build/src/nullfn.o \
     build/asm/Game/ENGINE_9554.o \
-    build/src/Game/ENGINE/entity_system.o \
-    build/src/Game/ENGINE/sprite_setters.o \
-    build/src/Game/ENGINE/animation_setters.o \
-    build/src/Game/ENGINE/blb_runtime.o \
+    build/src/entity.o \
+    build/src/sprset.o \
+    build/src/anim.o \
+    build/src/blb.o \
     build/asm/Game/OBJECT/hud.o \
     build/asm/Game/OBJECT/entity_dtor.o \
     build/asm/Game/OBJECT/decor.o \
@@ -55,7 +56,6 @@ build/SLES_010.90.elf: \
     build/src/LIBCD/libcd.o \
     build/src/LIBSPU/libspu_voice.o \
     build/asm/LIBSPU_tail.o \
-    build/src/Game/ENGINE.o \
     build/asm/Game/PLAYER.o \
     build/asm/Game/MAIN.o \
     build/asm/LIBGPU.o \
@@ -66,7 +66,7 @@ build/SLES_010.90.elf: \
     build/asm/data/96920.bss.o
 build/asm/header.o:
 build/asm/Game/ENGINE_boot.o:
-build/src/Game/ENGINE/early_stub.o:
+build/src/crt0stub.o:
 build/asm/data/Game/ENGINE.rodata.o:
 build/asm/data/Game/OBJECT.rodata.o:
 build/asm/data/Game/BOSS.rodata.o:
@@ -77,17 +77,18 @@ build/asm/data/Game/MAIN.rodata.o:
 build/asm/data/LIBCD.rodata.o:
 build/asm/data/LIBGPU.rodata.o:
 build/asm/data/LIBSPU.rodata.o:
-build/src/Game/ENGINE/prim_alloc.o:
+build/src/gfx.o:
+build/src/prim.o:
 build/asm/Game/ENGINE_40F0.o:
-build/src/Game/ENGINE/stub_vibrate_off.o:
+build/src/vibrate.o:
 build/asm/Game/ENGINE_5C3C.o:
-build/src/Game/ENGINE/sprite_accessors.o:
-build/src/Game/ENGINE/empty_stub_18d4c.o:
+build/src/spracc.o:
+build/src/nullfn.o:
 build/asm/Game/ENGINE_9554.o:
-build/src/Game/ENGINE/entity_system.o:
-build/src/Game/ENGINE/sprite_setters.o:
-build/src/Game/ENGINE/animation_setters.o:
-build/src/Game/ENGINE/blb_runtime.o:
+build/src/entity.o:
+build/src/sprset.o:
+build/src/anim.o:
+build/src/blb.o:
 build/asm/Game/OBJECT/hud.o:
 build/asm/Game/OBJECT/entity_dtor.o:
 build/asm/Game/OBJECT/decor.o:
@@ -120,7 +121,6 @@ build/src/Game/MAIN/memmove.o:
 build/src/LIBCD/libcd.o:
 build/src/LIBSPU/libspu_voice.o:
 build/asm/LIBSPU_tail.o:
-build/src/Game/ENGINE.o:
 build/asm/Game/PLAYER.o:
 build/asm/Game/MAIN.o:
 build/asm/LIBGPU.o:
@@ -129,4 +129,4 @@ build/asm/data/80FEC.data.o:
 build/asm/data/96154.sdata.o:
 build/asm/data/96920.sbss.o:
 build/asm/data/96920.bss.o:
--include build/asm/header.d build/asm/Game/ENGINE_boot.d build/src/Game/ENGINE/early_stub.d build/asm/data/Game/ENGINE.rodata.d build/asm/data/Game/OBJECT.rodata.d build/asm/data/Game/BOSS.rodata.d build/asm/data/Game/PLAYER.rodata.d build/asm/data/Game/PLAYER_STATES.rodata.d build/asm/data/Game/VEHICLE/vehicle.rodata.d build/asm/data/Game/MAIN.rodata.d build/asm/data/LIBCD.rodata.d build/asm/data/LIBGPU.rodata.d build/asm/data/LIBSPU.rodata.d build/src/Game/ENGINE/prim_alloc.d build/asm/Game/ENGINE_40F0.d build/src/Game/ENGINE/stub_vibrate_off.d build/asm/Game/ENGINE_5C3C.d build/src/Game/ENGINE/sprite_accessors.d build/src/Game/ENGINE/empty_stub_18d4c.d build/asm/Game/ENGINE_9554.d build/src/Game/ENGINE/entity_system.d build/src/Game/ENGINE/sprite_setters.d build/src/Game/ENGINE/animation_setters.d build/src/Game/ENGINE/blb_runtime.d build/asm/Game/OBJECT/hud.d build/asm/Game/OBJECT/entity_dtor.d build/asm/Game/OBJECT/decor.d build/asm/Game/OBJECT/collectibles.d build/asm/Game/OBJECT/effects.d build/asm/Game/OBJECT/cd.d build/asm/Game/OBJECT/movie.d build/asm/Game/OBJECT/enemies.d build/asm/Game/OBJECT/bosses.d build/src/Game/BOSS/clayball_platform.d build/src/Game/PLAYER/player.d build/asm/Game/PLAYER/finn.d build/src/Game/PLAYER/destructor_spu_at10c.d build/src/Game/PLAYER_STATES/player_states.d build/asm/Game/UI/menu.d build/asm/Game/UI/password.d build/asm/Game/UI/hud_results.d build/asm/Game/UI/ending.d build/asm/Game/MAIN/level.d build/asm/Game/MAIN/blb_accessors.d build/asm/Game/AUDIO/sound.d build/asm/Game/MAIN/gamestate.d build/src/Game/MAIN/level_load.d build/src/Game/MAIN/entity_init.d build/src/Game/MAIN/main.d build/src/Game/VEHICLE/static_game_state.d build/src/Game/VEHICLE/empty_callbacks.d build/src/Game/MAIN/blb_memory.d build/src/Game/MAIN/memmove.d build/src/LIBCD/libcd.d build/src/LIBSPU/libspu_voice.d build/asm/LIBSPU_tail.d build/src/Game/ENGINE.d build/asm/Game/PLAYER.d build/asm/Game/MAIN.d build/asm/LIBGPU.d build/asm/LIBSPU.d build/asm/data/80FEC.data.d build/asm/data/96154.sdata.d build/asm/data/96920.sbss.d build/asm/data/96920.bss.d
+-include build/asm/header.d build/asm/Game/ENGINE_boot.d build/src/crt0stub.d build/asm/data/Game/ENGINE.rodata.d build/asm/data/Game/OBJECT.rodata.d build/asm/data/Game/BOSS.rodata.d build/asm/data/Game/PLAYER.rodata.d build/asm/data/Game/PLAYER_STATES.rodata.d build/asm/data/Game/VEHICLE/vehicle.rodata.d build/asm/data/Game/MAIN.rodata.d build/asm/data/LIBCD.rodata.d build/asm/data/LIBGPU.rodata.d build/asm/data/LIBSPU.rodata.d build/src/gfx.d build/src/prim.d build/asm/Game/ENGINE_40F0.d build/src/vibrate.d build/asm/Game/ENGINE_5C3C.d build/src/spracc.d build/src/nullfn.d build/asm/Game/ENGINE_9554.d build/src/entity.d build/src/sprset.d build/src/anim.d build/src/blb.d build/asm/Game/OBJECT/hud.d build/asm/Game/OBJECT/entity_dtor.d build/asm/Game/OBJECT/decor.d build/asm/Game/OBJECT/collectibles.d build/asm/Game/OBJECT/effects.d build/asm/Game/OBJECT/cd.d build/asm/Game/OBJECT/movie.d build/asm/Game/OBJECT/enemies.d build/asm/Game/OBJECT/bosses.d build/src/Game/BOSS/clayball_platform.d build/src/Game/PLAYER/player.d build/asm/Game/PLAYER/finn.d build/src/Game/PLAYER/destructor_spu_at10c.d build/src/Game/PLAYER_STATES/player_states.d build/asm/Game/UI/menu.d build/asm/Game/UI/password.d build/asm/Game/UI/hud_results.d build/asm/Game/UI/ending.d build/asm/Game/MAIN/level.d build/asm/Game/MAIN/blb_accessors.d build/asm/Game/AUDIO/sound.d build/asm/Game/MAIN/gamestate.d build/src/Game/MAIN/level_load.d build/src/Game/MAIN/entity_init.d build/src/Game/MAIN/main.d build/src/Game/VEHICLE/static_game_state.d build/src/Game/VEHICLE/empty_callbacks.d build/src/Game/MAIN/blb_memory.d build/src/Game/MAIN/memmove.d build/src/LIBCD/libcd.d build/src/LIBSPU/libspu_voice.d build/asm/LIBSPU_tail.d build/asm/Game/PLAYER.d build/asm/Game/MAIN.d build/asm/LIBGPU.d build/asm/LIBSPU.d build/asm/data/80FEC.data.d build/asm/data/96154.sdata.d build/asm/data/96920.sbss.d build/asm/data/96920.bss.d

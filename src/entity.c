@@ -11,7 +11,7 @@ extern void ZeroEntityField(void *field);
 extern void InitEntityAnimationState(SpriteEntity *entity);
 extern void CalculateEntityScreenBounds(Entity *entity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityStruct);
+INCLUDE_ASM("asm/nonmatchings/entity", InitEntityStruct);
 
 void FreeWithCallback(Entity *entity, s32 flags) {
     void *ctx = entity->spriteContext;
@@ -50,11 +50,11 @@ s32 GetWorldPositionY(Entity *entity, s16 localY) {
     return (s32)localY + (s32)g_pGameState->camera_y;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CalculateParallaxXOffset);
+INCLUDE_ASM("asm/nonmatchings/entity", CalculateParallaxXOffset);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CalculateParallaxXOffsetAlt);
+INCLUDE_ASM("asm/nonmatchings/entity", CalculateParallaxXOffsetAlt);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", WorldToScreenX);
+INCLUDE_ASM("asm/nonmatchings/entity", WorldToScreenX);
 
 s32 WorldToScreenYWithParallax(Entity *entity, s16 value) {
     if (entity->scalePowerupY == 0x10000) {
@@ -75,9 +75,9 @@ void GetEntityScreenBounds(Entity *entity, s16 *out) {
     __builtin_memcpy(out, &entity->screenX1, 8);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CalculateEntityScreenBounds);
+INCLUDE_ASM("asm/nonmatchings/entity", CalculateEntityScreenBounds);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CalculateEntityRenderBounds);
+INCLUDE_ASM("asm/nonmatchings/entity", CalculateEntityRenderBounds);
 
 void SetEntityFacingDirection(Entity *entity, u8 direction) {
     if (direction == 2) {
@@ -95,7 +95,7 @@ void func_8001AAE4(Entity *entity, u8 direction) {
     entity->textureDirty = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", UpdateParallaxLayerPosition);
+INCLUDE_ASM("asm/nonmatchings/entity", UpdateParallaxLayerPosition);
 
 void func_8001B344(Entity *entity) {
     if (entity->textureDirty) {
@@ -125,37 +125,37 @@ s32 CheckBoxOverlap(Entity *entity, BoxCorner minCorner, BoxCorner maxCorner) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CollisionCheckWrapper);
+INCLUDE_ASM("asm/nonmatchings/entity", CollisionCheckWrapper);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityBroadcastBoxCollision);
+INCLUDE_ASM("asm/nonmatchings/entity", EntityBroadcastBoxCollision);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckEntityPointCollisionWithOffsets);
+INCLUDE_ASM("asm/nonmatchings/entity", CheckEntityPointCollisionWithOffsets);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityBroadcastPointCollision);
+INCLUDE_ASM("asm/nonmatchings/entity", EntityBroadcastPointCollision);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CheckEntityBoxCollision);
+INCLUDE_ASM("asm/nonmatchings/entity", CheckEntityBoxCollision);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffScreen);
+INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffScreen);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffscreenLeft);
+INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenLeft);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffscreenLeftSimple);
+INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenLeftSimple);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsPositionOffscreenLeft);
+INCLUDE_ASM("asm/nonmatchings/entity", IsPositionOffscreenLeft);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffscreenRight);
+INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenRight);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffscreenRightSimple);
+INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenRightSimple);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsPositionOffscreenRight);
+INCLUDE_ASM("asm/nonmatchings/entity", IsPositionOffscreenRight);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", IsEntityOffScreenY);
+INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffScreenY);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", SetupEntityScaleCallbacks);
+INCLUDE_ASM("asm/nonmatchings/entity", SetupEntityScaleCallbacks);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", PlayEntityPositionSound);
+INCLUDE_ASM("asm/nonmatchings/entity", PlayEntityPositionSound);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", UpdateEntitySoundPanning);
+INCLUDE_ASM("asm/nonmatchings/entity", UpdateEntitySoundPanning);
 
 SpriteEntity *InitFullEntityWithAnimation(SpriteEntity *entity, s16 allocSize) {
     InitEntityStruct(&entity->base, allocSize);
@@ -166,11 +166,11 @@ SpriteEntity *InitFullEntityWithAnimation(SpriteEntity *entity, s16 allocSize) {
     return entity;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntitySprite);
+INCLUDE_ASM("asm/nonmatchings/entity", InitEntitySprite);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityWithSprite);
+INCLUDE_ASM("asm/nonmatchings/entity", InitEntityWithSprite);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", InitEntityAnimationState);
+INCLUDE_ASM("asm/nonmatchings/entity", InitEntityAnimationState);
 
 void DestroyEntityAndFreeMemory(SpriteEntity *entity, s32 flags) {
     entity->base.collisionVtable = g_EntityVtable_SpriteBase;
@@ -206,7 +206,7 @@ extern void TickEntityAnimation(SpriteEntity *entity);
 extern void ApplyPendingSpriteState(SpriteEntity *entity);
 extern void UpdateSpriteFrameData(SpriteEntity *entity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", EntityUpdateCallback);
+INCLUDE_ASM("asm/nonmatchings/entity", EntityUpdateCallback);
 
 void ApplyAnimationPositionOffsets(SpriteEntity *entity) {
     if (entity->base.facing) {
@@ -235,9 +235,9 @@ void InitEntitySpriteAndPixelBuffer(SpriteEntity *entity, s16 width, s16 height,
     entity->pPixelBuffer = AllocateFromHeap(g_pBlbHeapBase, 1, size, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", AllocSpriteRenderContext);
+INCLUDE_ASM("asm/nonmatchings/entity", AllocSpriteRenderContext);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CreateMultiFrameRenderContext);
+INCLUDE_ASM("asm/nonmatchings/entity", CreateMultiFrameRenderContext);
 
 extern void *InitSpriteContextDefaults(void *ctx, s16 spriteId);
 
