@@ -750,7 +750,26 @@ void LoadLevelSpriteAssets(void *arg) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GetSlopeHeightAtSubpixel);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SetPlayerVehicleSpeed);
+void SetPlayerVehicleSpeed(void *entity, s32 speed) {
+    void *other;
+    u8 *ptr;
+    *(s32 *)((u8 *)entity + 0x140) = speed;
+    if (*(void **)((u8 *)entity + 0x2C)) {
+        ptr = (u8 *)entity + 0x84;
+        if (GetLevelFlags(ptr) & 0x400) goto store;
+        if (GetLevelFlags(ptr) & 0x200) goto store;
+        if (GetLevelFlags(ptr) & 0x2000) goto store;
+        if (GetLevelFlags(ptr) & 0x100) goto store;
+        if (GetLevelFlags(ptr) & 0x10) goto store;
+        GetLevelFlags(ptr);
+store:
+        *(s32 *)((u8 *)(*(void **)((u8 *)entity + 0x2C)) + 0x100) = *(s32 *)((u8 *)entity + 0x140);
+    }
+    other = *(void **)((u8 *)entity + 0x14C);
+    if (other) {
+        *(s32 *)((u8 *)other + 0x1C) = *(s32 *)((u8 *)entity + 0x140);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnEntitiesAlternateSystem);
 
