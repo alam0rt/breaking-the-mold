@@ -10,6 +10,11 @@ extern void ApplyAudioSettings(void *audioCtx);
 extern s32 rand(void);
 extern void InitRunnLevelEntity(Entity *entity);
 
+/* Forward decls for in-TU helpers used by Setup*Animation before their
+ * own definitions appear below. */
+void MenuSetEntityIdle2(Entity *entity);
+void TimerEntityTick(Entity *entity);
+
 /* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
  * by the menu set-idle helpers. Wrapped in a padded 2-element array to
  * reproduce the 4-byte stack hole + 8 bytes of trailing scratch in the
@@ -117,7 +122,12 @@ s32 MenuButtonCallback(Entity *entity, u32 event) {
  * Installs MenuButtonCallback at +0x08/+0x0C, sets the current sprite
  * id to 0x63848E59 (highlighted), and queues MenuSetEntityIdle2 at
  * +0x98/+0x9C so the next callback-queue dispatch settles back to the
- * idle sprite. */
+ * idle sprite.
+ *
+ * SHELVED: Quirk-5 lui-hoist scheduling diff. Same family as
+ * MenuActivateButton; TripadSlot pins the 0x30 frame correctly but
+ * cc1 in the original schedules `li s1, -1` immediately after the
+ * `sw s1, ...` save (instr 4) while modern cc1 places it later. */
 INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuButtonAnimation);
 
 /* Tail-call helper: clears the event-callback pair at +0x08/+0x0C and
