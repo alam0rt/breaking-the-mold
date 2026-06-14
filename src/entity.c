@@ -71,7 +71,11 @@ INCLUDE_ASM("asm/nonmatchings/entity", CalculateParallaxXOffset);
 
 INCLUDE_ASM("asm/nonmatchings/entity", CalculateParallaxXOffsetAlt);
 
-/* value + camera_x. Byte-identical to GetWorldPositionX above. */
+/* value + camera_x. Byte-identical to GetWorldPositionX above. Its `addu
+ * v0,v0,v1; jr ra` tail (label .L8001A350) is a SHARED epilogue that
+ * CalculateParallaxXOffset/Alt `j` into, so it can't be converted to C until
+ * those tail-merged neighbors are decompiled too (else: undefined ref to
+ * .L8001A350 at link). */
 INCLUDE_ASM("asm/nonmatchings/entity", WorldToScreenX);
 
 /* Y-axis sibling of CalculateParallaxXOffsetAlt. Scales by +0x5C (entity
