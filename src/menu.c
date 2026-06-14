@@ -4,6 +4,8 @@
 extern void EntityProcessCallbackQueue(Entity *entity);
 extern void EntityUpdateCallback(Entity *entity);
 extern void SetEntitySpriteId(Entity *entity, u32 spriteId, s32 flags);
+extern void SetAnimationFrameIndex(void *animEntity, u32 value);
+extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
 
 /* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
  * by the menu set-idle helpers. Wrapped in a padded 2-element array to
@@ -297,4 +299,12 @@ INCLUDE_ASM("asm/nonmatchings/menu", Menu_CycleOptionAndPlaySound);
  * *(u8*)(entity+0x108); if it was already 0, wraps back to 4 so the
  * range stays 0..4. Updates the icon via SetAnimationFrameIndex(
  * entity+0x10C, new_value) and plays the 0x686C1C97 cycle SFX. */
-INCLUDE_ASM("asm/nonmatchings/menu", Menu_DecrementCounter);
+void Menu_DecrementCounter(Entity *entity) {
+    u8 *counter = *(u8 **)((u8 *)entity + 0x108);
+    u8 v = *counter;
+    if (v == 0) v = 4; else v -= 1;
+    *counter = v;
+    SetAnimationFrameIndex(*(void **)((u8 *)entity + 0x10C),
+                           **(u8 **)((u8 *)entity + 0x108));
+    PlaySoundEffect(0x686C1C97, 0xA0, 0);
+}
