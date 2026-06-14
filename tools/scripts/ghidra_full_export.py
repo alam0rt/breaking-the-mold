@@ -158,7 +158,7 @@ def main():
     ap.add_argument("--project", default="/mnt/share/sam/ghidra")
     ap.add_argument("--name", default="skullmonkeys")
     ap.add_argument("--program", default="SLES_010.90")
-    ap.add_argument("--out", default="/tmp")
+    ap.add_argument("--out", default="export")
     ap.add_argument("--no-c", action="store_true", help="skip the slow CppExporter pass")
     args = ap.parse_args()
 
@@ -189,10 +189,11 @@ def main():
         program = flat_api.getCurrentProgram()
         log(f"Opened: {program.getName()}")
         out = Path(args.out)
-        dump_types(program, out / "sm_types.txt")
-        dump_functions(program, out / "sm_funcs.txt")
+        out.mkdir(parents=True, exist_ok=True)
+        dump_types(program, out / "datatypes.txt")
+        dump_functions(program, out / "functions.txt")
         if not args.no_c:
-            export_c(program, str(out / "sm_export.c"))
+            export_c(program, str(out / f"{args.program}.c"))
     log("Done.")
 
 

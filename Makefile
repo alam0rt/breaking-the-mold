@@ -635,6 +635,28 @@ ghidra-export-all:
 	@echo "Review and merge into symbol_addrs.txt manually"
 
 # -----------------------------------------------------------------------------
+# Ghidra C export (best/latest decompiled representation for analysis/decomp)
+# -----------------------------------------------------------------------------
+# Exports the live Ghidra program to export/:
+#   export/$(GHIDRA_PROGRAM).c  - whole-program C (datatype defs + decompiled bodies)
+#   export/datatypes.txt        - every struct/union/enum: offset/size/type/name/comment
+#   export/functions.txt        - every function signature + plate comment
+# Requirements: run inside `nix develop` (sets GHIDRA_INSTALL_DIR, provides
+# pyghidra) and keep the Ghidra GUI CLOSED (project lock). Uses the GHIDRA_*
+# project vars defined above.
+EXPORT_DIR := export
+
+.PHONY: export
+export:
+	@echo "Exporting Ghidra program $(GHIDRA_PROGRAM) -> $(EXPORT_DIR)/ (this re-decompiles; takes a few minutes)..."
+	@$(PYTHON) tools/scripts/ghidra_full_export.py \
+		--project $(GHIDRA_PROJECT_DIR) \
+		--name $(GHIDRA_PROJECT_NAME) \
+		--program $(GHIDRA_PROGRAM) \
+		--out $(EXPORT_DIR)
+	@echo "Done -> $(EXPORT_DIR)/$(GHIDRA_PROGRAM).c (+ datatypes.txt, functions.txt)"
+
+# -----------------------------------------------------------------------------
 # Asset Extraction
 # -----------------------------------------------------------------------------
 

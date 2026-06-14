@@ -109,3 +109,6 @@ result-*
 .mcp.json
 .claude
 memories/
+
+# Ghidra C export (make export) - large generated artifacts
+export/
