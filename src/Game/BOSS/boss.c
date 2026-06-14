@@ -23,8 +23,17 @@ extern void GenericSpriteEntityInitCallback(void *entity, u16 param, u8 flags, s
 extern void ClayballResetState(void *entity);
 extern u8 D_80011648[];
 
-/* InitClayballWithSwitchBlock @ 80058A00 — 2-instr load order swap (lh/lhu) */
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/boss", InitClayballWithSwitchBlock);
+void *InitClayballWithSwitchBlock(void *entity, u8 *def, void *spawnContext, u8 flags) {
+    InitEntitySprite(entity, spawnContext, 0x3C0, *(s16 *)(def + 0x8), (s16)(*(u16 *)(def + 0xA) - 1), 0);
+    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    *(void **)((u8 *)entity + 0x100) = def;
+    GenericSpriteEntityInitCallback(entity, *(u16 *)(def + 0xC), flags, 0);
+    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80011648;
+    *(u8 *)((u8 *)entity + 0x11A) = 0;
+    *(s32 *)((u8 *)entity + 0x124) = 0;
+    ClayballResetState(entity);
+    return entity;
+}
 
 /* ClayballSwitchEventHandler @ 80058AAC — switch case layout diff;
  * cc1 puts stores in j delay slots, GCC doesn't reproduce */
