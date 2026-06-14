@@ -114,7 +114,14 @@ void MenuSetEntityIdle(Entity *entity) {
  * sprite 0x33808E1B; otherwise identical (clears event pair, calls
  * SetEntitySpriteId). Used as the post-flash resting state queued by
  * MenuActivateButton-family helpers. */
-INCLUDE_ASM("asm/nonmatchings/menu", MenuSetEntityIdle2);
+void MenuSetEntityIdle2(Entity *entity) {
+    PaddedSlotPair u;
+    u.s[0].markerLo = 0;
+    u.s[0].markerHi = 0;
+    u.s[0].fn = NULL;
+    *(MenuCallbackSlot *)((u8 *)entity + 8) = u.s[0];
+    SetEntitySpriteId(entity, 0x33808E1B, 1);
+}
 
 /* Allocates+inits a menu button with a caller-supplied direct sprite
  * hash via InitEntitySprite(entity, sprite_id, 0x3E8, x, y, 0). Installs
