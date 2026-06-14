@@ -196,6 +196,10 @@
     - "asm"
     - "Game/PLAYER"
   -
+    - 387080
+    - "asm"
+    - "Game/PLAYER/finn"
+  -
     - 399320
     - "c"
     - "Game/PLAYER/destructor_spu_at10c"

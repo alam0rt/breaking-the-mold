@@ -55,6 +55,7 @@ SECTIONS
         build/asm/Game/OBJECT/enemies.o(.rodata);
         build/asm/Game/OBJECT/bosses.o(.rodata);
         build/src/Game/BOSS/boss.o(.rodata);
+        build/asm/Game/PLAYER/finn.o(.rodata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.rodata);
         build/src/Game/PLAYER_STATES/player_states.o(.rodata);
         build/src/Game/VEHICLE/static_game_state.o(.rodata);
@@ -97,6 +98,7 @@ SECTIONS
         build/asm/Game/OBJECT/enemies.o(.sdata);
         build/asm/Game/OBJECT/bosses.o(.sdata);
         build/src/Game/BOSS/boss.o(.sdata);
+        build/asm/Game/PLAYER/finn.o(.sdata);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sdata);
         build/src/Game/PLAYER_STATES/player_states.o(.sdata);
         build/src/Game/VEHICLE/static_game_state.o(.sdata);
@@ -139,6 +141,7 @@ SECTIONS
         build/asm/Game/OBJECT/enemies.o(.sbss);
         build/asm/Game/OBJECT/bosses.o(.sbss);
         build/src/Game/BOSS/boss.o(.sbss);
+        build/asm/Game/PLAYER/finn.o(.sbss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.sbss);
         build/src/Game/PLAYER_STATES/player_states.o(.sbss);
         build/src/Game/VEHICLE/static_game_state.o(.sbss);
@@ -181,6 +184,7 @@ SECTIONS
         build/asm/Game/OBJECT/enemies.o(.bss);
         build/asm/Game/OBJECT/bosses.o(.bss);
         build/src/Game/BOSS/boss.o(.bss);
+        build/asm/Game/PLAYER/finn.o(.bss);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.bss);
         build/src/Game/PLAYER_STATES/player_states.o(.bss);
         build/src/Game/VEHICLE/static_game_state.o(.bss);
@@ -212,6 +216,7 @@ SECTIONS
         build/asm/Game/OBJECT/bosses.o(.text);
         build/src/Game/BOSS/boss.o(.text);
         build/asm/Game/PLAYER.o(.text);
+        build/asm/Game/PLAYER/finn.o(.text);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.text);
         build/src/Game/PLAYER_STATES/player_states.o(.text);
         build/src/Game/VEHICLE/vehicle.o(.text);
@@ -260,6 +265,7 @@ SECTIONS
         build/asm/Game/OBJECT/enemies.o(.data);
         build/asm/Game/OBJECT/bosses.o(.data);
         build/src/Game/BOSS/boss.o(.data);
+        build/asm/Game/PLAYER/finn.o(.data);
         build/src/Game/PLAYER/destructor_spu_at10c.o(.data);
         build/src/Game/PLAYER_STATES/player_states.o(.data);
         build/src/Game/VEHICLE/static_game_state.o(.data);

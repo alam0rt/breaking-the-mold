@@ -179,12 +179,9 @@ local bss(start, kind, vram) = {
         // -----------------------------------------------------------------
         // UNIT 4: Game/PLAYER — player state machine, physics, input
         // -----------------------------------------------------------------
-        asm('4AE30', 'Game/PLAYER'),
+        asm('4AE30', 'Game/PLAYER'),               // 0x8005A630 player FSM (PlayerState_*/PlayerCallback_*)
+        asm('5E808', 'Game/PLAYER/finn'),          // 0x8006E008 FINN/glide subentity                [N]
         c('617D8', 'Game/PLAYER/destructor_spu_at10c'),
-        // PROPOSED: PLAYER (0x8005A630 [R]) is the big player FSM
-        // (PlayerTickCallback, PlayerState_*, PlayerCallback_*). FINN vehicle +
-        // glide subentity split off near the end:
-        //   asm('5E808', 'Game/PLAYER/finn'),          // 0x8006E008 Finn/FINN subentity + glide      [N]
 
         // -----------------------------------------------------------------
         // UNIT 5: Game/PLAYER_STATES — player platform state machine (~50KB blob)
