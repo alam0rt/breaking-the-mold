@@ -24,6 +24,7 @@ extern s32 GetWorldPositionY(Entity *entity, s16 localY);
  * own definitions appear below. */
 void MenuSetEntityIdle2(Entity *entity);
 void TimerEntityTick(Entity *entity);
+void SetupMenuIdleAnimation(Entity *entity);
 
 /* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
  * by the menu set-idle helpers. Wrapped in a padded 2-element array to
@@ -106,7 +107,14 @@ INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuIdleAnimation);
  * active running animation. Installs EntityUpdateCallback at the tick
  * slot and MenuEntityCallback as the event handler, switches sprite to
  * 0x0305A4F5, and queues SetupMenuIdleAnimation at +0x98/+0x9C so the
- * cycle re-enters idle once the run animation completes. */
+ * cycle re-enters idle once the run animation completes.
+ *
+ * SHELVED: 4-instruction scheduling diff. TripadSlot pins the 0x30
+ * frame correctly but cc1 in the original places `sw $ra` between the
+ * `sw $s0` save and `li s0, -1`, then schedules markerLo store before
+ * markerHi. Modern cc1 does `sw s0; li s0, -1` immediately together
+ * and stores markerHi first. Same diff class as SetupMenuIdleAnimation
+ * (4-instr reorder). Permuter candidate. */
 INCLUDE_ASM("asm/nonmatchings/menu", InitRunnLevelEntity);
 
 /* Allocates+inits a "button highlight" SpriteEntity from the D_8009CBE8
