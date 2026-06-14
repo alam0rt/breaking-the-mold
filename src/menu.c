@@ -220,7 +220,9 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitMenuPasswordButton);
  * Performs the standard activate flow (highlight sprite 0x63848E59,
  * queue MenuSetEntityIdle2), then HIDES the +0x34 sub-entity by
  * clearing its BasicEntity.active byte (+0x0A=0) while the flash
- * animation plays. */
+ * animation plays.
+ *
+ * SHELVED: Quirk-5 lui-hoist (same family as MenuActivateButton). */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButtonWithReset);
 
 /* MISLABELED -- has nothing to do with the FINN vehicle. This is the
@@ -270,7 +272,11 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitMenuLevelSelectButton);
  * flashes the highlight child at +0x100 with sprite 0x63848E59, queues
  * MenuSetEntityIdle2, and hides the level-icon sub-entity at parent
  * +0x34 by clearing its active byte (+0x0A=0). (The +0x34 entity is
- * separate from the +0x114 level-icon set up at init.) */
+ * separate from the +0x114 level-icon set up at init.)
+ *
+ * SHELVED: Quirk-5 lui-hoist (sprite-id constant). TripadSlot version
+ * matches frame + body but the `lui a1, 0x6384` is hoisted to position
+ * 1 by original cc1. Same as MenuActivateButton. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateLevelSelectButton);
 
 /* Level-select deactivate -- byte-identical to FINN_ClearSubentityState:
@@ -358,7 +364,9 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitMenuSkullIconButton);
 /* Skull-icon counterpart of MenuActivateButtonWithReset -- same body:
  * flashes the +0x100 highlight with sprite 0x63848E59, queues
  * MenuSetEntityIdle2, and hides the +0x34 sub-entity by clearing its
- * active byte. */
+ * active byte.
+ *
+ * SHELVED: Quirk-5 lui-hoist (same family as MenuActivateButton). */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateSkullIconButton);
 
 /* Skull-icon deactivate -- byte-identical to MenuDeactivateLevelSelectButton
