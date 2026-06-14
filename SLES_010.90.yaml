@@ -189,8 +189,8 @@
     - "Game/MAIN/memmove"
   -
     - 473088
-    - "asm"
-    - "LIBCD"
+    - "c"
+    - "LIBCD/libcd"
   -
     - 498404
     - "asm"

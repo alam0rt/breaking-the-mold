@@ -48,6 +48,7 @@ SECTIONS
         build/src/Game/VEHICLE/empty_callbacks.o(.rodata);
         build/src/Game/MAIN/blb_memory.o(.rodata);
         build/src/Game/MAIN/memmove.o(.rodata);
+        build/src/LIBCD/libcd.o(.rodata);
         build/src/LIBSPU/libspu_voice.o(.rodata);
         build/asm/LIBSPU_tail.o(.rodata);
         main_SDATA_START = .;
@@ -60,7 +61,7 @@ SECTIONS
         build/asm/Game/PLAYER_STATES.o(.sdata);
         build/src/Game/VEHICLE/vehicle.o(.sdata);
         build/asm/Game/MAIN.o(.sdata);
-        build/asm/LIBCD.o(.sdata);
+        build/asm/data/LIBCD.rodata.o(.sdata);
         build/asm/LIBGPU.o(.sdata);
         build/asm/LIBSPU.o(.sdata);
         build/src/Game/ENGINE/stub_vibrate_off.o(.sdata);
@@ -76,6 +77,7 @@ SECTIONS
         build/src/Game/VEHICLE/empty_callbacks.o(.sdata);
         build/src/Game/MAIN/blb_memory.o(.sdata);
         build/src/Game/MAIN/memmove.o(.sdata);
+        build/src/LIBCD/libcd.o(.sdata);
         build/src/LIBSPU/libspu_voice.o(.sdata);
         build/asm/LIBSPU_tail.o(.sdata);
         main_SBSS_START = .;
@@ -88,7 +90,7 @@ SECTIONS
         build/asm/Game/PLAYER_STATES.o(.sbss);
         build/src/Game/VEHICLE/vehicle.o(.sbss);
         build/asm/Game/MAIN.o(.sbss);
-        build/asm/LIBCD.o(.sbss);
+        build/asm/data/LIBCD.rodata.o(.sbss);
         build/asm/LIBGPU.o(.sbss);
         build/asm/LIBSPU.o(.sbss);
         build/src/Game/ENGINE/stub_vibrate_off.o(.sbss);
@@ -104,6 +106,7 @@ SECTIONS
         build/src/Game/VEHICLE/empty_callbacks.o(.sbss);
         build/src/Game/MAIN/blb_memory.o(.sbss);
         build/src/Game/MAIN/memmove.o(.sbss);
+        build/src/LIBCD/libcd.o(.sbss);
         build/src/LIBSPU/libspu_voice.o(.sbss);
         build/asm/LIBSPU_tail.o(.sbss);
         main_BSS_START = .;
@@ -116,7 +119,7 @@ SECTIONS
         build/asm/Game/PLAYER_STATES.o(.bss);
         build/src/Game/VEHICLE/vehicle.o(.bss);
         build/asm/Game/MAIN.o(.bss);
-        build/asm/LIBCD.o(.bss);
+        build/asm/data/LIBCD.rodata.o(.bss);
         build/asm/LIBGPU.o(.bss);
         build/asm/LIBSPU.o(.bss);
         build/src/Game/ENGINE/stub_vibrate_off.o(.bss);
@@ -132,6 +135,7 @@ SECTIONS
         build/src/Game/VEHICLE/empty_callbacks.o(.bss);
         build/src/Game/MAIN/blb_memory.o(.bss);
         build/src/Game/MAIN/memmove.o(.bss);
+        build/src/LIBCD/libcd.o(.bss);
         build/src/LIBSPU/libspu_voice.o(.bss);
         build/asm/LIBSPU_tail.o(.bss);
         build/asm/Game/ENGINE.o(.text);
@@ -154,7 +158,7 @@ SECTIONS
         build/src/Game/MAIN/blb_memory.o(.text);
         build/asm/Game/MAIN.o(.text);
         build/src/Game/MAIN/memmove.o(.text);
-        build/asm/LIBCD.o(.text);
+        build/src/LIBCD/libcd.o(.text);
         build/asm/LIBGPU.o(.text);
         build/asm/LIBSPU.o(.text);
         build/src/LIBSPU/libspu_voice.o(.text);
@@ -171,7 +175,7 @@ SECTIONS
         build/asm/Game/PLAYER_STATES.o(.data);
         build/src/Game/VEHICLE/vehicle.o(.data);
         build/asm/Game/MAIN.o(.data);
-        build/asm/LIBCD.o(.data);
+        build/asm/data/LIBCD.rodata.o(.data);
         build/asm/LIBGPU.o(.data);
         build/asm/LIBSPU.o(.data);
         build/src/Game/ENGINE/stub_vibrate_off.o(.data);
@@ -187,6 +191,7 @@ SECTIONS
         build/src/Game/VEHICLE/empty_callbacks.o(.data);
         build/src/Game/MAIN/blb_memory.o(.data);
         build/src/Game/MAIN/memmove.o(.data);
+        build/src/LIBCD/libcd.o(.data);
         build/src/LIBSPU/libspu_voice.o(.data);
         build/asm/LIBSPU_tail.o(.data);
         build/asm/data/80FEC.data.o(.data);
