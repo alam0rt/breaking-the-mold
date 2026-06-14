@@ -99,6 +99,21 @@ local bss(start, kind, vram) = {
         // Segments named per original compilation unit (10 units total).
         // Rodata and text segments sharing a name belong to the same .obj.
         // C segments retain their src/ paths (preserving matched code).
+        //
+        // PROPOSED FINER STRUCTURE (2026-06-14, comments only — no config
+        // change yet). The 10 rodata-anchored units below are CONFIRMED real
+        // object boundaries (rodata order == text order == link order; each
+        // rodata sub-segment's first item is referenced by the text where that
+        // unit begins). But the big *text* blobs (OBJECT, PLAYER_STATES,
+        // VEHICLE) bundle several no-rodata source files that are invisible in
+        // the rodata section. The "// PROPOSED:" blocks below subdivide those
+        // blobs at real function starts. Evidence + full reasoning:
+        // docs/architecture/compilation-units.md. Evidence tags:
+        //   [R] rodata-anchored (hard)  [L] PSY-Q *_OBJ_* marker (hard)
+        //   [N] subsystem name-cluster (strong)  [g] inter-function gap
+        // To apply a block: replace the single active asm()/c() line with the
+        // commented lines, then `make check` (should stay byte-identical since
+        // splits are at function starts and migrate_rodata_to_functions=false).
         // =================================================================
 
         // -----------------------------------------------------------------
@@ -135,25 +150,57 @@ local bss(start, kind, vram) = {
         c('D8C0', 'Game/ENGINE/animation_setters'),
 
         // -----------------------------------------------------------------
-        // UNIT 2: Game/OBJECT — enemies, items, decor, bosses
+        // UNIT 2: Game/OBJECT — enemies, items, decor, bosses (~188KB blob)
         // -----------------------------------------------------------------
         asm('1AB78', 'Game/OBJECT'),
+        // PROPOSED: OBJECT is really ~8 source files in link order. ROM offset
+        // shown; VRAM in comment. Boss STATE MACHINES live here (not in the
+        // c('48968','Game/BOSS/boss') unit below — that one is clayball/platform).
+        //   asm('1AB78', 'Game/OBJECT/hud'),          // 0x8002A378 HUD + pause menu                  [R]
+        //   asm('1C7F0', 'Game/OBJECT/entity_dtor'),  // 0x8002BFF0 generic EntityDestructor_Type0-6  [N]
+        //   asm('1CFD8', 'Game/OBJECT/decor'),        // 0x8002C7D8 path/decor entities               [N]
+        //   asm('1DC74', 'Game/OBJECT/collectibles'), // 0x8002D474 pickups (clayball/willie/phart..) [N]
+        //   asm('2150C', 'Game/OBJECT/effects'),      // 0x80030D0C particles/grid/ripple/beam FX     [N]
+        //   asm('291DC', 'Game/OBJECT/cd'),           // 0x800389DC game CD/BLB I/O + audio track     [N]
+        //   asm('29950', 'Game/OBJECT/movie'),        // 0x80039150 STR movie streaming/decode        [N]
+        //   asm('2AB94', 'Game/OBJECT/enemies'),      // 0x8003A394 enemy AI, projectiles, platforms  [N]
+        //   asm('37A88', 'Game/OBJECT/bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
 
         // -----------------------------------------------------------------
         // UNIT 3: Game/BOSS — boss state machines (ShrineyGuard, JoeHeadJoe, Klogg)
         // -----------------------------------------------------------------
         c('48968', 'Game/BOSS/boss'),
+        // PROPOSED: name is misleading. Rodata anchor 0x80011628 [R] confirms a
+        // real object here, but its code is clayball/circular-platform/Shriney-
+        // sound, NOT the boss FSMs (those are in Game/OBJECT/bosses above).
+        // player.c create/collision primitives likely begin mid-segment:
+        //   c('48968', 'Game/BOSS/clayball_platform'),// 0x80058168 clayball + circular platform     [R]
+        //   asm('49EA4', 'Game/PLAYER/player'),        // 0x800596A4 CreatePlayerEntity, collision    [N]
 
         // -----------------------------------------------------------------
         // UNIT 4: Game/PLAYER — player state machine, physics, input
         // -----------------------------------------------------------------
         asm('4AE30', 'Game/PLAYER'),
         c('617D8', 'Game/PLAYER/destructor_spu_at10c'),
+        // PROPOSED: PLAYER (0x8005A630 [R]) is the big player FSM
+        // (PlayerTickCallback, PlayerState_*, PlayerCallback_*). FINN vehicle +
+        // glide subentity split off near the end:
+        //   asm('5E808', 'Game/PLAYER/finn'),          // 0x8006E008 Finn/FINN subentity + glide      [N]
 
         // -----------------------------------------------------------------
-        // UNIT 5: Game/PLAYER_STATES — player platform state machine
+        // UNIT 5: Game/PLAYER_STATES — player platform state machine (~50KB blob)
         // -----------------------------------------------------------------
         c('61848', 'Game/PLAYER_STATES/player_states'),
+        // PROPOSED: this blob is really ~9 source files in link order:
+        //   c('61848', 'Game/PLAYER_STATES/vehicle'),  // 0x80071048 Runn/Soar/Finn modes + platforms [R]
+        //   asm('65798', 'Game/UI/menu'),              // 0x80074F98 cursor/buttons/options/lvl-select [N]
+        //   asm('667F4', 'Game/UI/password'),          // 0x80075FF4 password entry UI                 [N]
+        //   asm('687E8', 'Game/UI/hud_results'),       // 0x80077FE8 HUD digits + results screen       [N]
+        //   asm('69E3C', 'Game/UI/ending'),            // 0x8007963C ending / credits                  [N]
+        //   asm('6A9BC', 'Game/MAIN/level'),           // 0x8007A1BC level-data ctx + playback seq     [N]
+        //   asm('6B1B0', 'Game/MAIN/blb_accessors'),   // 0x8007A9B0 ~120 BLB/level/tile/sprite getters[N]
+        //   asm('6C7B8', 'Game/AUDIO/sound'),          // 0x8007BFB8 SPU upload, SFX, voice, CD audio  [N]
+        //   asm('6D4FC', 'Game/MAIN/gamestate'),       // 0x8007CCFC InitGameState, respawn, lvl start [N]
 
         // -----------------------------------------------------------------
         // UNIT 6: Game/VEHICLE — vehicle modes (FINN/RUNN/SOAR), tile collision
@@ -161,6 +208,11 @@ local bss(start, kind, vram) = {
         c('6D9D0', 'Game/VEHICLE/vehicle'),
         c('73690', 'Game/VEHICLE/static_game_state'),
         c('736E0', 'Game/VEHICLE/empty_callbacks'),
+        // PROPOSED: this unit (rodata anchor 0x80012140 [R]) is level lifecycle,
+        // not vehicle code. Really ~3 files:
+        //   c('6D9D0', 'Game/MAIN/level_load'),        // 0x8007D1D0 load/setup level, game-mode loop  [R]
+        //   asm('6F7D0', 'Game/MAIN/entity_init'),     // 0x8007EFD0 ~120 EntityType###_*_Init + remap [N]
+        //   asm('728B4', 'Game/MAIN/main'),            // 0x800820B4 cheats, main(), debug menu        [N]
 
         // -----------------------------------------------------------------
         // UNIT 7: Game/MAIN — main(), menus, passwords, audio, level loading
@@ -173,6 +225,17 @@ local bss(start, kind, vram) = {
         // UNIT 8: LIBCD — PSY-Q CD-ROM library
         // -----------------------------------------------------------------
         c('73800', 'LIBCD/libcd'),
+        // PROPOSED: PSY-Q *_OBJ_* symbol prefixes [L] mark real library object
+        // boundaries. LIBCD spans several internal objects, and a LIBETC unit
+        // (pad+vsync+intr) sits between LIBCD and LIBGPU:
+        //   c('73800', 'LIBCD/libcd'),                 // 0x80083000 CdInit/CdControl/CdSync API       [L]
+        //   asm('74150', 'LIBCD/bios_cdrom'),          // 0x80083950 BIOS_OBJ_*/CD_* cdrom internals   [L]
+        //   asm('758E4', 'LIBCD/iso9660'),             // 0x800850E4 CdSearchFile/ISO9660_OBJ_*         [L]
+        //   asm('76204', 'LIBCD/cdread'),              // 0x80085A04 CdRead/CDREAD_OBJ_*                [L]
+        //   asm('76E0C', 'LIBCD/stream'),              // 0x8008660C St*/C_011_OBJ_*/dma_execute        [L]
+        //   asm('77E2C', 'LIBETC/pad'),                // 0x8008762C PadInit/PadRead/send_pad           [L]
+        //   asm('78424', 'LIBETC/vsync_intr'),         // 0x80087C24 VSync/*Intr*/FlushCache/setjmp     [L]
+        //   asm('79158', 'LIBGPU/gpu_font'),           // 0x80088958 SetVideoMode/LoadClut/Fnt*         [L]
 
         // -----------------------------------------------------------------
         // UNIT 9: LIBGPU — PSY-Q GPU library
