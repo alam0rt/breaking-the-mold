@@ -31,6 +31,13 @@ public class UncoverFields extends GhidraScript {
                 set(dtm, s, 0x86, UnsignedShortDataType.dataType, 2, "spriteMaxHeight",
                     "Embedded SpriteContext+0x0e: max height across frames");
             }
+            // data-type cleanup: meaningful SpriteRenderContext words still typed undefined2
+            set(dtm, "/SpriteRenderContext", 0x08, UnsignedShortDataType.dataType, 2, "wSlotId",
+                "VRAM slot id");
+            set(dtm, "/SpriteRenderContext", 0x24, UnsignedShortDataType.dataType, 2, "wTpage",
+                "GPU texture page word");
+            set(dtm, "/SpriteRenderContext", 0x26, UnsignedShortDataType.dataType, 2, "wClut",
+                "GPU CLUT word");
             ok = true;
         } finally {
             currentProgram.endTransaction(tx, ok);
