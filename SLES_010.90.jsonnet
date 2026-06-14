@@ -166,13 +166,13 @@ local bss(start, kind, vram) = {
         // in comment. Boss STATE MACHINES live in OBJECT/bosses below; the
         // c('48968','Game/BOSS/boss') unit further down is clayball/platform code.
         // -----------------------------------------------------------------
-        asm('1AB78', 'Game/OBJECT/hud'),          // 0x8002A378 HUD + pause menu                   [R]
-        asm('1C7F0', 'Game/OBJECT/entity_dtor'),  // 0x8002BFF0 generic entity destructors         [N]
-        asm('1CFD8', 'Game/OBJECT/decor'),        // 0x8002C7D8 path/decor entities                [N]
-        asm('1DC74', 'Game/OBJECT/collectibles'), // 0x8002D474 pickups (clayball/willie/phart...) [N]
-        asm('2150C', 'Game/OBJECT/effects'),      // 0x80030D0C particles/grid/ripple/beam FX      [N]
-        asm('291DC', 'Game/OBJECT/cd'),           // 0x800389DC game CD/BLB I/O + audio track      [N]
-        asm('29950', 'Game/OBJECT/movie'),        // 0x80039150 STR movie streaming/decode         [N]
+        asm('1AB78', 'hud'),          // 0x8002A378 HUD + pause menu                   [R]
+        asm('1C7F0', 'edtor'),        // 0x8002BFF0 generic entity destructors         [N]
+        asm('1CFD8', 'decor'),        // 0x8002C7D8 path/decor entities                [N]
+        asm('1DC74', 'pickups'),      // 0x8002D474 pickups (clayball/willie/phart...) [N]
+        asm('2150C', 'effects'),      // 0x80030D0C particles/grid/ripple/beam FX      [N]
+        asm('291DC', 'gamecd'),       // 0x800389DC game CD/BLB I/O + audio track      [N]
+        asm('29950', 'movie'),        // 0x80039150 STR movie streaming/decode         [N]
         // PROPOSED: movie has mixed addressing [A] for D_800A5A30 / D_800A5A24.
         // InitMovieStreamingBuffers @ 0x80039CE0 uses gp_rel, but it is wedged
         // between hilo siblings (DisplayLoadingScreen @ 0x800399A8 before, and
@@ -182,8 +182,8 @@ local bss(start, kind, vram) = {
         // to produce the observed function order from separate TUs. Action:
         // leave the segment as-is and reproduce the gp_rel store via a local
         // extern when decomping InitMovieStreamingBuffers (see compiler-quirks).
-        asm('2AB94', 'Game/OBJECT/enemies'),      // 0x8003A394 enemy AI, projectiles, platforms   [N]
-        asm('37A88', 'Game/OBJECT/bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
+        asm('2AB94', 'enemies'),      // 0x8003A394 enemy AI, projectiles, platforms   [N]
+        asm('37A88', 'bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
 
         // -----------------------------------------------------------------
         // UNIT 3: Game/BOSS — clayball/circular-platform + player primitives

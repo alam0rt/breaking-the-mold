@@ -158,39 +158,39 @@
   -
     - 109432
     - "asm"
-    - "Game/OBJECT/hud"
+    - "hud"
   -
     - 116720
     - "asm"
-    - "Game/OBJECT/entity_dtor"
+    - "edtor"
   -
     - 118744
     - "asm"
-    - "Game/OBJECT/decor"
+    - "decor"
   -
     - 121972
     - "asm"
-    - "Game/OBJECT/collectibles"
+    - "pickups"
   -
     - 136460
     - "asm"
-    - "Game/OBJECT/effects"
+    - "effects"
   -
     - 168412
     - "asm"
-    - "Game/OBJECT/cd"
+    - "gamecd"
   -
     - 170320
     - "asm"
-    - "Game/OBJECT/movie"
+    - "movie"
   -
     - 174996
     - "asm"
-    - "Game/OBJECT/enemies"
+    - "enemies"
   -
     - 227976
     - "asm"
-    - "Game/OBJECT/bosses"
+    - "bosses"
   -
     - 297320
     - "c"
