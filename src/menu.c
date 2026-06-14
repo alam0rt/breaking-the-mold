@@ -351,7 +351,15 @@ INCLUDE_ASM("asm/nonmatchings/menu", Menu_PlayConfirmSoundIfEnabled);
  * audio-settings ptr at +0x118) -> final vtable D_80011F84. Then
  * allocates a second child (the level-icon sprite) at the (x,y) read
  * from the position table for the currently-selected level, gives it
- * zOrder 0x4B0, stores it at +0x114 and pushes it onto the render list. */
+ * zOrder 0x4B0, stores it at +0x114 and pushes it onto the render list.
+ *
+ * SHELVED: scheduling diff. Original cc1 sets up all 3 AllocateFromHeap
+ * arg constants (a1=0x100, a2=1, a3=0) BEFORE the field stores, then
+ * interleaves +0x10C between the arg setup, and places `sw s4, 0x118`
+ * in the jal delay slot. Mine groups all stores together and puts
+ * `move a3, zero` in the delay slot, making the function 1 instruction
+ * (4 bytes) longer -- which cascades downstream by 4 bytes, breaking
+ * SHA1. Permuter candidate. */
 INCLUDE_ASM("asm/nonmatchings/menu", InitMenuLevelSelectButton);
 
 /* Level-select counterpart of MenuActivateButtonWithReset -- same body:
