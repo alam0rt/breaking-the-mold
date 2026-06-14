@@ -35,7 +35,14 @@ INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GameModeCallback);
 
 extern void AddToZOrderList(u8 *obj, s32 zOrder);
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SaveCheckpointState);
+void SaveCheckpointState(void *entity) {
+    *(u32 *)((u8 *)entity + 0x138) = *(u32 *)((u8 *)entity + 0x10C);
+    *(u32 *)((u8 *)entity + 0x134) = *(u32 *)((u8 *)entity + 0x1C);
+    *(u8 *)((u8 *)entity + 0x14A) = 1;
+    *(u8 *)((u8 *)entity + 0x63) = 1;
+    *(u32 *)((u8 *)entity + 0x1C) = 0;
+    AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RestoreCheckpointEntities);
 
@@ -910,7 +917,12 @@ void func_8008283C(void) {
 void func_80082844(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpecialEntityDestroyCallback_2120);
+void SpecialEntityDestroyCallback_2120(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80012120;
+    if (flags & 1) {
+        FreeSpecialEntity2120Memory(entity, 0x1C);
+    }
+}
 
 void FreeSpecialEntity2120Memory(void *ptr) {
     FreeFromHeap(D_800A5954, ptr, 0, 0);
