@@ -20,6 +20,7 @@ extern void *g_pBlbHeapBase;
 extern void *g_pGameState;
 extern u8 D_80012034[]; /* menu-button vtable, +0x18 install slot */
 extern u8 D_8001208C[]; /* menu-button-highlight vtable */
+extern u8 D_80011FDC[]; /* password-button vtable (post-cursor override) */
 extern u8 D_8009CBE8[]; /* menu-button-highlight sprite table */
 extern s32 GetWorldPositionX(Entity *entity, s16 localX);
 extern s32 GetWorldPositionY(Entity *entity, s16 localY);
@@ -224,7 +225,15 @@ Entity *InitMenuButtonWithSpritePtr(Entity *entity, void *spriteDef, s16 x, s16 
  * installs vtable D_8001208C and GetWorldPositionX/Y move-callbacks,
  * adds it to the sorted render list, and stores the child pointer at
  * parent+0x100 (with parent+0x104 cleared to "inactive"). Finally
- * installs matching GetWorldPositionX/Y move-callbacks on the parent. */
+ * installs matching GetWorldPositionX/Y move-callbacks on the parent.
+ *
+ * SHELVED: stack-marshal of the GetWorldPositionX/Y callback slots
+ * doesn't reproduce the original frame layout. Original packs the 4
+ * marshals into a 0x38 frame, reusing the s0 save-slot as scratch
+ * (s0 holds the -1 marker after the first call); my C version emits
+ * a 0x50 frame with separate scratch + 6 callee-saves. Likely needs
+ * an explicit u32 -1 constant variable + manual slot reuse, or a
+ * dedicated helper struct that pins the layout. Permuter candidate. */
 INCLUDE_ASM("asm/nonmatchings/menu", AttachCursorToButton);
 
 /* Cursor-focus enter handler for a plain menu button. Loads the
@@ -282,7 +291,15 @@ INCLUDE_ASM("asm/nonmatchings/menu", Menu_PlayConfirmSound);
  * overrides vtable to D_80011FDC (password-button vtable). Stores
  * caller's type byte at +0x108 and the back-flag byte (5th arg) at
  * +0x109 -- these gate which Menu_Play*SoundIfEnabled helpers fire. */
-INCLUDE_ASM("asm/nonmatchings/menu", InitMenuPasswordButton);
+Entity *InitMenuPasswordButton(Entity *entity, s16 x, s16 y, u8 typeByte, u8 backFlag) {
+    InitEntitySprite(entity, 0x10094096, 0x3E8, x, y, 0);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80012034;
+    AttachCursorToButton(entity);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80011FDC;
+    *((u8 *)entity + 0x108) = typeByte;
+    *((u8 *)entity + 0x109) = backFlag;
+    return entity;
+}
 
 /* MenuActivateButton variant for buttons that own a label/value
  * sub-entity at parent+0x34 (e.g. password symbols or option labels).
