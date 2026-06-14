@@ -155,7 +155,7 @@ local bss(start, kind, vram) = {
         asm('687E8', 'results'),                         // 0x80077FE8 HUD digits + results screen
         asm('69E3C', 'ending'),                          // 0x8007963C ending / credits
         asm('6A9BC', 'level'),                           // 0x8007A1BC level-data ctx + playback sequence
-        asm('6B1B0', 'blbacc'),                          // 0x8007A9B0 BLB/level/tile/sprite TOC getters
+        c('6B1B0', 'blbacc'),                          // 0x8007A9B0 BLB/level/tile/sprite TOC getters
         asm('6C7B8', 'sound'),                           // 0x8007BFB8 SPU upload, SFX, voice, CD audio
         asm('6D4FC', 'gstate'),                          // 0x8007CCFC InitGameState/respawn/level-start
         c('6D9D0', 'lvlload'),                    // 0x8007D1D0 load/setup level, game-mode loop  [R]
