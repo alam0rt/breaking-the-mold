@@ -155,7 +155,13 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButton);
 
 /* Cursor-focus exit handler -- clears parent+0x104, zeroes the
  * highlight child's event-callback pair (+0x08/+0x0C), and switches
- * the child sprite to 0x39900619 (idle) via SetEntitySpriteId. */
+ * the child sprite to 0x39900619 (idle) via SetEntitySpriteId.
+ *
+ * SHELVED: 2-instruction scheduling-only diff — original hoists the
+ * `lui $a1` for the 0x39900619 constant ahead of the sb/lw, mine emits
+ * it just before the `ori`. Same registers, same instruction count,
+ * Quirk-5-shape (decomp-permuter territory). Closest C draft kept in
+ * git history. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateButton);
 
 /* Plays the confirm/select SFX (PlaySoundEffect(0x90810000, 0xA0, 0))
