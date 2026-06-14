@@ -8,117 +8,6 @@ extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
 extern void HidePauseMenuHUD(s32 handle);
 extern u8 D_80012120[];
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", InitializeAndLoadLevel);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SetupAndStartLevel);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", DisplayTransitionSprite);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnPlayerAndEntities);
-
-extern u8 D_80012100[];
-extern void DestroyEntity(void *entity, s32 arg);
-
-void DestroyEntityAndFreeResources(void *entity, s32 flags) {
-    void *buckets = *(void **)((u8 *)entity + 0x16C);
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80012100;
-    if (buckets) {
-        FreeFromHeap(g_pBlbHeapBase, buckets, 0, 0);
-    }
-    DestroyEntity(entity, 0);
-    if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
-    }
-}
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", GameModeCallback);
-
-extern void AddToZOrderList(u8 *obj, s32 zOrder);
-
-void SaveCheckpointState(void *entity) {
-    *(u32 *)((u8 *)entity + 0x138) = *(u32 *)((u8 *)entity + 0x10C);
-    *(u32 *)((u8 *)entity + 0x134) = *(u32 *)((u8 *)entity + 0x1C);
-    *(u8 *)((u8 *)entity + 0x14A) = 1;
-    *(u8 *)((u8 *)entity + 0x63) = 1;
-    *(u32 *)((u8 *)entity + 0x1C) = 0;
-    AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
-}
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RestoreCheckpointEntities);
-
-s32 RemoveCheckpointEntityById(s32 gameState, s32 target) {
-    s32 *node = *(s32 **)(gameState + 0x134);
-    s32 *prev = 0;
-
-    while (node != 0) {
-        if (*(s32 *)((s32)node + 4) == target) {
-            if (prev == 0) {
-                *(s32 *)(gameState + 0x134) = *node;
-            } else {
-                *prev = *node;
-            }
-            FreeFromHeap(g_pBlbHeapBase, (void *)node, 8, 0);
-            return 1;
-        }
-        prev = node;
-        node = *(s32 **)(s32)node;
-    }
-    return 0;
-}
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", PauseGameAndShowMenu);
-
-void PauseGameWithFadeOut(u8 *obj) {
-    PlaySoundEffect(0x4C60F249, 0xA0, 1);
-    obj[0x151] = 1;
-    HidePauseMenuHUD(*(s32 *)&obj[0x14C]);
-    obj[0x160] = 0x16;
-}
-
-void SetNextLevelFlagWithFade(u8 *obj) {
-    obj[0x151] = 1;
-    obj[0x160] = 0x16;
-    obj[0x147] = 1;
-}
-
-extern void ResumeAllVoicePitches(void);
-extern void ClearTickList(void *entity);
-
-void UnpauseGameAndRestoreEntities(void *entity) {
-    ResumeAllVoicePitches();
-    *(u32 *)((u8 *)entity + 0x10C) = *(u32 *)((u8 *)entity + 0x154);
-    *(u8 *)((u8 *)entity + 0x63) = *(u8 *)((u8 *)entity + 0x158);
-    *(u8 *)((u8 *)entity + 0x151) = 0;
-    *(u8 *)((u8 *)entity + 0x150) = 0;
-    ClearTickList(entity);
-    *(u32 *)((u8 *)entity + 0x1C) = *(u32 *)((u8 *)entity + 0x15C);
-    *(u32 *)((u8 *)entity + 0x15C) = 0;
-    if (*(u8 *)((u8 *)entity + 0x18D)) {
-        AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
-        *(u8 *)((u8 *)entity + 0x18D) = 0;
-    }
-}
-
-extern void RemoveFromTickList(void *entity, void *arg);
-extern void FreeEntityLists(void *entity);
-
-void ClearEntitiesAndFadeToBlack(void *entity) {
-    void *field2c = *(void **)((u8 *)entity + 0x2C);
-    *(u8 *)((u8 *)entity + 0x145) = 1;
-    *(u8 *)((u8 *)entity + 0x130) = 1;
-    *(u8 *)((u8 *)entity + 0x131) = 0;
-    *(u8 *)((u8 *)entity + 0x132) = 0;
-    *(u8 *)((u8 *)entity + 0x133) = 0;
-    RemoveFromTickList(entity, field2c);
-    FreeEntityLists(entity);
-    AddEntityToSortedRenderList(entity, *(void **)((u8 *)entity + 0x2C));
-    *(u32 *)((u8 *)entity + 0x13C) = *(u32 *)((u8 *)entity + 0x28);
-    *(u32 *)((u8 *)entity + 0x28) = 0;
-}
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", HandleGenericTriggerZone);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", CleanupRespawnEntities);
 
 extern u8 D_8009D9FC[];
 extern void *CreateCollectibleWithFlags(void *entity, void *spawnData, u8 *flags, s32 arg3, s32 arg4);
@@ -792,7 +681,7 @@ void EntityType095_SoundEmitterPanning_Init(void *list, void *spawnData) {
 void EntityType008_KloggCatchableBall_Init(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", RemapEntityTypesForLevel);
+INCLUDE_ASM("asm/nonmatchings/Game/MAIN/entity_init", RemapEntityTypesForLevel);
 
 extern void *D_800A595C;
 extern u8 D_8009DAB4[];
@@ -833,7 +722,7 @@ store:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", SpawnEntitiesAlternateSystem);
+INCLUDE_ASM("asm/nonmatchings/Game/MAIN/entity_init", SpawnEntitiesAlternateSystem);
 
 void ClearAlternateEntitySpawnFlags(void *state) {
     s16 i;
@@ -844,7 +733,7 @@ void ClearAlternateEntitySpawnFlags(void *state) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", AddToDepthBucket);
+INCLUDE_ASM("asm/nonmatchings/Game/MAIN/entity_init", AddToDepthBucket);
 
 extern void SetPolyGT4(void *prim);
 extern void AddPrim(void *ot, void *prim);
@@ -906,133 +795,3 @@ s32 IsNormalPlatformLevel(void *arg) {
 end:
     return result;
 }
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", CheckCheatCodeInput);
-
-void func_800826C0(u8 *obj, u8 *outA, u8 *outB, u8 *outC) {
-    *outA = obj[0x199];
-    *outB = obj[0x19A];
-    *outC = obj[0x19B];
-}
-
-void func_800826E4(u8 *obj, u8 a, u8 b, u8 c) {
-    obj[0x199] = a;
-    obj[0x19A] = b;
-    obj[0x19B] = c;
-}
-
-u8 func_800826F4(u8 *obj) {
-    return obj[0x198];
-}
-
-void func_80082700(u8 *obj, u8 val) {
-    obj[0x198] = val;
-}
-
-extern u8 D_800A608C[];
-extern s32 FindSaveSlotByName(u8 *name, u8 *slots);
-
-s32 FindSaveSlotForCurrentLevel(u8 *obj) {
-    return FindSaveSlotByName(&obj[0x84], D_800A608C);
-}
-
-void func_80082730(u8 *obj, u8 a, u8 b) {
-    obj[0x19C] = a;
-    obj[0x19D] = b;
-}
-
-u8 func_8008273C(u8 *obj) {
-    return obj[0x19C];
-}
-
-u8 GetLevelDebugFlag(GameState *gameState) {
-    return (u16)GetLevelFlags(&gameState->level_context) >> 0xf;
-}
-
-u8 GetLevelShowHUDFlag(GameState *gameState) {
-    return ((u16)GetLevelFlags(&gameState->level_context) >> 0xe) & 1;
-}
-
-u8 func_80082790(u8 *obj) {
-    return obj[0x14A];
-}
-
-void func_8008279C(u8 *obj, u8 val) {
-    obj[0x152] = val;
-}
-
-void func_800827A4(u8 *obj, u8 val) {
-    obj[0x170] = val;
-}
-
-u8 func_800827AC(u8 *obj) {
-    return obj[0x161];
-}
-
-void func_800827B8(u8 *obj, u8 val) {
-    obj[0x161] = val;
-}
-
-void func_800827C0(u8 *obj, s32 val32, s16 val16) {
-    *(s32 *)&obj[0x164] = val32;
-    *(s16 *)&obj[0x168] = val16;
-}
-
-s32 func_800827CC(u8 *obj) {
-    return *(s32 *)&obj[0x14C];
-}
-
-u8 func_800827D8(u8 *obj) {
-    return obj[0x14B];
-}
-
-void func_800827E4(u8 *obj, u8 val) {
-    obj[0x14B] = val;
-}
-
-void func_800827EC(u8 *obj, u8 val) {
-    obj[0x144] = val;
-}
-
-u8 func_800827F4(u8 *obj) {
-    return obj[0x149];
-}
-
-void func_80082800(u8 *obj, u8 val) {
-    obj[0x149] = val;
-}
-
-void func_80082808(u8 *obj, u8 val) {
-    obj[0x148] = val;
-}
-
-void func_80082810(u8 *obj, u8 val) {
-    obj[0x146] = val;
-}
-
-u8 GetLevelAutoScrollFlag(GameState *gameState) {
-    return ((u16)GetLevelFlags(&gameState->level_context) >> 0xb) & 1;
-}
-
-void func_8008283C(void) {
-}
-
-void func_80082844(void) {
-}
-
-void SpecialEntityDestroyCallback_2120(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80012120;
-    if (flags & 1) {
-        FreeSpecialEntity2120Memory(entity, 0x1C);
-    }
-}
-
-void FreeSpecialEntity2120Memory(void *ptr) {
-    FreeFromHeap(g_pBlbHeapBase, ptr, 0, 0);
-}
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", main);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", func_80082BE8);
-
-INCLUDE_ASM("asm/nonmatchings/Game/VEHICLE/vehicle", ProcessDebugMenuInput);

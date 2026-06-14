@@ -68,6 +68,9 @@ SECTIONS
         build/asm/Game/MAIN/blb_accessors.o(.rodata);
         build/asm/Game/AUDIO/sound.o(.rodata);
         build/asm/Game/MAIN/gamestate.o(.rodata);
+        build/src/Game/MAIN/level_load.o(.rodata);
+        build/src/Game/MAIN/entity_init.o(.rodata);
+        build/src/Game/MAIN/main.o(.rodata);
         build/src/Game/VEHICLE/static_game_state.o(.rodata);
         build/src/Game/VEHICLE/empty_callbacks.o(.rodata);
         build/src/Game/MAIN/blb_memory.o(.rodata);
@@ -83,7 +86,7 @@ SECTIONS
         build/asm/data/Game/BOSS.rodata.o(.sdata);
         build/asm/Game/PLAYER.o(.sdata);
         build/asm/data/Game/PLAYER_STATES.rodata.o(.sdata);
-        build/src/Game/VEHICLE/vehicle.o(.sdata);
+        build/asm/data/Game/VEHICLE/vehicle.rodata.o(.sdata);
         build/asm/Game/MAIN.o(.sdata);
         build/asm/data/LIBCD.rodata.o(.sdata);
         build/asm/LIBGPU.o(.sdata);
@@ -121,6 +124,9 @@ SECTIONS
         build/asm/Game/MAIN/blb_accessors.o(.sdata);
         build/asm/Game/AUDIO/sound.o(.sdata);
         build/asm/Game/MAIN/gamestate.o(.sdata);
+        build/src/Game/MAIN/level_load.o(.sdata);
+        build/src/Game/MAIN/entity_init.o(.sdata);
+        build/src/Game/MAIN/main.o(.sdata);
         build/src/Game/VEHICLE/static_game_state.o(.sdata);
         build/src/Game/VEHICLE/empty_callbacks.o(.sdata);
         build/src/Game/MAIN/blb_memory.o(.sdata);
@@ -136,7 +142,7 @@ SECTIONS
         build/asm/data/Game/BOSS.rodata.o(.sbss);
         build/asm/Game/PLAYER.o(.sbss);
         build/asm/data/Game/PLAYER_STATES.rodata.o(.sbss);
-        build/src/Game/VEHICLE/vehicle.o(.sbss);
+        build/asm/data/Game/VEHICLE/vehicle.rodata.o(.sbss);
         build/asm/Game/MAIN.o(.sbss);
         build/asm/data/LIBCD.rodata.o(.sbss);
         build/asm/LIBGPU.o(.sbss);
@@ -174,6 +180,9 @@ SECTIONS
         build/asm/Game/MAIN/blb_accessors.o(.sbss);
         build/asm/Game/AUDIO/sound.o(.sbss);
         build/asm/Game/MAIN/gamestate.o(.sbss);
+        build/src/Game/MAIN/level_load.o(.sbss);
+        build/src/Game/MAIN/entity_init.o(.sbss);
+        build/src/Game/MAIN/main.o(.sbss);
         build/src/Game/VEHICLE/static_game_state.o(.sbss);
         build/src/Game/VEHICLE/empty_callbacks.o(.sbss);
         build/src/Game/MAIN/blb_memory.o(.sbss);
@@ -189,7 +198,7 @@ SECTIONS
         build/asm/data/Game/BOSS.rodata.o(.bss);
         build/asm/Game/PLAYER.o(.bss);
         build/asm/data/Game/PLAYER_STATES.rodata.o(.bss);
-        build/src/Game/VEHICLE/vehicle.o(.bss);
+        build/asm/data/Game/VEHICLE/vehicle.rodata.o(.bss);
         build/asm/Game/MAIN.o(.bss);
         build/asm/data/LIBCD.rodata.o(.bss);
         build/asm/LIBGPU.o(.bss);
@@ -227,6 +236,9 @@ SECTIONS
         build/asm/Game/MAIN/blb_accessors.o(.bss);
         build/asm/Game/AUDIO/sound.o(.bss);
         build/asm/Game/MAIN/gamestate.o(.bss);
+        build/src/Game/MAIN/level_load.o(.bss);
+        build/src/Game/MAIN/entity_init.o(.bss);
+        build/src/Game/MAIN/main.o(.bss);
         build/src/Game/VEHICLE/static_game_state.o(.bss);
         build/src/Game/VEHICLE/empty_callbacks.o(.bss);
         build/src/Game/MAIN/blb_memory.o(.bss);
@@ -269,7 +281,9 @@ SECTIONS
         build/asm/Game/MAIN/blb_accessors.o(.text);
         build/asm/Game/AUDIO/sound.o(.text);
         build/asm/Game/MAIN/gamestate.o(.text);
-        build/src/Game/VEHICLE/vehicle.o(.text);
+        build/src/Game/MAIN/level_load.o(.text);
+        build/src/Game/MAIN/entity_init.o(.text);
+        build/src/Game/MAIN/main.o(.text);
         build/src/Game/VEHICLE/static_game_state.o(.text);
         build/src/Game/VEHICLE/empty_callbacks.o(.text);
         build/src/Game/MAIN/blb_memory.o(.text);
@@ -290,7 +304,7 @@ SECTIONS
         build/asm/data/Game/BOSS.rodata.o(.data);
         build/asm/Game/PLAYER.o(.data);
         build/asm/data/Game/PLAYER_STATES.rodata.o(.data);
-        build/src/Game/VEHICLE/vehicle.o(.data);
+        build/asm/data/Game/VEHICLE/vehicle.rodata.o(.data);
         build/asm/Game/MAIN.o(.data);
         build/asm/data/LIBCD.rodata.o(.data);
         build/asm/LIBGPU.o(.data);
@@ -328,6 +342,9 @@ SECTIONS
         build/asm/Game/MAIN/blb_accessors.o(.data);
         build/asm/Game/AUDIO/sound.o(.data);
         build/asm/Game/MAIN/gamestate.o(.data);
+        build/src/Game/MAIN/level_load.o(.data);
+        build/src/Game/MAIN/entity_init.o(.data);
+        build/src/Game/MAIN/main.o(.data);
         build/src/Game/VEHICLE/static_game_state.o(.data);
         build/src/Game/VEHICLE/empty_callbacks.o(.data);
         build/src/Game/MAIN/blb_memory.o(.data);

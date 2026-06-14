@@ -250,7 +250,15 @@
   -
     - 448976
     - "c"
-    - "Game/VEHICLE/vehicle"
+    - "Game/MAIN/level_load"
+  -
+    - 456656
+    - "c"
+    - "Game/MAIN/entity_init"
+  -
+    - 469172
+    - "c"
+    - "Game/MAIN/main"
   -
     - 472720
     - "c"

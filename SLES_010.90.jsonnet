@@ -230,16 +230,17 @@ local bss(start, kind, vram) = {
         asm('6D4FC', 'Game/MAIN/gamestate'),             // 0x8007CCFC InitGameState/respawn/level-start
 
         // -----------------------------------------------------------------
-        // UNIT 6: Game/VEHICLE — vehicle modes (FINN/RUNN/SOAR), tile collision
+        // UNIT 6: Game/MAIN — level lifecycle, entity init table, main loop
+        //   APPLIED: was Game/VEHICLE/vehicle (single 0x55C0 c()); rodata anchor
+        //   0x80012140 [R] revealed this is level lifecycle code, not vehicles.
+        //   Split into 3 TUs at function-boundary addresses verified by both
+        //   tools/find-tu-boundaries.py and Ghidra MCP xref audit.
         // -----------------------------------------------------------------
-        c('6D9D0', 'Game/VEHICLE/vehicle'),
+        c('6D9D0', 'Game/MAIN/level_load'),       // 0x8007D1D0 load/setup level, game-mode loop  [R]
+        c('6F7D0', 'Game/MAIN/entity_init'),      // 0x8007EFD0 ~120 EntityType###_*_Init + remap [N]
+        c('728B4', 'Game/MAIN/main'),             // 0x800820B4 cheats, main(), debug menu        [N]
         c('73690', 'Game/VEHICLE/static_game_state'),
         c('736E0', 'Game/VEHICLE/empty_callbacks'),
-        // PROPOSED: this unit (rodata anchor 0x80012140 [R]) is level lifecycle,
-        // not vehicle code. Really ~3 files:
-        //   c('6D9D0', 'Game/MAIN/level_load'),        // 0x8007D1D0 load/setup level, game-mode loop  [R]
-        //   asm('6F7D0', 'Game/MAIN/entity_init'),     // 0x8007EFD0 ~120 EntityType###_*_Init + remap [N]
-        //   asm('728B4', 'Game/MAIN/main'),            // 0x800820B4 cheats, main(), debug menu        [N]
 
         // -----------------------------------------------------------------
         // UNIT 7: Game/MAIN — main(), menus, passwords, audio, level loading
