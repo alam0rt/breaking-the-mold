@@ -14,6 +14,10 @@ extern void *InitEntitySprite(void *entity, u32 spriteId, s32 z,
 extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z,
                                   s16 x, s16 y);
 extern void AttachCursorToButton(Entity *button);
+extern void *AllocateFromHeap(void *heap, s32 size, s32 align, s32 flags);
+extern void AddEntityToSortedRenderList(void *list, void *entity);
+extern void *g_pBlbHeapBase;
+extern void *g_pGameState;
 extern u8 D_80012034[]; /* menu-button vtable, +0x18 install slot */
 extern u8 D_8001208C[]; /* menu-button-highlight vtable */
 extern u8 D_8009CBE8[]; /* menu-button-highlight sprite table */
