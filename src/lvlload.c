@@ -8,13 +8,13 @@ extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
 extern void HidePauseMenuHUD(s32 handle);
 extern u8 D_80012120[];
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", InitializeAndLoadLevel);
+INCLUDE_ASM("asm/nonmatchings/lvlload", InitializeAndLoadLevel);
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", SetupAndStartLevel);
+INCLUDE_ASM("asm/nonmatchings/lvlload", SetupAndStartLevel);
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", DisplayTransitionSprite);
+INCLUDE_ASM("asm/nonmatchings/lvlload", DisplayTransitionSprite);
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", SpawnPlayerAndEntities);
+INCLUDE_ASM("asm/nonmatchings/lvlload", SpawnPlayerAndEntities);
 
 extern u8 D_80012100[];
 extern void DestroyEntity(void *entity, s32 arg);
@@ -31,7 +31,7 @@ void DestroyEntityAndFreeResources(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", GameModeCallback);
+INCLUDE_ASM("asm/nonmatchings/lvlload", GameModeCallback);
 
 extern void AddToZOrderList(u8 *obj, s32 zOrder);
 
@@ -44,7 +44,7 @@ void SaveCheckpointState(void *entity) {
     AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", RestoreCheckpointEntities);
+INCLUDE_ASM("asm/nonmatchings/lvlload", RestoreCheckpointEntities);
 
 s32 RemoveCheckpointEntityById(s32 gameState, s32 target) {
     s32 *node = *(s32 **)(gameState + 0x134);
@@ -66,7 +66,7 @@ s32 RemoveCheckpointEntityById(s32 gameState, s32 target) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", PauseGameAndShowMenu);
+INCLUDE_ASM("asm/nonmatchings/lvlload", PauseGameAndShowMenu);
 
 void PauseGameWithFadeOut(u8 *obj) {
     PlaySoundEffect(0x4C60F249, 0xA0, 1);
@@ -116,6 +116,6 @@ void ClearEntitiesAndFadeToBlack(void *entity) {
     *(u32 *)((u8 *)entity + 0x28) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", HandleGenericTriggerZone);
+INCLUDE_ASM("asm/nonmatchings/lvlload", HandleGenericTriggerZone);
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/level_load", CleanupRespawnEntities);
+INCLUDE_ASM("asm/nonmatchings/lvlload", CleanupRespawnEntities);

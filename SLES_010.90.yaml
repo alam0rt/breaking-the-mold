@@ -250,35 +250,35 @@
   -
     - 448976
     - "c"
-    - "Game/MAIN/level_load"
+    - "lvlload"
   -
     - 456656
     - "c"
-    - "Game/MAIN/entity_init"
+    - "entinit"
   -
     - 469172
     - "c"
-    - "Game/MAIN/main"
+    - "main"
   -
     - 472720
     - "c"
-    - "Game/VEHICLE/static_game_state"
+    - "gstctor"
   -
     - 472800
     - "c"
-    - "Game/VEHICLE/empty_callbacks"
+    - "emptycb"
   -
     - 472816
     - "c"
-    - "Game/MAIN/blb_memory"
+    - "blbmem"
   -
     - 472916
     - "asm"
-    - "Game/MAIN"
+    - "libc"
   -
     - 472980
     - "c"
-    - "Game/MAIN/memmove"
+    - "memmove"
   -
     - 473088
     - "c"

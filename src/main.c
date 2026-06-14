@@ -9,7 +9,7 @@ extern void HidePauseMenuHUD(s32 handle);
 extern u8 D_80012120[];
 
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/main", CheckCheatCodeInput);
+INCLUDE_ASM("asm/nonmatchings/main", CheckCheatCodeInput);
 
 void func_800826C0(u8 *obj, u8 *outA, u8 *outB, u8 *outC) {
     *outA = obj[0x199];
@@ -133,8 +133,8 @@ void FreeSpecialEntity2120Memory(void *ptr) {
     FreeFromHeap(g_pBlbHeapBase, ptr, 0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/main", main);
+INCLUDE_ASM("asm/nonmatchings/main", main);
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/main", func_80082BE8);
+INCLUDE_ASM("asm/nonmatchings/main", func_80082BE8);
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/main", ProcessDebugMenuInput);
+INCLUDE_ASM("asm/nonmatchings/main", ProcessDebugMenuInput);

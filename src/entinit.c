@@ -681,7 +681,7 @@ void EntityType095_SoundEmitterPanning_Init(void *list, void *spawnData) {
 void EntityType008_KloggCatchableBall_Init(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/entity_init", RemapEntityTypesForLevel);
+INCLUDE_ASM("asm/nonmatchings/entinit", RemapEntityTypesForLevel);
 
 extern void *D_800A595C;
 extern u8 D_8009DAB4[];
@@ -722,7 +722,7 @@ store:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/entity_init", SpawnEntitiesAlternateSystem);
+INCLUDE_ASM("asm/nonmatchings/entinit", SpawnEntitiesAlternateSystem);
 
 void ClearAlternateEntitySpawnFlags(void *state) {
     s16 i;
@@ -733,7 +733,7 @@ void ClearAlternateEntitySpawnFlags(void *state) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/MAIN/entity_init", AddToDepthBucket);
+INCLUDE_ASM("asm/nonmatchings/entinit", AddToDepthBucket);
 
 extern void SetPolyGT4(void *prim);
 extern void AddPrim(void *ot, void *prim);
