@@ -152,6 +152,10 @@
     - "c"
     - "Game/ENGINE/animation_setters"
   -
+    - 69704
+    - "c"
+    - "Game/ENGINE/blb_runtime"
+  -
     - 109432
     - "asm"
     - "Game/OBJECT/hud"

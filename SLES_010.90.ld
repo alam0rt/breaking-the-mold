@@ -45,6 +45,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.rodata);
         build/src/Game/ENGINE/sprite_setters.o(.rodata);
         build/src/Game/ENGINE/animation_setters.o(.rodata);
+        build/src/Game/ENGINE/blb_runtime.o(.rodata);
         build/asm/Game/OBJECT/hud.o(.rodata);
         build/asm/Game/OBJECT/entity_dtor.o(.rodata);
         build/asm/Game/OBJECT/decor.o(.rodata);
@@ -97,6 +98,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.sdata);
         build/src/Game/ENGINE/sprite_setters.o(.sdata);
         build/src/Game/ENGINE/animation_setters.o(.sdata);
+        build/src/Game/ENGINE/blb_runtime.o(.sdata);
         build/asm/Game/OBJECT/hud.o(.sdata);
         build/asm/Game/OBJECT/entity_dtor.o(.sdata);
         build/asm/Game/OBJECT/decor.o(.sdata);
@@ -149,6 +151,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.sbss);
         build/src/Game/ENGINE/sprite_setters.o(.sbss);
         build/src/Game/ENGINE/animation_setters.o(.sbss);
+        build/src/Game/ENGINE/blb_runtime.o(.sbss);
         build/asm/Game/OBJECT/hud.o(.sbss);
         build/asm/Game/OBJECT/entity_dtor.o(.sbss);
         build/asm/Game/OBJECT/decor.o(.sbss);
@@ -201,6 +204,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.bss);
         build/src/Game/ENGINE/sprite_setters.o(.bss);
         build/src/Game/ENGINE/animation_setters.o(.bss);
+        build/src/Game/ENGINE/blb_runtime.o(.bss);
         build/asm/Game/OBJECT/hud.o(.bss);
         build/asm/Game/OBJECT/entity_dtor.o(.bss);
         build/asm/Game/OBJECT/decor.o(.bss);
@@ -241,6 +245,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.text);
         build/src/Game/ENGINE/sprite_setters.o(.text);
         build/src/Game/ENGINE/animation_setters.o(.text);
+        build/src/Game/ENGINE/blb_runtime.o(.text);
         build/asm/Game/OBJECT/hud.o(.text);
         build/asm/Game/OBJECT/entity_dtor.o(.text);
         build/asm/Game/OBJECT/decor.o(.text);
@@ -300,6 +305,7 @@ SECTIONS
         build/src/Game/ENGINE/entity_system.o(.data);
         build/src/Game/ENGINE/sprite_setters.o(.data);
         build/src/Game/ENGINE/animation_setters.o(.data);
+        build/src/Game/ENGINE/blb_runtime.o(.data);
         build/asm/Game/OBJECT/hud.o(.data);
         build/asm/Game/OBJECT/entity_dtor.o(.data);
         build/asm/Game/OBJECT/decor.o(.data);

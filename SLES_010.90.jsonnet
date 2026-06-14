@@ -150,22 +150,15 @@ local bss(start, kind, vram) = {
         asm('9554', 'Game/ENGINE_9554'),       // menu entity init, sprite object
         c('A8C8', 'Game/ENGINE/entity_system'),  // entity system core
         c('D880', 'Game/ENGINE/sprite_setters'),
-        c('D8C0', 'Game/ENGINE/animation_setters'),
-        // PROPOSED: animation_setters has mixed addressing modes [A] for
-        // g_pGameState. LoadBLBHeader @ 0x800208B0 emits a single-instruction
-        // gp_rel store; every other reference in the file (UpdateEntityRender,
-        // EntityApplyMovementCallbacks, EntityTickLoopWithCamera, ...) uses
-        // lui+lw. Across the whole binary g_pGameState has 1 gp_rel writer
-        // vs 255 hilo users (find-tu-boundaries.py + Ghidra MCP xref audit
-        // 2026-06-14). The cleanest split anchors at the BLB-helper cluster
-        // (BLB_ReadSectorsWrapper / InitEntityWithTable / LoadBLBHeader and
-        // the entity destruct + tick/render-loop family that follows it):
-        //   c('D8C0', 'Game/ENGINE/animation_setters'),  // 0x8001D8C0 anim/sprite setters body
-        //   c('11048', 'Game/ENGINE/blb_runtime'),       // 0x80020848 BLB load + entity lifecycle [A]
-        // Alternative: declare g_pGameState file-scope as `extern u8 g_pGameState[];`
-        // and re-declare it as `extern GameState *g_pGameState;` inside LoadBLBHeader
-        // to reproduce the per-decl addressing-mode split without changing the
-        // linker script. See docs/compiler-quirks.md.
+        c('D8C0', 'Game/ENGINE/animation_setters'),     // 0x8001D8C0 anim/sprite setters body
+        c('11048', 'Game/ENGINE/blb_runtime'),          // 0x80020848 BLB load + entity lifecycle [A]
+        // UNIT 1 split applied 2026-06-14: animation_setters had mixed addressing
+        // [A] for g_pGameState (LoadBLBHeader @ 0x800208B0 used gp_rel, all 255
+        // other references used lui+lw). The BLB-helper cluster
+        // (BLB_ReadSectorsWrapper / InitEntityWithTable / LoadBLBHeader / entity
+        // destruct + tick/render-loop family) is now in its own TU
+        // (blb_runtime.c), matching the original per-file addressing-mode split.
+        // Evidence: tools/find-tu-boundaries.py + Ghidra MCP xref audit.
 
         // -----------------------------------------------------------------
         // UNIT 2: Game/OBJECT — split into ~9 source files in link order
