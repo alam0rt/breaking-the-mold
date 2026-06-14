@@ -9,6 +9,12 @@ extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
 extern void ApplyAudioSettings(void *audioCtx);
 extern s32 rand(void);
 extern void InitRunnLevelEntity(Entity *entity);
+extern void *InitEntitySprite(void *entity, u32 spriteId, s32 z,
+                              s16 x, s16 y, s32 flags);
+extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z,
+                                  s16 x, s16 y, s32 flags);
+extern void AttachCursorToButton(Entity *button);
+extern u8 D_80012034[]; /* menu-button vtable, +0x18 install slot */
 
 /* Forward decls for in-TU helpers used by Setup*Animation before their
  * own definitions appear below. */
@@ -160,7 +166,12 @@ void MenuSetEntityIdle2(Entity *entity) {
  * the temporary D_80012034 vtable, then calls AttachCursorToButton to
  * spawn the highlight sub-entity (stored at +0x100) and wire the shared
  * move-callbacks. Returns the button entity. */
-INCLUDE_ASM("asm/nonmatchings/menu", InitMenuButtonWithSpriteId);
+Entity *InitMenuButtonWithSpriteId(Entity *entity, u32 spriteId, s16 x, s16 y) {
+    InitEntitySprite(entity, spriteId, 0x3E8, x, y, 0);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80012034;
+    AttachCursorToButton(entity);
+    return entity;
+}
 
 /* Same as InitMenuButtonWithSpriteId but passes a sprite-*table* pointer
  * to InitEntityWithSprite (so the underlying sprite is resolved through
