@@ -164,13 +164,38 @@ INCLUDE_ASM("asm/nonmatchings/menu", InitRunnLevelEntity);
  * GetWorldPositionX/Y identity move-callbacks at +0x24/+0x2C so the
  * sprite tracks its own world position. Returns the new entity.
  *
- * SHELVED: register allocation diff. cc1 in the original allocates
- * $v1 for the GetWorldPosition function pointer and reuses $v0 for the
- * -1 marker (after the vtable store frees $v0). Modern cc1 picks $v0
- * for fn ptr and $v1 for marker — same body, opposite regs. Tried
- * statement re-ordering (markerFirst, fnFirst, interleaved); all swap
- * which regs get the swap. Permuter territory. */
-INCLUDE_ASM("asm/nonmatchings/menu", InitMenuButtonEntity);
+ * MATCH recipe for the GetWorldPositionX/Y slot-marshal family (also
+ * applies to InitMenuCursorEntity / AttachCursorToButton):
+ *  - TripadSlot pins the 0x30 frame with the slot at sp+0x1C.
+ *  - A named `void (*fn)(Entity*)` local (assigned as its own statement,
+ *    NOT inline in the struct init) flips the regalloc so the fn pointer
+ *    lands in $v1 and the -1 marker in $v0 -- the documented "register
+ *    allocation diff" that resisted plain statement reordering. The
+ *    named `s16 m1` is also load-bearing (dropping it re-hoists the fn).
+ *  - An `__asm__ volatile("":::"memory")` scheduling fence after the
+ *    vtable store stops cc1 from hoisting the fn lui/addiu pair ABOVE the
+ *    vtable store (the last remaining diff). Same zero-byte barrier idiom
+ *    used in src/libs/libvoice.c. */
+Entity *InitMenuButtonEntity(Entity *entity, s16 x, s16 y) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)(Entity *);
+    InitEntityWithSprite(entity, &D_8009CBE8, 0x7D0, x, y);
+    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_8001208C;
+    __asm__ volatile("" ::: "memory");
+    m1 = -1;
+    fn = (void (*)(Entity *))GetWorldPositionX;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x24) = u.s;
+    fn = (void (*)(Entity *))GetWorldPositionY;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x2C) = u.s;
+    return entity;
+}
 
 /* Event-handler installed on the button-highlight child by
  * MenuActivate*Button helpers. Same body as MenuEntityCallback: only
