@@ -67,7 +67,12 @@ s32 WorldToScreenYWithParallax(Entity *entity, s16 value) {
     return ((s32)value * entity->scalePowerupY >> 16) + (s32)D_800A5960->camera_y;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/entity_system", CreateEntityRenderContext);
+extern void *PrepareSpriteVRAMSlotForContext(void *ctx, s16 width, s16 height, s16 depth, u8 flags);
+
+void CreateEntityRenderContext(Entity *entity, s16 width, s16 height, s16 depth, u8 flags) {
+    void *ctx = AllocateFromHeap(D_800A5954, 0x3C, 1, 0);
+    entity->spriteContext = PrepareSpriteVRAMSlotForContext(ctx, width, (s16)((height + 3) & 0xFFFCu), depth, flags);
+}
 
 void GetEntityScreenBounds(Entity *entity, s16 *out) {
     CalculateEntityScreenBounds(entity);

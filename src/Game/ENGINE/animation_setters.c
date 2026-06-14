@@ -11,6 +11,8 @@ extern u8 D_800103CC[];
 extern u8 D_8001040C[];
 extern u8 D_800103EC[];
 
+typedef struct { s32 a; s32 b; } S32Pair;
+
 typedef struct AnimEntity {
     u8 pad00[0xC0];
     /* 0xC0 */ u32 pendingFrame;
@@ -144,7 +146,42 @@ void func_8001D268(AnimEntity *entity, u8 value) {
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TickEntityAnimation);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", AdvanceAnimationFrame);
+typedef struct AdvAnimState {
+    u8 pad_D8[0xD8];
+    s16 field_D8;
+    s16 field_DA;
+    u16 field_DC;
+    s16 field_DE;
+    u8 pad_E0[0xF0 - 0xE0];
+    u8 field_F0;
+    u8 field_F1;
+} AdvAnimState;
+
+void AdvanceAnimationFrame(AdvAnimState *e) {
+    s16 current = e->field_DA;
+    s16 target = e->field_DE;
+
+    if (current == target) {
+        if (e->field_F1 != 0) {
+            e->field_DA = e->field_DC;
+        }
+        return;
+    }
+
+    if (e->field_F0 == 0) {
+        s16 newVal = current + 1;
+        e->field_DA = newVal;
+        if (newVal >= e->field_D8) {
+            e->field_DA = 0;
+        }
+    } else {
+        s16 newVal = current - 1;
+        e->field_DA = newVal;
+        if (newVal < 0) {
+            e->field_DA = e->field_D8 - 1;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", ApplyPendingSpriteState);
 
@@ -309,9 +346,15 @@ typedef struct EntityAccessorView {
     s32 field_B0;       /* 0xB0 */
     u8 padB4[0xCC - 0xB4];
     s32 field_CC;       /* 0xCC */
-    u8 padD0[0xDA - 0xD0];
+    u8 padD0[0xD8 - 0xD0];
+    s16 field_D8;       /* 0xD8 */
     s16 field_DA;       /* 0xDA */
-    u8 padDC[0xF6 - 0xDC];
+    u16 field_DC;       /* 0xDC */
+    s16 field_DE;       /* 0xDE */
+    u8 padE0[0xF0 - 0xE0];
+    u8 field_F0;        /* 0xF0 */
+    u8 field_F1;        /* 0xF1 */
+    u8 padF2[0xF6 - 0xF2];
     u8 field_F6;        /* 0xF6 */
 } EntityAccessorView;
 
@@ -411,7 +454,9 @@ void func_800201A8(EntityAccessorView *e, u8 value) {
     e->field_F6 = value;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_800201B0);
+void func_800201B0(EntityAccessorView *e, S32Pair val) {
+    *(S32Pair *)&e->field_98 = val;
+}
 
 s16 func_800201D0(EntityAccessorView *e) {
     return e->field_DA;
@@ -543,15 +588,21 @@ s32 func_800205A0(EntityAccessorView *e) {
     return e->field_34;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_800205AC);
+void func_800205AC(EntityAccessorView *e, S32Pair val) {
+    *(S32Pair *)((u8 *)e + 0x2C) = val;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TransformYCoord);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_80020668);
+void func_80020668(EntityAccessorView *e, S32Pair val) {
+    *(S32Pair *)((u8 *)e + 0x24) = val;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", TransformXCoord);
 
-INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", func_80020724);
+void func_80020724(EntityAccessorView *e, S32Pair val) {
+    *(S32Pair *)((u8 *)e + 0x1C) = val;
+}
 
 INCLUDE_ASM("asm/nonmatchings/Game/ENGINE/animation_setters", InvokeEntityRenderCallback);
 
