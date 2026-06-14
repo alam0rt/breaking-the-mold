@@ -56,7 +56,18 @@ typedef struct {
  * caller-supplied (x,y). Installs vtable D_800120AC, wires
  * GetWorldPositionX/Y as identity move-callbacks at +0x24/+0x2C (FSM
  * marker 0xFFFF0000 = direct call), then EntitySetState to the FSM
- * slot at D_800A6050/D_800A6054 to enter the cursor's idle tick state. */
+ * slot at D_800A6050/D_800A6054 to enter the cursor's idle tick state.
+ *
+ * SHELVED: gp-rel-extern blocker. Original loads D_800A6050/D_800A6054 via
+ * single-instruction `lw $aN, %gp_rel(D_800A6050)($gp)`. Our cc1+maspsx
+ * cannot emit gp_rel addressing for `extern u32 D_800A6050` (the symbol is
+ * owned by undefined_syms.txt, not defined in menu.o's .sdata). cc1 emits
+ * the bare symbol form and maspsx leaves it for GNU as, which resolves to
+ * 2-instruction `lui $aN, %hi(...); lw $aN, %lo(...)($aN)`. Net: function
+ * grows by 8 bytes (2 gp_rel sites × 4 bytes each), shifting every byte
+ * after it including all .data — symbol D_8009CBDC slides to 0x8009CBE4,
+ * causing 29k+ vtable byte diffs cascading through libgpu etc.
+ * See memories/repo/gp-rel-extern-blocker.md. */
 INCLUDE_ASM("asm/nonmatchings/menu", InitMenuCursorEntity);
 
 /* Generic tick callback that drives a countdown timer at entity+0x100:
