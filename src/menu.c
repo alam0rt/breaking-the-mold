@@ -276,7 +276,10 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateLevelSelectButton);
 /* Level-select deactivate -- byte-identical to FINN_ClearSubentityState:
  * clears parent+0x104, zeroes the highlight child's event-callback
  * pair, switches to idle sprite 0x39900619, and re-shows the +0x34
- * sub-entity (+0x0A=1). */
+ * sub-entity (+0x0A=1).
+ *
+ * SHELVED: same Quirk-5 lui-hoist scheduling diff as the parent
+ * FINN_ClearSubentityState body. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateLevelSelectButton);
 
 /* No-op stub @ 0x80075B7C (8 bytes: jr $ra; nop). Empty C body already
@@ -361,7 +364,10 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateSkullIconButton);
 /* Skull-icon deactivate -- byte-identical to MenuDeactivateLevelSelectButton
  * / FINN_ClearSubentityState: clears parent+0x104, zeros the highlight
  * child's event-callback pair, switches to idle sprite 0x39900619, and
- * re-shows the +0x34 sub-entity (+0x0A=1). */
+ * re-shows the +0x34 sub-entity (+0x0A=1).
+ *
+ * SHELVED: same Quirk-5 lui-hoist scheduling diff as the parent
+ * FINN_ClearSubentityState body. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateSkullIconButton);
 
 /* No-op stub @ 0x80075F24 (8 bytes: jr $ra; nop). Empty C body already
