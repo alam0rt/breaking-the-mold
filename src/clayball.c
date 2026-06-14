@@ -7,16 +7,16 @@ extern u8 D_800116E8[];
 extern u8 D_80011708[];
 extern u8 EntityApplyMovementCallbacks(void *entity, s16 x, s16 y);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", CircularPlatformUpdatePath);
+INCLUDE_ASM("asm/nonmatchings/clayball", CircularPlatformUpdatePath);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", InitCircularPlatformEntity);
+INCLUDE_ASM("asm/nonmatchings/clayball", InitCircularPlatformEntity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", ClayballTickWithParticleSpawn);
+INCLUDE_ASM("asm/nonmatchings/clayball", ClayballTickWithParticleSpawn);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", CircularPlatformEventHandler);
+INCLUDE_ASM("asm/nonmatchings/clayball", CircularPlatformEventHandler);
 
 /* CircularPlatformUpdateWithMirror @ 8005894C — arg ordering and s16 arithmetic diffs */
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", CircularPlatformUpdateWithMirror);
+INCLUDE_ASM("asm/nonmatchings/clayball", CircularPlatformUpdateWithMirror);
 
 extern void *InitEntitySprite(void *entity, void *def, s32 spriteId, s16 x, s16 y, s32 unused);
 extern void GenericSpriteEntityInitCallback(void *entity, u16 param, u8 flags, s32 zero);
@@ -37,7 +37,7 @@ void *InitClayballWithSwitchBlock(void *entity, u8 *def, void *spawnContext, u8 
 
 /* ClayballSwitchEventHandler @ 80058AAC — switch case layout diff;
  * cc1 puts stores in j delay slots, GCC doesn't reproduce */
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", ClayballSwitchEventHandler);
+INCLUDE_ASM("asm/nonmatchings/clayball", ClayballSwitchEventHandler);
 
 extern void ClayballSpawnSwitchBlock(void *entity);
 
@@ -52,15 +52,15 @@ s32 ClayballSpawnOnSignalHandler(void *entity, u16 event, u32 param, s32 arg3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", ClayballResetState);
+INCLUDE_ASM("asm/nonmatchings/clayball", ClayballResetState);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", ClayballSpawnSwitchBlock);
+INCLUDE_ASM("asm/nonmatchings/clayball", ClayballSpawnSwitchBlock);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", InitBonusClayballEntity);
+INCLUDE_ASM("asm/nonmatchings/clayball", InitBonusClayballEntity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", ShrineyGuardSoundUpdateTick);
+INCLUDE_ASM("asm/nonmatchings/clayball", ShrineyGuardSoundUpdateTick);
 
-INCLUDE_ASM("asm/nonmatchings/Game/BOSS/clayball_platform", ShrineyGuardEventWithSound);
+INCLUDE_ASM("asm/nonmatchings/clayball", ShrineyGuardEventWithSound);
 
 extern u8 D_80011628[];
 extern void StopSPUVoice(s32 voice);

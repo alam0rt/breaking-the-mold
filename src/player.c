@@ -9,9 +9,9 @@ extern u8 D_80011804[];
 
 s32 CheckTileCollisionOverride(void *entity, u8 *tile);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", CreatePlayerEntity);
+INCLUDE_ASM("asm/nonmatchings/player", CreatePlayerEntity);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", InitPlayerSpriteAvailability);
+INCLUDE_ASM("asm/nonmatchings/player", InitPlayerSpriteAvailability);
 
 void EntityDestructor_WithSPUVoiceStop(void *entity, s32 flags) {
     u8 *e = (u8 *)entity;
@@ -23,7 +23,7 @@ void EntityDestructor_WithSPUVoiceStop(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", CheckWallCollision);
+INCLUDE_ASM("asm/nonmatchings/player", CheckWallCollision);
 
 s32 CheckCollisionAbove40(void *entity) {
     u8 tile;
@@ -52,17 +52,17 @@ s32 CheckCollisionBelow1(void *entity) {
     return tile == 0x7D;
 }
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", TransformYCoordinateWithScale);
+INCLUDE_ASM("asm/nonmatchings/player", TransformYCoordinateWithScale);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", CalculateScaledXCoord);
+INCLUDE_ASM("asm/nonmatchings/player", CalculateScaledXCoord);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", TransformXCoordinateWithScale);
+INCLUDE_ASM("asm/nonmatchings/player", TransformXCoordinateWithScale);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", CalculateScaledYCoord);
+INCLUDE_ASM("asm/nonmatchings/player", CalculateScaledYCoord);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", PlayerApplyPositionWithCollision);
+INCLUDE_ASM("asm/nonmatchings/player", PlayerApplyPositionWithCollision);
 
-INCLUDE_ASM("asm/nonmatchings/Game/PLAYER/player", IsEntityNearSoundTrigger);
+INCLUDE_ASM("asm/nonmatchings/player", IsEntityNearSoundTrigger);
 
 s32 CheckTileCollisionOverride(void *entity, u8 *tile) {
     u8 t = *tile;

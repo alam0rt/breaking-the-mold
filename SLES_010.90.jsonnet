@@ -192,15 +192,15 @@ local bss(start, kind, vram) = {
         // function-name clustering — Clayball/Shriney funcs are in the lower
         // half, CreatePlayerEntity/CheckCollision* are in the upper half).
         // -----------------------------------------------------------------
-        c('48968', 'Game/BOSS/clayball_platform'),  // 0x80058168 clayball + circular platform  [R]
-        c('49EA4', 'Game/PLAYER/player'),           // 0x800596A4 CreatePlayerEntity + collision [N]
+        c('48968', 'clayball'),                     // 0x80058168 clayball + circular platform  [R]
+        c('49EA4', 'player'),                       // 0x800596A4 CreatePlayerEntity + collision [N]
 
         // -----------------------------------------------------------------
         // UNIT 4: Game/PLAYER — player state machine, physics, input
         // -----------------------------------------------------------------
-        asm('4AE30', 'Game/PLAYER'),               // 0x8005A630 player FSM (PlayerState_*/PlayerCallback_*)
-        asm('5E808', 'Game/PLAYER/finn'),          // 0x8006E008 FINN/glide subentity                [N]
-        c('617D8', 'Game/PLAYER/destructor_spu_at10c'),
+        asm('4AE30', 'playst'),                    // 0x8005A630 player FSM (PlayerState_*/PlayerCallback_*)
+        asm('5E808', 'finn'),                      // 0x8006E008 FINN/glide subentity                [N]
+        c('617D8', 'playdtor'),
         // PROPOSED: the PLAYER blob (0x8005A630-0x8006E008, ~80KB) is a single
         // asm() with no rodata anchor [R] inside it, so internal boundaries are
         // inferred only from function-name clusters [N]. No addressing-mode

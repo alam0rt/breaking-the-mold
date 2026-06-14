@@ -194,23 +194,23 @@
   -
     - 297320
     - "c"
-    - "Game/BOSS/clayball_platform"
+    - "clayball"
   -
     - 302756
     - "c"
-    - "Game/PLAYER/player"
+    - "player"
   -
     - 306736
     - "asm"
-    - "Game/PLAYER"
+    - "playst"
   -
     - 387080
     - "asm"
-    - "Game/PLAYER/finn"
+    - "finn"
   -
     - 399320
     - "c"
-    - "Game/PLAYER/destructor_spu_at10c"
+    - "playdtor"
   -
     - 399432
     - "c"
