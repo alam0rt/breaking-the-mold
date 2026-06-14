@@ -150,7 +150,7 @@ local bss(start, kind, vram) = {
         asm('5E808', 'finn'),                      // 0x8006E008 FINN/glide subentity                [N]
         c('617D8', 'playdtor'),
         c('61848', 'vehicle'),                           // 0x80071048 Runn/Soar/Finn vehicle modes + platforms [R]
-        asm('65798', 'menu'),                            // 0x80074F98 cursor/buttons/options/level-select
+        c('65798', 'menu'),                              // 0x80074F98 cursor/buttons/options/level-select
         asm('667F4', 'passwd'),                          // 0x80075FF4 password entry UI
         asm('687E8', 'results'),                         // 0x80077FE8 HUD digits + results screen
         asm('69E3C', 'ending'),                          // 0x8007963C ending / credits

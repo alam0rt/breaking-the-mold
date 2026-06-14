@@ -57,7 +57,7 @@ SECTIONS
         build/src/player.o(.rodata);
         build/asm/finn.o(.rodata);
         build/src/playdtor.o(.rodata);
-        build/asm/menu.o(.rodata);
+        build/src/menu.o(.rodata);
         build/asm/passwd.o(.rodata);
         build/asm/results.o(.rodata);
         build/asm/ending.o(.rodata);
@@ -108,7 +108,7 @@ SECTIONS
         build/src/player.o(.sdata);
         build/asm/finn.o(.sdata);
         build/src/playdtor.o(.sdata);
-        build/asm/menu.o(.sdata);
+        build/src/menu.o(.sdata);
         build/asm/passwd.o(.sdata);
         build/asm/results.o(.sdata);
         build/asm/ending.o(.sdata);
@@ -159,7 +159,7 @@ SECTIONS
         build/src/player.o(.sbss);
         build/asm/finn.o(.sbss);
         build/src/playdtor.o(.sbss);
-        build/asm/menu.o(.sbss);
+        build/src/menu.o(.sbss);
         build/asm/passwd.o(.sbss);
         build/asm/results.o(.sbss);
         build/asm/ending.o(.sbss);
@@ -210,7 +210,7 @@ SECTIONS
         build/src/player.o(.bss);
         build/asm/finn.o(.bss);
         build/src/playdtor.o(.bss);
-        build/asm/menu.o(.bss);
+        build/src/menu.o(.bss);
         build/asm/passwd.o(.bss);
         build/asm/results.o(.bss);
         build/asm/ending.o(.bss);
@@ -253,7 +253,7 @@ SECTIONS
         build/asm/finn.o(.text);
         build/src/playdtor.o(.text);
         build/src/vehicle.o(.text);
-        build/asm/menu.o(.text);
+        build/src/menu.o(.text);
         build/asm/passwd.o(.text);
         build/asm/results.o(.text);
         build/asm/ending.o(.text);
@@ -311,7 +311,7 @@ SECTIONS
         build/src/player.o(.data);
         build/asm/finn.o(.data);
         build/src/playdtor.o(.data);
-        build/asm/menu.o(.data);
+        build/src/menu.o(.data);
         build/asm/passwd.o(.data);
         build/asm/results.o(.data);
         build/asm/ending.o(.data);
