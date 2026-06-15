@@ -18,11 +18,45 @@ void LoadSpriteHashArrayToVRAM(void *heap, u8 **arr) {
 
 INCLUDE_ASM("asm/nonmatchings/layer", FreeLayerRenderSlot);
 
-INCLUDE_ASM("asm/nonmatchings/layer", FreeLayerSlotByEntityPointer);
+extern void FreeLayerRenderSlot(u8 *base, u8 idx);
 
-INCLUDE_ASM("asm/nonmatchings/layer", FreeLayerSlotsByEntityList);
+void FreeLayerSlotByEntityPointer(u8 *base, void *needle) {
+    s16 i;
+    for (i = 0; i < 20; i++) {
+        u8 *slot = base + i * 24;
+        if (*(void **)slot == needle) {
+            FreeLayerRenderSlot(base, (u8)i);
+            return;
+        }
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlots);
+void FreeLayerSlotsByEntityList(u8 *base, void **list) {
+    while (1) {
+        void *needle;
+        s16 i;
+        if (*list == NULL) return;
+        needle = *list;
+        for (i = 0; i < 20; i++) {
+            u8 *slot = base + i * 24;
+            if (*(void **)slot == needle) {
+                FreeLayerRenderSlot(base, (u8)i);
+                break;
+            }
+        }
+        list++;
+    }
+}
+
+void FreeAllLayerRenderSlots(u8 *base) {
+    s16 i;
+    for (i = 0; i < 20; i++) {
+        u8 *slot = base + i * 24;
+        if (*(void **)slot != NULL) {
+            FreeLayerRenderSlot(base, (u8)i);
+        }
+    }
+}
 
 u8 *func_800194F4(u8 *base, void *needle) {
     s16 i;
