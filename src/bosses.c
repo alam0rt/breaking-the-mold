@@ -1,5 +1,7 @@
 #include "common.h"
 
+extern u8 *g_pGameState;
+
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityTickWithReadyCheck);
@@ -142,7 +144,10 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStartLoopAttackState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardDeathState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardDeathCallback);
+void ShrineyGuardDeathCallback(u8 *e) {
+    g_pGameState[0x148] = e[0x110];
+    e[0x106] = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBoss);
 
@@ -214,7 +219,11 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EnemySpriteState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyDefeatState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageDeathCallback);
+void MonkeyMageDeathCallback(u8 *e) {
+    u8 *p = *(u8 **)(e + 0x34);
+    p[0xA] = 0;
+    g_pGameState[0x148] = e[0x106];
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageDestroyCallback);
 
