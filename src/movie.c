@@ -14,7 +14,8 @@ INCLUDE_ASM("asm/nonmatchings/movie", InitMovieDecoder);
 
 INCLUDE_ASM("asm/nonmatchings/movie", MovieFrameDecodeCallback);
 
-INCLUDE_ASM("asm/nonmatchings/movie", StubMovieStreamCallback);
+void StubMovieStreamCallback(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/movie", DecodeNextMovieFrame);
 

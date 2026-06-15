@@ -132,9 +132,11 @@ INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_O);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_P);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", func_80030C98);
+void func_80030C98(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", func_80030CA0);
+void func_80030CA0(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_Q);
 

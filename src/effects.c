@@ -238,9 +238,11 @@ INCLUDE_ASM("asm/nonmatchings/effects", func_800388F8);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8_80038904);
 
-INCLUDE_ASM("asm/nonmatchings/effects", NopStub_80038968);
+void NopStub_80038968(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", NopStub_80038970);
+void NopStub_80038970(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BC8);
 

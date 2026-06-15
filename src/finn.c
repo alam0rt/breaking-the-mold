@@ -64,9 +64,11 @@ INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED30);
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED3C);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED44);
+void func_8006ED44(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED4C);
+void func_8006ED4C(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityDestroyCallback_Simple);
 
@@ -120,9 +122,11 @@ INCLUDE_ASM("asm/nonmatchings/finn", func_800704F0);
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_800704FC);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_80070504);
+void func_80070504(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8007050C);
+void func_8007050C(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", EntityDestructor_Simple13);
 

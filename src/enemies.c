@@ -248,9 +248,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_8004135
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_800413c0);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", NopStub_80041424);
+void NopStub_80041424(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", NopStub_8004142c);
+void NopStub_8004142c(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010E04_80041434);
 
@@ -410,9 +412,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011168);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011188);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", NopStub_80045e70);
+void NopStub_80045e70(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", NopStub_80045e78);
+void NopStub_80045e78(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800111C8_80045e80);
 
@@ -458,9 +462,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemyDestroyCallback_0x80011228);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011228);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", NopStub_80046ce4);
+void NopStub_80046ce4(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", NopStub_80046cec);
+void NopStub_80046cec(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011248);
 

@@ -2,7 +2,8 @@
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", LoadGameAssetLocations);
 
-INCLUDE_ASM("asm/nonmatchings/gamecd", func_80038B98);
+void func_80038B98(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", CdBLB_ReadSectors);
 

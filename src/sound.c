@@ -10,9 +10,11 @@ INCLUDE_ASM("asm/nonmatchings/sound", func_8007C324);
 
 INCLUDE_ASM("asm/nonmatchings/sound", ShutdownSPUAndResetSoundState);
 
-INCLUDE_ASM("asm/nonmatchings/sound", func_8007C35C);
+void func_8007C35C(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/sound", func_8007C364);
+void func_8007C364(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", SetGameMode);
 

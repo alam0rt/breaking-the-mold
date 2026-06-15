@@ -5,7 +5,10 @@ u8 GetLevelCount(LevelDataContext *ctx) {
     return *(u8 *)(ctx->blb_header + 0xF31);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelAssetIndex);
+u8 GetLevelAssetIndex(LevelDataContext *ctx, u8 index) {
+    u8 *p = (u8 *)(ctx->blb_header + index * 112 + 0xC);
+    return *p;
+}
 
 void *func_8007A9E8(LevelDataContext *ctx, u8 index) {
     return (void *)(ctx->blb_header + index * 112 + 0x56);
@@ -15,11 +18,34 @@ char *getLevelName(LevelDataContext *ctx, u8 index) {
     return (char *)(ctx->blb_header + index * 112 + 0x5B);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelFlagByIndex);
+u8 GetLevelFlagByIndex(LevelDataContext *ctx, u8 index) {
+    u8 *p = (u8 *)(ctx->blb_header + index * 112 + 0xD);
+    return *p;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentLevelAssetIndex);
+u8 GetCurrentLevelAssetIndex(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) == 3) {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 world = blb + slot * 0x70;
+        return *(u8 *)(world + 0xC);
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentLevelDisplayName);
+char *GetCurrentLevelDisplayName(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) != 3) {
+        return NULL;
+    }
+    {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 world = blb + slot * 0x70;
+        return (char *)(world + 0x56);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007AADC);
 
@@ -35,19 +61,54 @@ u8 GetAssetCount(LevelDataContext *ctx) {
     return *(u8 *)(ctx->blb_header + 0xF32);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieEntryByIndex);
+void *GetMovieEntryByIndex(LevelDataContext *ctx, u8 index) {
+    return (void *)(index * 28 + ctx->blb_header + 0xB64);
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007AD10);
+void *func_8007AD10(LevelDataContext *ctx, u8 index) {
+    return (void *)(index * 28 + ctx->blb_header + 0xB69);
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentMovieReserved);
+char *GetCurrentMovieReserved(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) != 1) {
+        return NULL;
+    }
+    {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 movie = slot * 28 + blb;
+        return (char *)(movie + 0xB64);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieDataForLevel);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", ReturnZero);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentMovieFilename);
+char *GetCurrentMovieFilename(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) != 1) {
+        return NULL;
+    }
+    {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 movie = slot * 28 + blb;
+        return (char *)(movie + 0xB6C);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieFrameField00);
+u16 GetMovieFrameField00(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) == 1) {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 movie = blb + slot * 28;
+        return *(u16 *)(movie + 0xB60);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieSectorCount);
 
@@ -187,11 +248,26 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B930);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", FindSpriteInTOC);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset601Size);
+u32 GetAsset601Size(LevelDataContext *ctx) {
+    if (ctx->tile_header != 0) {
+        return ctx->audio_size;
+    }
+    return ctx->container_601_size;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset601Ptr);
+void *GetAsset601Ptr(LevelDataContext *ctx) {
+    if (ctx->tile_header != 0) {
+        return (void *)ctx->audio;
+    }
+    return (void *)ctx->container_601;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset602Ptr);
+void *GetAsset602Ptr(LevelDataContext *ctx) {
+    if (ctx->tile_header != 0) {
+        return (void *)ctx->palette;
+    }
+    return (void *)ctx->container_602;
+}
 
 void *GetDemoDataPtr(LevelDataContext *ctx) {
     if (ctx->spu_samples != 0) {

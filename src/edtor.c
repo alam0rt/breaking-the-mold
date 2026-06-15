@@ -16,9 +16,11 @@ INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type4);
 
 INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type5);
 
-INCLUDE_ASM("asm/nonmatchings/edtor", func_8002C794);
+void func_8002C794(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/edtor", func_8002C79C);
+void func_8002C79C(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type6_Simple);
 

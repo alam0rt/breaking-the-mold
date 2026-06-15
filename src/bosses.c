@@ -226,9 +226,11 @@ INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageBossPartDestroyCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageHUDDestroyCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F024);
+void func_8004F024(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F02C);
+void func_8004F02C(void) {
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageSimpleDestroyCallback);
 
