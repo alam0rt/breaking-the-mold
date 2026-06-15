@@ -17,9 +17,12 @@ extern void EntityStateSetWalk(void *e);
 extern void SetAnimationSpriteId(void *e, s32 id);
 extern void SetAnimationFrameCallback(void *e, u32 packed);
 extern s32 rand(void);
+extern void StopSPUVoice(s32 voice);
 extern void *D_80010C64;
+extern void *D_80010CE4;
 extern void *D_80010DE4;
 extern void *D_80010E04;
+extern void *D_80011048;
 extern void *D_80011068;
 extern void *D_80011088;
 extern void *D_800110A8;
@@ -245,7 +248,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySpawnerTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingHazard);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", DestroySoundEntityWithVoice);
+void DestroySoundEntityWithVoice(void *e, u32 flags) {
+    *(void **)((u8 *)e + 0x18) = &D_80010CE4;
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
+    DestroyEntityAndFreeMemory(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterIdleTickCallback);
 
@@ -579,7 +589,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffscreenParentCleanupTick);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCameraTrackingEntity);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterDestroyCallback);
+void SoundEmitterDestroyCallback(void *e, u32 flags) {
+    *(void **)((u8 *)e + 0x18) = &D_80011048;
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x20));
+    *(void **)((u8 *)e + 0x18) = &D_800111C8;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterWithPanningTick);
 
@@ -607,7 +624,12 @@ void EntityDestroyCallback_Vt800110A8(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800111C8);
+void EntityDestroyCallback_Vt800111C8(void *e, u32 flags) {
+    *(void **)((u8 *)e + 0x18) = &D_800111C8;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 void EntityDestroyCallback_Vt800110E8(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800110E8;
