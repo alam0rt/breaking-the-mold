@@ -5,6 +5,22 @@ extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 extern void EntityProcessCallbackQueue(void *entity);
 extern void EntityUpdateCallback(void *entity);
 extern void CheckAndDisableSpawnDataOffscreen(void *entity);
+extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void *D_80010C64;
+extern void *D_80010DE4;
+extern void *D_80010E04;
+extern void *D_80011068;
+extern void *D_80011088;
+extern void *D_800110A8;
+extern void *D_800110E8;
+extern void *D_80011108;
+extern void *D_80011128;
+extern void *D_80011148;
+extern void *D_80011168;
+extern void *D_80011188;
+extern void *D_800111C8;
+extern void *D_80011228;
+extern void *D_80011248;
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -270,39 +286,94 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickWithSoundPanning);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnMultipleProjectiles);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010C64);
+void EntityDestroyCallback_Vt80010C64(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010C64;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4);
+void EntityDestroyCallback_Vt80010DE4(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_800410bc);
+void EntityDestroyCallback_Vt80010DE4_800410bc(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_80041120);
+void EntityDestroyCallback_Vt80010DE4_80041120(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010E04);
+void EntityDestroyCallback_Vt80010E04(void *entity, u32 flag) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010E04;
+    if (flag & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", func_800411CC);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityFromHeapContext);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_80041230);
+void EntityDestroyCallback_Vt80010DE4_80041230(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_80041294);
+void EntityDestroyCallback_Vt80010DE4_80041294(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_800412f8);
+void EntityDestroyCallback_Vt80010DE4_800412f8(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_8004135c);
+void EntityDestroyCallback_Vt80010DE4_8004135c(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010DE4_800413c0);
+void EntityDestroyCallback_Vt80010DE4_800413c0(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void NopStub_80041424(void) {
 }
 
 void NopStub_8004142c(void) {
 }
-
-extern void *D_80010E04;
-extern void *D_800111C8;
-extern void *D_80011248;
 
 void EntityDestroyCallback_Vt80010E04_80041434(void *entity, u32 flag) {
     *(void **)((u8 *)entity + 0x18) = &D_80010E04;
@@ -471,25 +542,79 @@ INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterDestroyCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterWithPanningTick);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011068);
+void EntityDestroyCallback_Vt80011068(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011068;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011088);
+void EntityDestroyCallback_Vt80011088(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011088;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800110A8);
+void EntityDestroyCallback_Vt800110A8(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800110A8;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800111C8);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800110E8);
+void EntityDestroyCallback_Vt800110E8(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800110E8;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011108);
+void EntityDestroyCallback_Vt80011108(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011108;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011128);
+void EntityDestroyCallback_Vt80011128(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011128;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011148);
+void EntityDestroyCallback_Vt80011148(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011148;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011168);
+void EntityDestroyCallback_Vt80011168(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011168;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011188);
+void EntityDestroyCallback_Vt80011188(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011188;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void NopStub_80045e70(void) {
 }
@@ -564,7 +689,13 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyDestroyCallback_0x80011228);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011228);
+void EntityDestroyCallback_Vt80011228(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011228;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void NopStub_80046ce4(void) {
 }

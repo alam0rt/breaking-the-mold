@@ -4,6 +4,12 @@ extern void *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(void *entity);
 extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
+extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void *D_80010A48;
+extern void *D_80010A68;
+extern void *D_80010B28;
+extern void *D_80010BA8;
+extern void *D_80010BC8;
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitParticleEntity);
 
@@ -204,9 +210,21 @@ INCLUDE_ASM("asm/nonmatchings/effects", DestroyTimedFadeEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityFadeInTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8);
+void EntityDestroyCallback_Vt80010BA8(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8_80038510);
+void EntityDestroyCallback_Vt80010BA8_80038510(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void func_80038574(void *e, u16 val) {
     *(u16 *)((u8 *)e + 0x90) = val;
@@ -224,9 +242,21 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback3);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback4);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010A48);
+void EntityDestroyCallback_Vt80010A48(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010A48;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010A68);
+void EntityDestroyCallback_Vt80010A68(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010A68;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyResourceType4);
 
@@ -268,13 +298,25 @@ void func_80038888(void *e) {
     *(u8 *)((u8 *)e + 0x1E0) = 0x20;
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010B28);
+void EntityDestroyCallback_Vt80010B28(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010B28;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 u32 func_800388F8(void *e) {
     return *(u32 *)((u8 *)e + 0x1C);
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8_80038904);
+void EntityDestroyCallback_Vt80010BA8_80038904(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void NopStub_80038968(void) {
 }
@@ -282,9 +324,14 @@ void NopStub_80038968(void) {
 void NopStub_80038970(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BC8);
+void EntityDestroyCallback_Vt80010BC8(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_80010BC8;
+    if (flag & 1) {
+        FreeEntityNoTeardown_800389ac(entity, 0x1C);
+    }
+}
 
-void FreeEntityNoTeardown_800389ac(void *entity) {
+void FreeEntityNoTeardown_800389ac(void *entity, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
 
