@@ -3,6 +3,7 @@
 
 void ClearSpriteContext(void *ctx);
 void InitSpriteContext(void *ctx);
+extern u8 DecodeRLESpriteCore(void *unused, void *src, u16 size, void *dst);
 
 /* Tentative defs unlock gp_rel via maspsx --use-comm-section. */
 void *D_800A6060;
@@ -414,4 +415,7 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", RenderSprite);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetFrameMetadata);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", DecodeRLESpriteChecked);
+u8 DecodeRLESpriteChecked(u8 *e, void *src, u16 size, void *dst) {
+    if (e[0x13] == 0) return 1;
+    return DecodeRLESpriteCore(NULL, src, size, dst);
+}
