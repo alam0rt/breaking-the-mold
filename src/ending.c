@@ -20,7 +20,9 @@ INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_1E54);
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_1E74);
 
-INCLUDE_ASM("asm/nonmatchings/ending", func_80079D74);
+u32 func_80079D74(void *e) {
+    return *(u32 *)((u8 *)e + 0x100);
+}
 
 INCLUDE_ASM("asm/nonmatchings/ending", func_80079D80);
 
@@ -37,7 +39,9 @@ INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034_V3);
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034_V4);
 
-INCLUDE_ASM("asm/nonmatchings/ending", func_80079F84);
+u32 func_80079F84(void *e) {
+    return *(u32 *)((u8 *)e + 0x100);
+}
 
 void func_80079F90(void) {
 }

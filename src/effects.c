@@ -230,11 +230,15 @@ INCLUDE_ASM("asm/nonmatchings/effects", func_80038878);
 
 INCLUDE_ASM("asm/nonmatchings/effects", func_80038880);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038888);
+void func_80038888(void *e) {
+    *(u8 *)((u8 *)e + 0x1E0) = 0x20;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010B28);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_800388F8);
+u32 func_800388F8(void *e) {
+    return *(u32 *)((u8 *)e + 0x1C);
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8_80038904);
 

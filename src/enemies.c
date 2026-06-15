@@ -488,5 +488,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleRevealState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SetEntityAnimationState);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", func_8004727C);
+void func_8004727C(void *e) {
+    *(u8 *)((u8 *)e + 0x101) = 0x14;
+}
 

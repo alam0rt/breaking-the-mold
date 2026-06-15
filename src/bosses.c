@@ -164,7 +164,9 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeCheckPlayerInAttackRange);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeSetIdleState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeClearVoice);
+void JoeHeadJoeClearVoice(void *e) {
+    *(s32 *)((u8 *)e + 0x118) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeSetFacingAndAttack);
 
@@ -172,7 +174,9 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEnterActiveState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeMoveAndCheckAttack);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeClearVoiceAlt);
+void JoeHeadJoeClearVoiceAlt(void *e) {
+    *(s32 *)((u8 *)e + 0x118) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeReturnToIdleState);
 

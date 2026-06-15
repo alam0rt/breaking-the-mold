@@ -34,21 +34,31 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_AnimateAndQueueIdle);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityDestroyCallback_Vtable0x80011784);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EB14);
+void func_8006EB14(void *e) {
+    *(u8 *)((u8 *)e + 0x2C) = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006EB20);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EB30);
+u32 func_8006EB30(void *e) {
+    return *(u32 *)((u8 *)e + 0x24);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityDestroyCallback_Vtable0x800117c4);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityDestroyCallback_Vtable0x800117e4);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC04);
+void func_8006EC04(void *e) {
+    *(u8 *)((u8 *)e + 0x1B1) = 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC10);
+void func_8006EC10(void *e) {
+    *(u8 *)((u8 *)e + 0x1B0) = 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC1C);
+void func_8006EC1C(void *e) {
+    *(u8 *)((u8 *)e + 0x1AF) = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC28);
 
@@ -60,9 +70,13 @@ INCLUDE_ASM("asm/nonmatchings/finn", func_8006ECE4);
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED08);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED30);
+u32 func_8006ED30(void *e) {
+    return *(u32 *)((u8 *)e + 0x100);
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED3C);
+void func_8006ED3C(void *e, u32 val) {
+    *(u32 *)((u8 *)e + 0x100) = val;
+}
 
 void func_8006ED44(void) {
 }
@@ -118,9 +132,13 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnCheckTriggerZones);
 
 INCLUDE_ASM("asm/nonmatchings/finn", SpawnAngledProjectile);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_800704F0);
+u32 func_800704F0(void *e) {
+    return *(u32 *)((u8 *)e + 0x100);
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_800704FC);
+void func_800704FC(void *e, u32 val) {
+    *(u32 *)((u8 *)e + 0x100) = val;
+}
 
 void func_80070504(void) {
 }
