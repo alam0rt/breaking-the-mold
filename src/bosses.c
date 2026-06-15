@@ -11,6 +11,9 @@ extern void *D_80011328;
 extern void *D_80011348;
 extern void *D_80011368;
 extern void *D_80011388;
+extern s32 EntityMessageHandler(void *e, u32 event);
+extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
+extern void EntityProcessCallbackQueue(void *e);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
