@@ -1,5 +1,9 @@
 #include "common.h"
 
+extern void SetReverbLevel(u8 level);
+extern void SetAudioVolume(u8 volume);
+extern void SetStereoMode(u8 mode);
+
 INCLUDE_ASM("asm/nonmatchings/passwd", InitPasswordDisplayEntity);
 
 INCLUDE_ASM("asm/nonmatchings/passwd", PasswordDigitSelectActive);
@@ -28,7 +32,11 @@ INCLUDE_ASM("asm/nonmatchings/passwd", InitMenuStage3);
 
 INCLUDE_ASM("asm/nonmatchings/passwd", InitMenuStage4);
 
-INCLUDE_ASM("asm/nonmatchings/passwd", ApplyAudioSettings);
+void ApplyAudioSettings(void *e) {
+    SetReverbLevel(*(u8 *)((u8 *)e + 0x12E));
+    SetAudioVolume(*(u8 *)((u8 *)e + 0x12F));
+    SetStereoMode((u8)(*(u8 *)((u8 *)e + 0x130) + 1));
+}
 
 void UpdateBackgroundColor(void);
 
