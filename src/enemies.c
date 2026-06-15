@@ -943,7 +943,14 @@ void InitBackgroundSparkleRevealState(void *e) {
     SetAnimationFrameCallback(e, 0x2421405);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SetEntityAnimationState);
+void SetEntityAnimationState(Entity *e) {
+    *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 1;
+    *(u8 *)((u8 *)e + 0x100) = 0;
+    EntitySetRenderFlags(e, 1);
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+}
 
 void func_8004727C(void *e) {
     *(u8 *)((u8 *)e + 0x101) = 0x14;

@@ -1,8 +1,11 @@
 #include "common.h"
+#include "functions.h"
 
 extern void SetReverbLevel(u8 level);
 extern void SetAudioVolume(u8 volume);
 extern void SetStereoMode(u8 mode);
+extern u8 *g_pGameState;
+u8 D_800A6045;
 
 INCLUDE_ASM("asm/nonmatchings/passwd", InitPasswordDisplayEntity);
 
@@ -48,7 +51,14 @@ INCLUDE_ASM("asm/nonmatchings/passwd", UpdateBackgroundColor);
 
 INCLUDE_ASM("asm/nonmatchings/passwd", MenuTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/passwd", DemoCountdownCallback);
+void DemoCountdownCallback(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x13C);
+    *ctr = *ctr - 1;
+    if (*ctr == 0) {
+        g_pGameState[0x148] = D_800A6045;
+    }
+    EntityUpdateCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/passwd", MenuInputHandler);
 
