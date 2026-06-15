@@ -1,5 +1,7 @@
 #include "common.h"
 
+extern void FreeAllLayerRenderSlots(u8 *base);
+
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots);
 
 INCLUDE_ASM("asm/nonmatchings/layer", ClearLayerRenderSlotsFromIndex);

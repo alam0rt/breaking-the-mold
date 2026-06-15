@@ -10,6 +10,7 @@ extern void *D_80011348;
 extern void *D_80011368;
 extern void *D_80011388;
 extern void *D_80011268;
+extern void *D_80011288;
 extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
@@ -239,7 +240,15 @@ void ShrineyGuardDeathCallback(u8 *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBoss);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBossDestructor);
+void JoeHeadJoeBossDestructor(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011288;
+    *(s32 *)((u8 *)entity + 0x118) = -1;
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011388;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeUpdateWithCollisionCheck);
 
