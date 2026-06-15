@@ -15,7 +15,10 @@ INCLUDE_ASM("asm/nonmatchings/sound", UploadAudioToSPU);
 
 INCLUDE_ASM("asm/nonmatchings/sound", PopSPUUploadBlock);
 
-INCLUDE_ASM("asm/nonmatchings/sound", func_8007C324);
+void func_8007C324(void) {
+    D_800A6078 = 0;
+    D_800A6081 = 0;
+}
 
 void ShutdownSPUAndResetSoundState(void) {
     SpuQuit();

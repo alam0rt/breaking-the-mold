@@ -4,6 +4,10 @@
 void ClearSpriteContext(void *ctx);
 void InitSpriteContext(void *ctx);
 
+/* Tentative defs unlock gp_rel via maspsx --use-comm-section. */
+void *D_800A6060;
+void *D_800A6064;
+
 u8 GetLevelCount(LevelDataContext *ctx) {
     return *(u8 *)(ctx->blb_header + 0xF31);
 }
@@ -339,7 +343,10 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetAssetHeaderPtr);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", ReturnZero2);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", SetSpriteTables);
+void SetSpriteTables(void *a, void *b) {
+    D_800A6060 = a;
+    D_800A6064 = b;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", LookupSpriteById);
 
