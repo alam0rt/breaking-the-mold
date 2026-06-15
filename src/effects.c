@@ -5,8 +5,10 @@ extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(void *entity);
 extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void *InitBasicEntityWithVtable(void *e, s16 val);
 extern void *D_80010A48;
 extern void *D_80010A68;
+extern void *D_80010AD8;
 extern void *D_80010B28;
 extern void *D_80010BA8;
 extern void *D_80010BC8;
@@ -77,7 +79,11 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityDestructor_WithTextureAndMemory);
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderRopeSegments);
 
-INCLUDE_ASM("asm/nonmatchings/effects", InitEntityWithCallbackVtable);
+void *InitEntityWithCallbackVtable(void *e, s16 val) {
+    InitBasicEntityWithVtable(e, val);
+    *(void **)((u8 *)e + 0xC) = &D_80010AD8;
+    return e;
+}
 
 void FlushDepthBucketsGlobal(void) {
     FlushDepthBuckets(g_pGameState);
@@ -223,7 +229,20 @@ INCLUDE_ASM("asm/nonmatchings/effects", CreateFadeOverlayEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", DestroyTimedFadeEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityFadeInTickCallback);
+void EntityFadeInTickCallback(void *e) {
+    s16 v = *(s16 *)((u8 *)e + 0x22) + 8;
+    *(s16 *)((u8 *)e + 0x22) = v;
+    if (v >= 0x100) {
+        *(s16 *)((u8 *)e + 0x22) = 0xFF;
+    }
+    {
+        u8 c = *(u8 *)((u8 *)e + 0x22);
+        u8 *q = *(u8 **)((u8 *)e + 0x1C);
+        q[0x40] = c;
+        q[0x41] = c;
+        q[0x42] = c;
+    }
+}
 
 void EntityDestroyCallback_Vt80010BA8(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
