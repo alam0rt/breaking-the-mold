@@ -14,6 +14,8 @@ extern void UpdateEntitySoundPanning(void *e, u32 sound);
 extern void CollectibleTickCallback(void *e);
 extern void CollectibleTickFinnMode(void *e);
 extern void EntityStateSetWalk(void *e);
+extern void SetAnimationSpriteId(void *e, s32 id);
+extern void SetAnimationFrameCallback(void *e, u32 packed);
 extern s32 rand(void);
 extern void *D_80010C64;
 extern void *D_80010DE4;
@@ -515,7 +517,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TimedEntityTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TimedEntityTickCallbackWithCollision);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithCollisionWrapper);
+void EntityUpdateWithCollisionWrapper(void *e) {
+    EntityUpdateCallback(e);
+    CollisionCheckWrapper(e, 2, 0x1000, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SwitchEventHandler_SetGameFlag);
 
@@ -776,7 +781,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleFadeTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleContactEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleRevealState);
+void InitBackgroundSparkleRevealState(void *e) {
+    *(u8 *)((u8 *)e + 0x100) = 1;
+    SetAnimationSpriteId(e, -1);
+    SetAnimationFrameCallback(e, 0x2421405);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SetEntityAnimationState);
 

@@ -12,6 +12,7 @@ extern void *D_80010AD8;
 extern void *D_80010B28;
 extern void *D_80010BA8;
 extern void *D_80010BC8;
+extern void *D_80010970;
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitParticleEntity);
 
@@ -182,7 +183,11 @@ INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateOne);
 
 INCLUDE_ASM("asm/nonmatchings/effects", NullStubFunction);
 
-INCLUDE_ASM("asm/nonmatchings/effects", InitMenuItemEntity);
+void *InitMenuItemEntity(void *e) {
+    InitBasicEntityWithVtable(e, 0xBB8);
+    *(void **)((u8 *)e + 0xC) = &D_80010970;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderSpotlightBeamEffect);
 

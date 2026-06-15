@@ -3,6 +3,7 @@
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void ResetGameStateInputAndContext(void);
 extern void *D_800120CC;
 extern void *D_80011E54;
 extern void *D_80011E74;
@@ -147,7 +148,13 @@ void *PassThroughFunction(void *x) {
     return x;
 }
 
-INCLUDE_ASM("asm/nonmatchings/ending", InitEndingSequence);
+void *InitEndingSequence(void *e, u32 a, u32 b) {
+    *(u32 *)((u8 *)e + 0x5C) = a;
+    *(u32 *)((u8 *)e + 0x64) = b;
+    *(u8 *)((u8 *)e + 0x60) = 0xFF;
+    ResetGameStateInputAndContext();
+    return e;
+}
 
 extern void builtin_delete(void *ptr);
 
