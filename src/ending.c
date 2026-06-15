@@ -77,5 +77,11 @@ void *PassThroughFunction(void *x) {
 
 INCLUDE_ASM("asm/nonmatchings/ending", InitEndingSequence);
 
-INCLUDE_ASM("asm/nonmatchings/ending", ConditionalDelete);
+extern void builtin_delete(void *ptr);
+
+void ConditionalDelete(void *p, u32 doDelete) {
+    if (doDelete & 1) {
+        builtin_delete(p);
+    }
+}
 
