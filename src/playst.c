@@ -56,7 +56,16 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_FallWithRotation);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_QueuedCallbackTimer);
+void PlayerState_QueuedCallbackTimer(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x166);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    PlayerTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_UpdateAttachedEntity);
 

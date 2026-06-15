@@ -53,7 +53,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitMonkeyMageBoss);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyTickWithCollision);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityTickWithShortTimer);
+void EntityTickWithShortTimer(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x104);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    EntityUpdateCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityMessageHandler);
 

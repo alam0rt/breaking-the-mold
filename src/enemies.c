@@ -68,7 +68,16 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckCollectibleOffscreen);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", TimedCollectibleTickCallback);
+void TimedCollectibleTickCallback(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x104);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    CollectibleTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickFinnMode);
 
@@ -82,7 +91,16 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleWithFlags);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleSparkleTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", TimedSparkleCollectibleTick);
+void TimedSparkleCollectibleTick(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x104);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    CollectibleSparkleTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", AIEntityRandomBehaviorTick);
 
@@ -212,7 +230,16 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitWalkingCollectibleEnemy);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyDeathWithParticles);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimerDeathWithParticles);
+void EntityTimerDeathWithParticles(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x104);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    EnemyDeathWithParticles(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnParticle);
 
@@ -311,7 +338,16 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleVariant);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityWithDeathSpawn);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimerCountdownDeathSpawn);
+void EntityTimerCountdownDeathSpawn(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x112);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    InitEntityWithDeathSpawn(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerAnimationSwitch);
 
@@ -583,9 +619,27 @@ INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_HiddenState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledMovingEntity);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", TimedEntityTickCallback);
+void TimedEntityTickCallback(Entity *e) {
+    u8 *ctr = (u8 *)e + 0x104;
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    EntityUpdateCallback(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", TimedEntityTickCallbackWithCollision);
+void TimedEntityTickCallbackWithCollision(Entity *e) {
+    u8 *ctr = (u8 *)e + 0x104;
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    EntityUpdateWithCollisionWrapper(e);
+}
 
 void EntityUpdateWithCollisionWrapper(void *e) {
     EntityUpdateCallback(e);
