@@ -4,22 +4,38 @@
 extern void *g_pBlbHeapBase;
 extern void *D_80010870;
 extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z, s16 x, s16 y);
-extern void InitPathFollowingDecorEntity(void *e, u32 flags, u32 mode);
+extern void *InitEntitySprite(void *entity, void *def, s32 z, s16 x, s16 y, s32 flags);
+extern void InitPathFollowingDecorEntity(void *e, void *data, u8 flag);
 
 void FreeEntityNoTeardown_8002c7d8(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/decor", InitPathDecorEntity);
+void *InitPathDecorEntity(void *e, u8 *data, void *spriteDef, u32 mask, u8 flag) {
+    InitEntitySprite(e, spriteDef, 0x3DE, *(s16 *)(data + 8), *(s16 *)(data + 0xA), mask & 0xFF);
+    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    InitPathFollowingDecorEntity(e, data, flag);
+    return e;
+}
 
-INCLUDE_ASM("asm/nonmatchings/decor", InitPathDecorEntityWithSprite);
+void *InitPathDecorEntityWithSprite(void *e, u8 *data, void *spriteDef, u8 flag) {
+    InitEntityWithSprite(e, spriteDef, 0x3DE, *(s16 *)(data + 8), *(s16 *)(data + 0xA));
+    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    InitPathFollowingDecorEntity(e, data, flag);
+    return e;
+}
 
-INCLUDE_ASM("asm/nonmatchings/decor", InitPathDecorNoData);
+void *InitPathDecorNoData(void *e, s32 x, s32 y, void *spriteDef, u8 flag) {
+    InitEntitySprite(e, spriteDef, 0x3DE, (s16)x, (s16)y, flag);
+    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    InitPathFollowingDecorEntity(e, NULL, 1);
+    return e;
+}
 
 void *InitPathDecorNoDataWithSprite(void *e, s32 x, s32 y, void *spriteDef) {
     InitEntityWithSprite(e, spriteDef, 0x3DE, (s16)x, (s16)y);
     *(void **)((u8 *)e + 0x18) = &D_80010870;
-    InitPathFollowingDecorEntity(e, 0, 1);
+    InitPathFollowingDecorEntity(e, NULL, 1);
     return e;
 }
 

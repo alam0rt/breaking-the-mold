@@ -66,6 +66,37 @@ So the IDs are baked into both the code and the BLB TOC at build time; the game 
 Recovering original names would require either the external build tool's hash algorithm + a name
 wordlist (algorithm unknown; not present here), or an asset-name list from another SKU/build.
 
+## Empirical investigation (2026-06-15) — name recovery attempt
+
+Used the extracted assets (`./extracted/<LEVEL>/.../601_audio_samples.bin` etc.) where each
+container is `count:u32` then `(id, size, offset)` triples, sorted ascending by id (binary-search
+lookup). Findings:
+
+- **IDs are globally stable per asset.** Across 117 audio containers / 227 unique sample ids,
+  **226 are byte-identical** wherever they appear. So an id is a deterministic function of asset
+  *identity*, not of pool position (rules out per-level sequential numbering).
+- **Exactly one collision:** id `0x60830860` is `SNOW` (34528 bytes) vs `RUNN` (7456 bytes) — two
+  different sounds. A uniform 32-bit *content* hash colliding even once among 227 items is ~6e-6
+  likely, so this is the signature of a **name hash** (a shared-name asset overridden per level),
+  not a content hash.
+- **Content-checksum ruled out:** CRC32 / CRC32^-1 / Adler-32 / FNV-1a / byte-sum over each
+  sample's raw bytes match **0/227** ids.
+- **No hash function exists in the game binary.** Every `spriteHash` reference is a consumer;
+  asset lookup is binary search over the pre-baked sorted ids. The password system
+  (`DecodePassword` @0x80025e48) uses bit-permutation tables + a 3-bit checksum, not a string hash.
+- **Dictionary attack negative.** 8 algorithms (crc32, crc32^-1, djb2, djb2a, sdbm, fnv1, fnv1a,
+  elf) × ~1600 candidate strings (level codes, official enemy names, SFX vocabulary, with
+  case + `.vag/.spr/.tim/...` extension transforms) against the full 639-id pool → **0 hits**.
+- **No name table in any BLB.** retail / `beta.blb` / `slps-01501` (JP) / `papx-90053` (demo) contain
+  no asset-name strings — only level *titles* and the header's 2/4-char section codes; the apparent
+  "strings" in asset bodies are PCM/pixel bytes that fall in the printable range.
+
+**Conclusion:** the ids are opaque, build-time, name-derived hashes (likely a non-standard or
+seeded algorithm), and the generator + name list lived only in the lost asset-build pipeline.
+**Original names are not recoverable from any shipped artifact.** Pursue role/behavior labels
+instead. (A future long-shot: a multi-GB brute force of a seeded/custom hash, or locating the
+original Neverhood/DreamWorks asset toolchain.)
+
 ## Practical naming
 
 Since true names are unrecoverable, label these IDs by **role/behavior**, which is already
