@@ -77,7 +77,11 @@ INCLUDE_ASM("asm/nonmatchings/sound", SaveAndMuteAllVoicePitches);
 
 INCLUDE_ASM("asm/nonmatchings/sound", ResumeAllVoicePitches);
 
-INCLUDE_ASM("asm/nonmatchings/sound", SetStereoMode);
+void SetStereoMode(u8 mode) {
+    if ((u8)(mode - 1) < 2) {
+        D_800A607E = mode;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", SetReverbLevel);
 
