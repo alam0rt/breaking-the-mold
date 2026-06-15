@@ -195,7 +195,17 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitMenuEntityWithChildAndParams);
 
 INCLUDE_ASM("asm/nonmatchings/effects", DestroySpotlightBeamEffect);
 
-INCLUDE_ASM("asm/nonmatchings/effects", BeamEffectTickWithRotation);
+void BeamEffectTickWithRotation(void *e) {
+    s16 timer;
+    *(u16 *)((u8 *)e + 0x28) += *(u16 *)((u8 *)e + 0x1C);
+    timer = (s16)(*(u16 *)((u8 *)e + 0x2A) - 1);
+    *(u16 *)((u8 *)e + 0x2A) = timer;
+    if (timer == 0) {
+        void *p = *(void **)((u8 *)e + 0x20);
+        *(u8 *)((u8 *)p + 0xA) = 0;
+        *(u8 *)((u8 *)e + 0x1E) = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", BeamEffectRenderCallback);
 
