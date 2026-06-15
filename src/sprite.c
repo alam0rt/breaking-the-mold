@@ -1,6 +1,18 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/sprite", InitBasicEntityWithVtable);
+extern void *D_8001039C;
+
+void *InitBasicEntityWithVtable(void *e, u16 val) {
+    u8 *p = (u8 *)e;
+    *(u32 *)(p + 0xC) = (u32)&D_8001039C;
+    *(u16 *)(p + 0x8) = val;
+    *(u16 *)(p + 0x0) = 0;
+    *(u16 *)(p + 0x2) = 0;
+    *(u16 *)(p + 0x4) = 0;
+    *(u16 *)(p + 0x6) = 0;
+    *(u8 *)(p + 0xA) = 1;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/sprite", PrepareSpriteVRAMSlotForContext);
 

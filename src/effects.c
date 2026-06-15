@@ -15,7 +15,13 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitParticleEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityTimerTickAndNotify);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DecorHandleCallback);
+s32 DecorHandleCallback(void *e, u16 event) {
+    u8 *p = (u8 *)e;
+    if (event == 2 && *(u16 *)(p + 0x100) == 0) {
+        p[0x102] = 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitBlbOverlayEntity);
 
@@ -151,7 +157,16 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitScaledMenuEntityWithChild);
 
 INCLUDE_ASM("asm/nonmatchings/effects", DestroyRippleExpandEffect);
 
-INCLUDE_ASM("asm/nonmatchings/effects", CountdownTimerTickCallback);
+void CountdownTimerTickCallback(void *e) {
+    u8 *p = (u8 *)e;
+    u8 v = p[0x28] - 1;
+    p[0x28] = v;
+    if (v == 0) {
+        u8 *q = *(u8 **)(p + 0x20);
+        p[0x29] = 1;
+        q[0xA] = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RippleEffectRenderCallback);
 
