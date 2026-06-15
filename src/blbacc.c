@@ -377,9 +377,11 @@ void *GetDemoDataPtr(LevelDataContext *ctx) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAssetHeaderPtr);
-
-INCLUDE_ASM("asm/nonmatchings/blbacc", ReturnZero2);
+void *GetAssetHeaderPtr(void *ctx) {
+    u8 *p = *(u8 **)((u8 *)ctx + 0x58);
+    if (p) return p - 0x10;
+    return NULL;
+}
 
 void SetSpriteTables(void *a, void *b) {
     D_800A6060 = a;
