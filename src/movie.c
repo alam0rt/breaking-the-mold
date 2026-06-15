@@ -10,7 +10,23 @@ INCLUDE_ASM("asm/nonmatchings/movie", SetupMovieDisplay);
 
 INCLUDE_ASM("asm/nonmatchings/movie", InitMovieStreamingBuffers);
 
-INCLUDE_ASM("asm/nonmatchings/movie", InitMovieDecoder);
+extern void DecDCTReset(s32 mode);
+extern void DecDCToutCallback(void (*cb)(void));
+extern s32 StSetRing(u8 *base, s32 size);
+extern void *StSetStream(s32 mode, s32 chan, s32 nsec, void (*cb)(void), s32 num);
+extern void StubMovieStreamCallback(void);
+extern void SeekAndStartCDRead(void *loc);
+
+/* Tentative def to unlock gp_rel via maspsx --use-comm-section. */
+u32 D_800A5A44;
+
+void InitMovieDecoder(void *loc, void (*outCb)(void)) {
+    DecDCTReset(0);
+    DecDCToutCallback(outCb);
+    StSetRing((u8 *)D_800A5A44 + 0x67000, 0x100);
+    StSetStream(1, 1, -1, 0, (void *)StubMovieStreamCallback);
+    SeekAndStartCDRead(loc);
+}
 
 INCLUDE_ASM("asm/nonmatchings/movie", MovieFrameDecodeCallback);
 
