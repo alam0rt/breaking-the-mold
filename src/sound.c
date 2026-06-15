@@ -3,8 +3,14 @@
 extern void SpuSetKey(s32 onoff, s32 voiceBits);
 extern void StopCDAudio(void);
 extern void SpuQuit(void);
+extern void SpuSetCommonCDVolume(s16 l, s16 r);
+extern s32 PlaySoundEffect(s32 id, s32 a1, s32 a2);
+extern void ProcessCDStreamState(void);
+extern s32 D_8009CE64[];
 /* Tentative defs to unlock gp_rel via maspsx --use-comm-section. */
+u32 D_800A6074;
 u32 D_800A6078;
+u8  D_800A6080;
 u8  D_800A6081;
 u8  D_800A6085;
 u8  D_800A6088;
@@ -68,7 +74,20 @@ INCLUDE_ASM("asm/nonmatchings/sound", SetStereoMode);
 
 INCLUDE_ASM("asm/nonmatchings/sound", SetReverbLevel);
 
-INCLUDE_ASM("asm/nonmatchings/sound", SetAudioVolume);
+void SetAudioVolume(u32 vol) {
+    u32 v = vol & 0xFF;
+    if (v < 5) {
+        s32 scaled;
+        D_800A6080 = (u8)vol;
+        scaled = (s32)(v * 0x7FFF) / 4;
+        SpuSetCommonCDVolume(scaled, scaled);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/sound", TickCDStreamBuffer);
+void TickCDStreamBuffer(void) {
+    if (D_800A6085 == 0) return;
+    if ((D_800A6074++ & 3) == 0) {
+        ProcessCDStreamState();
+    }
+}
 
