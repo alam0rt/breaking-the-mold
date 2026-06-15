@@ -5,6 +5,7 @@ extern void SetReverbLevel(u8 level);
 extern void SetAudioVolume(u8 volume);
 extern void SetStereoMode(u8 mode);
 extern u8 *g_pGameState;
+u8 D_800A6042;
 u8 D_800A6045;
 
 INCLUDE_ASM("asm/nonmatchings/passwd", InitPasswordDisplayEntity);
@@ -47,7 +48,17 @@ void UpdateBackgroundColorWrapper(void) {
     UpdateBackgroundColor();
 }
 
-INCLUDE_ASM("asm/nonmatchings/passwd", UpdateBackgroundColor);
+extern u8 D_8009CBAC[];
+extern s16 D_800A5970;
+extern s16 D_800A596C;
+extern s16 D_800A596E;
+
+void UpdateBackgroundColor(void) {
+    u32 idx = D_800A6042 * 3;
+    D_800A5970 = D_8009CBAC[idx];
+    D_800A596C = D_8009CBAC[idx + 1];
+    D_800A596E = D_8009CBAC[idx + 2];
+}
 
 INCLUDE_ASM("asm/nonmatchings/passwd", MenuTickCallback);
 
