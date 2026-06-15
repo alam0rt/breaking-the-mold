@@ -252,9 +252,16 @@ void func_8004F024(void) {
 void func_8004F02C(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageSimpleDestroyCallback);
+extern void *D_800113A8;
 
-void FreeEntityAllocOnly(void *e) {
+void MonkeyMageSimpleDestroyCallback(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_800113A8;
+    if (flag & 1) {
+        FreeEntityAllocOnly(entity, 0x1C);
+    }
+}
+
+void FreeEntityAllocOnly(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 

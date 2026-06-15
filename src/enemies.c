@@ -3,6 +3,8 @@
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 extern void EntityProcessCallbackQueue(void *entity);
+extern void EntityUpdateCallback(void *entity);
+extern void CheckAndDisableSpawnDataOffscreen(void *entity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -298,9 +300,18 @@ void NopStub_80041424(void) {
 void NopStub_8004142c(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010E04_80041434);
+extern void *D_80010E04;
+extern void *D_800111C8;
+extern void *D_80011248;
 
-void FreeEntityNoTeardown_80041468(void *e) {
+void EntityDestroyCallback_Vt80010E04_80041434(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_80010E04;
+    if (flag & 1) {
+        FreeEntityNoTeardown_80041468(entity, 0x1C);
+    }
+}
+
+void FreeEntityNoTeardown_80041468(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
@@ -322,7 +333,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledPlatformEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityConditionalActivateTick);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithSpawnDataCheck);
+void EntityUpdateWithSpawnDataCheck(void *entity) {
+    EntityUpdateCallback(entity);
+    CheckAndDisableSpawnDataOffscreen(entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithCollisionSpawnCheck);
 
@@ -483,9 +497,14 @@ void NopStub_80045e70(void) {
 void NopStub_80045e78(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800111C8_80045e80);
+void EntityDestroyCallback_Vt800111C8_80045e80(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_800111C8;
+    if (flag & 1) {
+        FreeEntityNoTeardown_80045eb4(entity, 0x1C);
+    }
+}
 
-void FreeEntityNoTeardown_80045eb4(void *e) {
+void FreeEntityNoTeardown_80045eb4(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
@@ -553,9 +572,14 @@ void NopStub_80046ce4(void) {
 void NopStub_80046cec(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011248);
+void EntityDestroyCallback_Vt80011248(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_80011248;
+    if (flag & 1) {
+        FreeEntityNoTeardown_80046d28(entity, 0x1C);
+    }
+}
 
-void FreeEntityNoTeardown_80046d28(void *e) {
+void FreeEntityNoTeardown_80046d28(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
