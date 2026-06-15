@@ -1,6 +1,9 @@
 #include "common.h"
 #include "Game/level_data_context.h"
 
+void ClearSpriteContext(void *ctx);
+void InitSpriteContext(void *ctx);
+
 u8 GetLevelCount(LevelDataContext *ctx) {
     return *(u8 *)(ctx->blb_header + 0xF31);
 }
@@ -322,9 +325,15 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", SetSpriteTables);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", LookupSpriteById);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", ClearSpriteContextWrapper);
+void *ClearSpriteContextWrapper(void *ctx) {
+    ClearSpriteContext(ctx);
+    return ctx;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", InitSpriteContextWrapper);
+void *InitSpriteContextWrapper(void *ctx) {
+    InitSpriteContext(ctx);
+    return ctx;
+}
 
 void ClearSpriteContext(void *ctx) {
     *(u32 *)((u8 *)ctx + 0x0) = 0;
