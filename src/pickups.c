@@ -5,6 +5,12 @@ extern void *g_pBlbHeapBase;
 extern void *D_80010870;
 extern void *D_80010890;
 extern void FreeEntityNoTeardown_80030cdc(void *e, u32 size);
+extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
+extern void DecorEntityTickWithOffscreenCheck(Entity *e);
+extern void EntitySetState(Entity *e, u32 marker, void *fn);
+/* gp_rel tentative defs (sdata blob owns the strong defs). */
+u32   D_800A59D8;
+void *D_800A59DC;
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitGreenBulletsCollectible);
 
@@ -88,7 +94,13 @@ INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartWithRandomTimer);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitInteractiveDecorEntity);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityTickWithCollision);
+void DecorEntityTickWithCollision(Entity *e) {
+    CollisionCheckWrapper(e, 2, 0x1000, 2);
+    DecorEntityTickWithOffscreenCheck(e);
+    if (*(u8 *)((u8 *)e + 0x11D) != 0) {
+        EntitySetState(e, D_800A59D8, D_800A59DC);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandler);
 
