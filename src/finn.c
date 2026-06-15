@@ -74,7 +74,11 @@ INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC40);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FINNCallback_DispatchToEntityHandler);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006ECE4);
+void func_8006ECE4(u8 *e, u8 *o1, u8 *o2, u8 *o3) {
+    *o1 = e[0x15A];
+    *o2 = e[0x15B];
+    *o3 = e[0x15C];
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED08);
 
@@ -106,11 +110,23 @@ s32 func_8006EF48(void *e) {
     return (a + b) < 0x10;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EF64);
+s32 func_8006EF64(void *e) {
+    u8 a = *(u8 *)((u8 *)e + 0x68) & 0xF;
+    u8 b = *(u8 *)((u8 *)e + 0x6A) & 0xF;
+    return !((a + b) < 0xF);
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EF84);
+s32 func_8006EF84(void *e) {
+    s32 a = (s32)(*(u8 *)((u8 *)e + 0x68) & 0xF) + 0xF;
+    s32 b = *(u8 *)((u8 *)e + 0x6A) & 0xF;
+    return (a - b) < 0x10;
+}
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EFA4);
+s32 func_8006EFA4(void *e) {
+    s32 a = (s32)(*(u8 *)((u8 *)e + 0x68) & 0xF) + 0xF;
+    s32 b = *(u8 *)((u8 *)e + 0x6A) & 0xF;
+    return !((a - b) < 0xF);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnMainTickHandler);
 
