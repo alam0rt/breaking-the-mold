@@ -30,7 +30,11 @@ INCLUDE_ASM("asm/nonmatchings/passwd", InitMenuStage4);
 
 INCLUDE_ASM("asm/nonmatchings/passwd", ApplyAudioSettings);
 
-INCLUDE_ASM("asm/nonmatchings/passwd", UpdateBackgroundColorWrapper);
+void UpdateBackgroundColor(void);
+
+void UpdateBackgroundColorWrapper(void) {
+    UpdateBackgroundColor();
+}
 
 INCLUDE_ASM("asm/nonmatchings/passwd", UpdateBackgroundColor);
 

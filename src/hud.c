@@ -1,6 +1,10 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/hud", HUD_UpdateVisibilityWrapper);
+void UpdateHUDEntityVisibility(void);
+
+void HUD_UpdateVisibilityWrapper(void) {
+    UpdateHUDEntityVisibility();
+}
 
 INCLUDE_ASM("asm/nonmatchings/hud", UpdateHUDEntityVisibility);
 

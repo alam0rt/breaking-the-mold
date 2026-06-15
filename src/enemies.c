@@ -342,7 +342,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithCollisionWrapper);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SwitchEventHandler_SetGameFlag);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityIncrementWorldX);
+void EntityIncrementWorldX(void *e) {
+    *(s16 *)((u8 *)e + 0x68) += 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityHideWithTimer);
 
