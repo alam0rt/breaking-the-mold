@@ -62,7 +62,7 @@ SECTIONS
         build/asm/results.o(.rodata);
         build/asm/ending.o(.rodata);
         build/asm/level.o(.rodata);
-        build/asm/blbacc.o(.rodata);
+        build/src/blbacc.o(.rodata);
         build/asm/sound.o(.rodata);
         build/asm/gstate.o(.rodata);
         build/src/entinit.o(.rodata);
@@ -113,7 +113,7 @@ SECTIONS
         build/asm/results.o(.sdata);
         build/asm/ending.o(.sdata);
         build/asm/level.o(.sdata);
-        build/asm/blbacc.o(.sdata);
+        build/src/blbacc.o(.sdata);
         build/asm/sound.o(.sdata);
         build/asm/gstate.o(.sdata);
         build/src/entinit.o(.sdata);
@@ -164,7 +164,7 @@ SECTIONS
         build/asm/results.o(.sbss);
         build/asm/ending.o(.sbss);
         build/asm/level.o(.sbss);
-        build/asm/blbacc.o(.sbss);
+        build/src/blbacc.o(.sbss);
         build/asm/sound.o(.sbss);
         build/asm/gstate.o(.sbss);
         build/src/entinit.o(.sbss);
@@ -215,7 +215,7 @@ SECTIONS
         build/asm/results.o(.bss);
         build/asm/ending.o(.bss);
         build/asm/level.o(.bss);
-        build/asm/blbacc.o(.bss);
+        build/src/blbacc.o(.bss);
         build/asm/sound.o(.bss);
         build/asm/gstate.o(.bss);
         build/src/entinit.o(.bss);
@@ -258,7 +258,7 @@ SECTIONS
         build/asm/results.o(.text);
         build/asm/ending.o(.text);
         build/asm/level.o(.text);
-        build/asm/blbacc.o(.text);
+        build/src/blbacc.o(.text);
         build/asm/sound.o(.text);
         build/asm/gstate.o(.text);
         build/src/lvlload.o(.text);
@@ -316,7 +316,7 @@ SECTIONS
         build/asm/results.o(.data);
         build/asm/ending.o(.data);
         build/asm/level.o(.data);
-        build/asm/blbacc.o(.data);
+        build/src/blbacc.o(.data);
         build/asm/sound.o(.data);
         build/asm/gstate.o(.data);
         build/src/entinit.o(.data);
