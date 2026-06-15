@@ -201,7 +201,22 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitPlayerSparkParticle);
 
 INCLUDE_ASM("asm/nonmatchings/effects", ParticleMovementAndFadeTick);
 
-INCLUDE_ASM("asm/nonmatchings/effects", InitRippleExpandEffect);
+extern void *D_800109A0;
+
+u8 *InitRippleExpandEffect(u8 *e, s32 color) {
+    GameState *gs;
+    u8 c;
+    InitBasicEntityWithVtable(e, 0x3CA);
+    *(void **)(e + 0xC) = &D_800109A0;
+    e[0x3A7] = 0;
+    gs = g_pGameState;
+    c = color;
+    *(s16 *)(e + 0x3A0) = c;
+    *(s16 *)(e + 0x3A2) = c;
+    *(s16 *)(e + 0x3A4) = c;
+    e[0x3A6] = (u8)gs->frame_counter;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderRippleExpandEffect);
 
