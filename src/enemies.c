@@ -6,6 +6,15 @@ extern void EntityProcessCallbackQueue(void *entity);
 extern void EntityUpdateCallback(void *entity);
 extern void CheckAndDisableSpawnDataOffscreen(void *entity);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void CollisionCheckWrapper(void *e, s32 a, s32 b, s32 c);
+extern void CheckAndDisableChildEntityOffscreen(void *e);
+extern void CheckAndDisableSpawnRefOffscreen(void *e);
+extern void EntityOffScreenChildCleanup(void *e);
+extern void UpdateEntitySoundPanning(void *e, u32 sound);
+extern void CollectibleTickCallback(void *e);
+extern void CollectibleTickFinnMode(void *e);
+extern void EntityStateSetWalk(void *e);
+extern s32 rand(void);
 extern void *D_80010C64;
 extern void *D_80010DE4;
 extern void *D_80010E04;
@@ -70,9 +79,17 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithDelayedWalk);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapWithAnimation);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityStartWalkWithTimer0x2d);
+void EntityStartWalkWithTimer0x2d(void *e) {
+    *(u8 *)((u8 *)e + 0x112) = (rand() & 0xF) + 4;
+    *(u16 *)((u8 *)e + 0x104) = 0x2D;
+    EntityStateSetWalk(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityStartWalkWithTimer10);
+void EntityStartWalkWithTimer10(void *e) {
+    *(u8 *)((u8 *)e + 0x112) = (rand() & 0xF) + 4;
+    *(u16 *)((u8 *)e + 0x104) = 0xA;
+    EntityStateSetWalk(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetWalk);
 
@@ -282,7 +299,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityWithChildSprite);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", DestroyEntityWithSoundAndChild);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickWithSoundPanning);
+void CollectibleTickWithSoundPanning(void *e) {
+    UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x118));
+    CollectibleTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnMultipleProjectiles);
 
@@ -396,7 +416,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntity_Alt);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimedStateSwitchTick);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithCollisionOffscreen);
+void EntityUpdateWithCollisionOffscreen(void *e) {
+    EntityUpdateCallback(e);
+    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CheckAndDisableChildEntityOffscreen(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableChildEntityOffscreen);
 
@@ -409,7 +433,11 @@ void EntityUpdateWithSpawnDataCheck(void *entity) {
     CheckAndDisableSpawnDataOffscreen(entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithCollisionSpawnCheck);
+void EntityUpdateWithCollisionSpawnCheck(void *e) {
+    EntityUpdateCallback(e);
+    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CheckAndDisableSpawnDataOffscreen(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnDataOffscreen);
 
@@ -434,7 +462,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitDirectionalScaledEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", PlatformTimerTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", PlatformCollisionTickCallback);
+void PlatformCollisionTickCallback(void *e) {
+    EntityUpdateCallback(e);
+    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CheckAndDisableSpawnRefOffscreen(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnRefOffscreen);
 
@@ -448,7 +480,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBouncableClayEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffScreenChildCleanup);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityTick_CollisionWithCleanup);
+void EntityTick_CollisionWithCleanup(void *e) {
+    EntityUpdateCallback(e);
+    CollisionCheckWrapper(e, 2, 0x1000, 2);
+    EntityOffScreenChildCleanup(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", HazardTimerTickCallback);
 
@@ -679,7 +715,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEntity_Alt);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEntityDestroyCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", FinnModeCollectibleTickCallback);
+void FinnModeCollectibleTickCallback(void *e) {
+    UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x118));
+    CollectibleTickFinnMode(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyPathFollowWithFacingFlip);
 

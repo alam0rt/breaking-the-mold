@@ -4,6 +4,7 @@ extern u8 *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void StopSPUVoice(s32 voice);
 extern void *D_800112E8;
 extern void *D_80011308;
 extern void *D_80011328;
@@ -53,7 +54,10 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EntityFollowPathTick);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyWithEffects);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityStopSound);
+void EntityStopSound(void *e) {
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x144));
+    *(s32 *)((u8 *)e + 0x144) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleDestroyState);
 
@@ -93,13 +97,19 @@ INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisDeathEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HazardActivateWithSound);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", HazardStopSound);
+void HazardStopSound(void *e) {
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
+    *(s32 *)((u8 *)e + 0x118) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleAnimState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HazardIdleWithSound);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", HazardStopSoundAlt);
+void HazardStopSoundAlt(void *e) {
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
+    *(s32 *)((u8 *)e + 0x118) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleActiveState);
 
