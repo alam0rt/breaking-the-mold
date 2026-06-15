@@ -196,9 +196,13 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BA8_80038510);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038574);
+void func_80038574(void *e, u16 val) {
+    *(u16 *)((u8 *)e + 0x90) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_8003857C);
+void func_8003857C(void *e, u8 val) {
+    *(u8 *)((u8 *)e + 0x3A7) = val;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback1);
 
@@ -216,19 +220,33 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyResourceType4);
 
 INCLUDE_ASM("asm/nonmatchings/effects", func_80038840);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038850);
+void func_80038850(void *e, u8 val) {
+    *(u8 *)((u8 *)e + 0x58) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038858);
+void func_80038858(void *e, u16 val) {
+    *(u16 *)((u8 *)e + 0x46) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038860);
+void func_80038860(void *e, u16 val) {
+    *(u16 *)((u8 *)e + 0x44) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038868);
+void func_80038868(void *e, u8 val) {
+    *(u8 *)((u8 *)e + 0x5D) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038870);
+void func_80038870(void *e, u16 val) {
+    *(u16 *)((u8 *)e + 0x46) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038878);
+void func_80038878(void *e, u16 val) {
+    *(u16 *)((u8 *)e + 0x44) = val;
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038880);
+void func_80038880(void *e, u8 val) {
+    *(u8 *)((u8 *)e + 0x1E7) = val;
+}
 
 void func_80038888(void *e) {
     *(u8 *)((u8 *)e + 0x1E0) = 0x20;

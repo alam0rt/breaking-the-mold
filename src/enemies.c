@@ -356,7 +356,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TrackerEntityTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandler_SetFlag0x110);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityNullEventHandler);
+s32 EntityNullEventHandler(void) {
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemySpawnerEntity);
 

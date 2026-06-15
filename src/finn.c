@@ -22,7 +22,9 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityFollowWithDistanceCheck);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubEvent_ProcessQueueOnReady);
 
-INCLUDE_ASM("asm/nonmatchings/finn", ClearEntityStateFlag);
+void ClearEntityStateFlag(void *e) {
+    *(u8 *)((u8 *)e + 0x10D) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", SetEntityStateFlagWithValue);
 
