@@ -6,6 +6,9 @@
 extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(void *entity);
 extern void *InitBasicEntityWithVtable(void *e, s16 val);
+extern u8 IsEntityOutsideSpawnBounds(Entity *e);
+extern void ChangeRenderZOrder(void *gs, void *layer, u32 zOrder);
+extern void EntityTimerTickAndNotify(Entity *e);
 extern void *D_80010A48;
 extern void *D_80010A68;
 extern void *D_80010AD8;
@@ -101,7 +104,15 @@ INCLUDE_ASM("asm/nonmatchings/effects", DestroyCompoundEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", SetupAlternateEntitySpriteContext);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityTickWithSpawnBoundsCheck);
+void EntityTickWithSpawnBoundsCheck(Entity *e) {
+    EntityUpdateCallback(e);
+    if ((u8)IsEntityOutsideSpawnBounds(e)) {
+        *(s32 *)(*(u32 *)((u8 *)e + 0x100) + 0x3C) = 0;
+        *(u32 *)((u8 *)e + 0x100) = 0;
+        *(u8 *)(*(u32 *)((u8 *)e + 0x34) + 0xA) = 0;
+        *(u8 *)((u8 *)e + 0x109) = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", CalculateChildEntityRenderPos);
 
@@ -247,7 +258,17 @@ s32 HandleCollisionEvent0x1018(void *e, u16 event) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitLoadingScreenEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", ZOrderChangeAndTimerTick);
+void ZOrderChangeAndTimerTick(Entity *e) {
+    u8 timer = *(u8 *)((u8 *)e + 0x108);
+    if (timer != 0) {
+        timer -= 1;
+        *(u8 *)((u8 *)e + 0x108) = timer;
+        if (timer == 0) {
+            ChangeRenderZOrder(g_pGameState, *(void **)((u8 *)e + 0x34), 0x3D4);
+        }
+    }
+    EntityTimerTickAndNotify(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", HandleEventAndChangeZOrder);
 

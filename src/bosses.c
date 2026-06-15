@@ -13,6 +13,8 @@ extern void *D_80011268;
 extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern void GlennYntisSelectRandomAnimState(Entity *e);
+extern void HazardActivateWithSound(Entity *e);
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   D_800A5B98;
 void *D_800A5B9C;
