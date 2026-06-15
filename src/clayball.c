@@ -1,5 +1,6 @@
 #include "common.h"
 #include "globals.h"
+#include "Game/entity_events.h"
 
 extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
@@ -75,7 +76,7 @@ extern void ClayballSpawnSwitchBlock(void *entity);
  * caller's payload at +0x128 and trigger ClayballSpawnSwitchBlock — i.e.
  * the clayball remains dormant until its named trigger fires. */
 s32 ClayballSpawnOnSignalHandler(void *entity, u16 event, u32 param, s32 arg3) {
-    if (event == 0x1014) {
+    if (event == EVT_SIGNAL_FIRE) {
         u8 *sub = *(u8 **)((u8 *)entity + 0x100);
         if (param == sub[0x15]) {
             *(s32 *)((u8 *)entity + 0x128) = arg3;

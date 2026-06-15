@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/entity_events.h"
 
 extern void *g_pGameState;
 extern void *g_pBlbHeapBase;
@@ -25,7 +26,7 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityTimerTickAndNotify);
 
 s32 DecorHandleCallback(void *e, u16 event) {
     u8 *p = (u8 *)e;
-    if (event == 2 && *(u16 *)(p + 0x100) == 0) {
+    if (event == EVT_TICK && *(u16 *)(p + 0x100) == 0) {
         p[0x102] = 1;
     }
     return 0;
@@ -233,7 +234,7 @@ INCLUDE_ASM("asm/nonmatchings/effects", FadeExpireEntityDespawnEvent);
 INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateOneAlt2);
 
 s32 HandleCollisionEvent0x1018(void *e, u16 event) {
-    if (event == 0x1018) {
+    if (event == EVT_WORLD_FREEZE) {
         *(u8 *)((u8 *)e + 0x24) = 1;
     }
     return 0;

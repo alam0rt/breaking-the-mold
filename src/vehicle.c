@@ -1,5 +1,6 @@
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/entity_events.h"
 
 extern void EntityProcessCallbackQueue(Entity *entity);
 extern s32 PlatformEntityOnCollision(Entity *entity, u32 event, u32 arg2, u32 arg3);
@@ -63,7 +64,7 @@ s32 PlatformEvent_CollisionAndQueue(Entity *entity, u32 event, u32 arg2, u32 arg
     s32 result;
     u32 maskedEvent = event & 0xFFFF;
     result = PlatformEntityOnCollision(entity, maskedEvent, arg2, arg3);
-    if (maskedEvent == 2) {
+    if (maskedEvent == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
         return result;
     }
@@ -80,7 +81,7 @@ s32 PlatformEvent_CollisionAndQueue(Entity *entity, u32 event, u32 arg2, u32 arg
  * the generic post-tick wakeup, not strictly animation.
  */
 s32 PlatformEvent_QueueOnAnimReady(Entity *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;

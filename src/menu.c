@@ -1,5 +1,6 @@
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/entity_events.h"
 
 extern void EntityProcessCallbackQueue(Entity *entity);
 extern void EntityUpdateCallback(Entity *entity);
@@ -138,7 +139,7 @@ void TimerEntityTick(Entity *entity) {
  * EntityProcessCallbackQueue to fire the queued state transition
  * (typical "animation finished" hand-off). */
 s32 MenuEntityCallback(Entity *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;
@@ -218,7 +219,7 @@ Entity *InitMenuButtonEntity(Entity *entity, s16 x, s16 y) {
  * queued MenuSetEntityIdle2 transition that returns the highlight to
  * its resting sprite after the activation flash. */
 s32 MenuButtonCallback(Entity *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;

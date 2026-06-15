@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/entity_events.h"
 
 extern void *g_pBlbHeapBase;
 extern u8 *g_pGameState;
@@ -163,7 +164,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterTickCallback);
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterStunnedTickCallback);
 
 s32 EntitySimpleEventPassthrough(void *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;
@@ -443,7 +444,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimedStateSwitchTick);
 
 void EntityUpdateWithCollisionOffscreen(void *e) {
     EntityUpdateCallback(e);
-    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
     CheckAndDisableChildEntityOffscreen(e);
 }
 
@@ -460,14 +461,14 @@ void EntityUpdateWithSpawnDataCheck(void *entity) {
 
 void EntityUpdateWithCollisionSpawnCheck(void *e) {
     EntityUpdateCallback(e);
-    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
     CheckAndDisableSpawnDataOffscreen(e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnDataOffscreen);
 
 s32 EntitySimpleEventPassthrough_V2(void *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;
@@ -489,7 +490,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", PlatformTimerTickCallback);
 
 void PlatformCollisionTickCallback(void *e) {
     EntityUpdateCallback(e);
-    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
     CheckAndDisableSpawnRefOffscreen(e);
 }
 
@@ -507,7 +508,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffScreenChildCleanup);
 
 void EntityTick_CollisionWithCleanup(void *e) {
     EntityUpdateCallback(e);
-    CollisionCheckWrapper(e, 2, 0x1000, 2);
+    CollisionCheckWrapper(e, 2, EVT_DAMAGE, 2);
     EntityOffScreenChildCleanup(e);
 }
 
@@ -518,7 +519,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", HazardEventHandler_0x1001);
 INCLUDE_ASM("asm/nonmatchings/enemies", HazardEventHandler_0x1001_V2);
 
 s32 EntityEventPassthrough_Event2(void *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;
@@ -542,7 +543,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TimedEntityTickCallbackWithCollision);
 
 void EntityUpdateWithCollisionWrapper(void *e) {
     EntityUpdateCallback(e);
-    CollisionCheckWrapper(e, 2, 0x1000, 1);
+    CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SwitchEventHandler_SetGameFlag);
@@ -578,7 +579,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterTickCallback);
 INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterActivateTickCallback);
 
 s32 TeleporterEventPassthrough_Event2(void *entity, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;
