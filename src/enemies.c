@@ -216,7 +216,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitSpecialPickupEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TripleLaserMonkeyDeathTick);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", TripleLaserMonkeyConditionalTick);
+void TripleLaserMonkeyConditionalTick(Entity *e) {
+    if ((*(s32 *)(g_pGameState + 0x10C) & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
+        EntityProcessCallbackQueue(e);
+    }
+    TripleLaserMonkeyDeathTick(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithCountdownToWalk);
 
@@ -320,7 +325,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityPathFollowerWithTriggerZone);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitLevelStateCollectible);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", ConditionalCollectibleTick);
+void ConditionalCollectibleTick(Entity *e) {
+    if ((*(s32 *)(g_pGameState + 0x10C) & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
+        EntityProcessCallbackQueue(e);
+    }
+    CollectibleTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerCountdownToWalkWithSprite);
 
