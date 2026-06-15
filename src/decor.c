@@ -57,7 +57,21 @@ void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
 
 INCLUDE_ASM("asm/nonmatchings/decor", EntityCollision_FlagAndDispatch);
 
-INCLUDE_ASM("asm/nonmatchings/decor", EntityTick_PathFollowUpdate);
+extern void InterpolateTimedPathPosition(void *time, s16 *out, void *pathData, s16 duration, s32 unused);
+
+void EntityTick_PathFollowUpdate(u8 *e) {
+    s16 out[2];
+    *(u16 *)(e + 0x10E) += 1;
+    InterpolateTimedPathPosition(
+        e + 0x10E,
+        out,
+        *(void **)(e + 0x108),
+        *(s16 *)(e + 0x10C),
+        8
+    );
+    *(s16 *)(e + 0x68) = *(u16 *)(e + 0x104) + (u16)out[0];
+    *(s16 *)(e + 0x6A) = *(u16 *)(e + 0x106) + (u16)out[1];
+}
 
 INCLUDE_ASM("asm/nonmatchings/decor", EntityTick_EasedMovementInterpolation);
 
