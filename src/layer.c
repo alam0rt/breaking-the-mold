@@ -18,7 +18,16 @@ INCLUDE_ASM("asm/nonmatchings/layer", FreeLayerSlotsByEntityList);
 
 INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlots);
 
-INCLUDE_ASM("asm/nonmatchings/layer", func_800194F4);
+u8 *func_800194F4(u8 *base, void *needle) {
+    s16 i;
+    for (i = 0; i < 20; i++) {
+        u8 *slot = base + i * 24;
+        if (*(void **)slot == needle) {
+            return slot;
+        }
+    }
+    return NULL;
+}
 
 void *ZeroEntityField(void *e) {
     *(s32 *)e = 0;
