@@ -67,7 +67,20 @@ void StopAllSPUVoices(void) {
 
 INCLUDE_ASM("asm/nonmatchings/sound", CalculateStereoVolume);
 
-INCLUDE_ASM("asm/nonmatchings/sound", SetVoicePanning);
+extern void CalculateStereoVolume(s16 *out, s32 vol, s32 pan);
+extern void SpuSetVoiceVolume(s32 voice, s16 volL, s16 volR);
+extern u8 D_8009CC18[];
+extern u8 D_8009CC68[];
+
+void SetVoicePanning(s32 voice_index, s16 pan_pos) {
+    s16 vols[2];
+    if ((u32)voice_index < 0x18) {
+        CalculateStereoVolume(&vols[0],
+                              *(s16 *)(D_8009CC68 + D_8009CC18[voice_index] * 12),
+                              pan_pos);
+        SpuSetVoiceVolume(voice_index, vols[0], vols[1]);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", StartCDAudioForLevel);
 
