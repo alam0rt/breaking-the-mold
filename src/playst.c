@@ -1,12 +1,20 @@
 #include "common.h"
 #include "functions.h"
+#include "globals.h"
 
 extern s32 PlayerEntityEventHandler(void *e, u32 event);
 extern s32 PlayerEntityEventHandlerAlt(void *e, u32 event);
+extern void RemoveEntityFromAllLists(void *gs, void *entity);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerClearSwirlPortalEntity);
+void PlayerClearSwirlPortalEntity(void *e) {
+    *(u8 *)((u8 *)g_pGameState + 0x62) = 0;
+    if (*(void **)((u8 *)e + 0x140) != NULL) {
+        RemoveEntityFromAllLists(g_pGameState, *(void **)((u8 *)e + 0x140));
+        *(void **)((u8 *)e + 0x140) = NULL;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerNotifyEntityRelease);
 
