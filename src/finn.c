@@ -101,7 +101,10 @@ void func_8006EC1C(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC28);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC40);
+typedef struct { s32 a; s32 b; } func_8006EC40_Pair;
+void func_8006EC40(void *e, func_8006EC40_Pair p) {
+    *(func_8006EC40_Pair *)((u8 *)e + 0x104) = p;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FINNCallback_DispatchToEntityHandler);
 

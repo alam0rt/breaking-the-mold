@@ -770,6 +770,8 @@ void FinnModeCollectibleTickCallback(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyPathFollowWithFacingFlip);
 
+extern void SetEntitySpriteId(void *e, u32 spriteId, s32 flags);
+
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetWalkSprite);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);

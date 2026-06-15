@@ -139,9 +139,17 @@ u8 GetCurrentStageIndex(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset101Entry);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelDimensions);
+void *GetLevelDimensions(void *dst, void *ctx) {
+    void *src = *(void **)((u8 *)ctx + 4);
+    __builtin_memcpy(dst, (u8 *)src + 8, 4);
+    return dst;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetSpawnPosition);
+void *GetSpawnPosition(void *dst, void *ctx) {
+    void *src = *(void **)((u8 *)ctx + 4);
+    __builtin_memcpy(dst, (u8 *)src + 0xC, 4);
+    return dst;
+}
 
 u16 GetLevelFlags(LevelDataContext *ctx) {
     return *(u16 *)(ctx->tile_header + 0x18);
@@ -223,9 +231,17 @@ s32 HasTileAttributes(LevelDataContext *ctx) {
     return ctx->tile_attributes != 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTileAttributeUnknown);
+void *GetTileAttributeUnknown(void *dst, void *ctx) {
+    void *src = *(void **)((u8 *)ctx + 0x2C);
+    __builtin_memcpy(dst, src, 4);
+    return dst;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTileAttributeDimensions);
+void *GetTileAttributeDimensions(void *dst, void *ctx) {
+    void *src = *(void **)((u8 *)ctx + 0x2C);
+    __builtin_memcpy(dst, (u8 *)src + 4, 4);
+    return dst;
+}
 
 void *GetTileAttributeData(LevelDataContext *ctx) {
     return (void *)(ctx->tile_attributes + 8);
