@@ -7,7 +7,9 @@ u8 GetLevelCount(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelAssetIndex);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007A9E8);
+void *func_8007A9E8(LevelDataContext *ctx, u8 index) {
+    return (void *)(ctx->blb_header + index * 112 + 0x56);
+}
 
 char *getLevelName(LevelDataContext *ctx, u8 index) {
     return (char *)(ctx->blb_header + index * 112 + 0x5B);
@@ -100,9 +102,14 @@ u32 GetTotalTileCount(LevelDataContext *ctx) {
     return *(u16 *)(th + 0x10) + *(u16 *)(th + 0x12) + *(u16 *)(th + 0x14);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B55C);
+u32 func_8007B55C(LevelDataContext *ctx) {
+    u32 th = ctx->tile_header;
+    return *(u16 *)(th + 0x10) + *(u16 *)(th + 0x12);
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B574);
+u16 func_8007B574(LevelDataContext *ctx) {
+    return *(u16 *)(ctx->tile_header + 0x14);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilePixelData);
 
@@ -205,7 +212,16 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", ClearSpriteContextWrapper);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", InitSpriteContextWrapper);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", ClearSpriteContext);
+void ClearSpriteContext(void *ctx) {
+    *(u32 *)((u8 *)ctx + 0x0) = 0;
+    *(u32 *)((u8 *)ctx + 0x4) = 0;
+    *(u32 *)((u8 *)ctx + 0x8) = 0;
+    *(u16 *)((u8 *)ctx + 0xC) = 0;
+    *(u16 *)((u8 *)ctx + 0xE) = 0;
+    *(u16 *)((u8 *)ctx + 0x10) = 0;
+    *(u8 *)((u8 *)ctx + 0x12) = 0;
+    *(u8 *)((u8 *)ctx + 0x13) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", InitSpriteContext);
 
