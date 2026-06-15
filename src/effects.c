@@ -223,7 +223,11 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010A68);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyResourceType4);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80038840);
+void func_80038840(void *e, u8 b40, u8 b41, u8 b42) {
+    *(u8 *)((u8 *)e + 0x40) = b40;
+    *(u8 *)((u8 *)e + 0x41) = b41;
+    *(u8 *)((u8 *)e + 0x42) = b42;
+}
 
 void func_80038850(void *e, u8 val) {
     *(u8 *)((u8 *)e + 0x58) = val;

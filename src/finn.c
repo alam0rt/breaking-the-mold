@@ -26,7 +26,10 @@ void ClearEntityStateFlag(void *e) {
     *(u8 *)((u8 *)e + 0x10D) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", SetEntityStateFlagWithValue);
+void SetEntityStateFlagWithValue(void *e, u8 val) {
+    *(u8 *)((u8 *)e + 0x10F) = val;
+    *(u8 *)((u8 *)e + 0x10D) = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_SetIdleSpriteAndPause);
 
@@ -40,7 +43,10 @@ void func_8006EB14(void *e) {
     *(u8 *)((u8 *)e + 0x2C) = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EB20);
+void func_8006EB20(void *e) {
+    u8 *p = *(u8 **)((u8 *)e + 0x24);
+    p[0x1E0] = 0x20;
+}
 
 u32 func_8006EB30(void *e) {
     return *(u32 *)((u8 *)e + 0x24);
