@@ -55,7 +55,23 @@ char *GetCurrentLevelDisplayName(LevelDataContext *ctx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007AADC);
+char *func_8007AADC(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    u8 kind = *(u8 *)(entry + 0xF36);
+    u8 slot;
+    if (kind < 3) {
+        return NULL;
+    }
+    if (kind == 3) {
+        slot = *(u8 *)(entry + 0xF92);
+    } else if (kind == 6) {
+        slot = *(u8 *)(entry + 0xF91);
+    } else {
+        return NULL;
+    }
+    return (char *)(blb + slot * 112 + 0x5B);
+}
 
 u8 GetLoadingScreenMinDisplayTime(LevelDataContext *ctx) {
     u32 blb = ctx->blb_header;
