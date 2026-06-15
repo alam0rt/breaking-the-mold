@@ -36,6 +36,11 @@ extern void *D_800111E8;
 extern void *D_80011228;
 extern void *D_80011248;
 extern void RemoveEntityFromAllLists(void *gs, s32 idx);
+extern void EntitySetState(Entity *e, u32 marker, void *fn);
+
+/* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
+u32   D_800A5B10;
+void *D_800A5B14;
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -509,9 +514,23 @@ void EntityTick_CollisionWithCleanup(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", HazardTimerTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", HazardEventHandler_0x1001);
+s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
+    if ((ev & 0xFFFF) == 0x1001) {
+        EntitySetState(e, D_800A5B10, D_800A5B14);
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", HazardEventHandler_0x1001_V2);
+s32 HazardEventHandler_0x1001_V2(void *e, u32 ev, u32 a2, u32 a3) {
+    u32 maskedEv = ev & 0xFFFF;
+    if (maskedEv == 0x1001) {
+        EntitySetState(e, D_800A5B10, D_800A5B14);
+    }
+    if (maskedEv == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 s32 EntityEventPassthrough_Event2(void *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {

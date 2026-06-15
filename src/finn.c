@@ -11,6 +11,11 @@ extern void *D_80011824;
 extern void *D_80011D14;
 extern void FreeEntityNoTeardown_8006ed88(void *e, u32 size);
 extern void FreeEntityNoTeardown_80070548(void *e, u32 size);
+extern void EntitySetState(Entity *e, u32 marker, void *fn);
+
+/* gp_rel tentative defs (sdata blob owns the strong defs). */
+u32   D_800A5F8C;
+void *D_800A5F90;
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
@@ -174,7 +179,12 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_NormalMovementAndInput);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_LevelExitCountdown);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnEvent_DamageToDeathExplosion);
+s32 FinnEvent_DamageToDeathExplosion(void *e, u32 ev, u32 a2, u32 a3) {
+    if ((ev & 0xFFFF) == 0x1000) {
+        EntitySetState(e, D_800A5F8C, D_800A5F90);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FINNEventHandler_DeathExplosion);
 
