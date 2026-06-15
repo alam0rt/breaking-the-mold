@@ -184,7 +184,14 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardMoveCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", BossRandomAttackChoice);
+void BossRandomAttackChoice(Entity *e) {
+    *(u8 *)((u8 *)e + 0x112) = 0x5A;
+    if ((rand() & 1) == 0) {
+        ShrineyGuardSetAttackState(e);
+    } else {
+        ShrineyGuardSetLoopingAttackState(e);
+    }
+}
 
 void ShrineyGuardAttackCounterState(Entity *e) {
     u8 *counter = (u8 *)e + 0x114;
@@ -289,7 +296,20 @@ INCLUDE_ASM("asm/nonmatchings/bosses", SpawnParticleAndMenuEntity);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", KloggUpdateWithSound);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", KloggUpdateWithTimer);
+void KloggUpdateWithTimer(Entity *e) {
+    u16 *ctr1 = (u16 *)((u8 *)e + 0x104);
+    if (*ctr1 != 0) {
+        *ctr1 -= 1;
+        if (*ctr1 == 0) {
+            EntityProcessCallbackQueue(e);
+        }
+    }
+    UpdateEntitySoundPanning(e, *(s32 *)((u8 *)e + 0x110));
+    if (*(u16 *)((u8 *)e + 0x116) != 0) {
+        *(u16 *)((u8 *)e + 0x116) -= 1;
+    }
+    EntityUpdateCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyHitMessageHandler);
 

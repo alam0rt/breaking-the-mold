@@ -935,7 +935,16 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleFadeTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleContactEventHandler);
+s32 BackgroundSparkleContactEventHandler(Entity *e, u32 ev) {
+    if ((ev & 0xFFFF) == 2) {
+        if (*(u8 *)((u8 *)e + 0x100) != 0) {
+            *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 0;
+            SetAnimationSpriteId(e, *(s16 *)((u8 *)e + 0xDA));
+            EntitySetRenderFlags(e, 0);
+        }
+    }
+    return 0;
+}
 
 void InitBackgroundSparkleRevealState(void *e) {
     *(u8 *)((u8 *)e + 0x100) = 1;
