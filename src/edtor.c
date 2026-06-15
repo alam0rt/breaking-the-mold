@@ -2,7 +2,11 @@
 
 INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_DestroyAllChildEntities);
 
-INCLUDE_ASM("asm/nonmatchings/edtor", func_8002C528);
+void func_8002C528(void *e) {
+    u8 *p = *(u8 **)((u8 *)e + 0x1C);
+    *(u8 *)((u8 *)e + 0x20) = 1;
+    p[0xA] = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type0);
 

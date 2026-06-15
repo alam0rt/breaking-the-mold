@@ -100,7 +100,11 @@ INCLUDE_ASM("asm/nonmatchings/finn", CreateGlidePlayerEntity);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnEntityDestroyWithSoundCleanup);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EF48);
+s32 func_8006EF48(void *e) {
+    u8 a = *(u8 *)((u8 *)e + 0x68) & 0xF;
+    u8 b = *(u8 *)((u8 *)e + 0x6A) & 0xF;
+    return (a + b) < 0x10;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006EF64);
 
