@@ -178,7 +178,12 @@ INCLUDE_ASM("asm/nonmatchings/effects", FadeExpireEntityDespawnEvent);
 
 INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateOneAlt2);
 
-INCLUDE_ASM("asm/nonmatchings/effects", HandleCollisionEvent0x1018);
+s32 HandleCollisionEvent0x1018(void *e, u16 event) {
+    if (event == 0x1018) {
+        *(u8 *)((u8 *)e + 0x24) = 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitLoadingScreenEntity);
 

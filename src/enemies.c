@@ -206,7 +206,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityState_Idle);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemyAnimatedWithDeathSpawn);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetFacingRight);
+void SetEntityFacingDirection(void *e, s32 dir);
+
+void EntitySetFacingRight(void *e) {
+    SetEntityFacingDirection(e, 2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityState_Animated);
 
@@ -480,7 +484,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundParticleEmitter);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", ParticleEmitterTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetReadyFlag);
+s32 EntitySetReadyFlag(void *e, u16 mode) {
+    if (mode == 2) {
+        *(u8 *)((u8 *)e + 0x100) = 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleEntity);
 
