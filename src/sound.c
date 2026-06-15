@@ -16,6 +16,7 @@ u8  D_800A6080;
 u8  D_800A6081;
 u8  D_800A6082;
 u8  D_800A6085;
+u8  D_800A6087;
 u8  D_800A6088;
 
 INCLUDE_ASM("asm/nonmatchings/sound", InitSPUDefaults);
@@ -89,9 +90,45 @@ void StopCDStreaming(void) {
     D_800A6085 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/sound", SaveAndMuteAllVoicePitches);
+extern void SpuGetVoicePitch(s32 voice, u16 *out);
+extern void SpuSetVoicePitch(s32 voice, u16 pitch);
+extern void PauseCDAudio(void);
+extern void ResumeCDAudio(void);
+extern u16 D_8009CC30[];
 
-INCLUDE_ASM("asm/nonmatchings/sound", ResumeAllVoicePitches);
+void SaveAndMuteAllVoicePitches(void) {
+    s32 i;
+    u16 *p;
+    u16 saved;
+    if (D_800A6087 == 0) {
+        i = 0;
+        p = D_8009CC30;
+        do {
+            SpuGetVoicePitch(i, &saved);
+            *p = saved;
+            SpuSetVoicePitch(i, 0);
+            i++;
+            p++;
+        } while (i < 0x18);
+        PauseCDAudio();
+        D_800A6087 = 1;
+    }
+}
+
+void ResumeAllVoicePitches(void) {
+    s32 i;
+    u16 *p;
+    if (D_800A6087 != 0) {
+        i = 0;
+        p = D_8009CC30;
+        do {
+            SpuSetVoicePitch(i, *p++);
+            i++;
+        } while (i < 0x18);
+        ResumeCDAudio();
+        D_800A6087 = 0;
+    }
+}
 
 void SetStereoMode(u8 mode) {
     if ((u8)(mode - 1) < 2) {
