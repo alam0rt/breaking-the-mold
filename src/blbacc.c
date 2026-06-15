@@ -159,7 +159,18 @@ u16 GetMovieSectorCount(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentModeReservedData);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007AFA4);
+u8 func_8007AFA4(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    u8 flag = *(u8 *)(entry + 0xF36);
+    if (flag == 6) return 1;
+    if (flag != 3) return 0;
+    {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u8 *p = (u8 *)blb + slot * 112;
+        return p[0xE];
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentTertiaryDataSize);
 
