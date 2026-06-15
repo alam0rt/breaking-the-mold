@@ -8,7 +8,13 @@ INCLUDE_ASM("asm/nonmatchings/layer", DestroyLayerRendererObject);
 
 INCLUDE_ASM("asm/nonmatchings/layer", LoadSpriteFramesToVRAM);
 
-INCLUDE_ASM("asm/nonmatchings/layer", LoadSpriteHashArrayToVRAM);
+void LoadSpriteHashArrayToVRAM(void *heap, u8 **arr) {
+    if (*arr == NULL) return;
+    do {
+        LoadSpriteFramesToVRAM(heap, *(u32 *)arr);
+        arr++;
+    } while (*arr != NULL);
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", FreeLayerRenderSlot);
 
