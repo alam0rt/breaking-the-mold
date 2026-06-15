@@ -164,7 +164,17 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EnemyUpdateWithCollisionAndDeath);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardIdleTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStunTickCallback);
+void ShrineyGuardStunTickCallback(Entity *e) {
+    u8 *ctr = (u8 *)e + 0x113;
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            *(u8 *)((u8 *)e + 0x115) = 0;
+            *(u8 *)((u8 *)e + 0x10C) = 1;
+        }
+    }
+    EnemyUpdateWithCollisionAndDeath(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", BossEventHandler);
 
