@@ -133,7 +133,17 @@ INCLUDE_ASM("asm/nonmatchings/effects", IsEntityOutsideSpawnBounds);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityTick_UploadTextureWithCallback);
 
-INCLUDE_ASM("asm/nonmatchings/effects", InitColoredOverlayEntity);
+extern void *D_80010AA8;
+
+void *InitColoredOverlayEntity(u8 *e, u8 r, u8 g, u8 b, u8 alpha, s16 vtableArg) {
+    InitBasicEntityWithVtable(e, vtableArg);
+    *(void **)(e + 0xC) = &D_80010AA8;
+    e[0x40] = r;
+    e[0x41] = g;
+    e[0x42] = b;
+    e[0x43] = alpha;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderFullScreenTileOverlay);
 
