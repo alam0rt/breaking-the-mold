@@ -83,7 +83,11 @@ void SetStereoMode(u8 mode) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/sound", SetReverbLevel);
+void SetReverbLevel(u8 level) {
+    if ((u8)level < 5) {
+        D_800A607F = level;
+    }
+}
 
 void SetAudioVolume(u32 vol) {
     u32 v = vol & 0xFF;

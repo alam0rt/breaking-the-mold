@@ -14,7 +14,14 @@ INCLUDE_ASM("asm/nonmatchings/vram", ProcessPendingVRAMSlotFrees);
 
 INCLUDE_ASM("asm/nonmatchings/vram", CalculateVRAMCoordinates);
 
-INCLUDE_ASM("asm/nonmatchings/vram", InitHeapConfig);
+void InitHeapConfig(void *base, void *ptr, u32 size) {
+    *(void **)((u8 *)base + 0xA640) = ptr;
+    if ((size >> 4) <= 0xFFFF) {
+        *(u32 *)((u8 *)base + 0xA644) = size;
+    } else {
+        *(u32 *)((u8 *)base + 0xA644) = 0xFFFF0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/vram", AllocateFromHeap);
 

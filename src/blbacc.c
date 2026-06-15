@@ -272,7 +272,18 @@ u16 func_8007B574(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilePixelData);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAnimatedTileData);
+void *GetAnimatedTileData(LevelDataContext *ctx, u32 idx) {
+    u8 *header = (u8 *)ctx->tile_header;
+    u16 a = *(u16 *)(header + 0x10);
+    u16 b = *(u16 *)(header + 0x12);
+    u16 sum = (u16)(a + b);
+    void *arr;
+    idx--;
+    if (idx < sum) return NULL;
+    arr = (void *)ctx->animated_tiles;
+    if (arr == NULL) return NULL;
+    return ((void **)arr)[idx - sum];
+}
 
 void *GetPaletteIndices(LevelDataContext *ctx) {
     return (void *)ctx->palette_indices;
