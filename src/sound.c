@@ -10,8 +10,11 @@ extern s32 D_8009CE64[];
 /* Tentative defs to unlock gp_rel via maspsx --use-comm-section. */
 u32 D_800A6074;
 u32 D_800A6078;
+u8  D_800A607E;
+u8  D_800A607F;
 u8  D_800A6080;
 u8  D_800A6081;
+u8  D_800A6082;
 u8  D_800A6085;
 u8  D_800A6088;
 
@@ -38,7 +41,11 @@ void func_8007C35C(void) {
 void func_8007C364(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/sound", SetGameMode);
+void SetGameMode(u8 mode) {
+    if ((mode & 0xFF) < 7) {
+        D_800A6082 = mode;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", PlaySoundEffect);
 
