@@ -2,7 +2,14 @@
 
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
 extern void *D_800120CC;
+extern void *D_80011E54;
+extern void *D_80011E74;
+extern void *D_80011EB4;
+extern void *D_80012034;
+extern void *D_8001208C;
+extern void *D_800120AC;
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingTickCallback);
 
@@ -20,9 +27,21 @@ INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsCompleteTick);
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsFadeOutTick);
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_1E54);
+void EndingEntityDestroyCallback_1E54(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011E54;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_1E74);
+void EndingEntityDestroyCallback_1E74(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011E74;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 u32 func_80079D74(void *e) {
     return *(u32 *)((u8 *)e + 0x100);
@@ -35,13 +54,37 @@ INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback);
 void func_80079DEC(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034);
+void EndingEntityDestroyCallback_2034(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034_V2);
+void EndingEntityDestroyCallback_2034_V2(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034_V3);
+void EndingEntityDestroyCallback_2034_V3(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034_V4);
+void EndingEntityDestroyCallback_2034_V4(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 u32 func_80079F84(void *e) {
     return *(u32 *)((u8 *)e + 0x100);
@@ -59,11 +102,29 @@ void func_80079FA0(void) {
 void func_80079FA8(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_2034_V5);
+void EndingEntityDestroyCallback_2034_V5(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_208C);
+void EndingEntityDestroyCallback_208C(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_8001208C;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_20AC);
+void EndingEntityDestroyCallback_20AC(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800120AC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void func_8007A0DC(void) {
 }
