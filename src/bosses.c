@@ -11,6 +11,7 @@ extern void *D_80011328;
 extern void *D_80011348;
 extern void *D_80011368;
 extern void *D_80011388;
+extern void *D_80011268;
 extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
 extern void EntityProcessCallbackQueue(void *e);
@@ -220,7 +221,15 @@ void KloggDeathCallback(u8 *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBoss);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", KloggDestroyCallback);
+void KloggDestroyCallback(void *e, u32 flags) {
+    *(void **)((u8 *)e + 0x18) = &D_80011268;
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
+    *(s32 *)((u8 *)e + 0x110) = -1;
+    DestroyEntityAndFreeMemory(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", SpawnParticleAndMenuEntity);
 

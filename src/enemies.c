@@ -1,6 +1,7 @@
 #include "common.h"
 
 extern void *g_pBlbHeapBase;
+extern u8 *g_pGameState;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 extern void EntityProcessCallbackQueue(void *entity);
 extern void EntityUpdateCallback(void *entity);
@@ -20,6 +21,7 @@ extern s32 rand(void);
 extern void StopSPUVoice(s32 voice);
 extern void *D_80010C64;
 extern void *D_80010CE4;
+extern void *D_80010DA4;
 extern void *D_80010DE4;
 extern void *D_80010E04;
 extern void *D_80011048;
@@ -32,9 +34,12 @@ extern void *D_80011128;
 extern void *D_80011148;
 extern void *D_80011168;
 extern void *D_80011188;
+extern void *D_800111A8;
 extern void *D_800111C8;
+extern void *D_800111E8;
 extern void *D_80011228;
 extern void *D_80011248;
+extern void RemoveEntityFromAllLists(void *gs, s32 idx);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -143,7 +148,15 @@ void StartAnimSequence4C(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEnemy);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", DestroySoundEmitterEntity);
+void DestroySoundEmitterEntity(void *e, u32 flags) {
+    *(void **)((u8 *)e + 0x18) = &D_80010DA4;
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x128));
+    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    DestroyEntityAndFreeMemory(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterTickCallback);
 
@@ -740,7 +753,15 @@ void StartAnimSequence13Frames(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEntity_Alt);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SoundEntityDestroyCallback);
+void SoundEntityDestroyCallback(void *e, u32 flags) {
+    *(void **)((u8 *)e + 0x18) = &D_800111E8;
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
+    *(void **)((u8 *)e + 0x18) = &D_80011228;
+    DestroyEntityAndFreeMemory(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 void FinnModeCollectibleTickCallback(void *e) {
     UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x118));
