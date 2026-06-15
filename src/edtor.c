@@ -1,5 +1,13 @@
 #include "common.h"
 
+extern void *g_pBlbHeapBase;
+extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void FreeEntityNoTeardown_8002c7d8(void *e, u32 size);
+extern void *D_800105CC;
+extern void *D_800105EC;
+extern void *D_8001060C;
+
 INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_DestroyAllChildEntities);
 
 void func_8002C528(void *e) {
@@ -8,17 +16,53 @@ void func_8002C528(void *e) {
     p[0xA] = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type0);
+void EntityDestructor_Type0(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type1);
+void EntityDestructor_Type1(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type2);
+void EntityDestructor_Type2(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type3);
+void EntityDestructor_Type3(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type4);
+void EntityDestructor_Type4(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type5);
+void EntityDestructor_Type5(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105EC;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void func_8002C794(void) {
 }
@@ -26,5 +70,10 @@ void func_8002C794(void) {
 void func_8002C79C(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/edtor", EntityDestructor_Type6_Simple);
+void EntityDestructor_Type6_Simple(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_8001060C;
+    if (flag & 1) {
+        FreeEntityNoTeardown_8002c7d8(entity, 0x1C);
+    }
+}
 
