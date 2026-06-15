@@ -189,7 +189,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeReturnToIdleStateAlt);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDeathAnimState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", KloggDeathCallback);
+void KloggDeathCallback(u8 *e) {
+    u8 *p = *(u8 **)(e + 0x34);
+    p[0xA] = 0;
+    g_pGameState[0x148] = e[0x110];
+    e[0x106] = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBoss);
 

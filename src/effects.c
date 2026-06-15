@@ -1,5 +1,8 @@
 #include "common.h"
 
+extern void *g_pGameState;
+extern void FlushDepthBuckets(void *entity);
+
 INCLUDE_ASM("asm/nonmatchings/effects", InitParticleEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityTimerTickAndNotify);
@@ -62,7 +65,9 @@ INCLUDE_ASM("asm/nonmatchings/effects", RenderRopeSegments);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitEntityWithCallbackVtable);
 
-INCLUDE_ASM("asm/nonmatchings/effects", FlushDepthBucketsGlobal);
+void FlushDepthBucketsGlobal(void) {
+    FlushDepthBuckets(g_pGameState);
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitAlternateEntity);
 
