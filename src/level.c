@@ -3,14 +3,58 @@
 
 extern s32 strcmp(const char *s1, const char *s2);
 extern s32 LoadAssetContainer(LevelDataContext *ctx, s32 arg1, s32 arg2);
+extern char D_800A6058[];
 
-INCLUDE_ASM("asm/nonmatchings/level", InitLevelDataContext);
+void ResetGameStateInputAndContext(LevelDataContext *ctx);
+void ClearContextOffsets68to7C(LevelDataContext *ctx);
+void ClearLevelDataContext(LevelDataContext *ctx);
 
-INCLUDE_ASM("asm/nonmatchings/level", ResetGameStateInputAndContext);
+void InitLevelDataContext(LevelDataContext *ctx, u32 blb_header, u32 callback) {
+    ctx->blb_header = blb_header;
+    ctx->sector_read_callback = callback;
+    ctx->current_sequence_index = 0xFF;
+    ResetGameStateInputAndContext(ctx);
+}
 
-INCLUDE_ASM("asm/nonmatchings/level", ClearContextOffsets68to7C);
+void ResetGameStateInputAndContext(LevelDataContext *ctx) {
+    ClearContextOffsets68to7C(ctx);
+    ClearLevelDataContext(ctx);
+}
 
-INCLUDE_ASM("asm/nonmatchings/level", ClearLevelDataContext);
+void ClearContextOffsets68to7C(LevelDataContext *ctx) {
+    ctx->primary_data = 0;
+    ctx->secondary_data = 0;
+    ctx->container_600 = 0;
+    ctx->container_601 = 0;
+    ctx->container_601_size = 0;
+    ctx->container_602 = 0;
+}
+
+void ClearLevelDataContext(LevelDataContext *ctx) {
+    ctx->current_sub_block = 0;
+    ctx->tile_header = 0;
+    ctx->vram_slot_config = 0;
+    ctx->palette_container = 0;
+    ctx->palette_anim = 0;
+    ctx->tilemap_container = 0;
+    ctx->layer_entries = 0;
+    ctx->tile_attributes = 0;
+    ctx->tile_pixels = 0;
+    ctx->palette_indices = 0;
+    ctx->tile_flags = 0;
+    ctx->animated_tiles = 0;
+    ctx->entities = 0;
+    ctx->vram_rects = 0;
+    ctx->vehicle_data = 0;
+    ctx->anim_offsets = 0;
+    ctx->sprites = 0;
+    ctx->sprites_size = 0;
+    ctx->audio = 0;
+    ctx->audio_size = 0;
+    ctx->palette = 0;
+    ctx->spu_samples = 0;
+    ctx->spu_samples_size = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/level", AdvancePlaybackSequence);
 
@@ -20,9 +64,19 @@ INCLUDE_ASM("asm/nonmatchings/level", SeekToLevelInSequence);
 
 INCLUDE_ASM("asm/nonmatchings/level", FindSaveSlotByName);
 
-INCLUDE_ASM("asm/nonmatchings/level", AdvanceLevelSequence);
+void AdvanceLevelSequence(LevelDataContext *ctx) {
+    ctx->current_sequence_index = *(u8 *)(ctx->blb_header + 0xF30) - 2;
+}
 
-INCLUDE_ASM("asm/nonmatchings/level", PeekNextPlaybackMode);
+u8 PeekNextPlaybackMode(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+
+    if ((s32)idx >= *(u8 *)(blb + 0xF30) - 1) {
+        return 0;
+    }
+    return *(u8 *)(blb + idx + 0xF37);
+}
 
 INCLUDE_ASM("asm/nonmatchings/level", GetPrimaryBufferSize);
 
