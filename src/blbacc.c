@@ -9,7 +9,9 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelAssetIndex);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007A9E8);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", getLevelName);
+char *getLevelName(LevelDataContext *ctx, u8 index) {
+    return (char *)(ctx->blb_header + index * 112 + 0x5B);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetLevelFlagByIndex);
 
@@ -93,7 +95,10 @@ void *GetPaletteAnimData(LevelDataContext *ctx) {
     return (void *)ctx->palette_anim;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTotalTileCount);
+u32 GetTotalTileCount(LevelDataContext *ctx) {
+    u32 th = ctx->tile_header;
+    return *(u16 *)(th + 0x10) + *(u16 *)(th + 0x12) + *(u16 *)(th + 0x14);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B55C);
 
@@ -115,9 +120,15 @@ u16 GetLayerCount(LevelDataContext *ctx) {
     return *(u16 *)(ctx->tilemap_container);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTilemapDataPtr);
+void *GetTilemapDataPtr(LevelDataContext *ctx, u16 index) {
+    u32 base = ctx->tilemap_container;
+    u32 off = index * 12;
+    return (void *)(base + *(u32 *)(base + off + 0xC));
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLayerEntry);
+void *GetLayerEntry(LevelDataContext *ctx, u16 index) {
+    return (void *)(ctx->layer_entries + index * 92);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B724);
 
@@ -175,7 +186,12 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset601Ptr);
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset602Ptr);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetDemoDataPtr);
+void *GetDemoDataPtr(LevelDataContext *ctx) {
+    if (ctx->spu_samples != 0) {
+        return (void *)(ctx->spu_samples + 0x10);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetAssetHeaderPtr);
 
