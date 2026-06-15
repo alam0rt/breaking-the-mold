@@ -18,7 +18,15 @@ void func_80038B98(void) {
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", CdBLB_ReadSectors);
 
-INCLUDE_ASM("asm/nonmatchings/gamecd", CdReadFileSync);
+extern s32 CdReadFile(void *fp, void *buf, s32 nsector);
+extern s32 CdReadSync(s32 mode, void *result);
+
+s32 CdReadFileSync(void *fp, void *buf) {
+    if (CdReadFile(fp, buf, 0) != 0) {
+        return ((u32)~CdReadSync(0, NULL)) >> 31;
+    }
+    return 0;
+}
 
 s32 CdSetModeAndSeek(void) {
     s32 track = D_800A59EC;
