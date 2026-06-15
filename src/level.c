@@ -56,7 +56,33 @@ void ClearLevelDataContext(LevelDataContext *ctx) {
     ctx->spu_samples_size = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/level", AdvancePlaybackSequence);
+u8 AdvancePlaybackSequence(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u32 entry = blb + idx;
+    u8 result;
+
+    if (*(u8 *)(entry + 0xF36) == 2) {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 name = slot * 12 + blb;
+        if (strcmp((char *)(name + 0xF1C), D_800A6058) == 0) {
+            return 0;
+        }
+    }
+    {
+        u8 next;
+        u32 hdr;
+        hdr = ctx->blb_header;
+        next = ctx->current_sequence_index + 1;
+        ctx->current_sequence_index = next;
+        if ((u8)(next & 0xFF) < *(u8 *)(hdr + 0xF30)) {
+            result = *(u8 *)(hdr + (next & 0xFF) + 0xF36);
+        } else {
+            result = 0;
+        }
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/level", SetSequenceIndexByMode);
 
@@ -78,7 +104,26 @@ u8 PeekNextPlaybackMode(LevelDataContext *ctx) {
     return *(u8 *)(blb + idx + 0xF37);
 }
 
-INCLUDE_ASM("asm/nonmatchings/level", GetPrimaryBufferSize);
+s32 GetPrimaryBufferSize(LevelDataContext *ctx) {
+    u32 blb;
+    u8 mode;
+    u32 entry;
+
+    blb = ctx->blb_header;
+    entry = blb + ctx->current_sequence_index;
+    mode = *(u8 *)(entry + 0xF36);
+    if (mode < 3) {
+        return 0;
+    }
+    if (mode != 3) {
+        return 0x7D000;
+    }
+    {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 world = blb + slot * 0x70;
+        return *(s32 *)(world + 4);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/level", LevelDataParser);
 
