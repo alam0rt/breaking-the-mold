@@ -1,5 +1,7 @@
 #include "common.h"
 
+extern void SpuSetKey(s32 onoff, s32 voiceBits);
+
 INCLUDE_ASM("asm/nonmatchings/sound", InitSPUDefaults);
 
 INCLUDE_ASM("asm/nonmatchings/sound", UploadAudioToSPU);
@@ -22,7 +24,11 @@ INCLUDE_ASM("asm/nonmatchings/sound", PlaySoundEffect);
 
 INCLUDE_ASM("asm/nonmatchings/sound", PlayGameSoundById);
 
-INCLUDE_ASM("asm/nonmatchings/sound", StopSPUVoice);
+void StopSPUVoice(s32 voice) {
+    if (voice != -1) {
+        SpuSetKey(0, 1 << voice);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", StopAllSPUVoices);
 

@@ -1,8 +1,10 @@
 #include "common.h"
 
+extern u8 *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void EntitySetRenderFlags(void *e, u32 flags);
 extern void *D_80011784;
 extern void *D_800117C4;
 extern void *D_800117E4;
@@ -186,7 +188,10 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetSpriteByAngle);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnDeathExplosion);
 
-INCLUDE_ASM("asm/nonmatchings/finn", RunnState_SetAdvanceLevelAndHide);
+void RunnState_SetAdvanceLevelAndHide(void *e) {
+    g_pGameState[0x146] = 1;
+    EntitySetRenderFlags(e, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetTimerAndTick);
 

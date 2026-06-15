@@ -32,7 +32,13 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SimpleTick);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_FrameCountTick);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_CooldownTick);
+void PlayerState_CooldownTick(void *e) {
+    u8 *p = (u8 *)e;
+    if (p[0x13C] != 0) {
+        p[0x13C]--;
+    }
+    PlayerTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_FallWithRotation);
 
