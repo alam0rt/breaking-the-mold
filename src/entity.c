@@ -1,10 +1,9 @@
 #include "common.h"
+#include "functions.h"
 #include "Game/entity.h"
 #include "Game/game_state.h"
 #include "globals.h"
 
-extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
-extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
 extern void InitEntityStruct(Entity *entity, s16 allocSize);
 extern void ClearSpriteContextWrapper(void *ctx);
 extern void ZeroEntityField(void *field);

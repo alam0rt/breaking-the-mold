@@ -1,22 +1,17 @@
 #include "common.h"
+#include "functions.h"
 #include "Game/entity.h"
 #include "Game/entity_events.h"
 
-extern void EntityProcessCallbackQueue(Entity *entity);
-extern void EntityUpdateCallback(Entity *entity);
 extern void SetEntitySpriteId(Entity *entity, u32 spriteId, s32 flags);
 extern void SetAnimationFrameIndex(void *animEntity, u32 value);
-extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
 extern void ApplyAudioSettings(void *audioCtx);
-extern s32 rand(void);
 extern void InitRunnLevelEntity(Entity *entity);
 extern void *InitEntitySprite(void *entity, u32 spriteId, s32 z,
                               s16 x, s16 y, s32 flags);
 extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z,
                                   s16 x, s16 y);
 extern void AttachCursorToButton(Entity *button);
-extern void *AllocateFromHeap(void *heap, s32 size, s32 align, s32 flags);
-extern void AddEntityToSortedRenderList(void *list, void *entity);
 extern void *g_pBlbHeapBase;
 extern void *g_pGameState;
 extern u8 D_80012034[]; /* menu-button vtable, +0x18 install slot */

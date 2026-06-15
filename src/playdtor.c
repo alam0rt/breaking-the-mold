@@ -1,4 +1,5 @@
 #include "common.h"
+#include "functions.h"
 #include "globals.h"
 
 typedef struct EntityWithSpuVoiceAt10c {
@@ -9,9 +10,6 @@ typedef struct EntityWithSpuVoiceAt10c {
 } EntityWithSpuVoiceAt10c;
 
 extern u8 D_80011D34[];
-extern void StopSPUVoice(u32 spuVoice);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 flags);
-extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 
 /* Entity destructor referenced from the +0x0C slot of vtable D_80011D34
  * (playst rodata). Swaps the entity vtable to the teardown vtable D_80011D34,

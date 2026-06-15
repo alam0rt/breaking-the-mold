@@ -1,10 +1,7 @@
 #include "common.h"
+#include "functions.h"
 #include "globals.h"
 
-extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
-extern void StopSPUVoice(s32 voice);
-extern u8 EntityApplyMovementCallbacks(void *entity, s16 x, s16 y);
 extern u8 D_80011804[];
 
 s32 CheckTileCollisionOverride(void *entity, u8 *tile);

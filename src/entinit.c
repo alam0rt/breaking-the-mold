@@ -1,11 +1,9 @@
 #include "common.h"
+#include "functions.h"
+extern s32 GetLevelFlags();
 #include "Game/game_state.h"
 #include "globals.h"
 
-extern s32 GetLevelFlags();
-extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
-extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
-extern void HidePauseMenuHUD(s32 handle);
 extern u8 D_80012120[];
 
 
@@ -412,9 +410,7 @@ void EntityType011_ExtraLife_Init(void *list, void *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-extern void *AllocateFromHeap(void *heap, s32 size, s32 align, s32 flags);
 extern void *InitPlatformDecorEntity(void *entity, void *spawnData);
-extern void AddEntityToSortedRenderList(void *list, void *entity);
 extern void AddToUpdateQueue(void *list, void *entity);
 
 /* Type 009: collectible (inner init is labelled 'platform decor' -- ambiguous,
@@ -909,7 +905,6 @@ void AddToDepthBucket(void *gameState, void *node) {
 }
 
 extern void SetPolyGT4(void *prim);
-extern void AddPrim(void *ot, void *prim);
 
 /* Walks the 256 depth buckets (entity+0x16C) front-to-back, calling SetPolyGT4
  * on each primitive and inserting it into the active GPU ordering table

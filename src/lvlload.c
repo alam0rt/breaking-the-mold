@@ -1,11 +1,9 @@
 #include "common.h"
+#include "functions.h"
+extern s32 GetLevelFlags();
 #include "Game/game_state.h"
 #include "globals.h"
 
-extern s32 GetLevelFlags();
-extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
-extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
-extern void HidePauseMenuHUD(s32 handle);
 extern u8 D_80012120[];
 
 /* Top-level level-load driver. Clears the prior level's entity lists, then
@@ -153,8 +151,6 @@ void UnpauseGameAndRestoreEntities(void *entity) {
     }
 }
 
-extern void RemoveFromTickList(void *entity, void *arg);
-extern void FreeEntityLists(void *entity);
 
 /* End-of-level fade-to-black. Sets level_clear_pending (+0x144), arms a BG
  * color update to RGB=0/0/0 via bg_color_change_flag (+0x130), pulls the

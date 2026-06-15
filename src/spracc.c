@@ -1,4 +1,5 @@
 #include "common.h"
+#include "functions.h"
 
 /*
  * Tiny accessor functions for the sprite render object
@@ -75,7 +76,6 @@ extern u8 D_8001039C[];           /* PrimObject base vtable (INIT_TABLES) */
 extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
 extern void SetDrawOffset(void *p, u16 *ofs);
 extern void SetDrawTPage(void *p, s32 dfe, s32 dtd, u16 tpage);
-extern void AddPrim(void *ot, void *prim);
 extern void *AllocPrim20_Pool3(GameGlobals *g);
 extern void *AllocPrim24(GameGlobals *g);
 extern void *AllocPrim28(GameGlobals *g);

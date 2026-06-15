@@ -1,8 +1,7 @@
 #include "common.h"
+#include "functions.h"
 
 extern void *g_pBlbHeapBase;
-extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
 extern void FreeEntityNoTeardown_8002c7d8(void *e, u32 size);
 extern void *D_800105CC;
 extern void *D_800105EC;

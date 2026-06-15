@@ -1,9 +1,8 @@
 #include "common.h"
+#include "functions.h"
 
-extern s32 rand(void);
 extern s32 PlayerEntityEventHandler(void *e, u32 event);
 extern s32 PlayerEntityEventHandlerAlt(void *e, u32 event);
-extern void EntityProcessCallbackQueue(void *e);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 

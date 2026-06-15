@@ -1,12 +1,10 @@
 #include "common.h"
+#include "functions.h"
 #include "globals.h"
 #include "Game/entity_events.h"
 
-extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
 extern u8 D_800116E8[];
 extern u8 D_80011708[];
-extern u8 EntityApplyMovementCallbacks(void *entity, s16 x, s16 y);
 
 /* Per-tick path update for the looping clayball/circular-platform entity:
  * advances a timed path via InterpolateTimedPathPosition, writes the
@@ -122,7 +120,6 @@ INCLUDE_ASM("asm/nonmatchings/clayball", ShrineyGuardSoundUpdateTick);
 INCLUDE_ASM("asm/nonmatchings/clayball", ShrineyGuardEventWithSound);
 
 extern u8 D_80011628[];
-extern void StopSPUVoice(s32 voice);
 extern void FreeEntityNoTeardown_80059674(void *entity, s32 size);
 
 /* Destructor for the sound-emitting clayball: silences the two managed

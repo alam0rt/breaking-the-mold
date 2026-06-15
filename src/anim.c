@@ -1,4 +1,5 @@
 #include "common.h"
+#include "functions.h"
 
 extern void *g_pBlbHeapBase;
 extern u8 g_EntityVtable_Destroyed[];
@@ -11,7 +12,6 @@ extern u8 g_EntityVtable_PartialDestroy[];
 extern u8 g_EntityVtable_SimpleDestruct[];
 extern u8 g_EntityVtable_LevelDestroy[];
 
-extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 extern void FreeMultiAllocResource(void *ptr, s32 type);
 extern void FreeResourceType2(void *ptr, s32 type);
 extern void FreeResourceType3(void *ptr, s32 type);

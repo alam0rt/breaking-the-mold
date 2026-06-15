@@ -1,13 +1,10 @@
 #include "common.h"
+#include "functions.h"
 #include "Game/entity_events.h"
 
 extern void *g_pBlbHeapBase;
 extern u8 *g_pGameState;
-extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
-extern void EntityProcessCallbackQueue(void *entity);
-extern void EntityUpdateCallback(void *entity);
 extern void CheckAndDisableSpawnDataOffscreen(void *entity);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
 extern void CollisionCheckWrapper(void *e, s32 a, s32 b, s32 c);
 extern void CheckAndDisableChildEntityOffscreen(void *e);
 extern void CheckAndDisableSpawnRefOffscreen(void *e);
@@ -18,8 +15,6 @@ extern void CollectibleTickFinnMode(void *e);
 extern void EntityStateSetWalk(void *e);
 extern void SetAnimationSpriteId(void *e, s32 id);
 extern void SetAnimationFrameCallback(void *e, u32 packed);
-extern s32 rand(void);
-extern void StopSPUVoice(s32 voice);
 extern void *D_80010C64;
 extern void *D_80010CE4;
 extern void *D_80010DA4;

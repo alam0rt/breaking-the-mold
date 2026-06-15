@@ -1,11 +1,10 @@
 #include "common.h"
+#include "functions.h"
 #include "Game/entity_events.h"
 
 extern void *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(void *entity);
-extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
 extern void *InitBasicEntityWithVtable(void *e, s16 val);
 extern void *D_80010A48;
 extern void *D_80010A68;

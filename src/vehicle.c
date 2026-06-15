@@ -1,8 +1,8 @@
 #include "common.h"
+#include "functions.h"
 #include "Game/entity.h"
 #include "Game/entity_events.h"
 
-extern void EntityProcessCallbackQueue(Entity *entity);
 extern s32 PlatformEntityOnCollision(Entity *entity, u32 event, u32 arg2, u32 arg3);
 
 /*

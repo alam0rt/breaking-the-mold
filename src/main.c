@@ -1,11 +1,9 @@
 #include "common.h"
+#include "functions.h"
+extern s32 GetLevelFlags();
 #include "Game/game_state.h"
 #include "globals.h"
 
-extern s32 GetLevelFlags();
-extern void FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
-extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);
-extern void HidePauseMenuHUD(s32 handle);
 extern u8 D_80012120[];
 
 

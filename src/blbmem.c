@@ -1,4 +1,5 @@
 #include "common.h"
+#include "functions.h"
 #include "globals.h"
 
 typedef struct BLBEntityHeader {
@@ -7,7 +8,6 @@ typedef struct BLBEntityHeader {
 } BLBEntityHeader;
 
 extern u8 D_80012758[];
-extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 
 void FreeBLBMemory(void *ptr, s32 size);
 

@@ -1,7 +1,7 @@
 #include "common.h"
+#include "functions.h"
 
 extern void *g_pBlbHeapBase;
-extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 extern u8 g_EntityVtable_SimpleDestruct[];
 extern u8 g_EntityVtable_LevelDestroy[];
 
@@ -19,11 +19,9 @@ extern void *PassThroughFunction(void *ptr);
 extern void RemoveEntityFromAllLists(void *entity, void *child);
 extern void RemoveEntityFromUpdateQueue(void *entity);
 extern void RemoveFromRenderList(void *entity);
-extern void RemoveFromTickList(void *entity, void *child);
 void RemoveFromUpdateQueue(u8 *entity);
 extern void RemoveFromZOrderList(void *entity);
 extern void ClearEntityDefList(void *entity);
-extern void FreeEntityLists(void *entity);
 extern void builtin_delete(void *ptr);
 extern void ConditionalDelete(void *ptr, s32 type);
 
@@ -99,12 +97,7 @@ INCLUDE_ASM("asm/nonmatchings/blb", DeferredEntityRemoval);
  * DeferredEntityRemoval performs. Used at level teardown / scene switches. */
 INCLUDE_ASM("asm/nonmatchings/blb", EntityRemoval);
 
-// lint:ok - common.h doesn't include entity.h, local definition needed
-typedef struct EntityListNode {
-    struct EntityListNode *next;  /* 0x00 */
-    u8 *entity;                  /* 0x04 */
-} EntityListNode;
-
+/* EntityListNode comes from Game/entity.h (via functions.h). */
 typedef struct EntityListHead {
     u8 pad[0x1C];
     EntityListNode *head;        /* 0x1C */

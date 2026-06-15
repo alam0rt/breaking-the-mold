@@ -1,10 +1,8 @@
 #include "common.h"
+#include "functions.h"
 
 extern u8 *g_pGameState;
 extern void *g_pBlbHeapBase;
-extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
-extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
-extern void StopSPUVoice(s32 voice);
 extern void *D_800112E8;
 extern void *D_80011308;
 extern void *D_80011328;
@@ -14,7 +12,6 @@ extern void *D_80011388;
 extern void *D_80011268;
 extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
-extern void EntityProcessCallbackQueue(void *e);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
