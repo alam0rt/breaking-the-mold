@@ -682,7 +682,16 @@ void EntityUpdateWithCollisionWrapper(void *e) {
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SwitchEventHandler_SetGameFlag);
+s32 SwitchEventHandler_SetGameFlag(u8 *e, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        u8 *p = *(u8 **)(e + 0x100);
+        u16 val = *(u16 *)(p + 0x12);
+        if ((u16)(val - 0x22) < 2 || val == 0x24) {
+            g_pGameState[0x11A] = 0x14;
+        }
+    }
+    return 0;
+}
 
 void EntityIncrementWorldX(void *e) {
     *(s16 *)((u8 *)e + 0x68) += 1;
