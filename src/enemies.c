@@ -62,19 +62,40 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetAttack);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleCollectibleState);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleDelay3);
+void EntityStateSetSparkle(void *e);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleDelay2);
+void EntitySetSparkleDelay3(void *e) {
+    *(u8 *)((u8 *)e + 0x110) = 3;
+    EntityStateSetSparkle(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleDelay1);
+void EntitySetSparkleDelay2(void *e) {
+    *(u8 *)((u8 *)e + 0x110) = 2;
+    EntityStateSetSparkle(e);
+}
+
+void EntitySetSparkleDelay1(void *e) {
+    *(u8 *)((u8 *)e + 0x110) = 1;
+    EntityStateSetSparkle(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSparkle);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence4A);
+extern u8 D_8009B55C[];
+extern u8 D_8009B57C[];
+extern u8 D_8009B59C[];
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence4B);
+void StartAnimSequence4A(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B55C, 4);
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence4C);
+void StartAnimSequence4B(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B57C, 4);
+}
+
+void StartAnimSequence4C(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B59C, 4);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEnemy);
 
@@ -146,11 +167,21 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleIdleState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleIdleStateB);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence3A);
+extern u8 D_8009B5BC[];
+extern u8 D_8009B5D4[];
+extern u8 D_8009B5EC[];
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence3B);
+void StartAnimSequence3A(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B5BC, 3);
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence9Frames);
+void StartAnimSequence3B(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B5D4, 3);
+}
+
+void StartAnimSequence9Frames(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B5EC, 9);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSoundEmittingEnemy);
 
@@ -442,17 +473,35 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitItemSparkleIdleState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitItemRevealState);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SetEntitySpecialState_1);
+extern u8 D_8009B7A4[];
+extern u8 D_8009B7DC[];
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SetEntitySpecialState_2);
+void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SetEntitySpecialState_3);
+void SetEntitySpecialState_1(void *e) {
+    *(u8 *)((u8 *)e + 0x110) = 1;
+    EntityStateSetSpecial(e);
+}
+
+void SetEntitySpecialState_2(void *e) {
+    *(u8 *)((u8 *)e + 0x110) = 2;
+    EntityStateSetSpecial(e);
+}
+
+void SetEntitySpecialState_3(void *e) {
+    *(u8 *)((u8 *)e + 0x110) = 3;
+    EntityStateSetSpecial(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSpecial);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence7Frames);
+void StartAnimSequence7Frames(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B7A4, 7);
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", StartAnimSequence13Frames);
+void StartAnimSequence13Frames(void *e) {
+    StartAnimationSequence((u8 *)e, (s32)D_8009B7DC, 13);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEntity_Alt);
 
