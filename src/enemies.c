@@ -39,6 +39,10 @@ extern void RemoveEntityFromAllLists(void *gs, s32 idx);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
+u32   D_800A5A68;
+void *D_800A5A6C;
+u32   D_800A5AE8;
+void *D_800A5AEC;
 u32   D_800A5B08;
 void *D_800A5B0C;
 u32   D_800A5B10;
@@ -163,7 +167,17 @@ void DestroySoundEmitterEntity(void *e, u32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterStunnedTickCallback);
+void SoundEmitterStunnedTickCallback(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x124);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntitySetState(e, D_800A5A68, D_800A5A6C);
+        }
+    }
+    EntityUpdateCallback(e);
+    CheckCollectibleOffscreen(e);
+}
 
 s32 EntitySimpleEventPassthrough(void *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
@@ -454,7 +468,13 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableChildEntityOffscreen);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledPlatformEntity);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityConditionalActivateTick);
+void EntityConditionalActivateTick(Entity *e) {
+    if ((*(s32 *)(g_pGameState + 0x10C) & 0x7F) == *(s32 *)(*(u8 **)((u8 *)e + 0x108) + 0xC)) {
+        EntitySetState(e, D_800A5AE8, D_800A5AEC);
+    }
+    EntityUpdateCallback(e);
+    CheckAndDisableSpawnDataOffscreen(e);
+}
 
 void EntityUpdateWithSpawnDataCheck(void *entity) {
     EntityUpdateCallback(entity);
