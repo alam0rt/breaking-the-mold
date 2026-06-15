@@ -687,7 +687,13 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetWalkSprite);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemyDestroyCallback_0x80011228);
+void EnemyDestroyCallback_0x80011228(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011228;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void EntityDestroyCallback_Vt80011228(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011228;

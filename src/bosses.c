@@ -3,6 +3,13 @@
 extern u8 *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void *D_800112E8;
+extern void *D_80011308;
+extern void *D_80011328;
+extern void *D_80011348;
+extern void *D_80011368;
+extern void *D_80011388;
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
@@ -234,17 +241,53 @@ void MonkeyMageDeathCallback(u8 *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageDestroyCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMagePartDestroyCallback);
+void MonkeyMagePartDestroyCallback(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011388;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMagePlatformDestroyCallback);
+void MonkeyMagePlatformDestroyCallback(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800112E8;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageForceFieldDestroyCallback);
+void MonkeyMageForceFieldDestroyCallback(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011328;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageAuxDestroyCallback);
+void MonkeyMageAuxDestroyCallback(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011348;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageBossPartDestroyCallback);
+void MonkeyMageBossPartDestroyCallback(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011368;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageHUDDestroyCallback);
+void MonkeyMageHUDDestroyCallback(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011388;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void func_8004F024(void) {
 }

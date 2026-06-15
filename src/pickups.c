@@ -2,6 +2,8 @@
 
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void DestroyEntityAndFreeMemory(void *entity, s32 mode);
+extern void *D_80010870;
 extern void *D_80010890;
 extern void FreeEntityNoTeardown_80030cdc(void *e, u32 size);
 
@@ -103,39 +105,141 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitEntityType0x3DE);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntitySpawnExplosionPieces);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_A);
+void EntityDestructor_Vtable0x80010870_A(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_VtableAndHeapFree);
+void EntityDestructor_VtableAndHeapFree(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_B);
+void EntityDestructor_Vtable0x80010870_B(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_C);
+void EntityDestructor_Vtable0x80010870_C(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_D);
+void EntityDestructor_Vtable0x80010870_D(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_E);
+void EntityDestructor_Vtable0x80010870_E(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_F);
+void EntityDestructor_Vtable0x80010870_F(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_G);
+void EntityDestructor_Vtable0x80010870_G(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_H);
+void EntityDestructor_Vtable0x80010870_H(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_I);
+void EntityDestructor_Vtable0x80010870_I(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_J);
+void EntityDestructor_Vtable0x80010870_J(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_K);
+void EntityDestructor_Vtable0x80010870_K(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_L);
+void EntityDestructor_Vtable0x80010870_L(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_M);
+void EntityDestructor_Vtable0x80010870_M(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_N);
+void EntityDestructor_Vtable0x80010870_N(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_O);
+void EntityDestructor_Vtable0x80010870_O(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_P);
+void EntityDestructor_Vtable0x80010870_P(void *entity, s32 flags) {
+    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void func_80030C98(void) {
 }
