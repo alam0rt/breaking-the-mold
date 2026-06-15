@@ -13,6 +13,11 @@ extern void FreeEntityNoTeardown_8006ed88(void *e, u32 size);
 extern void FreeEntityNoTeardown_80070548(void *e, u32 size);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
 extern void ApplyAnimationPositionOffsets(Entity *e);
+extern void FinnCheckTriggerZones(Entity *e);
+extern void FinnHandleInput(Entity *e);
+extern void FinnVehicleMovementUpdate(Entity *e);
+extern void FinnUpdateRotationSprite(Entity *e);
+extern void EntityUpdateCallback(Entity *e);
 
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   D_800A5F8C;

@@ -5,6 +5,7 @@
 extern s32 PlayerEntityEventHandler(void *e, u32 event);
 extern s32 PlayerEntityEventHandlerAlt(void *e, u32 event);
 extern void RemoveEntityFromAllLists(void *gs, void *entity);
+extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
@@ -171,7 +172,27 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CollisionTrailEntityUpdate
 
 INCLUDE_ASM("asm/nonmatchings/playst", TryActivatePowerup);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerPlaySoundOnDirectionInput);
+/* Plays the directional-walk SFX (asset 0x64221E61) if any of the four
+ * cardinal D-pad bits are pressed in the player's current input snapshot
+ * (e->input->u2 — bit 1 = left, 2 = down, 4 = right, 8 = up). The
+ * compiler short-circuits the four bit tests in the rather odd
+ * 4 → 1 → 8 → 2 order seen in the original — preserved here for byte-match. */
+void PlayerPlaySoundOnDirectionInput(Entity *e) {
+    void *p = *(void **)((u8 *)e + 0x100);
+    u16 flags = *(u16 *)((u8 *)p + 2);
+    s32 a1 = 0;
+    if (flags & 4) goto fire;
+    if (flags & 1) goto fire;
+    if (flags & 8) goto fire;
+    if (flags & 2) goto fire;
+    goto check;
+fire:
+    a1 = 1;
+check:
+    if ((u8)a1) {
+        PlayEntityPositionSound(e, 0x64221E61);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_IdleInputHandler);
 

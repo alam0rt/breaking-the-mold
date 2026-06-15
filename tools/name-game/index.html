@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skullmonkeys Asset Name Hunt</title>
+<style>
+  :root { --bg:#11131a; --panel:#1b1e28; --ink:#e7e9f0; --mut:#8b90a3; --acc:#5aa9ff; --ok:#36d07a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid #2a2e3c; display:flex;
+           align-items:center; gap:16px; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; }
+  .grow { flex:1; }
+  .pill { background:var(--panel); border:1px solid #2a2e3c; border-radius:99px;
+          padding:4px 12px; font-size:13px; color:var(--mut); }
+  button { background:var(--panel); color:var(--ink); border:1px solid #333a4d;
+           border-radius:8px; padding:10px 14px; min-height:42px; cursor:pointer;
+           font-size:14px; touch-action:manipulation; }
+  button:hover { border-color:var(--acc); }
+  main { max-width:760px; margin:24px auto; padding:0 16px; }
+  .card { background:var(--panel); border:1px solid #2a2e3c; border-radius:16px;
+          padding:22px; transition:border-color .15s, box-shadow .15s; }
+  .card.ok { border-color:var(--ok); box-shadow:0 0 0 3px rgba(54,208,122,.25); }
+  .stage { display:flex; justify-content:center; align-items:center;
+           width:100%; height:min(48vh,340px);
+           background:
+             linear-gradient(45deg,#171a23 25%,transparent 25%) 0 0/24px 24px,
+             linear-gradient(-45deg,#171a23 25%,transparent 25%) 0 12px/24px 24px,
+             linear-gradient(45deg,transparent 75%,#171a23 75%) 12px -12px/24px 24px,
+             linear-gradient(-45deg,transparent 75%,#171a23 75%) -12px 0/24px 24px,
+             #20242f;
+           border-radius:12px; padding:12px; }
+  /* object-fit:contain upscales tiny pixel-art to fit and shrinks large sprites — no clipping */
+  .stage img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+  .meta { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 4px; color:var(--mut);
+          font-size:13px; }
+  .meta code { color:var(--ink); }
+  .row { display:flex; gap:10px; margin-top:16px; }
+  #guess { flex:1; font-size:18px; padding:12px 14px; border-radius:10px;
+           border:1px solid #333a4d; background:#0d0f15; color:var(--ink);
+           text-transform:uppercase; letter-spacing:.04em; }
+  #guess:focus { outline:none; border-color:var(--acc); }
+  .card.ok #guess { border-color:var(--ok); color:var(--ok); }
+  .live { margin-top:10px; font-size:13px; color:var(--mut); }
+  .live b { color:var(--ink); font-variant-numeric:tabular-nums; }
+  .live .hit { color:var(--ok); }
+  .hint { margin-top:6px; font-size:13px; color:var(--mut); }
+  .solved { margin-top:28px; }
+  .solved h2 { font-size:14px; color:var(--mut); margin:0 0 12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:10px; }
+  .cell { background:#0d0f15; border:1px solid #242836; border-radius:10px; padding:6px;
+          cursor:pointer; text-align:center; transition:border-color .12s, transform .08s; }
+  .cell:active { transform:scale(.94); }
+  .cell:hover { border-color:var(--ok); }
+  .thumb { width:100%; height:62px; display:flex; align-items:center; justify-content:center;
+           background:#171a23; border-radius:6px; overflow:hidden; }
+  .thumb img { max-width:100%; max-height:100%; image-rendering:pixelated; object-fit:contain; }
+  .nm { font-size:11px; color:var(--ok); margin-top:5px; font-weight:600;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  a.dl { color:var(--acc); text-decoration:none; }
+  .empty { color:var(--mut); font-style:italic; }
+  @media (max-width:560px){
+    header { padding:10px 14px; gap:8px; }
+    header h1 { font-size:15px; width:100%; }
+    main { margin:16px auto; }
+    .card { padding:16px; border-radius:14px; }
+    #guess { font-size:16px; }   /* keep >=16px so iOS doesn't zoom on focus */
+    .meta { font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🐒 Skullmonkeys Asset Name Hunt</h1>
+  <span class="pill" id="progress">0 named</span>
+  <span class="grow"></span>
+  <button id="skip">Skip ⏭</button>
+  <button id="export">Export JSON</button>
+  <button id="reset" title="clear your saved answers">Reset</button>
+</header>
+
+<main>
+  <p class="hint">Type the original asset name. We hash your guess with the recovered
+    ToolX formula and the box turns <b style="color:var(--ok)">green</b> when the hash
+    matches this asset's id. Correct names are saved to your browser and can be exported.
+    Case &amp; spaces/punctuation don't matter (they're ignored by the hash).</p>
+
+  <div class="card" id="card">
+    <div class="stage"><img id="art" alt="asset"></div>
+    <div class="meta">
+      <span>id <code id="hex"></code></span>
+      <span id="floor"></span>
+      <span id="levels"></span>
+      <span id="role"></span>
+    </div>
+    <div class="row">
+      <input id="guess" autocomplete="off" autocapitalize="characters"
+             spellcheck="false" placeholder="your guess…">
+    </div>
+    <div class="live">your guess → <b id="yourhash">0x________</b> <span id="status"></span></div>
+  </div>
+
+  <div class="solved">
+    <h2>Your collection (<span id="count">0</span>) — tap to revisit · <a class="dl" id="dl" href="#">download</a></h2>
+    <div class="grid" id="list"></div>
+    <p class="empty" id="emptymsg">Nothing yet — go name a monkey.</p>
+  </div>
+</main>
+
+<script src="klash.js"></script>
+<script src="manifest.js"></script>
+<script>
+const KEY = "skullmonkeys_names";
+// seed with the names already cracked this investigation
+const SEEDS = {
+  "0x29c0e211":"NO", "0x2ad0f011":"YES", "0x68c0f413":"QUIT",
+  "0x69c04050":"CONTINUE", "0x69c8f473":"QUIT GAME", "0x0ad0f813":"PAUSED",
+};
+
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
+function save(o){ localStorage.setItem(KEY, JSON.stringify(o)); }
+let solved = load();
+for (const [h,n] of Object.entries(SEEDS)) if (!(h in solved)) solved[h] = n;
+save(solved);
+
+const M = (window.MANIFEST || []);
+const byHex = Object.fromEntries(M.map(a => [a.hex, a]));
+let cur = null;
+
+const $ = id => document.getElementById(id);
+
+function pickNext(){
+  const open = M.filter(a => !(a.hex in solved));
+  const pool = open.length ? open : M;
+  setAsset(pool[Math.floor(Math.random()*pool.length)]);
+  $("guess").value = "";
+  $("card").classList.remove("ok");
+  $("status").textContent = "";
+  $("yourhash").textContent = "0x________";
+  $("guess").focus();
+}
+
+function onInput(){
+  const g = $("guess").value;
+  if (!g.trim()){ $("yourhash").textContent="0x________"; $("status").textContent=""; return; }
+  const h = assetIdHex(g);
+  $("yourhash").textContent = h;
+  if (h === cur.hex){
+    $("status").innerHTML = '<span class="hit">✓ match!</span>';
+    $("card").classList.add("ok");
+    solved[cur.hex] = g.trim();
+    save(solved);
+    render();
+    setTimeout(pickNext, 750);
+  } else {
+    $("card").classList.remove("ok");
+    const need = minNameLen(cur.id), have = effectiveLen(g);
+    $("status").textContent = have < need ? `· too short (need ≥ ${need} letters)` : "";
+  }
+}
+
+function setAsset(a){
+  cur = a;
+  $("art").src = a.img; $("art").alt = a.hex;
+  $("hex").textContent = a.hex;
+  $("floor").innerHTML = "· name is <b style='color:var(--ink)'>≥ " + minNameLen(a.id) + " letters</b>";
+  $("levels").textContent = a.levels ? "· levels: " + a.levels.split(";").slice(0,6).join(" ") : "";
+  $("role").textContent = a.role ? "· hint: " + a.role : "";
+}
+
+// revisit a solved asset (collection -> stage)
+function showReview(hex){
+  const a = byHex[hex]; if (!a) return;
+  setAsset(a);
+  $("guess").value = solved[hex];
+  $("card").classList.add("ok");
+  $("yourhash").textContent = a.hex;
+  $("status").innerHTML = '<span class="hit">✓ named — Skip for a new one</span>';
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function render(){
+  const ents = Object.entries(solved).filter(([h]) => byHex[h]);
+  $("progress").textContent = ents.length + " / " + M.length + " named";
+  $("count").textContent = ents.length;
+  $("emptymsg").style.display = ents.length ? "none" : "block";
+  const wrap = $("list");
+  wrap.innerHTML = "";
+  for (const [hex,name] of ents.sort((a,b)=>a[1].localeCompare(b[1]))){
+    const a = byHex[hex];
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.innerHTML = `<div class="thumb"><img src="${a.img}" alt="" loading="lazy"></div>`+
+                     `<div class="nm" title="${name}">${name}</div>`;
+    cell.addEventListener("click", () => showReview(hex));
+    wrap.appendChild(cell);
+  }
+  $("dl").href = dataUrl();
+}
+
+function dataUrl(){
+  const out = Object.entries(solved).map(([hex,name]) => ({
+    hex, id: byHex[hex] ? byHex[hex].id : parseInt(hex,16), name
+  }));
+  return "data:application/json," + encodeURIComponent(JSON.stringify(out, null, 2));
+}
+
+$("guess").addEventListener("input", onInput);
+$("guess").addEventListener("keydown", e => { if (e.key==="Enter" && $("card").classList.contains("ok")) pickNext(); });
+$("skip").addEventListener("click", pickNext);
+$("export").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = dataUrl(); a.download = "skullmonkeys_names.json"; a.click();
+});
+$("reset").addEventListener("click", () => {
+  if (confirm("Clear all your saved answers?")){ solved = {...SEEDS}; save(solved); render(); pickNext(); }
+});
+
+render();
+pickNext();
+</script>
+</body>
+</html>

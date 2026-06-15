@@ -1,0 +1,237 @@
+function,n_ids,cluster_class,n_pairs_in_class,n_suffix_candidates,example_pair,suffix_candidates
+EntityTick_ShadowMirror,12,0x0002404d,6,0,0x052aa082↔0x0538a2ea,
+KloggDeathEventHandler,6,0x00000003,4,358,0x800da102↔0x800da11a,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+KloggDeathEventHandler,6,0x00000005,3,288,0x800da102↔0x800da116,0↔2 | 0↔D | 0↔H | 1↔3 | 1↔E | 1↔I | 2↔4 | 2↔F
+ClayballState_DestroyWithDebris,5,0x00000003,3,358,0x462c6040↔0x46346040,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+Callback_800570a4,5,0x00000003,3,358,0x462c6040↔0x46346040,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+EntityTick_ShadowMirror,12,0x0c488923,2,0,0x0628a800↔0x2524e089,
+EntityTick_ShadowMirror,12,0x002020c3,2,2,0x0628a800↔0x8524a880,61↔ROLL | FALL↔LAND
+InitMenuStage1,7,0x00000003,2,358,0x3080820d↔0x3080840d,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+KloggDeathEventHandler,6,0x00000009,2,244,0x800da116↔0x800da132,0↔3 | 0↔C | 0↔I | 1↔4 | 1↔D | 1↔J | 1↔RUN | 2↔5
+ClayballState_DestroyWithDebris,5,0x00000005,2,288,0x462c6040↔0x46386040,0↔2 | 0↔D | 0↔H | 1↔3 | 1↔E | 1↔I | 2↔4 | 2↔F
+PlayerCallback_DeathDebrisSpawner,5,0x00000003,2,358,0xb468d0c6↔0xb868d0c6,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+RunnEvent_CutsceneDebrisAndLevel,5,0x00000003,2,358,0xb468d0c6↔0xb868d0c6,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+BossCollision_SpawnDebrisAndLayers,5,0x00000003,2,358,0xb468d0c6↔0xb868d0c6,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+FinnDamageEventHandler,5,0x00000003,2,358,0x2e809804↔0x2e811804,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+Callback_800570a4,5,0x00000005,2,288,0x462c6040↔0x46386040,0↔2 | 0↔D | 0↔H | 1↔3 | 1↔E | 1↔I | 2↔4 | 2↔F
+PlayerCallback_8005d404,5,0x00000003,2,358,0xb468d0c6↔0xb868d0c6,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+EntityInitCallback_80070850,5,0x00000003,2,358,0xb468d0c6↔0xb868d0c6,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+SpawnCollectibleParticles,4,0x00000003,2,358,0x5a89815f↔0x5ab9815f,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+GlennYntisDeathEventHandler,4,0x00000003,2,358,0x18e88310↔0x18e88510,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+EntityTick_ShadowMirror,12,0x01810441,1,1,0x052aa082↔0x0628a800,UP↔LAND
+EntityTick_ShadowMirror,12,0x01110211,1,1,0x052aa082↔0x0708a4a0,UP↔IDLE
+EntityTick_ShadowMirror,12,0x00100285,1,1,0x052aa082↔0x112ae088,21↔F17
+EntityTick_ShadowMirror,12,0x002c8039,1,0,0x052aa082↔0x2524e089,
+EntityTick_ShadowMirror,12,0x000a8413,1,0,0x052aa082↔0x8139a088,
+CreateMenuEntities,8,0x00155e51,1,0,0x00e2f188↔0x80e85ea0,
+CreateMenuEntities,8,0x01c07221,1,0,0x00e2f188↔0x88a28194,
+CreateMenuEntities,8,0x0cef18a9,1,0,0x00e2f188↔0x902c0002,
+CreateMenuEntities,8,0x17e91ba5,1,0,0x00e2f188↔0x9158a0f6,
+CreateMenuEntities,8,0x0ca9c6f5,1,0,0x00e2f188↔0xa9240484,
+CreateMenuEntities,8,0x125fa537,1,0,0x00e2f188↔0xb8700ca1,
+CreateMenuEntities,8,0x00ee03d1,1,0,0x00e2f188↔0xe8628689,
+CreateMenuEntities,8,0x0212b7cd,1,0,0x80e85ea0↔0x88a28194,
+ToggleMenuOptionState,7,0x0111880d,1,0,0x0ad0f813↔0x29c0e211,
+ToggleMenuOptionState,7,0x00004011,1,54,0x0ad0f813↔0x2ad0f011,0↔44 | 1↔54 | 2↔64 | 3↔74 | 3↔HAIR | 4↔08 | 4↔84 | 5↔18
+ToggleMenuOptionState,7,0x00188403,1,0,0x0ad0f813↔0x68c0f413,
+ToggleMenuOptionState,7,0x086c6217,1,0,0x0ad0f813↔0x69c04050,
+ToggleMenuOptionState,7,0x018c0c63,1,0,0x0ad0f813↔0x69c8f473,
+ToggleMenuOptionState,7,0x02734a3f,1,0,0x0ad0f813↔0x90810000,
+ToggleMenuOptionState,7,0x00018809,1,0,0x29c0e211↔0x2ad0f011,
+ToggleMenuOptionState,7,0x00160241,1,1,0x29c0e211↔0x68c0f413,26↔EXIT
+InitMenuStage1,7,0x044e14d9,1,0,0x10094096↔0x3080820d,
+InitMenuStage1,7,0x044e24d9,1,0,0x10094096↔0x3080840d,
+InitMenuStage1,7,0x044e74d9,1,0,0x10094096↔0x30808e0d,
+InitMenuStage1,7,0x031e5153,1,0,0x10094096↔0x38a0c119,
+InitMenuStage1,7,0x021d42e3,1,0,0x10094096↔0x40b18011,
+InitMenuStage1,7,0x192a51cf,1,0,0x10094096↔0x68c01218,
+InitMenuStage1,7,0x020810c5,1,0,0x3080820d↔0x38a0c119,
+KloggDeathEventHandler,6,0x00012211,1,3,0x800da102↔0x888da193,17↔CHEST | 27↔LEG | 43↔F31
+KloggDeathEventHandler,6,0x00000011,1,205,0x800da116↔0x800da152,0↔4 | 0↔B | 0↔J | 1↔5 | 1↔C | 1↔K | 2↔6 | 2↔D
+KloggDeathEventHandler,6,0x00010a11,1,4,0x800da116↔0x888da193,15↔CHEST | 25↔LEG | 41↔F31 | 61↔GLIDE
+KloggDeathEventHandler,6,0x00011211,1,5,0x800da11a↔0x888da193,16↔CHEST | 26↔LEG | 42↔F31 | 46↔RIGHT | 95↔COLLECT
+KloggDeathEventHandler,6,0x00014211,1,5,0x800da132↔0x888da193,18↔CHEST | 26↔DIE | 28↔LEG | 41↔CLOSING | 44↔F31
+ClayballState_DestroyWithDebris,5,0x00000009,1,244,0x462c6040↔0x463e6040,0↔3 | 0↔C | 0↔I | 1↔4 | 1↔D | 1↔J | 1↔RUN | 2↔5
+ClayballState_DestroyWithDebris,5,0x04242411,1,1,0x462c6040↔0xd6bc2450,64↔PIECE
+ClayballState_DestroyWithDebris,5,0x04242211,1,3,0x46346040↔0xd6bc2450,R↔DEACTIVATE | 63↔PIECE | F37↔KICK
+ClayballState_DestroyWithDebris,5,0x04242111,1,2,0x46386040↔0xd6bc2450,62↔PIECE | MIRROR↔CLOSING
+ClayballState_DestroyWithDebris,5,0x04242091,1,2,0x463e6040↔0xd6bc2450,61↔PIECE | 77↔BONUS
+PlayerCallback_DeathDebrisSpawner,5,0x02a14ac3,1,0,0x146ce002↔0x3d348056,
+PlayerCallback_DeathDebrisSpawner,5,0x00218625,1,0,0x146ce002↔0xb468d0c6,
+PlayerCallback_DeathDebrisSpawner,5,0x010c312b,1,0,0x146ce002↔0xb868d0c6,
+PlayerCallback_DeathDebrisSpawner,5,0x02186255,1,0,0x146ce002↔0xbe68d0c6,
+PlayerCallback_DeathDebrisSpawner,5,0x0895c509,1,0,0x3d348056↔0xb468d0c6,
+PlayerCallback_DeathDebrisSpawner,5,0x0855c509,1,0,0x3d348056↔0xb868d0c6,
+PlayerCallback_DeathDebrisSpawner,5,0x06b8a121,1,0,0x3d348056↔0xbe68d0c6,
+RunnEvent_CutsceneDebrisAndLevel,5,0x02a14ac3,1,0,0x146ce002↔0x3d348056,
+RunnEvent_CutsceneDebrisAndLevel,5,0x00218625,1,0,0x146ce002↔0xb468d0c6,
+RunnEvent_CutsceneDebrisAndLevel,5,0x010c312b,1,0,0x146ce002↔0xb868d0c6,
+RunnEvent_CutsceneDebrisAndLevel,5,0x02186255,1,0,0x146ce002↔0xbe68d0c6,
+RunnEvent_CutsceneDebrisAndLevel,5,0x0895c509,1,0,0x3d348056↔0xb468d0c6,
+RunnEvent_CutsceneDebrisAndLevel,5,0x0855c509,1,0,0x3d348056↔0xb868d0c6,
+RunnEvent_CutsceneDebrisAndLevel,5,0x06b8a121,1,0,0x3d348056↔0xbe68d0c6,
+BossCollision_SpawnDebrisAndLayers,5,0x02a14ac3,1,0,0x146ce002↔0x3d348056,
+BossCollision_SpawnDebrisAndLayers,5,0x00218625,1,0,0x146ce002↔0xb468d0c6,
+BossCollision_SpawnDebrisAndLayers,5,0x010c312b,1,0,0x146ce002↔0xb868d0c6,
+BossCollision_SpawnDebrisAndLayers,5,0x02186255,1,0,0x146ce002↔0xbe68d0c6,
+BossCollision_SpawnDebrisAndLayers,5,0x0895c509,1,0,0x3d348056↔0xb468d0c6,
+BossCollision_SpawnDebrisAndLayers,5,0x0855c509,1,0,0x3d348056↔0xb868d0c6,
+BossCollision_SpawnDebrisAndLayers,5,0x06b8a121,1,0,0x3d348056↔0xbe68d0c6,
+FinnDamageEventHandler,5,0x00c75d8f,1,0,0x146ce002↔0x2e809804,
+FinnDamageEventHandler,5,0x00c75dbf,1,0,0x146ce002↔0x2e811804,
+FinnDamageEventHandler,5,0x00c75def,1,0,0x146ce002↔0x2e839804,
+FinnDamageEventHandler,5,0x02a14ac3,1,0,0x146ce002↔0x3d348056,
+FinnDamageEventHandler,5,0x061484ed,1,0,0x2e809804↔0x3d348056,
+FinnDamageEventHandler,5,0x00000005,1,288,0x2e811804↔0x2e839804,0↔2 | 0↔D | 0↔H | 1↔3 | 1↔E | 1↔I | 2↔4 | 2↔F
+FinnDamageEventHandler,5,0x09dacc29,1,0,0x2e811804↔0x3d348056,
+PlaySoundEffect,5,0x0488bd15,1,0,0x00248e52↔0x246166fa,
+PlaySoundEffect,5,0x0468a44f,1,0,0x00248e52↔0x44d4c8d8,
+PlaySoundEffect,5,0x024b0889,1,0,0x00248e52↔0x5860c640,
+PlaySoundEffect,5,0x0f4888a7,1,0,0x00248e52↔0x70d006d8,
+PlaySoundEffect,5,0x05ad7113,1,0,0x246166fa↔0x44d4c8d8,
+PlaySoundEffect,5,0x00682e9f,1,0,0x246166fa↔0x5860c640,
+PlaySoundEffect,5,0x0112a58b,1,0,0x246166fa↔0x70d006d8,
+PlaySoundEffect,5,0x039681d3,1,0,0x44d4c8d8↔0x5860c640,
+Callback_800570a4,5,0x00000009,1,244,0x462c6040↔0x463e6040,0↔3 | 0↔C | 0↔I | 1↔4 | 1↔D | 1↔J | 1↔RUN | 2↔5
+Callback_800570a4,5,0x04242411,1,1,0x462c6040↔0xd6bc2450,64↔PIECE
+Callback_800570a4,5,0x04242211,1,3,0x46346040↔0xd6bc2450,R↔DEACTIVATE | 63↔PIECE | F37↔KICK
+Callback_800570a4,5,0x04242111,1,2,0x46386040↔0xd6bc2450,62↔PIECE | MIRROR↔CLOSING
+Callback_800570a4,5,0x04242091,1,2,0x463e6040↔0xd6bc2450,61↔PIECE | 77↔BONUS
+PlayerCallback_8005cce0,5,0x0024518b,1,0,0x4260c8b5↔0x54608016,
+PlayerCallback_8005cce0,5,0x0094634b,1,0,0x4260c8b5↔0x5838cc16,
+PlayerCallback_8005cce0,5,0x151a7923,1,0,0x4260c8b5↔0x91a9d01d,
+PlayerCallback_8005cce0,5,0x0708b093,1,0,0x4260c8b5↔0xd167c005,
+PlayerCallback_8005cce0,5,0x00031613,1,0,0x54608016↔0x5838cc16,
+PlayerCallback_8005cce0,5,0x00bc5c95,1,0,0x54608016↔0x91a9d01d,
+PlayerCallback_8005cce0,5,0x004e141d,1,0,0x54608016↔0xd167c005,
+PlayerCallback_8005cce0,5,0x02f26447,1,0,0x5838cc16↔0x91a9d01d,
+PlayerCallback_8005d404,5,0x02a14ac3,1,0,0x146ce002↔0x3d348056,
+PlayerCallback_8005d404,5,0x00218625,1,0,0x146ce002↔0xb468d0c6,
+PlayerCallback_8005d404,5,0x010c312b,1,0,0x146ce002↔0xb868d0c6,
+PlayerCallback_8005d404,5,0x02186255,1,0,0x146ce002↔0xbe68d0c6,
+PlayerCallback_8005d404,5,0x0895c509,1,0,0x3d348056↔0xb468d0c6,
+PlayerCallback_8005d404,5,0x0855c509,1,0,0x3d348056↔0xb868d0c6,
+PlayerCallback_8005d404,5,0x06b8a121,1,0,0x3d348056↔0xbe68d0c6,
+EntityInitCallback_80070850,5,0x02a14ac3,1,0,0x146ce002↔0x3d348056,
+EntityInitCallback_80070850,5,0x00218625,1,0,0x146ce002↔0xb468d0c6,
+EntityInitCallback_80070850,5,0x010c312b,1,0,0x146ce002↔0xb868d0c6,
+EntityInitCallback_80070850,5,0x02186255,1,0,0x146ce002↔0xbe68d0c6,
+EntityInitCallback_80070850,5,0x0895c509,1,0,0x3d348056↔0xb468d0c6,
+EntityInitCallback_80070850,5,0x0855c509,1,0,0x3d348056↔0xb868d0c6,
+EntityInitCallback_80070850,5,0x06b8a121,1,0,0x3d348056↔0xbe68d0c6,
+SpawnCollectibleParticles,4,0x00000005,1,288,0x5a89815f↔0x5ad9815f,0↔2 | 0↔D | 0↔H | 1↔3 | 1↔E | 1↔I | 2↔4 | 2↔F
+SpawnCollectibleParticles,4,0x07370a27,1,0,0x5a89815f↔0x98004092,
+SpawnCollectibleParticles,4,0x07370ae7,1,0,0x5ab9815f↔0x98004092,
+SpawnCollectibleParticles,4,0x07370b67,1,0,0x5ad9815f↔0x98004092,
+GlennYntisDeathEventHandler,4,0x00000005,1,288,0x18e88310↔0x18e88910,0↔2 | 0↔D | 0↔H | 1↔3 | 1↔E | 1↔I | 2↔4 | 2↔F
+GlennYntisDeathEventHandler,4,0x00001105,1,26,0x18e88310↔0x18e8c704,Y↔TEETH | 01↔HEAD | 02↔24 | 06↔20 | 12↔34 | 16↔30 | 22↔44 | 26↔40
+GlennYntisDeathEventHandler,4,0x00001085,1,20,0x18e88510↔0x18e8c704,R↔ABOVE | Z↔TEETH | 01↔24 | 02↔HEAD | 11↔34 | 21↔44 | 25↔ENRAGE | 31↔54
+GlennYntisDeathEventHandler,4,0x00001385,1,2,0x18e88910↔0x18e8c704,03↔HEAD | 99↔CHARGE
+JoeHeadJoeMoveAndCheckAttack,4,0x01446087,1,0,0x0b290ba2↔0x0e3889be,
+JoeHeadJoeMoveAndCheckAttack,4,0x0694d639,1,0,0x0b290ba2↔0x603588e8,
+JoeHeadJoeMoveAndCheckAttack,4,0x0130df35,1,0,0x0b290ba2↔0xf2810224,
+JoeHeadJoeMoveAndCheckAttack,4,0x01566e0d,1,0,0x0e3889be↔0x603588e8,
+JoeHeadJoeMoveAndCheckAttack,4,0x1735f973,1,0,0x0e3889be↔0xf2810224,
+JoeHeadJoeMoveAndCheckAttack,4,0x15992569,1,0,0x603588e8↔0xf2810224,
+ShrineyGuardSoundUpdateTick,4,0x00003309,1,1,0x086e44c0↔0x11eac4c0,53↔WAVE
+ShrineyGuardSoundUpdateTick,4,0x00000141,1,52,0x086e44c0↔0x204e44c0,6↔02 | 7↔12 | 8↔00 | 8↔22 | 9↔10 | 9↔32 | L↔02 | M↔12
+ShrineyGuardSoundUpdateTick,4,0x00402283,1,0,0x086e44c0↔0x205e40c2,
+ShrineyGuardSoundUpdateTick,4,0x00006349,1,0,0x11eac4c0↔0x204e44c0,
+ShrineyGuardSoundUpdateTick,4,0x008c6d21,1,0,0x11eac4c0↔0x205e40c2,
+ShrineyGuardSoundUpdateTick,4,0x00080201,1,25,0x204e44c0↔0x205e40c2,0↔94 | A↔44 | A↔57 | A↔83 | B↔54 | B↔67 | B↔93 | C↔64
+InitEntityWithChildSprite,3,0x069a42a5,1,0,0x222d9098↔0x60889602,
+InitEntityWithChildSprite,3,0x0242d253,1,0,0x222d9098↔0x8429153c,
+InitEntityWithChildSprite,3,0x067dc943,1,0,0x60889602↔0x8429153c,
+TeleporterActivate,3,0x06590d13,1,0,0x0bbb70ac↔0x9389b8c4,
+TeleporterActivate,3,0x06141869,1,0,0x0bbb70ac↔0xc9387d8c,
+TeleporterActivate,3,0x0b5638a9,1,0,0x9389b8c4↔0xc9387d8c,
+InitMonkeyMageBoss,3,0x091a585d,1,0,0x0244655d↔0x181c3854,
+InitMonkeyMageBoss,3,0x14b98a8b,1,0,0x0244655d↔0x8818a018,
+InitMonkeyMageBoss,3,0x004984c9,1,0,0x181c3854↔0x8818a018,
+GlennYntisDamageEventHandler,3,0x03c8909b,1,0,0x8b603980↔0x98004092,
+GlennYntisDamageEventHandler,3,0x01fe835d,1,0,0x8b603980↔0xe0c00650,
+GlennYntisDamageEventHandler,3,0x011b09e3,1,0,0x98004092↔0xe0c00650,
+KloggSpawnProjectilesCallback,3,0x0008b001,1,3,0x083488e2↔0x0c34aa22,9↔BODY | O↔BODY | 26↔STAND
+KloggSpawnProjectilesCallback,3,0x01be8243,1,0,0x083488e2↔0x1a2c8516,
+KloggSpawnProjectilesCallback,3,0x05860bcd,1,0,0x0c34aa22↔0x1a2c8516,
+ClayballSpawnSwitchBlock,3,0x002a0c21,1,0,0x082e03d8↔0x222222d8,
+ClayballSpawnSwitchBlock,3,0x00006097,1,0,0x082e03d8↔0x262e0319,
+ClayballSpawnSwitchBlock,3,0x03087041,1,0,0x222222d8↔0x262e0319,
+PlayerProcessTileCollision,3,0x04878569,1,0,0x00248e52↔0x092b8480,
+PlayerProcessTileCollision,3,0x027c91e7,1,0,0x00248e52↔0x7003474c,
+PlayerProcessTileCollision,3,0x0f31e4a3,1,0,0x092b8480↔0x7003474c,
+PlayerTickCallback,3,0x048af653,1,0,0x1e28e0d4↔0x40e28045,
+PlayerTickCallback,3,0x0724e7f5,1,0,0x1e28e0d4↔0xe0880448,
+PlayerTickCallback,3,0x0354206d,1,0,0x40e28045↔0xe0880448,
+PlayerCallback_DeathAnimSetStateHandler,3,0x00184081,1,2,0x02a10c60↔0x02c00e64,F56↔FEET | F58↔LEGS
+PlayerCallback_DeathAnimSetStateHandler,3,0x00102881,1,1,0x02a10c60↔0x08814c64,70↔F53
+PlayerCallback_DeathAnimSetStateHandler,3,0x000520a1,1,0,0x02c00e64↔0x08814c64,
+PlayerState_Falling,3,0x0020b005,1,0,0x092b8480↔0x0b2084d0,
+PlayerState_Falling,3,0x03240f79,1,0,0x092b8480↔0x88b9833c,
+PlayerState_Falling,3,0x07320fd9,1,0,0x0b2084d0↔0x88b9833c,
+PlayerState_StandingIdle,3,0x00742187,1,0,0x00388110↔0x1c395196,
+PlayerState_StandingIdle,3,0x00002147,1,2,0x00388110↔0x3838801a,70↔LEGS | F08↔START
+PlayerState_StandingIdle,3,0x00746309,1,0,0x1c395196↔0x3838801a,
+PlayerState_PickupItem,3,0x0003f185,1,0,0x1c395196↔0x1c3aa013,
+PlayerState_PickupItem,3,0x00746309,1,0,0x1c395196↔0x3838801a,
+PlayerState_PickupItem,3,0x00492011,1,1,0x1c3aa013↔0x3838801a,50↔BOTTOM
+RunnEntityDamageEffect,3,0x01b2a0a5,1,0,0x1b301085↔0x1e181d10,
+RunnEntityDamageEffect,3,0x0a162b69,1,0,0x1b301085↔0x40784034,
+RunnEntityDamageEffect,3,0x02e922f3,1,0,0x1e181d10↔0x40784034,
+PlayerCallback_8005e574,3,0x00184081,1,2,0x02a10c60↔0x02c00e64,F56↔FEET | F58↔LEGS
+PlayerCallback_8005e574,3,0x00102881,1,1,0x02a10c60↔0x08814c64,70↔F53
+PlayerCallback_8005e574,3,0x000520a1,1,0,0x02c00e64↔0x08814c64,
+PlayerCallback_8005e650,3,0x00184081,1,2,0x02a10c60↔0x02c00e64,F56↔FEET | F58↔LEGS
+PlayerCallback_8005e650,3,0x00102881,1,1,0x02a10c60↔0x08814c64,70↔F53
+PlayerCallback_8005e650,3,0x000520a1,1,0,0x02c00e64↔0x08814c64,
+Callback_80072de0,3,0x01b2a0a5,1,0,0x1b301085↔0x1e181d10,
+Callback_80072de0,3,0x0a162b69,1,0,0x1b301085↔0x40784034,
+Callback_80072de0,3,0x02e922f3,1,0,0x1e181d10↔0x40784034,
+InitPhartHeadCollectible,2,0x02257505,1,0,0x8c510186↔0xa9240484,
+Collectible1970IconTickCallback,2,0x00000201,1,103,0x408a6461↔0x428a6465,0↔9 | 0↔O | 0↔F03 | 0↔F13 | 0↔F23 | 0↔F33 | 0↔F43 | 0↔F53
+CollectibleHamsterShieldTickCallback,2,0x00000201,1,103,0x42906465↔0xc2906565,0↔9 | 0↔O | 0↔F03 | 0↔F13 | 0↔F23 | 0↔F33 | 0↔F43 | 0↔F53
+DecorPlaySoundAndAnimate,2,0x1558fdbd,1,0,0x40023e30↔0xbb781481,
+EntityEventHandlerSpawnProjectile,2,0x017a9a29,1,0,0x24002913↔0x61200640,
+InitPathFollowingHazard,2,0x06a598d3,1,0,0x12308128↔0x74044081,
+InitEnemyAnimatedWithDeathSpawn,2,0x04d852c5,1,0,0x400c9a1d↔0x44d4c8d8,
+EntityEventHandlerSpawnMultipleProjectiles,2,0x0698796d,1,0,0x082c0536↔0x8b603980,
+InitCheckpointEntity,2,0x00081021,1,17,0x80729081↔0x88329285,5↔OUTER | A↔F11 | C↔ANGRY | K↔OUTER | Y↔FLY | 06↔58 | 14↔BODY | 16↔68
+CollectibleScaledTickCallback,2,0x0369188f,1,0,0x2cda4604↔0xec000027,
+EntityDestroyWithEffects,2,0x08c385c9,1,0,0x02ed1470↔0xc0099011,
+BossState_SpawnDeathParticle,2,0x00482203,1,1,0x60de1050↔0xa0cc18d0,F37↔BELOW
+BossState_DefeatedWithParticles,2,0x020921c5,1,0,0x424d1840↔0xa0cc1cd0,
+CollectibleRiseState,2,0x0331f1c3,1,0,0x424129a1↔0x81421850,
+CollectibleFloatState,2,0x038f221b,1,0,0x66017821↔0x82421850,
+HazardActivateWithSound,2,0x0319fa59,1,0,0x7a318245↔0x8068815c,
+HazardIdleWithSound,2,0x072a4493,1,0,0x407801d0↔0x62318245,
+ShrineyGuardSetLoopingAttackState,2,0x0024c13b,1,0,0x40106054↔0xc00200c9,
+JoeHeadJoeAttackEventHandler,2,0x00000003,1,358,0xf03391e9↔0xf033a1e9,0↔1 | 0↔E | 0↔G | 1↔2 | 1↔F | 1↔H | 2↔3 | 2↔G
+JoeHeadJoeSetIdleState,2,0x0694d639,1,0,0x0b290ba2↔0x603588e8,
+InitKloggBoss,2,0x0592a5ed,1,0,0x486492c4↔0xcaadc032,
+EnemyHitMessageHandler,2,0x094650c3,1,0,0x0c3082c3↔0x98004092,
+JoeHeadJoeBallFallCallback,2,0x0994a647,1,0,0x069580a0↔0x34014841,
+JoeHeadJoeBallStartRolling,2,0x2729957d,1,0,0x0239cb33↔0x70a09ce1,
+SpawnSwirlPortalEntity,2,0x04efb97d,1,0,0x3d348056↔0xca1b20cb,
+SpawnPlayerDeathEffect,2,0x1194692b,1,0,0x422a0225↔0x5860c640,
+PlayerState_PlayRandomIdleAnimation,2,0x028a2dc5,1,0,0x5900c41e↔0xd305d045,
+PlayerState_Jump,2,0x04878569,1,0,0x00248e52↔0x092b8480,
+PlayerStateInit_Walking,2,0x0ddb12d9,1,0,0x1e089010↔0x70d006d8,
+PlayerState_StartSwimming,2,0x01b60a4d,1,0,0x00388110↔0x06e0a824,
+FinnDeathExplosion,2,0x01e67205,1,0,0x088c5011↔0x344210b1,
+PlatformStateInit_ResumeWithSound,2,0x015c91f3,1,0,0x3c389550↔0x40f8c274,
+PlatformStateInit_LandFromFlight,2,0x05beef49,1,0,0x1a202d81↔0x60680076,
+CreateFinnPlayerEntity,2,0x12358fc7,1,0,0x3da80d13↔0xcc6c8070,
+FinnState_Spawn,2,0x0002404d,1,0,0x1b280c33↔0x3da80d13,
+InitMenuSkullIconButton,2,0x029a4465,1,0,0x10094096↔0x81100030,
+PasswordSubmitEventHandler,2,0x0213593d,1,0,0x42906465↔0x64221e61,
+InitMenuStage3,2,0x029a4465,1,0,0x10094096↔0x81100030,
+InitMenuStage4,2,0x01019fe5,1,0,0x10094096↔0xe289c059,
+InitGroundPatrolEnemy,2,0x02257505,1,0,0x8c510186↔0xa9240484,
+Callback_80048f40,2,0x00482203,1,1,0x60de1050↔0xa0cc18d0,F37↔BELOW
+Callback_8004906c,2,0x020921c5,1,0,0x424d1840↔0xa0cc1cd0,
+Callback_80067fc8,2,0x0ddb12d9,1,0,0x1e089010↔0x70d006d8,
+Callback_8006b4f4,2,0x0994b1df,1,0,0x421586c2↔0x8569a090,
+Callback_8006d724,2,0x01b60a4d,1,0,0x00388110↔0x06e0a824,
+EntityInitCallback_800726c8,2,0x015c91f3,1,0,0x3c389550↔0x40f8c274,
+Callback_80072ce8,2,0x05beef49,1,0,0x1a202d81↔0x60680076,
+EnemyPatrolState,2,0x00000001,1,473,0x60b93cbd↔0x60b9bcbd,0↔00 | 0↔01 | 0↔02 | 0↔03 | 0↔04 | 0↔05 | 0↔06 | 0↔07

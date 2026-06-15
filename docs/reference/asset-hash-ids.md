@@ -388,6 +388,57 @@ DE suffix delta: 0xb0f00340
 The localized suffix strings are still unknown, but they can now be tested against a concrete hash
 candidate rather than a whole family of variants.
 
+## Round 8 (2026-06-15): MENU text anchors confirm the formula
+
+Additional user visual identification from `MENU` primary sprites gave four more exact text anchors.
+Important path note: `MENU` is the game level/section string from the BLB table; `primary` is the
+extraction bucket name, not an original ToolX directory/name.
+
+```text
+0x0ad0f813 = text "Paused"   (visual read from the common all-level text bank)
+0x68c0f413 = text "Quit"
+0x69c04050 = text "Continue"
+0x69c8f473 = text "Quit Game"
+```
+
+Together with `YES`/`NO`, all six exact text labels reproduce the same fixed output rotation and
+XOR seed:
+
+```text
+Name       calcHash(name)  Asset id    Implied seed
+NO         0x20004000      0x29c0e211  0x28c0e011
+YES        0x42020000      0x2ad0f011  0x28c0e011
+PAUSED     0x42030044      0x0ad0f813  0x28c0e011
+QUIT       0x00028048      0x68c0f413  0x28c0e011
+CONTINUE   0x20140828      0x69c04050  0x28c0e011
+QUIT GAME  0x21028c48      0x69c8f473  0x28c0e011
+```
+
+`calcHash` ignores non-alphanumeric characters, so `QUIT GAME`, `QUIT_GAME`, and `QUITGAME` are
+equivalent for hashing. This moves the formula from "candidate" to confirmed for alphanumeric
+asset/text names:
+
+```c
+u32 skullmonkeys_asset_hash(const char *name) {
+  return 0x28c0e011 ^ rotl(neverhood_calcHash(name), 27);
+}
+```
+
+Expanded repro:
+
+```bash
+python3 tools/scripts/asset_hash_probe.py --seeded
+```
+
+The same user pass also identified `0x00e2f188` as a number-glyph sprite: frames 0-9 are the
+digits `0` through `9`. Obvious exact-name guesses for that bank (`NUMBERS`, `NUMBER`, `NUM`,
+`DIGITS`, `DIGIT`, and broader number/font variants) do **not** hash to `0x00e2f188`, so that
+bank's original ToolX name is still unknown. This is expected: visual role labels are not always
+source names, while literal menu text labels often are.
+
+Current status: the hash code is cracked. Remaining work is corpus/name recovery: finding the real
+ToolX names for non-literal sprites, sounds, animations, and shared banks.
+
 ## Practical naming
 
 Since true names are unrecoverable, label these IDs by **role/behavior**, which is already

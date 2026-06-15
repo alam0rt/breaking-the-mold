@@ -1,5 +1,6 @@
 #include "common.h"
 #include "functions.h"
+#include "Game/callback_slot.h"
 
 extern void *g_pBlbHeapBase;
 extern void *D_80010870;
@@ -8,6 +9,8 @@ extern void FreeEntityNoTeardown_80030cdc(void *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
+extern void CheckpointSwampTickCallback(Entity *e);
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   D_800A59D8;
 void *D_800A59DC;

@@ -41,6 +41,15 @@ SUFFIXES = ["", "0", "1", "01", "A", "B", "C", "SPR", "SEQ", "SND", "SFX", "ANIM
 EXTS = ["", ".SPR", ".SEQ", ".SND", ".VAG", ".TIM", ".ANM", ".CEL", ".DAT", ".BIN", ".RAW", ".XA"]
 SEPS = ["", "_", "-"]
 
+EXACT_TEXT_ANCHORS = [
+    ("NO", 0x29C0E211),
+    ("YES", 0x2AD0F011),
+    ("PAUSED", 0x0AD0F813),
+    ("QUIT", 0x68C0F413),
+    ("CONTINUE", 0x69C04050),
+    ("QUIT GAME", 0x69C8F473),
+]
+
 
 def u16(data: bytes, off: int) -> int:
     return struct.unpack_from("<H", data, off)[0]
@@ -237,7 +246,7 @@ def set_toggle(text: str, mode: str) -> int:
 
 
 def seeded_name_hash(text: str) -> int:
-    """Current best Skullmonkeys hash candidate from the YES/NO visual anchors."""
+    """Confirmed Skullmonkeys hash formula for normalized alphanumeric names."""
     return SEEDED_XOR_MASK ^ rot(cumulative_toggle(text, "never", False), SEEDED_OUTPUT_ROT)
 
 
@@ -335,7 +344,7 @@ def print_dictionary_probe():
 
 
 def print_seeded_probe() -> None:
-    """Probe the seeded/rotated calcHash candidate derived from YES/NO."""
+    """Probe the seeded/rotated calcHash formula confirmed by text anchors."""
     no_id = 0x29C0E211
     yes_id = 0x2AD0F011
     no_base = cumulative_toggle("NO", "never", False)
@@ -352,7 +361,19 @@ def print_seeded_probe() -> None:
     print(f"  expected NO^YES:  0x{expected_delta:08x} = rotl(calcHash('NO')^calcHash('YES'), {SEEDED_OUTPUT_ROT})")
     print(f"  implied seed from NO:  0x{no_seed:08x}")
     print(f"  implied seed from YES: 0x{yes_seed:08x}")
-    print(f"  candidate formula: id = 0x{SEEDED_XOR_MASK:08x} ^ rotl(calcHash(name), {SEEDED_OUTPUT_ROT})")
+    print(f"  confirmed formula: id = 0x{SEEDED_XOR_MASK:08x} ^ rotl(calcHash(name), {SEEDED_OUTPUT_ROT})")
+
+    anchor_seeds = set()
+    print("\nExact text anchor validation:")
+    for name, target in EXACT_TEXT_ANCHORS:
+        base_hash = cumulative_toggle(name, "never", False)
+        value = seeded_name_hash(name)
+        seed = target ^ rot(base_hash, SEEDED_OUTPUT_ROT)
+        anchor_seeds.add(seed)
+        status = "HIT" if value == target else "MISS"
+        print(f"  {name:10s} base=0x{base_hash:08x} target=0x{target:08x} calc=0x{value:08x} seed=0x{seed:08x} {status}")
+    if anchor_seeds == {SEEDED_XOR_MASK}:
+        print(f"  all exact text anchors imply seed 0x{SEEDED_XOR_MASK:08x}")
 
     rows = collect_blb(ROOT / "disks/blb/sles-01090.blb")
     all_ids = set(rows["sprite"]) | set(rows["anim"]) | set(rows["audio"])
@@ -369,7 +390,8 @@ def print_seeded_probe() -> None:
                     labels[sprite_id] = row["human_role"]
 
     checks = [
-        "NO", "YES",
+        "NO", "YES", "PAUSED", "QUIT", "CONTINUE", "QUITGAME", "QUIT GAME",
+        "NUMBERS", "NUMBER", "NUM", "DIGITS", "DIGIT",
         "CURSOR", "MENU_CURSOR", "MENUCURSOR", "POINTER", "SELECTOR",
         "MONKEY", "SCREAMER", "SCREAMERMONKEY", "SCREAMER_MONKEY",
         "SHRINEY", "SHRINEYGUARD", "SHRINEY_GUARD", "SHRINEYGUARD_SLAM", "SHRINEYGUARD_YELL",
@@ -385,6 +407,8 @@ def print_seeded_probe() -> None:
     candidate_tokens = {
         "NO": ["NO"],
         "YES": ["YES"],
+        "menu_text": ["PAUSED", "QUIT", "CONTINUE", "QUITGAME", "QUIT_GAME", "QUIT GAME"],
+        "number_glyphs": ["NUMBER", "NUMBERS", "NUM", "DIGIT", "DIGITS", "FIGURE", "FIGURES", "FONT", "NUMFONT"],
         "cursor": ["CURSOR", "MENU_CURSOR", "MENUCURSOR", "POINTER", "SELECTOR"],
         "plain_monkey": ["MONKEY", "SCREAMER", "SCREAMERMONKEY", "SCREAMER_MONKEY", "SKULLMONKEY", "ENEMYMONKEY"],
         "shriney_guard": ["SHRINEY", "SHRINEYGUARD", "SHRINEY_GUARD", "SHINYGUARD", "SHRINEGUARD", "GUARD"],
@@ -555,7 +579,7 @@ def main() -> None:
     parser.add_argument("--dict", action="store_true", help="run role-aware dictionary probe")
     parser.add_argument("--lang", action="store_true", help="probe likely English/French/German language tag deltas")
     parser.add_argument("--regional", action="store_true", help="summarize PAL English/French/German rotated delta masks")
-    parser.add_argument("--seeded", action="store_true", help="probe the seeded/rotated calcHash candidate from YES/NO anchors")
+    parser.add_argument("--seeded", action="store_true", help="probe the confirmed seeded/rotated calcHash formula")
     parser.add_argument("--diff", nargs=2, metavar=("BASE", "OTHER"), help="diff located container entries between two BLBs")
     args = parser.parse_args()
     if not args.pool and not args.dict and not args.lang and not args.regional and not args.seeded and not args.diff:

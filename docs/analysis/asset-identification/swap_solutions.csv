@@ -1,0 +1,761 @@
+class_hex,class_pop,cluster_size,pairs_role_labeled,suffix_a,suffix_b,v_hex,sample_role_ids
+0x00283063,8,20,5,ARM00,UP2,0x00283063,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ARM01,UP1,0x00283063,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ATK01,EGG,0x00283063,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BG25,HUD8,0x30028306,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOX07,HUD,0x30028306,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ATK6,EAST00,0x00283063,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ATKEAST,L10,0x00283063,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ATKL,EAST00,0x00283063,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOWB,FLYA,0x0a0c18c0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BG06,WEST25,0x18c00a0c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BGR,NOERASE,0x28306300,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,1970S,SOUTH26,0x18c00a0c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BAREAT,CENTER,0x0c600506,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOX00,HUDTURN,0x30028306,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOX24,NOERASE,0x28306300,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOXFALL,HUD12,0x30028306,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BROW20,STEP14,0x14183180,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BROW34,STEP00,0x14183180,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ABOVE00,SLIDE15,0x83063002,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOW33,LOGOATK,0x0a0c18c0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BONUS09,SLIDE32,0x14183180,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOX23,HORNSLEFT,0x0c600506,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOX25,FIRESOUTH,0x30028306,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,CENTER24,DOWN39,0x01418318,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BACKSWIM,TODOWN07,0x005060c6,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOW11,MAINMENU2,0x060c6005,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOW3,MAINMENU01,0x060c6005,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOW9,FROMLEFT00,0x83180141,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOWSLAM,FRAME13,0x0a0c18c0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BONEFORWARD,SKINR,0xc00a0c18,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BORDER3,CLOCKPLAT,0x30028306,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BACK21,SLAMMEDNORTH,0x060c6005,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BANNERTOP,VICTORY07,0x02830630,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BLOWING14,SLAMMED23,0x060c6005,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BOXFRONT,FIREDBELOW,0x6005060c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BACKCROUCH,DIGITALFLY,0x6005060c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BACKDROP25,CLOSEABOVE,0x00a0c18c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BELOWFLOATING,FRAME27,0x8c00a0c1,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,ARROW,CONTINUEATTACKING,0x0c18c00a,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00283063,8,20,5,BACKDROPCLOSE,LEVELSPIT,0x18c00a0c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x007850a5,10,17,6,BOX17,RROLL,0xa00f0a14,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALL06,OUTER1,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALLR,OUTER19,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FIRE13,TORSO9,0x00f0a14a,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,HOCKA,TEETH01,0x429401e1,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,HOCKB,TEETH00,0x429401e1,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,IDLE7,INNER13,0x52803c28,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,IDLE8,INNER12,0x52803c28,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,INTRO31,POOP8,0xf0a14a00,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,OKSTEP,TORSOC,0x00f0a14a,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,BANNER30,TURN08,0x2852803c,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,CENTERPUSH,WORM,0x03c28528,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALLING11,HIT07,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALLING12,HIT16,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALLING13,HIT25,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALLING14,HIT34,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,POOP7,WINDOWATK,0xc2852803,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,PULL29,RROLLING,0xa00f0a14,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,BARSLAMMING,WAITA,0x00f0a14a,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,BONUSLAND,OUTER19,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,DAMAGE02,FLYABOVE,0xa5007850,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FRONTWAKE,SLIDE30,0x852803c2,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,HOCKINNER,UPDEATH,0x14a00f0a,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,HORNCENTER,SKIN39,0x852803c2,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,LEFT11,SLEEPING09,0xa00f0a14,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,NOSE24,OUTERSTART,0x01e14294,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,NUMEND,OUTERSTART,0x01e14294,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,QUIT19,WORLDTHROW,0x03c28528,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,REARHIT,TEXTCLOSE,0x03c28528,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,RSTOMP,WORLDABOVE,0x07850a50,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,BEGIN14,NEWSWIMMING,0x007850a5,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,CANCELTOP,INNERBLOW,0x50a50078,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,END38,LOADGAMENORTH,0x3c285280,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FORWARD31,OUTEROUCH,0xa14a00f0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,OKWIN,RANKINGFLYING,0x5007850a,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,FALLENLEFT,QUITLANDED,0xa00f0a14,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,MARKERSTAMP,SWIMMING7,0x01e14294,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,RANKINGSTOMP,TORIGHTB,0x401e1429,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,BONUSSLAMMED,SELECTDEAD,0x850a5007,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x007850a5,10,17,6,BOTTOMSLAMMED,YELLABOVE,0x03c28528,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x00d89129,10,14,5,END36,TOE11,0x00d89129,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,RROLL,UROLL,0x806c4894,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,BELLY8,BGROLL,0x894806c4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FOOT17,STEP17,0x912900d8,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,LOSE17,NOROLL,0x6c489480,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,NOROLL,ROLL18,0x6244a403,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,POOPU,SOUTH11,0xc4894806,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,BODY2,LEVELROLL,0x036244a4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,DEATHNORTH,DIE9,0x4036244a,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,DEMOOPEN,SPIT21,0x00d89129,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,MAPSPIT,TOOTH13,0x4036244a,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,MENTAL,TIMEFACE,0x6244a403,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,SHOOT03,TEXTTOP,0x1b122520,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,ARMS36,DUCKMIDDLE,0x225201b1,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,ARROWATK,CENTER37,0x00d89129,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,BARCROUCH,STOMP06,0x036244a4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,EARS26,FOOTMIDDLE,0x806c4894,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FRAMEFIRE,HUDTOUP,0x25201b12,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FRONT36,RIGHTWAIT,0x894806c4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,KICK14,PULLTOLEFT,0x201b1225,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,QUIT9,TITLECROUCH,0x4894806c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,BACKWARD5,STANDINGB,0x894806c4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,BELLYRIGHT,BODYLEFT,0x036244a4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,BOTTOMSPIT,NEWINTRO,0x036244a4,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,DEMOCROUCH,FONTLAND,0x44a40362,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,DIEBACK,FALLENRIGHT,0x912900d8,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,DIERIGHT,FALLENBACK,0x912900d8,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FACEKICK,MAINMENUDONE,0x4806c489,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FROMRIGHT27,TOUPCLOSE,0x06c48948,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FRONTDANCE,NUMBERDEAD,0x912900d8,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,FRONTDEAD,NUMBERDANCE,0x912900d8,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,PAUSETURNING,TORIGHT3,0x4036244a,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,ATTACKEAST,CONTINUEDONE,0x4036244a,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x00d89129,10,14,5,LEVELSTAMP,TEXTSPINNING,0x225201b1,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x01991231,10,12,3,BGD,LETTER7,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BOX17,LROLL,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,DROLL,ROLL1,0x22462033,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,IDLE8,PULLE,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,IDLED,PULL9,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,ATTACK8,TEXTD,0x03322462,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BEAM,FLYNORTH,0x066448c4,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BLOW01,SAVE12,0x6448c406,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BODY36,REST39,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,DUCK31,TORSO3,0x12310199,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,FACE31,WEST22,0x91880cc8,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,LETTER06,MIST,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKDROP23,REST,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKDROP6,NEW35,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKDROP7,NEW26,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKDROPD,NOATK,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKDROPL,NEW35,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BGCHEER,DIGITSA,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BOUNCY,WAITTOUP,0x20332246,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BOX39,METERWAVE,0x20332246,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,DEATH36,EMPTY27,0x48c40664,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKDROPHIT,REST7,0x4066448c,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKWIN,STAGEOUCH,0x891880cc,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BGWALKED,LETTER22,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BOX26,LETTERSSWIM,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,FIRED07,SIDECLIMB,0x10199123,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BEARD39,NUMSLAMMING,0x6448c406,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BEARDFRONT,BOXTAUNT,0x24620332,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,DEFAULT25,FOOTINNER,0x20332246,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,DIGITS34,SELECTPULL,0x01991231,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,EASTSLEEPING,FIRE00,0x22462033,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKWARDOPEN,HEALTH26,0x8c406644,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BELLYCENTER,FRAMEDUCK,0x880cc891,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BOTTOMSLAMMING,FIRED5,0x03322462,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BOXABOVE,TREASUREBALL,0x8c406644,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BACKWARDOPENING,MIDDLE5,0x8c406644,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,BONUSSWIM,SELECTVICTORY,0x01991231,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,DIGITSINNER,MARKERSLEEP,0x20332246,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,KLOGGBALL,LETTERSSPINNING,0x62033224,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x01991231,10,12,3,LOADGAMEATTACK,OPENBACKWARD,0x99123101,0x4aee0118=Shriney Guard boss slamming down animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARMS5,EAST4,0x42802063,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BALL,TIME12,0x6850040c,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BARA,LOSE13,0x0c685004,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BG01,SWIM11,0x0040c685,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BG15,PULL10,0x28020634,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BGHURT,FEET,0x01031a14,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARM6,TEXTSIDE,0x031a1401,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARMEAST,END11,0x42802063,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARML,TEXTSIDE,0x031a1401,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARMS09,TURN34,0x1a140103,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARMS36,TURN31,0x1a140103,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ATK15,UFALLEN,0x1a140103,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BELLY26,LOGO3,0x8d0a0081,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BELLY6,DONE26,0x850040c6,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BELLYB,NECKUP,0x850040c6,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BELLYL,DONE26,0x850040c6,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BG21,LEGSEAST,0x01031a14,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BAREND,SCREAM24,0x0c685004,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BARENTER,HORN00,0x34280206,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BARENTER,HURT00,0x34280206,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BAROUTER,BROW14,0x06342802,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BLANK39,GORILLA,0x0040c685,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BLANKATK,SWIM19,0x0040c685,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BONUS2,LOGOBLOW,0x0818d0a0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ABOVESTOMP,UDANCE,0x06342802,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ATTACK37,FIRING31,0x80206342,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ATTACK38,FIRING30,0x80206342,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BACKDROP5,NUMROLL,0x20634280,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BACKDROPWEST,NUME,0x20634280,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BARHURT,NUMBERS01,0x31a14010,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BEGIN20,ENDCENTER,0x850040c6,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BELOW01,FRAMEROLL,0xa00818d0,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BLANKPULL,MAPDOWN,0x63428020,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BONE23,BORDERIDLE,0xd0a00818,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BACKDROPWAIT,TAIL17,0x6850040c,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BACKDROPWEST,NOSE20,0x20634280,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BODYCENTER,WESTSLAM,0x31a14010,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BACKBUTTONFLOAT,BODY0,0x1031a140,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,ARROWJUMPING,STAGEFIRED,0x00818d0a,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x0040c685,8,10,3,BACKDROPNORTH,TITLELOSE,0x20634280,0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation | 0x4baf8200=Shriney Guard boss yelling animation
+0x06184187,10,8,3,BG01,PART05,0x20c3830c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,DSTART,EARE,0x61841870,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,ARM30,START10,0x0c20c383,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,ARMS0,START08,0x06184187,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,ARMS03,START0,0x06184187,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BELLY20,ROLL3,0x830c20c3,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BELLY4,ROLL10,0x830c20c3,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BELOW07,EAR09,0xc30830e0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BELOW08,EAR08,0xc30830e0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BLANK02,PARTR,0x20c3830c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CHEST25,YES17,0xc3830c20,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,DEAD11,NUMFLY,0x1861061c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,EARS08,RSTART,0x87061841,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BARBELOW,TODOWN,0x18706184,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CHAREAST,EARS15,0x61841870,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CHEST02,PANEL02,0xe0c30830,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CHEST11,PANEL01,0xe0c30830,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CURSOR02,LEGS10,0x61061c18,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,DAMAGE5,FRAME03,0x830e0c30,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,DEMOERASE,EYE00,0x70618418,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,EARBELOW,RSTART,0x87061841,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,EARS7,OUTERHURT,0x61841870,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,EASTFLY,ENTER18,0xc30830e0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,EATC,SPITTING14,0x061c1861,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,ARMSBELOW,ARROW11,0x061c1861,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,ARMSBELOW,RANDOWN,0x061c1861,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,ARROW11,FROMLEFT8,0x830c20c3,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BLANKDEAD,NUMBERC,0x20c3830c,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BLANKRUN,TURNDOWN,0x1c186106,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CHARA,LETTERSTART,0xc3830c20,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,D38,EXTRASDANCING,0x30c20c38,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BELLY17,PAUSEDNORTH,0xc30830e0,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BOXCROUCH,INTRODOWN,0xe0c30830,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CENTERSCREAM,TIME06,0x30e0c308,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CHARTOP,EXTRASFIRED,0x61841870,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CURSORA,NEWGAMEFACE,0x61061c18,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BELOW04,FROMLEFTSHOOT,0x061c1861,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CONTINUEIDLE,DRAWBACK,0xe0c30830,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,BACKDROPFALLING,TEXTSTOMP,0x18706184,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x06184187,10,8,3,CONTINUEFRONT,SLAMMEDWEST,0x84187061,0x4baf8200=Shriney Guard boss yelling animation | 0x4a3ea110=Menu door opens to reveal monkey animation | 0x4aee0118=Shriney Guard boss slamming down animation
+0x03087041,8,8,0,18,SLAM10,0x84382081,
+0x03087041,8,8,0,ARM00,LSLAM,0x82081843,
+0x03087041,8,8,0,ATK20,TURN7,0x08704103,
+0x03087041,8,8,0,ATK28,TURNE,0x08704103,
+0x03087041,8,8,0,BAR6,WEST07,0x10e08206,
+0x03087041,8,8,0,BARL,WEST07,0x10e08206,
+0x03087041,8,8,0,BG07,DRAW36,0x1040c21c,
+0x03087041,8,8,0,ARM17,HANDS33,0x08184382,
+0x03087041,8,8,0,ARMS11,EAST02,0x0e082061,
+0x03087041,8,8,0,ARMS20,EAST01,0x0e082061,
+0x03087041,8,8,0,BAR00,MAPSWIM,0x0820610e,
+0x03087041,8,8,0,BAR07,TOLEFTB,0x0c21c104,
+0x03087041,8,8,0,BGFALL,TAIL08,0x10308704,
+0x03087041,8,8,0,BGRUN,CLOSE00,0x18438208,
+0x03087041,8,8,0,ARM03,OPTIONS13,0x82081843,
+0x03087041,8,8,0,ARMEAST,WAVINGU,0x03087041,
+0x03087041,8,8,0,ARMS34,OPTIONSC,0x82081843,
+0x03087041,8,8,0,ATK03,OPTIONS31,0x82081843,
+0x03087041,8,8,0,ATKTOP,SCREAM24,0x08704103,
+0x03087041,8,8,0,BEGINB,DEMOREST,0x1040c21c,
+0x03087041,8,8,0,ABOVE3,TODOWNWAVE,0x08184382,
+0x03087041,8,8,0,BACKFALL,PAUSED30,0x43820818,
+0x03087041,8,8,0,BANNER00,OPENINGB,0x18438208,
+0x03087041,8,8,0,BARDIE,TOLEFTFALL,0x0610e082,
+0x03087041,8,8,0,BEGINB,INNERSTART,0x1040c21c,
+0x03087041,8,8,0,BELLYCENTER,LAND1,0x03087041,
+0x03087041,8,8,0,BGREAR,SCORESLEEP,0x10e08206,
+0x03087041,8,8,0,ABOVEEAT,TODOWNLOSE,0x08184382,
+0x03087041,8,8,0,ARMS06,FORWARDINTRO,0x820610e0,
+0x03087041,8,8,0,ATTACKING0,REARWAKE,0x10e08206,
+0x03087041,8,8,0,BELOWWAVING,FRAME15,0x610e0820,
+0x03087041,8,8,0,BGTOLEFT,CURSORDONE,0xe0820610,
+0x03087041,8,8,0,BLANK05,YESSWIMMING,0x38208184,
+0x03087041,8,8,0,ABOVEFALLEN,RUNNING13,0x84382081,
+0x03087041,8,8,0,ARMSLEFT,WINDOWFLOATING,0x87041030,
+0x03087041,8,8,0,BACKDROP21,DEFAULTSOUTH,0x1040c21c,
+0x03087041,8,8,0,BACKDROPCENTER,DEFAULTD,0x1040c21c,
+0x03087041,8,8,0,BACKDROPFIRED,DEFAULT38,0x1040c21c,
+0x03087041,8,8,0,BACKDROPWEST,LEFTJUMPED,0x20610e08,
+0x03087041,8,8,0,BANNERFLOATING,SAVEGAMECENTER,0x10308704,
+0x0002404d,6,7,0,8,BACK9,0x0002404d,
+0x0002404d,6,7,0,01,FRONTA,0x01202680,
+0x0002404d,6,7,0,1,ATTACK3,0x01202680,
+0x0002404d,6,7,0,20,YELL27,0x02404d00,
+0x0002404d,6,7,0,21,OKBACK,0x34000901,
+0x0002404d,6,7,0,30,LEFT03,0x04809a00,
+0x0002404d,6,7,0,A,ATTACK9,0x01202680,
+0x0002404d,6,7,0,A,PUNCH17,0x404d0002,
+0x0002404d,6,7,0,03,QUITBACK,0x00120268,
+0x0002404d,6,7,0,10,ATTACK36,0x01202680,
+0x0002404d,6,7,0,11,ATTACK37,0x01202680,
+0x0002404d,6,7,0,12,ATTACK38,0x01202680,
+0x0002404d,6,7,0,13,ATTACK39,0x01202680,
+0x0002404d,6,7,0,7,VICTORY14,0x80012026,
+0x0002404d,6,7,0,ALT,VICTORY14,0x80012026,
+0x0002404d,6,7,0,ARM16,ATTACK2,0x01202680,
+0x0002404d,6,7,0,ARMA,ARMSBACK,0x02680012,
+0x0002404d,6,7,0,ARMBACK,NECKU,0x0002404d,
+0x0002404d,6,7,0,ARMS,ATTACK21,0x01202680,
+0x0002404d,6,7,0,ARMS7,ATTACK9,0x01202680,
+0x0002404d,6,7,0,ARMS7,PUNCH17,0x404d0002,
+0x0002404d,6,7,0,ARMTOUP,RAN17,0x01340009,
+0x0002404d,6,7,0,ARROW33,HUD09,0x004809a0,
+0x0002404d,6,7,0,ATK18,ATTACK2,0x01202680,
+0x0002404d,6,7,0,ATKA,TOUPSWIM,0x01340009,
+0x0002404d,6,7,0,ATKTOUP,RAN15,0x01340009,
+0x0002404d,6,7,0,ATKU,ATTACK21,0x01202680,
+0x0002404d,6,7,0,ATTACK3,OUCHU,0x01202680,
+0x0002404d,6,7,0,ATTACK6,OUCHR,0x01202680,
+0x0002404d,6,7,0,ATTACK9,FIRE3,0x01202680,
+0x0002404d,6,7,0,ATTACK9,HIP13,0x01202680,
+0x0002404d,6,7,0,ARM15,STOMACH14,0x0004809a,
+0x0002404d,6,7,0,ATK24,FIRESOUTH,0x20268001,
+0x0002404d,6,7,0,ATK3,ATTACKTOUP,0x09013400,
+0x0002404d,6,7,0,ATKBACK,BODYTOP,0x0002404d,
+0x0002404d,6,7,0,ATKBELOW,OUCH14,0x02680012,
+0x0002404d,6,7,0,ATTACK03,FIRE39,0x01202680,
+0x0002404d,6,7,0,ATTACK37,NOSWIM,0x01202680,
+0x0002404d,6,7,0,ARMSTORIGHT,ARROW01,0x004809a0,
+0x0002404d,6,7,0,ATTACKINSIDE,KICKUP,0x01202680,
+0x000a10c1,6,6,1,09,FEET07,0x00a10c10,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,1,ABOVE19,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,20,TURN04,0x0a10c100,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,34,SAVE17,0x00508608,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,70S,FROST,0x05086080,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,32,DEMOFALL,0x01421820,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,32,YESSTART,0xc1000a10,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,8,BODYABOVE,0x08608005,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE18,BAD,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARM35,IDLEC,0x42182001,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ATK00,LOAD2,0x18200142,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ATK2,LOAD00,0x18200142,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,13,ABOVESTOMP,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE00,TOP08,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE01,TOP17,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE02,TOP26,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE03,TOP35,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE1,STOMPC,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE19,OUCHU,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE3,STOMPA,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVESTAND,U5,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARM04,PIECE11,0x42182001,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARM16,RANKEAT,0x000a10c1,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMS30,LOAD11,0x08005086,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMS34,STEPUP,0x000a10c1,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ATK18,RANKEAT,0x000a10c1,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVE8,TOUPSLAP,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVEFALL,SPIT1,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ABOVESTAND,ATKA,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARM25,TURNING08,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMS27,TURNING0,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMS39,JUMPED08,0x82001421,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMSU,TURNING08,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ATK27,TURNING08,0x00142182,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,31,BONUSATTACKING,0x30400284,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMS09,STAGESHOOT,0x42182001,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARROWSCREAM,FLY39,0x43040028,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARMSBELOW,LOADGAME7,0x18200142,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ARROWHOCK,WESTSLIDE,0x10c1000a,0x4aee0118=Shriney Guard boss slamming down animation
+0x000a10c1,6,6,1,ATTACKING25,UPSLIDE,0x40028430,0x4aee0118=Shriney Guard boss slamming down animation
+0x00000303,4,6,0,02,12,0x0000c0c0,
+0x00000303,4,6,0,03,11,0x0000c0c0,
+0x00000303,4,6,0,12,22,0x00018180,
+0x00000303,4,6,0,13,21,0x00018180,
+0x00000303,4,6,0,22,32,0x00030300,
+0x00000303,4,6,0,23,31,0x00030300,
+0x00000303,4,6,0,01,UP31,0x00006060,
+0x00000303,4,6,0,02,UP22,0x00006060,
+0x00000303,4,6,0,2,ARM34,0x00000303,
+0x00000303,4,6,0,2,ATK36,0x00000303,
+0x00000303,4,6,0,25,ARM3,0x00000303,
+0x00000303,4,6,0,27,ATK3,0x00000303,
+0x00000303,4,6,0,3,ARM25,0x00000303,
+0x00000303,4,6,0,3,ARMSU,0x00000303,
+0x00000303,4,6,0,3,ATK27,0x00000303,
+0x00000303,4,6,0,3,PAINR,0x00030300,
+0x00000303,4,6,0,34,ARM2,0x00000303,
+0x00000303,4,6,0,36,ATK2,0x00000303,
+0x00000303,4,6,0,02,POOP33,0xc00000c0,
+0x00000303,4,6,0,03,NOSWIM,0x0000c0c0,
+0x00000303,4,6,0,04,POOP31,0xc00000c0,
+0x00000303,4,6,0,11,POOP24,0xc00000c0,
+0x00000303,4,6,0,12,PAIN33,0x00018180,
+0x00000303,4,6,0,13,LEVELA,0x03030000,
+0x00000303,4,6,0,13,POOP22,0xc00000c0,
+0x00000303,4,6,0,14,PAIN15,0x00018180,
+0x00000303,4,6,0,23,HORNS2,0x00060600,
+0x00000303,4,6,0,24,HORNS1,0x00060600,
+0x00000303,4,6,0,24,PAIN23,0x06060000,
+0x00000303,4,6,0,30,PAIN15,0x00030300,
+0x00000303,4,6,0,31,PAIN24,0x00030300,
+0x00000303,4,6,0,32,PAIN33,0x00030300,
+0x00000303,4,6,0,38,BGEAST,0x00c0c000,
+0x00000303,4,6,0,38,REAR11,0x00060600,
+0x00000303,4,6,0,39,ARMSUP,0x00000303,
+0x00000303,4,6,0,39,REAR10,0x00060600,
+0x00000303,4,6,0,01,BODYTOUP,0x00606000,
+0x00000303,4,6,0,5,SOUTHDRAW,0x00000606,
+0x00000303,4,6,0,3,HORNFORWARD,0x60600000,
+0x00000303,4,6,0,4,LIMBFORWARD,0x00001818,
+0x016082a1,8,6,0,BLANKU,YES9,0x4202c105,
+0x016082a1,8,6,0,BONE0,SLAP5,0x080b0415,
+0x016082a1,8,6,0,DONE9,LOGOU,0x082a1016,
+0x016082a1,8,6,0,CLIMBWEST,D04,0x415080b0,
+0x016082a1,8,6,0,DFIRED,FONT02,0x20a84058,
+0x016082a1,8,6,0,DONE24,WAIT20,0x20a84058,
+0x016082a1,8,6,0,DOWN03,SAVE19,0x415080b0,
+0x016082a1,8,6,0,10,DEMOBOUNCING,0x16082a10,
+0x016082a1,8,6,0,ATK30,LEVELIDLE,0x016082a1,
+0x016082a1,8,6,0,BACKCLIMB,BROW7,0x054202c1,
+0x016082a1,8,6,0,BELOWTURN,EYESC,0x405820a8,
+0x016082a1,8,6,0,BONED,BOUNCING5,0x80b04150,
+0x016082a1,8,6,0,BOXCLOSE,LEFT08,0x05820a84,
+0x016082a1,8,6,0,DEMOSHOOT,RUN30,0x016082a1,
+0x016082a1,8,6,0,DIGIT7,WALKED22,0x6082a101,
+0x016082a1,8,6,0,DIGIT9,WALKED04,0x6082a101,
+0x016082a1,8,6,0,DOWN33,LOGOOUCH,0x082a1016,
+0x016082a1,8,6,0,ARROWCLIMB,SIDE38,0x0415080b,
+0x016082a1,8,6,0,ARROWSWIM,LOGOTOP,0x082a1016,
+0x016082a1,8,6,0,ATTACKING9,SWIM10,0x016082a1,
+0x016082a1,8,6,0,BELOW33,PRESSWEST,0x16082a10,
+0x016082a1,8,6,0,CANCEL08,TOPFIRED,0x202c1054,
+0x016082a1,8,6,0,CONTINUEWAKE,HIP6,0x1016082a,
+0x016082a1,8,6,0,CONTINUEWAKE,HIPL,0x1016082a,
+0x016082a1,8,6,0,DEADMIDDLE,TOUP05,0x2a101608,
+0x016082a1,8,6,0,ARROWSWIMMING,SKIN9,0x415080b0,
+0x016082a1,8,6,0,BACKFALLEN,NUMABOVE,0x20a84058,
+0x016082a1,8,6,0,BARUP,CANCELWALKING,0x202c1054,
+0x016082a1,8,6,0,CLIMB0,FROMRIGHTATK,0x405820a8,
+0x016082a1,8,6,0,DEFAULTR,SLEEPING34,0x820a8405,
+0x016082a1,8,6,0,DIE,TORIGHTBOUNCING,0x415080b0,
+0x016082a1,8,6,0,BELOWPUSH,RIGHTFLYING,0x080b0415,
+0x016082a1,8,6,0,BOX34,DIGITALFROMLEFT,0x1054202c,
+0x016082a1,8,6,0,CLOSE6,DIGITALFORWARD,0x1054202c,
+0x016082a1,8,6,0,CLOSEL,DIGITALFORWARD,0x1054202c,
+0x016082a1,8,6,0,DEMOSHOOTING,TURNING3,0x415080b0,
+0x016082a1,8,6,0,BLANKSPIT,JUMPINGBOTTOM,0x2c105420,
+0x016082a1,8,6,0,BACKGROUNDA,FIRINGOUTSIDE,0x820a8405,
+0x016082a1,8,6,0,BELOWPUSH,DIGITALFROMLEFT,0x405820a8,
+0x016082a1,8,6,0,CONTINUE02,CREDITSDUCKING,0x2c105420,
+0x00006097,7,5,0,ARMS22,LAND1,0x8000304b,
+0x00006097,7,5,0,ARMS25,LANDD,0x8000304b,
+0x00006097,7,5,0,ATKC,TOPOUCH,0x04b80003,
+0x00006097,7,5,0,BACK,DEFAULT,0x0001825c,
+0x00006097,7,5,0,BARD,SCORE38,0x12e0000c,
+0x00006097,7,5,0,ARROWATK,UPRUN,0x04b80003,
+0x00006097,7,5,0,ATK6,LOADGAMED,0x5c000182,
+0x00006097,7,5,0,ATKL,LOADGAMED,0x5c000182,
+0x00006097,7,5,0,BACK0,DEFAULTR,0x0001825c,
+0x00006097,7,5,0,BACK3,DEFAULTU,0x0001825c,
+0x00006097,7,5,0,BACKA,DEFAULT7,0x0001825c,
+0x00006097,7,5,0,BACKB,DEFAULT8,0x0001825c,
+0x00006097,7,5,0,BACKC,DEFAULT9,0x0001825c,
+0x00006097,7,5,0,BACKSLAP,FIREC,0x0001825c,
+0x00006097,7,5,0,BARSLAP,FIRE20,0x0000c12e,
+0x00006097,7,5,0,BELOW34,PRESSA,0x06097000,
+0x00006097,7,5,0,ABOVEATK,EMPTY16,0x0000c12e,
+0x00006097,7,5,0,ARM23,SPINNING17,0x8000304b,
+0x00006097,7,5,0,ARM25,BEGINRIGHT,0x0000c12e,
+0x00006097,7,5,0,ARM36,SPITCENTER,0x00609700,
+0x00006097,7,5,0,ARMCENTER,SPIT36,0x00609700,
+0x00006097,7,5,0,ARMSU,BEGINRIGHT,0x0000c12e,
+0x00006097,7,5,0,ATK1,LOADGAMEDIE,0x5c000182,
+0x00006097,7,5,0,ATK27,BEGINRIGHT,0x0000c12e,
+0x00006097,7,5,0,ATK34,SPITCENTER,0x00609700,
+0x00006097,7,5,0,ATKCENTER,SPIT34,0x00609700,
+0x00006097,7,5,0,BACK18,HITINSIDE,0x0000c12e,
+0x00006097,7,5,0,BARTHROW,BELLY03,0xc12e0000,
+0x00006097,7,5,0,BG36,BORDERSTAMP,0x000c12e0,
+0x00006097,7,5,0,ARMS10,NEWSWIMMING,0x04b80003,
+0x00006097,7,5,0,ARROWMIDDLE,START4,0x00304b80,
+0x00006097,7,5,0,ATKDOWN,SELECTOR18,0x00609700,
+0x00006097,7,5,0,BACK21,DEFAULTTURN,0x0001825c,
+0x00006097,7,5,0,BGOPEN,TAUNTCENTER,0x00609700,
+0x00006097,7,5,0,ABOVE25,EMPTYFORWARD,0x0000c12e,
+0x00006097,7,5,0,ABOVEFALLING,RUNLEFT,0x001825c0,
+0x00006097,7,5,0,ARROWIDLE,SLEEPABOVE,0x97000060,
+0x00006097,7,5,0,BANNERWALKED,PRESS33,0x000304b8,
+0x00006097,7,5,0,ABOVETURNING,LEGFROMLEFT,0x60970000,
+0x00006097,7,5,0,BACKGLIDING,DEFAULTSLIDING,0x0001825c,
+0x00055841,7,5,0,07,QUITFLY,0x002ac208,
+0x00055841,7,5,0,24,FLOAT02,0x10400156,
+0x00055841,7,5,0,ARMS22,UPB,0x082000ab,
+0x00055841,7,5,0,BEGIN,NO00,0x208002ac,
+0x00055841,7,5,0,BEGIND,NO0,0x208002ac,
+0x00055841,7,5,0,BG0,BODYUP,0x002ac208,
+0x00055841,7,5,0,ABOVE17,NUMR,0x00156104,
+0x00055841,7,5,0,BGSLAM,DONE7,0x10400156,
+0x00055841,7,5,0,ARMSE,EARNORTH,0x082000ab,
+0x00055841,7,5,0,ARROW3,SLEEP20,0x82000ab0,
+0x00055841,7,5,0,ARROW37,SLEEP8,0x82000ab0,
+0x00055841,7,5,0,BEGIND,THROW21,0x208002ac,
+0x00055841,7,5,0,BONEC,EXTRAS24,0x208002ac,
+0x00055841,7,5,0,BONEE,EXTRAS22,0x208002ac,
+0x00055841,7,5,0,BONUSRIGHT,D13,0x82000ab0,
+0x00055841,7,5,0,BACKATK,NUMOUTER,0x00156104,
+0x00055841,7,5,0,BAR20,ERASEABOVE,0x00ab0820,
+0x00055841,7,5,0,BLANKSTAMP,TURN3,0x00156104,
+0x00055841,7,5,0,BOXTURN,EXTRAS04,0x208002ac,
+0x00055841,7,5,0,BROW37,MAINMENU8,0x00156104,
+0x00055841,7,5,0,BROW8,MAINMENU37,0x00156104,
+0x00055841,7,5,0,BROWN,MAINMENU37,0x00156104,
+0x00055841,7,5,0,BROWTOLEFT,HOCKB,0x208002ac,
+0x00055841,7,5,0,ATTACK36,QUITCHEER,0x002ac208,
+0x00055841,7,5,0,BANNERNORTH,YESHIT,0xc208002a,
+0x00055841,7,5,0,BONETORIGHT,FRAME8,0x82000ab0,
+0x00055841,7,5,0,BONUSEATING,SAVE34,0x000ab082,
+0x00055841,7,5,0,BOX17,DEFAULTSHOOT,0x61040015,
+0x00055841,7,5,0,ATKTODOWN,DIGITSROLL,0x082000ab,
+0x00055841,7,5,0,BACKGLIDING,MIDDLE16,0x41000558,
+0x00055841,7,5,0,BARMIDDLE,SLEEPRIGHT,0x0ab08200,
+0x00055841,7,5,0,BONETODOWN,FROMLEFT0,0x84100055,
+0x00055841,7,5,0,BOTTOMHURT,YESWALKED,0x61040015,
+0x00055841,7,5,0,BEGIN03,BONUSFROMRIGHT,0x2ac20800,
+0x00055841,7,5,0,BACKDROPTHROWING,START18,0x05584100,
+0x00055841,7,5,0,BANNERINTRO,STOMACHOUTER,0x000ab082,
+0x00055841,7,5,0,BEGININNER,STAGESLAMMING,0x10005584,
+0x00055841,7,5,0,BACKBUTTONEAST,ROLLINGBACK,0xb082000a,
+0x00055841,7,5,0,BLANKSTOMP,DUCKINGFROMLEFT,0x10005584,
+0x00055841,7,5,0,BODYBACKWARD,OPENINGFROMLEFT,0x00156104,
+0x001a43c1,9,5,0,BAR21,WALK14,0x21e0800d,
+0x001a43c1,9,5,0,BONE,HOCKTOP,0x87820034,
+0x001a43c1,9,5,0,BURST,OKWAKE,0x34878200,
+0x001a43c1,9,5,0,EARS06,NUM26,0x20034878,
+0x001a43c1,9,5,0,EARSEAST,NO0,0x20034878,
+0x001a43c1,9,5,0,BACK05,NOSTART,0x20034878,
+0x001a43c1,9,5,0,DONE3,ENTERTOP,0x400690f0,
+0x001a43c1,9,5,0,ABOVE1,BLOWING20,0x0400690f,
+0x001a43c1,9,5,0,ABOVE10,BLOWING8,0x0400690f,
+0x001a43c1,9,5,0,ABOVE16,BLOWING2,0x0400690f,
+0x001a43c1,9,5,0,ARM26,SAVEEATING,0x00348782,
+0x001a43c1,9,5,0,ARMS9,FONTFIRING,0x21e0800d,
+0x001a43c1,9,5,0,ATK15,TODOWNWAKE,0x48782003,
+0x001a43c1,9,5,0,CHEST21,EXTRAS29,0x20034878,
+0x001a43c1,9,5,0,CHEST29,EXTRAS21,0x20034878,
+0x001a43c1,9,5,0,CHEST30,EXTRAS38,0x20034878,
+0x001a43c1,9,5,0,CHEST38,EXTRAS30,0x20034878,
+0x001a43c1,9,5,0,DUCK01,YELLING36,0xf0400690,
+0x001a43c1,9,5,0,EARLEFT,OKFIRING,0x0f040069,
+0x001a43c1,9,5,0,EARSEAST,THROW21,0x20034878,
+0x001a43c1,9,5,0,EATING0,YESFIRED,0x0f040069,
+0x001a43c1,9,5,0,ENTERUP,QUITFIRE,0x400690f0,
+0x001a43c1,9,5,0,ARROWFALL,JUMPED17,0xd21e0800,
+0x001a43c1,9,5,0,BARFALLING,FLYINGU,0x78200348,
+0x001a43c1,9,5,0,CHEER39,SPITTING27,0xa43c1001,
+0x001a43c1,9,5,0,DANCELEFT,LANDED20,0x800d21e0,
+0x001a43c1,9,5,0,DEMOSTEP,LETTERS08,0x43c1001a,
+0x001a43c1,9,5,0,DIGITALSLAM,TAUNT5,0x01a43c10,
+0x001a43c1,9,5,0,DUCKLEFT,LEVELSTEP,0xd21e0800,
+0x001a43c1,9,5,0,EASTLOSE,SLAPSOUTH,0x800d21e0,
+0x001a43c1,9,5,0,BELOWSPITTING,DUCK14,0x03487820,
+0x001a43c1,9,5,0,CANCEL36,CROUCHNORTH,0x1e0800d2,
+0x001a43c1,9,5,0,CANCELTAUNT,HORNEAST,0x78200348,
+0x001a43c1,9,5,0,CENTER11,HEALTHTAUNT,0x0400690f,
+0x001a43c1,9,5,0,DEMOSTEP,LETTERBELOW,0x43c1001a,
+0x001a43c1,9,5,0,EXTRASFIRING,PAUSE14,0x43c1001a,
+0x001a43c1,9,5,0,BACKBUTTONWALK,OUCHTOP,0x800d21e0,
+0x001a43c1,9,5,0,BORDERD,CONTINUEFIRING,0x400690f0,
+0x001a43c1,9,5,0,CLOSE20,NUMBERSLANDING,0x1a43c100,
+0x001a43c1,9,5,0,CROUCHOUTER,MARKERWAVE,0x0400690f,
+0x00249009,6,5,0,A,RUN30,0x40240092,
+0x00249009,6,5,0,04,DONE13,0x00492012,
+0x00249009,6,5,0,1,FRONT33,0x09240240,
+0x00249009,6,5,0,11,BONUSD,0x80124804,
+0x00249009,6,5,0,14,BEGIN9,0x00924024,
+0x00249009,6,5,0,17,BEGIN6,0x00924024,
+0x00249009,6,5,0,17,BEGINL,0x00924024,
+0x00249009,6,5,0,1,BONUSOUCH,0x80124804,
+0x00249009,6,5,0,33,FOOTLEFT,0x01248048,
+0x00249009,6,5,0,ARM18,DOWN2,0x01200492,
+0x00249009,6,5,0,ARM9,RANK38,0x00249009,
+0x00249009,6,5,0,ARMS11,NO08,0x24024009,
+0x00249009,6,5,0,ARMS7,RUN30,0x40240092,
+0x00249009,6,5,0,ARMU,DOWN21,0x01200492,
+0x00249009,6,5,0,ATK16,DOWN2,0x01200492,
+0x00249009,6,5,0,ATK35,FONT4,0x00900249,
+0x00249009,6,5,0,ATK4,OUCH32,0x01200492,
+0x00249009,6,5,0,ATKC,FIRE00,0x00249009,
+0x00249009,6,5,0,BACK03,BOX5,0x00900249,
+0x00249009,6,5,0,24,THROWING16,0x12004920,
+0x00249009,6,5,0,ARM4,RANKINGE,0x00249009,
+0x00249009,6,5,0,ARMSE,NODYING,0x24024009,
+0x00249009,6,5,0,BACK03,TITLE1,0x00900249,
+0x00249009,6,5,0,BACK08,TOOTHD,0x00924024,
+0x00249009,6,5,0,BACK9,TITLE18,0x00900249,
+0x00249009,6,5,0,BACKA,TOOTH38,0x00924024,
+0x00249009,6,5,0,ARM7,SLAPTOLEFT,0x40092402,
+0x00249009,6,5,0,ARMS1,RUNNING02,0x00249009,
+0x00249009,6,5,0,ARMS17,RUNNING8,0x00249009,
+0x00249009,6,5,0,ATTACK32,OUCH00,0x09002490,
+0x00249009,6,5,0,ATTACKR,FIREFRONT,0x49201200,
+0x00249009,6,5,0,BACK35,SPINNING04,0x80480124,
+0x00249009,6,5,0,BACKBEGIN,EATINGB,0x80480124,
+0x00249009,6,5,0,BACKFIRE,RVICTORY,0x00900249,
+0x00249009,6,5,0,ARROWRUNNING,RANK20,0x24804801,
+0x00249009,6,5,0,ATTACK33,EASTWAVING,0x09240240,
+0x00249009,6,5,0,BACK29,BACKBUTTON09,0x92012004,
+0x00249009,6,5,0,ARROWDAMAGE,OUTSIDE13,0x40092402,
+0x00249009,6,5,0,BACKDROP02,BARROLLING,0x00924024,
+0x00249009,6,5,0,BACKBUTTONTURN,BANNER04,0x00492012,
+0x00288255,8,5,0,BGB,PRESS30,0x14412a80,
+0x00288255,8,5,0,DDONE,EAST0,0x02882550,
+0x00288255,8,5,0,ARMSABOVE,R09,0x095400a2,
+0x00288255,8,5,0,BAR16,TOPDONE,0x12a80144,
+0x00288255,8,5,0,BEGINU,KICK19,0x05104aa0,
+0x00288255,8,5,0,BLANK14,LAND8,0xaa005104,
+0x00288255,8,5,0,BORDER0,SPIT7,0x400a2095,
+0x00288255,8,5,0,BORDER03,SPIT,0x400a2095,
+0x00288255,8,5,0,BORDER9,SPITD,0x400a2095,
+0x00288255,8,5,0,DEAD13,HANDS5,0x4aa00510,
+0x00288255,8,5,0,DEAD5,HANDS13,0x4aa00510,
+0x00288255,8,5,0,DEMO10,OUCH35,0x014412a8,
+0x00288255,8,5,0,BANNER23,SLAM37,0x400a2095,
+0x00288255,8,5,0,BELLY09,PANEL22,0x400a2095,
+0x00288255,8,5,0,BELLY27,PANEL20,0x400a2095,
+0x00288255,8,5,0,BELOWIDLE,RUN16,0x12a80144,
+0x00288255,8,5,0,BROWWEST,LEVEL4,0x25500288,
+0x00288255,8,5,0,CHARLAND,POOPUP,0xa2095400,
+0x00288255,8,5,0,ARMS20,TAILMIDDLE,0x4aa00510,
+0x00288255,8,5,0,ARMS37,TOLEFTSLAP,0x5400a209,
+0x00288255,8,5,0,BACKOPEN,DEFAULT8,0x00288255,
+0x00288255,8,5,0,BELOWCLOSE,FACE07,0x12a80144,
+0x00288255,8,5,0,BGBELOW,ERASEFACE,0x95400a20,
+0x00288255,8,5,0,BLANKTOP,OPTIONS1,0xaa005104,
+0x00288255,8,5,0,BORDER0,SLAMMED38,0x400a2095,
+0x00288255,8,5,0,CENTEROPEN,STAGE6,0x005104aa,
+0x00288255,8,5,0,CENTEROPEN,STAGEL,0x005104aa,
+0x00288255,8,5,0,CONTINUE3,ERASE23,0x2095400a,
+0x00288255,8,5,0,DEAD35,SLEEPING09,0xa2095400,
+0x00288255,8,5,0,ARROW28,CHEERTOLEFT,0x005104aa,
+0x00288255,8,5,0,BACKDROPA,STOMACH30,0x412a8014,
+0x00288255,8,5,0,BELOW0,WORLDVICTORY,0x02882550,
+0x00288255,8,5,0,BOXSCREAM,PRESSREST,0x14412a80,
+0x00288255,8,5,0,CLIMB38,FROMRIGHT10,0x82550028,
+0x00288255,8,5,0,BONUSWALK,DANCINGLEFT,0x400a2095,
+0x00288255,8,5,0,BORDER02,STOMACHFRONT,0x412a8014,
+0x00288255,8,5,0,CONTINUEEATING,NECK33,0x8014412a,
+0x00288255,8,5,0,CONTINUETOLEFT,NODRAW,0x8014412a,
+0x00288255,8,5,0,DEFAULTDYING,DUCKINGB,0x50028825,
+0x00288255,8,5,0,ARMTORIGHT,BACKDROPPOOP,0x400a2095,
+0x002a0c21,7,5,0,7,TOUP02,0x01506108,
+0x002a0c21,7,5,0,3,ARMSTOUP,0x08400a83,
+0x002a0c21,7,5,0,ALT,TOUP02,0x01506108,
+0x002a0c21,7,5,0,ATK38,UFLOAT,0x08400a83,
+0x002a0c21,7,5,0,BG,BONUSREST,0xc21002a0,
+0x002a0c21,7,5,0,BLANK14,PINK,0x20054184,
+0x002a0c21,7,5,0,BLOWSIDE,R19,0x20054184,
+0x002a0c21,7,5,0,BODY37,BOX04,0x02a0c210,
+0x002a0c21,7,5,0,CHAR01,NEW30,0x42005418,
+0x002a0c21,7,5,0,ATTACK33,BAR28,0x21002a0c,
+0x002a0c21,7,5,0,ATTACK34,BAR27,0x21002a0c,
+0x002a0c21,7,5,0,BEGIN22,LOSE24,0x00a83084,
+0x002a0c21,7,5,0,BONE00,TITLE13,0x80150610,
+0x002a0c21,7,5,0,BONE02,TITLE11,0x80150610,
+0x002a0c21,7,5,0,BONUSREST,BOX2,0xc21002a0,
+0x002a0c21,7,5,0,BONUSREST,BURN,0xc21002a0,
+0x002a0c21,7,5,0,BROW26,HEALTHB,0x01506108,
+0x002a0c21,7,5,0,CENTERA,WEST34,0x10801506,
+0x002a0c21,7,5,0,CHAR09,NEWFIRE,0x42005418,
+0x002a0c21,7,5,0,BACKE,EATINGREAR,0x05418420,
+0x002a0c21,7,5,0,BELLY30,WAITREAR,0x00a83084,
+0x002a0c21,7,5,0,BOXATK,REARSTOMP,0x41842005,
+0x002a0c21,7,5,0,CENTERSPIT,NAIL0,0x01506108,
+0x002a0c21,7,5,0,ARMS22,BELLYCENTER,0x8308400a,
+0x002a0c21,7,5,0,ARMSTOUP,INSIDEWIN,0x08400a83,
+0x002a0c21,7,5,0,ATTACK2,HORNCENTER,0x84200541,
+0x002a0c21,7,5,0,BACKBLOWING,DANCED,0x18420054,
+0x002a0c21,7,5,0,BONE24,WALKEDINNER,0xa0c21002,
+0x002a0c21,7,5,0,BONUS39,DIGITSDEAD,0x20054184,
+0x002a0c21,7,5,0,BOX32,SOUTHFALLING,0x0a830840,
+0x002a0c21,7,5,0,BUBBLE,PAUSEDINNER,0x0a830840,
+0x002a0c21,7,5,0,CANCELSPIT,TOLEFT3,0x02a0c210,
+0x002a0c21,7,5,0,BOTTOMSHOOTING,NEW09,0x002a0c21,
+0x002a0c21,7,5,0,BOXOUTER,QUITGAMEDIE,0x21002a0c,
+0x002a0c21,7,5,0,CENTERENTER,FIRING30,0x01506108,
+0x002a0c21,7,5,0,BEGINOUTER,NUMBERSTURN,0x308400a8,
+0x002a0c21,7,5,0,BLANKDUCKING,RANKFLOAT,0x61080150,
+0x002a0c21,7,5,0,BLOWMIDDLE,CHARYELLING,0x10801506,
+0x002a0c21,7,5,0,BACKGLIDING,OUTSIDEINTRO,0x21002a0c,
+0x002a0c21,7,5,0,BOTTOMGLIDING,DOWNSWIMMING,0x42005418,
+0x00421c41,7,5,0,31,UPEAT,0x80210e20,
+0x00421c41,7,5,0,1UP,LOGO00,0x38820084,
+0x00421c41,7,5,0,BG18,NUM26,0x4100421c,
+0x00421c41,7,5,0,BGD,MAPEAT,0x4100421c,
+0x00421c41,7,5,0,ARM28,STEP00,0x10401087,
+0x00421c41,7,5,0,ARM37,STEP01,0x10401087,
+0x00421c41,7,5,0,ARMS11,FEETA,0x04010871,
+0x00421c41,7,5,0,ATK19,BGSPIT,0x10401087,
+0x00421c41,7,5,0,BGEAT,WALK21,0x4100421c,
+0x00421c41,7,5,0,CHESTU,FLY05,0x10871040,
+0x00421c41,7,5,0,CHESTUP,FLY0,0x10871040,
+0x00421c41,7,5,0,ABOVE13,KICK31,0x2080210e,
+0x00421c41,7,5,0,BEGIN6,THROW14,0x38820084,
+0x00421c41,7,5,0,BEGINL,THROW14,0x38820084,
+0x00421c41,7,5,0,BLANKFACE,COOL,0x2080210e,
+0x00421c41,7,5,0,BOX09,MAPDANCE,0x0210e208,
+0x00421c41,7,5,0,BROW21,START03,0x20084388,
+0x00421c41,7,5,0,CLIMB2,OUTRO02,0x82008438,
+0x00421c41,7,5,0,ATTACK18,ERASE14,0x80210e20,
+0x00421c41,7,5,0,ATTACK36,ERASE12,0x80210e20,
+0x00421c41,7,5,0,BACKFLOAT,STEP08,0x10871040,
+0x00421c41,7,5,0,BEGIN14,ENDINNER,0x10401087,
+0x00421c41,7,5,0,BELOWSTEP,OKROLL,0x0e208021,
+0x00421c41,7,5,0,BGSLAM,FLOATLEFT,0x100421c4,
+0x00421c41,7,5,0,BLANK05,WESTYELL,0x2080210e,
+0x00421c41,7,5,0,BONEU,TITLEABOVE,0x82008438,
+0x00421c41,7,5,0,BOX10,WAITTODOWN,0x10e20802,
+0x00421c41,7,5,0,CANCELDEAD,TOOTH,0x0421c410,
+0x00421c41,7,5,0,BARD,CANCELJUMPING,0x04010871,
+0x00421c41,7,5,0,BEGINABOVE,THROW32,0x100421c4,
+0x00421c41,7,5,0,BORDERBACK,CLOSE02,0x10401087,
+0x00421c41,7,5,0,ARROWYELLING,TOPPULL,0x80210e20,
+0x00421c41,7,5,0,BACKBUTTONOPEN,NUM28,0x01087104,
+0x00421c41,7,5,0,BANNERLOSE,FALLING32,0x20084388,
+0x00421c41,7,5,0,BARYELLING,TOPSCREAM,0x88200843,
+0x00421c41,7,5,0,BLANKFRONT,BOTTOMEAT,0x0e208021,
+0x00421c41,7,5,0,BLOWTOLEFT,HANDSEAST,0x20084388,
+0x00421c41,7,5,0,BROW20,MAINMENUSLEEP,0x421c4100,
+0x00421c41,7,5,0,ABOVEDAMAGE,BANNERFLEW,0x10401087,
+0x00421c41,7,5,0,ABOVEFLOATING,OKDAMAGE,0x421c4100,
+0x03061893,10,5,0,BG06,WAKE28,0x4981830c,
+0x03061893,10,5,0,BG09,WAKE25,0x4981830c,
+0x03061893,10,5,0,BG15,WAKE19,0x4981830c,
+0x03061893,10,5,0,BG18,WAKE16,0x4981830c,
+0x03061893,10,5,0,BGRUN,WAKE1,0x4981830c,
+0x03061893,10,5,0,FORWARD,REARC,0xc18624c0,
+0x03061893,10,5,0,LAND18,STEP04,0x981830c4,
+0x03061893,10,5,0,LEVEL1,REST21,0xc18624c0,
+0x03061893,10,5,0,LEVEL11,REST9,0xc18624c0,
+0x03061893,10,5,0,LEVEL18,REST2,0xc18624c0,
+0x03061893,10,5,0,POOP24,TEXT25,0xc3126060,
+0x03061893,10,5,0,BEARD3,RANKROLL,0x060c3126,
+0x03061893,10,5,0,BGSTAND,OUTRO37,0x93030618,
+0x03061893,10,5,0,BOX34,CURSORWIN,0x3126060c,
+0x03061893,10,5,0,DAMAGEUP,DSTART,0xc4981830,
+0x03061893,10,5,0,FIRED05,STAND04,0x0c498183,
+0x03061893,10,5,0,HIP28,TURNBELOW,0x18930306,
+0x03061893,10,5,0,BG18,INNERSLAMMED,0xc0c18624,
+0x03061893,10,5,0,LANDFRONT,WINGS04,0x89303061,
+0x03061893,10,5,0,METER03,WALKING30,0x30c49818,
+0x03061893,10,5,0,BACK18,SLEEPINGSIDE,0x93030618,
+0x03061893,10,5,0,BODYTORIGHT,GLYPH04,0x1830c498,
+0x03061893,10,5,0,CHEER17,OUTSIDESLAM,0x1830c498,
+0x03061893,10,5,0,BROW5,RANKINGBACKWARD,0x0c312606,
+0x03061893,10,5,0,DANCEBACKWARD,METER04,0x4c0c1862,
+0x03061893,10,5,0,DEATHOUTER,WORLDSTAND,0x4981830c,
+0x03061893,10,5,0,FACESTART,LOGOYELLING,0x60c31260,
+0x03061893,10,5,0,FRAMESTOMP,RANFORWARD,0x830c4981,
+0x03061893,10,5,0,FROMLEFTE,SIDEFALLING,0x981830c4,
+0x03061893,10,5,0,FROMLEFTSTAND,STAMP30,0x830c4981,
+0x03061893,10,5,0,BANNERBELOW,EXTRASBELOW,0xc0c18624,
+0x03061893,10,5,0,BLANKBOUNCING,INNERBLOW,0xc0c18624,
+0x03061893,10,5,0,BOXTAUNT,RANKINGBLOWING,0x3126060c,
+0x03061893,10,5,0,EMPTYSCREAM,LIMBFORWARD,0x30c49818,
+0x03061893,10,5,0,JUMPING00,OPTIONSEATING,0x26060c31,
+0x03061893,10,5,0,PANELTHROW,VICTORYABOVE,0x61893030,
+0x03061893,10,5,0,RANFORWARD,THROWINGFACE,0x830c4981,
+0x03061893,10,5,0,LETTERSLAMMED,PARTSTOLEFT,0x61893030,
+0x05a6854f,14,5,0,BOX32,LOADOUTSIDE,0x3c169a15,
+0x05a6854f,14,5,0,DIGITALHIT,LOGOPULL,0x6854f05a,
+0x05a6854f,14,5,0,DONE06,SLAMBACKWARD,0xc169a153,
+0x05a6854f,14,5,0,ATTACKINGBACKWARD,USPIT,0xd342a782,
+0x05a6854f,14,5,0,CANCEL38,TODOWNSPINNING,0x6854f05a,
+0x05a6854f,14,5,0,LOADGAME20,OUTSIDETAUNT,0x3c169a15,
+0x05a6854f,14,5,0,RANKINGDYING,THROWBELOW,0x782d342a,
+0x05a6854f,14,5,0,GLYPHFLOAT,LOADGAMESPINNING,0x2a782d34,

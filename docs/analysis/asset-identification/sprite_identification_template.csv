@@ -8,7 +8,7 @@ sprite_hex,sprite_decimal,regional_fr_hex,regional_de_hex,levels,segments,repres
 0x004c9138,5017912,,,CLOU;CRYS;SOAR,stage0;stage1;stage2;stage3;stage4,SOAR/stage2/sprites/sprite_5017912_anim00_f00.png,88,,,,
 0x006b9a6f,7051887,,,FOOD;SNOW,primary;stage2,SNOW/primary/sprites/sprite_7051887_anim00_f13.png,35,,,,
 0x00ce0610,13501968,,,CSTL;FOOD;SEVN;TMPL,primary;stage0;stage1;stage3,SEVN/primary/sprites/sprite_13501968_anim00.png,7,,,,
-0x00e2f188,14872968,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_14872968_anim00_f04.png,260,,,,
+0x00e2f188,14872968,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_14872968_anim00_f04.png,260,Number glyph frames 0-9,,visual-user,User identified MENU/primary frames f00-f09 as digits 0-9; obvious NUM/NUMBER/DIGITS names do not hash to this ID
 0x02098010,34177040,,,TMPL,primary,TMPL/primary/sprites/sprite_34177040_anim00.png,1,,,,
 0x022e3442,36582466,,,WIZZ,primary,WIZZ/primary/sprites/sprite_36582466_anim00_f15.png,65,,,,
 0x0239cb33,37342003,,,HEAD,primary,docs/analysis/asset-identification/direct_blb_thumbnails/sprite_37342003_direct.png,1,,,,
@@ -66,7 +66,7 @@ sprite_hex,sprite_decimal,regional_fr_hex,regional_de_hex,levels,segments,repres
 0x0aa18900,178358528,,,KLOG,primary,KLOG/primary/sprites/sprite_178358528_anim00_f12.png,15,,,,
 0x0aabc010,179027984,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_179027984_anim00_f00.png,84,,,,
 0x0ace0610,181274128,,,CSTL;FOOD;SEVN;TMPL,primary;stage0;stage1;stage3,SEVN/primary/sprites/sprite_181274128_anim00.png,7,,,,
-0x0ad0f813,181467155,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_181467155_anim00.png,26,,,,
+0x0ad0f813,181467155,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_181467155_anim00.png,26,Text: Paused,PAUSED,formula-confirmed,Agent visual read as PAUSED; exact name hashes to this ID with seed 0x28c0e011
 0x0b0811bb,185078203,,,HEAD,primary,HEAD/primary/sprites/sprite_185078203_anim00_f07.png,9,,,,
 0x0b081dbb,185081275,,,HEAD,primary,HEAD/primary/sprites/sprite_185081275_anim00_f07.png,9,,,,
 0x0b2084d0,186680528,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_186680528_anim00.gif,21,,,,
@@ -274,10 +274,10 @@ sprite_hex,sprite_decimal,regional_fr_hex,regional_de_hex,levels,segments,repres
 0x64bb1cbe,1689984190,,,BRG1;PHRO;TMPL,stage0;stage1;stage2;stage3,TMPL/stage2/sprites/sprite_1689984190_anim00_f10.png,77,,,,
 0x657c322c,1702638124,,,CSTL;FOOD;HEAD;MOSS;PHRO;SNOW,primary;stage0;stage1;stage2;stage3;stage5,HEAD/primary/sprites/sprite_1702638124_anim00_f05.png,104,,,,
 0x68c01218,1757418008,,,MENU,stage0;stage4;stage5,MENU/stage5/sprites/sprite_1757418008_anim00_f28.png,90,,,,
-0x68c0f413,1757475859,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1757475859_anim00.png,26,,,,
+0x68c0f413,1757475859,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1757475859_anim00.png,26,Text: Quit,QUIT,formula-confirmed,User identified MENU/primary sprite as QUIT; exact name hashes to this ID
 0x69588258,1767408216,,,GLEN,primary,docs/analysis/asset-identification/direct_blb_thumbnails/sprite_1767408216_direct.png,1,,,,
-0x69c04050,1774207056,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1774207056_anim00.png,26,,,,
-0x69c8f473,1774777459,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1774777459_anim00.png,26,,,,
+0x69c04050,1774207056,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1774207056_anim00.png,26,Text: Continue,CONTINUE,formula-confirmed,User identified MENU/primary sprite as CONTINUE; exact name hashes to this ID
+0x69c8f473,1774777459,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1774777459_anim00.png,26,Text: Quit Game,QUITGAME,formula-confirmed,User identified MENU/primary sprite as QUIT GAME; calcHash ignores spaces so exact token is QUITGAME
 0x6a351094,1781862548,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1781862548_anim00_f04.png,208,,,,
 0x6c22083a,1814169658,,,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_1814169658_anim00_f68.png,2197,,,,
 0x6c289c1c,1814600732,,,CSTL,stage0;stage1;stage3,CSTL/stage3/sprites/sprite_1814600732_anim00_f04.png,39,,,,
@@ -317,7 +317,7 @@ sprite_hex,sprite_decimal,regional_fr_hex,regional_de_hex,levels,segments,repres
 0x888da193,2290983315,,,KLOG,primary,KLOG/primary/sprites/sprite_2290983315_anim00_f00.png,4,,,,
 0x88a16190,2292277648,,,SEVN,primary,SEVN/primary/sprites/sprite_2292277648_anim00.png,1,,,,
 0x88a28194,2292351380,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_2292351380_anim00.png,26,,,,
-0x88b9833c,2293859132,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_2293859132_anim00.gif,21,,,,
+0x88b9833c,2293859132,,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,primary,WIZZ/primary/sprites/sprite_2293859132_anim00.gif,21,Klaymen (player) running/leaping cycle,,visual-confirmed,confirmed from anim gif; floor=15; common (21 levels). DIE_SNOW_AMASS_GUN was a collision.
 0x8a1940e1,2316910817,,,HEAD,primary,HEAD/primary/sprites/sprite_2316910817_anim00_f03.png,10,,,,
 0x8a3809f2,2318928370,,,HEAD,primary,HEAD/primary/sprites/sprite_2318928370_anim00_f03.png,7,,,,
 0x8a7ce022,2323439650,,,GLID;SCIE;SOAR;TMPL,primary;stage0;stage1;stage2;stage3;stage4,SOAR/primary/sprites/sprite_2323439650_anim00_f00.png,16,,,,
