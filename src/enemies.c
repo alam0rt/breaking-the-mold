@@ -16,6 +16,7 @@ extern void EntityStateSetWalk(void *e);
 extern void SetAnimationSpriteId(void *e, s32 id);
 extern void SetAnimationFrameCallback(void *e, u32 packed);
 extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z, s16 x, s16 y);
+extern void *InitEntitySprite(void *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
 extern void *InitCollectibleEntity(void *e, void *spawn);
 extern void *D_80010C64;
 extern void *D_80010CE4;
@@ -52,11 +53,23 @@ void *D_800A5B14;
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntityFromSpawn);
+void *InitCollectibleEntityFromSpawn(void *e, void *spawn, u32 spriteId) {
+    InitEntitySprite(e, spriteId, 0x3CA,
+                     *(s16 *)((u8 *)spawn + 0x8),
+                     (s16)(*(u16 *)((u8 *)spawn + 0xA) - 1), 0);
+    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    InitCollectibleEntity(e, spawn);
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleFromSpawn);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntityDirect);
+void *InitCollectibleEntityDirect(void *e, u32 spriteId, s16 x, s16 y) {
+    InitEntitySprite(e, spriteId, 0x3CA, x, y, 0);
+    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    InitCollectibleEntity(e, NULL);
+    return e;
+}
 
 void *CreateCollectibleAtPosition(void *e, void *spriteDef, s16 x, s16 y) {
     InitEntityWithSprite(e, spriteDef, 0x3CA, x, y);
