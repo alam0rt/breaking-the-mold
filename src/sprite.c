@@ -1,6 +1,10 @@
 #include "common.h"
 
 extern void *D_8001039C;
+extern u8 *g_pBlbHeapBase;
+extern void RenderTilemapHorizontalScroll(void *e);
+extern void RenderTilemapVerticalScroll(void *e);
+extern void SetupTilemapPrimitives(void *e);
 
 void *InitBasicEntityWithVtable(void *e, u16 val) {
     u8 *p = (u8 *)e;
@@ -30,7 +34,17 @@ INCLUDE_ASM("asm/nonmatchings/sprite", InitTilemapLayerRendering);
 
 INCLUDE_ASM("asm/nonmatchings/sprite", FreeMultiAllocResource);
 
-INCLUDE_ASM("asm/nonmatchings/sprite", RenderTilemapLayerWithScroll);
+void RenderTilemapLayerWithScroll(void *e) {
+    u8 idx;
+    u8 *p;
+    RenderTilemapHorizontalScroll(e);
+    RenderTilemapVerticalScroll(e);
+    SetupTilemapPrimitives(e);
+    idx = g_pBlbHeapBase[0xA088];
+    p = (u8 *)e + idx * 4;
+    *(s16 *)(p + 0x50) = -(*(s16 *)((u8 *)e + 0)) >> 4;
+    *(s16 *)(p + 0x52) = -(*(s16 *)((u8 *)e + 2)) >> 4;
+}
 
 INCLUDE_ASM("asm/nonmatchings/sprite", RenderTilemapHorizontalScroll);
 
