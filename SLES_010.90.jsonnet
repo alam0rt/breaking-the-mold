@@ -154,7 +154,7 @@ local bss(start, kind, vram) = {
         asm('667F4', 'passwd'),                          // 0x80075FF4 password entry UI
         asm('687E8', 'results'),                         // 0x80077FE8 HUD digits + results screen
         asm('69E3C', 'ending'),                          // 0x8007963C ending / credits
-        asm('6A9BC', 'level'),                           // 0x8007A1BC level-data ctx + playback sequence
+        c('6A9BC', 'level'),                             // 0x8007A1BC level-data ctx + playback sequence
         c('6B1B0', 'blbacc'),                          // 0x8007A9B0 BLB/level/tile/sprite TOC getters
         asm('6C7B8', 'sound'),                           // 0x8007BFB8 SPU upload, SFX, voice, CD audio
         asm('6D4FC', 'gstate'),                          // 0x8007CCFC InitGameState/respawn/level-start
