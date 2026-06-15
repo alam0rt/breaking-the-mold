@@ -20,7 +20,10 @@ INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlots);
 
 INCLUDE_ASM("asm/nonmatchings/layer", func_800194F4);
 
-INCLUDE_ASM("asm/nonmatchings/layer", ZeroEntityField);
+void *ZeroEntityField(void *e) {
+    *(s32 *)e = 0;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", FindLayerSlotByEntityPointer);
 

@@ -109,7 +109,9 @@ void func_8006EC1C(void *e) {
     *(u8 *)((u8 *)e + 0x1AF) = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006EC28);
+s32 func_8006EC28(s32 a, u8 b) {
+    return b ? b < 0x3C : 0;
+}
 
 typedef struct { s32 a; s32 b; } func_8006EC40_Pair;
 void func_8006EC40(void *e, func_8006EC40_Pair p) {
