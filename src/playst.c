@@ -1,5 +1,7 @@
 #include "common.h"
 
+extern s32 rand(void);
+
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerClearSwirlPortalEntity);
@@ -22,7 +24,12 @@ INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerColoredParticle);
 
 INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerDeathEffect);
 
-INCLUDE_ASM("asm/nonmatchings/playst", ApplyRandomRGBEffect);
+void ApplyRandomRGBEffect(void *e) {
+    *(u8 *)((u8 *)e + 0x15D) = rand();
+    *(u8 *)((u8 *)e + 0x15E) = rand();
+    *(u8 *)((u8 *)e + 0x15F) = rand();
+    *(u8 *)((u8 *)e + 0x1AE) = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerTickCallback);
 
