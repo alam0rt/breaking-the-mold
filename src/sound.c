@@ -23,7 +23,18 @@ INCLUDE_ASM("asm/nonmatchings/sound", InitSPUDefaults);
 
 INCLUDE_ASM("asm/nonmatchings/sound", UploadAudioToSPU);
 
-INCLUDE_ASM("asm/nonmatchings/sound", PopSPUUploadBlock);
+extern u8 D_8009CFB0[];
+
+void PopSPUUploadBlock(void) {
+    u8 cnt = D_800A6081;
+    if (cnt != 0) {
+        u16 sz;
+        cnt--;
+        sz = *(u16 *)(D_8009CFB0 + (u8)cnt * 12);
+        D_800A6081 = cnt;
+        D_800A6078 -= sz;
+    }
+}
 
 void func_8007C324(void) {
     D_800A6078 = 0;
