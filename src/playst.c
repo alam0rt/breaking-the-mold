@@ -61,7 +61,27 @@ void PlayerState_CooldownTick(void *e) {
     PlayerTickCallback(e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_FallWithRotation);
+/* Fall-with-rotation tick: gradually decays the player's vertical velocity
+ * (entity+0x50/+0x54) by 0xC00 per frame while still nonzero, and rotates
+ * the visual angle (entity+0x72) by +0x20 per frame, wrapping at 0x1000.
+ * Tail-calls PlayerTickCallback for the standard sprite/animation tick. */
+void PlayerState_FallWithRotation(Entity *e) {
+    s32 vy = *(s32 *)((u8 *)e + 0x50);
+    if (vy != 0) {
+        vy -= 0xC00;
+        *(s32 *)((u8 *)e + 0x50) = vy;
+        *(s32 *)((u8 *)e + 0x54) = vy;
+    }
+    {
+        u16 angle = *(u16 *)((u8 *)e + 0x72);
+        u16 new_angle = angle + 0x20;
+        *(u16 *)((u8 *)e + 0x72) = new_angle;
+        if (new_angle >= 0x1000) {
+            *(u16 *)((u8 *)e + 0x72) = angle - 0xFE0;
+        }
+    }
+    PlayerTickCallback(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
 
