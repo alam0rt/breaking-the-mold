@@ -21,7 +21,15 @@ INCLUDE_ASM("asm/nonmatchings/decor", UpdateDecorEntityTriggerColors);
 
 INCLUDE_ASM("asm/nonmatchings/decor", DecorEntityTickWithOffscreenCheck);
 
-INCLUDE_ASM("asm/nonmatchings/decor", EntityCollisionHandler_SpecialTrigger);
+void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
+    void *r = NULL;
+    if ((event & 0xFFFF) == 0x1016) {
+        r = e;
+        *(u8 *)((u8 *)e + 0x11D) = 1;
+        *(s16 *)((u8 *)e + 0x12) = 0;
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/decor", EntityCollision_FlagAndDispatch);
 

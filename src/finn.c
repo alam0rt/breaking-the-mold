@@ -126,7 +126,18 @@ void func_8006ECE4(u8 *e, u8 *o1, u8 *o2, u8 *o3) {
     *o3 = e[0x15C];
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006ED08);
+void func_8006ED08(u8 *e, u8 r, u8 g, u8 b) {
+    u8 *ptr = *(u8 **)(e + 0x34);
+    u8 t1, t2;
+    e[0x15A] = r;
+    t1 = *(volatile u8 *)(e + 0x15A);
+    e[0x15B] = g;
+    t2 = *(volatile u8 *)(e + 0x15B);
+    e[0x15C] = b;
+    ptr[0x34] = t1;
+    ptr[0x35] = t2;
+    ptr[0x36] = b;
+}
 
 u32 func_8006ED30(void *e) {
     return *(u32 *)((u8 *)e + 0x100);
