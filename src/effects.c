@@ -115,7 +115,13 @@ INCLUDE_ASM("asm/nonmatchings/effects", RenderFullScreenTileOverlay);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitScrollingLayerEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", OverlayEntityCallback);
+s32 OverlayEntityCallback(Entity *e, u32 ev) {
+    if ((ev & 0xFFFF) == 2) {
+        *(u8 *)(*(u32 *)((u8 *)e + 0x20) + 0xA) = 0;
+        *(u8 *)((u8 *)e + 0x34) = 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", func_80034B10);
 
