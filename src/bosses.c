@@ -15,6 +15,7 @@ extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
 extern void HazardActivateWithSound(Entity *e);
+extern void UpdateEntitySoundPanning(void *e, u32 sound);
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   D_800A5B98;
 void *D_800A5B9C;
@@ -307,7 +308,13 @@ void KloggDestroyCallback(void *e, u32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", SpawnParticleAndMenuEntity);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", KloggUpdateWithSound);
+void KloggUpdateWithSound(Entity *e) {
+    UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x110));
+    if (*(u16 *)((u8 *)e + 0x116) != 0) {
+        *(u16 *)((u8 *)e + 0x116) -= 1;
+    }
+    EntityUpdateCallback(e);
+}
 
 void KloggUpdateWithTimer(Entity *e) {
     u16 *ctr1 = (u16 *)((u8 *)e + 0x104);
