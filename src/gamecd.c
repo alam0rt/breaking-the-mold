@@ -1,11 +1,15 @@
 #include "common.h"
 
-extern void CdControl(s32 cmd, s32 a, s32 b);
+extern s32 CdControl(s32 cmd, void *param, void *result);
 extern void CdFlush(void);
+extern s32 D_8009B3D8[];
+extern u8 D_8009B43C[];
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u8 D_800A59E8;
 u8 D_800A59E9;
 u8 D_800A59EA;
+u8 D_800A59EC;
+s32 D_800A59F4;
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", LoadGameAssetLocations);
 
@@ -16,7 +20,11 @@ INCLUDE_ASM("asm/nonmatchings/gamecd", CdBLB_ReadSectors);
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", CdReadFileSync);
 
-INCLUDE_ASM("asm/nonmatchings/gamecd", CdSetModeAndSeek);
+s32 CdSetModeAndSeek(void) {
+    s32 track = D_800A59EC;
+    D_800A59F4 = D_8009B3D8[track];
+    return CdControl(0x1B, &D_8009B43C[track * 24], NULL) == 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", PlayCDAudioTrack);
 

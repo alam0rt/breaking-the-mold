@@ -12,6 +12,12 @@ extern void *D_80011388;
 extern void *D_80011268;
 extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
+extern void EntitySetState(Entity *e, u32 marker, void *fn);
+/* gp_rel tentative defs (sdata blob owns the strong defs). */
+u32   D_800A5C10;
+void *D_800A5C14;
+u32   D_800A5C18;
+void *D_800A5C1C;
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
@@ -148,7 +154,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardMoveCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", BossRandomAttackChoice);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackCounterState);
+void ShrineyGuardAttackCounterState(Entity *e) {
+    u8 *counter = (u8 *)e + 0x114;
+    (*counter)++;
+    if (*counter < 3) {
+        EntitySetState(e, D_800A5C10, D_800A5C14);
+    } else {
+        EntitySetState(e, D_800A5C18, D_800A5C1C);
+        *counter = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardSetAttackState);
 
