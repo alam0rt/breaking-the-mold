@@ -18,6 +18,8 @@ extern void HazardActivateWithSound(Entity *e);
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   D_800A5B98;
 void *D_800A5B9C;
+u32   D_800A5BF0;
+void *D_800A5BF4;
 u32   D_800A5C10;
 void *D_800A5C14;
 u32   D_800A5C18;
@@ -164,7 +166,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitShrineyGuardBoss);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyUpdateWithCollisionAndDeath);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardIdleTickCallback);
+void ShrineyGuardIdleTickCallback(Entity *e) {
+    u8 *ctr = (u8 *)e + 0x112;
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntitySetState(e, D_800A5BF0, D_800A5BF4);
+        }
+    }
+    EnemyUpdateWithCollisionAndDeath(e);
+}
 
 void ShrineyGuardStunTickCallback(Entity *e) {
     u8 *ctr = (u8 *)e + 0x113;
