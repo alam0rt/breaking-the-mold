@@ -127,6 +127,48 @@ s32 GetPrimaryBufferSize(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/level", LevelDataParser);
 
-INCLUDE_ASM("asm/nonmatchings/level", LoadLevelByWorldIndex);
+u8 LoadLevelByWorldIndex(LevelDataContext *ctx, u32 arg1, u8 world_index) {
+    u32 blb;
+    u8 i = 0;
 
-INCLUDE_ASM("asm/nonmatchings/level", LoadLevelByWorldId);
+    blb = ctx->blb_header;
+    if (*(u8 *)(blb + 0xF30) != 0) {
+        world_index &= 0xFF;
+        do {
+            u32 entry = blb + (u8)i;
+            if (*(u8 *)(entry + 0xF36) >= 3) {
+                if (*(u8 *)(entry + 0xF92) == world_index) {
+                    ctx->current_sequence_index = i;
+                    break;
+                }
+            }
+            blb = ctx->blb_header;
+            i++;
+        } while ((u8)i < *(u8 *)(blb + 0xF30));
+    }
+    return LevelDataParser(ctx, arg1) & 0xFF;
+}
+
+u8 LoadLevelByWorldId(LevelDataContext *ctx, u32 arg1, u8 world_id) {
+    u32 blb;
+    u8 i = 0;
+
+    blb = ctx->blb_header;
+    if (*(u8 *)(blb + 0xF30) != 0) {
+        world_id &= 0xFF;
+        do {
+            u32 entry = blb + (u8)i;
+            if (*(u8 *)(entry + 0xF36) >= 3) {
+                u8 slot = *(u8 *)(entry + 0xF92);
+                u32 world = blb + slot * 0x70;
+                if (*(u8 *)(world + 0xC) == world_id) {
+                    ctx->current_sequence_index = i;
+                    break;
+                }
+            }
+            blb = ctx->blb_header;
+            i++;
+        } while ((u8)i < *(u8 *)(blb + 0xF30));
+    }
+    return LevelDataParser(ctx, arg1) & 0xFF;
+}
