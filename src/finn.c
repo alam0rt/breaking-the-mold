@@ -1,5 +1,8 @@
 #include "common.h"
 
+extern void *g_pBlbHeapBase;
+extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006E084);
@@ -98,7 +101,9 @@ void func_8006ED4C(void) {
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityDestroyCallback_Simple);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FreeEntityNoTeardown_8006ed88);
+void FreeEntityNoTeardown_8006ed88(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", CreateGlidePlayerEntity);
 
@@ -176,7 +181,9 @@ void func_8007050C(void) {
 
 INCLUDE_ASM("asm/nonmatchings/finn", EntityDestructor_Simple13);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FreeEntityNoTeardown_80070548);
+void FreeEntityNoTeardown_80070548(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", InitEntity_FinnSpawnCountdown);
 

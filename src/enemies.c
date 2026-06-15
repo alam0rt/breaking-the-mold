@@ -1,5 +1,8 @@
 #include "common.h"
 
+extern void *g_pBlbHeapBase;
+extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntityFromSpawn);
@@ -291,7 +294,9 @@ void NopStub_8004142c(void) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80010E04_80041434);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityNoTeardown_80041468);
+void FreeEntityNoTeardown_80041468(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCheckpointEntity);
 
@@ -459,7 +464,9 @@ void NopStub_80045e78(void) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt800111C8_80045e80);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityNoTeardown_80045eb4);
+void FreeEntityNoTeardown_80045eb4(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitFloatingPlatformEntity);
 
@@ -527,7 +534,9 @@ void NopStub_80046cec(void) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityDestroyCallback_Vt80011248);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityNoTeardown_80046d28);
+void FreeEntityNoTeardown_80046d28(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundParticleEmitter);
 

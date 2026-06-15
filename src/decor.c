@@ -1,6 +1,11 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/decor", FreeEntityNoTeardown_8002c7d8);
+extern void *g_pBlbHeapBase;
+extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+
+void FreeEntityNoTeardown_8002c7d8(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/decor", InitPathDecorEntity);
 

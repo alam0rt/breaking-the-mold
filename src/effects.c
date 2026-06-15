@@ -1,7 +1,9 @@
 #include "common.h"
 
 extern void *g_pGameState;
+extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(void *entity);
+extern void FreeFromHeap(void *heap, void *ptr, s32 arg2, s32 arg3);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitParticleEntity);
 
@@ -282,5 +284,7 @@ void NopStub_80038970(void) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyCallback_Vt80010BC8);
 
-INCLUDE_ASM("asm/nonmatchings/effects", FreeEntityNoTeardown_800389ac);
+void FreeEntityNoTeardown_800389ac(void *entity) {
+    FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+}
 

@@ -1,6 +1,8 @@
 #include "common.h"
 
 extern u8 *g_pGameState;
+extern void *g_pBlbHeapBase;
+extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
@@ -252,7 +254,9 @@ void func_8004F02C(void) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageSimpleDestroyCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", FreeEntityAllocOnly);
+void FreeEntityAllocOnly(void *e) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F098);
 
