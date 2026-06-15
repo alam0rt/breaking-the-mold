@@ -1,5 +1,9 @@
 #include "common.h"
 
+extern void *g_pBlbHeapBase;
+extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void *D_800120CC;
+
 INCLUDE_ASM("asm/nonmatchings/ending", EndingTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/ending", TriggerEndingSequence);
@@ -67,9 +71,16 @@ void func_8007A0DC(void) {
 void func_8007A0E4(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback_20CC);
+void EndingEntityDestroyCallback_20CC(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_800120CC;
+    if (flag & 1) {
+        FreeEntityNoTeardown_8007a120(entity, 0x1C);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", FreeEntityNoTeardown_8007a120);
+void FreeEntityNoTeardown_8007a120(void *e, u32 size) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 void *PassThroughFunction(void *x) {
     return x;

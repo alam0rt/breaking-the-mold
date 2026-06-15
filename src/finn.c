@@ -2,6 +2,10 @@
 
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void *D_80011824;
+extern void *D_80011D14;
+extern void FreeEntityNoTeardown_8006ed88(void *e, u32 size);
+extern void FreeEntityNoTeardown_80070548(void *e, u32 size);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
@@ -99,9 +103,14 @@ void func_8006ED44(void) {
 void func_8006ED4C(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityDestroyCallback_Simple);
+void FinnSubentityDestroyCallback_Simple(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_80011824;
+    if (flag & 1) {
+        FreeEntityNoTeardown_8006ed88(entity, 0x1C);
+    }
+}
 
-void FreeEntityNoTeardown_8006ed88(void *e) {
+void FreeEntityNoTeardown_8006ed88(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
@@ -179,9 +188,14 @@ void func_80070504(void) {
 void func_8007050C(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", EntityDestructor_Simple13);
+void EntityDestructor_Simple13(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_80011D14;
+    if (flag & 1) {
+        FreeEntityNoTeardown_80070548(entity, 0x1C);
+    }
+}
 
-void FreeEntityNoTeardown_80070548(void *e) {
+void FreeEntityNoTeardown_80070548(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 

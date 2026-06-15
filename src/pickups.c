@@ -2,6 +2,8 @@
 
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void *D_80010890;
+extern void FreeEntityNoTeardown_80030cdc(void *e, u32 size);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitGreenBulletsCollectible);
 
@@ -141,9 +143,14 @@ void func_80030C98(void) {
 void func_80030CA0(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_Vtable0x80010870_Q);
+void EntityDestructor_Vtable0x80010870_Q(void *entity, u32 flag) {
+    *(void **)((u8 *)entity + 0x18) = &D_80010890;
+    if (flag & 1) {
+        FreeEntityNoTeardown_80030cdc(entity, 0x1C);
+    }
+}
 
-void FreeEntityNoTeardown_80030cdc(void *e) {
+void FreeEntityNoTeardown_80030cdc(void *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
