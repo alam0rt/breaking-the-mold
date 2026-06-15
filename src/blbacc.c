@@ -215,7 +215,9 @@ void *GetLayerEntry(LevelDataContext *ctx, u16 index) {
     return (void *)(ctx->layer_entries + index * 92);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B724);
+void *func_8007B724(LevelDataContext *ctx, u16 idx) {
+    return (void *)(ctx->layer_entries + idx * 92 + 0x2C);
+}
 
 s32 HasTileAttributes(LevelDataContext *ctx) {
     return ctx->tile_attributes != 0;
