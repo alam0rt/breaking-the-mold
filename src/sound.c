@@ -1,6 +1,13 @@
 #include "common.h"
 
 extern void SpuSetKey(s32 onoff, s32 voiceBits);
+extern void StopCDAudio(void);
+extern void SpuQuit(void);
+/* Tentative defs to unlock gp_rel via maspsx --use-comm-section. */
+u32 D_800A6078;
+u8  D_800A6081;
+u8  D_800A6085;
+u8  D_800A6088;
 
 INCLUDE_ASM("asm/nonmatchings/sound", InitSPUDefaults);
 
@@ -10,7 +17,11 @@ INCLUDE_ASM("asm/nonmatchings/sound", PopSPUUploadBlock);
 
 INCLUDE_ASM("asm/nonmatchings/sound", func_8007C324);
 
-INCLUDE_ASM("asm/nonmatchings/sound", ShutdownSPUAndResetSoundState);
+void ShutdownSPUAndResetSoundState(void) {
+    SpuQuit();
+    D_800A6078 = 0;
+    D_800A6081 = 0;
+}
 
 void func_8007C35C(void) {
 }
@@ -30,7 +41,10 @@ void StopSPUVoice(s32 voice) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/sound", StopAllSPUVoices);
+void StopAllSPUVoices(void) {
+    SpuSetKey(0, 0xFFFFFF);
+    D_800A6088 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", CalculateStereoVolume);
 
@@ -38,7 +52,10 @@ INCLUDE_ASM("asm/nonmatchings/sound", SetVoicePanning);
 
 INCLUDE_ASM("asm/nonmatchings/sound", StartCDAudioForLevel);
 
-INCLUDE_ASM("asm/nonmatchings/sound", StopCDStreaming);
+void StopCDStreaming(void) {
+    StopCDAudio();
+    D_800A6085 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/sound", SaveAndMuteAllVoicePitches);
 
