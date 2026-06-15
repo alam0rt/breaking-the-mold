@@ -125,46 +125,46 @@ local bss(start, kind, vram) = {
 
         c('39F0', 'gfx'),                      // graphics init, OT clear, buffer swap
         c('3EC8', 'prim'),                     // AllocPrim20..AllocPrim36 (7 funcs)
-        asm('40F0', 'vram'),                   // AllocateVRAMSlot onward
+        c('40F0', 'vram'),                     // AllocateVRAMSlot onward
         c('5C34', 'vibrate'),
-        asm('5C3C', 'sprite'),                 // render init, tilemap, sprite context
+        c('5C3C', 'sprite'),                   // render init, tilemap, sprite context
         c('909C', 'spracc'),
         c('954C', 'nullfn'),
-        asm('9554', 'layer'),                  // menu entity init, sprite object
+        c('9554', 'layer'),                    // menu entity init, sprite object
         c('A8C8', 'entity'),                   // entity system core
         c('D880', 'sprset'),
         c('D8C0', 'anim'),                     // 0x8001D8C0 anim/sprite setters body
         c('11048', 'blb'),                     // 0x80020848 BLB load + entity lifecycle [A]
-        asm('1AB78', 'hud'),          // 0x8002A378 HUD + pause menu                   [R]
-        asm('1C7F0', 'edtor'),        // 0x8002BFF0 generic entity destructors         [N]
-        asm('1CFD8', 'decor'),        // 0x8002C7D8 path/decor entities                [N]
-        asm('1DC74', 'pickups'),      // 0x8002D474 pickups (clayball/willie/phart...) [N]
-        asm('2150C', 'effects'),      // 0x80030D0C particles/grid/ripple/beam FX      [N]
-        asm('291DC', 'gamecd'),       // 0x800389DC game CD/BLB I/O + audio track      [N]
-        asm('29950', 'movie'),        // 0x80039150 STR movie streaming/decode         [N]
-        asm('2AB94', 'enemies'),      // 0x8003A394 enemy AI, projectiles, platforms   [N]
-        asm('37A88', 'bosses'),       // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
+        c('1AB78', 'hud'),            // 0x8002A378 HUD + pause menu                   [R]
+        c('1C7F0', 'edtor'),          // 0x8002BFF0 generic entity destructors         [N]
+        c('1CFD8', 'decor'),          // 0x8002C7D8 path/decor entities                [N]
+        c('1DC74', 'pickups'),        // 0x8002D474 pickups (clayball/willie/phart...) [N]
+        c('2150C', 'effects'),        // 0x80030D0C particles/grid/ripple/beam FX      [N]
+        c('291DC', 'gamecd'),         // 0x800389DC game CD/BLB I/O + audio track      [N]
+        c('29950', 'movie'),          // 0x80039150 STR movie streaming/decode         [N]
+        c('2AB94', 'enemies'),        // 0x8003A394 enemy AI, projectiles, platforms   [N]
+        c('37A88', 'bosses'),         // 0x80047288 Klogg/MonkeyMage/Glenn/Shriney/Joe [N]
         c('48968', 'clayball'),                     // 0x80058168 clayball + circular platform  [R]
         c('49EA4', 'player'),                       // 0x800596A4 CreatePlayerEntity + collision [N]
-        asm('4AE30', 'playst'),                    // 0x8005A630 player FSM (PlayerState_*/PlayerCallback_*)
-        asm('5E808', 'finn'),                      // 0x8006E008 FINN/glide subentity                [N]
+        c('4AE30', 'playst'),                      // 0x8005A630 player FSM (PlayerState_*/PlayerCallback_*)
+        c('5E808', 'finn'),                        // 0x8006E008 FINN/glide subentity                [N]
         c('617D8', 'playdtor'),
         c('61848', 'vehicle'),                           // 0x80071048 Runn/Soar/Finn vehicle modes + platforms [R]
         c('65798', 'menu'),                              // 0x80074F98 cursor/buttons/options/level-select
-        asm('667F4', 'passwd'),                          // 0x80075FF4 password entry UI
-        asm('687E8', 'results'),                         // 0x80077FE8 HUD digits + results screen
-        asm('69E3C', 'ending'),                          // 0x8007963C ending / credits
+        c('667F4', 'passwd'),                            // 0x80075FF4 password entry UI
+        c('687E8', 'results'),                           // 0x80077FE8 HUD digits + results screen
+        c('69E3C', 'ending'),                            // 0x8007963C ending / credits
         c('6A9BC', 'level'),                             // 0x8007A1BC level-data ctx + playback sequence
         c('6B1B0', 'blbacc'),                          // 0x8007A9B0 BLB/level/tile/sprite TOC getters
-        asm('6C7B8', 'sound'),                           // 0x8007BFB8 SPU upload, SFX, voice, CD audio
-        asm('6D4FC', 'gstate'),                          // 0x8007CCFC InitGameState/respawn/level-start
+        c('6C7B8', 'sound'),                             // 0x8007BFB8 SPU upload, SFX, voice, CD audio
+        c('6D4FC', 'gstate'),                            // 0x8007CCFC InitGameState/respawn/level-start
         c('6D9D0', 'lvlload'),                    // 0x8007D1D0 load/setup level, game-mode loop  [R]
         c('6F7D0', 'entinit'),                    // 0x8007EFD0 ~120 EntityType###_*_Init + remap [N]
         c('728B4', 'main'),                       // 0x800820B4 cheats, main(), debug menu        [N]
         c('73690', 'gstctor'),
         c('736E0', 'emptycb'),
         c('736F0', 'blbmem'),
-        asm('73754', 'libc'),
+        c('73754', 'libc'),
         c('73794', 'memmove'),
 
         // =====================================================================
