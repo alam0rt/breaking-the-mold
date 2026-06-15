@@ -250,9 +250,27 @@ u16 func_8007B7E8(LevelDataContext *ctx) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTilemapLayerWidth);
+u16 GetTilemapLayerWidth(LevelDataContext *ctx, u16 layer_idx) {
+    u8 *layers = (u8 *)ctx->anim_offsets;
+    if (layers != NULL) {
+        u16 idx = (layer_idx - 1) & 0xFFFF;
+        u8 *entry = layers + idx * 12;
+        u32 offset = *(u32 *)(entry + 0xC);
+        return *(u16 *)(layers + offset + 4);
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetTilemapLayerDataPtr);
+u8 *GetTilemapLayerDataPtr(LevelDataContext *ctx, u16 layer_idx) {
+    u8 *layers = (u8 *)ctx->anim_offsets;
+    if (layers != NULL) {
+        u16 idx = (layer_idx - 1) & 0xFFFF;
+        u8 *entry = layers + idx * 12;
+        u32 offset = *(u32 *)(entry + 0xC);
+        return layers + offset + 6;
+    }
+    return NULL;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilemapLayerIndex);
 
