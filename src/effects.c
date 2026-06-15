@@ -66,7 +66,20 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitPasswordSymbolEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityTick_ParallaxScrollPosition);
 
-INCLUDE_ASM("asm/nonmatchings/effects", MultiPartEntityMessageHandler);
+u32 MultiPartEntityMessageHandler(void *e, s32 event) {
+    switch (event & 0xFFFF) {
+        case 0x1009:
+            *(u8 *)((u8 *)e + 0x108) = 1;
+            break;
+        case 0x1010:
+            *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 0;
+            break;
+        case 0x100F:
+            *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 1;
+            break;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitHUDIconEntity);
 
