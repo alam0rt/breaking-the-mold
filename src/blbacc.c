@@ -108,9 +108,18 @@ char *GetCurrentMovieReserved(LevelDataContext *ctx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieDataForLevel);
-
-INCLUDE_ASM("asm/nonmatchings/blbacc", ReturnZero);
+void *GetMovieDataForLevel(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) != 1) {
+        return NULL;
+    }
+    {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        u32 movie = slot * 28 + blb;
+        return (void *)(movie + 0xB69);
+    }
+}
 
 char *GetCurrentMovieFilename(LevelDataContext *ctx) {
     u32 blb = ctx->blb_header;
