@@ -166,7 +166,21 @@ void FreeEntityNoTeardown_8006ed88(void *e, u32 size) {
 
 INCLUDE_ASM("asm/nonmatchings/finn", CreateGlidePlayerEntity);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnEntityDestroyWithSoundCleanup);
+extern void StopSPUVoice(s32 voice);
+extern void *D_80011CF4;
+
+void FinnEntityDestroyWithSoundCleanup(u8 *e, s32 mode) {
+    s32 voice = *(s32 *)(e + 0x114);
+    *(void **)(e + 0x18) = &D_80011CF4;
+    if (voice >= 0) {
+        StopSPUVoice(voice);
+        *(s32 *)(e + 0x114) = -1;
+    }
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (mode & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 s32 func_8006EF48(void *e) {
     u8 a = *(u8 *)((u8 *)e + 0x68) & 0xF;
