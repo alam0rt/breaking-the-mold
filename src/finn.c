@@ -240,7 +240,12 @@ void RunnState_SetAdvanceLevelAndHide(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetTimerAndTick);
 
-INCLUDE_ASM("asm/nonmatchings/finn", IsTileTypeSolidOrHazard);
+s32 IsTileTypeSolidOrHazard(s32 unused, u8 *tilePtr) {
+    u8 tile = *tilePtr;
+    if ((u8)(tile + 0x4B) < 3) return 1;
+    if (tile == 0xC9 || tile == 0xCB || (u8)(tile + 0x23) < 3) return 1;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnCheckTriggerZones);
 
