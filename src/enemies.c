@@ -363,7 +363,13 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerAnimationSwitch);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerTimerCountdown);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityRandomIdleOrAnimated);
+void InitEntityRandomIdleOrAnimated(Entity *e) {
+    if (rand() & 1) {
+        InitEntityState_Animated(e);
+    } else {
+        InitEntityState_Idle(e);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityState_Idle);
 

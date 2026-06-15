@@ -12,6 +12,7 @@ extern void *D_80011D14;
 extern void FreeEntityNoTeardown_8006ed88(void *e, u32 size);
 extern void FreeEntityNoTeardown_80070548(void *e, u32 size);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern void ApplyAnimationPositionOffsets(Entity *e);
 
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   D_800A5F8C;
@@ -255,7 +256,12 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnExitMoveRightTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/finn", InitEntity_FinnScaledSprite);
 
-INCLUDE_ASM("asm/nonmatchings/finn", RunnRender_AnimOffsetWithSlide);
+void RunnRender_AnimOffsetWithSlide(Entity *e) {
+    ApplyAnimationPositionOffsets(e);
+    if (*(s16 *)((u8 *)e + 0xDA) < 0x11) {
+        *(u16 *)((u8 *)e + 0x68) += 5;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", RunnEvent_CutsceneDebrisAndLevel);
 
