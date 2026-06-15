@@ -49,7 +49,10 @@ void SetGameMode(u8 mode) {
 
 INCLUDE_ASM("asm/nonmatchings/sound", PlaySoundEffect);
 
-INCLUDE_ASM("asm/nonmatchings/sound", PlayGameSoundById);
+s32 PlayGameSoundById(u16 soundId, s32 channel) {
+    if ((u16)(soundId - 0xC9) >= 0x1C) return -1;
+    return PlaySoundEffect(D_8009CE64[(u16)soundId], channel, 0);
+}
 
 void StopSPUVoice(s32 voice) {
     if (voice != -1) {
