@@ -38,7 +38,12 @@ INCLUDE_ASM("asm/nonmatchings/finn", EntityTick_FollowPlayerWithInterpolation);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityFollowWithDistanceCheck);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnSubEvent_ProcessQueueOnReady);
+s32 FinnSubEvent_ProcessQueueOnReady(Entity *e, u32 ev) {
+    if ((ev & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 void ClearEntityStateFlag(void *e) {
     *(u8 *)((u8 *)e + 0x10D) = 0;
@@ -198,7 +203,12 @@ s32 FINNEventHandler_DeathExplosion(void *e, u32 ev) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnEvent_QueueOnAnimReady);
+s32 FinnEvent_QueueOnAnimReady(Entity *e, u32 ev) {
+    if ((ev & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnVehicleMovementUpdate);
 
