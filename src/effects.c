@@ -13,6 +13,11 @@ extern void *D_80010B28;
 extern void *D_80010BA8;
 extern void *D_80010BC8;
 extern void *D_80010970;
+extern void *D_800109F0;
+extern void *D_80010A88;
+extern void *D_80010A10;
+extern void FreeResourceType4(void *e, s32 mode);
+extern void FreeWithCallback(void *e, s32 mode);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitParticleEntity);
 
@@ -283,13 +288,37 @@ void func_8003857C(void *e, u8 val) {
     *(u8 *)((u8 *)e + 0x3A7) = val;
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback1);
+void EntityDestroyWithFreeCallback1(void *entity, s32 flags) {
+    *(void **)((u8 *)entity + 0x18) = &D_800109F0;
+    FreeWithCallback(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback2);
+void EntityDestroyWithFreeCallback2(void *entity, s32 flags) {
+    *(void **)((u8 *)entity + 0x18) = &D_800109F0;
+    FreeWithCallback(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback3);
+void EntityDestroyWithFreeCallback3(void *entity, s32 flags) {
+    *(void **)((u8 *)entity + 0x18) = &D_800109F0;
+    FreeWithCallback(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyWithFreeCallback4);
+void EntityDestroyWithFreeCallback4(void *entity, s32 flags) {
+    *(void **)((u8 *)entity + 0x18) = &D_80010A10;
+    FreeWithCallback(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void EntityDestroyCallback_Vt80010A48(void *entity, s32 flags) {
     *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010A48;
@@ -307,7 +336,13 @@ void EntityDestroyCallback_Vt80010A68(void *entity, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestroyResourceType4);
+void EntityDestroyResourceType4(void *entity, s32 flags) {
+    *(void **)((u8 *)entity + 0x18) = &D_80010A88;
+    FreeResourceType4(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void func_80038840(void *e, u8 b40, u8 b41, u8 b42) {
     *(u8 *)((u8 *)e + 0x40) = b40;
