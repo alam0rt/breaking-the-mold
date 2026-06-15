@@ -110,7 +110,17 @@ u16 GetMovieFrameField00(LevelDataContext *ctx) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetMovieSectorCount);
+u16 GetMovieSectorCount(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    if (*(u8 *)(entry + 0xF36) != 1) {
+        return 0;
+    }
+    {
+        u32 off = *(u8 *)(entry + 0xF92) * 28;
+        return *(u16 *)(blb + off + 0xB62);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentModeReservedData);
 
@@ -150,7 +160,11 @@ void *GetSecondaryColorPtr(LevelDataContext *ctx) {
     return (void *)(ctx->tile_header + 4);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetPaletteGroupCount);
+u8 GetPaletteGroupCount(LevelDataContext *ctx) {
+    u8 *p = (u8 *)ctx->palette_container;
+    if (p == NULL) return 0;
+    return *p;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetPaletteDataPtr);
 
@@ -228,7 +242,13 @@ u32 GetLevelDataContextField3C(LevelDataContext *ctx) {
     return ctx->vram_rects;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B7E8);
+u16 func_8007B7E8(LevelDataContext *ctx) {
+    u16 *p = (u16 *)ctx->anim_offsets;
+    if (p != NULL) {
+        return *p;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetTilemapLayerWidth);
 
