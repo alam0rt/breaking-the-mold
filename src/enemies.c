@@ -2,6 +2,7 @@
 
 extern void *g_pBlbHeapBase;
 extern void FreeFromHeap(void *heap, void *ptr, s32 a2, s32 a3);
+extern void EntityProcessCallbackQueue(void *entity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -108,7 +109,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterStunnedTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySimpleEventPassthrough);
+s32 EntitySimpleEventPassthrough(void *entity, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(entity);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityFollowPathWithWrapping);
 
@@ -322,7 +328,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityUpdateWithCollisionSpawnCheck);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnDataOffscreen);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySimpleEventPassthrough_V2);
+s32 EntitySimpleEventPassthrough_V2(void *entity, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(entity);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventTimerCountdownWithGameState);
 
@@ -360,7 +371,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", HazardEventHandler_0x1001);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", HazardEventHandler_0x1001_V2);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventPassthrough_Event2);
+s32 EntityEventPassthrough_Event2(void *entity, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(entity);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityPathMovementUpdate);
 
@@ -412,7 +428,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterActivateTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterEventPassthrough_Event2);
+s32 TeleporterEventPassthrough_Event2(void *entity, u32 event) {
+    if ((event & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(entity);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterActivate);
 
