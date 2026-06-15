@@ -15,6 +15,8 @@ extern void CollectibleTickFinnMode(void *e);
 extern void EntityStateSetWalk(void *e);
 extern void SetAnimationSpriteId(void *e, s32 id);
 extern void SetAnimationFrameCallback(void *e, u32 packed);
+extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z, s16 x, s16 y);
+extern void *InitCollectibleEntity(void *e, void *spawn);
 extern void *D_80010C64;
 extern void *D_80010CE4;
 extern void *D_80010DA4;
@@ -56,7 +58,12 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleFromSpawn);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntityDirect);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleAtPosition);
+void *CreateCollectibleAtPosition(void *e, void *spriteDef, s16 x, s16 y) {
+    InitEntityWithSprite(e, spriteDef, 0x3CA, x, y);
+    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    InitCollectibleEntity(e, NULL);
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntity);
 
