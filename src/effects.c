@@ -1,8 +1,8 @@
 #include "common.h"
 #include "functions.h"
+#include "globals.h"
 #include "Game/entity_events.h"
 
-extern void *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(void *entity);
 extern void *InitBasicEntityWithVtable(void *e, s16 val);

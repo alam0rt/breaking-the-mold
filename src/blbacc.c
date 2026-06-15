@@ -56,9 +56,27 @@ char *GetCurrentLevelDisplayName(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007AADC);
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLoadingScreenMinDisplayTime);
+u8 GetLoadingScreenMinDisplayTime(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    u8 mode = *(u8 *)(entry + 0xF36);
+    if ((u32)(mode - 4) < 2) {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        return *(u8 *)(blb + (slot << 4) + 0xCD1);
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetLoadingScreenMaxDisplayTime);
+u8 GetLoadingScreenMaxDisplayTime(LevelDataContext *ctx) {
+    u32 blb = ctx->blb_header;
+    u32 entry = blb + ctx->current_sequence_index;
+    u8 mode = *(u8 *)(entry + 0xF36);
+    if ((u32)(mode - 4) < 2) {
+        u8 slot = *(u8 *)(entry + 0xF92);
+        return *(u8 *)(blb + (slot << 4) + 0xCD2);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorOffset);
 
