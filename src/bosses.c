@@ -14,10 +14,14 @@ extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
+u32   D_800A5B98;
+void *D_800A5B9C;
 u32   D_800A5C10;
 void *D_800A5C14;
 u32   D_800A5C18;
 void *D_800A5C1C;
+u32   D_800A5C20;
+void *D_800A5C24;
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
@@ -92,7 +96,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitGlennYntisBoss);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestructor_WithSPUStop);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", Hazard_TickWithBehaviorTransition);
+void Hazard_TickWithBehaviorTransition(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x114);
+    CollectibleTickCallback(e);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntitySetState(e, D_800A5B98, D_800A5B9C);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisEventHandler);
 
@@ -190,7 +203,17 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBossDestructor);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeUpdateWithCollisionCheck);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoe_CheckAttackAndUpdate);
+void JoeHeadJoe_CheckAttackAndUpdate(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x112);
+    JoeHeadJoeCheckPlayerInAttackRange(e);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntitySetState(e, D_800A5C20, D_800A5C24);
+        }
+    }
+    JoeHeadJoeUpdateWithCollisionCheck(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeAttackEventHandler);
 

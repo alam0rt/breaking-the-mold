@@ -39,6 +39,8 @@ extern void RemoveEntityFromAllLists(void *gs, s32 idx);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
+u32   D_800A5B08;
+void *D_800A5B0C;
 u32   D_800A5B10;
 void *D_800A5B14;
 
@@ -512,7 +514,17 @@ void EntityTick_CollisionWithCleanup(void *e) {
     EntityOffScreenChildCleanup(e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", HazardTimerTickCallback);
+void HazardTimerTickCallback(Entity *e) {
+    u16 *ctr = (u16 *)((u8 *)e + 0x110);
+    EntityUpdateCallback(e);
+    EntityOffScreenChildCleanup(e);
+    if (*ctr != 0) {
+        *ctr -= 1;
+        if (*ctr == 0) {
+            EntitySetState(e, D_800A5B08, D_800A5B0C);
+        }
+    }
+}
 
 s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
     if ((ev & 0xFFFF) == 0x1001) {

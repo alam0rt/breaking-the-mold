@@ -186,7 +186,16 @@ s32 FinnEvent_DamageToDeathExplosion(void *e, u32 ev, u32 a2, u32 a3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", FINNEventHandler_DeathExplosion);
+s32 FINNEventHandler_DeathExplosion(void *e, u32 ev) {
+    u32 m = ev & 0xFFFF;
+    if (m == 0x1000) {
+        EntitySetState(e, D_800A5F8C, D_800A5F90);
+    }
+    if (m == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnEvent_QueueOnAnimReady);
 
