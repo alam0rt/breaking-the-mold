@@ -159,7 +159,15 @@ u8 GetCurrentStageIndex(LevelDataContext *ctx) {
     return *(u8 *)ctx;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetAsset101Entry);
+void *GetAsset101Entry(LevelDataContext *ctx, u16 idx) {
+    void **table = (void **)ctx->vram_slot_config;
+    if (table != NULL) {
+        if (idx < 2) {
+            return table[idx];
+        }
+    }
+    return NULL;
+}
 
 void *GetLevelDimensions(void *dst, void *ctx) {
     void *src = *(void **)((u8 *)ctx + 4);
@@ -199,7 +207,13 @@ u8 GetPaletteGroupCount(LevelDataContext *ctx) {
     return *p;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetPaletteDataPtr);
+void *GetPaletteDataPtr(LevelDataContext *ctx, u8 idx) {
+    u8 *base = (u8 *)ctx->palette_container;
+    u8 *entry;
+    if (base == NULL) return NULL;
+    entry = base + idx * 12;
+    return base + *(s32 *)(entry + 0xC);
+}
 
 void *GetPaletteAnimData(LevelDataContext *ctx) {
     return (void *)ctx->palette_anim;
@@ -325,7 +339,12 @@ void *GetVehicleDataPtr(LevelDataContext *ctx) {
     return (void *)ctx->vehicle_data;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", func_8007B930);
+u16 func_8007B930(LevelDataContext *ctx) {
+    s32 v1 = 0;
+    if (ctx->container_600) v1 = *(u16 *)ctx->container_600;
+    if (ctx->sprites) v1 += *(s32 *)ctx->sprites;
+    return (u16)v1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", FindSpriteInTOC);
 
