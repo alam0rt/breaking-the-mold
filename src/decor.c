@@ -55,7 +55,22 @@ void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/decor", EntityCollision_FlagAndDispatch);
+/* Two-bit collision dispatcher: on event 0x1016 marks the entity (+0x11D = 1,
+ * clears the +0x12 word) and on event 2 forwards to EntityProcessCallbackQueue.
+ * Returns the marked entity (only if 0x1016 fired) for chained handlers. */
+void *EntityCollision_FlagAndDispatch(Entity *e, u32 event) {
+    void *r = NULL;
+    event &= 0xFFFF;
+    if (event == 0x1016) {
+        *((u8 *)e + 0x11D) = 1;
+        *(s16 *)((u8 *)e + 0x12) = 0;
+        r = e;
+    }
+    if (event == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return r;
+}
 
 extern void InterpolateTimedPathPosition(void *time, s16 *out, void *pathData, s16 duration, s32 unused);
 

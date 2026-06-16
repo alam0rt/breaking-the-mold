@@ -1,5 +1,6 @@
 #include "common.h"
 #include "functions.h"
+#include "Game/callback_slot.h"
 
 extern u8 *g_pGameState;
 extern void *g_pBlbHeapBase;
