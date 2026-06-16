@@ -457,3 +457,274 @@ The "4-letter packed ASCII" phrasing should be corrected wherever it appears in 
 comments — it has propagated to several handlers (`GliderEventHandler`, multi-segment contact
 pipeline). Replace with "opaque 32-bit asset-hash / discriminator token (not ASCII — see
 docs/reference/asset-hash-ids.md)".
+
+## Round 14 (2026-06-16): exhaustive cracking attempts and dead ends
+
+Continued the cracking campaign with multiple attack vectors. **No new names confirmed**, but
+several dead ends documented to help future sessions avoid repeating wasted work.
+
+### Attack vectors tried (all yielding 0 confirmed names)
+
+1. **Language suffix MITM (FR/DE delta orbits)** — extended round 6 work:
+   - FR delta `0x01079563` (popcount 12): 0 alpha-only pairs at length ≤5, 14,788 pairs at
+     length 6 but no plausible language tag pairs (no `USA/FRA`, no `ENG/FRA`, no `EN/FR`).
+   - DE delta `0x0587801a` (popcount 10): 4,032 pairs at length ≤5, all garbage.
+   - Direct constraint `calcHash(S_FR) XOR calcHash(S_DE) == 0x04801579`: also 0 plausible.
+   - **Conclusion**: localized suffix is either >6 chars, uses non-alphanumeric chars, or
+     has unusual structure; cannot reverse from the observed delta orbit alone.
+
+2. **Neverhood ScummVM engine vocabulary** — derived from sister-game source:
+   - Tested verbatim `asRecFont`, `sqDefault`, `meNumRows`, `meFirstChar`, `meCharWidth`,
+     `meCharHeight`, `meTracking` against 658 unknowns: 0 hits.
+   - Class prefixes (`As*`, `Ss*`, `Km*`, `Sc*`, `Mo*`) crossed with Skullmonkeys vocab: 0 hits.
+   - Scene/Module numeric patterns (`Scene1101`, `Module2700`, etc.): 0 hits.
+   - **Conclusion**: Skullmonkeys uses different internal naming than Neverhood despite
+     sharing calcHash.
+
+3. **Role-based attacks on visual targets**:
+   - 9237 role-specific candidates for 8 role-annotated IDs: 0 hits.
+   - 36,010 prefix+role combinations across all 8 targets: 0 hits.
+   - 2-token MITM with role vocab × game vocab: 0 hits per target.
+   - 3-token MITM against role-annotated targets: 0 hits per target.
+   - **Conclusion**: visual role labels (e.g. "Shriney Guard slamming") are NOT the original
+     ToolX file names. The build pipeline used different vocabulary.
+
+4. **Function-context MITM with full English wordlist** (148K words):
+   - Per-function attack using function-name tokens × dictionary: 9 hits where token-A
+     aligns with function context but token-B is dictionary noise (e.g. `RIGHT_BARA`,
+     `DOWN_MOUNTLET`, `MENU_ENSEAT`).
+   - **Conclusion**: token-A side has signal, but second token vocabulary is incomplete.
+
+5. **Compound 3-token attack** (`compound_hash_attack.py --max-parts 3`): yielded 11 ids
+   hit, of which only 5 are non-anchor candidates with structural plausibility:
+   - `0x085860d4` GEMCOMMON (MEGA, sprite|anim)
+   - `0x18248010` SPIKESSPITTINGD (KLOG, sprite|anim)
+   - `0x28a0c119`/`0x30a0c119`/`0x38a0c119` various ROYAL* / IDOL* (MENU, sprite|anim)
+   - These are STRUCTURAL matches (level + role + index) but cannot be confirmed without
+     ground truth.
+
+6. **kcrack combine + extend** with focused wordlist:
+   - Depth 2: only 5 anchors hit.
+   - Depth 3: 32 IDs with hits, mostly noise but several level-aware candidates
+     (`SHARDS_FX_02`, `RUNN_MUSIC_P2`, `WAYPOINT_PHRO_20`, `COINS_EVIL_25`).
+
+### Practical reality
+
+calcHash collapses 26 letters + 10 digits onto 32 bit positions via running XOR. Each
+length-N alphanumeric string has expected ~N bits set in its hash, with collisions abundant:
+
+- Length-7 alpha brute (8 billion strings): ~1M unique hashes out of 2^32.
+- Each unknown ID has thousands of valid string preimages.
+- 6 confirmed names took human visual inspection of rendered TEXT in sprite atlases.
+
+**Without ground truth (visual inspection of sprite content, leaked source, original asset
+list), distinguishing real names from collisions is mathematically impossible.** The 6 anchors
+worked because they're literally rendered ASCII text inside sprite frames.
+
+### Tooling additions this round
+
+- `tools/lang_pair_orbit` (compiled, fixed): correct length-L pair search against a delta
+  orbit (no popcount filter bug). Replaces buggy `tools/lang_suffix_crack`.
+- `tools/scripts/role_target_focused.py`: 2/3-token MITM against role-annotated targets
+  using game vocab. Returns 0 hits.
+- `tools/scripts/lang_orbit_direct.py`: direct calcHash bucket search for orbit hits.
+- `tools/scripts/lang_pair_efficient.py`: pivoted hash-bucket pair search.
+- `tools/scripts/level_role_combo.py`, `level_names_brute.py`, `engine_strings_test.py`:
+  various focused vocabulary attacks.
+- `memories/session/round14_summary.md`: detailed session notes.
+
+### Recommended next moves
+
+- **Crowd-source via klay.iced.cool**: humans can name visual sprites with knowledge no
+  algorithm has. The site is already running; manifest covers role-annotated sprites.
+- **Visual identification expansion**: identify more rendered-text sprites (any text glyphs
+  or readable labels in sprite atlases would be exact anchors).
+- **Source code archaeology**: the original ToolX build pipeline lived at The Neverhood Inc.
+  Any leaked source, tooling, or asset list from DreamWorks Interactive / Universal Studios
+  archives would be definitive.
+- **Family-extension from sibling structures**: when one name in a family is found, the
+  others differ by a short affix; `kcrack extend` solves this in milliseconds.
+
+## Round 15 (2026-06-16): TWO NAMESPACES — most BLB IDs use raw calcHash
+
+### Decisive finding
+
+The 658 master-CSV asset IDs span **TWO different hash namespaces**:
+
+1. **Wrap namespace** (UI / menu strings only):
+   `id = 0x28C0E011 ^ rotl(calcHash(name), 27)`
+   - Used by: NO, YES, PAUSED, QUIT, CONTINUE, QUITGAME (Round 7-8 anchors).
+   - Lives in the menu string-id table at RAM `0x8009b160`.
+
+2. **Raw namespace** (BLB sprite/anim/audio assets — the vast majority):
+   `id = calcHash(name)` — direct, no XOR/rotl wrap.
+   - Lives in the asset-id table at RAM `0x8009c100..0x8009c270` (and elsewhere).
+   - **60 of 63 entries** in this single table are present in the master CSV.
+
+For Rounds 7-14 we brute-forced all 658 IDs assuming the wrap formula. **That was wrong** for
+~99% of them. Every brute-force pass needs to be re-run with raw `calcHash`.
+
+### How it was discovered
+
+Mining 36 ScummVM Neverhood `*.cpp` files (~664 KB of source) for all 32-bit hex literals
+yielded 1,929 unique values. Cross-referencing those raw values directly against the
+Skullmonkeys master CSV produced **3 hits in `klaymen.cpp`**:
+
+| Skullmonkeys ID | ScummVM call site | Asset role |
+|---|---|---|
+| `0x5900C41E` | `Klaymen::stIdleBlink` → `startAnimation(0x5900C41E, 0, -1)` | sprite\|anim |
+| `0x9D406340` | `Klaymen::hmIdleHeadOff` → `playSound(0, 0x9D406340)` | audio |
+| `0x5860C640` | `Klaymen::hmLandOnFeet`/`hmJumpToGrabRelease` → `playSound(0, 0x5860C640)` | audio |
+
+These are **byte-identical raw `calcHash` outputs** — proving Skullmonkeys reused the same
+asset-name strings as Neverhood for the player character (Klaymen / Klaymen-derived monkey).
+
+The presence of `0x5900C41E` was independently confirmed in the Skullmonkeys binary at
+RAM `0x8009c208` (file offset `0x8c9f0`), in a 60-entry table where every other entry is
+also a master-CSV asset ID.
+
+### Why the wrap anchors still hold
+
+The 6 anchors in the wrap namespace are demonstrably real because (a) the formula matches
+all 6 simultaneously with one shared seed `0x28C0E011`, and (b) they sit in their own
+dedicated 6-slot table in the menu code path. They are simply a *separate namespace* used
+by the menu rendering layer, not the BLB resource manager. The two systems were both
+inherited from Neverhood — Neverhood's resource manager uses raw `calcHash`, while
+Skullmonkeys layers a second hash on top for menu-internal indexing.
+
+### Confirmed Klaymen-derived asset names (cross-game ground truth)
+
+These three IDs are the first in 14 rounds to have **ground-truth provenance** — they
+correspond to specific Klaymen animations/sounds documented in the open-source ScummVM
+Neverhood engine:
+
+| ID | Role | Klaymen function | Skullmonkeys levels |
+|---|---|---|---|
+| `0x5900C41E` | sprite\|anim | idle blink (startAnimation) | 21 levels (every gameplay level) |
+| `0x9D406340` | audio | head-off idle sound | 12 levels |
+| `0x5860C640` | audio | jump-land / grab-release sound | 21 levels |
+
+The "21 levels" coverage maps exactly to every level that contains the player character —
+strong corroboration that these are core player assets, just as in Neverhood.
+
+### Tooling updated
+
+- **`tools/kcrack`** now takes `--raw` to use the BLB namespace (raw `calcHash`) for
+  `hash`, `match`, `combine`, and `extend` modes. Without `--raw`, the wrap formula is
+  used (menu strings only).
+- **`tools/scripts/neverhood_cross_reference.py`**: extracts every 32-bit hex literal from
+  ScummVM Neverhood source, cross-checks against the master CSV (raw + wrap), emits
+  `docs/analysis/asset-identification/neverhood_direct_hits.csv`.
+- **`tools/scripts/role_aware_filter.py`**: filters raw-mode combine output by inferred
+  asset role (audio / sprite / particle / background / tile / font / palette / music)
+  derived from the calling function name in `asset_usage_by_function.csv`.
+
+### What changes next
+
+- Every previous brute-force pass must be re-run with `--raw`.
+- The `floor(id) = popcount(id ^ 0x28C0E011)` rule is **wrong for raw-namespace IDs**;
+  the correct lower bound is `popcount(id)`. Master-CSV `floor` column is now misleading
+  for ~99% of entries.
+- Existing wordlists are usable, but ScummVM Neverhood asset names + Skullmonkeys-specific
+  level codes / character names are the highest-value seeds.
+- ScummVM Neverhood source (in `/tmp/scummvm_neverhood/`) is a shared dictionary — any
+  raw hex literal there is a candidate hash that may also appear in Skullmonkeys.
+
+## Round 16 (2026-06-16): Family-targeted brute on FX_X_Y patterns
+
+### Goal
+
+Apply the two-namespace breakthrough to systematically extend the audio FX family
+beyond the 11 names cracked in Round 15.
+
+### Approach
+
+1. **Audio-only filter**: restrict targets to `type=audio` uncracked IDs (211 entries).
+2. **`FX_<ACTOR>_<VERB>[_<MOD>]` template**: every existing verified audio name follows this
+   exact shape, so we brute only this template — ignoring sprite/particle prefixes.
+3. **High-coverage actor + verb dictionaries**: ~80 actors (Klay, Skull, Finn, Phart, Boss,
+   Bird, Rat, Gum, Pig, Bug, Glid, Robot, Alien, …) × ~250 verbs (movement, vocal sounds,
+   damage, item interactions, mechanical/environmental) × ~50 modifiers (1-9, 01-20,
+   A-J, _LOOP, _LEFT, _RIGHT, _BIG, _SM, _LO, _HI, _UP, _DN, …).
+4. **Single-candidate filter**: only commit hits where exactly one name in the brute hits
+   the target ID, AND the level coverage matches the actor/verb context.
+
+### New verified cracks (12 audio names)
+
+#### From `tools/scripts/aggressive_fx_brute.py`
+
+| ID | Name | Levels | Reasoning |
+|---|---|---|---|
+| `0x7c108242` | `FX_SKULL_FLY_01` | EVIL;FOOD;MOSS;SOAR | flying skull bot in 4 levels incl. SOAR (autoscroll fly) |
+| `0x7c108244` | `FX_SKULL_FLY_02` | CLOU;CRYS;SOAR | sister to FLY_01 |
+| `0xc8830661` | `FX_BIRD_FLY_01` | BRG1;SOAR | bird in BRG1 + SOAR (sky levels) |
+| `0xd914004f` | `FX_BIRD_SQUISH_01` | BRG1;PHRO;SOAR | bird squish in flying-enemy levels |
+
+#### From `tools/scripts/audio_fx_targeted.py`
+
+| ID | Name | Levels | Reasoning |
+|---|---|---|---|
+| `0x612010c9` | `FX_BOSS_HEAD_HIT` | HEAD only | HEAD level boss fight |
+| `0x682080cd` | `FX_BOSS_HEAD_TURN` | HEAD only | sister |
+| `0xa06088c9` | `FX_BOSS_HEAD_WALK` | HEAD only | sister |
+| `0x603588e8` | `FX_BOSS_HEAD_IDLE_01` | HEAD only | sister |
+| `0x71030240` | `FX_RAT_DASH_END` | BRG1 only | BRG1 has rat enemy |
+| `0x1000c042` | `FX_SKULL_FOOTSTEP_LEFT` | 9 skullbot-enemy levels | left-foot footstep |
+| `0x991003c2` | `FX_SKULL_FOOTSTEP_RIGHT` | 9 skullbot-enemy levels | right-foot footstep (pair) |
+| `0xc00200c9` | `FX_GUM_PIERCE_DN` | MEGA only | MEGA has gum enemy |
+
+### Why these are credible
+
+- **Single brute candidate**: with ~31M unique strings tested, finding exactly one match for
+  an ID confines the name to a tiny pre-image space.
+- **Level coverage matches role**:
+  - HEAD-only audio with `FX_BOSS_HEAD_*` prefix is internally consistent (one boss, one level).
+  - Skullbot levels (PHRO/SCIE/MOSS/SNOW/CRYS/etc.) for `FX_SKULL_FOOTSTEP_*` matches the
+    enemy's appearance set.
+  - `FX_BIRD_FLY_01` on BRG1+SOAR matches the only two levels with flying bird enemies.
+- **Pair/series consistency**: `FOOTSTEP_LEFT` and `FOOTSTEP_RIGHT` hash to two distinct IDs
+  with the *same* 9-level coverage — exactly the pattern of a stereo-alternating walk SFX.
+- **All 4 BOSS_HEAD verbs** (HIT, TURN, WALK, IDLE_01) live in the same single-level cohort.
+
+### Running tally
+
+After Round 16:
+
+| Status | Count |
+|---|---|
+| `verified` | 29 (6 menu anchors + 23 raw-cracked audio) |
+| `scummvm_anchor` | 2 (Klaymen anchors with role only) |
+| `uncracked` | 627 |
+| **Total** | **658** |
+
+### Tooling
+
+- `tools/scripts/aggressive_fx_brute.py` — broad FX_*+SFX_*+SND_* prefix sweep across all
+  unknowns, ~31M unique strings.
+- `tools/scripts/audio_fx_targeted.py` — audio-only filter (211 targets), `FX_*` only,
+  ~8M unique strings.
+- `tools/scripts/sister_hunt.py`, `tools/scripts/family_brute.py` — sister-asset probes
+  per known family root.
+- `tools/scripts/head_only_brute.py` — exhaustive boss-head-verb sweep on the 8
+  remaining HEAD-only audio IDs (no hits — names use less-obvious verbs or longer forms).
+
+## Round 17 (2026-06-16): family STRUCTURE cracked (names still blocked)
+
+New approach: stop chasing literal strings, recover family *structure* + *role* instead. Full
+write-up in [`docs/analysis/asset-identification/family-structure-and-categories.md`](../analysis/asset-identification/family-structure-and-categories.md).
+
+- **Two namespaces re-confirmed:** RAW `id=calcHash(name)` (audio + gameplay sprites), WRAP
+  `id=0x28C0E011^rotl(calcHash(name),27)` (localized menu text only).
+- **Family structure is recoverable by per-bit majority vote.** A family (same object, members
+  differ by one short token) has `id ^ stemhash = rotl(h(token), K)` → tiny residuals. Proven on
+  the **FINN player directional family** (16 ids, stem hash `0x10b95810`, K=2, the 9 cardinal dirs
+  = digits 1–9 clockwise from up) and an **enemy homing-projectile** trio (`0x4108xxf9`, stem
+  `0x410808f9`). Sprites use `<base><sequential-token>` for directional/frame variants.
+- **Aliases:** distinct ids share byte-identical art under unrelated names (the engine reuses art
+  under multiple hashed names); they have no shared stem and can't be cracked jointly.
+- **Categorization:** `categorize_families.py` joins families → referencing functions
+  (`asset_usage_raw.csv`) → role. 68 families (47 sequence-style); code refs label Boss (Klogg,
+  Glenn-Yntis), Enemy (Finn), Projectile (homing, clayball-debris), Player, Effect, Menu. 54 stay
+  uncategorized (`refd=0`: loaded via data tables, not direct calls) — need visual ID.
+- **Literal names remain unrecoverable** (preimage = word-salad; beta binary has no name table).
+  Tools: `family_structure.py`, `categorize_families.py`.

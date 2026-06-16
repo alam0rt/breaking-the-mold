@@ -1,0 +1,34 @@
+<!doctype html><html><head>
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>klay sprite review sheets</title>
+<style>
+ body{background:#0b0b0d;color:#9be;font:13px/1.5 system-ui,monospace;margin:0;padding:10px}
+ h1{color:#9f9;font-size:17px;margin:.3em 0}
+ p.x{color:#8aa;max-width:60ch}
+ code{color:#fd6}
+ a.b{display:inline-block;margin:6px 6px 6px 0;padding:7px 12px;background:#14151b;border:1px solid #2a2e3c;border-radius:7px;color:#6af;text-decoration:none}
+ .sheet{margin:14px 0;border-top:1px solid #222;padding-top:8px}
+ .sheet h2{color:#cd6;font-size:14px;margin:.2em 0}
+ img{width:100%;height:auto;image-rendering:pixelated;border:1px solid #222;border-radius:4px}
+ .hint{color:#789;font-size:12px}
+</style></head><body>
+<h1>Skullmonkeys &mdash; sprite naming review</h1>
+<p class=x>Each tile is an <b>uncracked sprite</b>, captioned with its 32-bit id, level-count
+(<code>L#</code>), and a known role or the engine function that references it. Recognise a sprite?
+Note its <code>0x&hellip;</code> id + your guessed name and send it back &mdash; I hash-check each with
+<code>calcHash</code> (RAW = id, or WRAP = <code>0x28C0E011^rotl(calcHash,27)</code>). A name is only
+trusted if the picture fits <i>and</i> a sibling id corroborates.</p>
+<p class=x><b>Sheet 0</b> is the highest-value set (known bosses/items/text first); later sheets are
+ordered by level. Tap a sheet to open it full-size for pinch-zoom.</p>
+<div>
+<a class=b href="sheet_00.png">sheet 0 &rarr;</a><a class=b href="sheet_01.png">sheet 1 &rarr;</a><a class=b href="sheet_02.png">sheet 2 &rarr;</a><a class=b href="sheet_03.png">sheet 3 &rarr;</a><a class=b href="sheet_04.png">sheet 4 &rarr;</a><a class=b href="sheet_05.png">sheet 5 &rarr;</a><a class=b href="sheet_06.png">sheet 6 &rarr;</a><a class=b href="sheet_07.png">sheet 7 &rarr;</a><a class=b href="sheet_08.png">sheet 8 &rarr;</a></div>
+<div class=sheet id="s0"><h2>Sheet 0</h2><a href="sheet_00.png"><img src="sheet_00.png" loading="lazy"></a></div>
+<div class=sheet id="s1"><h2>Sheet 1</h2><a href="sheet_01.png"><img src="sheet_01.png" loading="lazy"></a></div>
+<div class=sheet id="s2"><h2>Sheet 2</h2><a href="sheet_02.png"><img src="sheet_02.png" loading="lazy"></a></div>
+<div class=sheet id="s3"><h2>Sheet 3</h2><a href="sheet_03.png"><img src="sheet_03.png" loading="lazy"></a></div>
+<div class=sheet id="s4"><h2>Sheet 4</h2><a href="sheet_04.png"><img src="sheet_04.png" loading="lazy"></a></div>
+<div class=sheet id="s5"><h2>Sheet 5</h2><a href="sheet_05.png"><img src="sheet_05.png" loading="lazy"></a></div>
+<div class=sheet id="s6"><h2>Sheet 6</h2><a href="sheet_06.png"><img src="sheet_06.png" loading="lazy"></a></div>
+<div class=sheet id="s7"><h2>Sheet 7</h2><a href="sheet_07.png"><img src="sheet_07.png" loading="lazy"></a></div>
+<div class=sheet id="s8"><h2>Sheet 8</h2><a href="sheet_08.png"><img src="sheet_08.png" loading="lazy"></a></div>
+</body></html>

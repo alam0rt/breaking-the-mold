@@ -1,0 +1,76 @@
+"""Probe names for password/menu sounds:
+- 0x42906465 'unlock' / 'hurt' / level-complete
+- 0x64221e61 'wrong-password' / directional input
+- 0x880c1e 'type' / digit press
+"""
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+from calchash import calcHash
+
+T1 = 0x42906465  # unlock/hurt
+T2 = 0x64221e61  # wrong/dir
+T3 = 0x00880c1e  # type/digit press
+
+names_unlock = [
+    "FX_UNLOCK","FX_PASSWORD_OK","FX_PASSWORD_VALID","FX_PASSWORD_SUCCESS",
+    "FX_PASS_OK","FX_PASS_VALID","FX_PASS_SUCCESS","FX_PASSWORD_GOOD",
+    "FX_PASS_GOOD","FX_PASS_RIGHT","FX_PASSWORD_RIGHT",
+    "FX_LEVEL_COMPLETE","FX_LEVEL_WIN","FX_LEVEL_END","FX_LEVEL_DONE",
+    "FX_LEVEL_PASS","FX_LEVEL_CLEAR","FX_LEVEL_OK","FX_LEVEL_BEAT",
+    "FX_MENU_OK","FX_MENU_ACCEPT","FX_MENU_CONFIRM","FX_MENU_SELECT",
+    "FX_HURT","FX_HURT_FLASH","FX_HURT_FLASH_01","FX_HURT_WHITE",
+    "FX_ENEMY_HURT","FX_ENEMY_DAMAGE","FX_ENEMY_FLASH","FX_ENEMY_HIT",
+    "FX_HIT","FX_HIT_01","FX_HIT_02","FX_HIT_FLASH",
+    "FX_DAMAGE","FX_DAMAGE_01","FX_DAMAGE_FLASH",
+    "FX_WIN","FX_WIN_01","FX_VICTORY","FX_CLEAR","FX_LEVEL_WIN_01",
+    "FX_PWD_OK","FX_PWD_VALID","FX_PWD_GOOD","FX_PWD_ENTER","FX_PWD_SUBMIT",
+    "SFX_UNLOCK","SFX_PASSWORD","SFX_LEVEL_COMPLETE","SFX_LEVEL_PASS",
+    "FX_OK","FX_OK_BEEP","FX_OK_DONE","FX_OK_CLICK",
+    "FX_CHEER","FX_FANFARE","FX_DING","FX_DING_DONG","FX_DING_OK",
+    "FX_GIB_HIT","FX_GIB_HURT","FX_GIB_FLASH","FX_SKULL_HURT","FX_SKULL_HIT",
+    "FX_BLB_HIT","FX_BLB_HURT","FX_BLB_FLASH",
+    "FX_ENEMY_HIT_01","FX_ENEMY_HIT_02","FX_ENEMY_HURT_01","FX_ENEMY_HURT_02",
+]
+names_wrong = [
+    "FX_WRONG","FX_WRONG_PASSWORD","FX_PASSWORD_NO","FX_PASSWORD_BAD",
+    "FX_PASSWORD_WRONG","FX_PASSWORD_FAIL","FX_PASSWORD_ERROR","FX_PASSWORD_INVALID",
+    "FX_PASS_NO","FX_PASS_BAD","FX_PASS_WRONG","FX_PASS_FAIL","FX_PASS_ERROR","FX_PASS_INVALID",
+    "FX_LEVEL_FAIL","FX_MENU_FAIL","FX_MENU_NO","FX_MENU_ERROR","FX_MENU_CANCEL",
+    "FX_BUZZ","FX_BUZZER","FX_BUZZ_NO","FX_BUZZER_FAIL","FX_HONK",
+    "FX_ERROR","FX_ERROR_01","FX_FAIL","FX_NO","FX_NO_OK","FX_CANCEL","FX_BACK",
+    "FX_INPUT_PRESS","FX_INPUT_DIR","FX_INPUT_MOVE","FX_INPUT","FX_DIR","FX_DIR_PRESS",
+    "FX_BUTTON_PRESS","FX_BUTTON","FX_BUTTON_TAP","FX_BUTTON_BEEP",
+    "FX_PWD_NO","FX_PWD_BAD","FX_PWD_WRONG","FX_PWD_FAIL","FX_PWD_ERROR",
+    "FX_PWD_INVALID","FX_PWD_CANCEL","FX_PWD_BUZZ",
+    "FX_KLAY_CRAWL","FX_KLAY_CRAB","FX_KLAY_DRAG","FX_KLAY_SHIMMY",
+    "FX_KLAY_SCRAPE","FX_KLAY_SCOOT","FX_KLAY_CREEP","FX_KLAY_SHUFFLE",
+    "FX_KLAY_SQUIRM","FX_KLAY_WORM","FX_KLAY_INCH","FX_KLAY_SLIDE",
+    "SFX_WRONG","SFX_BUZZ","SFX_ERROR","SFX_FAIL","SFX_INVALID",
+    "FX_BAD","FX_BAD_BEEP","FX_BAD_BUZZ","FX_BAD_NO",
+]
+names_type = [
+    "FX_TYPE","FX_TYPE_01","FX_TYPE_BEEP","FX_TYPING","FX_KEYTAP","FX_KEY_TAP",
+    "FX_KEY_PRESS","FX_KEY_DOWN","FX_BUTTON_TAP","FX_BUTTON_DOWN",
+    "FX_PRESS","FX_PRESS_01","FX_PRESS_BUTTON","FX_PRESS_KEY",
+    "FX_PASSWORD_TYPE","FX_PASSWORD_DIGIT","FX_PASS_TYPE","FX_PASS_DIGIT",
+    "FX_PWD_TYPE","FX_PWD_DIGIT","FX_PWD_KEY","FX_PWD_INPUT","FX_PWD_PRESS",
+    "FX_DIGIT","FX_DIGIT_01","FX_DIGIT_PRESS","FX_DIGIT_TAP","FX_DIGIT_BLIP",
+    "FX_BLIP","FX_BLIP_01","FX_BEEP","FX_BEEP_01","FX_BEEP_LO","FX_BEEP_HI",
+    "FX_CLICK","FX_CLICK_01","FX_TAP","FX_TAP_01","FX_DING","FX_DOT","FX_DOT_01",
+    "FX_BLIP_TYPE","FX_BLIP_PWD","FX_CLICK_PWD","FX_CLICK_KEY",
+    "FX_MENU_TYPE","FX_MENU_DIGIT","FX_MENU_KEY","FX_MENU_PRESS","FX_MENU_TAP",
+    "FX_INPUT_TAP","FX_INPUT_KEY","FX_INPUT_DIGIT","FX_INPUT_TYPE",
+    "SFX_TYPE","SFX_TYPING","SFX_KEY","SFX_DIGIT","SFX_BLIP","SFX_CLICK","SFX_BEEP",
+]
+for tlist, target, label in [(names_unlock, T1, "0x42906465 unlock"), 
+                              (names_wrong, T2, "0x64221e61 wrong-password"),
+                              (names_type, T3, "0x880c1e type/digit-press")]:
+    print(f"\n=== {label} ===")
+    found = False
+    for n in tlist:
+        h = calcHash(n)
+        if h == target:
+            print(f"  {n} -> 0x{h:08x} <-- TARGET")
+            found = True
+    if not found:
+        print(f"  No hit out of {len(tlist)} candidates")

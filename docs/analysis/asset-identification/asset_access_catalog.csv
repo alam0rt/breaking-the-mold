@@ -1,0 +1,659 @@
+id_hex,type,status,n_refs,access_kinds,category,top_functions,levels
+0x022e3442,sprite,uncracked,2,setspr:2,Boss,CollectibleDestroyState | InitKloggChaseState,WIZZ
+0x0239cb33,sprite,uncracked,2,setspr:2,Boss,JoeHeadJoeBallRegularInitState | JoeHeadJoeBallStartRolling,HEAD
+0x0244655d,sprite,uncracked,4,init:3;other:1,Boss,EntitySetReadyFlag | InitBackgroundSparkleEntity | InitMonkeyMageBoss,WIZZ
+0x06101db0,sprite,uncracked,3,init:2;other:1,Boss,InitBonusItemEntity | ShrineyGuardDeathCallback | InitJoeHeadJoeBoss,HEAD
+0x069580a0,sprite,uncracked,2,other:1;setspr:1,Boss,ProjectileTickWithCollision | JoeHeadJoeBallFallCallback,RUNN
+0x08192250,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardAttackAnimState | ShrineyGuardReadyAttackState,MEGA
+0x083488e2,sprite,uncracked,3,other:3,Boss,KloggSpawnProjectilesCallback | KloggMoveToTargetPosition,KLOG
+0x085860d4,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardIdleState | ShrineyGuardAttackAnimState,MEGA
+0x086e44c0,audio,uncracked,2,other:2,Boss,InitBonusClayballEntity | ShrineyGuardSoundUpdateTick,EVIL
+0x08b9135c,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler,GLEN
+0x08ba0250,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler,GLEN
+0x09382152,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardSetLoopingAttackState | ShrineyGuardIdleState,MEGA
+0x0a1820d4,sprite,uncracked,2,other:1;setspr:1,Boss,ShrineyGuardStartLoopAttackState | ShrineyGuardDeathState,MEGA
+0x0b0811bb,sprite,uncracked,2,setspr:2,Boss,JoeHeadJoeReturnToIdleState | JoeHeadJoeReturnToIdleStateAlt,HEAD
+0x0b081dbb,sprite,uncracked,3,setspr:2;other:1,Boss,JoeHeadJoeReturnToIdleState | JoeHeadJoeClearVoiceAlt,HEAD
+0x0b290ba2,sprite,uncracked,4,setspr:3;other:1,Boss,JoeHeadJoeCheckPlayerInAttackRange | JoeHeadJoeSetIdleState | JoeHeadJoeEnterActiveState,HEAD
+0x0c3082c3,audio,uncracked,2,other:2,Boss,KloggUpdateWithTimer | EnemyHitMessageHandler,KLOG
+0x0c34aa22,sprite,uncracked,6,other:4;init:2,Boss,KloggSpawnProjectilesCallback | JoeHeadJoeApplyGravity | KloggMoveToTargetPosition,KLOG
+0x0c78005c,sprite,uncracked,2,setspr:2,Boss,GlennYntisAnimStateC | GlennYntisDefeatedState,GLEN
+0x0e3889be,sprite,uncracked,2,token:1;setspr:1,Boss,JoeHeadJoeEnterActiveState | JoeHeadJoeMoveAndCheckAttack,HEAD
+0x11eac4c0,audio,uncracked,2,other:2,Boss,InitBonusClayballEntity | ShrineyGuardSoundUpdateTick,EVIL
+0x146ce002,audio,uncracked,6,token:6,Boss,PlayerCallback_DeathDebrisSpawner | RunnRender_AnimOffsetWithSlide | RunnEvent_CutsceneDebrisAndLevel,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x181c3854,sprite,uncracked,3,other:3,Boss,GliderStateInit_ResetAtSpawn | InitMonkeyMageBoss | InitBonusItemEntity,WIZZ
+0x18e88310,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler | GlennYntisDeathEventHandler,GLEN
+0x18e88510,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler | GlennYntisDeathEventHandler,GLEN
+0x18e88910,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler | GlennYntisDeathEventHandler,GLEN
+0x18e8c704,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler | GlennYntisDeathEventHandler,GLEN
+0x193ca112,sprite,uncracked,4,other:2;setspr:2,Boss,KloggSetMoveState | KloggSpawnProjectilesCallback | EnemyIdleTimerState,KLOG
+0x1a2c8516,sprite,uncracked,2,other:1;setspr:1,Boss,KloggMoveToTargetPosition | KloggSpawnProjectilesCallback,KLOG
+0x1a3109b2,sprite,uncracked,2,setspr:2,Boss,JoeHeadJoeSetFacingAndAttack | JoeHeadJoeEnterActiveState,HEAD
+0x204e44c0,audio,uncracked,2,other:2,Boss,InitBonusClayballEntity | ShrineyGuardSoundUpdateTick,EVIL
+0x205e40c2,audio,uncracked,3,other:3,Boss,ShrineyGuardSoundUpdateTick | InitBonusClayballEntity,EVIL
+0x222cb0e2,audio,uncracked,3,other:3,Boss,ClayballIndicatorState_Wait | ShrineyGuardDeactivateWithSound,BOIL;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x2b3889b2,sprite,uncracked,2,setspr:2,Boss,JoeHeadJoeReturnToIdleStateAlt | JoeHeadJoeDeathAnimState,HEAD
+0x2b79835d,sprite,uncracked,3,setspr:2;other:1,Boss,GlennYntisSelectRandomAnimState | GlennYntisIdleAnimState | GlennYntisAnimStateB,GLEN
+0x2c182010,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardReadyAttackState | ShrineyGuardStartLoopAttackState,MEGA
+0x2d688254,sprite,uncracked,2,setspr:2,Boss,GlennYntisSelectRandomAnimState | GlennYntisIdleAnimState,GLEN
+0x323ac9be,sprite,uncracked,3,setspr:2;other:1,Boss,JoeHeadJoeBallStopSound | JoeHeadJoeState_EnterCollisionState,HEAD
+0x34014841,audio,uncracked,3,other:3,Boss,ProjectileTickWithCollision | JoeHeadJoeBallFallCallback,KLOG;RUNN
+0x3a3a49b2,sprite,uncracked,2,other:1;setspr:1,Boss,JoeHeadJoeEventHandler | JoeHeadJoeBallRegularInitState,HEAD
+0x3d348056,sprite,uncracked,7,other:7,Boss,PlayerProcessTileCollision | SpawnSwirlPortalEntity | PlayerCallback_DeathDebrisSpawner,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x40106054,sprite,uncracked,3,setspr:2;other:1,Boss,ShrineyGuardAttackCounterState | ShrineyGuardSetAttackState | ShrineyGuardSetLoopingAttackState,MEGA
+0x42464cc8,audio,uncracked,2,other:2,Boss,PathFollowerApplyFallVelocity | ShrineyGuardEventHandler,CRYS;CSTL;PHRO;SNOW
+0x424d1840,sprite,uncracked,2,other:1;setspr:1,Boss,BossState_SpawnDeathParticle | BossState_DefeatedWithParticles,WIZZ
+0x42906465,audio,uncracked,7,other:4;sound:3,Boss,PasswordDigitSelectInactive | InitHamsterShieldCollectible | CollectibleHamsterShieldTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x486492c4,audio,uncracked,2,other:2,Boss,KloggDeathCallback | InitKloggBoss,KLOG
+0x48d81135,sprite,uncracked,3,other:2;init:1,Boss,InitBonusItemEntity | BossHPBarTickCallback | InitGlennYntisBoss,GLEN
+0x48f843d4,sprite,uncracked,3,other:3,Boss,GlennYntisDamageEventHandler,GLEN
+0x4c106054,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardAttackCounterState | ShrineyGuardSetAttackState,MEGA
+0x603588e8,audio,verified,4,other:3;setspr:1,Boss,JoeHeadJoeCheckPlayerInAttackRange | JoeHeadJoeSetIdleState | JoeHeadJoeEnterActiveState,HEAD
+0x60de1050,sprite,uncracked,2,other:1;setspr:1,Boss,InitKloggChaseState | BossState_SpawnDeathParticle,WIZZ
+0x657c322c,sprite,uncracked,4,other:2;setspr:2,Boss,BounceClay_IdleState | BounceClay_DestroyingState | JoeHeadJoeState_IdleAfterCollision,CSTL;FOOD;HEAD;MOSS;PHRO;SNOW
+0x69588258,sprite,uncracked,3,setspr:2;other:1,Boss,GlennYntisSelectRandomAnimState | GlennYntisAnimStateB | GlennYntisAnimStateC,GLEN
+0x70a09ce1,audio,uncracked,2,other:2,Boss,JoeHeadJoeBallRegularInitState | JoeHeadJoeBallStartRolling,HEAD
+0x7a318245,audio,uncracked,2,other:2,Boss,GlennYntisDeathEventHandler | HazardActivateWithSound,GLEN
+0x800da102,sprite,uncracked,2,other:2,Boss,EntityCollision_EnemyHitWithCallback | KloggDeathEventHandler,KLOG
+0x800da116,sprite,uncracked,2,other:2,Boss,EntityCollision_EnemyHitWithCallback | KloggDeathEventHandler,KLOG
+0x800da11a,sprite,uncracked,2,other:2,Boss,EntityCollision_EnemyHitWithCallback | KloggDeathEventHandler,KLOG
+0x800da132,sprite,uncracked,2,other:2,Boss,EntityCollision_EnemyHitWithCallback | KloggDeathEventHandler,KLOG
+0x800da152,sprite,uncracked,2,other:2,Boss,EntityCollision_EnemyHitWithCallback | KloggDeathEventHandler,KLOG
+0x8068815c,sprite,uncracked,1,setspr:1,Boss,GlennYntisDeathEventHandler,GLEN
+0x815900d0,sprite,uncracked,2,init:2,Boss,JoeHeadJoeApplyGravitySlow | InitEntity_ScaledSprite2,EVIL;SCIE
+0x8818a018,sprite,uncracked,8,other:8,Boss,EntityType005_MovingPlatformA_Init | InitMonkeyMageBoss | EntityType001_BossEntity_Init,BRG1;CAVE;CRYS;CSTL;EGGS;FOOD;
+0x88783718,sprite,uncracked,7,other:7,Boss,EntityType001_BossEntity_Init | EntityType005_MovingPlatformA_Init | EntityType050_BossMain_Init,CAVE;CRYS;EGGS;FOOD;GLID;HEAD;
+0x888da193,sprite,uncracked,2,other:2,Boss,EntityCollision_EnemyHitWithCallback | KloggDeathEventHandler,KLOG
+0x8a1940e1,sprite,uncracked,3,init:2;other:1,Boss,JoeHeadJoeState_HideAndNotifyGameState,HEAD
+0x8a3809f2,sprite,uncracked,1,setspr:1,Boss,JoeHeadJoeClearVoice,HEAD
+0x8b603980,sprite,uncracked,8,other:8,Boss,GlennYntisDamageEventHandler | Hazard_TickWithBehaviorTransition | EntityEventHandlerSpawnMultipleProjectiles,EVIL;GLEN;SCIE
+0x9299c307,sprite,uncracked,6,other:6,Boss,EntityType006_MovingPlatformB_Init | EntityType001_BossEntity_Init | EntityType005_MovingPlatformA_Init,MOSS
+0x98004092,sprite,uncracked,19,other:19,Boss,InitShrineyGuardBoss | KloggDestroyCallback | CircularPlatformUpdatePath,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x98f8221e,sprite,uncracked,9,other:9,Boss,EntityType120_ChildSprite_Init | EntityType021_ClockPlatformC_Init | EntityType001_BossEntity_Init,BOIL;CAVE;CRYS;CSTL;EGGS;FOOD;
+0xa0cc18d0,sprite,uncracked,2,other:2,Boss,InitKloggChaseState | BossState_SpawnDeathParticle,WIZZ
+0xa0cc1cd0,sprite,uncracked,5,init:3;other:2,Boss,FreeEntityNoTeardown_80046d28 | InitBackgroundParticleEmitter | BossState_SpawnDeathParticle,WIZZ
+0xa8482860,sprite,uncracked,3,init:2;other:1,Boss,InitBonusItemEntity | GlennYntisVictoryCallback | InitShrineyGuardBoss,MEGA
+0xb01c25f0,sprite,uncracked,3,init:2;other:1,Boss,JoeHeadJoeBallFallCallback | InitAnimatedDirectionalEntity,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;
+0xb468d0c6,sprite,uncracked,7,other:7,Boss,PlayerCallback_DeathDebrisSpawner | RunnEvent_CutsceneDebrisAndLevel | BossCollision_SpawnDebrisAndLayers,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xb868d0c6,sprite,uncracked,7,other:7,Boss,PlayerCallback_DeathDebrisSpawner | RunnEvent_CutsceneDebrisAndLevel | BossCollision_SpawnDebrisAndLayers,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xbe68d0c6,sprite,uncracked,7,other:7,Boss,PlayerCallback_DeathDebrisSpawner | RunnEvent_CutsceneDebrisAndLevel | BossCollision_SpawnDebrisAndLayers,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc00200c9,audio,verified,1,other:1,Boss,ShrineyGuardSetAttackState,MEGA
+0xcaadc032,sprite,uncracked,3,init:2;other:1,Boss,InitBonusItemEntity | KloggDeathCallback | InitKloggBoss,KLOG
+0xd0cc5442,audio,uncracked,2,other:2,Boss,JoeHeadJoeState_HideAndNotifyGameState,HEAD;SOAR
+0xe0c00650,audio,verified,1,sound:1,Boss,GlennYntisDamageEventHandler,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0xf03391e9,audio,uncracked,4,other:4,Boss,JoeHeadJoe_CheckAttackAndUpdate | JoeHeadJoeAttackEventHandler,HEAD
+0xf033a1e9,audio,uncracked,2,other:2,Boss,JoeHeadJoe_CheckAttackAndUpdate | JoeHeadJoeAttackEventHandler,HEAD
+0xf2810224,audio,uncracked,2,token:1;other:1,Boss,JoeHeadJoeEnterActiveState | JoeHeadJoeMoveAndCheckAttack,HEAD
+0x08624580,sprite,uncracked,8,other:7;init:1,Collectible,CollectibleUniverseEnemaTickCallback | CollectiblePhartHeadTickCallback | InitSingleFrameDecorEntity,BRG1;SOAR
+0x09406d8a,sprite,uncracked,2,setspr:2,Collectible,CheckpointSwampTickCallback | DecorSetSpriteIdle,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x10094096,sprite,uncracked,20,init:16;other:4,Collectible,InitMenuStage4 | Menu_PlayConfirmSoundIfEnabled | Menu_DecrementCounter,MENU
+0x20211e5f,sprite,uncracked,3,other:2;setspr:1,Collectible,InitCollectibleIdleState | InitCollectibleIdleStateB,FOOD;SNOW
+0x21a81d54,sprite,uncracked,7,setspr:5;other:2,Collectible,InitCollectibleTimer0x1e_SpriteC | InitCollectibleTimer0x1e | InitCollectibleTimer0x3c_SpriteA,FOOD;SNOW
+0x40864668,audio,uncracked,2,other:2,Collectible,InitScaleResetCollectible | ScaleResetCollectibleTickCallback,BRG1
+0x408a6461,audio,uncracked,2,other:2,Collectible,Init1970IconEntity | Collectible1970IconTickCallback,BOIL;CLOU;TMPL
+0x424129a1,audio,uncracked,2,other:2,Collectible,CollectiblePickupState | CollectibleRiseState,WIZZ
+0x428a6465,audio,uncracked,2,other:2,Collectible,Init1970IconEntity | Collectible1970IconTickCallback,BOIL;CLOU;TMPL
+0x44c26454,audio,uncracked,2,other:2,Collectible,InitPhoenixHandCollectible | CollectiblePhoenixHandTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x52186e1c,sprite,uncracked,3,init:2;other:1,Collectible,CollectibleIdleState | InitAnimatedTimedCollectible,FOOD
+0x6082c120,audio,uncracked,3,other:3,Collectible,InitYellowBirdCollectible | CollectibleYellowBirdTickCallback,GLID;SCIE;SOAR;TMPL
+0x62000441,audio,uncracked,2,other:2,Collectible,InitSingleFrameDecorEntity | TriggerCollectible100CTickCallback,BRG1;SOAR
+0x63848e59,sprite,uncracked,15,setspr:11;other:4,Collectible,AttachCursorToButton | Menu_PlayConfirmSoundIfEnabled | InitMenuSkullIconButton,MENU
+0x65281e40,audio,uncracked,2,other:1;sound:1,Collectible,RemoveCheckpointEntityById | PauseGameAndShowMenu,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x66017821,audio,uncracked,2,other:2,Collectible,CollectibleRiseState | CollectibleFloatState,WIZZ
+0x686c1c97,audio,uncracked,8,sound:8,Collectible,Menu_IncrementSelection | Menu_CycleOptionAndPlaySound | MenuDeactivateLevelSelectButton,MENU
+0x6a351094,sprite,uncracked,13,other:9;init:4,Collectible,CollectiblePhartHeadTickCallback | NotifyGameStateOneAlt | SetEntityScaleFadeIn,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x6c289c1c,sprite,uncracked,2,setspr:2,Collectible,InitConditionalCollectibleEntity | CollectibleIdleState,CSTL
+0x6d209c95,sprite,uncracked,2,setspr:2,Collectible,CollectibleWalkState | InitConditionalCollectibleEntity,CSTL
+0x80729081,sprite,uncracked,2,init:2,Collectible,FreeEntityNoTeardown_80041468 | InitCheckpointEntity,BRG1;GLID;SCIE;SNOW;TMPL;WEED
+0x81100030,sprite,uncracked,3,init:2;other:1,Collectible,Menu_DecrementAndPlaySound | InitMenuSkullIconButton | InitMenuStage3,MENU
+0x81421850,sprite,uncracked,3,other:3,Collectible,CollectiblePickupState | CollectibleRiseState,WIZZ
+0x82421850,sprite,uncracked,2,other:2,Collectible,CollectiblePickupState | CollectibleRiseState,WIZZ
+0x88210498,sprite,uncracked,4,init:2;setspr:2,Collectible,EntityFloatingWithCollisionTick | InitCollectibleEntity_Alt,CSTL;MOSS
+0x88329285,sprite,uncracked,2,init:2,Collectible,FreeEntityNoTeardown_80041468 | InitCheckpointEntity,BRG1;GLID;SCIE;SNOW;TMPL;WEED
+0x88a28194,sprite,uncracked,9,other:7;init:2,Collectible,ScaleResetCollectibleTickCallback | CreateMenuEntities | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x8c30008c,sprite,uncracked,8,other:7;init:1,Collectible,TriggerCollectible100CTickCallback | CollectiblePhartHeadTickCallback | CollectibleUniverseEnemaTickCallback,BRG1
+0x8c510186,sprite,uncracked,5,init:3;other:2,Collectible,UpdateHUDItemVisibility | InitEntity_8c510186 | CollectiblePhoenixHandTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x902c0002,sprite,uncracked,9,other:7;init:2,Collectible,CollectibleHamsterShieldTickCallback | CreateMenuEntities | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x9158a0f6,sprite,uncracked,4,init:3;other:1,Collectible,CreateMenuEntities | CollectibleExtraLifeTickCallback | InitPhoenixHandCollectible,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xa9240484,sprite,uncracked,6,init:5;other:1,Collectible,CreateMenuEntities | DecorStartAnimationAlt | InitTransparentDecorEntity,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc0034658,audio,uncracked,2,other:2,Collectible,InitPhartHeadCollectible | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc2906565,audio,uncracked,2,other:2,Collectible,InitHamsterShieldCollectible | CollectibleHamsterShieldTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc87ca082,sprite,uncracked,3,other:2;init:1,Collectible,TriggerFadeOut | InitYellowBirdCollectible | SetEntityStateFlagWithValue,GLID;SCIE;SOAR;TMPL
+0xc88a346a,audio,uncracked,2,other:2,Collectible,InitUniverseEnemaCollectible | CollectibleUniverseEnemaTickCallback,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0xe48744c4,audio,uncracked,2,other:2,Collectible,InitSuperWillieCollectible | CollectibleSuperWillieTickCallback,CLOU;CSTL;EVIL;MOSS;WEED
+0xec000027,sprite,uncracked,1,other:1,Collectible,CollectibleScaledTickCallback,BRG1;PHRO;SOAR
+0xed209c94,sprite,uncracked,3,setspr:3,Collectible,ConditionalCollectibleTick,CSTL
+0x28c080df,sprite,uncracked,1,init:1,Cutscene/Level,SetupAndStartLevel,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x000ac607,sprite,uncracked,3,other:3,Effect/Particle,EntityTick_EasedMovementInterpolation | SpawnDecorParticleEffect,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x02ed1470,sprite,uncracked,2,setspr:2,Effect/Particle,EntityFollowPathTick | EntityDestroyWithEffects,WIZZ
+0x04835000,sprite,uncracked,4,other:3;setspr:1,Effect/Particle,RunnEvent_CutsceneDebrisAndLevel | EntityEnterAnimatedIdleState | PlatformStateInit_FadeAndTimer,RUNN
+0x5822c080,sprite,uncracked,2,other:2,Effect/Particle,SpawnCollectibleParticles | CollectibleSparkleTickCallback,TMPL
+0x5a89815f,sprite,uncracked,2,other:2,Effect/Particle,EntityEventHandlerIdle | SpawnCollectibleParticles,BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;
+0x5ab9815f,sprite,uncracked,2,other:2,Effect/Particle,EntityEventHandlerIdle | SpawnCollectibleParticles,BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;
+0x5ad9815f,sprite,uncracked,2,other:2,Effect/Particle,EntityEventHandlerIdle | SpawnCollectibleParticles,BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;
+0x804c881c,sprite,uncracked,3,other:3,Effect/Particle,EntityTimerDeathWithParticles | EntityEventHandlerSpawnParticle,BRG1
+0x80b92212,sprite,uncracked,1,other:1,Effect/Particle,EntityType064_Particle_Init,TMPL
+0xa0149114,sprite,uncracked,3,other:3,Effect/Particle,InitBackgroundParticleEmitter | ParticleEmitterTickCallback,WIZZ
+0xc0099011,audio,uncracked,4,other:4,Effect/Particle,EntityFollowPathTick | EntityMessageHandler | EntityDestroyWithEffects,WIZZ
+0xe4834384,sprite,uncracked,1,other:1,Effect/Particle,InitItemSparkleIdleState,BRG1;PHRO;SOAR
+0x004a981c,sprite,uncracked,1,other:1,Enemy,EntityType026_FlyingEnemy_Init,BOIL;CLOU;MOSS
+0x024d704e,sprite,uncracked,2,setspr:2,Enemy,GliderStartFallState | GliderLandedState,WIZZ
+0x024e981c,sprite,uncracked,1,other:1,Enemy,EntityType026_FlyingEnemy_Init,BOIL;CLOU;MOSS
+0x0538a2ea,sprite,uncracked,2,other:2,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x088c5011,sprite,uncracked,2,other:1;setspr:1,Enemy,FinnStateInit_SetSpriteByAngle | FinnDeathExplosion,FINN
+0x08bc8013,sprite,uncracked,2,other:1;setspr:1,Enemy,EnemyIdleTimerState | EnemySpriteState,KLOG
+0x08de7215,sprite,uncracked,1,setspr:1,Enemy,GliderStateInit_ResetAtSpawn,WIZZ
+0x0aa18900,sprite,uncracked,2,setspr:2,Enemy,FinnSetTurnState | FinnSetActiveState,KLOG
+0x10057441,sprite,uncracked,2,setspr:2,Enemy,GliderStateInit_WakeUp | GliderSetActiveState,WIZZ
+0x112ae088,sprite,uncracked,2,other:1;token:1,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x12308128,sprite,uncracked,2,init:2,Enemy,EnemySpawnerTickCallback | InitPathFollowingHazard,RUNN
+0x12800031,sprite,uncracked,6,other:6,Enemy,EntityType020_ClockPlatformB_Init | EntityType018_EnemyCluster_Init | EntityType019_ClockPlatformA_Init,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x168254b5,sprite,uncracked,9,other:7;init:2,Enemy,InvokeGameStateCallback | InitEntity_168254b5 | EntityNullEventHandler,FINN
+0x18248010,sprite,uncracked,2,other:1;setspr:1,Enemy,EnemySpriteState | EnemyDefeatState,KLOG
+0x1b280858,sprite,uncracked,3,setspr:3,Enemy,FinnState_Spawn | FinnSetTurnState,KLOG
+0x1b280c33,sprite,uncracked,2,other:1;setspr:1,Enemy,FinnStateIdle | FinnState_Spawn,KLOG
+0x21229c5c,sprite,uncracked,3,setspr:2;other:1,Enemy,InitCollectibleTimer0x1e_SpriteC | InitShooterEnemyStateA | InitShooterEnemyStateB,FOOD;SNOW
+0x212a9c2d,sprite,uncracked,5,setspr:4;other:1,Enemy,AnimatedEntityToggleSpriteB | AnimatedEntityToggleSpriteA | EnemySetLoopingAnimation,TMPL
+0x2524e089,sprite,uncracked,2,other:2,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x2cda4604,sprite,uncracked,2,other:2,Enemy,CollectibleTickFinnMode | CollectibleScaledTickCallback,BRG1;PHRO;SOAR
+0x2e809804,sprite,uncracked,2,other:2,Enemy,FinnDamageEventHandler,KLOG
+0x2e811804,sprite,uncracked,2,other:2,Enemy,FinnDamageEventHandler,KLOG
+0x2e839804,sprite,uncracked,2,other:2,Enemy,FinnDamageEventHandler,KLOG
+0x344210b1,sprite,uncracked,1,other:1,Enemy,FinnDeathExplosion,FINN
+0x35289fae,sprite,uncracked,2,setspr:2,Enemy,InitSoundEmittingEnemy | AnimatedEntityToggleSpriteA,TMPL
+0x39900619,sprite,uncracked,17,setspr:11;other:6,Enemy,SetupMenuButtonAnimation | MenuActivateButton | MenuActivateButtonWithReset,MENU
+0x400c9a1d,sprite,uncracked,2,other:1;setspr:1,Enemy,InitEntityState_Idle | InitEnemyAnimatedWithDeathSpawn,PHRO;SCIE
+0x407801d0,sprite,uncracked,3,setspr:2;other:1,Enemy,CollectibleAnimState | HazardIdleWithSound | HazardStopSoundAlt,GLEN
+0x407801dc,sprite,uncracked,3,setspr:2;other:1,Enemy,HazardStopSoundAlt | CollectibleActiveState,GLEN
+0x40e0824c,audio,uncracked,2,other:2,Enemy,FinnMainTickHandler,FINN
+0x425a399c,sprite,uncracked,1,other:1,Enemy,EntityType026_FlyingEnemy_Init,BOIL;CLOU;MOSS
+0x44d4c8d8,audio,uncracked,3,other:2;token:1,Enemy,InitEntityState_Idle | InitEnemyAnimatedWithDeathSpawn | PlaySoundEffect,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x458b0320,sprite,uncracked,3,setspr:2;other:1,Enemy,EnemySetWalkSprite | EnemySetIdleSprite,BRG1;SOAR
+0x51200640,audio,verified,2,other:1;sound:1,Enemy,InitTimerBasedMenuEntity | EnemySpawnerTickCallback,FOOD
+0x518b11b2,sprite,uncracked,3,init:2;other:1,Enemy,EnemyState_TurnAroundWithToken | InitEntity_ScaledSprite1,FOOD
+0x53209c1c,sprite,uncracked,3,setspr:2;other:1,Enemy,InitCollectibleTimer0x1e_SpriteC | InitShooterEnemyStateB | InitCollectibleIdleState,FOOD;SNOW
+0x60a91c9c,sprite,uncracked,1,other:1,Enemy,EnemyPatrolState,BRG1
+0x60aa1c9c,sprite,uncracked,1,other:1,Enemy,InitEnemyFallingState,BRG1
+0x60b8bc9c,sprite,uncracked,3,setspr:2;other:1,Enemy,InitTripleLaserMonkeyAttackState | LaserMonkeyIdleState,BRG1;PHRO;TMPL
+0x60b93cbd,sprite,uncracked,2,other:2,Enemy,EntityFallingGravityWithCollision | EnemyPatrolState,BRG1
+0x60b98cbd,sprite,uncracked,3,setspr:2;other:1,Enemy,EntityEventHandlerWithCountdownToWalk | LaserMonkeyWalkState,BRG1;PHRO;TMPL
+0x60b9bcbd,sprite,uncracked,2,other:2,Enemy,EntityFallingGravityWithCollision | EnemyPatrolState,BRG1
+0x61a91c9c,sprite,uncracked,1,other:1,Enemy,EnemyPatrolState,BRG1
+0x62318245,audio,uncracked,2,other:2,Enemy,CollectibleAnimState | HazardIdleWithSound,GLEN
+0x62aa1c9c,sprite,uncracked,1,other:1,Enemy,InitEnemyFallingState,BRG1
+0x64bb1cbe,sprite,uncracked,3,setspr:2;other:1,Enemy,LaserMonkeyWalkState | InitTripleLaserMonkeyAttackState,BRG1;PHRO;TMPL
+0x68009240,audio,verified,4,other:3;token:1,Enemy,StartAnimSequence4C | EntityFollowPathWithWrapping | EnemyStartMovingWithSound,BOIL;CLOU;MOSS
+0x6ae1a244,audio,uncracked,1,other:1,Enemy,FinnVehicleMovementUpdate,FINN
+0x74044081,audio,uncracked,3,other:3,Enemy,EnemySpawnerTickCallback | InitPathFollowingHazard,RUNN
+0x8139a088,sprite,uncracked,2,other:2,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x82886816,sprite,uncracked,5,other:4;init:1,Enemy,EntityTick_InterpolateTimedPath | InitClockPlatformWithTimer | EntityType018_EnemyCluster_Init,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x883d14b4,sprite,uncracked,1,other:1,Enemy,GliderEventHandlerWithCounter,WIZZ
+0x8a7ce022,sprite,uncracked,1,other:1,Enemy,FinnSubState_SetIdleSpriteAndPause,GLID;SCIE;SOAR;TMPL
+0x8b7ce0b2,sprite,uncracked,1,other:1,Enemy,FinnSubState_FaceRightAndAnimate,GLID;SCIE;SOAR;TMPL
+0x90810000,audio,verified,14,sound:8;other:6,Enemy,Menu_PlaySelectSoundIfEnabled | MenuDeactivateButton | FINN_ClearSubentityState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x93043811,sprite,uncracked,5,other:5,Enemy,EntityType018_EnemyCluster_Init | EntityType019_ClockPlatformA_Init | EntityType020_ClockPlatformB_Init,BOIL;CAVE;CSTL;EGGS;GLID;MOSS;
+0x9629a000,sprite,uncracked,2,other:2,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x9918a8e2,sprite,uncracked,1,setspr:1,Enemy,EnemyStateInit_SetSpriteAndHandler,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xa628e009,sprite,uncracked,2,other:2,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0xc8f90114,sprite,uncracked,1,setspr:1,Enemy,HazardStopSound,GLEN
+0xca282402,sprite,uncracked,1,setspr:1,Enemy,GliderWaitState,WIZZ
+0xd2801814,sprite,uncracked,6,other:6,Enemy,EntityType019_ClockPlatformA_Init | EntityType020_ClockPlatformB_Init | EntityType018_EnemyCluster_Init,CAVE;CRYS;EGGS;MOSS
+0xd70880a4,sprite,uncracked,2,other:2,Enemy,InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0xe7443a6f,sprite,uncracked,4,other:2;setspr:2,Enemy,BounceClay_DestroyingState | HazardActiveState,CSTL;FOOD;MOSS;PHRO;SNOW
+0xfa100225,sprite,uncracked,2,init:2,Enemy,SpawnEntityOrTriggerZone | InitEntityType0x3DE,BOIL;CAVE;CRYS;CSTL;EGGS;FOOD;
+0x0005c699,sprite,uncracked,2,setspr:2,Menu/UI,MenuEntityCallback | SetupMenuIdleAnimation,MENU
+0x00880c1e,audio,uncracked,7,sound:6;other:1,Menu/UI,PasswordBackspaceHandler | PasswordSubmitEventHandler | PasswordDigitInputHandler,MENU
+0x00e2f188,sprite,uncracked,16,init:16,Menu/UI,CreateMenuEntities | PlatformRideComplete,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x0305a4f5,sprite,uncracked,4,other:2;setspr:2,Menu/UI,SetupMenuIdleAnimation | InitRunnLevelEntity,MENU
+0x0a921e2c,sprite,uncracked,2,init:2,Menu/UI,HandleCollisionEvent0x1018 | InitLoadingScreenEntity,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x0ad0f813,sprite,verified,2,other:1;setspr:1,Menu/UI,ToggleMenuSelectionHighlight | ToggleMenuOptionState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x28ce0610,sprite,uncracked,2,other:1;init:1,Menu/UI,CheckVRAMSlotPixelColor | InitPasswordEntity,CSTL;FOOD;SEVN;TMPL
+0x29c0e211,sprite,verified,2,other:1;setspr:1,Menu/UI,ToggleMenuSelectionHighlight | ToggleMenuOptionState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x2ad0f011,sprite,verified,2,other:1;setspr:1,Menu/UI,ToggleMenuSelectionHighlight | ToggleMenuOptionState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x3080820d,sprite,uncracked,1,init:1,Menu/UI,InitMenuStage1,MENU
+0x3080840d,sprite,uncracked,1,init:1,Menu/UI,InitMenuStage1,MENU
+0x30808e0d,sprite,uncracked,1,init:1,Menu/UI,InitMenuStage1,MENU
+0x3099991b,sprite,uncracked,3,other:2;init:1,Menu/UI,Menu_DecrementCounter,MENU
+0x33808e1b,sprite,uncracked,2,other:1;setspr:1,Menu/UI,MenuSetEntityIdle | MenuSetEntityIdle2,MENU
+0x38a0c119,sprite,uncracked,1,init:1,Menu/UI,InitMenuStage1,MENU
+0x40b18011,sprite,uncracked,1,token:1,Menu/UI,InitMenuStage1,MENU
+0x4c60f249,audio,uncracked,2,other:1;sound:1,Menu/UI,PauseGameAndShowMenu | PauseGameWithFadeOut,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x646c2cc0,audio,uncracked,3,sound:3,Menu/UI,HidePauseMenuHUD | ToggleMenuSelectionHighlight | MenuInputHandler,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x68c01218,sprite,uncracked,1,init:1,Menu/UI,InitMenuStage1,MENU
+0x68c0f413,sprite,verified,2,other:1;setspr:1,Menu/UI,ToggleMenuSelectionHighlight | ToggleMenuOptionState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x69c04050,sprite,verified,2,other:1;setspr:1,Menu/UI,ToggleMenuSelectionHighlight | ToggleMenuOptionState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x69c8f473,sprite,verified,2,other:1;setspr:1,Menu/UI,ToggleMenuSelectionHighlight | ToggleMenuOptionState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xe289c059,sprite,uncracked,3,init:3,Menu/UI,InitMenuStage4,MENU
+0xec95689b,sprite,uncracked,7,init:4;other:3,Menu/UI,Menu_DecrementCounter | HUDDigitDisplayTickCallback | CreateResultsScreenEntity,MENU
+0x00248e52,audio,uncracked,5,other:3;sound:1;token:1,Player,PlayerNotifyEntityRelease | PlayerProcessTileCollision | PlayerState_SpecialMove2,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x002e2414,sprite,uncracked,2,token:1;other:1,Player,CheckTileCollisionOverride | PlayerProcessBounceCollision,FOOD
+0x00388110,sprite,uncracked,9,setspr:4;other:3;token:2,Player,PlayerCallback_EventHandlerAltWithQueue | PlayerStateCallback_2 | PlayerCallback_RestoreNormalHitbox,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x02841e65,sprite,uncracked,3,other:3,Player,PlayerCallback_SpawnTrailParticle | SpawnPlayerTrailParticle,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x02a10c60,sprite,uncracked,2,other:2,Player,PlayerCallback_SetStateWithQueueProcess | PlayerCallback_DeathAnimSetStateHandler,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x02c00e64,sprite,uncracked,3,other:3,Player,PlayerCallback_SetStateWithQueueProcess | PlayerCallback_DeathAnimSetStateHandler,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x04084011,sprite,uncracked,3,setspr:2;other:1,Player,PlayerState_RemoveAttachedEntity | PlayerStateInit_ThrowProjectile,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x052aa082,sprite,uncracked,4,other:2;setspr:1;token:1,Player,PlayerStateInit_ClimbIdle | PlayerStateInit_DamageKnockback | InitShadowMirrorSubentity,EGGS
+0x0628a800,sprite,uncracked,3,setspr:1;other:1;token:1,Player,PlayerStateInit_ClimbWithMirror | InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x06e0a824,audio,uncracked,3,other:3,Player,UpdateHUDEntityVisibility | PlayerCallback_RestoreNormalHitbox | PlayerState_StartSwimming,CAVE;CSTL;EGGS;EVIL;SCIE;WEED
+0x0708a4a0,sprite,uncracked,5,other:2;setspr:2;token:1,Player,PlayerState_TransitionToLevelExit | PlayerStateInit_ClimbIdle | PlayerState_CrouchOrClimbTransition,EGGS
+0x08208902,sprite,uncracked,4,other:2;setspr:2,Player,PlayerState_HideAndClearBounce | PlayerState_CheckpointExit | PlatformState_SetBounceAndHideSprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x08814c64,sprite,uncracked,3,other:3,Player,PlayerCallback_SetStateWithQueueProcess | PlayerCallback_DeathAnimSetStateHandler,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x092b8480,sprite,uncracked,5,token:2;other:2;setspr:1,Player,PlayerProcessTileCollision | PlayerState_JumpApex | PlayerState_Falling,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x0a08c490,sprite,uncracked,2,setspr:2,Player,PlayerStateInit_IdleWithZoneTrigger | PlayerStateInit_IdleStanding,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x0a3a4051,sprite,uncracked,1,setspr:1,Player,PlayerStateInit_FallFromLedge,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x0aabc010,sprite,uncracked,2,other:1;setspr:1,Player,PlayerStateInit_FallingWithInput | PlayerStateInit_Falling,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x0b2084d0,sprite,uncracked,2,setspr:2,Player,PlayerState_JumpApex | PlayerState_Falling,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x0e0ac230,sprite,uncracked,2,other:1;setspr:1,Player,PlayerStateInit_TeleportFallVariant | PlayerStateInit_FallingWithInput,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x18298210,sprite,uncracked,4,other:2;setspr:2,Player,PlayerState_WalkingRight | PlayerState_UpdateTPageAndHideHalo | PlayerState_WalkingLeft,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1a28c11a,sprite,uncracked,2,other:1;setspr:1,Player,PlayerStateInit_Falling | PlayerStateInit_TeleportLanding,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1b301085,sprite,uncracked,9,init:5;other:3;setspr:1,Player,FreeEntityNoTeardown_80073308 | PlayerState_DeathStart | PlayerState_Death,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1c395196,sprite,uncracked,4,token:2;other:2,Player,PlayerStateCallback_2 | PlayerState_StandingIdle | PlayerState_SpecialMove1,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1c3aa013,sprite,uncracked,10,setspr:6;other:4,Player,PlayerState_PickupItem | PlayerStateInit_BounceJumpAnimation | PlayerState_SpecialMove1,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1c8c2437,sprite,uncracked,2,other:1;setspr:1,Player,UniverseEnemaKillAllEnemies | PlayerStateInit_CheckpointEntry,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;
+0x1cf99931,sprite,uncracked,1,other:1,Player,PlayerState_ClearBounceAndAirFlag,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1d1811b3,sprite,uncracked,6,other:3;setspr:3,Player,PlayerCallback_ThrowSetStateAndSpawn | PlayerCallback_CheckpointSaveAndSpawnHUD,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1df99931,sprite,uncracked,1,other:1,Player,PlayerState_ClearBounceAndAirFlag,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1e089010,sprite,uncracked,4,other:2;setspr:2,Player,PlayerStateInit_Walking | PlayerState_StopSoundAndClear | PlayerStateInit_ResumeWalking,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1e1000b3,sprite,uncracked,7,other:3;setspr:2;init:2,Player,EntityTick_ShadowMirror | PlayerStateInit_ThrowProjectile | PlayerStateInit_CheckpointRestore,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1e28e0d4,sprite,uncracked,6,token:3;setspr:2;other:1,Player,PlayerState_FallWithRotation | PlayerTickCallback | PlayerState_TransitionToPickup,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1ef99931,sprite,uncracked,2,other:2,Player,PlayerState_ClearBounceAndAirFlag | PlayerStateInit_JumpFromPlatform,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x21842018,sprite,uncracked,3,other:1;alloc:1;setspr:1,Player,InitPlayerEntity | EntityTick_AnimationFrameAdvance,FINN
+0x282b8491,sprite,uncracked,5,setspr:3;other:2,Player,PlayerEnterLandingState | PlayerState_Falling | PlayerSetupIdleState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x292e8480,sprite,uncracked,6,setspr:4;other:2,Player,PlayerState_UpdateTPageAndHideHalo | PlayerState_WalkingLeft | PlayerState_WalkingRight,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x3838801a,sprite,uncracked,6,other:3;token:2;setspr:1,Player,PlayerStateCallback_2 | PlayerState_StandingIdle | PlayerState_SpecialMove1,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x392cb014,sprite,uncracked,2,other:1;setspr:1,Player,PlayerState_ClearCheckpointAndSetInvincible | PlayerEnterNormalState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x393c80c2,sprite,uncracked,8,setspr:4;other:4,Player,PlayerState_SetupBounceDownFast | PlayerState_ClearInAirFlag | PlayerSetupBounceAnimation,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x3da80d13,sprite,uncracked,3,init:1;other:1;setspr:1,Player,CreateFinnPlayerEntity | FinnStateIdle | FinnState_Spawn,KLOG
+0x3eb98520,sprite,uncracked,2,setspr:2,Player,SoarStateInit_BeginFlightMode | SoarState_BeginFlight,RUNN
+0x40e28045,audio,uncracked,1,other:1,Player,PlayerTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x421586c2,audio,uncracked,5,other:4;sound:1,Player,RunnEventHandler_QueueProcess | PlayerStateInit_DamageKnockback | PlayerState_DamageKnockback,EGGS;GLEN
+0x422a0225,sprite,uncracked,3,other:3,Player,SpawnPlayerColoredParticle | SpawnPlayerDeathEffect,CLOU
+0x4260c8b5,sprite,uncracked,2,other:2,Player,PlayerCallback_EventHandlerWithQueue,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;
+0x428254e2,audio,uncracked,4,sound:2;other:2,Player,AddPlayerLives | AddPlayerOrbs | InitTransparentDecorEntity,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x48204012,sprite,uncracked,8,other:4;setspr:4,Player,PlayerStateInit_Idle | PlayerCallback_SwimmingRisingPhysics | PlayerCallback_SetIdleStateCallbacks,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x49289c14,sprite,uncracked,6,other:6,Player,PlayerBounceCallback | SpawnSwirlPortalEntity | PlayerSpawnDustParticle,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x50f08207,audio,uncracked,4,other:4,Player,PlayerCallback_ProcessBounceWrapper6 | PlayerCallback_FallingPhysicsMain | PlayerCallback_FallingPhysicsContinue,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x54608016,sprite,uncracked,2,other:2,Player,PlayerCallback_EventHandlerWithQueue,BOIL;CAVE;EVIL;FOOD;HEAD;MEGA;
+0x5838cc16,sprite,uncracked,2,other:2,Player,PlayerCallback_EventHandlerWithQueue,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;
+0x5860c640,audio,verified,3,other:2;token:1,Player,SpawnPlayerColoredParticle | SpawnPlayerDeathEffect | PlaySoundEffect,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x5900c41e,sprite,scummvm_anchor,4,other:3;setspr:1,Player,PlayerState_IdleLookAround | PlayerCallback_SetIdleStateCallbacks | PlayerState_PlayRandomIdleAnimation,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x5a2082f2,sprite,uncracked,2,other:1;setspr:1,Player,PlayerStateInit_CrouchSlide | PlayerStateInit_IdleWithZoneTrigger,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x64221e61,audio,uncracked,19,other:17;sound:2,Player,TryActivatePowerup | PlayerCallback_CollisionTrailEntityUpdate | PlayerCallback_SetStateSimple,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x6c22083a,sprite,uncracked,2,setspr:2,Player,PlayerState_CheckpointRestoreComplete | UniverseEnemaActivate,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x7003474c,audio,uncracked,2,other:2,Player,PlayerNotifyEntityRelease | PlayerProcessTileCollision,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x70d006d8,audio,uncracked,4,other:3;token:1,Player,PlayerState_StopSoundAndClear | PlayerStateInit_Walking | PlaySoundEffect,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x80e85ea0,sprite,uncracked,11,other:9;init:2,Player,Collectible1970IconTickCallback | CreateMenuEntities | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x8524a880,sprite,uncracked,3,other:2;token:1,Player,PlayerStateInit_HeavyDamageLaunch | InitShadowMirrorSubentity | EntityTick_ShadowMirror,EGGS
+0x8569a090,sprite,uncracked,4,other:2;token:2,Player,PlayerStateInit_DamageKnockback | PlayerDestroyVoiceCallback | InitShadowMirrorSubentity,EGGS
+0x88b9833c,sprite,uncracked,3,other:2;token:1,Player,PlayerState_Running | PlayerState_JumpApex | PlayerState_Falling,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x8d01c734,sprite,uncracked,3,other:3,Player,PlayerSetupIdleState | PlayerState_StandingIdle | PlayerStateInit_TeleportLanding,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x91a9d01d,sprite,uncracked,2,other:2,Player,PlayerCallback_EventHandlerWithQueue,PHRO;SCIE
+0xa89d0ad0,sprite,uncracked,3,init:2;other:1,Player,ProjectileApplyVelocity | InitAuraEffectAtPlayer,BRG1;CAVE;CRYS;SNOW;SOAR
+0xc8099196,sprite,uncracked,1,other:1,Player,PlayerStateInit_BounceActive,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xca1b20cb,sprite,uncracked,10,other:5;init:5,Player,ProjectileState_HomingMissileTrack | FreeEntityNoTeardown_80070548 | RunnEvent_CutsceneDebrisAndLevel,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xcc6c8070,audio,uncracked,1,other:1,Player,CreateFinnPlayerEntity,GLEN;KLOG
+0xd167c005,sprite,uncracked,2,other:2,Player,PlayerCallback_EventHandlerWithQueue,PHRO;SCIE
+0xd305d045,sprite,uncracked,1,token:1,Player,PlayerState_PlayRandomIdleAnimation,PHRO;SCIE
+0xe0880448,audio,uncracked,1,other:1,Player,PlayerTickCallback,BOIL;BRG1;CAVE;CRYS;CSTL;EGGS;
+0x000cc8f8,sprite,uncracked,2,other:1;setspr:1,Projectile,ProjectileState_HomingActiveVariant3 | ProjectileHomingTickState,FOOD;TMPL
+0x006b9a6f,sprite,uncracked,8,setspr:5;other:3,Projectile,EntityEventHandlerSpawnProjectile | InitCollectibleTimer0x1e_SpriteC | InitCollectibleTimer0x1e,FOOD;SNOW
+0x02847462,audio,uncracked,2,other:2,Projectile,InitGreenBulletsCollectible | DecorEntity_CollectWithSwirlyEffect,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x082c0536,sprite,uncracked,1,other:1,Projectile,EntityEventHandlerSpawnMultipleProjectiles,EVIL;SCIE
+0x082e03d8,sprite,uncracked,2,other:2,Projectile,ClayballResetState | ClayballSpawnSwitchBlock,EVIL
+0x10882010,sprite,uncracked,1,other:1,Projectile,EntityType093_BonusClayball_Init,EVIL
+0x222222d8,sprite,uncracked,2,other:2,Projectile,ClayballResetState | ClayballSpawnSwitchBlock,EVIL
+0x222d9098,sprite,uncracked,2,other:1;init:1,Projectile,SpawnProjectileEntityDef | InitEntityWithChildSprite,EVIL;SCIE
+0x24002913,sprite,uncracked,1,other:1,Projectile,EntityEventHandlerSpawnProjectile,FOOD;SNOW
+0x262e0319,sprite,uncracked,2,other:2,Projectile,ClayballResetState | ClayballSpawnSwitchBlock,EVIL
+0x40098a60,sprite,uncracked,2,other:1;setspr:1,Projectile,ProjectileHomingTickState | ProjectileState_HomingMissileTrack,FOOD;TMPL
+0x410800f9,sprite,uncracked,2,other:1;setspr:1,Projectile,ProjectileState_HomingActiveVariant2 | ProjectileState_HomingActiveVariant3,FOOD;TMPL
+0x410808f9,sprite,uncracked,3,other:2;setspr:1,Projectile,ProjectileState_HomingActive | ProjectileState_HomingActiveVariant2,FOOD;TMPL
+0x410818f9,sprite,uncracked,3,other:2;setspr:1,Projectile,ProjectileState_HomingActive | HomingMissileTrackTarget,FOOD;TMPL
+0x462c6040,sprite,uncracked,1,other:1,Projectile,ClayballState_DestroyWithDebris,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x46346040,sprite,uncracked,1,other:1,Projectile,ClayballState_DestroyWithDebris,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x46386040,sprite,uncracked,1,other:1,Projectile,ClayballState_DestroyWithDebris,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x463e6040,sprite,uncracked,1,other:1,Projectile,ClayballState_DestroyWithDebris,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x4a806042,audio,uncracked,6,other:6,Projectile,InitClayballWithRandomColor | InitEntity_PathDecor2 | CollectibleClaySingleTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x61200640,audio,verified,1,token:1,Projectile,EntityEventHandlerSpawnProjectile,FOOD;SNOW
+0x78d909e0,sprite,uncracked,3,init:2;other:1,Projectile,ProjectileDeactivate | InitEntity_ScaledAnimated1,SNOW
+0x8429153c,sprite,uncracked,2,other:1;init:1,Projectile,SpawnProjectileEntityDef | InitEntityWithChildSprite,EVIL;SCIE
+0x88a16190,sprite,uncracked,3,other:3,Projectile,EntityType059_WaypointClayballC_Init | EntityType062_ClayballVariantA_Init,SEVN
+0x9c6584d2,sprite,uncracked,1,other:1,Projectile,HomingProjectileTick,BRG1
+0xb69c8356,sprite,uncracked,1,other:1,Projectile,EntityType066_ClayballVariantC_Init,CSTL
+0xb7cce25e,sprite,uncracked,1,other:1,Projectile,EntityType067_ClayballVariantD_Init,CSTL
+0xb8700ca1,sprite,uncracked,9,init:8;other:1,Projectile,InitEntityState_Animated | CreateMenuEntities | DecorEntity_CollectWithSwirlyEffect,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xbebce258,sprite,uncracked,1,other:1,Projectile,EntityType068_ClayballVariantE_Init,CSTL;SOAR
+0xc48c7158,sprite,uncracked,1,other:1,Projectile,EntityType092_SwitchClayballC_Init,EVIL
+0xc89e9158,sprite,uncracked,1,other:1,Projectile,EntityType091_SwitchClayballB_Init,EVIL
+0xd6bc2450,sprite,uncracked,1,other:1,Projectile,ClayballState_DestroyWithDebris,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0xd89c319a,sprite,uncracked,2,other:2,Projectile,EntityType068_ClayballVariantE_Init | EntityType090_SwitchClayballA_Init,EVIL
+0xe8628689,sprite,uncracked,3,init:3,Projectile,CreateMenuEntities | SpawnDecorParticleEffect | InitGreenBulletsCollectible,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x246166fa,audio,uncracked,1,token:1,Sound/Audio,PlaySoundEffect,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x01a5b0d3,audio,uncracked,3,table:1;other:1;token:1,Teleport/Decor,TeleporterTransitionTickCallback | TeleporterPortalEventHandler,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x093080c8,sprite,uncracked,2,setspr:2,Teleport/Decor,DecorSetRandomTimer | DecorStartWithRandomTimer,BRG1;CAVE;CRYS;SNOW;SOAR
+0x09993072,sprite,uncracked,5,init:2;setspr:2;other:1,Teleport/Decor,DeathAnimationTick | InitDirectionalPositionEntity,MEGA
+0x0bbb70ac,sprite,uncracked,1,other:1,Teleport/Decor,TeleporterActivate,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1a202d81,sprite,uncracked,3,setspr:3,Teleport/Decor,PlatformStateInit_BounceWithGravity | PlatformStateInit_IdleNoGravity | PlatformStateInit_LandFromFlight,RUNN
+0x1a2ab594,sprite,uncracked,2,setspr:2,Teleport/Decor,TeleporterPortalEventHandler | TeleporterExitState,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x1e181d10,sprite,uncracked,2,other:1;setspr:1,Teleport/Decor,PlatformStateInit_LandFromFlight | RunnEntityDamageEffect,RUNN
+0x3c389550,sprite,uncracked,2,other:1;setspr:1,Teleport/Decor,PlatformEntityCheckTriggerZones | PlatformStateInit_ResumeWithSound,RUNN
+0x40023e30,audio,uncracked,7,sound:4;other:3,Teleport/Decor,DecorEntityCollisionHandlerExt | DecorPlaySoundAndAnimate | EndingTickCallback,BOIL;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x40784034,audio,uncracked,2,other:2,Teleport/Decor,PlatformStateInit_LandFromFlight | RunnEntityDamageEffect,RUNN
+0x40f8c274,audio,uncracked,2,other:2,Teleport/Decor,PlatformEntityCheckTriggerZones | PlatformStateInit_ResumeWithSound,RUNN
+0x60680076,audio,uncracked,1,other:1,Teleport/Decor,PlatformStateInit_LandFromFlight,RUNN
+0x746048f1,audio,uncracked,2,other:2,Teleport/Decor,SoundEmitterIdleTickCallback | EntityPathFollowerWithTriggerZone,RUNN
+0x80282799,sprite,uncracked,3,other:3,Teleport/Decor,TeleporterTickCallback | TeleporterActivateTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x880161a7,sprite,uncracked,1,setspr:1,Teleport/Decor,DecorSetSpriteActive,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x91106183,sprite,uncracked,1,setspr:1,Teleport/Decor,DecorStartAnimation,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x9b0ab1c6,sprite,uncracked,1,setspr:1,Teleport/Decor,TeleporterActivate,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x9b2204a0,sprite,uncracked,2,other:1;init:1,Teleport/Decor,BounceClay_HiddenState | InitScaledMovingEntity,BOIL
+0xa9228088,sprite,uncracked,2,setspr:1;other:1,Teleport/Decor,DecorCollisionTickWithSpawnAndSound,BRG1;CAVE;CRYS;SNOW;SOAR
+0xa9387d8c,sprite,uncracked,1,other:1,Teleport/Decor,TeleporterActivate,CLOU
+0xbb781481,sprite,uncracked,2,other:1;setspr:1,Teleport/Decor,DecorEntityCollisionHandlerExt,BOIL;CAVE;CLOU;CRYS;CSTL;EGGS;
+0xc8830661,audio,verified,1,other:1,Teleport/Decor,InitPathFollowingEntity_Alt,BRG1;SOAR
+0x0c01c014,sprite,uncracked,2,setspr:2,Uncategorized,RunnSteeringTick | RunnSetIdleState,GLEN
+0x42c11270,audio,uncracked,2,other:2,Uncategorized,StartAnimSequence4C,CAVE
+0x4d09d01c,sprite,uncracked,3,setspr:2;other:1,Uncategorized,RunnSetIdleState | RunnSetActiveState,GLEN
+0x5238cd10,sprite,uncracked,3,other:2;setspr:1,Uncategorized,RunnState_DeathAdvanceLevel | EntityEnterAnimatedIdleState,RUNN
+0x60181a0c,sprite,uncracked,2,other:1;setspr:1,Uncategorized,InitEntityRandomIdleOrAnimated | InitEntityState_Idle,PHRO;SCIE
+0x60889602,audio,uncracked,1,other:1,Uncategorized,InitEntityWithChildSprite,EVIL;SCIE
+0x611c5804,sprite,uncracked,2,other:1;setspr:1,Uncategorized,EntitySetFacingRight | InitEntityState_Animated,PHRO;SCIE
+0x7c108242,audio,verified,2,other:2,Uncategorized,StartAnimSequence4C,EVIL;FOOD;MOSS;SOAR
+0x7c108244,audio,verified,2,other:2,Uncategorized,StartAnimSequence4C,CLOU;CRYS;SOAR
+0x8ab92024,sprite,uncracked,1,init:1,Uncategorized,DisplayTransitionSprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xb4011101,sprite,uncracked,1,other:1,Uncategorized,EntityGroundSnapMovementCallback,BRG1;PHRO;SOAR
+0xc2820c70,audio,uncracked,2,other:2,Uncategorized,StartAnimSequence4C,EGGS;GLID;WEED
+0xe6830101,sprite,uncracked,1,setspr:1,Uncategorized,SetEntitySpecialState_3,BRG1;PHRO;SOAR
+0x00000000,type500,uncracked,0,,Table-only,,
+0x000f0106,type500,uncracked,0,,Table-only,,
+0x00100125,type500,uncracked,0,,Table-only,,
+0x001822d8,audio,uncracked,0,,Table-only,,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;
+0x001882e0,audio,uncracked,0,,Table-only,,BOIL;CAVE;EGGS;EVIL;FOOD;HEAD;
+0x003701ac,type500,uncracked,0,,Table-only,,
+0x003c0171,type500,uncracked,0,,Table-only,,
+0x004c9138,sprite,uncracked,0,,Table-only,,CLOU;CRYS;SOAR
+0x006e0046,type500,uncracked,0,,Table-only,,
+0x00ae0046,type500,uncracked,0,,Table-only,,
+0x00c60046,type500,uncracked,0,,Table-only,,
+0x00ce0610,sprite,uncracked,0,,Table-only,,CSTL;FOOD;SEVN;TMPL
+0x00e49240,audio,verified,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x0101820a,type700,uncracked,0,,Table-only,,
+0x0120e27a,audio,uncracked,0,,Table-only,,BRG1;SOAR
+0x012484d2,audio,uncracked,0,,Table-only,,BRG1;SOAR
+0x01680261,audio,uncracked,0,,Table-only,,KLOG
+0x02098010,sprite,uncracked,0,,Table-only,,TMPL
+0x02102152,audio,uncracked,0,,Table-only,,BOIL;FOOD
+0x0220a173,audio,uncracked,0,,Table-only,,FOOD
+0x02804e67,sprite,uncracked,0,,Table-only,,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x02a48626,audio,uncracked,0,,Table-only,,FINN
+0x02e900c0,audio,uncracked,0,,Table-only,,MENU
+0x03ecb851,audio,uncracked,0,,Table-only,,BOIL
+0x04041001,audio,uncracked,0,,Table-only,,WIZZ
+0x0408c01e,sprite,uncracked,0,,Table-only,,EVIL;FOOD;MOSS;SOAR
+0x040a2110,sprite,uncracked,0,,Table-only,,FINN
+0x0428801e,sprite,uncracked,0,,Table-only,,EVIL;FOOD;MOSS;SOAR
+0x0434ce72,audio,uncracked,0,,Table-only,,CLOU
+0x0462e0bb,audio,uncracked,0,,Table-only,,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;
+0x0478a37a,audio,uncracked,0,,Table-only,,BOIL;CSTL;TMPL
+0x04a68e56,audio,uncracked,0,,Table-only,,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;
+0x04dce858,audio,uncracked,0,,Table-only,,CLOU
+0x069480a0,sprite,uncracked,0,,Table-only,,RUNN
+0x08041001,audio,uncracked,0,,Table-only,,WIZZ
+0x08089081,audio,uncracked,0,,Table-only,,WIZZ
+0x080c8300,sprite,uncracked,0,,Table-only,,EVIL
+0x08148300,sprite,uncracked,0,,Table-only,,EVIL;FINN;RUNN
+0x08148ac2,audio,uncracked,0,,Table-only,,EGGS
+0x08188300,sprite,uncracked,0,,Table-only,,EVIL;FINN;RUNN
+0x081c8302,sprite,uncracked,0,,Table-only,,EVIL;FINN;RUNN
+0x081d8300,sprite,uncracked,0,,Table-only,,EVIL;FINN;RUNN
+0x081e8300,sprite,uncracked,0,,Table-only,,EVIL;FINN;RUNN
+0x085c8300,sprite,uncracked,0,,Table-only,,FINN
+0x09ce0610,sprite,uncracked,0,,Table-only,,CSTL;FOOD;SEVN;TMPL
+0x0a409040,audio,uncracked,0,,Table-only,,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;
+0x0ace0610,sprite,uncracked,0,,Table-only,,CSTL;FOOD;SEVN;TMPL
+0x0cce0610,sprite,uncracked,0,,Table-only,,CSTL;FOOD;SEVN;TMPL
+0x0e041001,audio,uncracked,0,,Table-only,,WIZZ
+0x1000c042,audio,verified,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;PHRO;SCIE;
+0x10031015,type700,uncracked,0,,Table-only,,
+0x10050221,type700,uncracked,0,,Table-only,,
+0x1063bb49,audio,uncracked,0,,Table-only,,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;
+0x10904443,audio,uncracked,0,,Table-only,,CRYS
+0x10965446,audio,uncracked,0,,Table-only,,FOOD
+0x10b85810,sprite,uncracked,0,,Table-only,,FINN
+0x10b91810,sprite,uncracked,0,,Table-only,,FINN
+0x10b9181c,sprite,uncracked,0,,Table-only,,FINN
+0x10b94810,sprite,uncracked,0,,Table-only,,FINN
+0x10b9481c,sprite,uncracked,0,,Table-only,,FINN
+0x10b95010,sprite,uncracked,0,,Table-only,,FINN
+0x10b9501c,sprite,uncracked,0,,Table-only,,FINN
+0x10b95a10,sprite,uncracked,0,,Table-only,,FINN
+0x10b95a1c,sprite,uncracked,0,,Table-only,,FINN
+0x10b95c10,sprite,uncracked,0,,Table-only,,FINN
+0x10b95c1c,sprite,uncracked,0,,Table-only,,FINN
+0x10b97810,sprite,uncracked,0,,Table-only,,FINN
+0x10b9781c,sprite,uncracked,0,,Table-only,,FINN
+0x10b9d810,sprite,uncracked,0,,Table-only,,FINN
+0x10b9d81c,sprite,uncracked,0,,Table-only,,FINN
+0x10bb5810,sprite,uncracked,0,,Table-only,,FINN
+0x10f0e983,audio,uncracked,0,,Table-only,,TMPL
+0x1546b710,audio,uncracked,0,,Table-only,,PHRO;SCIE
+0x1828e640,audio,uncracked,0,,Table-only,,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;
+0x1847c001,type700,uncracked,0,,Table-only,,
+0x18ce0610,sprite,uncracked,0,,Table-only,,CSTL;FOOD;SEVN;TMPL
+0x1b610064,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x21e90ca0,audio,uncracked,0,,Table-only,,MENU
+0x2222b64a,audio,uncracked,0,,Table-only,,CSTL;MOSS
+0x22a4aa42,audio,uncracked,0,,Table-only,,BRG1;CAVE;CRYS;SNOW;SOAR
+0x23683294,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x2470e0f2,audio,uncracked,0,,Table-only,,CLOU
+0x25d2c8d8,audio,uncracked,0,,Table-only,,BOIL;CSTL;TMPL
+0x28a0c119,sprite,uncracked,0,,Table-only,,MENU
+0x29808408,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x2a6e0410,sprite,uncracked,0,,Table-only,,EGGS
+0x2b2ca36b,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x30004240,audio,verified,0,,Table-only,,BRG1
+0x302010c4,audio,uncracked,0,,Table-only,,BRG1;PHRO;TMPL
+0x302016c4,audio,uncracked,0,,Table-only,,HEAD
+0x30a0c119,sprite,uncracked,0,,Table-only,,MENU
+0x31190002,type700,uncracked,0,,Table-only,,
+0x3128adf0,audio,uncracked,0,,Table-only,,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;
+0x326e0410,sprite,uncracked,0,,Table-only,,FOOD;TMPL
+0x3a186940,sprite,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0x3a186980,sprite,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0x400c989d,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0x400c991d,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0x401106da,audio,uncracked,0,,Table-only,,BOIL;CLOU;FOOD;HEAD;MEGA;PHRO;
+0x40110e26,audio,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x40189a1d,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0x402044c9,audio,uncracked,0,,Table-only,,MEGA
+0x40400270,audio,verified,0,,Table-only,,BRG1;SOAR
+0x40489938,sprite,uncracked,0,,Table-only,,CLOU;CRYS;SOAR
+0x404c5919,sprite,uncracked,0,,Table-only,,SCIE;SNOW
+0x40815801,audio,uncracked,0,,Table-only,,WIZZ
+0x408a1c10,sprite,uncracked,0,,Table-only,,CAVE
+0x408a2c10,sprite,uncracked,0,,Table-only,,FOOD
+0x40b28011,sprite,uncracked,0,,Table-only,,MENU
+0x40b48011,sprite,uncracked,0,,Table-only,,MENU
+0x40c0d0e4,audio,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0x40c21c10,sprite,uncracked,0,,Table-only,,BRG1
+0x40c22c10,sprite,uncracked,0,,Table-only,,SCIE
+0x40da1c10,sprite,uncracked,0,,Table-only,,FINN
+0x40da2c10,sprite,uncracked,0,,Table-only,,EGGS
+0x40e9a362,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x40ea1c10,sprite,uncracked,0,,Table-only,,CLOU
+0x40ea2c10,sprite,uncracked,0,,Table-only,,WEED
+0x412e8311,audio,uncracked,0,,Table-only,,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;
+0x4148c374,audio,uncracked,0,,Table-only,,RUNN
+0x41ca1c10,sprite,uncracked,0,,Table-only,,CRYS
+0x421d1000,audio,uncracked,0,,Table-only,,MENU
+0x42590440,audio,uncracked,0,,Table-only,,MENU
+0x42ca1c10,sprite,uncracked,0,,Table-only,,CLOU
+0x43234444,audio,uncracked,0,,Table-only,,GLEN
+0x4348b052,audio,uncracked,0,,Table-only,,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;
+0x4428c941,audio,verified,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x44ca1c10,sprite,uncracked,0,,Table-only,,TMPL
+0x44d6c8cd,audio,uncracked,0,,Table-only,,BRG1;SOAR
+0x45310a04,audio,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x46269090,sprite,uncracked,0,,Table-only,,WIZZ
+0x48017101,audio,uncracked,0,,Table-only,,WIZZ
+0x48209640,audio,uncracked,0,,Table-only,,KLOG
+0x4824c0c5,audio,uncracked,0,,Table-only,,MEGA
+0x486002db,audio,uncracked,0,,Table-only,,BOIL;CSTL;TMPL
+0x48608484,sprite,uncracked,0,,Table-only,,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;
+0x4860c074,audio,uncracked,0,,Table-only,,RUNN
+0x48ca1c10,sprite,uncracked,0,,Table-only,,CAVE;CRYS
+0x492c8430,sprite,uncracked,0,,Table-only,,WIZZ
+0x49609640,audio,uncracked,0,,Table-only,,KLOG
+0x49a09640,audio,uncracked,0,,Table-only,,KLOG
+0x4a1ea052,sprite,uncracked,0,,Table-only,,GLEN
+0x4a3ea110,sprite,uncracked,0,,Table-only,,MENU
+0x4a4ec094,sprite,uncracked,0,,Table-only,,GLEN
+0x4a60ca40,audio,verified,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x4aee0118,sprite,uncracked,0,,Table-only,,MEGA
+0x4baf8200,sprite,uncracked,0,,Table-only,,MEGA
+0x4c02d240,audio,uncracked,0,,Table-only,,KLOG
+0x4c22d240,audio,uncracked,0,,Table-only,,KLOG
+0x4c2a8850,sprite,uncracked,0,,Table-only,,WIZZ
+0x4c62d240,audio,uncracked,0,,Table-only,,KLOG
+0x4ca2d240,audio,uncracked,0,,Table-only,,KLOG
+0x4cddccd8,audio,uncracked,0,,Table-only,,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;
+0x4e05b540,anim,uncracked,0,,Table-only,,
+0x50008340,audio,verified,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x502141c3,audio,uncracked,0,,Table-only,,MEGA
+0x5024100c,type700,uncracked,0,,Table-only,,
+0x502840c3,audio,uncracked,0,,Table-only,,HEAD;MEGA
+0x50408b61,audio,uncracked,0,,Table-only,,EVIL;GLEN;SCIE
+0x50412804,type700,uncracked,0,,Table-only,,
+0x5050c643,audio,uncracked,0,,Table-only,,BOIL;CSTL;TMPL
+0x506e8654,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x507883c3,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x5101c047,audio,uncracked,0,,Table-only,,GLEN
+0x512061c1,audio,uncracked,0,,Table-only,,MEGA
+0x512c8430,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x51910816,audio,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x523ea110,sprite,uncracked,0,,Table-only,,EGGS
+0x524ec094,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x52a08394,sprite,uncracked,0,,Table-only,,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;
+0x52ee0118,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x53608b64,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x53af8200,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x542a8850,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x563ba142,audio,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x56a1c2c0,audio,uncracked,0,,Table-only,,GLEN
+0x5821c242,audio,uncracked,0,,Table-only,,CLOU
+0x5862f614,audio,uncracked,0,,Table-only,,KLOG
+0x5870c6e8,audio,uncracked,0,,Table-only,,BRG1;SOAR
+0x5a088840,sprite,uncracked,0,,Table-only,,KLOG
+0x5a204c30,sprite,uncracked,0,,Table-only,,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;
+0x5d2ce434,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;
+0x5d40a249,audio,uncracked,0,,Table-only,,BOIL;BRG1;FOOD;MEGA;PHRO;SCIE;
+0x5e269090,sprite,uncracked,0,,Table-only,,MENU
+0x60041650,audio,uncracked,0,,Table-only,,CSTL
+0x606c8061,audio,uncracked,0,,Table-only,,KLOG
+0x60830860,audio,uncracked,0,,Table-only,,RUNN;SNOW
+0x60a91d9c,anim,uncracked,0,,Table-only,,
+0x60aa1e9c,anim,uncracked,0,,Table-only,,
+0x612010c9,audio,verified,0,,Table-only,,HEAD
+0x612c8430,sprite,uncracked,0,,Table-only,,FOOD;SNOW
+0x61581a0c,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0x61841021,audio,uncracked,0,,Table-only,,EVIL;SCIE;WIZZ
+0x61981a0c,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0x620ec210,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x6220a452,audio,uncracked,0,,Table-only,,CSTL;MOSS
+0x62ee0118,sprite,uncracked,0,,Table-only,,BRG1
+0x63af8200,sprite,uncracked,0,,Table-only,,FOOD;SNOW
+0x662096e9,audio,uncracked,0,,Table-only,,HEAD
+0x682080cd,audio,verified,0,,Table-only,,HEAD
+0x6c351094,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x7000c248,audio,verified,0,,Table-only,,PHRO;SCIE
+0x70204350,audio,verified,0,,Table-only,,BRG1;FOOD
+0x70404350,audio,verified,0,,Table-only,,BRG1;PHRO;TMPL
+0x71030240,audio,verified,0,,Table-only,,BRG1
+0x72000210,type700,uncracked,0,,Table-only,,
+0x72a7d455,audio,uncracked,0,,Table-only,,GLEN
+0x74182b40,audio,verified,0,,Table-only,,FOOD;TMPL
+0x75189608,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0x760106c1,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x7622c165,audio,uncracked,0,,Table-only,,GLEN
+0x7623c165,audio,uncracked,0,,Table-only,,GLEN
+0x78100250,audio,uncracked,0,,Table-only,,PHRO;SCIE
+0x7a0ec210,sprite,uncracked,0,,Table-only,,EGGS
+0x80808846,audio,uncracked,0,,Table-only,,SEVN
+0x80a0c240,audio,uncracked,0,,Table-only,,SNOW
+0x826ca852,audio,uncracked,0,,Table-only,,BOIL
+0x83248e62,audio,uncracked,0,,Table-only,,BOIL;CSTL;TMPL
+0x84004480,sprite,uncracked,0,,Table-only,,BOIL
+0x8508000a,sprite,uncracked,0,,Table-only,,EVIL;FINN;RUNN
+0x8c29e08c,sprite,uncracked,0,,Table-only,,GLEN
+0x90805c51,audio,uncracked,0,,Table-only,,EGGS
+0x908254e5,audio,uncracked,0,,Table-only,,PHRO
+0x90985240,audio,uncracked,0,,Table-only,,TMPL
+0x90a19011,sprite,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x90b102a1,sprite,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x90c24401,audio,uncracked,0,,Table-only,,SEVN
+0x90d85954,audio,uncracked,0,,Table-only,,PHRO
+0x9180d446,audio,uncracked,0,,Table-only,,CAVE
+0x9291d400,audio,uncracked,0,,Table-only,,TMPL
+0x92af8810,sprite,uncracked,0,,Table-only,,BRG1
+0x92f8f1c0,audio,uncracked,0,,Table-only,,MEGA
+0x9389b8c4,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x980861a3,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x980c6211,sprite,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0x987101b9,sprite,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0x987140d0,sprite,uncracked,0,,Table-only,,BRG1
+0x991003c2,audio,verified,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;PHRO;SCIE;
+0x9940bb40,audio,uncracked,0,,Table-only,,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;
+0x9980d651,audio,uncracked,0,,Table-only,,BOIL;EVIL
+0x9cc87050,audio,uncracked,0,,Table-only,,SCIE
+0x9d406340,audio,scummvm_anchor,0,,Table-only,,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;
+0x9d4dc260,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xa00a0c30,sprite,uncracked,0,,Table-only,,CAVE
+0xa0299a4d,sprite,uncracked,0,,Table-only,,FOOD;SNOW
+0xa06088c9,audio,verified,0,,Table-only,,HEAD
+0xa0824440,audio,uncracked,0,,Table-only,,FOOD
+0xa116220c,sprite,uncracked,0,,Table-only,,HEAD
+0xa2034840,audio,uncracked,0,,Table-only,,WEED
+0xb0107444,audio,uncracked,0,,Table-only,,TMPL
+0xb0807444,audio,uncracked,0,,Table-only,,TMPL
+0xb0b07444,audio,uncracked,0,,Table-only,,TMPL
+0xb0d07444,audio,uncracked,0,,Table-only,,TMPL
+0xb12c0854,sprite,uncracked,0,,Table-only,,EGGS;GLID;WEED
+0xb1907444,audio,uncracked,0,,Table-only,,TMPL
+0xb2907444,audio,uncracked,0,,Table-only,,TMPL
+0xb6c35cc0,audio,uncracked,0,,Table-only,,PHRO;RUNN
+0xb84968b0,sprite,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0xb92c4850,sprite,uncracked,0,,Table-only,,EGGS;GLID;WEED
+0xba094800,sprite,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0xc0608a40,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc2911461,audio,uncracked,0,,Table-only,,BOIL;FOOD;HEAD;MEGA;MENU;PHRO;
+0xc305034b,audio,uncracked,0,,Table-only,,BRG1;PHRO;SOAR
+0xc473c624,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc672c624,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc8648260,audio,uncracked,0,,Table-only,,KLOG
+0xc864b260,audio,uncracked,0,,Table-only,,KLOG
+0xc864d260,audio,uncracked,0,,Table-only,,KLOG
+0xc92884e2,audio,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xc9387d8c,sprite,uncracked,0,,Table-only,,CLOU
+0xca1006c0,audio,uncracked,0,,Table-only,,BOIL;FOOD;HEAD;MEGA;MENU;PHRO;
+0xca223f46,audio,uncracked,0,,Table-only,,TMPL
+0xd02dc3d5,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xd0a14440,audio,uncracked,0,,Table-only,,BRG1
+0xd0a5f094,sprite,uncracked,0,,Table-only,,GLID;SCIE;SOAR;TMPL
+0xd0b04444,audio,uncracked,0,,Table-only,,FINN
+0xd144ab00,audio,uncracked,0,,Table-only,,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;
+0xd4865c40,audio,uncracked,0,,Table-only,,GLID
+0xd4a094c0,audio,uncracked,0,,Table-only,,FOOD
+0xd68e3c40,audio,uncracked,0,,Table-only,,WEED
+0xd914004f,audio,verified,0,,Table-only,,BRG1;PHRO;SOAR
+0xe00e989d,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0xe00e991d,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0xe398d28d,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;
+0xe4cb8330,sprite,uncracked,0,,Table-only,,BRG1;SOAR
+0xe6182b56,audio,uncracked,0,,Table-only,,FOOD;SNOW
+0xf175320e,sprite,uncracked,0,,Table-only,,CSTL;FOOD;MOSS;PHRO;SNOW
+0xf8494814,sprite,uncracked,0,,Table-only,,CAVE;EGGS;GLID;WEED
+0xf936c015,sprite,uncracked,0,,Table-only,,BOIL;CAVE;EVIL;FOOD;HEAD;MEGA;
+0xfa20cd14,sprite,uncracked,0,,Table-only,,BOIL;CSTL;FOOD;HEAD;MEGA;MOSS;
+0xfa700ce7,sprite,uncracked,0,,Table-only,,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0xfb260440,sprite,uncracked,0,,Table-only,,BOIL
+0xfc82d540,audio,uncracked,0,,Table-only,,CLOU;WEED

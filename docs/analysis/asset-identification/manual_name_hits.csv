@@ -1,0 +1,4 @@
+name,id_hex,kinds,floor,sources
+QUIT,0x68c0f413,sprite|anim,13,demo
+CONTINUE,0x69c04050,sprite|anim,9,demo
+QUITGAME,0x69c8f473,sprite|anim,17,demo

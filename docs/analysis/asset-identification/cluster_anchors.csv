@@ -1,0 +1,36 @@
+cluster_id,class_hex,swap_pop,comp_size,n_anchors,n_visual_labeled,n_unsolved,anchor_names,labeled_examples,unsolved_ids,swap_examples
+K0001,0x00283063,8,10,0,2,10,,0x4aee0118=Shriney Guard boss s | 0x4baf8200=Shriney Guard boss y,0x2a6e0410;0x46269090;0x492c8430;0x4a1ea052;0x4a4ec094;0x4aee0118;0x4baf8200;0x4c2a8850;0x523ea110;0x7a0ec210,
+K0002,0x00283063,8,10,0,2,10,,0x4a3ea110=Menu door opens to r | 0x512c8430=Klaymen running (loc,0x326e0410;0x4a3ea110;0x512c8430;0x524ec094;0x52ee0118;0x53af8200;0x542a8850;0x5e269090;0x620ec210;0x92af8810,
+K0014,0x00d89129,10,4,0,2,4,,0x4a3ea110=Menu door opens to r | 0x512c8430=Klaymen running (loc,0x4a3ea110;0x512c8430;0x524ec094;0x92af8810,
+K0022,0x00000003,2,3,0,1,3,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x52ee0118;0x62ee0118,0↔1 | 0↔E | 0↔G | 1↔2
+K0023,0x00000003,2,3,0,1,3,,0x4baf8200=Shriney Guard boss y,0x4baf8200;0x53af8200;0x63af8200,0↔1 | 0↔E | 0↔G | 1↔2
+K0024,0x00000003,2,3,0,1,3,,0x61981a0c=Plain monkey enemy,0x60181a0c;0x61581a0c;0x61981a0c,0↔1 | 0↔E | 0↔G | 1↔2
+K0034,0x00000003,2,3,0,1,3,,0x512c8430=Klaymen running (loc,0x492c8430;0x512c8430;0x612c8430,0↔1 | 0↔E | 0↔G | 1↔2
+K0068,0x00000003,2,2,0,1,2,,0x4a3ea110=Menu door opens to r,0x4a3ea110;0x523ea110,0↔1 | 0↔E | 0↔G | 1↔2
+K0069,0x00000005,2,2,0,1,2,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x62ee0118,0↔2 | 0↔D | 0↔H | 0↔D
+K0070,0x00000005,2,2,0,1,2,,0x4baf8200=Shriney Guard boss y,0x4baf8200;0x63af8200,0↔2 | 0↔D | 0↔H | 0↔D
+K0074,0x000a10c1,6,2,0,1,2,,0x4aee0118=Shriney Guard boss s,0x2a6e0410;0x4aee0118,
+K0071,0x0040c685,8,2,0,1,2,,0x4a3ea110=Menu door opens to r,0x4a3ea110;0x52ee0118,
+K0072,0x0040c685,8,2,0,1,2,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x523ea110,
+K0073,0x0040c685,8,2,0,1,2,,0x4baf8200=Shriney Guard boss y,0x4baf8200;0x7a0ec210,
+K0306,0x0040c685,8,2,0,1,2,,0x512c8430=Klaymen running (loc,0x326e0410;0x512c8430,
+K0006,0x007850a5,10,5,0,1,5,,0x4baf8200=Shriney Guard boss y,0x2a6e0410;0x4a4ec094;0x4baf8200;0x4c2a8850;0x523ea110,
+K0007,0x007850a5,10,5,0,1,5,,0x4a3ea110=Menu door opens to r,0x326e0410;0x4a3ea110;0x524ec094;0x53af8200;0x542a8850,
+K0008,0x007850a5,10,5,0,1,5,,0x4aee0118=Shriney Guard boss s,0x46269090;0x492c8430;0x4a1ea052;0x4aee0118;0x7a0ec210,
+K0012,0x007850a5,10,5,0,1,5,,0x512c8430=Klaymen running (loc,0x512c8430;0x52ee0118;0x5e269090;0x620ec210;0x92af8810,
+K0013,0x00d89129,10,4,0,1,4,,0x4baf8200=Shriney Guard boss y,0x2a6e0410;0x46269090;0x4a1ea052;0x4baf8200,
+K0025,0x00d89129,10,3,0,1,3,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x4c2a8850;0x7a0ec210,
+K0026,0x03283063,10,3,0,1,3,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x53af8200;0x612c8430,
+K0075,0x06184187,10,2,0,1,2,,0x4baf8200=Shriney Guard boss y,0x2a6e0410;0x4baf8200,
+K0076,0x06184187,10,2,0,1,2,,0x4a3ea110=Menu door opens to r,0x4a3ea110;0x524ec094,
+K0077,0x06184187,10,2,0,1,2,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x7a0ec210,
+K0078,0x01991231,10,2,0,1,2,,0x4aee0118=Shriney Guard boss s,0x46269090;0x4aee0118,
+K0079,0x01991231,10,2,0,1,2,,0x4a3ea110=Menu door opens to r,0x4a3ea110;0x53af8200,
+K0080,0x01991231,10,2,0,1,2,,0x4baf8200=Shriney Guard boss y,0x4baf8200;0x523ea110,
+K0081,0x060c60c5,10,2,0,1,2,,0x4aee0118=Shriney Guard boss s,0x4aee0118;0x524ec094,
+K0083,0x03283063,10,2,0,1,2,,0x4baf8200=Shriney Guard boss y,0x4baf8200;0x52ee0118,
+K0324,0x06184187,10,2,0,1,2,,0x512c8430=Klaymen running (loc,0x512c8430;0x92af8810,
+K0326,0x01991231,10,2,0,1,2,,0x512c8430=Klaymen running (loc,0x512c8430;0x620ec210,
+K0337,0x03283063,10,2,0,1,2,,0x512c8430=Klaymen running (loc,0x512c8430;0x63af8200,
+K0082,0x067850a5,12,2,0,1,2,,0x4baf8200=Shriney Guard boss y,0x4baf8200;0x524ec094,
+K0335,0x067850a5,12,2,0,1,2,,0x512c8430=Klaymen running (loc,0x512c8430;0x62ee0118,

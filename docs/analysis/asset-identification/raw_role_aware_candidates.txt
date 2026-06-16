@@ -1,0 +1,33 @@
+# Role-aware candidates from raw-mode combine attack + function-context
+# id	role	best_score	best_name	num_candidates	function	runnerup_name	runnerup_score
+0x60889602	audio	16	38_16_SOUND	1	InitEntityWithChildSprite		0
+0xc864b260	?	15	LAND_FALL_KLAY	1			0
+0x61200640	particle	11	3_98_WALK	6	EntityEventHandlerSpawnProjectile	0_WALK_TO	8
+0x40e0824c	audio	11	03_STAGE_06	3	FinnMainTickHandler	03_STAGE_RT	8
+0x0b2084d0	sprite	11	09_CANCEL_3	2	PlayerState_Falling	09_CANCEL_I	8
+0x987140d0	?	11	090_SHIELD_25	1			0
+0x60041650	?	11	DEATH_0_05	5		DEATH_00_5	11
+0x804c881c	particle	11	BIT_P1_MANA	1	EntityEventHandlerSpawnParticle		0
+0x542a8850	?	10	S1_LOOK_MOSS	1			0
+0x4a60ca40	?	10	FX_KLAY_JUMP	1			0
+0x5860c640	audio	10	FX_KLAY_LAND	1	PlaySoundEffect		0
+0x462c6040	particle	9	01_HIT_GATE	2	ClayballState_DestroyWithDebris	FG_HIT_GATE	6
+0x8139a088	?	9	CLEAR_3_HURT	3	EntityTick_ShadowMirror	CLEAR_I_HURT	6
+0x61981a0c	?	9	INTRO_60_DROP	1			0
+0x70204350	?	8	021_STAGE_U	3		09_STAGE_UP	8
+0x71030240	?	8	FX_5_STAGE	2		FX_K_STAGE	5
+0x48209640	?	8	LOOK_T_092	1			0
+0x34014841	audio	7	02_BLACK_9	3	JoeHeadJoeBallFallCallback	02_BLACK_O	4
+0x093080c8	sprite	7	FROM_12_60	4	DecorStartWithRandomTimer	FROM_960_0	7
+0x00248e52	audio	7	9_090_WHITE	2	PlaySoundEffect	O_090_WHITE	4
+0x408a1c10	?	7	LEFT_25_00	1			0
+0x1000c042	?	6	ANM_4_2	7		ANM_4_H	3
+0x04084011	sprite	6	DOG_0_8	8	PlayerStateInit_ThrowProjectile	DOG_0_N	3
+0x401106da	?	6	DEATH_AMMO_S	1			0
+0x40784034	audio	6	DROP_IDLE_A	1	RunnEntityDamageEffect		0
+0x408a6461	?	6	Q_MOSS_SHINE	1	Collectible1970IconTickCallback		0
+0xb84968b0	?	5	ENTITY_8_BRONZE	2		ENTITY_N_BRONZE	2
+0x612c8430	?	5	OUT_EXIT_ARE	1			0
+0x40c21c10	?	5	D_STAR_SET	4		LEFT_S_006	4
+0x50f08207	audio	5	WITH_EAST_012	1	PlayerCallback_FallingPhysicsMain		0
+0x18248010	sprite	5	R_R_KLAY	1	EnemyDefeatState		0

@@ -1,0 +1,2 @@
+cohort_id,opaque_name,n_members,n_anchors,n_unsolved,kinds,anchor_names,unsolved_ids,unsolved_floors
+C0006,ToggleMenuOptionState,7,6,1,audio;sprite|anim,0x0ad0f813=PAUSED;0x29c0e211=NO;0x2ad0f011=YES;0x68c0f413=QUIT;0x69c04050=CONTINUE;0x69c8f473=QUITGAME,0x90810000,11

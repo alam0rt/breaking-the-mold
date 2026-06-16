@@ -1,8 +1,13 @@
 /* kcrack — Skullmonkeys (SLES-01090) asset-name cracker, consolidated.
  *
- * Hash (recovered): asset_id(name) = 0x28C0E011 ^ rotl(calcHash(name), 27)
+ * Hash (TWO NAMESPACES recovered):
+ *   menu:  asset_id(name) = 0x28C0E011 ^ rotl(calcHash(name), 27)   [default]
+ *   blb :  asset_id(name) = calcHash(name)                           [--raw]
  *   calcHash: each alphanumeric char advances a 5-bit running position and
  *   toggles that bit. Case-insensitive; non-alphanumerics are ignored.
+ *
+ * Use --raw on every BLB asset id (sprite/anim/audio). Only use the default
+ * (wrap) on UI/menu strings (NO/YES/PAUSED/QUIT/CONTINUE/QUITGAME).
  *
  * Knowledge baked in:
  *   - floor(id) = popcount(id ^ SEED) = minimum name length (lower bound; true
@@ -34,12 +39,14 @@
 #include <unistd.h>
 
 #define SEED 0x28C0E011u
+static int g_raw = 0;                  /* 1 = use raw calcHash (BLB namespace) */
 static const char CS[36] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 static int STEPC[36];                 /* per-symbol calcHash step */
 
 static uint32_t rotl(uint32_t v,int r){ r&=31; return (v<<r)|(v>>((32-r)&31)); }
 static int popc(uint32_t v){ int c=0; while(v){v&=v-1;c++;} return c; }
-static int floor_of(uint32_t id){ return popc(id ^ SEED); }
+static int floor_of(uint32_t id){ return g_raw ? popc(id) : popc(id ^ SEED); }
+static uint32_t wrap_or_raw(uint32_t h){ return g_raw ? h : (SEED ^ rotl(h,27)); }
 
 /* full calcHash of a C string (handles case + ignores non-alnum) */
 static uint32_t calc(const char *s){
@@ -55,7 +62,7 @@ static void calc_state(const char *s, uint32_t *h, uint32_t *sh){
         if((c>='A'&&c<='Z')||(*s>='0'&&*s<='9')){ ss=(ss+(c-64))&31; hh^=1u<<ss; } }
     *h=hh; *sh=ss;
 }
-static uint32_t asset_id(const char *s){ return SEED ^ rotl(calc(s),27); }
+static uint32_t asset_id(const char *s){ return wrap_or_raw(calc(s)); }
 static int eff_len(const char *s){ int n=0; for(; *s; s++)
     if((*s>='A'&&*s<='Z')||(*s>='a'&&*s<='z')||(*s>='0'&&*s<='9')) n++; return n; }
 
@@ -100,8 +107,17 @@ static int nthreads(void){ if(g_threads>0) return g_threads;
 
 /* ============================ mode: hash ============================ */
 static int do_hash(int argc,char**argv,int i){
-    if(i<argc){ for(; i<argc; i++) printf("0x%08x\t%s\n", asset_id(argv[i]), argv[i]); }
-    else { char line[256]; while(fgets(line,sizeof line,stdin)){ line[strcspn(line,"\r\n")]=0;
+    int printed=0;
+    for(int j=i; j<argc; j++){
+        if(argv[j][0]=='-' && argv[j][1]=='-'){ /* skip flags & their values */
+            if(!strcmp(argv[j],"--overshoot")||!strcmp(argv[j],"--max-cons")
+              ||!strcmp(argv[j],"--threads")||!strcmp(argv[j],"--depth")
+              ||!strcmp(argv[j],"--suf")||!strcmp(argv[j],"--pre")) j++;
+            continue;
+        }
+        printf("0x%08x\t%s\n", asset_id(argv[j]), argv[j]); printed=1;
+    }
+    if(!printed){ char line[256]; while(fgets(line,sizeof line,stdin)){ line[strcspn(line,"\r\n")]=0;
         printf("0x%08x\n", asset_id(line)); } }
     return 0;
 }
@@ -133,7 +149,7 @@ static void emit_combo(int *idx,int depth,uint32_t id){
         memcpy(buf+p,CW[idx[d]],CL[idx[d]]); p+=CL[idx[d]]; } buf[p]=0; report(buf,id);
 }
 static void rec_combo(int depth,uint32_t h,uint32_t sh,int *idx){
-    uint32_t id=SEED^rotl(h,27); if(set_has(id)) emit_combo(idx,depth,id);
+    uint32_t id=wrap_or_raw(h); if(set_has(id)) emit_combo(idx,depth,id);
     if(depth>=g_depth) return;
     for(int w=0;w<CN;w++){ idx[depth]=w; rec_combo(depth+1, h^rotl(CB[w],sh),(sh+CSx[w])&31,idx); }
 }
@@ -159,7 +175,7 @@ static void emit_ext(const char *suffix,uint32_t id){
     char buf[256]; snprintf(buf,sizeof buf,"%s%s%s",g_prefix,g_root,suffix); report(buf,id);
 }
 static void rec_suf(int depth,uint32_t h,uint32_t sh,char *suf){
-    uint32_t id=SEED^rotl(h,27); if(set_has(id)){ suf[depth]=0; emit_ext(suf,id); }
+    uint32_t id=wrap_or_raw(h); if(set_has(id)){ suf[depth]=0; emit_ext(suf,id); }
     if(depth>=g_suf) return;
     for(int d=0;d<36;d++){ uint32_t nsh=(sh+STEPC[d])&31; suf[depth]=CS[d];
         rec_suf(depth+1, h^(1u<<nsh), nsh, suf); }
@@ -169,7 +185,7 @@ static void *suf_worker(void *a){ ESlice*s=(ESlice*)a; char suf[32];
     for(int d=s->lo;d<s->hi;d++){ uint32_t nsh=(g_shbase+STEPC[d])&31; suf[0]=CS[d];
         rec_suf(1, g_hbase^(1u<<nsh), nsh, suf); } return NULL; }
 static void brute_suffix(void){           /* uses current g_hbase/g_shbase/g_prefix */
-    char none[1]={0}; uint32_t id0=SEED^rotl(g_hbase,27);   /* ROOT alone (suffix len 0) */
+    char none[1]={0}; uint32_t id0=wrap_or_raw(g_hbase);   /* ROOT alone (suffix len 0) */
     if(set_has(id0)) emit_ext(none,id0);
     if(g_suf<1) return;
     int T=nthreads(); if(T>36)T=36; pthread_t th[36]; ESlice sl[36]; int per=(36+T-1)/T;
@@ -204,6 +220,7 @@ int main(int argc,char**argv){
         else if(!strcmp(argv[i],"--depth")&&i+1<argc) g_depth=atoi(argv[++i]);
         else if(!strcmp(argv[i],"--suf")&&i+1<argc) g_suf=atoi(argv[++i]);
         else if(!strcmp(argv[i],"--pre")&&i+1<argc) g_pre=atoi(argv[++i]);
+        else if(!strcmp(argv[i],"--raw")) g_raw=1;
         else if(np<4) pos[np++]=argv[i];
     }
     if(!strcmp(mode,"hash"))    return do_hash(argc,argv,2);
