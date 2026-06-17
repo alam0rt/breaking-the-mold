@@ -1,0 +1,21 @@
+entity,stem_hash,sh,action,sprite_id,ref_funcs
+SKULL,0xb04fa10a,11,FLY_01,0x800da102,EntityCollision_EnemyHitWithCallback | KloggDeathE
+SKULL,0xb04fa10a,11,FLY_02,0x800da11a,EntityCollision_EnemyHitWithCallback | KloggDeathE
+KLAY,0x18288010,21,DIE_FALL,0x1e28e0d4,PlayerState_FallWithRotation | PlayerTickCallback 
+KLAY,0x18288010,21,DUCK_DOWN,0x0a3a4051,PlayerStateInit_FallFromLedge
+KLAY,0x18288010,21,FALL,0x00388110,PlayerCallback_EventHandlerAltWithQueue | PlayerSt
+KLAY,0x18288010,21,RUN_FAST,0x092b8480,PlayerProcessTileCollision | PlayerState_JumpApex 
+KLAY,0x18288010,21,TURN,0x18298210,PlayerState_WalkingRight | PlayerState_UpdateTPage
+KLAY,0x18288010,21,WAKE_UP,0x392cb014,PlayerState_ClearCheckpointAndSetInvincible | Play
+PICKUP,0x1c288030,26,FARTHEAD,0x1e1000b3,EntityTick_ShadowMirror | PlayerStateInit_ThrowPro
+PICKUP,0x1c288030,26,SUPER_WILLIE,0x1c8c2437,UniverseEnemaKillAllEnemies | PlayerStateInit_Chec
+PICKUP,0x1c288030,26,UNIVERSE_ENEMA,0x6c22083a,PlayerState_CheckpointRestoreComplete | UniverseEn
+BOSS_HEAD,0x0a3809b2,11,ATTACK1,0x0b081dbb,JoeHeadJoeReturnToIdleState | JoeHeadJoeClearVoice
+BOSS_HEAD,0x0a3809b2,11,ATTACK2,0x0b0811bb,JoeHeadJoeReturnToIdleState | JoeHeadJoeReturnToId
+BOSS_HEAD,0x0a3809b2,11,DIE,0x2b3889b2,JoeHeadJoeReturnToIdleStateAlt | JoeHeadJoeDeathAn
+BOSS_HEAD,0x0a3809b2,11,HIT,0x1a3109b2,JoeHeadJoeSetFacingAndAttack | JoeHeadJoeEnterActi
+BOSS_HEAD,0x0a3809b2,11,IDLE1,0x0b290ba2,JoeHeadJoeCheckPlayerInAttackRange | JoeHeadJoeSet
+BOSS_HEAD,0x0a3809b2,11,TURN,0x8a3809f2,JoeHeadJoeClearVoice
+BOSS_HEAD,0x0a3809b2,11,WALK,0x0e3889be,JoeHeadJoeEnterActiveState | JoeHeadJoeMoveAndChec
+BIRD,0xec418237,30,FLY_01,0xec000027,CollectibleScaledTickCallback
+BIRD,0xec418237,30,SQUISH_01,0xe4cb8330,

@@ -728,3 +728,33 @@ write-up in [`docs/analysis/asset-identification/family-structure-and-categories
   uncategorized (`refd=0`: loaded via data tables, not direct calls) — need visual ID.
 - **Literal names remain unrecoverable** (preimage = word-salad; beta binary has no name table).
   Tools: `family_structure.py`, `categorize_families.py`.
+
+## Round 18 (2026-06-17): sprite naming structure cracked — `STEM + <ACTION>`
+
+Breakthrough; full write-up in
+[`docs/analysis/asset-identification/family-structure-and-categories.md`](../analysis/asset-identification/family-structure-and-categories.md) §7.
+
+- Gameplay **sprite animation families are `STEM + <ACTION>`**, where the action suffixes are the
+  *same words as the FX sounds* (`HIT/TURN/WALK/IDLE/DIE/ATTACK/FALL/DIE_FALL/DUCK_DOWN/RUN_FAST`…).
+- Found by a transform sweep (sound family ↔ sprite family share action-suffix spacing), **validated
+  by code identity + level** (boss head → HEAD level + `JoeHeadJoe*`; player → `PlayerState_*`).
+  A bare-item pickup coincidence failed this validation (mapped FARTHEAD→PhoenixHand sprite) — code
+  identity is the discriminator.
+- With known suffixes, the family stem hash solves exactly and **predicts the rest of the family**:
+  boss head `stem=0x0a3809b2,sh=11` (7 sprites); player `stem=0x18288010,sh=21` (4+).
+- **Recovered:** the action half of many sprite names. **Still opaque:** the entity STEM (≠ the
+  sound's entity word; ~6–11 chars, no clean reversal). So sprite *sets* are now groupable +
+  action-labeled even without full literal names. Tool: `tools/scripts/fx_sprite_families.py`.
+
+## Round 19 (2026-06-17): pickup sprite naming convention cracked (code co-occurrence)
+
+Full write-up in [`family-structure-and-categories.md`](../analysis/asset-identification/family-structure-and-categories.md) §8.
+
+- **Method:** trace functions that play a verified `FX_PICKUP_*` sound AND set a sprite → behavioral
+  (item ↔ sprite-id) pairing, independent of guessed function names. `tools/scripts/trace_sound_sprite.py`.
+- **Convention:** pickup sprite = `calcHash(PREFIX + ITEM)`, `calcHash(PREFIX)=0x88200080, sh27`.
+  5 exact confirmations: Phart-Head `0x8c510186`=`PREFIX+FARTHEAD`, Grow `0x8c30008c`=`+GROW`,
+  1-up `0xa9240484`=`+ONE_UP`, Universe-Enema `0x6a351094`=`+UNIVERSE_ENEMA_1`, Super-Willie
+  `0x902c0002`=`+WILLIE`.
+- **Remaining unknown:** the shared PREFIX string (popcount 4, ≥4 chars, opaque). One word completes
+  all pickup names.

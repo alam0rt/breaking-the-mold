@@ -169,6 +169,79 @@ unique assets are boss assets; FINN's are swim-mode; etc.), even without a preci
 [`docs/blb/asset-types.md`](../../blb/asset-types.md) §501 and
 [`docs/reference/ENTITY_REMAPPING_CORRECTION.md`](../../reference/ENTITY_REMAPPING_CORRECTION.md).
 
+## 7. BREAKTHROUGH: sprite names are `STEM + <ACTION>`, actions = the FX vocabulary (2026-06-17)
+
+The biggest crack into gameplay-sprite naming so far. Method and findings:
+
+**The idea.** A character's **sound** family (e.g. `FX_BOSS_HEAD_HIT/TURN/WALK/IDLE_01`) and its
+**sprite** animation family use the *same action suffixes* (`HIT`, `TURN`, `WALK`, …). The sprite
+family is `STEM_sprite + ACTION`; the sound family is `FX_<entity>_ + ACTION`. Both encode the
+identical action words, so the two families have the **same internal hash spacing** — and a single
+`(seed, rotation)` transform maps one onto the other. Sweeping all 32 rotations for a transform that
+lands ≥2 verified FX cores on real sprite IDs surfaces these matches.
+
+**Validation discriminator (critical).** A real match must also agree with **code identity + level**.
+- ✅ `BOSS_HEAD_HIT/TURN/WALK` → sprite IDs all in the **HEAD** level, all referenced by **`JoeHeadJoe*`**
+  functions (the boss-head boss is JoeHeadJoe).
+- ✅ `KLAY_DIE_FALL/DUCK_DOWN/RUN_FAST` → all **Player** sprites, referenced by `PlayerState_*`.
+- ❌ A bare-item pickup "triple" (`FARTHEAD/GROW/ONE_UP`) hit 3 real IDs too but **failed** this test
+  (mapped `FARTHEAD`→ the *PhoenixHand* sprite; its prefix reversed to garbage) → coincidence.
+  So code-identity validation is what separates real families from collisions.
+
+**Solving a family's stem.** With the action suffixes known, `id_action = h(STEM) ^ rotl(h(action),
+sh_STEM)`; the `sh_STEM` that makes all members agree on one `h(STEM)` gives the stem hash, and then
+**predicting `STEM + other_action` finds the rest of the family**:
+- **Boss head** — `stem=0x0a3809b2, sh=11`, 7 sprites: `HIT 0x1a3109b2`, `TURN 0x8a3809f2`,
+  `WALK 0x0e3889be`, `IDLE_1 0x0b290ba2`, `DIE 0x2b3889b2`, `ATTACK_1 0x0b081dbb`, `ATTACK_2 0x0b0811bb`.
+- **Player (KLAY)** — `stem=0x18288010, sh=21`: `DIE_FALL 0x1e28e0d4`, `DUCK_DOWN 0x0a3a4051`,
+  `RUN_FAST 0x092b8480`, `FALL 0x00388110`.
+  (`IDLE_1/DIE/ATTACK_1/2`, `FALL` were *predicted* then confirmed present — not chance.)
+
+**What's recovered vs still opaque.** The **action half of the name is recovered** (real strings:
+`HIT, TURN, WALK, IDLE, DIE, ATTACK, FALL, DIE_FALL, DUCK_DOWN, RUN_FAST`). The **entity STEM is still
+opaque** — it is *not* the sound's entity word (sounds say `BOSS_HEAD`/`KLAY`; the sprite stem is a
+different ~6–11-char string that doesn't reverse to a clean word). So full literal names still need
+the stem, but every entity's sprite *set* can now be grouped + action-labeled, and new IDs predicted.
+
+Tools: `tools/scripts/fx_sprite_families.py` (transform sweep + stem solve + family map), output
+`fx_sprite_families.csv`/`.md`.
+
+## 8. BREAKTHROUGH: pickup sprite naming convention cracked via code co-occurrence (2026-06-17)
+
+The first *cracked sprite naming convention* beyond menu text — found by tracing code behavior,
+not guessing.
+
+**Method (the key move).** Gameplay sounds aren't code literals, but they DO appear in the same
+function that sets the entity's sprite (via `PlayEntityPositionSound` etc.). So a function that
+references verified `FX_PICKUP_FARTHEAD` and calls `SetEntitySpriteId(e, 0x8c510186)` tells us
+`0x8c510186` *is* the Phart-Head pickup sprite — behaviorally, independent of the (guessed)
+function name. Tool: `tools/scripts/trace_sound_sprite.py`. This gave **correct (item ↔ sprite-id)
+pairings** (which we'd been guessing wrong all along).
+
+**The convention.** With correct pairings, the pickup sprites solve to
+`sprite_id = calcHash(PREFIX + ITEM)` where `calcHash(PREFIX) = 0x88200080, end-shift 27`. Confirmed
+by **5 exact matches**:
+
+| pickup | sprite id | item string |
+|---|---|---|
+| Phart-Head | `0x8c510186` | `…FARTHEAD` |
+| Grow | `0x8c30008c` | `…GROW` |
+| 1-up | `0xa9240484` | `…ONE_UP` |
+| Universe-Enema | `0x6a351094` | `…UNIVERSE_ENEMA_1` (note the frame suffix) |
+| Super-Willie | `0x902c0002` | `…WILLIE` (sprite drops the `SUPER_`) |
+
+5 items fitting one transform on independently-code-derived IDs is not chance. (1970/GLIDEY/PHOENIX
+use different item strings — their sprites are set in `Init1970IconEntity` / `InitYellowBirdCollectible`
+/ `InitPhoenixHandCollectible`, so the words are `…ICON`/`…YELLOWBIRD`/`…HAND`-ish, not yet pinned.)
+
+**Status.** The pickup-sprite **PREFIX** (`calcHash 0x88200080`, sh27, popcount 4 → ≥4 chars) is the
+single shared unknown — it does not reverse to a clean word (brute → garbage), like the entity stems.
+One prefix word would complete all pickup names and likely generalize. The earlier "FARTHEAD→0x8c510186
+coincidence" I dismissed was actually this real convention — code identity (`InitPhartHeadCollectible`)
+confirmed it.
+
+Tools: `tools/scripts/trace_sound_sprite.py` (sound↔sprite code co-occurrence).
+
 ## Tooling
 - `tools/scripts/entity_census.py` — per-level entity-type → role census from BLB Asset 501 → `entity_census.csv`/`.md`.
 - `tools/scripts/family_structure.py` — bit-vote a family's ids → shared stem hash + residual/token structure.
