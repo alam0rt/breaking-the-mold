@@ -153,6 +153,13 @@
 #define FX_SKULL_UP                        0x30004240u
 #define KLAYMEN_IDLEHEAD_SOUND             0x9d406340u
 
+/* Role-named audio (ids verified, exact asset names still uncracked).
+ * FX_BUTTON_UNPAUSE: trigger-context cracked in SESSION10 usage notes
+ * (PauseGameWithFadeOut). FX_MENU_CYCLE: only call sites are the four
+ * menu cycle up/down handlers in src/menu.c. */
+#define FX_BUTTON_UNPAUSE                  0x4c60f249u  /* PauseGameWithFadeOut */
+#define FX_MENU_CYCLE                      0x686c1c97u  /* level/option cycle */
+
 /* ---- Sprites (Asset 600). Menu glyphs are TEXT namespace. ------------------- */
 #define SPR_PREFIX_FARTHEAD                0x8c510186u  /* <PREFIX>FARTHEAD */
 #define SPR_PREFIX_GROW                    0x8c30008cu  /* <PREFIX>GROW */
@@ -175,6 +182,31 @@
 #define SPR_MENU_HIGHLIGHT_IDLE_ALT        0x33808e1bu  /* alternate highlight idle */
 #define SPR_MENU_HIGHLIGHT_ACTIVE          0x63848e59u  /* button highlight flash/active */
 #define SPR_MENU_SKULL_ICON                0x81100030u  /* skull/options icon */
+
+/* Role-named gameplay sprites consumed by the EntityType*_Init dispatch
+ * table in src/entinit.c. Ids are verified asset hashes (status=uncracked
+ * in cracked_names.csv); names are working RE labels grouped by spawning
+ * function. */
+#define SPR_PLATFORM_BALL_A                0x98f8221eu  /* Type 001/049/057 generic platform/clayball */
+#define SPR_PLATFORM_BALL_B                0x88783718u  /* Type 005/050/058 generic platform/clayball */
+#define SPR_PLATFORM_BALL_C                0x8818a018u  /* Type 006/051/059 generic platform/clayball */
+#define SPR_PLATFORM_VARIANT_D             0x9299c307u  /* Type 012 moving platform variant C */
+#define SPR_ENEMY_CLUSTER_A                0x93c9a20fu  /* Type 017 enemy-cluster sprite */
+#define SPR_ENEMY_CLUSTER_B                0x9ab9a209u  /* Type 018 enemy-cluster sibling */
+#define SPR_CLOCK_PLATFORM_A               0x93043811u  /* Type 019 clock-platform variant A */
+#define SPR_CLOCK_PLATFORM_B               0xd2801814u  /* Type 020 clock-platform variant B */
+#define SPR_CLOCK_PLATFORM_C               0x12800031u  /* Type 021 clock-platform variant C */
+#define SPR_CLAYBALL_DECOR_A               0x88a16190u  /* Type 062 clayball decor variant A */
+#define SPR_CLAYBALL_DECOR_B               0xdcb92390u  /* Type 063 clayball decor variant B */
+#define SPR_PARTICLE_DECOR                 0x80b92212u  /* Type 064 particle/passive decor */
+#define SPR_CLAYBALL_PARALLAX_A            0xb69c8356u  /* Type 066 clayball parallax variant */
+#define SPR_CLAYBALL_PARALLAX_B            0xb7cce25eu  /* Type 067 clayball parallax variant */
+#define SPR_CLAYBALL_PARALLAX_C            0xbebce258u  /* Type 068 clayball parallax variant */
+#define SPR_SWITCH_CLAYBALL_A              0xd89c319au  /* Type 090 switch-block clayball A */
+#define SPR_SWITCH_CLAYBALL_B              0xc89e9158u  /* Type 091 switch-block clayball B */
+#define SPR_SWITCH_CLAYBALL_C              0xc48c7158u  /* Type 092 switch-block clayball C */
+#define SPR_BONUS_CLAYBALL                 0x10882010u  /* Type 093 bonus/score clayball */
+#define SPR_LEVEL_FLAG2_EXTRA              0x168254b5u  /* level-flag-2 extra sprite (LoadLevelSpriteAssets) */
 
 /* ---- Footstep surface variants referenced by the remap table @0x8009d0fc ----
  * modes 5/6 (ELECTRIC/SQUISH) are referenced by the table but absent from the
