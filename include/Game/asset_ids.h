@@ -169,6 +169,13 @@
 #define SPR_QUIT_GAME                      0x69c8f473u  /* QUIT GAME */
 #define SPR_YES                            0x2ad0f011u  /* YES */
 
+/* Role-named MENU sprites (ids verified, exact asset names still uncracked). */
+#define SPR_MENU_BUTTON_NAV                0x10094096u  /* universal menu/back button */
+#define SPR_MENU_HIGHLIGHT_IDLE            0x39900619u  /* button highlight idle */
+#define SPR_MENU_HIGHLIGHT_IDLE_ALT        0x33808e1bu  /* alternate highlight idle */
+#define SPR_MENU_HIGHLIGHT_ACTIVE          0x63848e59u  /* button highlight flash/active */
+#define SPR_MENU_SKULL_ICON                0x81100030u  /* skull/options icon */
+
 /* ---- Footstep surface variants referenced by the remap table @0x8009d0fc ----
  * modes 5/6 (ELECTRIC/SQUISH) are referenced by the table but absent from the
  * shipped asset-id list (cut/unused). Names cracked 5/5 per row; ids are real
