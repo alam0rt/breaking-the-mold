@@ -19,7 +19,9 @@
  * ============================================================================= */
 
 #include "common.h"
+#include "Game/asset_ids.h"
 #include "Game/entity.h"
+#include "Game/entity_events.h"
 
 /* ---- BLB heap -------------------------------------------------------------- */
 extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
