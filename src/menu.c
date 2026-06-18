@@ -484,7 +484,7 @@ void func_80075B7C(void) {
 /* Level-select "cycle up" handler. If *(u8*)(entity+0x110) <
  * entity+0x10C - 1, increments the current-level index, calls
  * ApplyAudioSettings(entity+0x118), and plays the menu-cycle SFX
- * (PlaySoundEffect(0x686C1C97, 0xA0, 0)). Always recomputes the
+ * (PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0)). Always recomputes the
  * level-icon entity (+0x114) worldX/worldY from the (x,y) table at
  * +0x108 indexed by new_index*4 so the icon slides to the next slot. */
 void Menu_IncrementSelection(Entity *entity) {
@@ -494,7 +494,7 @@ void Menu_IncrementSelection(Entity *entity) {
     if ((s32)cur < (s32)(max - 1)) {
         *slider = cur + 1;
         ApplyAudioSettings(*(void **)((u8 *)entity + 0x118));
-        PlaySoundEffect(0x686C1C97, 0xA0, 0);
+        PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
     }
     {
         u8 idx = **(u8 **)((u8 *)entity + 0x110);
@@ -512,7 +512,7 @@ void Menu_IncrementSelection(Entity *entity) {
 
 /* Cycle-down counterpart of Menu_IncrementSelection. If
  * *(u8*)(entity+0x110) > 0, decrements, calls ApplyAudioSettings, and
- * plays the 0x686C1C97 cycle SFX. Always repositions the level-icon
+ * plays the FX_MENU_CYCLE SFX. Always repositions the level-icon
  * entity at +0x114 using the (x,y) lookup at +0x108 + new_index*4. */
 void Menu_DecrementAndPlaySound(Entity *entity) {
     u8 *slider = *(u8 **)((u8 *)entity + 0x110);
@@ -520,7 +520,7 @@ void Menu_DecrementAndPlaySound(Entity *entity) {
     if (cur != 0) {
         *slider = cur - 1;
         ApplyAudioSettings(*(void **)((u8 *)entity + 0x118));
-        PlaySoundEffect(0x686C1C97, 0xA0, 0);
+        PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
     }
     {
         u8 idx = **(u8 **)((u8 *)entity + 0x110);
@@ -580,20 +580,20 @@ void func_80075F24(void) {
  * increments it, wrapping to 0 if it was >= 4 (values cycle through
  * 0..4). Then SetAnimationFrameIndex(entity+0x10C, new_value) to update
  * the displayed icon frame and plays the menu-cycle SFX
- * (PlaySoundEffect(0x686C1C97, 0xA0, 0)). */
+ * (PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0)). */
 void Menu_CycleOptionAndPlaySound(Entity *entity) {
     u8 *counter = *(u8 **)((u8 *)entity + 0x108);
     u8 v = *counter;
     if (v < 4) *counter = v + 1; else *counter = 0;
     SetAnimationFrameIndex(*(void **)((u8 *)entity + 0x10C),
                            **(u8 **)((u8 *)entity + 0x108));
-    PlaySoundEffect(0x686C1C97, 0xA0, 0);
+    PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
 }
 
 /* Cycle-down counterpart of Menu_CycleOptionAndPlaySound. Decrements
  * *(u8*)(entity+0x108); if it was already 0, wraps back to 4 so the
  * range stays 0..4. Updates the icon via SetAnimationFrameIndex(
- * entity+0x10C, new_value) and plays the 0x686C1C97 cycle SFX. */
+ * entity+0x10C, new_value) and plays the FX_MENU_CYCLE SFX. */
 void Menu_DecrementCounter(Entity *entity) {
     u8 *counter = *(u8 **)((u8 *)entity + 0x108);
     u8 v = *counter;
@@ -601,5 +601,5 @@ void Menu_DecrementCounter(Entity *entity) {
     *counter = v;
     SetAnimationFrameIndex(*(void **)((u8 *)entity + 0x10C),
                            **(u8 **)((u8 *)entity + 0x108));
-    PlaySoundEffect(0x686C1C97, 0xA0, 0);
+    PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
 }

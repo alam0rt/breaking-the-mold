@@ -169,51 +169,51 @@ extern void *InitClayballAtWaypoint(void *entity, void *spawnData, u32 hash, s32
 extern void *InitClayballWithSwitchBlock(void *entity, void *spawnData, u32 hash, s32 arg3);
 
 /* --- InitGenericSpriteEntity family (alloc 0x124, sprite selected by hash). --- */
-/* Type 001: 'boss entity' sprite (hash 0x98F8221E). Despite the name it shares
+/* Type 001: 'boss entity' sprite (hash SPR_PLATFORM_BALL_A). Despite the name it shares
  * the generic-sprite path with the moving platforms below. */
 void EntityType001_BossEntity_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    entity = InitGenericSpriteEntity(entity, spawnData, 0x98F8221E, 0, 0);
+    entity = InitGenericSpriteEntity(entity, spawnData, SPR_PLATFORM_BALL_A, 0, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 005: moving platform variant A (sprite hash 0x88783718). */
+/* Type 005: moving platform variant A (sprite hash SPR_PLATFORM_BALL_B). */
 void EntityType005_MovingPlatformA_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    entity = InitGenericSpriteEntity(entity, spawnData, 0x88783718, 0, 0);
+    entity = InitGenericSpriteEntity(entity, spawnData, SPR_PLATFORM_BALL_B, 0, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 006: moving platform variant B (sprite hash 0x8818A018). */
+/* Type 006: moving platform variant B (sprite hash SPR_PLATFORM_BALL_C). */
 void EntityType006_MovingPlatformB_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    entity = InitGenericSpriteEntity(entity, spawnData, 0x8818A018, 0, 0);
+    entity = InitGenericSpriteEntity(entity, spawnData, SPR_PLATFORM_BALL_C, 0, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 012: moving platform variant C (hash 0x9299C307, behaviour flag=1). */
+/* Type 012: moving platform variant C (hash SPR_PLATFORM_VARIANT_D, behaviour flag=1). */
 void EntityType012_MovingPlatformC_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    entity = InitGenericSpriteEntity(entity, spawnData, 0x9299C307, 1, 0);
+    entity = InitGenericSpriteEntity(entity, spawnData, SPR_PLATFORM_VARIANT_D, 1, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 017: enemy-cluster sprite (hash 0x93C9A20F). */
+/* Type 017: enemy-cluster sprite (hash SPR_ENEMY_CLUSTER_A). */
 void EntityType017_EnemyCluster_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    entity = InitGenericSpriteEntity(entity, spawnData, 0x93C9A20F, 1, 0);
+    entity = InitGenericSpriteEntity(entity, spawnData, SPR_ENEMY_CLUSTER_A, 1, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 018: enemy-cluster sibling (hash 0x9AB9A209). */
+/* Type 018: enemy-cluster sibling (hash SPR_ENEMY_CLUSTER_B). */
 void EntityType018_EnemyCluster_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    entity = InitGenericSpriteEntity(entity, spawnData, 0x9AB9A209, 1, 0);
+    entity = InitGenericSpriteEntity(entity, spawnData, SPR_ENEMY_CLUSTER_B, 1, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -222,7 +222,7 @@ void EntityType018_EnemyCluster_Init(void *list, void *spawnData) {
 /* Type 019: clock-platform variant A. */
 void EntityType019_ClockPlatformA_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x13C, 1, 0);
-    entity = InitClockPlatformWithTimer(entity, spawnData, 0x93043811, 0);
+    entity = InitClockPlatformWithTimer(entity, spawnData, SPR_CLOCK_PLATFORM_A, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -230,7 +230,7 @@ void EntityType019_ClockPlatformA_Init(void *list, void *spawnData) {
 /* Type 020: clock-platform variant B. */
 void EntityType020_ClockPlatformB_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x13C, 1, 0);
-    entity = InitClockPlatformWithTimer(entity, spawnData, 0xD2801814, 0);
+    entity = InitClockPlatformWithTimer(entity, spawnData, SPR_CLOCK_PLATFORM_B, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -238,7 +238,7 @@ void EntityType020_ClockPlatformB_Init(void *list, void *spawnData) {
 /* Type 021: clock-platform variant C. */
 void EntityType021_ClockPlatformC_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x13C, 1, 0);
-    entity = InitClockPlatformWithTimer(entity, spawnData, 0x12800031, 0);
+    entity = InitClockPlatformWithTimer(entity, spawnData, SPR_CLOCK_PLATFORM_C, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -247,26 +247,26 @@ void EntityType021_ClockPlatformC_Init(void *list, void *spawnData) {
  *     are clayball-form enemies driven along a path, NOT the bosses themselves
  *     (each just selects a different sprite hash). Names likely should be
  *     ClayballOnPath_{A,B,C}. --- */
-/* Type 049: clayball-on-path sprite A (hash 0x98F8221E). */
+/* Type 049: clayball-on-path sprite A (hash SPR_PLATFORM_BALL_A). */
 void EntityType049_BossRelated_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x128, 1, 0);
-    entity = InitClayballOnPath(entity, spawnData, 0x98F8221E, 0);
+    entity = InitClayballOnPath(entity, spawnData, SPR_PLATFORM_BALL_A, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 050: clayball-on-path sprite B (hash 0x88783718). 'BossMain' is misleading. */
+/* Type 050: clayball-on-path sprite B (hash SPR_PLATFORM_BALL_B). 'BossMain' is misleading. */
 void EntityType050_BossMain_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x128, 1, 0);
-    entity = InitClayballOnPath(entity, spawnData, 0x88783718, 0);
+    entity = InitClayballOnPath(entity, spawnData, SPR_PLATFORM_BALL_B, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 051: clayball-on-path sprite C (hash 0x8818A018). 'BossPart' is misleading. */
+/* Type 051: clayball-on-path sprite C (hash SPR_PLATFORM_BALL_C). 'BossPart' is misleading. */
 void EntityType051_BossPart_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x128, 1, 0);
-    entity = InitClayballOnPath(entity, spawnData, 0x8818A018, 0);
+    entity = InitClayballOnPath(entity, spawnData, SPR_PLATFORM_BALL_C, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -275,7 +275,7 @@ void EntityType051_BossPart_Init(void *list, void *spawnData) {
 /* Type 057: waypoint clayball A (same sprite hash as type 049). */
 void EntityType057_WaypointClayballA_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x12C, 1, 0);
-    entity = InitClayballAtWaypoint(entity, spawnData, 0x98F8221E, 0);
+    entity = InitClayballAtWaypoint(entity, spawnData, SPR_PLATFORM_BALL_A, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -283,7 +283,7 @@ void EntityType057_WaypointClayballA_Init(void *list, void *spawnData) {
 /* Type 058: waypoint clayball B. */
 void EntityType058_WaypointClayballB_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x12C, 1, 0);
-    entity = InitClayballAtWaypoint(entity, spawnData, 0x88783718, 0);
+    entity = InitClayballAtWaypoint(entity, spawnData, SPR_PLATFORM_BALL_B, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -291,7 +291,7 @@ void EntityType058_WaypointClayballB_Init(void *list, void *spawnData) {
 /* Type 059: waypoint clayball C. */
 void EntityType059_WaypointClayballC_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x12C, 1, 0);
-    entity = InitClayballAtWaypoint(entity, spawnData, 0x8818A018, 0);
+    entity = InitClayballAtWaypoint(entity, spawnData, SPR_PLATFORM_BALL_C, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -301,44 +301,44 @@ void EntityType059_WaypointClayballC_Init(void *list, void *spawnData) {
 /* Type 062: clayball variant A. */
 void EntityType062_ClayballVariantA_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, 0x88A16190, 0, 0));
+    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, SPR_CLAYBALL_DECOR_A, 0, 0));
 }
 
 /* Type 063: clayball variant B. */
 void EntityType063_ClayballVariantB_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, 0xDCB92390, 0, 0));
+    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, SPR_CLAYBALL_DECOR_B, 0, 0));
 }
 
 /* Type 064: particle / passive decor sprite. */
 void EntityType064_Particle_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, 0x80B92212, 0, 0));
+    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, SPR_PARTICLE_DECOR, 0, 0));
 }
 
 /* Type 066: clayball variant C (parallax-layer flag bit set). */
 void EntityType066_ClayballVariantC_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, 0xB69C8356, 0, 1));
+    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, SPR_CLAYBALL_PARALLAX_A, 0, 1));
 }
 
 /* Type 067: clayball variant D (parallax). */
 void EntityType067_ClayballVariantD_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, 0xB7CCE25E, 0, 1));
+    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, SPR_CLAYBALL_PARALLAX_B, 0, 1));
 }
 
 /* Type 068: clayball variant E (parallax). */
 void EntityType068_ClayballVariantE_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x124, 1, 0);
-    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, 0xBEBCE258, 0, 1));
+    AddEntityToSortedRenderList(list, InitGenericSpriteEntity(entity, spawnData, SPR_CLAYBALL_PARALLAX_C, 0, 1));
 }
 
 /* --- Switch-block clayball family (alloc 0x12C, clayball wired to a switch). --- */
 /* Type 090: switch-clayball A. */
 void EntityType090_SwitchClayballA_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x12C, 1, 0);
-    entity = InitClayballWithSwitchBlock(entity, spawnData, 0xD89C319A, 0);
+    entity = InitClayballWithSwitchBlock(entity, spawnData, SPR_SWITCH_CLAYBALL_A, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -346,7 +346,7 @@ void EntityType090_SwitchClayballA_Init(void *list, void *spawnData) {
 /* Type 091: switch-clayball B. */
 void EntityType091_SwitchClayballB_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x12C, 1, 0);
-    entity = InitClayballWithSwitchBlock(entity, spawnData, 0xC89E9158, 0);
+    entity = InitClayballWithSwitchBlock(entity, spawnData, SPR_SWITCH_CLAYBALL_B, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -354,7 +354,7 @@ void EntityType091_SwitchClayballB_Init(void *list, void *spawnData) {
 /* Type 092: switch-clayball C. */
 void EntityType092_SwitchClayballC_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x12C, 1, 0);
-    entity = InitClayballWithSwitchBlock(entity, spawnData, 0xC48C7158, 0);
+    entity = InitClayballWithSwitchBlock(entity, spawnData, SPR_SWITCH_CLAYBALL_C, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -364,7 +364,7 @@ extern void *InitBonusClayballEntity(void *entity, void *spawnData, u32 hash, s3
 /* Type 093: bonus / score clayball (large 0x130 entity). */
 void EntityType093_BonusClayball_Init(void *list, void *spawnData) {
     void *entity = AllocateFromHeap(g_pBlbHeapBase, 0x130, 1, 0);
-    entity = InitBonusClayballEntity(entity, spawnData, 0x10882010, 0);
+    entity = InitBonusClayballEntity(entity, spawnData, SPR_BONUS_CLAYBALL, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
@@ -816,11 +816,11 @@ extern void LoadSpriteHashArrayToVRAM(void *heap, u8 *data);
 extern void LoadSpriteFramesToVRAM(void *heap, u32 hash);
 
 /* Uploads the level's sprite-hash array (D_8009DAB4) into VRAM, plus one
- * extra sprite (hash 0x168254B5) when the current level has flag bit 2 set. */
+ * extra sprite (SPR_LEVEL_FLAG2_EXTRA) when the current level has flag bit 2 set. */
 void LoadLevelSpriteAssets(void *arg) {
     LoadSpriteHashArrayToVRAM(D_800A595C, D_8009DAB4);
     if (GetLevelFlags((u8 *)arg + 0x84) & 4) {
-        LoadSpriteFramesToVRAM(D_800A595C, 0x168254B5);
+        LoadSpriteFramesToVRAM(D_800A595C, SPR_LEVEL_FLAG2_EXTRA);
     }
 }
 

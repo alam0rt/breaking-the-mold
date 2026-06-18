@@ -109,12 +109,12 @@ s32 RemoveCheckpointEntityById(s32 gameState, s32 target) {
  * they keep updating while the world is paused. */
 INCLUDE_ASM("asm/nonmatchings/lvlload", PauseGameAndShowMenu);
 
-/* Begins the pause-to-fade-out transition: plays SFX 0x4C60F249, sets
+/* Begins the pause-to-fade-out transition: plays FX_BUTTON_UNPAUSE, sets
  * fade_out_active (+0x151), hides the pause menu HUD, and arms the 22-frame
  * fade countdown (+0x160 = 0x16). GameModeCallback completes the transition
  * when the countdown reaches 0. */
 void PauseGameWithFadeOut(u8 *obj) {
-    PlaySoundEffect(0x4C60F249, 0xA0, 1);
+    PlaySoundEffect(FX_BUTTON_UNPAUSE, 0xA0, 1);
     obj[0x151] = 1;
     HidePauseMenuHUD(*(s32 *)&obj[0x14C]);
     obj[0x160] = 0x16;
