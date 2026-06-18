@@ -47,7 +47,7 @@ INCLUDE_ASM("asm/nonmatchings/decor", DecorEntityTickWithOffscreenCheck);
 
 void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
     void *r = NULL;
-    if ((event & 0xFFFF) == 0x1016) {
+    if ((event & 0xFFFF) == EVT_SET_STATE_FLAG) {
         r = e;
         *(u8 *)((u8 *)e + 0x11D) = 1;
         *(s16 *)((u8 *)e + 0x12) = 0;
@@ -61,12 +61,12 @@ void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
 void *EntityCollision_FlagAndDispatch(Entity *e, u32 event) {
     void *r = NULL;
     event &= 0xFFFF;
-    if (event == 0x1016) {
+    if (event == EVT_SET_STATE_FLAG) {
         *((u8 *)e + 0x11D) = 1;
         *(s16 *)((u8 *)e + 0x12) = 0;
         r = e;
     }
-    if (event == 2) {
+    if (event == EVT_TICK) {
         EntityProcessCallbackQueue(e);
     }
     return r;

@@ -45,7 +45,7 @@ INCLUDE_ASM("asm/nonmatchings/finn", EntityTick_FollowPlayerWithInterpolation);
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityFollowWithDistanceCheck);
 
 s32 FinnSubEvent_ProcessQueueOnReady(Entity *e, u32 ev) {
-    if ((ev & 0xFFFF) == 2) {
+    if ((ev & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(e);
     }
     return 0;
@@ -219,7 +219,7 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_NormalMovementAndInput);
 INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_LevelExitCountdown);
 
 s32 FinnEvent_DamageToDeathExplosion(void *e, u32 ev, u32 a2, u32 a3) {
-    if ((ev & 0xFFFF) == 0x1000) {
+    if ((ev & 0xFFFF) == EVT_DAMAGE) {
         EntitySetState(e, D_800A5F8C, D_800A5F90);
     }
     return 0;
@@ -227,17 +227,17 @@ s32 FinnEvent_DamageToDeathExplosion(void *e, u32 ev, u32 a2, u32 a3) {
 
 s32 FINNEventHandler_DeathExplosion(void *e, u32 ev) {
     u32 m = ev & 0xFFFF;
-    if (m == 0x1000) {
+    if (m == EVT_DAMAGE) {
         EntitySetState(e, D_800A5F8C, D_800A5F90);
     }
-    if (m == 2) {
+    if (m == EVT_TICK) {
         EntityProcessCallbackQueue(e);
     }
     return 0;
 }
 
 s32 FinnEvent_QueueOnAnimReady(Entity *e, u32 ev) {
-    if ((ev & 0xFFFF) == 2) {
+    if ((ev & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(e);
     }
     return 0;

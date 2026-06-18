@@ -98,7 +98,7 @@ INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartWithRandomTimer);
 INCLUDE_ASM("asm/nonmatchings/pickups", InitInteractiveDecorEntity);
 
 void DecorEntityTickWithCollision(Entity *e) {
-    CollisionCheckWrapper(e, 2, 0x1000, 2);
+    CollisionCheckWrapper(e, EVT_TICK, EVT_DAMAGE, EVT_TICK);
     DecorEntityTickWithOffscreenCheck(e);
     if (*(u8 *)((u8 *)e + 0x11D) != 0) {
         EntitySetState(e, D_800A59D8, D_800A59DC);

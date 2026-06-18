@@ -370,7 +370,7 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateButton);
  * 1 so the *IfEnabled variants below know a sound has already been
  * issued this frame. (Unlocked: see the D_800A6045 .comm note above.) */
 void Menu_PlayConfirmSound(void) {
-    PlaySoundEffect(0x90810000, 0xA0, 0);
+    PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0);
     D_800A6045 = 1;
 }
 
@@ -420,7 +420,7 @@ INCLUDE_ASM("asm/nonmatchings/menu", FINN_ClearSubentityState);
  * (non-zero type) emit the click sound. (Unlocked: D_800A6045 .comm.) */
 void Menu_PlaySelectSoundIfEnabled(Entity *entity) {
     if (*((u8 *)entity + 0x108) != 0) {
-        PlaySoundEffect(0x90810000, 0xA0, 0);
+        PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0);
         D_800A6045 = *((u8 *)entity + 0x108);
     }
 }
@@ -432,7 +432,7 @@ void Menu_PlaySelectSoundIfEnabled(Entity *entity) {
  * fires the confirm sound. (Unlocked: D_800A6045 .comm.) */
 void Menu_PlayConfirmSoundIfEnabled(Entity *entity) {
     if (*((u8 *)entity + 0x109) != 0) {
-        PlaySoundEffect(0x90810000, 0xA0, 0);
+        PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0);
         D_800A6045 = 1;
     }
 }

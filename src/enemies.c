@@ -620,7 +620,7 @@ void HazardTimerTickCallback(Entity *e) {
 }
 
 s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
-    if ((ev & 0xFFFF) == 0x1001) {
+    if ((ev & 0xFFFF) == EVT_SET_READY) {
         EntitySetState(e, D_800A5B10, D_800A5B14);
     }
     return 0;
@@ -628,10 +628,10 @@ s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
 
 s32 HazardEventHandler_0x1001_V2(void *e, u32 ev, u32 a2, u32 a3) {
     u32 maskedEv = ev & 0xFFFF;
-    if (maskedEv == 0x1001) {
+    if (maskedEv == EVT_SET_READY) {
         EntitySetState(e, D_800A5B10, D_800A5B14);
     }
-    if (maskedEv == 2) {
+    if (maskedEv == EVT_TICK) {
         EntityProcessCallbackQueue(e);
     }
     return 0;
@@ -698,7 +698,7 @@ void EntityUpdateWithCollisionWrapper(void *e) {
 }
 
 s32 SwitchEventHandler_SetGameFlag(u8 *e, u32 event) {
-    if ((event & 0xFFFF) == 2) {
+    if ((event & 0xFFFF) == EVT_TICK) {
         u8 *p = *(u8 **)(e + 0x100);
         u16 val = *(u16 *)(p + 0x12);
         if ((u16)(val - 0x22) < 2 || val == 0x24) {
@@ -975,7 +975,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundParticleEmitter);
 INCLUDE_ASM("asm/nonmatchings/enemies", ParticleEmitterTickCallback);
 
 s32 EntitySetReadyFlag(void *e, u16 mode) {
-    if (mode == 2) {
+    if (mode == EVT_TICK) {
         *(u8 *)((u8 *)e + 0x100) = 1;
     }
     return 0;
@@ -986,7 +986,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleEntity);
 INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleFadeTickCallback);
 
 s32 BackgroundSparkleContactEventHandler(Entity *e, u32 ev) {
-    if ((ev & 0xFFFF) == 2) {
+    if ((ev & 0xFFFF) == EVT_TICK) {
         if (*(u8 *)((u8 *)e + 0x100) != 0) {
             *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 0;
             SetAnimationSpriteId(e, *(s16 *)((u8 *)e + 0xDA));

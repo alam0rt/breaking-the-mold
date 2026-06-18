@@ -68,13 +68,13 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityTick_ParallaxScrollPosition);
 
 u32 MultiPartEntityMessageHandler(void *e, s32 event) {
     switch (event & 0xFFFF) {
-        case 0x1009:
+        case EVT_TOKEN_RELEASE:
             *(u8 *)((u8 *)e + 0x108) = 1;
             break;
         case 0x1010:
             *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 0;
             break;
-        case 0x100F:
+        case EVT_ATTACH_TO_ENTITY:
             *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 1;
             break;
     }
@@ -150,7 +150,7 @@ INCLUDE_ASM("asm/nonmatchings/effects", RenderFullScreenTileOverlay);
 INCLUDE_ASM("asm/nonmatchings/effects", InitScrollingLayerEntity);
 
 s32 OverlayEntityCallback(Entity *e, u32 ev) {
-    if ((ev & 0xFFFF) == 2) {
+    if ((ev & 0xFFFF) == EVT_TICK) {
         *(u8 *)(*(u32 *)((u8 *)e + 0x20) + 0xA) = 0;
         *(u8 *)((u8 *)e + 0x34) = 1;
     }
