@@ -4,20 +4,20 @@
 #include "Game/entity_events.h"
 
 extern void SetEntitySpriteId(Entity *entity, u32 spriteId, s32 flags);
-extern void SetAnimationFrameIndex(void *animEntity, u32 value);
-extern void ApplyAudioSettings(void *audioCtx);
+extern void SetAnimationFrameIndex(Entity *animEntity, u32 value);
+extern void ApplyAudioSettings(u8 *audioCtx);
 extern void InitRunnLevelEntity(Entity *entity);
-extern void *InitEntitySprite(void *entity, u32 spriteId, s32 z,
-                              s16 x, s16 y, s32 flags);
-extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z,
-                                  s16 x, s16 y);
+extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z,
+                                s16 x, s16 y, s32 flags);
+extern Entity *InitEntityWithSprite(Entity *entity, u8 *spriteDef, s32 z,
+                                    s16 x, s16 y);
 extern void AttachCursorToButton(Entity *button);
 extern void *g_pBlbHeapBase;
 extern void *g_pGameState;
-extern u8 D_80012034[]; /* menu-button vtable, +0x18 install slot */
-extern u8 D_8001208C[]; /* menu-button-highlight vtable */
-extern u8 D_80011FDC[]; /* password-button vtable (post-cursor override) */
-extern u8 D_8009CBE8[]; /* menu-button-highlight sprite table */
+extern u8 MENU_BUTTON_VTABLE[] asm("D_80012034"); /* menu-button vtable, +0x18 install slot */
+extern u8 MENU_HIGHLIGHT_VTABLE[] asm("D_8001208C"); /* menu-button-highlight vtable */
+extern u8 PASSWORD_BUTTON_VTABLE[] asm("D_80011FDC"); /* password-button vtable (post-cursor override) */
+extern u8 MENU_HIGHLIGHT_SPRITE_TABLE[] asm("D_8009CBE8"); /* menu-button-highlight sprite table */
 extern s32 GetWorldPositionX(Entity *entity, s16 localX);
 extern s32 GetWorldPositionY(Entity *entity, s16 localY);
 
@@ -32,25 +32,25 @@ extern s32 GetWorldPositionY(Entity *entity, s16 localY);
  * override) that stays a GLOBAL common symbol, so the blob's strong def wins
  * at link time (no extra bytes allocated, value unchanged) while maspsx now
  * emits the matching %gp_rel store. See memories/repo/gp-rel-extern-blocker.md. */
-u8 D_800A6045; /* menu select/confirm SFX debounce flag */
+u8 MENU_SELECT_SOUND_DEBOUNCE asm("D_800A6045"); /* menu select/confirm SFX debounce flag */
 
 /* Same gp-rel unlock as D_800A6045: the cursor's idle FSM state pair
  * (marker 0xFFFF0000 + &SetupMenuIdleAnimation) lives in the .sdata blob;
  * tentative defs let maspsx emit the matching single-instruction gp_rel
  * loads in InitMenuCursorEntity. */
-u32   D_800A6050; /* FSM marker (0xFFFF0000 = direct call) */
-void *D_800A6054; /* FSM handler = &SetupMenuIdleAnimation */
+u32 MENU_CURSOR_IDLE_STATE_MARKER asm("D_800A6050"); /* FSM marker (0xFFFF0000 = direct call) */
+EntityCallback MENU_CURSOR_IDLE_STATE_CALLBACK asm("D_800A6054"); /* FSM handler = &SetupMenuIdleAnimation */
 
 /* Cursor entity vtable + sprite table -- both outside gp range, addressed
  * absolute (lui/lo), so plain externs are correct here. */
-extern u8 D_800120AC[];
-extern u8 D_8009CBDC[];
-extern void EntitySetState(Entity *entity, u32 marker, void *fn);
+extern u8 MENU_CURSOR_VTABLE[] asm("D_800120AC");
+extern u8 MENU_CURSOR_SPRITE_TABLE[] asm("D_8009CBDC");
+extern void EntitySetState(Entity *entity, u32 marker, EntityCallback fn);
 
 /* Forward decls for in-TU helpers used by Setup*Animation before their
  * own definitions appear below. */
 void MenuSetEntityIdle2(Entity *entity);
-void TimerEntityTick(Entity *entity);
+void TimerEntityTick();
 void SetupMenuIdleAnimation(Entity *entity);
 
 /* Local 8-byte (markerLo, markerHi, fn) FSM callback-install slot used
@@ -78,6 +78,47 @@ typedef struct {
     s32 pad2;
 } TripadSlot;
 
+typedef struct TimedMenuEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u16 timer;
+} TimedMenuEntity;
+
+typedef struct MenuButtonEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ Entity *highlight;
+    /* 0x104 */ u8 active;
+    /* 0x105 */ u8 pad105[3];
+    /* 0x108 */ u8 typeByte;
+    /* 0x109 */ u8 backFlag;
+} MenuButtonEntity;
+
+typedef struct MenuPoint {
+    /* 0x00 */ s16 x;
+    /* 0x02 */ s16 y;
+} MenuPoint;
+
+typedef struct MenuLevelSelectEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ Entity *highlight;
+    /* 0x104 */ u8 active;
+    /* 0x105 */ u8 pad105[3];
+    /* 0x108 */ MenuPoint *positionTable;
+    /* 0x10C */ u8 levelCount;
+    /* 0x10D */ u8 pad10D[3];
+    /* 0x110 */ u8 *currentIndex;
+    /* 0x114 */ Entity *levelIcon;
+    /* 0x118 */ u8 *audioSettings;
+} MenuLevelSelectEntity;
+
+typedef struct MenuSkullIconEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ Entity *highlight;
+    /* 0x104 */ u8 active;
+    /* 0x105 */ u8 pad105[3];
+    /* 0x108 */ u8 *value;
+    /* 0x10C */ Entity *icon;
+} MenuSkullIconEntity;
+
 /* Allocates+inits the menu cursor SpriteEntity via InitEntityWithSprite
  * using the D_8009CBDC sprite table at z-order 0x7D0 (2000) and the
  * caller-supplied (x,y). Installs vtable D_800120AC, wires
@@ -93,21 +134,21 @@ Entity *InitMenuCursorEntity(Entity *entity, s16 x, s16 y) {
     TripadSlot u;
     s16 m1;
     void (*fn)(Entity *);
-    InitEntityWithSprite(entity, &D_8009CBDC, 0x7D0, x, y);
-    entity->collisionVtable = &D_800120AC;
+    InitEntityWithSprite(entity, MENU_CURSOR_SPRITE_TABLE, 0x7D0, x, y);
+    entity->collisionVtable = MENU_CURSOR_VTABLE;
     __asm__ volatile("" ::: "memory");
     m1 = -1;
     fn = (void (*)(Entity *))GetWorldPositionX;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x24) = u.s;
+    *(MenuCallbackSlot *)&entity->moveMarkerX = u.s;
     fn = (void (*)(Entity *))GetWorldPositionY;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x2C) = u.s;
-    EntitySetState(entity, D_800A6050, D_800A6054);
+    *(MenuCallbackSlot *)&entity->moveMarkerY = u.s;
+    EntitySetState(entity, MENU_CURSOR_IDLE_STATE_MARKER, MENU_CURSOR_IDLE_STATE_CALLBACK);
     return entity;
 }
 
@@ -116,17 +157,16 @@ Entity *InitMenuCursorEntity(Entity *entity, s16 x, s16 y) {
  * EntityProcessCallbackQueue to consume the queued next-state callback
  * (+0x98/+0x9C). Always falls through to EntityUpdateCallback for the
  * regular per-frame sprite/animation/render housekeeping. */
-void TimerEntityTick(Entity *entity) {
-    u16 *timer = (u16 *)((u8 *)entity + 0x100);
-    u16 v = *timer;
+void TimerEntityTick(TimedMenuEntity *entity) {
+    u16 v = entity->timer;
     if (v != 0) {
         v -= 1;
-        *timer = v;
+        entity->timer = v;
         if (v == 0) {
-            EntityProcessCallbackQueue(entity);
+            EntityProcessCallbackQueue((Entity *)entity);
         }
     }
-    EntityUpdateCallback(entity);
+    EntityUpdateCallback((Entity *)entity);
 }
 
 /* Minimal event-callback for the Klaymen/runner-style idle helper
@@ -191,20 +231,20 @@ Entity *InitMenuButtonEntity(Entity *entity, s16 x, s16 y) {
     TripadSlot u;
     s16 m1;
     void (*fn)(Entity *);
-    InitEntityWithSprite(entity, &D_8009CBE8, 0x7D0, x, y);
-    entity->collisionVtable = &D_8001208C;
+    InitEntityWithSprite(entity, MENU_HIGHLIGHT_SPRITE_TABLE, 0x7D0, x, y);
+    entity->collisionVtable = MENU_HIGHLIGHT_VTABLE;
     __asm__ volatile("" ::: "memory");
     m1 = -1;
     fn = (void (*)(Entity *))GetWorldPositionX;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x24) = u.s;
+    *(MenuCallbackSlot *)&entity->moveMarkerX = u.s;
     fn = (void (*)(Entity *))GetWorldPositionY;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x2C) = u.s;
+    *(MenuCallbackSlot *)&entity->moveMarkerY = u.s;
     return entity;
 }
 
@@ -240,7 +280,7 @@ void MenuSetEntityIdle(Entity *entity) {
     u.s[0].markerLo = 0;
     u.s[0].markerHi = 0;
     u.s[0].fn = NULL;
-    *(MenuCallbackSlot *)((u8 *)entity + 8) = u.s[0];
+    *(MenuCallbackSlot *)&entity->eventMarker = u.s[0];
     SetEntitySpriteId(entity, SPR_MENU_HIGHLIGHT_IDLE, 1);
 }
 
@@ -253,7 +293,7 @@ void MenuSetEntityIdle2(Entity *entity) {
     u.s[0].markerLo = 0;
     u.s[0].markerHi = 0;
     u.s[0].fn = NULL;
-    *(MenuCallbackSlot *)((u8 *)entity + 8) = u.s[0];
+    *(MenuCallbackSlot *)&entity->eventMarker = u.s[0];
     SetEntitySpriteId(entity, SPR_MENU_HIGHLIGHT_IDLE_ALT, 1);
 }
 
@@ -264,7 +304,7 @@ void MenuSetEntityIdle2(Entity *entity) {
  * move-callbacks. Returns the button entity. */
 Entity *InitMenuButtonWithSpriteId(Entity *entity, u32 spriteId, s16 x, s16 y) {
     InitEntitySprite(entity, spriteId, 0x3E8, x, y, 0);
-    entity->collisionVtable = &D_80012034;
+    entity->collisionVtable = MENU_BUTTON_VTABLE;
     AttachCursorToButton(entity);
     return entity;
 }
@@ -273,9 +313,9 @@ Entity *InitMenuButtonWithSpriteId(Entity *entity, u32 spriteId, s16 x, s16 y) {
  * to InitEntityWithSprite (so the underlying sprite is resolved through
  * a lookup table -- used when the button art is animated/multi-frame).
  * Sets vtable=D_80012034 then AttachCursorToButton. */
-Entity *InitMenuButtonWithSpritePtr(Entity *entity, void *spriteDef, s16 x, s16 y) {
+Entity *InitMenuButtonWithSpritePtr(Entity *entity, u8 *spriteDef, s16 x, s16 y) {
     InitEntityWithSprite(entity, spriteDef, 0x3E8, x, y);
-    entity->collisionVtable = &D_80012034;
+    entity->collisionVtable = MENU_BUTTON_VTABLE;
     AttachCursorToButton(entity);
     return entity;
 }
@@ -301,7 +341,7 @@ Entity *InitMenuButtonWithSpritePtr(Entity *entity, void *spriteDef, s16 x, s16 
  * as the deactivate lui-hoist. decomp-permuter candidate (reorder-only). */
 INCLUDE_ASM("asm/nonmatchings/menu", AttachCursorToButton);
 #if 0
-void AttachCursorToButton(Entity *parent) {
+void AttachCursorToButton(MenuButtonEntity *parent) {
     Entity *child;
     struct { s32 pad; MenuCallbackSlot s; s32 pad2[5]; } u; /* 0x20: slot@sp+0x1C, frame 0x50 */
     s16 m1;
@@ -310,22 +350,22 @@ void AttachCursorToButton(Entity *parent) {
     fnX = (void (*)(Entity *))GetWorldPositionX;
     fnY = (void (*)(Entity *))GetWorldPositionY;
     child = AllocateFromHeap(g_pBlbHeapBase, 0x100, 1, 0);
-    InitEntityWithSprite(child, &D_8009CBE8, 0x7D0,
-                         *(u16 *)((u8 *)parent + 0x68) + 0x6A,
-                         *(u16 *)((u8 *)parent + 0x6A) + 0xE);
-    *(s32 *)((u8 *)child + 0x18) = (s32)&D_8001208C;
+    InitEntityWithSprite(child, MENU_HIGHLIGHT_SPRITE_TABLE, 0x7D0,
+                         parent->sprite.base.worldX + 0x6A,
+                         parent->sprite.base.worldY + 0xE);
+    child->collisionVtable = MENU_HIGHLIGHT_VTABLE;
     m1 = -1;
     u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnX;
-    *(MenuCallbackSlot *)((u8 *)child + 0x24) = u.s;
+    *(MenuCallbackSlot *)&child->moveMarkerX = u.s;
     u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnY;
-    *(MenuCallbackSlot *)((u8 *)child + 0x2C) = u.s;
-    *(Entity **)((u8 *)parent + 0x100) = child;
+    *(MenuCallbackSlot *)&child->moveMarkerY = u.s;
+    parent->highlight = child;
     AddEntityToSortedRenderList(g_pGameState, child);
-    *((u8 *)parent + 0x104) = 0;
+    parent->active = 0;
     u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnX;
-    *(MenuCallbackSlot *)((u8 *)parent + 0x24) = u.s;
+    *(MenuCallbackSlot *)&parent->sprite.base.moveMarkerX = u.s;
     u.s.markerLo = 0; u.s.markerHi = m1; u.s.fn = fnY;
-    *(MenuCallbackSlot *)((u8 *)parent + 0x2C) = u.s;
+    *(MenuCallbackSlot *)&parent->sprite.base.moveMarkerY = u.s;
 }
 #endif
 
@@ -371,7 +411,7 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateButton);
  * issued this frame. (Unlocked: see the D_800A6045 .comm note above.) */
 void Menu_PlayConfirmSound(void) {
     PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0);
-    D_800A6045 = 1;
+    MENU_SELECT_SOUND_DEBOUNCE = 1;
 }
 
 /* Builds a password-screen button via
@@ -380,13 +420,13 @@ void Menu_PlayConfirmSound(void) {
  * overrides vtable to D_80011FDC (password-button vtable). Stores
  * caller's type byte at +0x108 and the back-flag byte (5th arg) at
  * +0x109 -- these gate which Menu_Play*SoundIfEnabled helpers fire. */
-Entity *InitMenuPasswordButton(Entity *entity, s16 x, s16 y, u8 typeByte, u8 backFlag) {
-    InitEntitySprite(entity, SPR_MENU_BUTTON_NAV, 0x3E8, x, y, 0);
-    entity->collisionVtable = &D_80012034;
-    AttachCursorToButton(entity);
-    entity->collisionVtable = &D_80011FDC;
-    *((u8 *)entity + 0x108) = typeByte;
-    *((u8 *)entity + 0x109) = backFlag;
+MenuButtonEntity *InitMenuPasswordButton(MenuButtonEntity *entity, s16 x, s16 y, u8 typeByte, u8 backFlag) {
+    InitEntitySprite((Entity *)entity, SPR_MENU_BUTTON_NAV, 0x3E8, x, y, 0);
+    entity->sprite.base.collisionVtable = MENU_BUTTON_VTABLE;
+    AttachCursorToButton((Entity *)entity);
+    entity->sprite.base.collisionVtable = PASSWORD_BUTTON_VTABLE;
+    entity->typeByte = typeByte;
+    entity->backFlag = backFlag;
     return entity;
 }
 
@@ -418,10 +458,10 @@ INCLUDE_ASM("asm/nonmatchings/menu", FINN_ClearSubentityState);
  * PlaySoundEffect(0x90810000, 0xA0, 0) and copies that type byte into
  * the gp-relative D_800A6045 debounce flag. Lets only "real" buttons
  * (non-zero type) emit the click sound. (Unlocked: D_800A6045 .comm.) */
-void Menu_PlaySelectSoundIfEnabled(Entity *entity) {
-    if (*((u8 *)entity + 0x108) != 0) {
+void Menu_PlaySelectSoundIfEnabled(MenuButtonEntity *entity) {
+    if (entity->typeByte != 0) {
         PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0);
-        D_800A6045 = *((u8 *)entity + 0x108);
+        MENU_SELECT_SOUND_DEBOUNCE = entity->typeByte;
     }
 }
 
@@ -430,10 +470,10 @@ void Menu_PlaySelectSoundIfEnabled(Entity *entity) {
  * PlaySoundEffect(0x90810000, 0xA0, 0) and writes 1 to D_800A6045.
  * Used so only the password screen's "back/confirm" button actually
  * fires the confirm sound. (Unlocked: D_800A6045 .comm.) */
-void Menu_PlayConfirmSoundIfEnabled(Entity *entity) {
-    if (*((u8 *)entity + 0x109) != 0) {
+void Menu_PlayConfirmSoundIfEnabled(MenuButtonEntity *entity) {
+    if (entity->backFlag != 0) {
         PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0);
-        D_800A6045 = 1;
+        MENU_SELECT_SOUND_DEBOUNCE = 1;
     }
 }
 
@@ -487,26 +527,26 @@ void func_80075B7C(void) {
  * (PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0)). Always recomputes the
  * level-icon entity (+0x114) worldX/worldY from the (x,y) table at
  * +0x108 indexed by new_index*4 so the icon slides to the next slot. */
-void Menu_IncrementSelection(Entity *entity) {
-    u8 *slider = *(u8 **)((u8 *)entity + 0x110);
-    u8 max = *(u8 *)((u8 *)entity + 0x10C);
+void Menu_IncrementSelection(MenuLevelSelectEntity *entity) {
+    u8 *slider = entity->currentIndex;
+    u8 max = entity->levelCount;
     u8 cur = *slider;
     if ((s32)cur < (s32)(max - 1)) {
         *slider = cur + 1;
-        ApplyAudioSettings(*(void **)((u8 *)entity + 0x118));
+        ApplyAudioSettings(entity->audioSettings);
         PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
     }
     {
-        u8 idx = **(u8 **)((u8 *)entity + 0x110);
-        u8 *table = *(u8 **)((u8 *)entity + 0x108);
-        u8 *display = *(u8 **)((u8 *)entity + 0x114);
-        *(u16 *)(display + 0x68) = *(u16 *)(table + idx * 4 + 0);
+        u8 idx = *entity->currentIndex;
+        MenuPoint *table = entity->positionTable;
+        Entity *display = entity->levelIcon;
+        display->worldX = table[idx].x;
     }
     {
-        u8 idx = **(u8 **)((u8 *)entity + 0x110);
-        u8 *table = *(u8 **)((u8 *)entity + 0x108);
-        u8 *display = *(u8 **)((u8 *)entity + 0x114);
-        *(u16 *)(display + 0x6A) = *(u16 *)(table + idx * 4 + 2);
+        u8 idx = *entity->currentIndex;
+        MenuPoint *table = entity->positionTable;
+        Entity *display = entity->levelIcon;
+        display->worldY = table[idx].y;
     }
 }
 
@@ -514,25 +554,25 @@ void Menu_IncrementSelection(Entity *entity) {
  * *(u8*)(entity+0x110) > 0, decrements, calls ApplyAudioSettings, and
  * plays the FX_MENU_CYCLE SFX. Always repositions the level-icon
  * entity at +0x114 using the (x,y) lookup at +0x108 + new_index*4. */
-void Menu_DecrementAndPlaySound(Entity *entity) {
-    u8 *slider = *(u8 **)((u8 *)entity + 0x110);
+void Menu_DecrementAndPlaySound(MenuLevelSelectEntity *entity) {
+    u8 *slider = entity->currentIndex;
     u8 cur = *slider;
     if (cur != 0) {
         *slider = cur - 1;
-        ApplyAudioSettings(*(void **)((u8 *)entity + 0x118));
+        ApplyAudioSettings(entity->audioSettings);
         PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
     }
     {
-        u8 idx = **(u8 **)((u8 *)entity + 0x110);
-        u8 *table = *(u8 **)((u8 *)entity + 0x108);
-        u8 *display = *(u8 **)((u8 *)entity + 0x114);
-        *(u16 *)(display + 0x68) = *(u16 *)(table + idx * 4 + 0);
+        u8 idx = *entity->currentIndex;
+        MenuPoint *table = entity->positionTable;
+        Entity *display = entity->levelIcon;
+        display->worldX = table[idx].x;
     }
     {
-        u8 idx = **(u8 **)((u8 *)entity + 0x110);
-        u8 *table = *(u8 **)((u8 *)entity + 0x108);
-        u8 *display = *(u8 **)((u8 *)entity + 0x114);
-        *(u16 *)(display + 0x6A) = *(u16 *)(table + idx * 4 + 2);
+        u8 idx = *entity->currentIndex;
+        MenuPoint *table = entity->positionTable;
+        Entity *display = entity->levelIcon;
+        display->worldY = table[idx].y;
     }
 }
 
@@ -581,12 +621,11 @@ void func_80075F24(void) {
  * 0..4). Then SetAnimationFrameIndex(entity+0x10C, new_value) to update
  * the displayed icon frame and plays the menu-cycle SFX
  * (PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0)). */
-void Menu_CycleOptionAndPlaySound(Entity *entity) {
-    u8 *counter = *(u8 **)((u8 *)entity + 0x108);
+void Menu_CycleOptionAndPlaySound(MenuSkullIconEntity *entity) {
+    u8 *counter = entity->value;
     u8 v = *counter;
     if (v < 4) *counter = v + 1; else *counter = 0;
-    SetAnimationFrameIndex(*(void **)((u8 *)entity + 0x10C),
-                           **(u8 **)((u8 *)entity + 0x108));
+    SetAnimationFrameIndex(entity->icon, *entity->value);
     PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
 }
 
@@ -594,12 +633,11 @@ void Menu_CycleOptionAndPlaySound(Entity *entity) {
  * *(u8*)(entity+0x108); if it was already 0, wraps back to 4 so the
  * range stays 0..4. Updates the icon via SetAnimationFrameIndex(
  * entity+0x10C, new_value) and plays the FX_MENU_CYCLE SFX. */
-void Menu_DecrementCounter(Entity *entity) {
-    u8 *counter = *(u8 **)((u8 *)entity + 0x108);
+void Menu_DecrementCounter(MenuSkullIconEntity *entity) {
+    u8 *counter = entity->value;
     u8 v = *counter;
     if (v == 0) v = 4; else v -= 1;
     *counter = v;
-    SetAnimationFrameIndex(*(void **)((u8 *)entity + 0x10C),
-                           **(u8 **)((u8 *)entity + 0x108));
+    SetAnimationFrameIndex(entity->icon, *entity->value);
     PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
 }
