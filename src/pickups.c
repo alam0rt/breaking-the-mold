@@ -3,17 +3,24 @@
 #include "Game/callback_slot.h"
 
 extern void *g_pBlbHeapBase;
-extern void *D_80010870;
-extern void *D_80010890;
-extern void FreeEntityNoTeardown_80030cdc(void *e, u32 size);
+extern u8 DECOR_ENTITY_DESTRUCTOR_VTABLE[] asm("D_80010870");
+extern u8 DECOR_SIMPLE_ALLOC_VTABLE[] asm("D_80010890");
+extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
-extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 extern void CheckpointSwampTickCallback(Entity *e);
+
+typedef struct InteractiveDecorEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x11D - 0x100];
+    /* 0x11D */ u8 triggerState;
+} InteractiveDecorEntity;
+
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
-u32   D_800A59D8;
-void *D_800A59DC;
+u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8");
+EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC");
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitGreenBulletsCollectible);
 
@@ -97,11 +104,11 @@ INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartWithRandomTimer);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitInteractiveDecorEntity);
 
-void DecorEntityTickWithCollision(Entity *e) {
-    CollisionCheckWrapper(e, EVT_TICK, EVT_DAMAGE, EVT_TICK);
-    DecorEntityTickWithOffscreenCheck(e);
-    if (*(u8 *)((u8 *)e + 0x11D) != 0) {
-        EntitySetState(e, D_800A59D8, D_800A59DC);
+void DecorEntityTickWithCollision(InteractiveDecorEntity *e) {
+    CollisionCheckWrapper((Entity *)e, EVT_TICK, EVT_DAMAGE, EVT_TICK);
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0) {
+        EntitySetState((Entity *)e, DECOR_TRIGGERED_STATE_MARKER, DECOR_TRIGGERED_STATE_CALLBACK);
     }
 }
 
@@ -119,139 +126,139 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitEntityType0x3DE);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntitySpawnExplosionPieces);
 
-void EntityDestructor_Vtable0x80010870_A(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_A(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_VtableAndHeapFree(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_VtableAndHeapFree(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_B(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_B(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_C(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_C(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_D(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_D(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_E(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_E(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_F(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_F(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_G(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_G(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_H(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_H(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_I(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_I(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_J(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_J(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_K(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_K(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_L(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_L(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_M(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_M(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_N(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_N(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_O(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_O(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void EntityDestructor_Vtable0x80010870_P(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010870;
+void EntityDestructor_Vtable0x80010870_P(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -261,14 +268,14 @@ void func_80030C98(void) {
 void func_80030CA0(void) {
 }
 
-void EntityDestructor_Vtable0x80010870_Q(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_80010890;
+void EntityDestructor_Vtable0x80010870_Q(Entity *entity, u32 flag) {
+    entity->collisionVtable = DECOR_SIMPLE_ALLOC_VTABLE;
     if (flag & 1) {
         FreeEntityNoTeardown_80030cdc(entity, 0x1C);
     }
 }
 
-void FreeEntityNoTeardown_80030cdc(void *e, u32 size) {
-    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size) {
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
 }
 
