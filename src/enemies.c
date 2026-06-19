@@ -46,7 +46,11 @@ extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 extern void AIEntityRandomBehaviorTick(Entity *e);
 extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern void SetAnimationLoopFrame(Entity *e, u32 frame);
+extern void SetAnimationSpriteCallback(Entity *e, u32 spriteId);
+extern void SetAnimationFrameIndex(Entity *e, s32 frame);
 void FreeEntityNoTeardown_80041468(Entity *e, u32 size);
 void EntityUpdateWithCollisionWrapper(Entity *e);
 void FreeEntityNoTeardown_80045eb4(Entity *e, u32 size);
@@ -326,7 +330,37 @@ void EntityStateSetIdle(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetRandomBehavior);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetAttack);
+void EntityStateSetAttack(EnemyTimerStateEntity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    s16 m1;
+    u32 *spriteIds;
+    e->stateDelay = 3;
+    __asm__ volatile("" ::: "memory");
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s[0];
+    fn = TimedSparkleCollectibleTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s[0];
+    fn = EntityEventHandlerWithDelayedWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
+    spriteIds = *(u32 **)((u8 *)e + 0x114);
+    SetEntitySpriteId((Entity *)e, spriteIds[5], 1);
+    SetAnimationLoopFrame((Entity *)e, 0x1084280);
+    SetAnimationSpriteCallback((Entity *)e, 0x2421405);
+    SetAnimationFrameIndex((Entity *)e, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleCollectibleState);
 
