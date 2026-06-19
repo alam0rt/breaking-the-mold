@@ -42,8 +42,11 @@ extern void *ENTITY_FREE_ONLY_VTABLE asm("D_800111C8");
 extern void *ALT_PATH_FOLLOWING_ENTITY_VTABLE asm("D_800111E8");
 extern void *ENEMY_ENTITY_VTABLE asm("D_80011228");
 extern void *ENEMY_FREE_ONLY_ENTITY_VTABLE asm("D_80011248");
+u32 ENEMY_ANIMATED_CALLBACK_MARKER asm("D_800A5AD0");
+EntityCallback ENEMY_ANIMATED_CALLBACK_FN asm("D_800A5AD4");
 extern void RemoveEntityFromAllLists(GameState *gs, s32 idx);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 extern void AIEntityRandomBehaviorTick(Entity *e);
 extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
@@ -53,6 +56,7 @@ extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2,
 extern s32 EntityEventHandlerSpawnParticle(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerCountdownToWalkWithSprite(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerTimerCountdown(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerAnimationSwitch(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityFallingGravityWithCollision(Entity *e);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
@@ -1193,7 +1197,44 @@ setIdleNextState:
     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemyAnimatedWithDeathSpawn);
+void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
+    PaddedSlotPair slot;
+    register void (*tickFn)() asm("$3");
+    register void (*eventFn)() asm("$9");
+    register u32 spriteId asm("$5");
+    void (*fn)();
+    s16 m1;
+
+    tickFn = InitEntityWithDeathSpawn;
+    eventFn = EntityEventHandlerAnimationSwitch;
+    spriteId = 0x400C9A1D;
+    __asm__ volatile("" : "=r"(tickFn), "=r"(eventFn), "=r"(spriteId) : "0"(tickFn), "1"(eventFn), "2"(spriteId));
+    *(u8 *)((u8 *)e + 0x111) = *(u8 *)((u8 *)e + 0x110);
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = tickFn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = eventFn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SetEntitySpriteId(e, spriteId, 1);
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x44D4C8D8);
+    SetAnimationFrameIndex(e, 0);
+    fn = InitEntityRandomIdleOrAnimated;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    EntitySetCallback(e, ENEMY_ANIMATED_CALLBACK_MARKER, ENEMY_ANIMATED_CALLBACK_FN);
+}
 
 void SetEntityFacingDirection(Entity *e, s32 dir);
 
