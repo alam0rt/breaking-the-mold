@@ -12,6 +12,7 @@ extern void EntityTimerTickAndNotify(Entity *e);
 extern void *PARTICLE_EFFECT_VTABLE asm("D_80010A48");
 extern void *VFX_ENTITY_VTABLE_10A68 asm("D_80010A68");
 extern void *CALLBACK_ENTITY_EVENT_VTABLE asm("D_80010AD8");
+extern void *VFX_ENTITY_VTABLE_10AE8 asm("D_80010AE8");
 extern void *ROPE_SEGMENT_ENTITY_VTABLE asm("D_80010B28");
 extern void *VFX_ENTITY_VTABLE_10B78 asm("D_80010B78");
 extern void *FADE_EFFECT_ENTITY_VTABLE asm("D_80010BA8");
@@ -22,6 +23,7 @@ extern void *RESOURCE_TYPE4_ENTITY_VTABLE asm("D_80010A88");
 extern void *VFX_ENTITY_VTABLE_10A10 asm("D_80010A10");
 extern void FreeResourceType4(Entity *e, s32 mode);
 extern void FreeWithCallback(Entity *e, s32 mode);
+extern void FreeTextureResource(void *e, s32 mode);
 
 typedef struct DecorEventEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -105,6 +107,14 @@ typedef struct EntityWithOwnedData {
     /* 0x18 */ void *collisionVtable;
     /* 0x1C */ void *ownedData;
 } EntityWithOwnedData;
+
+typedef struct EntityWithTextureMemory {
+    /* 0x00 */ u8 pad0[0xC];
+    /* 0x0C */ void *eventVtable;
+    /* 0x10 */ u8 pad10[0x2C];
+    /* 0x3C */ void *textureData0;
+    /* 0x40 */ void *textureData1;
+} EntityWithTextureMemory;
 
 typedef struct ZOrderTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -219,7 +229,15 @@ INCLUDE_ASM("asm/nonmatchings/effects", func_800335A4);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitPathFollowEntityAlt);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDestructor_WithTextureAndMemory);
+void EntityDestructor_WithTextureAndMemory(EntityWithTextureMemory *e, s32 flags) {
+    e->eventVtable = &VFX_ENTITY_VTABLE_10AE8;
+    FreeFromHeap(g_pBlbHeapBase, e->textureData0, 0, 0);
+    FreeFromHeap(g_pBlbHeapBase, e->textureData1, 0, 0);
+    FreeTextureResource(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderRopeSegments);
 
