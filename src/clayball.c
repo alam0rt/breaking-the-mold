@@ -3,8 +3,25 @@
 #include "globals.h"
 #include "Game/entity_events.h"
 
-extern u8 D_800116E8[];
-extern u8 D_80011708[];
+extern u8 CLAYBALL_TEARDOWN_VTABLE[] asm("D_800116E8");
+extern u8 SMALL_CLAYBALL_HELPER_VTABLE[] asm("D_80011708");
+
+typedef struct SwitchClayballEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 *spawnDef;
+    /* 0x104 */ u8 pad104[0x11A - 0x104];
+    /* 0x11A */ u8 active;
+    /* 0x11B */ u8 pad11B[0x124 - 0x11B];
+    /* 0x124 */ Entity *linkedEntity;
+    /* 0x128 */ s32 signalPayload;
+} SwitchClayballEntity;
+
+typedef struct SoundClayballEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x128 - 0x100];
+    /* 0x128 */ s32 rollingVoice;
+    /* 0x12C */ s32 impactVoice;
+} SoundClayballEntity;
 
 /* Per-tick path update for the looping clayball/circular-platform entity:
  * advances a timed path via InterpolateTimedPathPosition, writes the
@@ -37,24 +54,24 @@ INCLUDE_ASM("asm/nonmatchings/clayball", CircularPlatformEventHandler);
  * @ 8005894C — arg ordering and s16 arithmetic diffs vs cc1. */
 INCLUDE_ASM("asm/nonmatchings/clayball", CircularPlatformUpdateWithMirror);
 
-extern void *InitEntitySprite(void *entity, void *def, s32 spriteId, s16 x, s16 y, s32 unused);
-extern void GenericSpriteEntityInitCallback(void *entity, u16 param, u8 flags, s32 zero);
-extern void ClayballResetState(void *entity);
-extern u8 D_80011648[];
+extern SpriteEntity *InitEntitySprite(SpriteEntity *entity, u8 *def, s32 spriteId, s16 x, s16 y, s32 unused);
+extern void GenericSpriteEntityInitCallback(SpriteEntity *entity, u16 param, u8 flags, s32 zero);
+extern void ClayballResetState(SwitchClayballEntity *entity);
+extern u8 SWITCH_CLAYBALL_GAMEPLAY_VTABLE[] asm("D_80011648");
 
 /* Constructor for the switch-triggered clayball variants (entity types
  * 090/091/092): sets up sprite 0x3C0, temporarily swaps the collision
- * vtable to D_800116E8 for GenericSpriteEntityInitCallback, restores the
- * gameplay vtable D_80011648, clears live state (+0x11A,+0x124) and calls
+ * vtable to CLAYBALL_TEARDOWN_VTABLE for GenericSpriteEntityInitCallback, restores the
+ * gameplay vtable SWITCH_CLAYBALL_GAMEPLAY_VTABLE, clears live state (+0x11A,+0x124) and calls
  * ClayballResetState to drop any leftover linked switch-block. */
-void *InitClayballWithSwitchBlock(void *entity, u8 *def, void *spawnContext, u8 flags) {
-    InitEntitySprite(entity, spawnContext, 0x3C0, *(s16 *)(def + 0x8), (s16)(*(u16 *)(def + 0xA) - 1), 0);
-    ((Entity *)entity)->collisionVtable = D_800116E8;
-    *(void **)((u8 *)entity + 0x100) = def;
-    GenericSpriteEntityInitCallback(entity, *(u16 *)(def + 0xC), flags, 0);
-    ((Entity *)entity)->collisionVtable = D_80011648;
-    *(u8 *)((u8 *)entity + 0x11A) = 0;
-    *(s32 *)((u8 *)entity + 0x124) = 0;
+SwitchClayballEntity *InitClayballWithSwitchBlock(SwitchClayballEntity *entity, u8 *def, u8 *spawnContext, u8 flags) {
+    InitEntitySprite(&entity->sprite, spawnContext, 0x3C0, *(s16 *)(def + 0x8), (s16)(*(u16 *)(def + 0xA) - 1), 0);
+    entity->sprite.base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
+    entity->spawnDef = def;
+    GenericSpriteEntityInitCallback(&entity->sprite, *(u16 *)(def + 0xC), flags, 0);
+    entity->sprite.base.collisionVtable = SWITCH_CLAYBALL_GAMEPLAY_VTABLE;
+    entity->active = 0;
+    entity->linkedEntity = NULL;
     ClayballResetState(entity);
     return entity;
 }
@@ -67,17 +84,17 @@ void *InitClayballWithSwitchBlock(void *entity, u8 *def, void *spawnContext, u8 
  * GCC doesn't reproduce. */
 INCLUDE_ASM("asm/nonmatchings/clayball", ClayballSwitchEventHandler);
 
-extern void ClayballSpawnSwitchBlock(void *entity);
+extern void ClayballSpawnSwitchBlock(SwitchClayballEntity *entity);
 
 /* Signal listener for the on-demand clayball spawn: when global event
  * 0x1014 arrives carrying the def's signal id (def[0x15]), record the
  * caller's payload at +0x128 and trigger ClayballSpawnSwitchBlock — i.e.
  * the clayball remains dormant until its named trigger fires. */
-s32 ClayballSpawnOnSignalHandler(void *entity, u16 event, u32 param, s32 arg3) {
+s32 ClayballSpawnOnSignalHandler(SwitchClayballEntity *entity, u16 event, u32 param, s32 arg3) {
     if (event == EVT_SIGNAL_FIRE) {
-        u8 *sub = *(u8 **)((u8 *)entity + 0x100);
+        u8 *sub = entity->spawnDef;
         if (param == sub[0x15]) {
-            *(s32 *)((u8 *)entity + 0x128) = arg3;
+            entity->signalPayload = arg3;
             ClayballSpawnSwitchBlock(entity);
         }
     }
@@ -119,74 +136,73 @@ INCLUDE_ASM("asm/nonmatchings/clayball", ShrineyGuardSoundUpdateTick);
  * its own per-event behaviour without disturbing the platform path. */
 INCLUDE_ASM("asm/nonmatchings/clayball", ShrineyGuardEventWithSound);
 
-extern u8 D_80011628[];
-extern void FreeEntityNoTeardown_80059674(void *entity, s32 size);
+extern u8 SOUND_CLAYBALL_SHUTDOWN_VTABLE[] asm("D_80011628");
+extern void FreeEntityNoTeardown_80059674(Entity *entity, s32 size);
 
 /* Destructor for the sound-emitting clayball: silences the two managed
  * SPU voices (rolling loop at +0x128, impact/short loop at +0x12C),
  * marks both voice handles as -1, swaps back to the teardown vtable,
  * runs the generic destroy, and frees from the BLB heap when requested. */
-void ShrineyGuardDestroyWithSoundCleanup(void *entity, s32 flags) {
-    u8 *e = (u8 *)entity;
-    ((Entity *)entity)->collisionVtable = D_80011628;
-    StopSPUVoice(*(s32 *)(e + 0x128));
-    *(s32 *)(e + 0x128) = -1;
-    StopSPUVoice(*(s32 *)(e + 0x12C));
-    *(s32 *)(e + 0x12C) = -1;
-    ((Entity *)entity)->collisionVtable = D_800116E8;
-    DestroyEntityAndFreeMemory(entity, 0);
+void ShrineyGuardDestroyWithSoundCleanup(SoundClayballEntity *entity, s32 flags) {
+    entity->sprite.base.collisionVtable = SOUND_CLAYBALL_SHUTDOWN_VTABLE;
+    StopSPUVoice(entity->rollingVoice);
+    entity->rollingVoice = -1;
+    StopSPUVoice(entity->impactVoice);
+    entity->impactVoice = -1;
+    entity->sprite.base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
+    DestroyEntityAndFreeMemory(&entity->sprite, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
 /* Generic destructor for the clayball entity family: restores the
- * teardown vtable (D_800116E8), runs DestroyEntityAndFreeMemory, and
+ * teardown vtable (CLAYBALL_TEARDOWN_VTABLE), runs DestroyEntityAndFreeMemory, and
  * releases the entity back to the BLB heap when bit 0 of flags is set.
  * The next five copies are byte-identical duplicates of this body — the
  * compiler emitted one per clayball-variant init site because each one
  * referenced this destructor as a separate static callback. */
-void EntityDestroyCallback_Vt800116E8(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_800116E8;
+void EntityDestroyCallback_Vt800116E8(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
-void EntityDestroyCallback_Vt800116E8_800594a0(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_800116E8;
+void EntityDestroyCallback_Vt800116E8_800594a0(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
-void EntityDestroyCallback_Vt800116E8_80059504(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_800116E8;
+void EntityDestroyCallback_Vt800116E8_80059504(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
-void EntityDestroyCallback_Vt800116E8_80059568(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_800116E8;
+void EntityDestroyCallback_Vt800116E8_80059568(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
-void EntityDestroyCallback_Vt800116E8_800595cc(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_800116E8;
+void EntityDestroyCallback_Vt800116E8_800595cc(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -204,8 +220,8 @@ void func_80059638(void) {
  * helper entity: swaps in vtable D_80011708 and conditionally frees via
  * the no-teardown path. The naming "Simple11" reflects the D_8001170*8
  * vtable it installs; likely should be EntityDestroy_SmallClayballHelper. */
-void EntityDestructor_Simple11(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_80011708;
+void EntityDestructor_Simple11(Entity *entity, s32 flags) {
+    entity->collisionVtable = SMALL_CLAYBALL_HELPER_VTABLE;
     if (flags & 1) {
         FreeEntityNoTeardown_80059674(entity, 0x1C);
     }
@@ -214,6 +230,6 @@ void EntityDestructor_Simple11(void *entity, s32 flags) {
 /* Bare heap release used by EntityDestructor_Simple11 — frees `entity`
  * from g_pBlbHeapBase without running any per-field teardown. The `size`
  * parameter is accepted but ignored (caller passes 0x1C). */
-void FreeEntityNoTeardown_80059674(void *entity, s32 size) {
-    FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+void FreeEntityNoTeardown_80059674(Entity *entity, s32 size) {
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
 }
