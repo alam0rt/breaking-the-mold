@@ -22,6 +22,7 @@ extern void SetAnimationFrameCallback(Entity *e, u32 packed);
 extern Entity *InitEntityWithSprite(Entity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
 extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
 extern Entity *InitCollectibleEntity(Entity *e, u8 *spawn);
+extern void *CHILD_SPRITE_PARENT_VTABLE asm("D_80010C44");
 extern void *PROJECTILE_PATH_ENTITY_VTABLE asm("D_80010C64");
 extern void *PATH_HAZARD_ENTITY_VTABLE asm("D_80010CE4");
 extern void *PATH_ENEMY_SOUND_VTABLE asm("D_80010DA4");
@@ -1313,7 +1314,17 @@ INCLUDE_ASM("asm/nonmatchings/enemies", SpawnProjectileEntityDef);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityWithChildSprite);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", DestroyEntityWithSoundAndChild);
+void DestroyEntityWithSoundAndChild(Entity *e, u32 flags) {
+    e->collisionVtable = &CHILD_SPRITE_PARENT_VTABLE;
+    StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
+    RemoveEntityFromAllLists(g_pGameState, *(s32 *)((u8 *)e + 0x110));
+    *(s32 *)((u8 *)e + 0x110) = 0;
+    e->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 void CollectibleTickWithSoundPanning(SoundPanningEntity *e) {
     UpdateEntitySoundPanning((Entity *)e, e->soundId);
