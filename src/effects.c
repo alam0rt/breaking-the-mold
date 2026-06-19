@@ -13,6 +13,7 @@ extern void *PARTICLE_EFFECT_VTABLE asm("D_80010A48");
 extern void *VFX_ENTITY_VTABLE_10A68 asm("D_80010A68");
 extern void *CALLBACK_ENTITY_EVENT_VTABLE asm("D_80010AD8");
 extern void *VFX_ENTITY_VTABLE_10AE8 asm("D_80010AE8");
+extern void *PATH_ENTITY_EVENT_VTABLE asm("D_80010B00");
 extern void *ROPE_SEGMENT_ENTITY_VTABLE asm("D_80010B28");
 extern void *VFX_ENTITY_VTABLE_10B78 asm("D_80010B78");
 extern void *FADE_EFFECT_ENTITY_VTABLE asm("D_80010BA8");
@@ -115,6 +116,16 @@ typedef struct EntityWithTextureMemory {
     /* 0x3C */ void *textureData0;
     /* 0x40 */ void *textureData1;
 } EntityWithTextureMemory;
+
+typedef struct PathFollowResourceEntity {
+    /* 0x00 */ u8 pad0[0xC];
+    /* 0x0C */ void *eventVtable;
+    /* 0x10 */ u8 pad10[0x2C];
+    /* 0x3C */ void *pathData;
+    /* 0x40 */ void *segmentData;
+    /* 0x44 */ u8 pad44[4];
+    /* 0x48 */ void *extraData;
+} PathFollowResourceEntity;
 
 typedef struct ZOrderTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -221,7 +232,16 @@ INCLUDE_ASM("asm/nonmatchings/effects", func_80032DD8);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitPathFollowEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyPathFollowEntity);
+void DestroyPathFollowEntity(PathFollowResourceEntity *e, s32 flags) {
+    e->eventVtable = &PATH_ENTITY_EVENT_VTABLE;
+    FreeFromHeap(g_pBlbHeapBase, e->pathData, 0, 0);
+    FreeFromHeap(g_pBlbHeapBase, e->segmentData, 0, 0);
+    FreeFromHeap(g_pBlbHeapBase, e->extraData, 0, 0);
+    FreeTextureResource(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderPathEntitySegments);
 
