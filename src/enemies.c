@@ -48,6 +48,12 @@ extern void AIEntityRandomBehaviorTick(Entity *e);
 extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern void ApplyAnimationPositionOffsets(Entity *e);
+extern void CollectibleSparkleTickCallback(Entity *e);
+extern s32 EntityEventHandler0x1001_1002_1008(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern void EntityGroundSnapWithAnimation(Entity *e);
+extern void SetEntityFacingDirection(Entity *e, s32 dir);
 extern void SetAnimationLoopFrame(Entity *e, u32 frame);
 extern void SetAnimationSpriteCallback(Entity *e, u32 spriteId);
 extern void SetAnimationFrameIndex(Entity *e, s32 frame);
@@ -362,7 +368,36 @@ void EntityStateSetAttack(EnemyTimerStateEntity *e) {
     SetAnimationFrameIndex((Entity *)e, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleCollectibleState);
+void EntitySetSparkleCollectibleState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    u32 *spriteIds;
+
+    SetEntityFacingDirection(e, 2);
+    fn = ApplyAnimationPositionOffsets;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+    fn = CollectibleSparkleTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityEventHandler0x1001_1002_1008_V2;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    spriteIds = *(u32 **)((u8 *)e + 0x114);
+    SetEntitySpriteId(e, spriteIds[2], 1);
+    SetAnimationFrameIndex(e, 2);
+}
 
 void EntityStateSetSparkle(Entity *e);
 
@@ -381,7 +416,39 @@ void EntitySetSparkleDelay1(EnemyTimerStateEntity *e) {
     EntityStateSetSparkle((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSparkle);
+void EntityStateSetSparkle(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    u32 *spriteIds;
+
+    *(u8 *)((u8 *)e + 0x111) = 1;
+    __asm__ volatile("" ::: "memory");
+    fn = EntityGroundSnapWithAnimation;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+    fn = CollectibleSparkleTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityEventHandler0x1001_1002_1008;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    spriteIds = *(u32 **)((u8 *)e + 0x114);
+    SetEntitySpriteId(e, spriteIds[0], 1);
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+}
 
 extern u8 ENEMY_ANIM_SEQUENCE_4A_DATA[] asm("D_8009B55C");
 extern u8 ENEMY_ANIM_SEQUENCE_4B_DATA[] asm("D_8009B57C");
