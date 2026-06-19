@@ -15,12 +15,14 @@ extern void *JOE_HEAD_JOE_BOSS_VTABLE asm("D_80011288");
 extern void *MONKEY_MAGE_SIMPLE_ALLOC_VTABLE asm("D_800113A8");
 
 extern s32 EntityMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 BossEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 JoeHeadJoeAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
 extern void HazardActivateWithSound(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
+extern void SetAnimationSpriteId(Entity *e, s32 id);
 
 typedef struct BossTimedSpriteEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -50,12 +52,22 @@ typedef struct ShrineyGuardEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x10C - 0x100];
     /* 0x10C */ u8 readyFlag;
-    /* 0x10D */ u8 pad10D[0x112 - 0x10D];
+    /* 0x10D */ u8 pad10D[0x111 - 0x10D];
+    /* 0x111 */ u8 activeTimer;
     /* 0x112 */ u8 idleTimeout;
     /* 0x113 */ u8 stunTimer;
     /* 0x114 */ u8 attackCounter;
     /* 0x115 */ u8 stunActive;
 } ShrineyGuardEntity;
+
+typedef struct KloggTriggerEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x110 - 0x100];
+    /* 0x110 */ u8 triggerTimer;
+    /* 0x111 */ u8 triggerActive;
+    /* 0x112 */ u8 pad112[0x134 - 0x112];
+    /* 0x134 */ u8 *triggerTarget;
+} KloggTriggerEntity;
 
 typedef struct JoeHeadJoeEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -139,7 +151,23 @@ s32 EntityEventHandlerWithComplete(Entity *e, u32 event, u32 arg2, u32 arg3) {
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", KloggEventHandlerWithTrigger);
+s32 KloggEventHandlerWithTrigger(KloggTriggerEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u8 timer;
+    u32 maskedEvent = event & 0xFFFF;
+    result = EntityMessageHandler((Entity *)e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        e->triggerActive = 1;
+        timer = e->triggerTimer - 1;
+        e->triggerTimer = timer;
+        if (timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
+        } else if (timer == 1) {
+            e->triggerTarget[0x101] = 0x14;
+        }
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityFollowPathTick);
 
@@ -273,7 +301,22 @@ void ShrineyGuardStunTickCallback(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", BossEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardActiveEventHandler);
+s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = BossEventHandler((Entity *)e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        if (e->activeTimer != 0) {
+            e->activeTimer -= 1;
+            if (e->activeTimer == 0) {
+                SetAnimationSpriteId((Entity *)e, -1);
+            }
+        } else {
+            EntityProcessCallbackQueue((Entity *)e);
+        }
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackEventHandler);
 
