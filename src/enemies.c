@@ -1435,7 +1435,15 @@ void FreeEntityNoTeardown_80041468(Entity *e, u32 size) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCheckpointEntity);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", DestroyEntityWithChildRemoval);
+void DestroyEntityWithChildRemoval(Entity *e, u32 flags) {
+    e->collisionVtable = &CHECKPOINT_ENTITY_VTABLE;
+    RemoveEntityFromAllLists(g_pGameState, *(s32 *)((u8 *)e + 0x104));
+    *(s32 *)((u8 *)e + 0x104) = 0;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityFloatingWithCollisionTick);
 
