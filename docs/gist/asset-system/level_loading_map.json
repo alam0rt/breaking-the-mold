@@ -1,0 +1,35 @@
+{
+ "level_load_pipeline": [
+  "GameModeCallback @0x8007E654 detects level-complete (state+0x146 set AND lives[0x11]==0 -> game over, else advance)",
+  "SeekToLevelInSequence @0x80...38255 walks the PLAYBACK SEQUENCE (header+0xf34) to find next entry",
+  "InitializeAndLoadLevel: LevelDataParser -> LoadAssetContainer (per segment) -> UploadAudioToSPU x2 -> LoadLevelSpriteAssets"
+ ],
+ "playback_sequence": {
+  "location": "BLB header +0xf34 (count at +0xf30)",
+  "entry_mode_byte": "+0xf36: 0x01=MOVIE, 0x03=LEVEL \u2014 levels and FMVs interleaved in ONE sequence",
+  "level_pointer": "+0xf92 byte -> indexes LevelMetadata table (idx*0x70)",
+  "movie_match": "FUN_8007a4c0 strcmp vs Movie Table @ header+0xb64 (13 x 0x1c, 4-char IDs DREA/LOGO/YNTS/...)"
+ },
+ "level_metadata_entry": {
+  "stride": "0x70 (112) bytes, 26 entries @ header+0x000",
+  "+0x04": "asset/data pointer",
+  "+0x08": "data offset",
+  "+0x0C": "level asset index byte (the stage id)",
+  "+0x0D": "byte flag",
+  "+0x5B": "byte flag",
+  "rest": "TOC sizes / sector info / per-stage flags"
+ },
+ "segment_structure": {
+  "note": "LevelDataContext ctx[] zeroed/populated by LoadAssetContainer; matches asset-types.md",
+  "primary": "shared bank: Asset 600 geometry/bg + 601 audio + 602 (loaded once)",
+  "secondary": "level tiles: 100/300/301/302/303/400/401 + 601/602",
+  "tertiary": "sprites/entities: 200/201/500/501/502/503/504/600(sprites)/700",
+  "dual_audio_upload": "UploadAudioToSPU called for PRIMARY then SECONDARY bank (Session 14) \u2014 why some sounds are global, others level-specific"
+ },
+ "shared_sprite_set": {
+  "array": "DAT_8009dab4 = zero-terminated array of sprite HASHES loaded to VRAM EVERY level (LoadSpriteHashArrayToVRAM @0x...4105)",
+  "note": "sprite analog of the audio primary bank \u2014 the always-resident core sprites. VALUES in .data segment (not in .c dump).",
+  "conditional": "LoadLevelSpriteAssets also loads 0x168254b5 (Projectile sprite) when a level flag is set"
+ },
+ "special_levels": "Asset 100 +0x1A special-level-id 99 = FINN/SEVN (3D/vehicle stages); FINN/RUNN use Asset 504 vehicle paths (78/1 waypoints)"
+}

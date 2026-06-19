@@ -1,0 +1,6 @@
+n,prefix_hi20,low_bytes,anchor,visual_role,members
+6,0x10b95,010 01c a10 a1c c10 c1c,,[HIGH]: FINN player directional sprite (frame/,0x10b95010;0x10b9501c;0x10b95a10;0x10b95a1c;0x10b95c10;0x10b95c1c
+5,0x800da,102 116 11a 132 152,,[HIGH]: Klogg boss death animation frame 1,0x800da102;0x800da116;0x800da11a;0x800da132;0x800da152
+3,0x18e88,310 510 910,,[HIGH]: Glenn Yntis boss death animation frame,0x18e88310;0x18e88510;0x18e88910
+3,0x30808,20d 40d e0d,,,0x3080820d;0x3080840d;0x30808e0d
+3,0x400c9,89d 91d a1d,,,0x400c989d;0x400c991d;0x400c9a1d

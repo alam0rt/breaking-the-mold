@@ -1,0 +1,703 @@
+{
+  "title": "Skullmonkeys ToolX asset-hash analysis",
+  "hash_function": {
+    "name": "calcHash (Neverhood/Skullmonkeys lineage)",
+    "description": "case-insensitive, alphanumeric-only, per-char single-bit XOR toggle; running shiftValue accumulator mod 32",
+    "homomorphism": "calc(A+B) = calc(A) XOR rotl(calc(B), sigma(A)) where sigma = sum of char-values mod 32",
+    "namespacing": "id = SEED XOR rotl(calcHash(assetname), R); SEED+R are per-type constants ('prefix key')"
+  },
+  "namespaces": [
+    {
+      "name": "RAW",
+      "seed": "0x00000000",
+      "rotation": 0,
+      "used_by": "audio FX_* (literal FX_ prefix in name)",
+      "anchors": 113,
+      "status": "established (prior work)"
+    },
+    {
+      "name": "TEXT",
+      "seed": "0x28C0E011",
+      "rotation": 27,
+      "used_by": "on-screen text glyphs (CONTINUE/QUIT/YES/NO/PAUSED), all 26 levels",
+      "anchors": 6,
+      "status": "established"
+    },
+    {
+      "name": "PICKUP",
+      "seed": "0x88200080",
+      "rotation": 27,
+      "used_by": "power-up pickups (GROW/HAMSTER/ONE_UP...)",
+      "anchors": 6,
+      "status": "established (solved via sister-math)"
+    },
+    {
+      "name": "BOSS",
+      "seed": "0x08280150",
+      "rotation": 27,
+      "used_by": "boss/mini-boss sprites (KLOGG/WIZARD/MEGA/HEAD/YNT)",
+      "anchors": 21,
+      "status": "NEW this session \u2014 validated, awaiting in-game confirm"
+    }
+  ],
+  "boss_sprite_decodes": [
+    {
+      "id": "0x022E3442",
+      "entity": "WIZARD",
+      "action": "ATTACK",
+      "frame": "01",
+      "reconstructed_name": "WIZARD_ATTACK_01",
+      "level": "WIZZ",
+      "calc_hash": "0x40C6A241"
+    },
+    {
+      "id": "0x02ED1470",
+      "entity": "WIZARD",
+      "action": "IDLE",
+      "frame": "01",
+      "reconstructed_name": "WIZARD_IDLE_01",
+      "level": "WIZZ",
+      "calc_hash": "0x58A2A401"
+    },
+    {
+      "id": "0x424D1840",
+      "entity": "WIZARD",
+      "action": "DIE",
+      "frame": "01",
+      "reconstructed_name": "WIZARD_DIE_01",
+      "level": "WIZZ",
+      "calc_hash": "0x4CA32209"
+    },
+    {
+      "id": "0x60DE1050",
+      "entity": "WIZARD",
+      "action": "HIT",
+      "frame": "01",
+      "reconstructed_name": "WIZARD_HIT_01",
+      "level": "WIZZ",
+      "calc_hash": "0x1EC2200D"
+    },
+    {
+      "id": "0x81421850",
+      "entity": "WIZARD",
+      "action": "FALL",
+      "frame": "01",
+      "reconstructed_name": "WIZARD_FALL_01",
+      "level": "WIZZ",
+      "calc_hash": "0x2D432011"
+    },
+    {
+      "id": "0x82421850",
+      "entity": "WIZARD",
+      "action": "FALL",
+      "frame": "02",
+      "reconstructed_name": "WIZARD_FALL_02",
+      "level": "WIZZ",
+      "calc_hash": "0x4D432011"
+    },
+    {
+      "id": "0x08192250",
+      "entity": "MEGA",
+      "action": "TURN",
+      "frame": "",
+      "reconstructed_name": "MEGA_TURN",
+      "level": "MEGA",
+      "calc_hash": "0x06246000"
+    },
+    {
+      "id": "0x085860D4",
+      "entity": "MEGA",
+      "action": "ROLL",
+      "frame": "",
+      "reconstructed_name": "MEGA_ROLL",
+      "level": "MEGA",
+      "calc_hash": "0x0E0C3080"
+    },
+    {
+      "id": "0x09382152",
+      "entity": "MEGA",
+      "action": "SPIT",
+      "frame": "",
+      "reconstructed_name": "MEGA_SPIT",
+      "level": "MEGA",
+      "calc_hash": "0x22040040"
+    },
+    {
+      "id": "0x0A1820D4",
+      "entity": "MEGA",
+      "action": "DIE",
+      "frame": "",
+      "reconstructed_name": "MEGA_DIE",
+      "level": "MEGA",
+      "calc_hash": "0x46043080"
+    },
+    {
+      "id": "0x2C182010",
+      "entity": "MEGA",
+      "action": "HIT",
+      "frame": "",
+      "reconstructed_name": "MEGA_HIT",
+      "level": "MEGA",
+      "calc_hash": "0x86042804"
+    },
+    {
+      "id": "0x40106054",
+      "entity": "MEGA",
+      "action": "IDLE",
+      "frame": "2",
+      "reconstructed_name": "MEGA_IDLE_2",
+      "level": "MEGA",
+      "calc_hash": "0x070C2089"
+    },
+    {
+      "id": "0x4C106054",
+      "entity": "MEGA",
+      "action": "IDLE",
+      "frame": "1",
+      "reconstructed_name": "MEGA_IDLE_1",
+      "level": "MEGA",
+      "calc_hash": "0x870C2088"
+    },
+    {
+      "id": "0x08BC8013",
+      "entity": "KLOGG",
+      "action": "HIT",
+      "frame": "",
+      "reconstructed_name": "KLOGG_HIT",
+      "level": "KLOG",
+      "calc_hash": "0x12902860"
+    },
+    {
+      "id": "0x18248010",
+      "entity": "KLOGG",
+      "action": "DIE",
+      "frame": "",
+      "reconstructed_name": "KLOGG_DIE",
+      "level": "KLOG",
+      "calc_hash": "0x01902802"
+    },
+    {
+      "id": "0x193CA112",
+      "entity": "KLOGG",
+      "action": "IDLE",
+      "frame": "1",
+      "reconstructed_name": "KLOGG_IDLE_1",
+      "level": "KLOG",
+      "calc_hash": "0x22940842"
+    },
+    {
+      "id": "0x1A2C8516",
+      "entity": "KLOGG",
+      "action": "SHOOT",
+      "frame": "",
+      "reconstructed_name": "KLOGG_SHOOT",
+      "level": "KLOG",
+      "calc_hash": "0x409088C2"
+    },
+    {
+      "id": "0x0C78005C",
+      "entity": "YNT",
+      "action": "DIE",
+      "frame": "",
+      "reconstructed_name": "YNT_DIE",
+      "level": "GLEN",
+      "calc_hash": "0x8A002180"
+    },
+    {
+      "id": "0x407801D0",
+      "entity": "YNT",
+      "action": "HIT",
+      "frame": "1",
+      "reconstructed_name": "YNT_HIT_1",
+      "level": "GLEN",
+      "calc_hash": "0x0A001009"
+    },
+    {
+      "id": "0x407801DC",
+      "entity": "YNT",
+      "action": "HIT",
+      "frame": "2",
+      "reconstructed_name": "YNT_HIT_2",
+      "level": "GLEN",
+      "calc_hash": "0x0A001189"
+    },
+    {
+      "id": "0x8068815C",
+      "entity": "YNT",
+      "action": "IDLE",
+      "frame": "1",
+      "reconstructed_name": "YNT_IDLE_1",
+      "level": "GLEN",
+      "calc_hash": "0x08100191"
+    }
+  ],
+  "sister_cluster_map": [
+    {
+      "size": 16,
+      "ids": [
+        "0x10B85810",
+        "0x10B91810",
+        "0x10B9181C",
+        "0x10B94810",
+        "0x10B9481C",
+        "0x10B95010",
+        "0x10B9501C",
+        "0x10B95A10",
+        "0x10B95A1C",
+        "0x10B95C10",
+        "0x10B95C1C",
+        "0x10B97810",
+        "0x10B9781C",
+        "0x10B9D810",
+        "0x10B9D81C",
+        "0x10BB5810"
+      ],
+      "shared_levels": "FINN",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 12,
+      "ids": [
+        "0x408A1C10",
+        "0x408A2C10",
+        "0x40C21C10",
+        "0x40C22C10",
+        "0x40DA1C10",
+        "0x40DA2C10",
+        "0x40EA1C10",
+        "0x40EA2C10",
+        "0x41CA1C10",
+        "0x42CA1C10",
+        "0x44CA1C10",
+        "0x48CA1C10"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 7,
+      "ids": [
+        "0x080C8300",
+        "0x08148300",
+        "0x08188300",
+        "0x081C8302",
+        "0x081D8300",
+        "0x081E8300",
+        "0x085C8300"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 6,
+      "ids": [
+        "0x00CE0610",
+        "0x09CE0610",
+        "0x0ACE0610",
+        "0x0CCE0610",
+        "0x18CE0610",
+        "0x28CE0610"
+      ],
+      "shared_levels": "CSTL;FOOD;SEVN;TMPL",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 6,
+      "ids": [
+        "0x400C989D",
+        "0x400C991D",
+        "0x400C9A1D",
+        "0x40189A1D",
+        "0xE00E989D",
+        "0xE00E991D"
+      ],
+      "shared_levels": "SCIE",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 5,
+      "ids": [
+        "0x800DA102",
+        "0x800DA116",
+        "0x800DA11A",
+        "0x800DA132",
+        "0x800DA152"
+      ],
+      "shared_levels": "KLOG",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 4,
+      "ids": [
+        "0x60A91C9C",
+        "0x60AA1C9C",
+        "0x61A91C9C",
+        "0x62AA1C9C"
+      ],
+      "shared_levels": "BRG1",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 4,
+      "ids": [
+        "0x60B8BC9C",
+        "0x60B93CBD",
+        "0x60B98CBD",
+        "0x60B9BCBD"
+      ],
+      "shared_levels": "BRG1",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x18E88310",
+        "0x18E88510",
+        "0x18E88910"
+      ],
+      "shared_levels": "GLEN",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x1CF99931",
+        "0x1DF99931",
+        "0x1EF99931"
+      ],
+      "shared_levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x28A0C119",
+        "0x30A0C119",
+        "0x38A0C119"
+      ],
+      "shared_levels": "MENU",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x2E809804",
+        "0x2E811804",
+        "0x2E839804"
+      ],
+      "shared_levels": "KLOG",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x3080820D",
+        "0x3080840D",
+        "0x30808E0D"
+      ],
+      "shared_levels": "MENU",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x40B18011",
+        "0x40B28011",
+        "0x40B48011"
+      ],
+      "shared_levels": "MENU",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x410800F9",
+        "0x410808F9",
+        "0x410818F9"
+      ],
+      "shared_levels": "FOOD;TMPL",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x462C6040",
+        "0x46386040",
+        "0x463E6040"
+      ],
+      "shared_levels": "BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x492C8430",
+        "0x512C8430",
+        "0x612C8430"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x4AEE0118",
+        "0x52EE0118",
+        "0x62EE0118"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x4BAF8200",
+        "0x53AF8200",
+        "0x63AF8200"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x5A89815F",
+        "0x5AB9815F",
+        "0x5AD9815F"
+      ],
+      "shared_levels": "BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;FOOD;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0x60181A0C",
+        "0x61581A0C",
+        "0x61981A0C"
+      ],
+      "shared_levels": "SCIE",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 3,
+      "ids": [
+        "0xB468D0C6",
+        "0xB868D0C6",
+        "0xBE68D0C6"
+      ],
+      "shared_levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x004A981C",
+        "0x024E981C"
+      ],
+      "shared_levels": "BOIL;CLOU;MOSS",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x004C9138",
+        "0x40489938"
+      ],
+      "shared_levels": "CLOU;CRYS;SOAR",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x0408C01E",
+        "0x0428801E"
+      ],
+      "shared_levels": "EVIL;FOOD;MOSS;SOAR",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x069480A0",
+        "0x069580A0"
+      ],
+      "shared_levels": "RUNN",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x085860D4",
+        "0x0A1820D4"
+      ],
+      "shared_levels": "MEGA",
+      "known_seed_decodes": 2
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x092B8480",
+        "0x292E8480"
+      ],
+      "shared_levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x0B0811BB",
+        "0x0B081DBB"
+      ],
+      "shared_levels": "HEAD",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x2A6E0410",
+        "0x326E0410"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x3A186940",
+        "0x3A186980"
+      ],
+      "shared_levels": "CAVE;EGGS;GLID;WEED",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x40106054",
+        "0x4C106054"
+      ],
+      "shared_levels": "MEGA",
+      "known_seed_decodes": 2
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x407801D0",
+        "0x407801DC"
+      ],
+      "shared_levels": "GLEN",
+      "known_seed_decodes": 2
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x46269090",
+        "0x5E269090"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x4A3EA110",
+        "0x523EA110"
+      ],
+      "shared_levels": "",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x4A4EC094",
+        "0x524EC094"
+      ],
+      "shared_levels": "GLEN",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x4C2A8850",
+        "0x542A8850"
+      ],
+      "shared_levels": "WIZZ",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x620EC210",
+        "0x7A0EC210"
+      ],
+      "shared_levels": "EGGS",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x6D209C95",
+        "0xED209C94"
+      ],
+      "shared_levels": "CSTL",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x81421850",
+        "0x82421850"
+      ],
+      "shared_levels": "WIZZ",
+      "known_seed_decodes": 2
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0x8A7CE022",
+        "0x8B7CE0B2"
+      ],
+      "shared_levels": "GLID;SCIE;SOAR;TMPL",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0xA0CC18D0",
+        "0xA0CC1CD0"
+      ],
+      "shared_levels": "WIZZ",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0xA9387D8C",
+        "0xC9387D8C"
+      ],
+      "shared_levels": "CLOU",
+      "known_seed_decodes": 0
+    },
+    {
+      "size": 2,
+      "ids": [
+        "0xB12C0854",
+        "0xB92C4850"
+      ],
+      "shared_levels": "EGGS;GLID;WEED",
+      "known_seed_decodes": 0
+    }
+  ],
+  "validation": {
+    "round_trip": "21/21 names re-hash to exact id",
+    "leave_one_boss_out": "seed re-derived from 3 bosses predicts 4th: KLOGG 4/4, WIZARD 6/6, MEGA 7/7, YNT 4/4",
+    "signal_vs_null": "21 coherent decodes vs 0.00 mean over random seeds (210x)",
+    "cross_modal": "decoded MEGA sprite actions {DIE,IDLE,ROLL,SPIT,TURN} == verified MEGA audio actions",
+    "action_pinning": "each id's hash fits exactly 1 action word (no ambiguity)",
+    "caveat": "all checks are internal-consistency; predicted sibling frames (e.g. MEGATURN02) do NOT exist in id list -> single-frame anims or different frame encoding; in-game breakpoint still recommended for 1 external anchor"
+  },
+  "open_problems": {
+    "remaining_uncracked_sprites": 398,
+    "wall": "each non-boss cluster's seed is underdetermined: a frame counter pins seed only up to the unknown base-name hash. Need an anchor or guessed base per namespace.",
+    "biggest_cluster": "FINN 16-member run (3D vehicle stage) \u2014 own seed, not boss seed"
+  }
+}

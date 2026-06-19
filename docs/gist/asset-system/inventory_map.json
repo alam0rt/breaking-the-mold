@@ -1,0 +1,59 @@
+{
+ "source": "CheckCheatCodeInput cheat table @ FUN_80081fd0 (switch @ 0x80012700, 22 handlers) \u2014 GROUND TRUTH item labels from in-code comments",
+ "player_state_inventory_fields": {
+  "0x11": {
+   "item": "LIVES",
+   "init": 5,
+   "cheat_max": 99,
+   "note": "DecrementPlayerLives decrements this; Max-Lives cheat=99"
+  },
+  "0x13": {
+   "item": "Swirly Qs",
+   "cheat_max": 20
+  },
+  "0x14": {
+   "item": "Phoenix Hands",
+   "cheat_max": 7,
+   "matching_sound": "FX_PICKUP_PHOENIX"
+  },
+  "0x15": {
+   "item": "Phart Heads",
+   "cheat_max": 7,
+   "matching_sound": "FX_PICKUP_FARTHEAD"
+  },
+  "0x16": {
+   "item": "Universe Enemas",
+   "cheat_max": 7,
+   "matching_sound": "FX_PICKUP_UNIVERSE_ENEMA / <PREFIX>UNIVERSE_ENEMA_1"
+  },
+  "0x19": {
+   "item": "1970s Items",
+   "cheat_max": 3,
+   "matching_sound": "FX_PICKUP_1970"
+  },
+  "0x1A": {
+   "item": "Green Bullets",
+   "cheat_max": 3
+  },
+  "0x1B": {
+   "item": "(set to 0x30 by Max-Items cheat) \u2014 ammo/count",
+   "cheat_max": 48
+  },
+  "0x1C": {
+   "item": "Super Willies",
+   "cheat_max": 7,
+   "matching_sound": "FX_PICKUP_SUPER_WILLIE"
+  },
+  "0x17": {
+   "item": "flags bitfield (|=1 on Max-Items)"
+  }
+ },
+ "hud_displayed_counters": {
+  "0x12": "HUD digit row 1",
+  "0x13": "HUD digit row 2 (Swirly Qs)",
+  "0x14": "HUD digit row 3 (Phoenix Hands)",
+  "note": "CreateMenuEntities reads [0x12]/[0x13]/[0x14] into STATUSNUMBERS digit sprites"
+ },
+ "pickup_namespace_verification": "all 6 <PREFIX> pickups verify: id=0x88200080 ^ rotl(calc(ITEM),27). GROW/FARTHEAD/WILLIE/HAMSTER/ONE_UP/UNIVERSE_ENEMA_1 exact.",
+ "cross_validation": "5 verified FX_PICKUP_* sound names match cheat-table inventory items (PHOENIX,FARTHEAD,UNIVERSE_ENEMA,1970,SUPER_WILLIE) \u2014 independent confirmation those names are correct."
+}

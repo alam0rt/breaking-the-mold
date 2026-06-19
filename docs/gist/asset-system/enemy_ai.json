@@ -1,0 +1,49 @@
+{
+ "source": "enemy-ai-overview.md (RE doc) + VERIFIED against SLES decomp",
+ "architecture": "factory + state-machine + per-frame tick callback. ~30 of 121 entity types are distinct enemy behaviors.",
+ "verified_in_decomp": {
+  "EnemyAIUpdateWithRandomization @ FUN_8004fb58": "CONFIRMED: decrements ai_timer[+0x101]; on 0 -> ai_random_value[+0x100]=rand()&7, timer=(rand()&0x1f)+0x20 (32-63 frames); EntityUpdateCallback; off-screen cleanup via SendMessage(state,3); CollisionCheckWrapper(.,4,0x1002,0) for projectile hits.",
+  "boss_HP": "CONFIRMED g_pPlayerState[0x1D]=5 (line 15315); decremented + checked==0 for boss death (15540/15589). Max ~4-5 hits."
+ },
+ "entity_ai_fields": {
+  "+0x68/+0x6A": "world position (physics)",
+  "+0x94/+0x96": "render position",
+  "+0x08/+0x0A": "sort position",
+  "+0x74": "facing_left (0=R,1=L)",
+  "+0x100": "ai_random_value (rand()&7)",
+  "+0x101": "ai_timer countdown",
+  "+0x108": "collision_target ptr",
+  "+0x10C": "hit_counter (max 4)",
+  "+0x116": "sound_cooldown (0xB4=180f=3s)",
+  "+0x12": "collision mask u16 (0x0002=enemy layer collides w/ player)",
+  "+0x16": "damage-react flag (0x8000)"
+ },
+ "ai_functions": {
+  "0x8002ea3c": "InitGroundPatrolEnemy (Clay Keeper, Loud Mouth)",
+  "0x8004f8dc": "InitEnemyEntityWithAI",
+  "0x8004fb58": "EnemyAIUpdateWithRandomization (verified)",
+  "0x8004ddf0": "EnemyHitMessageHandler",
+  "0x8003c5b8": "InitPathFollowingEnemy",
+  "0x800514a0": "InitWalkingEnemyEntity",
+  "0x800805c8": "EntityType025 GroundPatrol factory"
+ },
+ "common_states": {
+  "0": "IDLE",
+  "1": "PATROL",
+  "2": "CHASE",
+  "3": "ATTACK",
+  "4": "HURT(invuln)",
+  "5": "DEATH",
+  "6": "STUNNED",
+  "7": "SPECIAL"
+ },
+ "behavior_patterns": {
+  "patrol": "walk constant speed, turn on wall OR ledge (no-floor-ahead). gravity = player gravity. (doc pseudo-code; core verified.)",
+  "flying": "horizontal speed + sine-table vertical oscillation (counter&0xFF), no gravity, optional player-Y tracking",
+  "shooter": "shoot_timer countdown, fire projectile if player in range (~200-300px), interval 60-120f",
+  "chase": "idle->chase (player in range)->attack; push_x toward player",
+  "jump": "periodic fixed-velocity hop, optional toward-player"
+ },
+ "hit_sounds": "EnemyHitMessageHandler plays random sounds from tables @0x8009bb84/90/9c on msgs 0x24825800/0x308b4800; gated by sound_cooldown[+0x116]=180f. msg 0x1002=projectile hit (boss HP--), 0x1019=positional sound.",
+ "note": "AI is genuinely real and modest: randomized-timer behavior switching + a small state set + per-type tick. Not scripted/complex \u2014 classic 2D platformer enemy AI."
+}

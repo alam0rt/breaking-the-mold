@@ -1,0 +1,115 @@
+{
+ "source": "entity-types.md (RE doc) \u2014 121-entry callback table @ 0x8009d5f8",
+ "value": "CATEGORIZATION layer (groups entity types by shared behavior). NOT a naming convention \u2014 doc entity names are generic placeholders (EnemyA/Type00), sprite-id guesses are inferred (2 conflicted with our verified names).",
+ "callback_families": {
+  "0x80080ddc": [
+   42,
+   43,
+   44,
+   53,
+   54,
+   55,
+   60
+  ],
+  "0x8008134c": [
+   89,
+   97,
+   98,
+   110,
+   111
+  ],
+  "0x8007efd0": [
+   0,
+   3,
+   4
+  ],
+  "0x80080af8": [
+   31,
+   32,
+   33
+  ],
+  "0x80080b60": [
+   34,
+   35,
+   36
+  ],
+  "0x800812ec": [
+   85,
+   104,
+   105
+  ],
+  "0x8007f050": [
+   86,
+   87,
+   88
+  ],
+  "0x8007f0d0": [
+   106,
+   107,
+   108
+  ],
+  "0x8007f140": [
+   112,
+   113,
+   114
+  ],
+  "0x8007f1c0": [
+   115,
+   116,
+   117
+  ],
+  "0x8007f460": [
+   24,
+   118
+  ],
+  "0x80080bc8": [
+   37,
+   38
+  ],
+  "0x80080c8c": [
+   39,
+   52
+  ],
+  "0x80080e4c": [
+   47,
+   48
+  ]
+ },
+ "family_labels": {
+  "0x80080ddc": "Portal/Particle (types 42-44,53-55,60)",
+  "0x80080af8": "Platform group A (31-33)",
+  "0x80080b60": "Platform group B (34-36)",
+  "0x80080e4c": "PlatformB (47-48)",
+  "0x8007f460": "SpecialAmmo (24,118)",
+  "0x8007efd0": "Default/ammo (0,3,4)",
+  "0x8008134c": "class 89/97/98/110/111",
+  "0x800812ec": "class 85/104/105"
+ },
+ "stats": {
+  "active_types": 112,
+  "distinct_callbacks": 82,
+  "singletons": 68,
+  "shared_classes": 14
+ },
+ "cross_validations": {
+  "MSG_UNIVERSE_ENEMA": "0x1018 collision msg + projectile-hit \"also used by Universe Enema\" -> confirms our FX_PICKUP_UNIVERSE_ENEMA / <PREFIX>UNIVERSE_ENEMA_1"
+ },
+ "entity_counts": {
+  "Clayball": 5727,
+  "PlatformB": 297,
+  "SpecialAmmo": 227,
+  "EnemyA": 152,
+  "Item": 144,
+  "PlatformA": 99,
+  "EnemyB": 60,
+  "Ammo": 308
+ },
+ "collision_messages": {
+  "0x1000": "CLAYBALL_COLLECT",
+  "0x1002": "PROJECTILE_HIT",
+  "0x1007": "CLAYBALL_VARIANT",
+  "3": "COLLECTED",
+  "0x1009": "NOTIFY_LINKED",
+  "0x1018": "UNIVERSE_ENEMA"
+ }
+}

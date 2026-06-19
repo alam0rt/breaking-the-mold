@@ -5,7 +5,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x000cc8f8,837880,13,sprite,FOOD;TMPL,uncracked,,,
 0x000f0106,983302,16,type500,,uncracked,,,
 0x00100125,1048869,12,type500,,uncracked,,,
-0x001822d8,1581784,13,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
+0x001822d8,1581784,13,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_FOOTSTEP_LEFT_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x001882e0,1606368,14,audio,BOIL;CAVE;EGGS;EVIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x00248e52,2395730,14,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_RUN_FAST,raw_calchash_fxconv,Klaymen fast-run footstep variant; in g_SoundRemapTable family with FX_KLAY_LAND and FX_KLAY_FOOTSTEP_QUIET
 0x002e2414,3023892,13,sprite,FOOD,uncracked,,,
@@ -23,8 +23,8 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x00e2f188,14872968,10,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [visual-user]: Number glyph frames 0-9
 0x00e49240,14979648,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_HURT,raw_calchash_brute,KLAY player hurt sound (was wrong-ns candidate BIG_WHITE_DIE)
 0x0101820a,16876042,13,type700,,uncracked,,,wrong-ns(wrap):SHE_HAS_AILS_ITS/combo
-0x0120e27a,18932346,12,audio,BRG1;SOAR,uncracked,,,
-0x012484d2,19170514,14,audio,BRG1;SOAR,uncracked,,,
+0x0120e27a,18932346,12,audio,BRG1;SOAR,verified,FX_KLAY_FOOTSTEP_RIGHT_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x012484d2,19170514,14,audio,BRG1;SOAR,verified,FX_KLAY_RUN_FAST_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x01680261,23593569,13,audio,KLOG,uncracked,,,
 0x01a5b0d3,27635923,12,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x02098010,34177040,10,sprite,TMPL,uncracked,,,VISUAL [HIGH]: Chain link sprite (TMPL)
@@ -50,12 +50,12 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x0408c01e,67682334,11,sprite,EVIL;FOOD;MOSS;SOAR,uncracked,,,
 0x040a2110,67772688,11,sprite,FINN,uncracked,,,
 0x0428801e,69763102,13,sprite,EVIL;FOOD;MOSS;SOAR,uncracked,,,
-0x0434ce72,70569586,16,audio,CLOU,verified,FX_KLAY_RUN_FAST_SOFT,raw_calchash_fxconv,Cloud-level soft variant of FX_KLAY_RUN_FAST (CLOU is the cloud-walking level)
-0x0462e0bb,73588923,10,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
-0x0478a37a,75015034,15,audio,BOIL;CSTL;TMPL,uncracked,,,
+0x0434ce72,70569586,16,audio,CLOU,verified,FX_KLAY_RUN_FAST_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x0462e0bb,73588923,10,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_FOOTSTEP_RIGHT_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x0478a37a,75015034,15,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_FOOTSTEP_RIGHT_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x04835000,75714560,11,sprite,RUNN,uncracked,,,
-0x04a68e56,78024278,16,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
-0x04dce858,81586264,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_QUIET_SOFT,raw_calchash_fxconv,Cloud-level soft variant of FX_KLAY_FOOTSTEP_QUIET
+0x04a68e56,78024278,16,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_RUN_FAST_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x04dce858,81586264,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_QUIET_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x052aa082,86679682,14,sprite,EGGS,uncracked,,,
 0x0538a2ea,87597802,18,sprite,EGGS,uncracked,,,
 0x06101db0,101719472,17,sprite,HEAD,uncracked,,,
@@ -151,7 +151,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x168254b5,377640117,14,sprite,FINN,uncracked,,,"VISUAL [HIGH]: Player projectile (green ring/oval, FINN)"
 0x181c3854,404502612,14,sprite,WIZZ,uncracked,,,wrong-ns(wrap):WAYPOINT_PHRO_20/combo; VISUAL [HIGH]: Skull-bar weapon (WIZZ)
 0x18248010,405045264,9,sprite,KLOG,uncracked,,,
-0x1828e640,405333568,11,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
+0x1828e640,405333568,11,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_LAND_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x18298210,405373456,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1847c001,407355393,8,type700,,uncracked,,,
 0x18ce0610,416155152,11,sprite,CSTL;FOOD;SEVN;TMPL,uncracked,,,
@@ -196,9 +196,9 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x23683294,594031252,13,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x24002913,603990291,9,sprite,FOOD;SNOW,uncracked,,,wrong-ns(wrap):SAGE_019_TO/combo
 0x246166fa,610363130,14,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FOOTSTEP_RIGHT_NORMAL,template_attack,level-affinity:21 levels (universal); klay footstep
-0x2470e0f2,611377394,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_RIGHT_SOFT,raw_calchash_fxconv,Cloud-level soft variant of FX_KLAY_FOOTSTEP_RIGHT
+0x2470e0f2,611377394,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_RIGHT_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x2524e089,623173769,10,sprite,EGGS,uncracked,,,
-0x25d2c8d8,634570968,11,audio,BOIL;CSTL;TMPL,uncracked,,,
+0x25d2c8d8,634570968,11,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_FOOTSTEP_QUIET_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x262e0319,640549657,15,sprite,EVIL,uncracked,,,
 0x282b8491,673940625,10,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x28a0c119,681623833,5,sprite,MENU,uncracked,,,wrong-ns(wrap):2_R_ARE/combo; VISUAL [HIGH]: Three crowned ducklings/characters (MENU)
@@ -252,11 +252,11 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x400c991d,1074567453,14,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x400c9a1d,1074567709,14,sprite,PHRO;SCIE,uncracked,,,
 0x40106054,1074815060,10,sprite,MEGA,uncracked,,,
-0x401106da,1074857690,17,audio,BOIL;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,verified,FX_KLAY_FOOTSTEP_LEFT_SOFT,raw_calchash_fxconv,Soft-surface variant of FX_KLAY_FOOTSTEP_LEFT (cloud-like surfaces across multiple levels)
+0x401106da,1074857690,17,audio,BOIL;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,verified,FX_KLAY_FOOTSTEP_LEFT_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x40110e26,1074859558,18,audio,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x40189a1d,1075354141,14,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x402044c9,1075856585,13,audio,MEGA,verified,FX_BOSS_MEGA_TURN,attack_all_vocab_d4,level-affinity:MEGA only; MEGA boss state change
-0x40400270,1077936752,11,audio,BRG1;SOAR,verified,FX_FINN_DIE_4,raw_calchash_brute,FINN boss death variant 4 (was wrong-ns candidate TO_GROUND_SNO)
+0x40400270,1077936752,11,audio,BRG1;SOAR,verified,FX_KLAY_FOOTSTEP_LEFT_WOOD,footstep_remap_table,"COLLISION: also =calcHash(FX_FINN_DIE_4) (prior brute guess, likely false-pos); footstep wins on ROM table 0x8009d0fc mode1/WOOD/slot0 + 5/5 row coherence"
 0x40489938,1078499640,13,sprite,CLOU;CRYS;SOAR,uncracked,,,
 0x404c5919,1078745369,12,sprite,SCIE;SNOW,uncracked,,,
 0x407801d0,1081606608,14,sprite,GLEN,uncracked,,,
@@ -293,7 +293,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x424129a1,1111566753,13,audio,WIZZ,uncracked,,,
 0x42464cc8,1111903432,16,audio,CRYS;CSTL;PHRO;SNOW,uncracked,,,
 0x424d1840,1112348736,16,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Wizard boss (WIZZ variant)
-0x42590440,1113130048,15,audio,MENU,verified,FX_MENU_WILLIE_EXIT,template_attack,level-affinity:MENU only; willie powerup menu exit
+0x42590440,1113130048,15,audio,MENU,verified,FX_MENU_WILLIE_EXIT,template_attack,level-affinity:MENU only; willie powerup menu exit THERE IS ALSO FX_MENU_WILLIE_ENTER
 0x425a399c,1113209244,17,sprite,BOIL;CLOU;MOSS,uncracked,,,
 0x4260c8b5,1113639093,11,sprite,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ,uncracked,,,
 0x428254e2,1115837666,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,verified,FX_PICKUP_ONE_UP,raw_calchash_fxconv,Extra Life collectible pickup jingle - CollectibleExtraLifeTickCallback line 28480 ('life collect jingle')
@@ -307,7 +307,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x44c26454,1153590356,10,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;MOSS;SNOW;TMPL,verified,FX_PICKUP_PHOENIX,raw_calchash_fxconv,Phoenix Hand collectible pickup (projectile ammo) - CollectiblePhoenixHandTickCallback line 28560; sets ranged-attack count via AddPhoenixHands
 0x44ca1c10,1154096144,13,sprite,TMPL,uncracked,,,
 0x44d4c8d8,1155908824,12,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FOOTSTEP_QUIET,raw_calchash_fxconv,Klaymen quiet-walk footstep; in g_SoundRemapTable family with FX_KLAY_LAND and FX_KLAY_RUN_FAST
-0x44d6c8cd,1154926797,14,audio,BRG1;SOAR,uncracked,,,
+0x44d6c8cd,1154926797,14,audio,BRG1;SOAR,verified,FX_KLAY_FOOTSTEP_QUIET_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x45310a04,1160841732,18,audio,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x458b0320,1166738208,17,sprite,BRG1;SOAR,uncracked,,,
 0x46269090,1176932496,15,sprite,WIZZ,uncracked,,,"VISUAL [HIGH]: Klaymen with arms up (WIZZ, localized)"
@@ -319,7 +319,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x48204012,1210073106,9,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x48209640,1210095168,13,audio,KLOG,verified,FX_BOSS_KLOGG_FIRE_3,template_attack,level-affinity:KLOG only; FIRE_1/FIRE_2/FIRE_3 numbered sequence
 0x4824c0c5,1210368197,11,audio,MEGA,verified,FX_BOSS_MEGA_SPIT,template_attack,level-affinity:MEGA only; MEGA boss projectile spit (sibling of FX_BOSS_MEGA_TURN/IDLE/DIE)
-0x486002db,1214251739,12,audio,BOIL;CSTL;TMPL,uncracked,,,
+0x486002db,1214251739,12,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_FOOTSTEP_LEFT_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x48608484,1214284932,11,sprite,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ,uncracked,,,
 0x4860c074,1214300276,9,audio,RUNN,uncracked,,,
 0x486492c4,1214550724,14,audio,KLOG,verified,FX_BOSS_KLOGG_IDLE,attack_all_vocab_d4,level-affinity:KLOG only; KLOGG boss idle
@@ -344,7 +344,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x4c60f249,1281421897,10,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x4c62d240,1281544768,12,audio,KLOG,verified,FX_BOSS_KLOGG_HIT_2,template_attack,level-affinity:KLOG only; HIT/HIT_1/HIT_2/HIT_3 numbered sequence
 0x4ca2d240,1285739072,12,audio,KLOG,verified,FX_BOSS_KLOGG_HIT_3,template_attack,level-affinity:KLOG only; HIT/HIT_1/HIT_2/HIT_3 numbered sequence
-0x4cddccd8,1289604312,14,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
+0x4cddccd8,1289604312,14,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_FOOTSTEP_QUIET_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x4d09d01c,1292488732,13,sprite,GLEN,uncracked,,,VISUAL [MED]: Red juice/potion bottle (GLEN)
 0x4e05b540,1308996928,15,anim,,uncracked,,,
 0x50008340,1342210880,13,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FART,raw_calchash_brute,KLAY player fart sound (signature Skullmonkeys gag)
@@ -353,7 +353,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x502840c3,1344815299,14,audio,HEAD;MEGA,verified,FX_BOSS_MEGA_DIE,attack_all_vocab_d4,level-affinity:HEAD;MEGA (boss only); MEGA boss death
 0x50408b61,1346407265,13,audio,EVIL;GLEN;SCIE,uncracked,,,
 0x50412804,1346447364,12,type700,,uncracked,,,
-0x5050c643,1347470915,12,audio,BOIL;CSTL;TMPL,uncracked,,,
+0x5050c643,1347470915,12,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_LAND_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x506e8654,1349420628,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x507883c3,1350075331,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MOSS;SEVN;SNOW;SOAR;WEED;WIZZ,verified,FX_KLAY_DIE_FALL,raw_calchash_fxconv,Klaymen death-by-falling sound across all gameplay levels
 0x50f08207,1357939207,12,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_HIT_HEAD,raw_calchash_fxconv,Klaymen ceiling-bump sound when jumping up into a ceiling (PlayerCallback_FallingPhysicsMain land-on-ceiling branch)
@@ -376,12 +376,12 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x54608016,1415610390,12,sprite,BOIL;CAVE;EVIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x563ba142,1446748482,19,audio,GLID;SCIE;SOAR;TMPL,verified,FX_OBJECT_GLIDEY_BIRD,attack_all_vocab_d4,level-affinity:GLID;SCIE;SOAR;TMPL (fly levels); GLIDEY entity
 0x56a1c2c0,1453441728,15,audio,GLEN,uncracked,,,
-0x5821c242,1478607426,13,audio,CLOU,verified,FX_KLAY_LAND_SOFT,raw_calchash_fxconv,Klaymen soft cloud landing sound (CLOU level)
+0x5821c242,1478607426,13,audio,CLOU,verified,FX_KLAY_LAND_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x5822c080,1478672512,11,sprite,TMPL,uncracked,,,
 0x5838cc16,1480117270,14,sprite,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x5860c640,1482737216,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_LAND,raw_calchash_brute,Klaymen jump-land sound; ScummVM anchor (Neverhood::Klaymen::hmLandOnFeet+hmJumpToGrabRelease)
 0x5862f614,1482880532,11,audio,KLOG,verified,FX_BOSS_KLOGG_EXPLOSION,template_attack,level-affinity:KLOG only; KLOGG boss explosion FX
-0x5870c6e8,1483785960,15,audio,BRG1;SOAR,uncracked,,,
+0x5870c6e8,1483785960,15,audio,BRG1;SOAR,verified,FX_KLAY_LAND_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x5900c41e,1493222430,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,scummvm_anchor,Klaymen_idleblink_anim,scummvm_xref_klaymen.cpp,Neverhood::Klaymen::stIdleBlink startAnimation
 0x5a088840,1510508608,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss full body large (KLOG)
 0x5a204c30,1512066096,13,sprite,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,uncracked,,,
@@ -488,7 +488,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x82421850,2185369680,13,sprite,WIZZ,uncracked,,,
 0x826ca852,2188159058,13,audio,BOIL,uncracked,,,
 0x82886816,2189977622,11,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,
-0x83248e62,2200211042,19,audio,BOIL;CSTL;TMPL,uncracked,,,
+0x83248e62,2200211042,19,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_RUN_FAST_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
 0x84004480,2214610048,12,sprite,BOIL,uncracked,,,
 0x8429153c,2217284924,19,sprite,EVIL;SCIE,uncracked,,,
 0x8508000a,2231894026,15,sprite,EVIL;FINN;RUNN,uncracked,,,

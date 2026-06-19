@@ -5,52 +5,57 @@
 #include "globals.h"
 
 extern void *g_pBlbHeapBase;
-extern void CheckAndDisableSpawnDataOffscreen(void *entity);
-extern void CollisionCheckWrapper(void *e, s32 a, s32 b, s32 c);
-extern void CheckAndDisableChildEntityOffscreen(void *e);
-extern void CheckAndDisableSpawnRefOffscreen(void *e);
-extern void EntityOffScreenChildCleanup(void *e);
-extern void UpdateEntitySoundPanning(void *e, u32 sound);
-extern void CollectibleTickCallback(void *e);
-extern void CollectibleTickFinnMode(void *e);
-extern void EntityStateSetWalk(void *e);
-extern void SetAnimationSpriteId(void *e, s32 id);
-extern void SetAnimationFrameCallback(void *e, u32 packed);
-extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z, s16 x, s16 y);
-extern void *InitEntitySprite(void *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
-extern void *InitCollectibleEntity(void *e, void *spawn);
-extern void *D_80010C64;
-extern void *D_80010CE4;
-extern void *D_80010DA4;
-extern void *D_80010DE4;
-extern void *D_80010E04;
-extern void *D_80011048;
-extern void *D_80011068;
-extern void *D_80011088;
-extern void *D_800110A8;
-extern void *D_800110E8;
-extern void *D_80011108;
-extern void *D_80011128;
-extern void *D_80011148;
-extern void *D_80011168;
-extern void *D_80011188;
-extern void *D_800111A8;
-extern void *D_800111C8;
-extern void *D_800111E8;
-extern void *D_80011228;
-extern void *D_80011248;
-extern void RemoveEntityFromAllLists(void *gs, s32 idx);
+extern void CheckAndDisableSpawnDataOffscreen(Entity *entity);
+extern void CollisionCheckWrapper(Entity *e, s32 a, s32 b, s32 c);
+extern void CheckAndDisableChildEntityOffscreen(Entity *e);
+extern void CheckAndDisableSpawnRefOffscreen(Entity *e);
+extern void EntityOffScreenChildCleanup(Entity *e);
+extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
+extern void CollectibleTickCallback(Entity *e);
+extern void CollectibleTickFinnMode(Entity *e);
+extern void EntityStateSetWalk(Entity *e);
+extern void SetAnimationSpriteId(Entity *e, s32 id);
+extern void SetAnimationFrameCallback(Entity *e, u32 packed);
+extern Entity *InitEntityWithSprite(Entity *entity, void *spriteDef, s32 z, s16 x, s16 y);
+extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
+extern Entity *InitCollectibleEntity(Entity *e, void *spawn);
+extern void *PROJECTILE_PATH_ENTITY_VTABLE asm("D_80010C64");
+extern void *PATH_HAZARD_ENTITY_VTABLE asm("D_80010CE4");
+extern void *PATH_ENEMY_SOUND_VTABLE asm("D_80010DA4");
+extern void *COLLECTIBLE_ENTITY_VTABLE asm("D_80010DE4");
+extern void *SIMPLE_FREE_ONLY_ENTITY_VTABLE asm("D_80010E04");
+extern void *CAMERA_TRACKING_ENTITY_VTABLE asm("D_80011048");
+extern void *INDEXED_SPRITE_ENTITY_VTABLE asm("D_80011068");
+extern void *CAMERA_HELPER_ENTITY_VTABLE asm("D_80011088");
+extern void *TRIGGER_ZONE_ENTITY_VTABLE asm("D_800110A8");
+extern void *SWITCH_BLOCK_ENTITY_VTABLE asm("D_800110E8");
+extern void *SCALED_MOVING_ENTITY_VTABLE asm("D_80011108");
+extern void *BOUNCABLE_CLAY_ENTITY_VTABLE asm("D_80011128");
+extern void *DIRECTIONAL_SCALED_ENTITY_VTABLE asm("D_80011148");
+extern void *SCALED_PLATFORM_ENTITY_VTABLE asm("D_80011168");
+extern void *ALT_COLLECTIBLE_ENTITY_VTABLE asm("D_80011188");
+extern void *CHECKPOINT_ENTITY_VTABLE asm("D_800111A8");
+extern void *ENTITY_FREE_ONLY_VTABLE asm("D_800111C8");
+extern void *ALT_PATH_FOLLOWING_ENTITY_VTABLE asm("D_800111E8");
+extern void *ENEMY_ENTITY_VTABLE asm("D_80011228");
+extern void *ENEMY_FREE_ONLY_ENTITY_VTABLE asm("D_80011248");
+extern void RemoveEntityFromAllLists(GameState *gs, s32 idx);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
+void FreeEntityNoTeardown_80041468(Entity *e, u32 size);
+void EntityUpdateWithCollisionWrapper(Entity *e);
+void FreeEntityNoTeardown_80045eb4(Entity *e, u32 size);
+void FreeEntityNoTeardown_80046d28(Entity *e, u32 size);
+void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
-u32   D_800A5A68;
-void *D_800A5A6C;
-u32   D_800A5AE8;
-void *D_800A5AEC;
-u32   D_800A5B08;
-void *D_800A5B0C;
-u32   D_800A5B10;
-void *D_800A5B14;
+u32   SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER asm("D_800A5A68");
+void *SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK asm("D_800A5A6C");
+u32   PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER asm("D_800A5AE8");
+void *PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK asm("D_800A5AEC");
+u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B08");
+void *HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B0C");
+u32   HAZARD_READY_STATE_MARKER asm("D_800A5B10");
+void *HAZARD_READY_STATE_CALLBACK asm("D_800A5B14");
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -58,7 +63,7 @@ void *InitCollectibleEntityFromSpawn(void *e, void *spawn, u32 spriteId) {
     InitEntitySprite(e, spriteId, 0x3CA,
                      *(s16 *)((u8 *)spawn + 0x8),
                      (s16)(*(u16 *)((u8 *)spawn + 0xA) - 1), 0);
-    ((Entity *)e)->collisionVtable = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     InitCollectibleEntity(e, spawn);
     return e;
 }
@@ -67,14 +72,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleFromSpawn);
 
 void *InitCollectibleEntityDirect(void *e, u32 spriteId, s16 x, s16 y) {
     InitEntitySprite(e, spriteId, 0x3CA, x, y, 0);
-    ((Entity *)e)->collisionVtable = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     InitCollectibleEntity(e, NULL);
     return e;
 }
 
 void *CreateCollectibleAtPosition(void *e, void *spriteDef, s16 x, s16 y) {
     InitEntityWithSprite(e, spriteDef, 0x3CA, x, y);
-    ((Entity *)e)->collisionVtable = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     InitCollectibleEntity(e, NULL);
     return e;
 }
@@ -176,28 +181,28 @@ void EntitySetSparkleDelay1(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSparkle);
 
-extern u8 D_8009B55C[];
-extern u8 D_8009B57C[];
-extern u8 D_8009B59C[];
+extern u8 ENEMY_ANIM_SEQUENCE_4A_DATA[] asm("D_8009B55C");
+extern u8 ENEMY_ANIM_SEQUENCE_4B_DATA[] asm("D_8009B57C");
+extern u8 ENEMY_ANIM_SEQUENCE_4C_DATA[] asm("D_8009B59C");
 
 void StartAnimSequence4A(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B55C, 4);
+    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_4A_DATA, 4);
 }
 
 void StartAnimSequence4B(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B57C, 4);
+    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_4B_DATA, 4);
 }
 
 void StartAnimSequence4C(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B59C, 4);
+    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_4C_DATA, 4);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEnemy);
 
 void DestroySoundEmitterEntity(void *e, u32 flags) {
-    ((Entity *)e)->collisionVtable = &D_80010DA4;
+    ((Entity *)e)->collisionVtable = &PATH_ENEMY_SOUND_VTABLE;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x128));
-    ((Entity *)e)->collisionVtable = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
@@ -211,7 +216,8 @@ void SoundEmitterStunnedTickCallback(Entity *e) {
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
-            EntitySetState(e, D_800A5A68, D_800A5A6C);
+            EntitySetState(e, SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER,
+                           SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK);
         }
     }
     EntityUpdateCallback(e);
@@ -299,20 +305,20 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleIdleState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleIdleStateB);
 
-extern u8 D_8009B5BC[];
-extern u8 D_8009B5D4[];
-extern u8 D_8009B5EC[];
+extern u8 ENEMY_ANIM_SEQUENCE_3A_DATA[] asm("D_8009B5BC");
+extern u8 ENEMY_ANIM_SEQUENCE_3B_DATA[] asm("D_8009B5D4");
+extern u8 ENEMY_ANIM_SEQUENCE_9_FRAME_DATA[] asm("D_8009B5EC");
 
 void StartAnimSequence3A(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B5BC, 3);
+    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_3A_DATA, 3);
 }
 
 void StartAnimSequence3B(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B5D4, 3);
+    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_3B_DATA, 3);
 }
 
 void StartAnimSequence9Frames(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B5EC, 9);
+    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_9_FRAME_DATA, 9);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSoundEmittingEnemy);
@@ -332,7 +338,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySpawnerTickCallback);
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingHazard);
 
 void DestroySoundEntityWithVoice(void *e, u32 flags) {
-    ((Entity *)e)->collisionVtable = &D_80010CE4;
+    ((Entity *)e)->collisionVtable = &PATH_HAZARD_ENTITY_VTABLE;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
     DestroyEntityAndFreeMemory(e, 0);
     if (flags & 1) {
@@ -422,7 +428,7 @@ void CollectibleTickWithSoundPanning(void *e) {
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnMultipleProjectiles);
 
 void EntityDestroyCallback_Vt80010C64(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010C64;
+    ((Entity *)entity)->collisionVtable = &PROJECTILE_PATH_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -430,7 +436,7 @@ void EntityDestroyCallback_Vt80010C64(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -438,7 +444,7 @@ void EntityDestroyCallback_Vt80010DE4(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_800410bc(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -446,7 +452,7 @@ void EntityDestroyCallback_Vt80010DE4_800410bc(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_80041120(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -454,7 +460,7 @@ void EntityDestroyCallback_Vt80010DE4_80041120(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010E04(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_80010E04;
+    ((Entity *)entity)->collisionVtable = &SIMPLE_FREE_ONLY_ENTITY_VTABLE;
     if (flag & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
@@ -465,7 +471,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", func_800411CC);
 INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityFromHeapContext);
 
 void EntityDestroyCallback_Vt80010DE4_80041230(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -473,7 +479,7 @@ void EntityDestroyCallback_Vt80010DE4_80041230(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_80041294(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -481,7 +487,7 @@ void EntityDestroyCallback_Vt80010DE4_80041294(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_800412f8(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -489,7 +495,7 @@ void EntityDestroyCallback_Vt80010DE4_800412f8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_8004135c(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -497,7 +503,7 @@ void EntityDestroyCallback_Vt80010DE4_8004135c(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_800413c0(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -511,13 +517,13 @@ void NopStub_8004142c(void) {
 }
 
 void EntityDestroyCallback_Vt80010E04_80041434(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_80010E04;
+    ((Entity *)entity)->collisionVtable = &SIMPLE_FREE_ONLY_ENTITY_VTABLE;
     if (flag & 1) {
         FreeEntityNoTeardown_80041468(entity, 0x1C);
     }
 }
 
-void FreeEntityNoTeardown_80041468(void *e, u32 size) {
+void FreeEntityNoTeardown_80041468(Entity *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
@@ -543,7 +549,8 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledPlatformEntity);
 
 void EntityConditionalActivateTick(Entity *e) {
     if ((g_pGameState->frame_counter & 0x7F) == *(s32 *)(*(u8 **)((u8 *)e + 0x108) + 0xC)) {
-        EntitySetState(e, D_800A5AE8, D_800A5AEC);
+        EntitySetState(e, PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER,
+                       PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK);
     }
     EntityUpdateCallback(e);
     CheckAndDisableSpawnDataOffscreen(e);
@@ -614,14 +621,16 @@ void HazardTimerTickCallback(Entity *e) {
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
-            EntitySetState(e, D_800A5B08, D_800A5B0C);
+            EntitySetState(e, HAZARD_TIMER_EXPIRED_STATE_MARKER,
+                           HAZARD_TIMER_EXPIRED_STATE_CALLBACK);
         }
     }
 }
 
 s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
     if ((ev & 0xFFFF) == EVT_SET_READY) {
-        EntitySetState(e, D_800A5B10, D_800A5B14);
+        EntitySetState(e, HAZARD_READY_STATE_MARKER,
+                       HAZARD_READY_STATE_CALLBACK);
     }
     return 0;
 }
@@ -629,7 +638,8 @@ s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
 s32 HazardEventHandler_0x1001_V2(void *e, u32 ev, u32 a2, u32 a3) {
     u32 maskedEv = ev & 0xFFFF;
     if (maskedEv == EVT_SET_READY) {
-        EntitySetState(e, D_800A5B10, D_800A5B14);
+        EntitySetState(e, HAZARD_READY_STATE_MARKER,
+                       HAZARD_READY_STATE_CALLBACK);
     }
     if (maskedEv == EVT_TICK) {
         EntityProcessCallbackQueue(e);
@@ -692,7 +702,7 @@ void TimedEntityTickCallbackWithCollision(Entity *e) {
     EntityUpdateWithCollisionWrapper(e);
 }
 
-void EntityUpdateWithCollisionWrapper(void *e) {
+void EntityUpdateWithCollisionWrapper(Entity *e) {
     EntityUpdateCallback(e);
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
 }
@@ -764,9 +774,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffscreenParentCleanupTick);
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCameraTrackingEntity);
 
 void SoundEmitterDestroyCallback(void *e, u32 flags) {
-    ((Entity *)e)->collisionVtable = &D_80011048;
+    ((Entity *)e)->collisionVtable = &CAMERA_TRACKING_ENTITY_VTABLE;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x20));
-    ((Entity *)e)->collisionVtable = &D_800111C8;
+    ((Entity *)e)->collisionVtable = &ENTITY_FREE_ONLY_VTABLE;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
@@ -775,7 +785,7 @@ void SoundEmitterDestroyCallback(void *e, u32 flags) {
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterWithPanningTick);
 
 void EntityDestroyCallback_Vt80011068(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011068;
+    ((Entity *)entity)->collisionVtable = &INDEXED_SPRITE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -783,7 +793,7 @@ void EntityDestroyCallback_Vt80011068(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011088(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011088;
+    ((Entity *)entity)->collisionVtable = &CAMERA_HELPER_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -791,7 +801,7 @@ void EntityDestroyCallback_Vt80011088(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt800110A8(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_800110A8;
+    ((Entity *)entity)->collisionVtable = &TRIGGER_ZONE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -799,14 +809,14 @@ void EntityDestroyCallback_Vt800110A8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt800111C8(void *e, u32 flags) {
-    ((Entity *)e)->collisionVtable = &D_800111C8;
+    ((Entity *)e)->collisionVtable = &ENTITY_FREE_ONLY_VTABLE;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
 }
 
 void EntityDestroyCallback_Vt800110E8(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_800110E8;
+    ((Entity *)entity)->collisionVtable = &SWITCH_BLOCK_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -814,7 +824,7 @@ void EntityDestroyCallback_Vt800110E8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011108(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011108;
+    ((Entity *)entity)->collisionVtable = &SCALED_MOVING_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -822,7 +832,7 @@ void EntityDestroyCallback_Vt80011108(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011128(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011128;
+    ((Entity *)entity)->collisionVtable = &BOUNCABLE_CLAY_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -830,7 +840,7 @@ void EntityDestroyCallback_Vt80011128(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011148(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011148;
+    ((Entity *)entity)->collisionVtable = &DIRECTIONAL_SCALED_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -838,7 +848,7 @@ void EntityDestroyCallback_Vt80011148(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011168(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011168;
+    ((Entity *)entity)->collisionVtable = &SCALED_PLATFORM_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -846,7 +856,7 @@ void EntityDestroyCallback_Vt80011168(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011188(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011188;
+    ((Entity *)entity)->collisionVtable = &ALT_COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -860,13 +870,13 @@ void NopStub_80045e78(void) {
 }
 
 void EntityDestroyCallback_Vt800111C8_80045e80(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_800111C8;
+    ((Entity *)entity)->collisionVtable = &ENTITY_FREE_ONLY_VTABLE;
     if (flag & 1) {
         FreeEntityNoTeardown_80045eb4(entity, 0x1C);
     }
 }
 
-void FreeEntityNoTeardown_80045eb4(void *e, u32 size) {
+void FreeEntityNoTeardown_80045eb4(Entity *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
@@ -882,10 +892,8 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitItemSparkleIdleState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitItemRevealState);
 
-extern u8 D_8009B7A4[];
-extern u8 D_8009B7DC[];
-
-void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame);
+extern u8 ITEM_REVEAL_ANIM_SEQUENCE_7_FRAME_DATA[] asm("D_8009B7A4");
+extern u8 ITEM_REVEAL_ANIM_SEQUENCE_13_FRAME_DATA[] asm("D_8009B7DC");
 
 void SetEntitySpecialState_1(void *e) {
     *(u8 *)((u8 *)e + 0x110) = 1;
@@ -905,19 +913,19 @@ void SetEntitySpecialState_3(void *e) {
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSpecial);
 
 void StartAnimSequence7Frames(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B7A4, 7);
+    StartAnimationSequence((u8 *)e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_7_FRAME_DATA, 7);
 }
 
 void StartAnimSequence13Frames(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)D_8009B7DC, 13);
+    StartAnimationSequence((u8 *)e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_13_FRAME_DATA, 13);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEntity_Alt);
 
 void SoundEntityDestroyCallback(void *e, u32 flags) {
-    ((Entity *)e)->collisionVtable = &D_800111E8;
+    ((Entity *)e)->collisionVtable = &ALT_PATH_FOLLOWING_ENTITY_VTABLE;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
-    ((Entity *)e)->collisionVtable = &D_80011228;
+    ((Entity *)e)->collisionVtable = &ENEMY_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
@@ -938,7 +946,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetWalkSprite);
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);
 
 void EnemyDestroyCallback_0x80011228(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011228;
+    ((Entity *)entity)->collisionVtable = &ENEMY_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -946,7 +954,7 @@ void EnemyDestroyCallback_0x80011228(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011228(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011228;
+    ((Entity *)entity)->collisionVtable = &ENEMY_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -960,13 +968,13 @@ void NopStub_80046cec(void) {
 }
 
 void EntityDestroyCallback_Vt80011248(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_80011248;
+    ((Entity *)entity)->collisionVtable = &ENEMY_FREE_ONLY_ENTITY_VTABLE;
     if (flag & 1) {
         FreeEntityNoTeardown_80046d28(entity, 0x1C);
     }
 }
 
-void FreeEntityNoTeardown_80046d28(void *e, u32 size) {
+void FreeEntityNoTeardown_80046d28(Entity *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 

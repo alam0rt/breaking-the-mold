@@ -1,0 +1,69 @@
+{
+ "method": "R<=5 level-guarded clustering with ledger names as anchors; unnamed members share the entity of any named sibling",
+ "entities": [
+  {
+   "entity": "MEGA",
+   "common_levels": "MEGA",
+   "size": 6,
+   "named": [
+    "08192250=MEGA_TURN",
+    "085860D4=MEGA_ROLL",
+    "0A1820D4=MEGA_DIE",
+    "2C182010=MEGA_HIT",
+    "40106054=MEGA_IDLE",
+    "4C106054=MEGA_IDLE"
+   ],
+   "unnamed": []
+  },
+  {
+   "entity": "PAUSED",
+   "common_levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "size": 5,
+   "named": [
+    "0AD0F813=PAUSED",
+    "29C0E211=NO",
+    "2AD0F011=YES",
+    "68C0F413=QUIT",
+    "69C8F473=QUIT GAME"
+   ],
+   "unnamed": []
+  },
+  {
+   "entity": "YNT",
+   "common_levels": "GLEN",
+   "size": 5,
+   "named": [
+    "0C78005C=YNT_DIE",
+    "407801D0=YNT_HIT",
+    "407801DC=YNT_HIT",
+    "8068815C=YNT_IDLE"
+   ],
+   "unnamed": [
+    "0x48F843D4"
+   ]
+  },
+  {
+   "entity": "FX",
+   "common_levels": "BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED",
+   "size": 4,
+   "named": [
+    "46346040=FX_PLAYER_SWIM_PRE"
+   ],
+   "unnamed": [
+    "0x462C6040",
+    "0x46386040",
+    "0x463E6040"
+   ]
+  },
+  {
+   "entity": "WIZARD",
+   "common_levels": "WIZZ",
+   "size": 2,
+   "named": [
+    "81421850=WIZARD_FALL",
+    "82421850=WIZARD_FALL"
+   ],
+   "unnamed": []
+  }
+ ]
+}

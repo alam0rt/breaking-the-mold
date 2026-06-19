@@ -1,0 +1,26 @@
+n_members,n_containers,kind,anchor,visual_role,containers,members
+16,1,sprite,,[HIGH]: FINN player directional sprite (Klayme,FINN/primary,0x10b85810;0x10b91810;0x10b9181c;0x10b94810;0x10b9481c;0x10b95010;0x10b9501c;0x10b95a10;0x10b95a1c;0x10b95c10;0x10b95c1c;0x10b97810;0x10b9781c;0x10b9d810;0x10b9d81c;0x10bb5810
+7,3,sprite,,[MED]: Curtain/wall texture (green/blue vertic,EVIL/primary;FINN/primary;RUNN/primary,0x080c8300;0x08148300;0x08188300;0x081c8302;0x081d8300;0x081e8300;0x085c8300
+6,22,sprite,,,BOIL/stage0;BOIL/stage1;BOIL/stage2;BOIL/stage3;BOIL/stage4;BRG1/stage1,0x400c989d;0x400c991d;0x400c9a1d;0x40189a1d;0xe00e989d;0xe00e991d
+6,7,sprite,,,CSTL/stage0;CSTL/stage1;CSTL/stage3;FOOD/stage0;SEVN/primary;TMPL/stage1,0x00ce0610;0x09ce0610;0x0ace0610;0x0cce0610;0x18ce0610;0x28ce0610
+6,1,audio,FX_AMBIENT_DRIP_4;FX_AMBIENT_DRIP_1,,TMPL/primary,0xb0107444;0xb0807444;0xb0b07444;0xb0d07444;0xb1907444;0xb2907444
+5,3,sprite,,,BRG1/stage0;BRG1/stage2;BRG1/stage3,0x60a91c9c;0x60aa1c9c;0x60b8bc9c;0x61a91c9c;0x62aa1c9c
+5,1,sprite,,[HIGH]: Klogg boss death animation frame 1,KLOG/primary,0x800da102;0x800da116;0x800da11a;0x800da132;0x800da152
+4,28,sprite,FX_PLAYER_SWIM_PRE,,BOIL/stage2;CAVE/stage0;CAVE/stage3;CRYS/stage0;CRYS/stage1;CRYS/stage2,0x462c6040;0x46346040;0x46386040;0x463e6040
+4,1,audio,FX_BOSS_KLOGG_HIT_1;FX_BOSS_KLOGG_HIT,,KLOG/primary,0x4c02d240;0x4c22d240;0x4c62d240;0x4ca2d240
+3,23,sprite,,,BOIL/primary;BRG1/primary;CAVE/primary;CLOU/primary;CRYS/primary;CSTL/primary,0xb468d0c6;0xb868d0c6;0xbe68d0c6
+3,21,sprite,,,BOIL/primary;BRG1/primary;CAVE/primary;CLOU/primary;CRYS/primary;CSTL/primary,0x1cf99931;0x1df99931;0x1ef99931
+3,42,sprite,,,BOIL/stage0;BOIL/stage1;BOIL/stage2;BOIL/stage3;BOIL/stage4;BRG1/stage0,0x5a89815f;0x5ab9815f;0x5ad9815f
+3,3,audio,FX_SKULL_UP;FX_SKULL_LAND_02,,BRG1/secondary;BRG1/secondary2;BRG1/secondary3,0x30004240;0x70204350;0x70404350
+3,2,sprite,,,BRG1/stage2;BRG1/stage3,0x60b93cbd;0x60b98cbd;0x60b9bcbd
+3,2,audio,FX_PICKUP_1970;FX_PICKUP_1970_03,,CLOU/secondary4;TMPL/secondary,0x408a6461;0x428a6465;0x42906465
+3,1,audio,,,EVIL/primary,0x086e44c0;0x204e44c0;0x205e40c2
+3,3,sprite,,,FOOD/stage1;FOOD/stage2;TMPL/stage0,0x410800f9;0x410808f9;0x410818f9
+3,1,sprite,,[HIGH]: Glenn Yntis boss death animation frame,GLEN/primary,0x18e88310;0x18e88510;0x18e88910
+3,1,sprite,,,KLOG/primary,0x2e809804;0x2e811804;0x2e839804
+3,1,audio,FX_BOSS_KLOGG_FIRE_3;FX_BOSS_KLOGG_FIRE_1,,KLOG/primary,0x48209640;0x49609640;0x49a09640
+3,1,audio,,,KLOG/primary,0xc8648260;0xc864b260;0xc864d260
+3,3,sprite,,,MENU/stage0;MENU/stage4;MENU/stage5,0x3080820d;0x3080840d;0x30808e0d
+3,1,sprite,,[HIGH]: Klaymen with arms up holding object (M,MENU/stage4,0x40b18011;0x40b28011;0x40b48011
+3,2,sprite,,[HIGH]: Skull-mage enemy (PHRO/SCIE),SCIE/stage2;SCIE/stage3,0x60181a0c;0x61581a0c;0x61981a0c
+3,1,audio,FX_BOSS_WIZARD_TAUNT_3;FX_BOSS_WIZARD_TAUNT_2,,WIZZ/primary,0x04041001;0x08041001;0x0e041001

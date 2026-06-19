@@ -1,0 +1,1414 @@
+{
+ "method": "collision-multiplicity within convention-valid name space",
+ "grades": {
+  "RECOVERED": "unique plausible preimage in the naming grammar (effectively true; not externally confirmed)",
+  "CANDIDATE": "2+ plausible convention strings collide; alternatives listed",
+  "caveat": "uniqueness is bounded by vocabulary completeness; a true name using an unguessed word would show as RECOVERED with the real string absent from the search space. No external ground truth exists (per project)."
+ },
+ "summary": {
+  "RECOVERED": 136,
+  "CANDIDATE": 12,
+  "RECOVERED-EXT": 3
+ },
+ "ledger": [
+  {
+   "id": "0x00248E52",
+   "name": "FX_KLAY_RUN_FAST",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x00880C1E",
+   "name": "FX_MENU_PASSWORD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MENU"
+  },
+  {
+   "id": "0x00E49240",
+   "name": "FX_KLAY_HURT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x02102152",
+   "name": "FX_OBJECT_SMOKE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;FOOD"
+  },
+  {
+   "id": "0x0220A173",
+   "name": "FX_OBJECT_SPLASH",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_OBJECT_PIERCE_WILLIE_01"
+   ],
+   "type": "audio",
+   "levels": "FOOD"
+  },
+  {
+   "id": "0x04041001",
+   "name": "FX_BOSS_WIZARD_TAUNT_3",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0x0434CE72",
+   "name": "FX_KLAY_RUN_FAST_SOFT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU"
+  },
+  {
+   "id": "0x04DCE858",
+   "name": "FX_KLAY_FOOTSTEP_QUIET_SOFT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU"
+  },
+  {
+   "id": "0x06E0A824",
+   "name": "FX_OBJECT_ELEVATOR",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CAVE;CSTL;EGGS;EVIL;SCIE;WEED"
+  },
+  {
+   "id": "0x08041001",
+   "name": "FX_BOSS_WIZARD_TAUNT_2",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0x08089081",
+   "name": "FX_BOSS_WIZARD_ATTACK",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0x0A409040",
+   "name": "FX_OBJECT_WILLIE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ"
+  },
+  {
+   "id": "0x0AD0F813",
+   "name": "PAUSED",
+   "namespace": "TEXT",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x0E041001",
+   "name": "FX_BOSS_WIZARD_TAUNT_1",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0x1000C042",
+   "name": "FX_SKULL_FOOTSTEP_LEFT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CRYS;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL"
+  },
+  {
+   "id": "0x10904443",
+   "name": "FX_AMBIENT_CRYSTAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CRYS"
+  },
+  {
+   "id": "0x10F0E983",
+   "name": "FX_AMBIENT_WATERFALL_LARGE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0x146CE002",
+   "name": "FX_KLAY_DIE_EXPLODE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x1B610064",
+   "name": "FX_OBJECT_PHOENIX_FLY",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x22A4AA42",
+   "name": "FX_OBJECT_HAMSTER",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;CAVE;CRYS;SNOW;SOAR"
+  },
+  {
+   "id": "0x246166FA",
+   "name": "FX_KLAY_FOOTSTEP_RIGHT_NORMAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x2470E0F2",
+   "name": "FX_KLAY_FOOTSTEP_RIGHT_SOFT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU"
+  },
+  {
+   "id": "0x29808408",
+   "name": "FX_EXPLODE_NORMAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x29C0E211",
+   "name": "NO",
+   "namespace": "TEXT",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x2AD0F011",
+   "name": "YES",
+   "namespace": "TEXT",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x2B2CA36B",
+   "name": "FX_OBJECT_CHECKPOINT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED"
+  },
+  {
+   "id": "0x30004240",
+   "name": "FX_SKULL_UP",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1"
+  },
+  {
+   "id": "0x302010C4",
+   "name": "FX_SKULL_SPRING_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;PHRO;TMPL"
+  },
+  {
+   "id": "0x302016C4",
+   "name": "FX_SKULL_SPRING_02",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0x401106DA",
+   "name": "FX_KLAY_FOOTSTEP_LEFT_SOFT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW"
+  },
+  {
+   "id": "0x402044C9",
+   "name": "FX_BOSS_MEGA_TURN",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MEGA"
+  },
+  {
+   "id": "0x40400270",
+   "name": "FX_FINN_DIE_4",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;SOAR"
+  },
+  {
+   "id": "0x40815801",
+   "name": "FX_BOSS_WIZARD_HIT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0x40864668",
+   "name": "FX_PICKUP_GROW",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1"
+  },
+  {
+   "id": "0x408A6461",
+   "name": "FX_PICKUP_1970",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_PICKUP_GUM_7_01"
+   ],
+   "type": "audio",
+   "levels": "BOIL;CLOU;TMPL"
+  },
+  {
+   "id": "0x40E0824C",
+   "name": "FX_PUFF_FALL_3",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_BOSS_BIRD_7_03"
+   ],
+   "type": "audio",
+   "levels": "FINN"
+  },
+  {
+   "id": "0x412E8311",
+   "name": "FX_KLAY_UNIVERSE_ENEMA",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ"
+  },
+  {
+   "id": "0x421D1000",
+   "name": "FX_MENU_SKULL_SCREAM",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MENU"
+  },
+  {
+   "id": "0x42590440",
+   "name": "FX_MENU_WILLIE_EXIT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MENU"
+  },
+  {
+   "id": "0x428254E2",
+   "name": "FX_PICKUP_ONE_UP",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED"
+  },
+  {
+   "id": "0x428A6465",
+   "name": "FX_PICKUP_1970_03",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;CLOU;TMPL"
+  },
+  {
+   "id": "0x4428C941",
+   "name": "FX_KLAY_DUCK_DOWN",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x44C26454",
+   "name": "FX_PICKUP_PHOENIX",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;MOSS;SNOW;TMPL"
+  },
+  {
+   "id": "0x44D4C8D8",
+   "name": "FX_KLAY_FOOTSTEP_QUIET",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x46346040",
+   "name": "FX_PLAYER_SWIM_PRE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED"
+  },
+  {
+   "id": "0x48017101",
+   "name": "FX_BOSS_WIZARD_BEAM",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0x48209640",
+   "name": "FX_BOSS_KLOGG_FIRE_3",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x4824C0C5",
+   "name": "FX_BOSS_MEGA_SPIT",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_BOSS_FLY_8_DN"
+   ],
+   "type": "audio",
+   "levels": "MEGA"
+  },
+  {
+   "id": "0x486492C4",
+   "name": "FX_BOSS_KLOGG_IDLE",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_KLAY_WILLIE_WIZARD_6"
+   ],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x49609640",
+   "name": "FX_BOSS_KLOGG_FIRE_1",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x49A09640",
+   "name": "FX_BOSS_KLOGG_FIRE_2",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x4A60CA40",
+   "name": "FX_KLAY_JUMP",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x4A806042",
+   "name": "FX_PICKUP_OBJECT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED"
+  },
+  {
+   "id": "0x4C02D240",
+   "name": "FX_BOSS_KLOGG_HIT_1",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x4C22D240",
+   "name": "FX_BOSS_KLOGG_HIT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x4C62D240",
+   "name": "FX_BOSS_KLOGG_HIT_2",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x4CA2D240",
+   "name": "FX_BOSS_KLOGG_HIT_3",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x50008340",
+   "name": "FX_KLAY_FART",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_OBJECT_SELECT_1_7"
+   ],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x502141C3",
+   "name": "FX_BOSS_MEGA_ROLL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MEGA"
+  },
+  {
+   "id": "0x502840C3",
+   "name": "FX_BOSS_MEGA_DIE",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_BOSS_DIE_RUN_END"
+   ],
+   "type": "audio",
+   "levels": "HEAD;MEGA"
+  },
+  {
+   "id": "0x507883C3",
+   "name": "FX_KLAY_DIE_FALL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MOSS;SEVN;SNOW;SOAR;WEED;WIZZ"
+  },
+  {
+   "id": "0x50F08207",
+   "name": "FX_KLAY_HIT_HEAD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x51200640",
+   "name": "FX_SKULL_FIRE_02",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "FOOD"
+  },
+  {
+   "id": "0x512061C1",
+   "name": "FX_BOSS_MEGA_IDLE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MEGA"
+  },
+  {
+   "id": "0x53608B64",
+   "name": "FX_KLAY_SHOOT_NORMAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x563BA142",
+   "name": "FX_OBJECT_GLIDEY_BIRD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "GLID;SCIE;SOAR;TMPL"
+  },
+  {
+   "id": "0x5821C242",
+   "name": "FX_KLAY_LAND_SOFT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU"
+  },
+  {
+   "id": "0x5860C640",
+   "name": "FX_KLAY_LAND",
+   "namespace": "RAW",
+   "grade": "RECOVERED-EXT",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "external_confirmation": "ScummVM/Neverhood: Klaymen landing sound (NH Klaymen::hmLandOnFeet)"
+  },
+  {
+   "id": "0x5862F614",
+   "name": "FX_BOSS_KLOGG_EXPLOSION",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "KLOG"
+  },
+  {
+   "id": "0x5900C41E",
+   "name": "Klaymen_idleblink_anim",
+   "namespace": null,
+   "grade": "RECOVERED-EXT",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "external_confirmation": "ScummVM/Neverhood: Klaymen idle-blink anim (NH Klaymen::stIdleBlink)"
+  },
+  {
+   "id": "0x5D40A249",
+   "name": "FX_KLAY_IDLE_SCREAM",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;FOOD;MEGA;PHRO;SCIE;SNOW"
+  },
+  {
+   "id": "0x603588E8",
+   "name": "FX_BOSS_HEAD_IDLE_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0x6082C120",
+   "name": "FX_PICKUP_GLIDEY",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "GLID;SCIE;SOAR;TMPL"
+  },
+  {
+   "id": "0x61200640",
+   "name": "FX_SKULL_FIRE_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "FOOD;SNOW"
+  },
+  {
+   "id": "0x612010C9",
+   "name": "FX_BOSS_HEAD_HIT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0x68009240",
+   "name": "FX_SKULL_FLAP",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_BOSS_KLOGG_6_2"
+   ],
+   "type": "audio",
+   "levels": "BOIL;CLOU;MOSS"
+  },
+  {
+   "id": "0x682080CD",
+   "name": "FX_BOSS_HEAD_TURN",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0x68C0F413",
+   "name": "QUIT",
+   "namespace": "TEXT",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x69C04050",
+   "name": "CONTINUE",
+   "namespace": "TEXT",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x69C8F473",
+   "name": "QUIT GAME",
+   "namespace": "TEXT",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x7000C248",
+   "name": "FX_SKULL_EAT",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_SKULL_SWIM_EAT_04"
+   ],
+   "type": "audio",
+   "levels": "PHRO;SCIE"
+  },
+  {
+   "id": "0x70204350",
+   "name": "FX_SKULL_LAND_02",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;FOOD"
+  },
+  {
+   "id": "0x70404350",
+   "name": "FX_SKULL_LAND_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;PHRO;TMPL"
+  },
+  {
+   "id": "0x70D006D8",
+   "name": "FX_KLAY_FOOTSTEP_LEFT_NORMAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x71030240",
+   "name": "FX_RAT_DASH_END",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1"
+  },
+  {
+   "id": "0x74182B40",
+   "name": "FX_SKULL_BITE_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "FOOD;TMPL"
+  },
+  {
+   "id": "0x760106C1",
+   "name": "FX_BUTTON_POWERUP",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x7C108242",
+   "name": "FX_SKULL_FLY_01",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_SKULL_SKULL_01_FAST"
+   ],
+   "type": "audio",
+   "levels": "EVIL;FOOD;MOSS;SOAR"
+  },
+  {
+   "id": "0x7C108244",
+   "name": "FX_SKULL_FLY_02",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU;CRYS;SOAR"
+  },
+  {
+   "id": "0x80A0C240",
+   "name": "FX_AMBIENT_BLIZZARD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "SNOW"
+  },
+  {
+   "id": "0x90810000",
+   "name": "FX_MENU_SELECT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ"
+  },
+  {
+   "id": "0x90985240",
+   "name": "FX_AMBIENT_CHAINS",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0x90D85954",
+   "name": "FX_AMBIENT_FOUNTAIN",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "PHRO"
+  },
+  {
+   "id": "0x9180D446",
+   "name": "FX_AMBIENT_CAVERN",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CAVE"
+  },
+  {
+   "id": "0x9291D400",
+   "name": "FX_AMBIENT_RIVER",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0x92F8F1C0",
+   "name": "FX_AMBIENT_WATERFALL_SMALL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MEGA"
+  },
+  {
+   "id": "0x991003C2",
+   "name": "FX_SKULL_FOOTSTEP_RIGHT",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CRYS;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL"
+  },
+  {
+   "id": "0x9980D651",
+   "name": "FX_AMBIENT_BOILER",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;EVIL"
+  },
+  {
+   "id": "0x9CC87050",
+   "name": "FX_AMBIENT_LIGHTNING",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "SCIE"
+  },
+  {
+   "id": "0x9D406340",
+   "name": "Klaymen_idlehead_sound",
+   "namespace": null,
+   "grade": "RECOVERED-EXT",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ",
+   "external_confirmation": "ScummVM/Neverhood: Klaymen idle-head sound (NH Klaymen::hmIdleHeadOff)"
+  },
+  {
+   "id": "0xA06088C9",
+   "name": "FX_BOSS_HEAD_WALK",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0xB0107444",
+   "name": "FX_AMBIENT_DRIP_4",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0xB0807444",
+   "name": "FX_AMBIENT_DRIP_1",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0xB0B07444",
+   "name": "FX_AMBIENT_DRIP_2",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0xB0D07444",
+   "name": "FX_AMBIENT_DRIP_3",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0xB1907444",
+   "name": "FX_AMBIENT_DRIP_5",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0xB2907444",
+   "name": "FX_AMBIENT_DRIP_6",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "TMPL"
+  },
+  {
+   "id": "0xC00200C9",
+   "name": "FX_GUM_PIERCE_DN",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "MEGA"
+  },
+  {
+   "id": "0xC0034658",
+   "name": "FX_PICKUP_FARTHEAD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;MOSS;SEVN;SNOW;SOAR;TMPL"
+  },
+  {
+   "id": "0xC0099011",
+   "name": "FX_BOSS_WIZARD_IDLE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "WIZZ"
+  },
+  {
+   "id": "0xC8830661",
+   "name": "FX_BIRD_FLY_01",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [
+    "FX_BIRD_SKULL_01_FAST"
+   ],
+   "type": "audio",
+   "levels": "BRG1;SOAR"
+  },
+  {
+   "id": "0xC88A346A",
+   "name": "FX_PICKUP_UNIVERSE_ENEMA",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS"
+  },
+  {
+   "id": "0xD0A14440",
+   "name": "FX_AMBIENT_WIND",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1"
+  },
+  {
+   "id": "0xD0CC5442",
+   "name": "FX_AMBIENT_TORCH",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD;SOAR"
+  },
+  {
+   "id": "0xD914004F",
+   "name": "FX_BIRD_SQUISH_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;PHRO;SOAR"
+  },
+  {
+   "id": "0xE0880448",
+   "name": "FX_PICKUP_SHIELD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL"
+  },
+  {
+   "id": "0xE0C00650",
+   "name": "FX_SKULL_SCREAM_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL"
+  },
+  {
+   "id": "0xE48744C4",
+   "name": "FX_PICKUP_SUPER_WILLIE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "CLOU;CSTL;EVIL;MOSS;WEED"
+  },
+  {
+   "id": "0xF03391E9",
+   "name": "FX_BOSS_HEAD_ATTACK_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0xF033A1E9",
+   "name": "FX_BOSS_HEAD_ATTACK_02",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0xF2810224",
+   "name": "FX_SKULL_GRUNT_01",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "HEAD"
+  },
+  {
+   "id": "0x022E3442",
+   "name": "WIZARD_ATTACK",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x02ED1470",
+   "name": "WIZARD_IDLE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x424D1840",
+   "name": "WIZARD_DIE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x60DE1050",
+   "name": "WIZARD_HIT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x81421850",
+   "name": "WIZARD_FALL",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x82421850",
+   "name": "WIZARD_FALL",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x08192250",
+   "name": "MEGA_TURN",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x085860D4",
+   "name": "MEGA_ROLL",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x09382152",
+   "name": "MEGA_SPIT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x0A1820D4",
+   "name": "MEGA_DIE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x2C182010",
+   "name": "MEGA_HIT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x40106054",
+   "name": "MEGA_IDLE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x4C106054",
+   "name": "MEGA_IDLE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x08BC8013",
+   "name": "KLOGG_HIT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x18248010",
+   "name": "KLOGG_DIE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x193CA112",
+   "name": "KLOGG_IDLE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x1A2C8516",
+   "name": "KLOGG_SHOOT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x0C78005C",
+   "name": "YNT_DIE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x407801D0",
+   "name": "YNT_HIT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x407801DC",
+   "name": "YNT_HIT",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x8068815C",
+   "name": "YNT_IDLE",
+   "namespace": "BOSS",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": ""
+  },
+  {
+   "id": "0x00E2F188",
+   "name": "STATUSNUMBERS",
+   "namespace": "PICKUP",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "note": "HUD digit-font; unique under 62-word vocab; decomp-corroborated (CreateMenuEntities)"
+  },
+  {
+   "id": "0x65281E40",
+   "name": "FX_BUTTON_PAUSE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "multi",
+   "note": "trigger-validated: PauseGameAndShowMenu; unique in FX_BUTTON_* grammar"
+  },
+  {
+   "id": "0x4C60F249",
+   "name": "FX_BUTTON_UNPAUSE",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "multi",
+   "note": "trigger-validated: PauseGameWithFadeOut; unique; pairs with FX_BUTTON_PAUSE"
+  },
+  {
+   "id": "0x0120E27A",
+   "name": "FX_KLAY_FOOTSTEP_RIGHT_WOOD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;SOAR",
+   "note": "footstep surface-variant; unique in footstep grammar; FP~0; level matches material (metal->BOIL/CSTL/TMPL, wood->BRG1); remap-table-backed (PlaySoundEffect mode*5+slot)"
+  },
+  {
+   "id": "0x0478A37A",
+   "name": "FX_KLAY_FOOTSTEP_RIGHT_METAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;CSTL;TMPL",
+   "note": "footstep surface-variant; unique in footstep grammar; FP~0; level matches material (metal->BOIL/CSTL/TMPL, wood->BRG1); remap-table-backed (PlaySoundEffect mode*5+slot)"
+  },
+  {
+   "id": "0x486002DB",
+   "name": "FX_KLAY_FOOTSTEP_LEFT_METAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;CSTL;TMPL",
+   "note": "footstep surface-variant; unique in footstep grammar; FP~0; level matches material (metal->BOIL/CSTL/TMPL, wood->BRG1); remap-table-backed (PlaySoundEffect mode*5+slot)"
+  },
+  {
+   "id": "0x5050C643",
+   "name": "FX_KLAY_LAND_METAL",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BOIL;CSTL;TMPL",
+   "note": "footstep surface-variant; unique in footstep grammar; FP~0; level matches material (metal->BOIL/CSTL/TMPL, wood->BRG1); remap-table-backed (PlaySoundEffect mode*5+slot)"
+  },
+  {
+   "id": "0x5870C6E8",
+   "name": "FX_KLAY_LAND_WOOD",
+   "namespace": "RAW",
+   "grade": "RECOVERED",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "BRG1;SOAR",
+   "note": "footstep surface-variant; unique in footstep grammar; FP~0; level matches material (metal->BOIL/CSTL/TMPL, wood->BRG1); remap-table-backed (PlaySoundEffect mode*5+slot)"
+  },
+  {
+   "id": "0xD0B04444",
+   "name": "FX_AMBIENT_DRAIN",
+   "namespace": "RAW",
+   "grade": "CANDIDATE",
+   "alternatives": [],
+   "type": "audio",
+   "levels": "FINN",
+   "note": "level-coherent (FINN=underwater swim) + unique water-AMBIENT word, BUT single-axis (no trigger/mechanism backing) -> CANDIDATE not RECOVERED"
+  }
+ ],
+ "namespace_keys": {
+  "RAW": "0x00000000 R0",
+  "TEXT": "0x28C0E011 R27",
+  "PICKUP": "0x88200080 R27",
+  "BOSS": "0x08280150 R27"
+ }
+}

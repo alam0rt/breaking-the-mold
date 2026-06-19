@@ -1,0 +1,20 @@
+fam,n,kind,stem,category,shared_calling_fn,levels,YOUR_ENTITY_NAME,RELATIONSHIP_NOTES,ANY_VISIBLE_TEXT,members
+fam00,9,sprite,0x60b91c9c,Enemy:9,EnemyPatrolState,BRG1|PHRO|TMPL,various monkey enemies,EnemyPatrolState; 9 poses,,0x60a91c9c;0x60aa1c9c;0x60b8bc9c;0x60b93cbd;0x60b98cbd;0x60b9bcbd;0x61a91c9c;0x62aa1c9c;0x64bb1cbe
+fam01,6,sprite,0x08ce0610,Table-only:5|Menu/UI:1,,CSTL|FOOD|SEVN|TMPL,Background sun-flare/bloom FX,parallaxed in background,,0x00ce0610;0x09ce0610;0x0ace0610;0x0cce0610;0x18ce0610;0x28ce0610
+fam02,6,sprite,0x081c8300,Table-only:6,,FINN|EVIL|RUNN,riveted-metal tiles/textures (3D-ish level),FINN+RUNN special stages; FINN,,0x08148300;0x08188300;0x081c8302;0x081d8300;0x081e8300;0x085c8300
+fam03,6,sprite,0x081c8300,Table-only:5|Player:1,,EVIL|FINN|RUNN|BOIL|BRG1|CAVE,riveted-metal tiles/textures (3D-ish level),FINN+RUNN special stages; EVIL,,0x08148300;0x08188300;0x081c8302;0x081d8300;0x081e8300;0x08208902
+fam04,5,sprite,0xba096800,Table-only:5,,CAVE|EGGS|GLID|WEED,WORKER YNT enemy,manual name; loose cluster,,0x3a186940;0x3a186980;0xb84968b0;0xba094800;0xf8494814
+fam05,5,audio,0x4068c074,Teleport/Decor:3|Table-only:2,,RUNN,,,,0x40784034;0x40f8c274;0x4148c374;0x4860c074;0x60680076
+fam06,4,sprite,0x00489818,Enemy:2|Table-only:2,,CLOU|BOIL|MOSS|CRYS|SOAR,FLAPPER / EGG BEATER flying enemy,manual names,,0x004a981c;0x004c9138;0x024e981c;0x40489938
+fam07,4,audio,0x004e44c0,Boss:4,ShrineyGuardSoundUpdateTick,EVIL,,,,0x086e44c0;0x11eac4c0;0x204e44c0;0x205e40c2
+fam08,4,sprite,0xba700481,Player:1|Projectile:1|Teleport/Decor:1|Table-only:1,,BOIL|CAVE|CLOU|CRYS|CSTL|BRG1,"clayball + clayball items (the ""coins"")","raw-namespace, not pickup-prefix; 0xb8700ca1=clayball",,0x1b301085;0xb8700ca1;0xbb781481;0xfa700ce7
+fam09,4,sprite,0x410808f9,Projectile:4,,FOOD|TMPL,head-shooter-monkey projectile,ALIAS cluster (byte-identical),,0x000cc8f8;0x410800f9;0x410808f9;0x410818f9
+fam10,3,sprite,0x1cf99931,Player:3,,BOIL|BRG1|CAVE|CLOU|CRYS|CSTL,KLAYMEN bounce anim,ALIAS cluster - all identical art; bounces on Ma-Bird+enemies,,0x1cf99931;0x1df99931;0x1ef99931
+fam11,3,sprite,0xbc68d0c6,Boss:3,PlayerCallback_DeathDebrisSpawner|BossCollision_SpawnDebrisAndLayers,BOIL|BRG1|CAVE|CLOU|CRYS|CSTL,"enemy projectiles (various, uncertain)",,,0xb468d0c6;0xb868d0c6;0xbe68d0c6
+fam12,3,sprite,0x5a99815f,Effect/Particle:3,SpawnCollectibleParticles,BOIL|BRG1|CLOU|CRYS|CSTL|EVIL,,,,0x5a89815f;0x5ab9815f;0x5ad9815f
+fam13,3,sprite,0x980061a3,Teleport/Decor:2|Table-only:1,,BOIL|BRG1|CAVE|CLOU|CRYS|CSTL,MA-BIRD checkpoint,0x620ec210 regional-bank alias = MA-BIRD,,0x880161a7;0x91106183;0x980861a3
+fam14,3,audio,0x44d4c8d8,Table-only:2|Enemy:1,,BRG1|CAVE|CRYS|CSTL|BOIL|CLOU,,,,0x44d4c8d8;0x44d6c8cd;0x4cddccd8
+fam15,3,sprite,0xe4830101,Uncategorized:2|Effect/Particle:1,,BRG1|PHRO|SOAR,BARKING BIRD enemy,"dangerous when Klaymen shrunk, squishable full-size; EntityGroundSnapMovementCallback",,0xb4011101;0xe4834384;0xe6830101
+fam16,3,sprite,0x6d209c94,Collectible:3,,CSTL,,,,0x6c289c1c;0x6d209c95;0xed209c94
+fam17,3,sprite,0x2e819804,Enemy:3,FinnDamageEventHandler,KLOG,,,,0x2e809804;0x2e811804;0x2e839804
+fam18,3,sprite,0xd127c005,Player:2|Table-only:1,,PHRO|SCIE|BOIL|CAVE|EVIL|FOOD,KLAYMEN idle anim,plays after idling,,0xd167c005;0xd305d045;0xf936c015

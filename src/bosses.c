@@ -3,14 +3,16 @@
 #include "globals.h"
 
 extern void *g_pBlbHeapBase;
-extern void *D_800112E8;
-extern void *D_80011308;
-extern void *D_80011328;
-extern void *D_80011348;
-extern void *D_80011368;
-extern void *D_80011388;
-extern void *D_80011268;
-extern void *D_80011288;
+extern void *BOSS_ENTITY_VTABLE asm("D_800112E8");
+extern void *MONKEY_MAGE_BOSS_VTABLE asm("D_80011308");
+extern void *BOSS_AUX_ENTITY_VTABLE asm("D_80011328");
+extern void *MONKEY_MAGE_AUX_VTABLE asm("D_80011348");
+extern void *BOSS_PARTICLE_SPAWN_VTABLE asm("D_80011368");
+extern void *BOSS_SPU_CLEANUP_VTABLE asm("D_80011388");
+extern void *KLOGG_BOSS_VTABLE asm("D_80011268");
+extern void *JOE_HEAD_JOE_BOSS_VTABLE asm("D_80011288");
+extern void *MONKEY_MAGE_SIMPLE_ALLOC_VTABLE asm("D_800113A8");
+
 extern s32 EntityMessageHandler(void *e, u32 event);
 extern s32 JoeHeadJoeAttackEventHandler(void *e, u32 event);
 extern void EntitySetState(Entity *e, u32 marker, void *fn);
@@ -18,16 +20,16 @@ extern void GlennYntisSelectRandomAnimState(Entity *e);
 extern void HazardActivateWithSound(Entity *e);
 extern void UpdateEntitySoundPanning(void *e, u32 sound);
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
-u32   D_800A5B98;
-void *D_800A5B9C;
-u32   D_800A5BF0;
-void *D_800A5BF4;
-u32   D_800A5C10;
-void *D_800A5C14;
-u32   D_800A5C18;
-void *D_800A5C1C;
-u32   D_800A5C20;
-void *D_800A5C24;
+u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98");
+void *HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C");
+u32   SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER asm("D_800A5BF0");
+void *SHRINEY_GUARD_IDLE_TIMEOUT_STATE_CALLBACK asm("D_800A5BF4");
+u32   SHRINEY_GUARD_REPEAT_ATTACK_STATE_MARKER asm("D_800A5C10");
+void *SHRINEY_GUARD_REPEAT_ATTACK_STATE_CALLBACK asm("D_800A5C14");
+u32   SHRINEY_GUARD_FINISH_ATTACK_STATE_MARKER asm("D_800A5C18");
+void *SHRINEY_GUARD_FINISH_ATTACK_STATE_CALLBACK asm("D_800A5C1C");
+u32   JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_MARKER asm("D_800A5C20");
+void *JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_CALLBACK asm("D_800A5C24");
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
@@ -117,7 +119,8 @@ void Hazard_TickWithBehaviorTransition(Entity *e) {
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
-            EntitySetState(e, D_800A5B98, D_800A5B9C);
+            EntitySetState(e, HAZARD_TIMER_EXPIRED_STATE_MARKER,
+                           HAZARD_TIMER_EXPIRED_STATE_CALLBACK);
         }
     }
 }
@@ -173,7 +176,8 @@ void ShrineyGuardIdleTickCallback(Entity *e) {
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
-            EntitySetState(e, D_800A5BF0, D_800A5BF4);
+            EntitySetState(e, SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER,
+                           SHRINEY_GUARD_IDLE_TIMEOUT_STATE_CALLBACK);
         }
     }
     EnemyUpdateWithCollisionAndDeath(e);
@@ -212,9 +216,11 @@ void ShrineyGuardAttackCounterState(Entity *e) {
     u8 *counter = (u8 *)e + 0x114;
     (*counter)++;
     if (*counter < 3) {
-        EntitySetState(e, D_800A5C10, D_800A5C14);
+        EntitySetState(e, SHRINEY_GUARD_REPEAT_ATTACK_STATE_MARKER,
+                       SHRINEY_GUARD_REPEAT_ATTACK_STATE_CALLBACK);
     } else {
-        EntitySetState(e, D_800A5C18, D_800A5C1C);
+        EntitySetState(e, SHRINEY_GUARD_FINISH_ATTACK_STATE_MARKER,
+                       SHRINEY_GUARD_FINISH_ATTACK_STATE_CALLBACK);
         *counter = 0;
     }
 }
@@ -241,9 +247,9 @@ void ShrineyGuardDeathCallback(u8 *e) {
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBoss);
 
 void JoeHeadJoeBossDestructor(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011288;
+    ((Entity *)entity)->collisionVtable = &JOE_HEAD_JOE_BOSS_VTABLE;
     *(s32 *)((u8 *)entity + 0x118) = -1;
-    ((Entity *)entity)->collisionVtable = &D_80011388;
+    ((Entity *)entity)->collisionVtable = &BOSS_SPU_CLEANUP_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -258,7 +264,8 @@ void JoeHeadJoe_CheckAttackAndUpdate(Entity *e) {
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
-            EntitySetState(e, D_800A5C20, D_800A5C24);
+            EntitySetState(e, JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_MARKER,
+                           JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_CALLBACK);
         }
     }
     JoeHeadJoeUpdateWithCollisionCheck(e);
@@ -306,7 +313,7 @@ void KloggDeathCallback(u8 *e) {
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBoss);
 
 void KloggDestroyCallback(void *e, u32 flags) {
-    ((Entity *)e)->collisionVtable = &D_80011268;
+    ((Entity *)e)->collisionVtable = &KLOGG_BOSS_VTABLE;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
     *(s32 *)((u8 *)e + 0x110) = -1;
     DestroyEntityAndFreeMemory(e, 0);
@@ -367,7 +374,7 @@ void MonkeyMageDeathCallback(u8 *e) {
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageDestroyCallback);
 
 void MonkeyMagePartDestroyCallback(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011388;
+    ((Entity *)entity)->collisionVtable = &BOSS_SPU_CLEANUP_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -375,7 +382,7 @@ void MonkeyMagePartDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMagePlatformDestroyCallback(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_800112E8;
+    ((Entity *)entity)->collisionVtable = &BOSS_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -383,7 +390,7 @@ void MonkeyMagePlatformDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageForceFieldDestroyCallback(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011328;
+    ((Entity *)entity)->collisionVtable = &BOSS_AUX_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -391,7 +398,7 @@ void MonkeyMageForceFieldDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageAuxDestroyCallback(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011348;
+    ((Entity *)entity)->collisionVtable = &MONKEY_MAGE_AUX_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -399,7 +406,7 @@ void MonkeyMageAuxDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageBossPartDestroyCallback(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011368;
+    ((Entity *)entity)->collisionVtable = &BOSS_PARTICLE_SPAWN_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -407,7 +414,7 @@ void MonkeyMageBossPartDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageHUDDestroyCallback(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011388;
+    ((Entity *)entity)->collisionVtable = &BOSS_SPU_CLEANUP_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -420,10 +427,8 @@ void func_8004F024(void) {
 void func_8004F02C(void) {
 }
 
-extern void *D_800113A8;
-
 void MonkeyMageSimpleDestroyCallback(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_800113A8;
+    ((Entity *)entity)->collisionVtable = &MONKEY_MAGE_SIMPLE_ALLOC_VTABLE;
     if (flag & 1) {
         FreeEntityAllocOnly(entity, 0x1C);
     }

@@ -758,3 +758,47 @@ Full write-up in [`family-structure-and-categories.md`](../analysis/asset-identi
   `0x902c0002`=`+WILLIE`.
 - **Remaining unknown:** the shared PREFIX string (popcount 4, ≥4 chars, opaque). One word completes
   all pickup names.
+
+## Round 21 (2026-06-17): the "WRAP namespace" is just calcHash with a fixed PREFIX — one hash, not two
+
+A key realization (credit: user) collapses the two-namespace model. The concat identity for `calcHash`
+is `calcHash(A+B).h = h_A ^ rotl(calcHash(B).h, sh_A)`. The WRAP formula
+`id = 0x28C0E011 ^ rotl(calcHash(name), 27)` is **identical in form** with `h_A = 0x28C0E011`,
+`sh_A = 27`. So **`27` is not a magic rotation constant — it is the end-`sh` (leftover shiftValue) of a
+hashed PREFIX, and `0x28C0E011` is that prefix's accumulated `h`.**
+
+- **Confirmed**: continuing `calcHash` from state `(h=0x28C0E011, sh=27)` over each menu word reproduces
+  all six menu IDs exactly (`NO`→`0x29c0e211`, `YES`→`0x2ad0f011`, `PAUSED`,`QUIT`,`CONTINUE`,`QUITGAME`).
+  So the menu sprites are literally named `‹MENU_PREFIX›NO`, `‹MENU_PREFIX›YES`, … — one `calcHash`, no
+  second transform. The "RAW vs WRAP" split is really "empty prefix vs a fixed menu-section prefix."
+- **`0x28C0E011` appears nowhere in the decompiled C** (the game stores only the final menu-ID table);
+  there is no hasher in the binary. So `(0x28C0E011, 27)` is a **build-time** artifact — ToolX's hash
+  state after hashing a real prefix string, not a runtime code seed. It is a genuine (unrecovered) ToolX
+  name prefix.
+- **Both known section prefixes end at `sh=27`**: menu `(0x28C0E011, 27)` and the pickup-item prefix
+  `(0x88200080, 27)` (`id = calcHash(ITEM_PREFIX + ITEM)`, verified on FARTHEAD/GROW/ONE_UP/…). Two
+  independently-derived prefixes sharing an end-shift hints at a **common parent path** in the asset
+  tree (or a 1/32 coincidence). Neither prefix string inverts to a word even at minimum length
+  (pickup→`GXVF`/`UJHT`; menu→9-char garbage), so the strings stay opaque.
+- **Why this matters:** a section prefix is a *shared* bottleneck — cracking one prefix string unlocks
+  **every** asset in that section at once (all menu text / all pickups), since the suffixes are already
+  known. A much smaller, higher-leverage target than any individual long name. This is the most
+  promising remaining avenue and reframes the namespace model for future work.
+
+## Round 20 (2026-06-17): brute / SMT feasibility proof — name recovery is information-theoretically blocked
+
+Full write-up: [`docs/analysis/asset-identification/name-cracking-feasibility.md`](../analysis/asset-identification/name-cracking-feasibility.md).
+
+- **Low popcount ≠ short name.** `popcount(id) = name_len − 2·cancellations`; cracked audio names
+  are 14–21 chars at popcount 5–9 (e.g. `FX_SKULL_FOOTSTEP_LEFT` = 19 chars, pc 5). So exhaustive
+  short-string brute (`tools/invert_short`, ≤7 chars) can never contain the real (long) names.
+- **SMT (z3) tested and ruled out.** A validated bit-vector model of `calcHash` inverts known names,
+  but "contains a known word" is **non-discriminating** — SAT for `CHAIN`, `ZQXJV`, and `WUMBO`
+  alike on the same target (lossy hash pads any substring to any target).
+- **Full-vocabulary MITM is a collision salad:** ~36–68 distinct *fully-meaningful* game-word
+  compositions hash to each single sprite target — no algorithmic way to pick the real one.
+- **Conclusion:** a 32-bit lossy hash leaves ~50 meaningful preimages per ID; the distinguishing
+  information was destroyed at hash time. No brute/BDD/SMT recovers it. Only rendered on-screen
+  **text**, **cross-game** (Neverhood) hashes, or an external **(name→id)** pair beat the lossiness.
+- **Useful byproduct:** `name_len ≡ popcount(id) (mod 2)`, `len ≥ popcount` — pins each name's
+  length parity.

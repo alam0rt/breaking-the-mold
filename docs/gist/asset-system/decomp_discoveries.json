@@ -1,0 +1,81 @@
+{
+ "new_sprite_ids_not_in_assetlist": [
+  {
+   "id": "0x4A298690",
+   "spawner": "Callback_800682a4",
+   "note": "sprite ref in decomp, absent from ids.csv"
+  },
+  {
+   "id": "0xAA0DA270",
+   "spawner": "CreateBossPlayerEntity (=password screen)",
+   "note": "absent from ids.csv",
+   "role": "SECRET-ENDING trigger entity (spawned when Swirly-Q total g_pPlayerState[0x1b]>=48; leads to END2/MVWIN.STR)"
+  },
+  {
+   "id": "0xE4AC9451",
+   "spawner": "CreateBossPlayerEntity",
+   "note": "8x4 grid layout (18 placements); password button/symbol grid; absent from ids.csv",
+   "role": "password symbol grid (8x4) \u2014 confirmed via sprite-ids-complete.md too"
+  }
+ ],
+ "password_screen_category": {
+  "note": "CreateBossPlayerEntity @ decomp is MISNAMED \u2014 it is the password ENTRY screen (per password-system.md / InitPasswordEntry @0x80075ff4). MENU level.",
+  "sprites": [
+   {
+    "id": "0x3099991B",
+    "role": "password cursor (moves between digit slots)",
+    "status": "uncracked"
+   },
+   {
+    "id": "0xEC95689B",
+    "role": "password digit display (x12, shows button icon per slot)",
+    "status": "uncracked"
+   },
+   {
+    "id": "0x10094096",
+    "role": "password back button",
+    "status": "uncracked"
+   },
+   {
+    "id": "0xE4AC9451",
+    "role": "password button/symbol grid (8 cols x 4 rows)",
+    "status": "NEW (not in ids.csv)"
+   },
+   {
+    "id": "0xAA0DA270",
+    "role": "password screen sprite",
+    "status": "NEW (not in ids.csv)"
+   }
+  ]
+ },
+ "sprite_sound_bindings": [
+  {
+   "sound": "0x424129A1",
+   "plays_during": "WIZARD_FALL anim 1 (EntityCallback_800493d8)",
+   "type": "audio"
+  },
+  {
+   "sound": "0x66017821",
+   "plays_during": "WIZARD_FALL anim 2 (EntityCallback_80049550)",
+   "type": "audio"
+  }
+ ],
+ "boss_component_tree": {
+  "assembler": "InitBossEntity",
+  "parts": [
+   {
+    "id": "0x181C3854",
+    "role": "BossMain (entity type 50)"
+   },
+   {
+    "id": "0x8818A018",
+    "role": "BossPart (type 51)"
+   },
+   {
+    "id": "0x0244655D",
+    "role": "boss sub-sprite (InitEntitySprite, z=0x3c0)"
+   }
+  ],
+  "note": "WIZZ Monkey Mage assembled from main+part+sub via EntitySetState chains"
+ }
+}

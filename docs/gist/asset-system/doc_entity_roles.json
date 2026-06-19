@@ -1,0 +1,56 @@
+{
+ "source": "entity-identification.md + game-loop.md (RE doc, treated as LEAD not ground truth; conflicting claims dropped: 0x6A351094=verified UNIVERSE_ENEMA_1 not Sparkle, 0x8C510186=verified FARTHEAD not walker)",
+ "roles": {
+  "0x004A981C": "Skullmonkey Fast walker (BLB type 27)",
+  "0x024E981C": "Skullmonkey Fast walker (type 27, variant)",
+  "0x425A399C": "Skullmonkey Fast walker (type 27, variant)",
+  "0x0408C01E": "Skullmonkey Patrol (type 10, variant)",
+  "0x004C9138": "Flying enemy (type 26)",
+  "0x40489938": "Flying enemy (type 26, variant)",
+  "0x88783718": "Flying Monkey Hover / Boss Part (type 28/51)",
+  "0x8818A018": "Flying Monkey Pattern / Boss Part (type 8/51)",
+  "0x80B92212": "Snow/Particle effect (type 64)",
+  "0x10094096": "Menu button (reused for all 4 main-menu buttons + password back)",
+  "0x68C01218": "Main menu BG layer 1",
+  "0x3080840D": "Main menu BG layer 2",
+  "0x3080820D": "Main menu BG layer 3",
+  "0x30808E0D": "Main menu BG layer 4",
+  "0x38A0C119": "Main menu BG layer 5",
+  "0x40B18011": "Menu Klaymen-head bonus anim",
+  "0x09406D8A": "Clayball (BLB type 2)",
+  "0x0C34AA22": "Item/1-up pickup (BLB type 8)"
+ },
+ "menu_structure": {
+  "stages": {
+   "1": "Main Menu FUN_80076ba0",
+   "2": "Password Entry FUN_80077068",
+   "3": "Options FUN_800771c4",
+   "4": "Load Game FUN_800773fc"
+  },
+  "main_menu_sprites": [
+   "0x68c01218 BG1",
+   "0x3080840d BG2",
+   "0x3080820d BG3",
+   "0x30808e0d BG4",
+   "0x38a0c119 BG5",
+   "0x10094096 button x4",
+   "0x40b18011 head bonus"
+  ]
+ },
+ "sprite_id_tables": {
+  "note": "ground-enemy sprite tables in .data (values from doc)",
+  "0x8009da50": [
+   "0x04280180",
+   "0x0408C01E"
+  ],
+  "0x8009da5c": [
+   "0x004C9138",
+   "0x40489938"
+  ],
+  "0x8009da68": [
+   "0x004A981C",
+   "0x024E981C",
+   "0x425A399C"
+  ]
+ }
+}

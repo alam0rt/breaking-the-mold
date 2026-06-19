@@ -1,0 +1,954 @@
+{
+ "note": "sprite id -> role from decomp entity callbacks + doc entity-type table. Names from ledger. Roles are RE labels (purpose), not asset strings.",
+ "bindings": [
+  {
+   "id": "0x00388110",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006d724",
+    "PlayerCallback_8005f430",
+    "PlayerStateCallback_2"
+   ]
+  },
+  {
+   "id": "0x0244655D",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "InitBossEntity"
+   ]
+  },
+  {
+   "id": "0x024D704E",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityCallback_80047d84"
+   ]
+  },
+  {
+   "id": "0x04084011",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006bdd4"
+   ]
+  },
+  {
+   "id": "0x04835000",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "RUNN",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_800730f8"
+   ]
+  },
+  {
+   "id": "0x052AA082",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "EGGS",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006b3f8"
+   ]
+  },
+  {
+   "id": "0x0628A800",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "EGGS",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006b7f8"
+   ]
+  },
+  {
+   "id": "0x0708A4A0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "EGGS",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006b658",
+    "EntityInitCallback_8006b304"
+   ]
+  },
+  {
+   "id": "0x08208902",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80072a98",
+    "PlayerState_CheckpointExit"
+   ]
+  },
+  {
+   "id": "0x08814C64",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerCallback_8005e574",
+    "PlayerCallback_8005e650"
+   ]
+  },
+  {
+   "id": "0x088C5011",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "FINN",
+   "doc_role": "FinnDeathExplosion",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x08DE7215",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80047ee4"
+   ]
+  },
+  {
+   "id": "0x092B8480",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerState_Jump"
+   ]
+  },
+  {
+   "id": "0x09406D8A",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED",
+   "doc_role": "Clayball(type2)",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x0A08C490",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_80068514"
+   ]
+  },
+  {
+   "id": "0x0A3A4051",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006a584"
+   ]
+  },
+  {
+   "id": "0x0AABC010",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006a940"
+   ]
+  },
+  {
+   "id": "0x0B2084D0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerState_Falling"
+   ]
+  },
+  {
+   "id": "0x0C34AA22",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "KLOG",
+   "doc_role": "ItemPickup(type8)",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x0E0AC230",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_8006a818"
+   ]
+  },
+  {
+   "id": "0x10057441",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityCallback_80047a80"
+   ]
+  },
+  {
+   "id": "0x168254B5",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "FINN",
+   "doc_role": "Projectile/Particle",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x181C3854",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "BossMain(type50)",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x18298210",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerState_WalkingLeft"
+   ]
+  },
+  {
+   "id": "0x1A202D81",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "RUNN",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_800727ec",
+    "Callback_800728e8",
+    "Callback_80072ce8"
+   ]
+  },
+  {
+   "id": "0x1A28C11A",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006aa9c"
+   ]
+  },
+  {
+   "id": "0x1A2AB594",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_800455bc"
+   ]
+  },
+  {
+   "id": "0x1B301085",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerState_Death"
+   ]
+  },
+  {
+   "id": "0x1C3AA013",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006b974",
+    "EntityInitCallback_800694ac",
+    "EntityInitCallback_80069600",
+    "PlayerState_LandingFromRide"
+   ]
+  },
+  {
+   "id": "0x1C8C2437",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006c3ac"
+   ]
+  },
+  {
+   "id": "0x1D1811B3",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerCallback_8005dde0"
+   ]
+  },
+  {
+   "id": "0x1E089010",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80067fc8",
+    "Callback_80068130"
+   ]
+  },
+  {
+   "id": "0x1E1000B3",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "EnemyA(type25)",
+   "decomp_funcs": [
+    "Callback_8006bf2c",
+    "Callback_8006c95c"
+   ]
+  },
+  {
+   "id": "0x1E181D10",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "RUNN",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80072de0"
+   ]
+  },
+  {
+   "id": "0x1E28E0D4",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MOSS;SEVN;SNOW;SOAR;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80069ef4"
+   ]
+  },
+  {
+   "id": "0x21842018",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "FINN",
+   "doc_role": "Player/Klaymen",
+   "decomp_funcs": [
+    "InitPlayerEntity"
+   ]
+  },
+  {
+   "id": "0x282B8491",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80067a34"
+   ]
+  },
+  {
+   "id": "0x292E8480",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerState_Running",
+    "PlayerState_WalkingRight"
+   ]
+  },
+  {
+   "id": "0x344210B1",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "FINN",
+   "doc_role": "FinnDeathExplosion",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x3838801A",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_8006c514"
+   ]
+  },
+  {
+   "id": "0x392CB014",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_8006c7f8"
+   ]
+  },
+  {
+   "id": "0x3C389550",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "RUNN",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_800726c8"
+   ]
+  },
+  {
+   "id": "0x3D348056",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "ExplosionDebris",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x3DA80D13",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "KLOG",
+   "doc_role": "",
+   "decomp_funcs": [
+    "CreateFinnPlayerEntity"
+   ]
+  },
+  {
+   "id": "0x3EB98520",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "RUNN",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_80072ba0"
+   ]
+  },
+  {
+   "id": "0x458B0320",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;SOAR",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80046b88"
+   ]
+  },
+  {
+   "id": "0x48204012",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_8006c668",
+    "PlayerCallback_80066e38",
+    "PlayerStateCallback_0"
+   ]
+  },
+  {
+   "id": "0x49289C14",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerCallback_8005d0c8",
+    "PlayerCallback_8005d25c"
+   ]
+  },
+  {
+   "id": "0x5238CD10",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "RUNN",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8007301c"
+   ]
+  },
+  {
+   "id": "0x5900C41E",
+   "name": "Klaymen_idleblink_anim",
+   "status": "scummvm_anchor",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80066f60"
+   ]
+  },
+  {
+   "id": "0x5A2082F2",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_800683d4"
+   ]
+  },
+  {
+   "id": "0x6A351094",
+   "name": "",
+   "status": "verified-anchor",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "Sparkle/Timer(type61)",
+   "decomp_funcs": [
+    "InitTimerDisplayEntity"
+   ]
+  },
+  {
+   "id": "0x6C22083A",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006c0d8"
+   ]
+  },
+  {
+   "id": "0x80E85EA0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006d910"
+   ]
+  },
+  {
+   "id": "0x81421850",
+   "name": "WIZARD_FALL",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityCallback_800493d8"
+   ]
+  },
+  {
+   "id": "0x82421850",
+   "name": "WIZARD_FALL",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityCallback_80049550"
+   ]
+  },
+  {
+   "id": "0x8524A880",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "EGGS",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006bc04"
+   ]
+  },
+  {
+   "id": "0x8569A090",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "EGGS",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006b4f4"
+   ]
+  },
+  {
+   "id": "0x8818A018",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;CAVE;CRYS;CSTL;EGGS;FOOD;GLID;HEAD;MOSS;TMPL;WEED;WIZZ",
+   "doc_role": "BossPart(type51)",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0x883D14B4",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_800479d0"
+   ]
+  },
+  {
+   "id": "0x88B9833C",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80069a3c"
+   ]
+  },
+  {
+   "id": "0x8A7CE022",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006e960"
+   ]
+  },
+  {
+   "id": "0x8B7CE0B2",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006ea0c"
+   ]
+  },
+  {
+   "id": "0x8C510186",
+   "name": "",
+   "status": "verified-anchor",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "InitEntity_8c510186"
+   ]
+  },
+  {
+   "id": "0x8D01C734",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_800698b8"
+   ]
+  },
+  {
+   "id": "0x90A19011",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006d3c8"
+   ]
+  },
+  {
+   "id": "0x90B102A1",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006d048"
+   ]
+  },
+  {
+   "id": "0x9158A0F6",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_800505a0"
+   ]
+  },
+  {
+   "id": "0x987101B9",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006d548"
+   ]
+  },
+  {
+   "id": "0x9918A8E2",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_800505fc"
+   ]
+  },
+  {
+   "id": "0xA0149114",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityCallback_80046e40"
+   ]
+  },
+  {
+   "id": "0xA0CC18D0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80048f40"
+   ]
+  },
+  {
+   "id": "0xA0CC1CD0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8004906c"
+   ]
+  },
+  {
+   "id": "0xA89D0AD0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;CAVE;CRYS;SNOW;SOAR",
+   "doc_role": "MessageBox(type45)",
+   "decomp_funcs": [
+    "InitEntity_a89d0ad0"
+   ]
+  },
+  {
+   "id": "0xB01C25F0",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ",
+   "doc_role": "Portal(type42)",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0xB468D0C6",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "ExplosionDebris",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0xB868D0C6",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "ExplosionDebris",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0xB8700CA1",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "InitMenuEntity"
+   ]
+  },
+  {
+   "id": "0xBE68D0C6",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "ExplosionDebris",
+   "decomp_funcs": []
+  },
+  {
+   "id": "0xC8099196",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "PlayerState_SpecialIdleAnim"
+   ]
+  },
+  {
+   "id": "0xC87CA082",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_8006e8f4"
+   ]
+  },
+  {
+   "id": "0xCA1B20CB",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "CreateSoarPlayerEntity"
+   ]
+  },
+  {
+   "id": "0xCA282402",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityCallback_80047bf4"
+   ]
+  },
+  {
+   "id": "0xD02DC3D5",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80069bbc"
+   ]
+  },
+  {
+   "id": "0xD0A5F094",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "GLID;SCIE;SOAR;TMPL",
+   "doc_role": "",
+   "decomp_funcs": [
+    "EntityInitCallback_8006d270"
+   ]
+  },
+  {
+   "id": "0xE4CB8330",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "BRG1;SOAR",
+   "doc_role": "",
+   "decomp_funcs": [
+    "Callback_80046b38"
+   ]
+  },
+  {
+   "id": "0xEC95689B",
+   "name": "",
+   "status": "uncracked",
+   "type": "sprite",
+   "levels": "MENU",
+   "doc_role": "",
+   "decomp_funcs": [
+    "CreateBossPlayerEntity"
+   ]
+  }
+ ]
+}

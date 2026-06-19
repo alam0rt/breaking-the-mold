@@ -1,0 +1,17 @@
+fam,n,category,stem_hash,example_fn,members,sheet_png
+0,9,Enemy,0x60b91c9c,EnemyPatrolState,0x60a91c9c;0x60aa1c9c;0x60b8bc9c;0x60b93cbd;0x60b98cbd;0x60b9bcbd;0x61a91c9c;0x62aa1c9c;0x64bb1cbe,fam00_Enemy_n9.png
+1,6,"Menu/UI,Table-only",0x08ce0610,,0x00ce0610;0x09ce0610;0x0ace0610;0x0cce0610;0x18ce0610;0x28ce0610,fam01_Menu-UI_n6.png
+2,6,Table-only,0x081c8300,,0x08148300;0x08188300;0x081c8302;0x081d8300;0x081e8300;0x085c8300,fam02_Table-only_n6.png
+3,6,"Player,Table-only",0x081c8300,,0x08148300;0x08188300;0x081c8302;0x081d8300;0x081e8300;0x08208902,fam03_Player_n6.png
+4,5,Table-only,0xba096800,,0x3a186940;0x3a186980;0xb84968b0;0xba094800;0xf8494814,fam04_Table-only_n5.png
+5,4,"Enemy,Table-only",0x00489818,EntityType026_FlyingEnemy_Init,0x004a981c;0x004c9138;0x024e981c;0x40489938,fam05_Enemy_n4.png
+6,4,"Player,Projectile,Table-only,Teleport/Decor",0xba700481,FreeEntityNoTeardown_80073308 ,0x1b301085;0xb8700ca1;0xbb781481;0xfa700ce7,fam06_Player_n4.png
+7,4,Projectile,0x410808f9,ProjectileState_HomingActiveVa,0x000cc8f8;0x410800f9;0x410808f9;0x410818f9,fam07_Projectile_n4.png
+8,3,Player,0x1cf99931,PlayerState_ClearBounceAndAirF,0x1cf99931;0x1df99931;0x1ef99931,fam08_Player_n3.png
+9,3,Boss,0xbc68d0c6,PlayerCallback_DeathDebrisSpaw,0xb468d0c6;0xb868d0c6;0xbe68d0c6,fam09_Boss_n3.png
+10,3,Effect/Particle,0x5a99815f,EntityEventHandlerIdle | Spawn,0x5a89815f;0x5ab9815f;0x5ad9815f,fam10_Effect-Particle_n3.png
+11,3,"Table-only,Teleport/Decor",0x980061a3,DecorSetSpriteActive,0x880161a7;0x91106183;0x980861a3,fam11_Table-only_n3.png
+12,3,"Effect/Particle,Uncategorized",0xe4830101,EntityGroundSnapMovementCallba,0xb4011101;0xe4834384;0xe6830101,fam12_Effect-Particle_n3.png
+13,3,Collectible,0x6d209c94,InitConditionalCollectibleEnti,0x6c289c1c;0x6d209c95;0xed209c94,fam13_Collectible_n3.png
+14,3,Enemy,0x2e819804,FinnDamageEventHandler,0x2e809804;0x2e811804;0x2e839804,fam14_Enemy_n3.png
+15,3,"Player,Table-only",0xd127c005,PlayerCallback_EventHandlerWit,0xd167c005;0xd305d045;0xf936c015,fam15_Player_n3.png

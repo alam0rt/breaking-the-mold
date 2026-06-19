@@ -1,0 +1,32 @@
+{
+ "summary": "Skullmonkeys level-exit teleporters with branching destinations (stage 2a/2b/bonus). Multiple teleporter entities per level, each carrying its own destination -> player chooses by entering one.",
+ "branch_chain": [
+  "1. Teleporter is a Portal-class entity; player touching it -> PlayerState_LevelExitTeleporter (0x...32620): stops CD stream, marks +0x1b2=1, links entity at player[0x5a].",
+  "2. The teleporter entity callback writes the DESTINATION into GameState: +0x19c=1 (branch flag) and +0x19d=<dest level index>.",
+  "3. GameStateCollisionCallback (0x...41498): if +0x146 set and +0x19c!=0 -> SetupAndStartLevel(state, *(+0x19d)) = JUMP to that explicit level (NOT sequential advance).",
+  "4. Normal level-complete instead sets +0x147 -> SeekToLevelInSequence(.,0,1,0) -> SetupAndStartLevel(99) = next entry in playback sequence."
+ ],
+ "destination_selection": {
+  "fixed (Callback_8004906c @ line 15783)": "uVar2 = teleporter_entity[+0x50] -> GameState+0x19d. Each teleporter is PLACED (Asset 501 variant data) with a hardcoded destination level index. Two/three teleporters in a level = two/three fixed destinations (stage 2a / 2b / bonus). This is the manual branch.",
+  "random (Callback_800670bc @ line 31210)": "rand() % count[+0x67] indexes a destination table param_1[idx+0x60]; rejects repeat of last (+0x19d) by incrementing. A teleporter that sends you to a RANDOM destination from a set (bonus-level roulette)."
+ },
+ "key_fields": {
+  "GameState+0x19c": "branch flag (1 = use explicit destination instead of sequence advance)",
+  "GameState+0x19d": "destination level index (byte) -> SetupAndStartLevel param_2",
+  "GameState+0x146": "level-transition trigger",
+  "GameState+0x147": "sequential next-level flag (normal exit)",
+  "teleporter_entity+0x50": "this teleporter's fixed destination level index",
+  "teleporter_entity+0x60..": "random-teleporter destination table; +0x67 = count",
+  "player+0x5a": "linked teleporter entity ref"
+ },
+ "functions": {
+  "PlayerState_LevelExitTeleporter": "0x...32620",
+  "SetupAndStartLevel": "(state, byte level_index) 0x...41xxx",
+  "SetNextLevelFlagWithFade": "sets +0x147/+0x151 (sequential advance)",
+  "GameStateCollisionCallback": "0x...41498 (dispatches branch vs advance)",
+  "Callback_8004906c": "fixed-destination teleporter (line 15783)",
+  "Callback_800670bc": "random-destination teleporter (line 31210)",
+  "SeekToLevelInSequence": "walks playback sequence (Session 20)"
+ },
+ "ties_to": "playback sequence + LevelMetadata table (Session 20): destination index -> metadata[idx*0x70] -> that level's assets. Branch just overrides which sequence/metadata entry loads next."
+}

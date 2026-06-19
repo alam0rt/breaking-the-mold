@@ -1,0 +1,151 @@
+slot,addr,id_hex,popcount,known_status,known_name,new_to_csv
+12,0x8009b174,0x0ad0f813,13,verified,PAUSED,
+13,0x8009b178,0x69c8f473,17,verified,QUIT GAME,
+15,0x8009b180,0x69c04050,9,verified,CONTINUE,
+16,0x8009b184,0x2ad0f011,12,verified,YES,
+18,0x8009b18c,0x68c0f413,13,verified,QUIT,
+19,0x8009b190,0x29c0e211,11,verified,NO,
+29,0x8009b1b8,0x03070501,8,,,NEW (not in cracked_names.csv)
+45,0x8009b1f8,0x4a020707,10,,,NEW (not in cracked_names.csv)
+46,0x8009b1fc,0x16070707,12,,,NEW (not in cracked_names.csv)
+47,0x8009b200,0x3d4b090b,14,,,NEW (not in cracked_names.csv)
+48,0x8009b204,0x17074819,12,,,NEW (not in cracked_names.csv)
+49,0x8009b208,0x07070707,12,,,NEW (not in cracked_names.csv)
+50,0x8009b20c,0x45070707,12,,,NEW (not in cracked_names.csv)
+52,0x8009b214,0x91106183,10,uncracked,,
+53,0x8009b218,0x980861a3,11,uncracked,,
+54,0x8009b21c,0x880161a7,11,uncracked,,
+55,0x8009b220,0x09406d8a,11,uncracked,,
+57,0x8009b228,0xa9228088,9,verified-anchor,<PREFIX>HAMSTER,
+58,0x8009b22c,0x093080c8,8,uncracked,,
+60,0x8009b234,0xfa700ce7,17,uncracked,,
+61,0x8009b238,0xbb781481,14,uncracked,,
+64,0x8009b244,0xffff0002,17,,,NEW (not in cracked_names.csv)
+65,0x8009b248,0xffff0006,18,,,NEW (not in cracked_names.csv)
+72,0x8009b264,0x002d000f,8,,,NEW (not in cracked_names.csv)
+74,0x8009b26c,0x0033fff6,18,,,NEW (not in cracked_names.csv)
+75,0x8009b270,0x0030ffe8,14,,,NEW (not in cracked_names.csv)
+76,0x8009b274,0x002bffdb,18,,,NEW (not in cracked_names.csv)
+77,0x8009b278,0x0024ffd0,13,,,NEW (not in cracked_names.csv)
+78,0x8009b27c,0x001bffc3,16,,,NEW (not in cracked_names.csv)
+79,0x8009b280,0x0011ffba,15,,,NEW (not in cracked_names.csv)
+80,0x8009b284,0x0005ffb0,13,,,NEW (not in cracked_names.csv)
+81,0x8009b288,0xfffaffa7,27,,,NEW (not in cracked_names.csv)
+82,0x8009b28c,0xffeaff9d,26,,,NEW (not in cracked_names.csv)
+83,0x8009b290,0xffdcff96,25,,,NEW (not in cracked_names.csv)
+84,0x8009b294,0xffcbff8f,26,,,NEW (not in cracked_names.csv)
+85,0x8009b298,0xffbbff89,25,,,NEW (not in cracked_names.csv)
+86,0x8009b29c,0xffabff85,24,,,NEW (not in cracked_names.csv)
+87,0x8009b2a0,0xff9bff82,23,,,NEW (not in cracked_names.csv)
+88,0x8009b2a4,0xff94ff81,21,,,NEW (not in cracked_names.csv)
+89,0x8009b2a8,0xff8dff81,22,,,NEW (not in cracked_names.csv)
+90,0x8009b2ac,0xff89ff80,20,,,NEW (not in cracked_names.csv)
+91,0x8009b2b0,0xff86ff80,20,,,NEW (not in cracked_names.csv)
+92,0x8009b2b4,0xff84ff80,19,,,NEW (not in cracked_names.csv)
+93,0x8009b2b8,0xff82ff80,19,,,NEW (not in cracked_names.csv)
+94,0x8009b2bc,0xff81ff80,19,,,NEW (not in cracked_names.csv)
+95,0x8009b2c0,0xff80ff80,18,,,NEW (not in cracked_names.csv)
+96,0x8009b2c4,0xfffefffa,29,,,NEW (not in cracked_names.csv)
+98,0x8009b2cc,0xfffa0007,17,,,NEW (not in cracked_names.csv)
+99,0x8009b2d0,0xfffd0017,19,,,NEW (not in cracked_names.csv)
+101,0x8009b2d8,0x081d8300,8,uncracked,,
+102,0x8009b2dc,0x081d8300,8,uncracked,,
+103,0x8009b2e0,0x08188300,6,uncracked,,
+104,0x8009b2e4,0x081e8300,8,uncracked,,
+105,0x8009b2e8,0x081e8300,8,uncracked,,
+106,0x8009b2ec,0x081c8302,8,uncracked,,
+107,0x8009b2f0,0x081c8302,8,uncracked,,
+108,0x8009b2f4,0x081c8302,8,uncracked,,
+109,0x8009b2f8,0x08148300,6,uncracked,,
+110,0x8009b2fc,0x081c8302,8,uncracked,,
+111,0x8009b300,0x081d8300,8,uncracked,,
+112,0x8009b304,0x081c8302,8,uncracked,,
+113,0x8009b308,0x08188300,6,uncracked,,
+114,0x8009b30c,0x081c8302,8,uncracked,,
+115,0x8009b310,0x081d8300,8,uncracked,,
+116,0x8009b314,0x081d8300,8,uncracked,,
+117,0x8009b318,0x08148300,6,uncracked,,
+118,0x8009b31c,0x081c8302,8,uncracked,,
+119,0x8009b320,0x081c8302,8,uncracked,,
+120,0x8009b324,0x081c8302,8,uncracked,,
+121,0x8009b328,0x08188300,6,uncracked,,
+122,0x8009b32c,0x081c8302,8,uncracked,,
+123,0x8009b330,0x081d8300,8,uncracked,,
+124,0x8009b334,0x081c8302,8,uncracked,,
+125,0x8009b338,0x08188300,6,uncracked,,
+126,0x8009b33c,0x081c8302,8,uncracked,,
+127,0x8009b340,0x081d8300,8,uncracked,,
+128,0x8009b344,0x081c8302,8,uncracked,,
+129,0x8009b348,0x081c8302,8,uncracked,,
+130,0x8009b34c,0x081c8302,8,uncracked,,
+131,0x8009b350,0x081c8302,8,uncracked,,
+132,0x8009b354,0x081c8302,8,uncracked,,
+133,0x8009b358,0x081c8302,8,uncracked,,
+134,0x8009b35c,0x081c8302,8,uncracked,,
+135,0x8009b360,0x081c8302,8,uncracked,,
+136,0x8009b364,0x081c8302,8,uncracked,,
+137,0x8009b368,0x081c8302,8,uncracked,,
+138,0x8009b36c,0x081c8302,8,uncracked,,
+139,0x8009b370,0x081c8302,8,uncracked,,
+140,0x8009b374,0x081c8302,8,uncracked,,
+141,0x8009b378,0x081c8302,8,uncracked,,
+142,0x8009b37c,0x081c8302,8,uncracked,,
+143,0x8009b380,0x081c8302,8,uncracked,,
+144,0x8009b384,0x081c8302,8,uncracked,,
+145,0x8009b388,0x081c8302,8,uncracked,,
+146,0x8009b38c,0x081c8302,8,uncracked,,
+147,0x8009b390,0x080c8300,6,uncracked,,
+148,0x8009b394,0x083c8300,8,,,NEW (not in cracked_names.csv)
+149,0x8009b398,0x085c8300,8,uncracked,,
+150,0x8009b39c,0x8508000a,6,uncracked,,
+152,0x8009b3a4,0xffff0000,16,,,NEW (not in cracked_names.csv)
+155,0x8009b3b0,0xffff4000,17,,,NEW (not in cracked_names.csv)
+156,0x8009b3b4,0x09ce0610,10,uncracked,,
+157,0x8009b3b8,0x0ace0610,10,uncracked,,
+158,0x8009b3bc,0x0cce0610,10,uncracked,,
+159,0x8009b3c0,0x00ce0610,8,uncracked,,
+160,0x8009b3c4,0x18ce0610,10,uncracked,,
+170,0x8009b3ec,0x099809a9,11,,,NEW (not in cracked_names.csv)
+171,0x8009b3f0,0x09810998,9,,,NEW (not in cracked_names.csv)
+172,0x8009b3f4,0x09710971,12,,,NEW (not in cracked_names.csv)
+173,0x8009b3f8,0x09620964,10,,,NEW (not in cracked_names.csv)
+174,0x8009b3fc,0x095d095d,14,,,NEW (not in cracked_names.csv)
+175,0x8009b400,0x0914091b,10,,,NEW (not in cracked_names.csv)
+176,0x8009b404,0x090d0914,9,,,NEW (not in cracked_names.csv)
+177,0x8009b408,0x0906090d,9,,,NEW (not in cracked_names.csv)
+178,0x8009b40c,0x08fd08fd,16,,,NEW (not in cracked_names.csv)
+179,0x8009b410,0x08ec08f3,13,,,NEW (not in cracked_names.csv)
+180,0x8009b414,0x08df08df,16,,,NEW (not in cracked_names.csv)
+181,0x8009b418,0x08df08df,16,,,NEW (not in cracked_names.csv)
+182,0x8009b41c,0x08d508d5,12,,,NEW (not in cracked_names.csv)
+183,0x8009b420,0x08cd08cd,12,,,NEW (not in cracked_names.csv)
+184,0x8009b424,0x08b6086c,11,,,NEW (not in cracked_names.csv)
+185,0x8009b428,0x0891089c,9,,,NEW (not in cracked_names.csv)
+187,0x8009b430,0x08650865,10,,,NEW (not in cracked_names.csv)
+188,0x8009b434,0x078d078c,13,,,NEW (not in cracked_names.csv)
+189,0x8009b438,0x07790775,16,,,NEW (not in cracked_names.csv)
+230,0x8009b4dc,0x60b8bc9c,15,uncracked,,
+231,0x8009b4e0,0x60b98cbd,16,uncracked,,
+232,0x8009b4e4,0x64bb1cbe,18,uncracked,,
+234,0x8009b4ec,0x60b9bcbd,18,uncracked,,
+235,0x8009b4f0,0x60a91c9c,13,uncracked,,
+236,0x8009b4f4,0x60aa1c9c,13,uncracked,,
+237,0x8009b4f8,0x60b93cbd,17,uncracked,,
+238,0x8009b4fc,0x61a91c9c,14,uncracked,,
+239,0x8009b500,0x62aa1c9c,14,uncracked,,
+241,0x8009b508,0xa0299a4d,13,uncracked,,
+242,0x8009b50c,0x006b9a6f,15,uncracked,,
+243,0x8009b510,0x20211e5f,13,uncracked,,
+244,0x8009b514,0x21229c5c,12,uncracked,,
+245,0x8009b518,0x21a81d54,12,uncracked,,
+246,0x8009b51c,0x53209c1c,12,uncracked,,
+248,0x8009b524,0x212a9c2d,13,uncracked,,
+249,0x8009b528,0x35289fae,17,uncracked,,
+251,0x8009b530,0x1a828448,9,,,NEW (not in cracked_names.csv)
+252,0x8009b534,0x0886cc58,11,,,NEW (not in cracked_names.csv)
+254,0x8009b53c,0x6c289c1c,13,uncracked,,
+255,0x8009b540,0xed209c94,14,uncracked,,
+256,0x8009b544,0x6d209c95,14,uncracked,,
+258,0x8009b54c,0x60181a0c,9,uncracked,,
+259,0x8009b550,0x611c5804,10,uncracked,,
+260,0x8009b554,0x400c9a1d,11,uncracked,,

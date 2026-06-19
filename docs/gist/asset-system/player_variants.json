@@ -1,0 +1,37 @@
+{
+ "note": "Klaymen player-variant init functions -> sprite ids. Each gameplay mode (normal/Finn-swim/Soar-fly/Glide/Runn-run) uses a distinct player sprite. CreateBossPlayerEntity is the MENU password screen (decompiler misname).",
+ "variants": {
+  "InitPlayerEntity": {
+   "mode": "normal platforming",
+   "sprites": [
+    "0x21842018"
+   ]
+  },
+  "CreateFinnPlayerEntity": {
+   "mode": "FINN (swim/3D rails)",
+   "sprites": [
+    "0x3DA80D13"
+   ]
+  },
+  "CreateSoarPlayerEntity": {
+   "mode": "SOAR (flying stage)",
+   "sprites": [
+    "0xCA1B20CB"
+   ]
+  },
+  "CreateGlidePlayerEntity": {
+   "mode": "GLID (gliding stage)",
+   "sprites": []
+  },
+  "CreateRunnPlayerEntity": {
+   "mode": "RUNN (auto-runner stage)",
+   "sprites": []
+  },
+  "CreateBossPlayerEntity": {
+   "mode": "MENU password screen (misnamed)",
+   "sprites": [
+    "0xEC95689B"
+   ]
+  }
+ }
+}

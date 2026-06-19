@@ -1,0 +1,257 @@
+{
+ "mechanism": "animation frame-event hashes: ToolX tags specific animation frames with a calcHash event id; on playback reaching that frame the engine sends NM_ANIMATION_START (msg param_2==1) with the hash as param_3; entity handler matches it to fire a sound/projectile/hitbox. Same calcHash namespace as assets (overlaps).",
+ "events": {
+  "0x0105080E": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x080CA433": {
+   "occurrences": 3,
+   "first_fn": "PlayerCallback_8005d404",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x10022814": {
+   "occurrences": 3,
+   "first_fn": "PlayerCallback_8005e170",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x1002A434": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005cce0",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x10062824": {
+   "occurrences": 2,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x1020AC7D": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005cce0",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x1023281C": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x10D86282": {
+   "occurrences": 4,
+   "first_fn": "EntityCallback_80047768",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x11022025": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005cce0",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x11232C94": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x1210CD03": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005f540",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x12820D34": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x146CE002": {
+   "occurrences": 2,
+   "first_fn": "PlayerCallback_8005d404",
+   "asset_name": "FX_KLAY_DIE_EXPLODE",
+   "is_asset_id": true
+  },
+  "0x182D840C": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005dde0",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x1A800898": {
+   "occurrences": 1,
+   "first_fn": "FUN_8005cf24",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x1C0C66F2": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x20833814": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005cce0",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x221017CA": {
+   "occurrences": 2,
+   "first_fn": "PlayerCallback_8005d0c8",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x2809A510": {
+   "occurrences": 3,
+   "first_fn": "PlayerCallback_8005d0c8",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x30160814": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x382C92C1": {
+   "occurrences": 2,
+   "first_fn": "PlayerCallback_8005d0c8",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x384D0812": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x404082C4": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x4A212247": {
+   "occurrences": 1,
+   "first_fn": "EntityCallback_80045410",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x50900004": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005f430",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x70032814": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005cce0",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x80062824": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x89038298": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x8C5E41E4": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x8CAA1108": {
+   "occurrences": 1,
+   "first_fn": "FUN_8004858c",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x92062824": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x920E2062": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x92120854": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x94062824": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x94222814": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x94422814": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0x98062824": {
+   "occurrences": 2,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0xB0062824": {
+   "occurrences": 1,
+   "first_fn": "PlayerCallback_8005e574",
+   "asset_name": "",
+   "is_asset_id": false
+  },
+  "0xB0C10420": {
+   "occurrences": 4,
+   "first_fn": "EntityCallback_80047768",
+   "asset_name": "",
+   "is_asset_id": false
+  }
+ },
+ "count": 39,
+ "cross_validation": "0x146CE002 frame-event = our verified FX_KLAY_DIE_EXPLODE asset name. Proves frame-events share the calcHash namespace AND the functional naming vocabulary.",
+ "concentration": "~25 of 39 fire from PlayerCallback_8005e574 (one Klaymen state w/ many tagged frames) + clusters in 8005d0c8/cce0/d404. EntityCallback_80047768 owns 0x10D86282 + 0xB0C10420 (x4 each) = a boss/enemy with 2 frame events.",
+ "why_crackable": "UNLIKE asset names (hashed at build, string discarded), a frame-event fires at a KNOWN, REPRODUCIBLE gameplay moment. The hash is observable at its trigger.",
+ "breakpoint_crack_strategy": [
+  "1. In an emulator (PCSX-Redux/no$), set a breakpoint on each param_3== comparison site (addresses known from the decomp line->fn map).",
+  "2. Play the moment that triggers it (e.g. let Klaymen die -> catches 0x146CE002; do a specific Klaymen action -> catches the 8005e574 events).",
+  "3. You SEE what happened on screen at the break -> you know the SEMANTIC (footstep, fire, hitbox-on, sound X).",
+  "4. That collapses the name to a tiny functional vocabulary (FOOTSTEP/FIRE/HIT/STEP/SHOOT/LAND/...) -> brute-force calcHash over that vocab almost certainly resolves it (short functional words, like FX_KLAY_DIE_EXPLODE).",
+  "5. Bonus: breakpoint the calcHash routine itself / the anim-frame dispatcher and read the event STRING from the sequence data if ToolX left it (it likely passes the hash, but the exposure-sheet tag MIGHT be present in sequence data loaded to RAM)."
+ ],
+ "why_better_than_asset_cracking": "Asset names: no observation point, lossy hash, dead end offline. Frame-events: live observation point + known semantic + short functional name = HIGH crack probability with an emulator. This is the single best remaining naming attack vector.",
+ "offline_crack_attempt": {
+  "result": "NO new names. Only 0x146CE002=FX_KLAY_DIE_EXPLODE (already known) hit a functional vocab.",
+  "why": "popcount shows most event names are LONG (9-14 chars, pc 9-14), not short tags. Short ones (0x50900004 pc=5) are too ambiguous; long ones unguessable without semantic. Same wall as asset names.",
+  "family_structure": "cluster 0x10062824/0x80062824/0x92062824/0x94062824/0x98062824/0xB0062824 share tail ..062824, differ only in top byte = ONE base event name + varying prefix char (a named family, like the sprite clusters). ~25 events fire from PlayerCallback_8005e574 = one Klaymen state.",
+  "implication": "breakpoint ONE member of the ..062824 family in-emulator while doing that Klaymen action -> semantic for the WHOLE family at once -> collapses to tiny vocab. Confirms the breakpoint approach is the unlock, offline guessing is not."
+ }
+}

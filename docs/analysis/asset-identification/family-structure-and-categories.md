@@ -14,18 +14,27 @@ by current methods," **not impossible**: a verified hit is still possible with t
 especially for corroborated targets like the FINN stem (§3). This doc records what we *can* already
 recover without the literal strings: the **naming structure** of families and their **roles**.
 
-## 1. Two confirmed hash namespaces
+## 1. One hash, with section prefixes (the "two namespaces" are the same calcHash)
 
-Re-verified against all 30+ confirmed names (`cracked_names.csv`):
+**UPDATE (2026-06-17, Round 21):** there is **one** hash, `calcHash`. What looked like a separate
+"WRAP namespace" is just `calcHash` with a fixed **prefix**. Via the concat identity
+`calcHash(A+B).h = h_A ^ rotl(calcHash(B).h, sh_A)`, the WRAP formula
+`id = 0x28C0E011 ^ rotl(calcHash(name), 27)` is exactly `calcHash(MENU_PREFIX + name)` where the
+menu prefix has hash-state `(h=0x28C0E011, sh=27)` — i.e. **`27` is the prefix's leftover shiftValue,
+not a magic rotation**. Confirmed: continuing `calcHash` from that state over each menu word
+reproduces all six menu IDs exactly. See `../../reference/asset-hash-ids.md` Round 21.
 
-| Model | Formula | Used by |
-|---|---|---|
-| **RAW** | `id = calcHash(name)` | all audio (`FX_<ENTITY>_<ACTION>[_NN]`) and gameplay sprites/anims |
-| **WRAP** | `id = 0x28C0E011 ^ rotl(calcHash(name), 27)` | localized **menu text** only (PAUSED/QUIT/CONTINUE/YES/NO/QUITGAME) |
+| Model | Formula | Really is | Used by |
+|---|---|---|---|
+| **RAW** | `id = calcHash(name)` | empty prefix `(0,0)` | audio (`FX_<ENTITY>_<ACTION>[_NN]`) + gameplay sprites/anims |
+| **"WRAP"** | `id = 0x28C0E011 ^ rotl(calcHash(name), 27)` | `calcHash(MENU_PREFIX + name)`, prefix state `(0x28C0E011, 27)` | menu text (PAUSED/QUIT/CONTINUE/YES/NO/QUITGAME) |
+| pickup | `id = calcHash(ITEM_PREFIX + ITEM)` | prefix state `(0x88200080, 27)` | item pickups (FARTHEAD/GROW/ONE_UP/…) |
 
-`calcHash` is case-insensitive and ignores non-alphanumerics (so `QUIT GAME` == `QUITGAME`, and
-separators like `_` are free). The two ScummVM Klaymen anchors (`0x5900c41e`,`0x9d406340`) are
-*role* identifications via shared Neverhood hashes, not recovered strings.
+Both identified prefixes end at **`sh=27`** (possible shared parent path). `calcHash` is
+case-insensitive and ignores non-alphanumerics (`QUIT GAME` == `QUITGAME`, `_` is free). A section
+prefix is a **shared bottleneck**: cracking one prefix string unlocks every asset in that section
+(suffixes already known). The two ScummVM Klaymen anchors (`0x5900c41e`,`0x9d406340`) are *role*
+identifications via shared Neverhood hashes, not recovered strings.
 
 ## 2. Blind brute-force doesn't work for long sprite names (but guess+verify can)
 
