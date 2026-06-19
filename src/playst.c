@@ -2,8 +2,9 @@
 #include "functions.h"
 #include "globals.h"
 
-extern s32 PlayerEntityEventHandler(PlayerEntity *e, u32 event);
-extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event);
+extern s32 PlayerEntityEventHandler(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 PlayerEntityCollisionHandler(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
 extern void RemoveEntityFromAllLists(GameState *gs, Entity *entity);
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 
@@ -117,11 +118,27 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerEntityCollisionHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEntityEventHandlerAlt);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_EventHandlerWithQueue);
+s32 PlayerCallback_EventHandlerWithQueue(PlayerEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = PlayerEntityEventHandler(e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue((Entity *)e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_AnimFrameParticleHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CollisionHandlerWithQueue);
+s32 PlayerCallback_CollisionHandlerWithQueue(PlayerEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = PlayerEntityCollisionHandler(e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue((Entity *)e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerBounceCallback);
 
@@ -181,7 +198,15 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SpawnTrailParticle);
 
 INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerTrailParticle);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_EventHandlerAltWithQueue);
+s32 PlayerCallback_EventHandlerAltWithQueue(PlayerEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = PlayerEntityEventHandlerAlt(e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue((Entity *)e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CollisionDamageSetup);
 

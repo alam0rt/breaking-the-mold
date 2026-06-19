@@ -14,8 +14,9 @@ extern void *KLOGG_BOSS_VTABLE asm("D_80011268");
 extern void *JOE_HEAD_JOE_BOSS_VTABLE asm("D_80011288");
 extern void *MONKEY_MAGE_SIMPLE_ALLOC_VTABLE asm("D_800113A8");
 
-extern s32 EntityMessageHandler(Entity *e, u32 event);
-extern s32 JoeHeadJoeAttackEventHandler(Entity *e, u32 event);
+extern s32 EntityMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 JoeHeadJoeAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
 extern void HazardActivateWithSound(Entity *e);
@@ -128,7 +129,15 @@ void EntityTickWithShortTimer(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityMessageHandler);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityEventHandlerWithComplete);
+s32 EntityEventHandlerWithComplete(Entity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = EntityMessageHandler(e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", KloggEventHandlerWithTrigger);
 
@@ -342,7 +351,15 @@ void JoeHeadJoe_CheckAttackAndUpdate(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeAttackEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBounceEventHandler);
+s32 JoeHeadJoeBounceEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = JoeHeadJoeAttackEventHandler(e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDeathEventHandler);
 
@@ -418,7 +435,15 @@ void KloggUpdateWithTimer(KloggBossEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyHitMessageHandler);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollision_EnemyHitWithCallback);
+s32 EntityCollision_EnemyHitWithCallback(Entity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = EnemyHitMessageHandler(e, maskedEvent, arg2, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", KloggDeathEventHandler);
 
