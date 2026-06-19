@@ -1,5 +1,6 @@
 #include "common.h"
 #include "functions.h"
+#include "Game/callback_slot.h"
 #include "globals.h"
 
 extern void *g_pBlbHeapBase;
@@ -206,7 +207,20 @@ INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleActiveState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSetPhaseFromHP);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", HazardSelectRandomBehavior);
+void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    e->idleTimeout = 0;
+    GlennYntisSelectRandomAnimState((Entity *)e);
+    fn = HazardActivateWithSound;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)((u8 *)e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSelectRandomAnimState);
 
