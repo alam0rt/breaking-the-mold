@@ -1,24 +1,25 @@
 #include "common.h"
 
-typedef void *(*CallbackFunc)();
-extern CallbackFunc *D_8009F440[];
+typedef u32 CallbackToken;
+typedef CallbackToken (*CallbackFunc)();
+extern CallbackFunc *BIOS_CALLBACK_TABLES[] asm("D_8009F440");
 
-extern u8 D_8009DF28[];
-extern u8 D_8009DF38[];
-extern u8 D_8009DF39[];
-extern u8 D_8009DF34[];
-extern void *D_8009DF18[];
-extern void *D_8009DF1C[];
-extern void *D_8009DF24[];
-extern void *D_8009E230[];
+extern u8 CD_STATUS_BYTE[] asm("D_8009DF28");
+extern u8 CD_MODE_BYTE[] asm("D_8009DF38");
+extern u8 CD_LAST_COMMAND_BYTE[] asm("D_8009DF39");
+extern u8 CD_LAST_POSITION[] asm("D_8009DF34");
+extern u8 *CD_LIB_PTR_9DF18[] asm("D_8009DF18");
+extern u8 *CD_LIB_PTR_9DF1C[] asm("D_8009DF1C");
+extern u8 *CD_LIB_PTR_9DF24[] asm("D_8009DF24");
+extern u8 *CD_LIB_PTR_9E230[] asm("D_8009E230");
 
-extern u32 D_800AE3D8[];
-extern u32 D_800AE3DC[];
+extern u32 STREAM_RING_BASE[] asm("D_800AE3D8");
+extern u32 STREAM_RING_SIZE[] asm("D_800AE3DC");
 extern void StClearRing(void);
 
 void StSetRing(u32 *ring, s32 size) {
-    D_800AE3D8[0] = (u32)ring;
-    D_800AE3DC[0] = (u32)size;
+    STREAM_RING_BASE[0] = (u32)ring;
+    STREAM_RING_SIZE[0] = (u32)size;
     StClearRing();
 }
 
@@ -45,19 +46,19 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", printf);
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", DeliverEvent);
 
 u8 CdStatus(void) {
-    return D_8009DF28[0];
+    return CD_STATUS_BYTE[0];
 }
 
 u8 CdMode(void) {
-    return D_8009DF38[0];
+    return CD_MODE_BYTE[0];
 }
 
 u8 CdLastCom(void) {
-    return D_8009DF39[0];
+    return CD_LAST_COMMAND_BYTE[0];
 }
 
 u8 *CdLastPos(void) {
-    return D_8009DF34;
+    return CD_LAST_POSITION;
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", CdReset);
@@ -84,9 +85,9 @@ void SYS_OBJ_144(void) {
 
 extern s32 CD_sync(s32 mode, u8 *result);
 extern s32 CD_ready(s32 mode, u8 *result);
-extern s32 CD_vol(void *vol);
-extern s32 CD_getsector(void *madr, s32 size);
-extern s32 CD_getsector2(void *madr, s32 size);
+extern s32 CD_vol(u8 *vol);
+extern s32 CD_getsector(u8 *madr, s32 size);
+extern s32 CD_getsector2(u8 *madr, s32 size);
 
 s32 CdSync(s32 mode, u8 *result) {
     return CD_sync(mode, result);
@@ -108,22 +109,22 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", CdControlB);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", SYS_OBJ_538);
 
-s32 CdMix(void *vol) {
+s32 CdMix(u8 *vol) {
     CD_vol(vol);
     return 1;
 }
 
-s32 CdGetSector(void *madr, s32 size) {
+s32 CdGetSector(u8 *madr, s32 size) {
     return CD_getsector(madr, size) == 0;
 }
 
-s32 CdGetSector2(void *madr, s32 size) {
+s32 CdGetSector2(u8 *madr, s32 size) {
     return CD_getsector2(madr, size) == 0;
 }
 
-extern void *DMACallback(s32 dma, void *func);
+extern CallbackToken DMACallback(s32 dma, CallbackToken func);
 
-void *CdDataCallback(void *func) {
+CallbackToken CdDataCallback(CallbackToken func) {
     return DMACallback(3, func);
 }
 
@@ -197,10 +198,10 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", CD_getsector);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", CD_getsector2);
 
-extern s32 D_8009E1C4[];
+extern s32 CD_TEST_PARAM_COUNT[] asm("D_8009E1C4");
 
 void CD_set_test_parmnum(s32 num) {
-    D_8009E1C4[0] = num;
+    CD_TEST_PARAM_COUNT[0] = num;
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", callback);
@@ -319,14 +320,14 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", init_ring_status);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", StGetNext);
 
-extern u32 D_800AE3D0[];
-extern u32 D_800ACB98[];
-extern u32 D_800AE3CC[];
+extern u32 STREAM_MASK_VALUE[] asm("D_800AE3D0");
+extern u32 STREAM_MASK_START[] asm("D_800ACB98");
+extern u32 STREAM_MASK_END[] asm("D_800AE3CC");
 
 void StSetMask(u32 mask, u32 start, u32 end) {
-    D_800AE3D0[0] = mask;
-    D_800ACB98[0] = start;
-    D_800AE3CC[0] = end;
+    STREAM_MASK_VALUE[0] = mask;
+    STREAM_MASK_START[0] = start;
+    STREAM_MASK_END[0] = end;
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", StCdInterrupt);
@@ -362,34 +363,34 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", func_800874F0);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", C_011_OBJ_A90);
 
-extern void *D_800ACBA8[];
+extern CallbackToken DS_SYNC_CALLBACK[] asm("D_800ACBA8");
 
-void *DsSyncCallback(void *func) {
-    void *old = D_800ACBA8[0];
-    D_800ACBA8[0] = func;
+CallbackToken DsSyncCallback(CallbackToken func) {
+    CallbackToken old = DS_SYNC_CALLBACK[0];
+    DS_SYNC_CALLBACK[0] = func;
     return old;
 }
 
-extern void *D_800ACBAC[];
+extern CallbackToken DS_READY_CALLBACK[] asm("D_800ACBAC");
 
-void *DsReadyCallback(void *func) {
-    void *old = D_800ACBAC[0];
-    D_800ACBAC[0] = func;
+CallbackToken DsReadyCallback(CallbackToken func) {
+    CallbackToken old = DS_READY_CALLBACK[0];
+    DS_READY_CALLBACK[0] = func;
     return old;
 }
 
-void *DsDataCallback(void *func) {
+CallbackToken DsDataCallback(CallbackToken func) {
     return DMACallback(3, func);
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", PadInit);
 
 extern void PAD_dr(void);
-extern u32 D_800A85F8[];
+extern u32 PAD_DATA_WORD[] asm("D_800A85F8");
 
 u32 PadRead(s32 pad) {
     PAD_dr();
-    return ~D_800A85F8[0];
+    return ~PAD_DATA_WORD[0];
 }
 
 extern void StopPAD(void);
@@ -402,14 +403,14 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", PAD_dr);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", ChangeClearPAD);
 
-extern s32 D_8009E33C[];
+extern s32 PAD_INIT_FLAG[] asm("D_8009E33C");
 
 void SetInitPadFlag(s32 flag) {
-    D_8009E33C[0] = flag;
+    PAD_INIT_FLAG[0] = flag;
 }
 
 s32 ReadInitPadFlag(void) {
-    return D_8009E33C[0];
+    return PAD_INIT_FLAG[0];
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", PAD_init);
@@ -478,45 +479,45 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", VSYNC_OBJ_1D4);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", ChangeClearRCnt);
 
-void *ResetCallback(void) {
-    CallbackFunc *table = D_8009F440[0];
-    return (void *)table[3]();
+CallbackToken ResetCallback(void) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
+    return table[3]();
 }
 
-void *InterruptCallback(void) {
-    CallbackFunc *table = D_8009F440[0];
-    return (void *)table[2]();
+CallbackToken InterruptCallback(void) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
+    return table[2]();
 }
 
-void *DMACallback(s32 dma, void *func) {
-    CallbackFunc *table = D_8009F440[0];
+CallbackToken DMACallback(s32 dma, CallbackToken func) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
     return table[1](dma, func);
 }
 
-void *VSyncCallback(void *func) {
-    CallbackFunc *table = D_8009F440[0];
+CallbackToken VSyncCallback(CallbackToken func) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
     return table[5](4, func);
 }
 
-void *VSyncCallbacks(void) {
-    CallbackFunc *table = D_8009F440[0];
-    return (void *)table[5]();
+CallbackToken VSyncCallbacks(void) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
+    return table[5]();
 }
 
-void *StopCallback(void) {
-    CallbackFunc *table = D_8009F440[0];
-    return (void *)table[4]();
+CallbackToken StopCallback(void) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
+    return table[4]();
 }
 
-void *RestartCallback(void) {
-    CallbackFunc *table = D_8009F440[0];
-    return (void *)table[6]();
+CallbackToken RestartCallback(void) {
+    CallbackFunc *table = BIOS_CALLBACK_TABLES[0];
+    return table[6]();
 }
 
-extern u16 D_8009E3BA[];
+extern u16 CALLBACK_PENDING_FLAG[] asm("D_8009E3BA");
 
 u16 CheckCallback(void) {
-    return D_8009E3BA[0];
+    return CALLBACK_PENDING_FLAG[0];
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", GetIntrMask);
@@ -573,10 +574,10 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", memclr_3);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", SetVideoMode);
 
-extern s32 D_8009F4A4[];
+extern s32 VIDEO_MODE_WORD[] asm("D_8009F4A4");
 
 s32 GetVideoMode(void) {
-    return D_8009F4A4[0];
+    return VIDEO_MODE_WORD[0];
 }
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", LoadTPage);
