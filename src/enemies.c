@@ -48,6 +48,7 @@ extern void AIEntityRandomBehaviorTick(Entity *e);
 extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
 extern s32 EntityEventHandler0x1001_1002_1008(Entity *e, u32 event, u32 arg2, u32 arg3);
@@ -62,6 +63,7 @@ void EntityUpdateWithCollisionWrapper(Entity *e);
 void FreeEntityNoTeardown_80045eb4(Entity *e, u32 size);
 void FreeEntityNoTeardown_80046d28(Entity *e, u32 size);
 void StartAnimationSequence(SpriteEntity *entity, s32 animData, s16 startFrame);
+void LaserMonkeyIdleState(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -520,9 +522,63 @@ void TripleLaserMonkeyConditionalTick(ConditionalPhaseEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithCountdownToWalk);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", LaserMonkeyWalkState);
+void LaserMonkeyWalkState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitTripleLaserMonkeyAttackState);
+    __asm__ volatile("" ::: "memory");
+    fn = TripleLaserMonkeyConditionalTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityEventHandlerWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x60B98CBD, 1);
+    fn = LaserMonkeyIdleState;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
+
+void InitTripleLaserMonkeyAttackState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+
+    __asm__ volatile("" ::: "memory");
+    fn = TripleLaserMonkeyConditionalTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    *(u8 *)((u8 *)e + 0x111) = 3;
+    __asm__ volatile("" ::: "memory");
+    fn = EntityEventHandlerWithCountdownToWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x64BB1CBE, 1);
+    fn = LaserMonkeyIdleState;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LaserMonkeyIdleState);
 
