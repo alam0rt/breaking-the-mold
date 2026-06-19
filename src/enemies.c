@@ -52,6 +52,7 @@ extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32
 extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnParticle(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerCountdownToWalkWithSprite(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerTimerCountdown(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityFallingGravityWithCollision(Entity *e);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
@@ -74,6 +75,8 @@ void EnemyDeathWithParticles(Entity *e);
 void CollectibleIdleState(Entity *e);
 void InitConditionalCollectibleEntity(Entity *e);
 void CollectibleWalkState(Entity *e);
+void InitEntityWithDeathSpawn(Entity *e);
+void InitEnemyAnimatedWithDeathSpawn(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -1149,7 +1152,46 @@ void InitEntityRandomIdleOrAnimated(Entity *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityState_Idle);
+void InitEntityState_Idle(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    void (*nextFn)();
+    s16 m1;
+
+    *(s16 *)((u8 *)e + 0x112) = 0x3C;
+    __asm__ volatile("" ::: "memory");
+    fn = EntityTimerCountdownDeathSpawn;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    fn = EntityEventHandlerWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SetEntitySpriteId(e, 0x60181A0C, 1);
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    if (*(u8 *)((u8 *)e + 0x110)) {
+        nextFn = InitEnemyAnimatedWithDeathSpawn;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
+        goto setIdleNextState;
+    } else {
+        nextFn = InitEntityRandomIdleOrAnimated;
+    }
+    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
+setIdleNextState:
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = nextFn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemyAnimatedWithDeathSpawn);
 
@@ -1159,7 +1201,49 @@ void EntitySetFacingRight(Entity *e) {
     SetEntityFacingDirection(e, 2);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityState_Animated);
+void InitEntityState_Animated(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    void (*nextFn)();
+    s16 m1;
+
+    *(u8 *)((u8 *)e + 0x111) = (rand() & 3) + 2;
+    __asm__ volatile("" ::: "memory");
+    fn = InitEntityWithDeathSpawn;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    fn = EntityEventHandlerTimerCountdown;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SetEntitySpriteId(e, 0x611C5804, 1);
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+    if (*(u8 *)((u8 *)e + 0x110)) {
+        nextFn = InitEnemyAnimatedWithDeathSpawn;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
+        goto setAnimatedNextState;
+    } else {
+        nextFn = InitEntityRandomIdleOrAnimated;
+    }
+    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
+setAnimatedNextState:
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = nextFn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitProjectilePathEntity);
 
