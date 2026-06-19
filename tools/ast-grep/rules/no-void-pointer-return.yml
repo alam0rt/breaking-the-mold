@@ -1,0 +1,19 @@
+id: no-void-pointer-return
+language: C
+severity: hint
+message: Prefer a concrete pointer return type over void* for functions.
+note: "Initializers and factories should usually return Entity*, SpriteEntity*, or the concrete entity type they initialize."
+rule:
+  all:
+    - any:
+        - kind: declaration
+        - kind: function_definition
+    - has:
+        field: type
+        kind: primitive_type
+        regex: '^void$'
+    - has:
+        field: declarator
+        kind: pointer_declarator
+        has:
+          kind: function_declarator

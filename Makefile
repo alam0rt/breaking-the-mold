@@ -79,6 +79,9 @@ STRIP := $(CROSS)strip
 # See: https://github.com/mkst/maspsx
 MASPSX := python3 tools/maspsx/maspsx.py
 
+# ast-grep clarity lint rules (see sgconfig.yml / tools/ast-grep/rules)
+AST_GREP := ast-grep
+
 # maspsx configuration (adjust based on your game's PSY-Q version)
 # PSY-Q 3.3 -> --aspsx-version=2.21
 # PSY-Q 3.5 -> --aspsx-version=2.34
@@ -164,7 +167,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop
 
 # Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
@@ -199,6 +202,7 @@ help:
 	@echo "Code Quality:"
 	@echo "  lint             - Run all linters (Lua)"
 	@echo "  lint-lua         - Lint Lua scripts with luacheck"
+	@echo "  lint-clarity     - Report ast-grep C clarity cleanup candidates"
 	@echo ""
 	@echo "Emulator/Debugging:"
 	@echo "  emu              - Launch PCSX-Redux with GDB server"
@@ -498,12 +502,17 @@ lint: lint-lua lint-decomp
 lint-decomp:
 	@$(PYTHON) tools/lint_decomp.py
 
+# C clarity checks (non-blocking while the decomp still has known cleanup debt)
+lint-clarity:
+	@echo "Running ast-grep clarity checks..."
+	@$(AST_GREP) scan --config sgconfig.yml --report-style medium src include || true
+
 # Fix common Lua issues automatically
 lint-fix:
 	@echo "Auto-fixing Lua scripts not yet implemented (luacheck doesn't auto-fix)"
 	@echo "Please manually fix issues reported by: make lint-lua"
 
-.PHONY: lint lint-lua lint-fix
+.PHONY: lint lint-lua lint-decomp lint-clarity lint-fix
 
 # =============================================================================
 # Launch PCSX-Redux in debug mode (requires nixGL for OpenGL on non-NixOS)

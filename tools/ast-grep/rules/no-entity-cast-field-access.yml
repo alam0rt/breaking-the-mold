@@ -1,0 +1,10 @@
+id: no-entity-cast-field-access
+language: C
+severity: hint
+message: Type the parameter/local as the entity type instead of casting before field access.
+note: "Replace ((Entity*)e)->field with e->field, or use SpriteEntity.base.field for sprite entities."
+rule:
+  pattern: '(($TYPE *)$BASE)->$FIELD'
+constraints:
+  TYPE:
+    regex: '^(Entity|SpriteEntity|PlayerEntity|FinnPlayerEntity|RunnPlayerEntity|SoarPlayerEntity|PathEnemyEntity|TimedPathEntity)$'

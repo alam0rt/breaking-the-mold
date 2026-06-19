@@ -1,0 +1,7 @@
+id: no-byte-pointer-arithmetic
+language: C
+severity: hint
+message: Prefer struct field access over byte-pointer offset arithmetic.
+note: "Patterns like (u8*)entity + 0x104 usually indicate a missing struct field. Add a typed field when the layout is known."
+rule:
+  pattern: '(u8 *)$BASE + $OFFSET'

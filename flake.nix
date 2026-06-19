@@ -135,6 +135,7 @@
             unzip
             p7zip
             clang-tools
+            ast-grep
             jsonnet
             rustc
             cargo
