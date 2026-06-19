@@ -81,6 +81,7 @@ void InitConditionalCollectibleEntity(Entity *e);
 void CollectibleWalkState(Entity *e);
 void InitEntityWithDeathSpawn(Entity *e);
 void InitEnemyAnimatedWithDeathSpawn(Entity *e);
+void ProjectilePathFollowerTick(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -1286,7 +1287,25 @@ setAnimatedNextState:
     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitProjectilePathEntity);
+Entity *InitProjectilePathEntity(Entity *e, s16 x, s16 y) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+
+    InitEntitySprite(e, 0xB8700CA1, 0x3DE, x, y, 1);
+    e->collisionVtable = &PROJECTILE_PATH_ENTITY_VTABLE;
+    __asm__ volatile("" ::: "memory");
+    fn = ProjectilePathFollowerTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+    *(u8 *)((u8 *)e + 0x100) = 0;
+    SetupEntityScaleCallbacks(e);
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", ProjectilePathFollowerTick);
 
