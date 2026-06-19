@@ -5,10 +5,25 @@
 #include "globals.h"
 
 extern void InitEntityStruct(Entity *entity, s16 allocSize);
-extern void ClearSpriteContextWrapper(void *ctx);
-extern void ZeroEntityField(void *field);
+extern u8 *ClearSpriteContextWrapper(u8 *ctx);
+extern u8 *ZeroEntityField(u8 *field);
 extern void InitEntityAnimationState(SpriteEntity *entity);
 extern void CalculateEntityScreenBounds(Entity *entity);
+
+typedef struct SpriteContextCallbackTable {
+    /* 0x00 */ u8 pad00[0x10];
+    /* 0x10 */ s16 callbackTargetOffset;
+    /* 0x12 */ u8 pad12[2];
+    /* 0x14 */ void (*releaseVRAMSlot)(u8 *target, s32 mode);
+} SpriteContextCallbackTable;
+
+typedef struct SpriteRenderContext {
+    /* 0x00 */ u8 pad00[4];
+    /* 0x04 */ s16 width;
+    /* 0x06 */ s16 height;
+    /* 0x08 */ u8 pad08[4];
+    /* 0x0C */ SpriteContextCallbackTable *callbacks;
+} SpriteRenderContext;
 
 /* Entity constructor. Zeroes the 0x80 base header, installs the Destroyed +
  * PartialDestroy vtables, primes the four 16.16 scale fields at 0x50..0x64
@@ -20,17 +35,17 @@ INCLUDE_ASM("asm/nonmatchings/entity", InitEntityStruct);
  * (release the reserved PSX texture-VRAM slot), then the Destroyed vtable.
  * flags&1 returns the entity itself to the BLB heap. */
 void FreeWithCallback(Entity *entity, s32 flags) {
-    void *ctx = entity->spriteContext;
+    SpriteRenderContext *ctx = entity->spriteContext;
     entity->collisionVtable = g_EntityVtable_PartialDestroy;
     if (ctx != NULL) {
-        void *sub = ((void **)ctx)[3]; /* ctx + 0xC */
-        s16 offset = *(s16 *)((u8 *)sub + 0x10);
-        void (*func)(void *, s32) = *(void (**)(void *, s32))((u8 *)sub + 0x14);
-        func((void *)((u8 *)ctx + offset), 3);
+        SpriteContextCallbackTable *callbacks = ctx->callbacks;
+        s16 offset = callbacks->callbackTargetOffset;
+        void (*func)(u8 *, s32) = callbacks->releaseVRAMSlot;
+        func(&((u8 *)ctx)[offset], 3);
     }
     entity->collisionVtable = g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -86,14 +101,14 @@ s32 WorldToScreenYWithParallax(Entity *entity, s16 value) {
     return ((s32)value * entity->scalePowerupY >> 16) + (s32)g_pGameState->camera_y;
 }
 
-extern void *PrepareSpriteVRAMSlotForContext(void *ctx, s16 width, s16 height, s16 depth, u8 flags);
+extern SpriteRenderContext *PrepareSpriteVRAMSlotForContext(SpriteRenderContext *ctx, s16 width, s16 height, s16 depth, u8 flags);
 
 /* Allocate a 0x3C-byte sprite-render context on the BLB heap and reserve a
  * PSX texture-VRAM rectangle. Height is rounded up to a multiple of 4
  * because PSX GPU rectangle uploads must be 4 px aligned in Y. depth
  * selects TIM bit-depth (4/8/15bpp); flags carry CLUT info. */
 void CreateEntityRenderContext(Entity *entity, s16 width, s16 height, s16 depth, u8 flags) {
-    void *ctx = AllocateFromHeap(g_pBlbHeapBase, 0x3C, 1, 0);
+    SpriteRenderContext *ctx = (SpriteRenderContext *)AllocateFromHeap(g_pBlbHeapBase, 0x3C, 1, 0);
     entity->spriteContext = PrepareSpriteVRAMSlotForContext(ctx, width, (s16)((height + 3) & 0xFFFCu), depth, flags);
 }
 
@@ -239,8 +254,8 @@ INCLUDE_ASM("asm/nonmatchings/entity", UpdateEntitySoundPanning);
 SpriteEntity *InitFullEntityWithAnimation(SpriteEntity *entity, s16 allocSize) {
     InitEntityStruct(&entity->base, allocSize);
     entity->base.collisionVtable = g_EntityVtable_SpriteBase;
-    ClearSpriteContextWrapper(&entity->base.pFrameTable);
-    ZeroEntityField(&entity->pFrameData);
+    ClearSpriteContextWrapper((u8 *)&entity->base.pFrameTable);
+    ZeroEntityField((u8 *)&entity->pFrameData);
     InitEntityAnimationState(entity);
     return entity;
 }
@@ -267,22 +282,22 @@ INCLUDE_ASM("asm/nonmatchings/entity", InitEntityAnimationState);
 void DestroyEntityAndFreeMemory(SpriteEntity *entity, s32 flags) {
     entity->base.collisionVtable = g_EntityVtable_SpriteBase;
     if (entity->pPixelBuffer != NULL) {
-        FreeFromHeap(g_pBlbHeapBase, entity->pPixelBuffer, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity->pPixelBuffer, 0, 0);
     }
-    FreeFromHeap(g_pBlbHeapBase, entity->pSpriteAsset, 4, 0);
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)entity->pSpriteAsset, 4, 0);
     {
-        void *ctx = entity->base.spriteContext;
+        SpriteRenderContext *ctx = entity->base.spriteContext;
         entity->base.collisionVtable = g_EntityVtable_PartialDestroy;
         if (ctx != NULL) {
-            void *sub = ((void **)ctx)[3];
-            s16 offset = *(s16 *)((u8 *)sub + 0x10);
-            void (*func)(void *, s32) = *(void (**)(void *, s32))((u8 *)sub + 0x14);
-            func((void *)((u8 *)ctx + offset), 3);
+            SpriteContextCallbackTable *callbacks = ctx->callbacks;
+            s16 offset = callbacks->callbackTargetOffset;
+            void (*func)(u8 *, s32) = callbacks->releaseVRAMSlot;
+            func(&((u8 *)ctx)[offset], 3);
         }
     }
     entity->base.collisionVtable = g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -291,9 +306,9 @@ void DestroyEntityAndFreeMemory(SpriteEntity *entity, s32 flags) {
  * dimensions). Lets us decode one frame at a time instead of keeping every
  * frame resident in VRAM. */
 void AllocateEntityPixelBuffer(SpriteEntity *entity) {
-    void *heap = g_pBlbHeapBase;
-    s16 *ctx = (s16 *)entity->base.spriteContext;
-    s32 size = (s32)ctx[2] * (s32)ctx[3];
+    u8 *heap = g_pBlbHeapBase;
+    SpriteRenderContext *ctx = entity->base.spriteContext;
+    s32 size = (s32)ctx->width * (s32)ctx->height;
     entity->pixelBufferSize = size;
     entity->pPixelBuffer = AllocateFromHeap(heap, 1, size, 0);
 }
@@ -332,12 +347,11 @@ void ApplyAnimationPositionOffsets(SpriteEntity *entity) {
 /* Reserve a VRAM slot and allocate the main-RAM pixel buffer sized to the
  * rounded VRAM dimensions (width * round_up_4(height)). */
 void InitEntitySpriteAndPixelBuffer(SpriteEntity *entity, s16 width, s16 height, s16 depth, u8 flags) {
-    typedef struct { u8 pad00[4]; s16 width; s16 height; } SpriteContext;
-    void *ctx = AllocateFromHeap(g_pBlbHeapBase, 0x3C, 1, 0);
-    SpriteContext *sc;
+    SpriteRenderContext *ctx = (SpriteRenderContext *)AllocateFromHeap(g_pBlbHeapBase, 0x3C, 1, 0);
+    SpriteRenderContext *sc;
     s32 size;
     entity->base.spriteContext = PrepareSpriteVRAMSlotForContext(ctx, width, (s16)((height + 3) & 0xFFFCu), depth, flags);
-    sc = (SpriteContext *)entity->base.spriteContext;
+    sc = entity->base.spriteContext;
     size = (s32)sc->width * (s32)sc->height;
     entity->pixelBufferSize = size;
     entity->pPixelBuffer = AllocateFromHeap(g_pBlbHeapBase, 1, size, 0);
@@ -353,12 +367,12 @@ INCLUDE_ASM("asm/nonmatchings/entity", AllocSpriteRenderContext);
  * where allocating per-frame would thrash VRAM. */
 INCLUDE_ASM("asm/nonmatchings/entity", CreateMultiFrameRenderContext);
 
-extern void *InitSpriteContextDefaults(void *ctx, s16 spriteId);
+extern SpriteRenderContext *InitSpriteContextDefaults(SpriteRenderContext *ctx, s16 spriteId);
 
 /* Bare sprite context with default state - no pixel buffer because static
  * sprites blit straight from the loaded asset. Used when InitEntitySprite
  * is called with staticSpriteFlag set. */
 void AllocateSpriteContext(Entity *entity, s16 spriteId) {
-    void *ctx = AllocateFromHeap(g_pBlbHeapBase, 0x3C, 1, 0);
+    SpriteRenderContext *ctx = (SpriteRenderContext *)AllocateFromHeap(g_pBlbHeapBase, 0x3C, 1, 0);
     entity->spriteContext = InitSpriteContextDefaults(ctx, spriteId);
 }
