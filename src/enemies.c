@@ -1606,7 +1606,34 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityShowAndActivate);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityWithTypeBasedTimer);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitPlatformEntityState);
+void InitPlatformEntityState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+
+    __asm__ volatile("" ::: "memory");
+    fn = EntityUpdateWithCollisionSpawnCheck;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntitySimpleEventPassthrough_V2;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, *(u32 *)(*(u8 **)((u8 *)e + 0x100) + 4), 1);
+    SetAnimationLoopFrame(e, 0x20140828);
+    fn = EntityHideAndDisable;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitDirectionalScaledEntity);
 
