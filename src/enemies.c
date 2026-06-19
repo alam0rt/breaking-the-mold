@@ -817,7 +817,24 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityHideWithTimer);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSwitchActivatedState);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitSwitchMovingState);
+void InitSwitchMovingState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    fn = EntityUpdateWithCollisionWrapper;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityIncrementWorldX;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSwitchBlockEntity);
 
