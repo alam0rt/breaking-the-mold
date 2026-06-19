@@ -51,5 +51,8 @@ INCLUDE_ASM("asm/nonmatchings/vram", GetMaxVRAMSlotSize);
 
 INCLUDE_ASM("asm/nonmatchings/vram", FreeAndCoalesceVRAMSlot);
 
-INCLUDE_ASM("asm/nonmatchings/vram", StubEmpty);
+void StubEmpty(void) {
+    s32 unused[3];
+    (void)&unused;
+}
 
