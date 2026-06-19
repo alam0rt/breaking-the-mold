@@ -144,7 +144,38 @@ out:
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GliderEventHandlerWithComplete);
+s32 GliderEventHandlerWithComplete(GliderEntity *e, u32 event, u32 arg2, u32 arg3) {
+    GliderEntity *entity = e;
+    u32 savedEvent = event;
+    if ((savedEvent & 0xFFFF) == 0x1001) goto event_1001;
+    if ((s32)(savedEvent & 0xFFFF) >= 0x1002) goto high_event;
+    if ((savedEvent & 0xFFFF) == 1) goto event_1;
+    goto check_complete;
+high_event:
+    if ((savedEvent & 0xFFFF) == 0x1016) goto event_1016;
+    goto check_complete;
+event_1001:
+    EntitySetState((Entity *)entity, GLIDER_WAKE_STATE_MARKER, GLIDER_WAKE_STATE_CALLBACK);
+    goto check_complete;
+event_1016:
+    entity->readyFlag = 1;
+    goto reset_masked;
+event_1:
+    if (arg2 == 0x10D86282) goto direction_one;
+    if (arg2 != 0xB0C10420) {
+        goto check_complete;
+    }
+    entity->directionFlag = 0;
+    goto check_complete;
+direction_one:
+    entity->directionFlag = 1;
+reset_masked:
+check_complete:
+    if ((savedEvent & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue((Entity *)entity);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderEventHandlerWithCounter);
 
