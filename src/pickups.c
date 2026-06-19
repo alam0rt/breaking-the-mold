@@ -50,9 +50,39 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitPlatformDecorEntity);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CheckpointSwampTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorSetSpriteIdle);
+void DecorSetSpriteIdle(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    s16 m1;
+    __asm__ volatile("" ::: "memory");
+    fn = CheckpointSwampTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SetEntitySpriteId(e, 0x09406D8A, 1);
+}
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorSetSpriteActive);
+void DecorSetSpriteActive(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    __asm__ volatile("" ::: "memory");
+    fn = CheckpointSwampTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x980861A3, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartAnimation);
 

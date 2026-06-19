@@ -13,6 +13,7 @@ extern void EntityOffScreenChildCleanup(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void CollectibleTickCallback(Entity *e);
 extern void CollectibleTickFinnMode(Entity *e);
+extern void EntityEventHandlerWalk(Entity *e);
 extern void EntityStateSetWalk(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
@@ -1030,7 +1031,20 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemyPathFollowWithFacingFlip);
 
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetWalkSprite);
+void EnemySetWalkSprite(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    __asm__ volatile("" ::: "memory");
+    fn = EntityEventHandlerWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0xE4CB8330, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);
 
