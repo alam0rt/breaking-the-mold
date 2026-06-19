@@ -4,15 +4,15 @@
 #include "globals.h"
 
 extern void *g_pBlbHeapBase;
-extern void EntitySetRenderFlags(void *e, u32 flags);
-extern void *D_80011784;
-extern void *D_800117C4;
-extern void *D_800117E4;
-extern void *D_80011824;
-extern void *D_80011D14;
-extern void FreeEntityNoTeardown_8006ed88(void *e, u32 size);
-extern void FreeEntityNoTeardown_80070548(void *e, u32 size);
-extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern void EntitySetRenderFlags(Entity *e, u32 flags);
+extern u8 FINN_SUBENTITY_VTABLE_1784[] asm("D_80011784");
+extern u8 FINN_SUBENTITY_VTABLE_17C4[] asm("D_800117C4");
+extern u8 FINN_SUBENTITY_VTABLE_17E4[] asm("D_800117E4");
+extern u8 FINN_SIMPLE_ALLOC_VTABLE_1824[] asm("D_80011824");
+extern u8 FINN_SIMPLE_ALLOC_VTABLE_1D14[] asm("D_80011D14");
+extern void FreeEntityNoTeardown_8006ed88(Entity *e, u32 size);
+extern void FreeEntityNoTeardown_80070548(Entity *e, u32 size);
+extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void FinnCheckTriggerZones(Entity *e);
 extern void FinnHandleInput(Entity *e);
@@ -20,9 +20,42 @@ extern void FinnVehicleMovementUpdate(Entity *e);
 extern void FinnUpdateRotationSprite(Entity *e);
 extern void EntityUpdateCallback(Entity *e);
 
+typedef struct FinnSubentityStateFlags {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x10D - 0x100];
+    /* 0x10D */ u8 stateFlag;
+    /* 0x10E */ u8 pad10E;
+    /* 0x10F */ u8 stateValue;
+} FinnSubentityStateFlags;
+
+typedef struct FinnPointerEntity {
+    /* 0x00 */ u8 pad00[0x24];
+    /* 0x24 */ u8 *target;
+    /* 0x28 */ u8 pad28[0x2C - 0x28];
+    /* 0x2C */ u8 smallFlag;
+} FinnPointerEntity;
+
+typedef struct FinnPairEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x104 - 0x100];
+    /* 0x104 */ s32 pairA;
+    /* 0x108 */ s32 pairB;
+} FinnPairEntity;
+
+typedef struct FinnStateValueEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u32 stateValue;
+} FinnStateValueEntity;
+
+typedef struct FinnVoiceEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x114 - 0x100];
+    /* 0x114 */ s32 voiceHandle;
+} FinnVoiceEntity;
+
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
-u32   D_800A5F8C;
-void *D_800A5F90;
+u32 FINN_DEATH_EXPLOSION_STATE_MARKER asm("D_800A5F8C");
+EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90");
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
@@ -51,13 +84,13 @@ s32 FinnSubEvent_ProcessQueueOnReady(Entity *e, u32 ev) {
     return 0;
 }
 
-void ClearEntityStateFlag(void *e) {
-    *(u8 *)((u8 *)e + 0x10D) = 0;
+void ClearEntityStateFlag(FinnSubentityStateFlags *e) {
+    e->stateFlag = 0;
 }
 
-void SetEntityStateFlagWithValue(void *e, u8 val) {
-    *(u8 *)((u8 *)e + 0x10F) = val;
-    *(u8 *)((u8 *)e + 0x10D) = 1;
+void SetEntityStateFlagWithValue(FinnSubentityStateFlags *e, u8 val) {
+    e->stateValue = val;
+    e->stateFlag = 1;
 }
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_SetIdleSpriteAndPause);
@@ -66,45 +99,45 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_FaceRightAndAnimate);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_AnimateAndQueueIdle);
 
-void FinnSubentityDestroyCallback_Vtable0x80011784(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_80011784;
+void FinnSubentityDestroyCallback_Vtable0x80011784(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = FINN_SUBENTITY_VTABLE_1784;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void func_8006EB14(void *e) {
-    *(u8 *)((u8 *)e + 0x2C) = 1;
+void func_8006EB14(FinnPointerEntity *e) {
+    e->smallFlag = 1;
 }
 
-void func_8006EB20(void *e) {
-    u8 *p = *(u8 **)((u8 *)e + 0x24);
+void func_8006EB20(FinnPointerEntity *e) {
+    u8 *p = e->target;
     p[0x1E0] = 0x20;
 }
 
-u32 func_8006EB30(void *e) {
-    return *(u32 *)((u8 *)e + 0x24);
+u8 *func_8006EB30(FinnPointerEntity *e) {
+    return e->target;
 }
 
-void FinnSubentityDestroyCallback_Vtable0x800117c4(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_800117C4;
+void FinnSubentityDestroyCallback_Vtable0x800117c4(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = FINN_SUBENTITY_VTABLE_17C4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void FinnSubentityDestroyCallback_Vtable0x800117e4(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = &D_800117E4;
+void FinnSubentityDestroyCallback_Vtable0x800117e4(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = FINN_SUBENTITY_VTABLE_17E4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
-void func_8006EC04(void *e) {
-    *(u8 *)((u8 *)e + 0x1B1) = 1;
+void func_8006EC04(PlayerEntity *e) {
+    e->_pad1B1[0] = 1;
 }
 
 void func_8006EC10(PlayerEntity *e) {
@@ -120,8 +153,8 @@ s32 func_8006EC28(s32 a, u8 b) {
 }
 
 typedef struct { s32 a; s32 b; } func_8006EC40_Pair;
-void func_8006EC40(void *e, func_8006EC40_Pair p) {
-    *(func_8006EC40_Pair *)((u8 *)e + 0x104) = p;
+void func_8006EC40(FinnPairEntity *e, func_8006EC40_Pair p) {
+    *(func_8006EC40_Pair *)&e->pairA = p;
 }
 
 INCLUDE_ASM("asm/nonmatchings/finn", FINNCallback_DispatchToEntityHandler);
@@ -145,12 +178,12 @@ void func_8006ED08(PlayerEntity *e, u8 r, u8 g, u8 b) {
     ptr[0x36] = b;
 }
 
-u32 func_8006ED30(void *e) {
-    return *(u32 *)((u8 *)e + 0x100);
+u32 func_8006ED30(FinnStateValueEntity *e) {
+    return e->stateValue;
 }
 
-void func_8006ED3C(void *e, u32 val) {
-    *(u32 *)((u8 *)e + 0x100) = val;
+void func_8006ED3C(FinnStateValueEntity *e, u32 val) {
+    e->stateValue = val;
 }
 
 void func_8006ED44(void) {
@@ -159,32 +192,32 @@ void func_8006ED44(void) {
 void func_8006ED4C(void) {
 }
 
-void FinnSubentityDestroyCallback_Simple(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_80011824;
+void FinnSubentityDestroyCallback_Simple(Entity *entity, u32 flag) {
+    entity->collisionVtable = FINN_SIMPLE_ALLOC_VTABLE_1824;
     if (flag & 1) {
         FreeEntityNoTeardown_8006ed88(entity, 0x1C);
     }
 }
 
-void FreeEntityNoTeardown_8006ed88(void *e, u32 size) {
-    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+void FreeEntityNoTeardown_8006ed88(Entity *e, u32 size) {
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
 }
 
 INCLUDE_ASM("asm/nonmatchings/finn", CreateGlidePlayerEntity);
 
 extern void StopSPUVoice(s32 voice);
-extern void *D_80011CF4;
+extern u8 FINN_SOUND_CLEANUP_VTABLE[] asm("D_80011CF4");
 
-void FinnEntityDestroyWithSoundCleanup(u8 *e, s32 mode) {
-    s32 voice = *(s32 *)(e + 0x114);
-    *(void **)(e + 0x18) = &D_80011CF4;
+void FinnEntityDestroyWithSoundCleanup(FinnVoiceEntity *e, s32 mode) {
+    s32 voice = e->voiceHandle;
+    e->sprite.base.collisionVtable = FINN_SOUND_CLEANUP_VTABLE;
     if (voice >= 0) {
         StopSPUVoice(voice);
-        *(s32 *)(e + 0x114) = -1;
+        e->voiceHandle = -1;
     }
-    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    DestroyEntityAndFreeMemory(&e->sprite, 0);
     if (mode & 1) {
-        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
     }
 }
 
@@ -218,17 +251,17 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_NormalMovementAndInput);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_LevelExitCountdown);
 
-s32 FinnEvent_DamageToDeathExplosion(void *e, u32 ev, u32 a2, u32 a3) {
+s32 FinnEvent_DamageToDeathExplosion(Entity *e, u32 ev, u32 a2, u32 a3) {
     if ((ev & 0xFFFF) == EVT_DAMAGE) {
-        EntitySetState(e, D_800A5F8C, D_800A5F90);
+        EntitySetState(e, FINN_DEATH_EXPLOSION_STATE_MARKER, FINN_DEATH_EXPLOSION_STATE_CALLBACK);
     }
     return 0;
 }
 
-s32 FINNEventHandler_DeathExplosion(void *e, u32 ev) {
+s32 FINNEventHandler_DeathExplosion(Entity *e, u32 ev) {
     u32 m = ev & 0xFFFF;
     if (m == EVT_DAMAGE) {
-        EntitySetState(e, D_800A5F8C, D_800A5F90);
+        EntitySetState(e, FINN_DEATH_EXPLOSION_STATE_MARKER, FINN_DEATH_EXPLOSION_STATE_CALLBACK);
     }
     if (m == EVT_TICK) {
         EntityProcessCallbackQueue(e);
@@ -253,7 +286,7 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetSpriteByAngle);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnDeathExplosion);
 
-void RunnState_SetAdvanceLevelAndHide(void *e) {
+void RunnState_SetAdvanceLevelAndHide(Entity *e) {
     g_pGameState->advance_level_flag = 1;
     EntitySetRenderFlags(e, 0);
 }
@@ -271,12 +304,12 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnCheckTriggerZones);
 
 INCLUDE_ASM("asm/nonmatchings/finn", SpawnAngledProjectile);
 
-u32 func_800704F0(void *e) {
-    return *(u32 *)((u8 *)e + 0x100);
+u32 func_800704F0(FinnStateValueEntity *e) {
+    return e->stateValue;
 }
 
-void func_800704FC(void *e, u32 val) {
-    *(u32 *)((u8 *)e + 0x100) = val;
+void func_800704FC(FinnStateValueEntity *e, u32 val) {
+    e->stateValue = val;
 }
 
 void func_80070504(void) {
@@ -285,15 +318,15 @@ void func_80070504(void) {
 void func_8007050C(void) {
 }
 
-void EntityDestructor_Simple13(void *entity, u32 flag) {
-    ((Entity *)entity)->collisionVtable = &D_80011D14;
+void EntityDestructor_Simple13(Entity *entity, u32 flag) {
+    entity->collisionVtable = FINN_SIMPLE_ALLOC_VTABLE_1D14;
     if (flag & 1) {
         FreeEntityNoTeardown_80070548(entity, 0x1C);
     }
 }
 
-void FreeEntityNoTeardown_80070548(void *e, u32 size) {
-    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+void FreeEntityNoTeardown_80070548(Entity *e, u32 size) {
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
 }
 
 INCLUDE_ASM("asm/nonmatchings/finn", InitEntity_FinnSpawnCountdown);
@@ -304,10 +337,10 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnExitMoveRightTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/finn", InitEntity_FinnScaledSprite);
 
-void RunnRender_AnimOffsetWithSlide(Entity *e) {
-    ApplyAnimationPositionOffsets(e);
-    if (*(s16 *)((u8 *)e + 0xDA) < 0x11) {
-        e->worldX += 5;
+void RunnRender_AnimOffsetWithSlide(SpriteEntity *e) {
+    ApplyAnimationPositionOffsets((Entity *)e);
+    if (e->currentFrame < 0x11) {
+        e->base.worldX += 5;
     }
 }
 
