@@ -14,7 +14,7 @@ extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void CollectibleTickCallback(Entity *e);
 extern void CollectibleTickFinnMode(Entity *e);
 extern void EntityEventHandlerIdle(Entity *e);
-extern void EntityEventHandlerWalk(Entity *e);
+extern s32 EntityEventHandlerWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityStateSetWalk(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
@@ -112,6 +112,19 @@ typedef struct TimedByteEntity {
     /* 0x100 */ u8 pad100[4];
     /* 0x104 */ u8 timer;
 } TimedByteEntity;
+
+typedef struct TimerTileRecord {
+    /* 0x00 */ u8 pad0[0x12];
+    /* 0x12 */ u16 tileId;
+} TimerTileRecord;
+
+typedef struct TimedByteWithTileEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[4];
+    /* 0x104 */ u8 timer;
+    /* 0x105 */ u8 pad105[3];
+    /* 0x108 */ TimerTileRecord *tileRecord;
+} TimedByteWithTileEntity;
 
 typedef struct DeathSpawnTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -671,7 +684,23 @@ s32 EntitySimpleEventPassthrough_V2(Entity *entity, u32 event) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventTimerCountdownWithGameState);
+s32 EntityEventTimerCountdownWithGameState(TimedByteWithTileEntity *e, u32 event) {
+    u8 timer;
+    u16 tileId;
+    if ((event & 0xFFFF) == EVT_TICK) {
+        timer = e->timer - 1;
+        e->timer = timer;
+        if (timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
+        } else {
+            tileId = e->tileRecord->tileId;
+            if ((u16)(tileId - 0x22) < 2 || tileId == 0x24) {
+                *(u8 *)((u8 *)g_pGameState + 0x11A) = 0x14;
+            }
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityHideAndDisable);
 
@@ -992,7 +1021,20 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitFloatingPlatformEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleScaledTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWalkWithTimer);
+s32 EntityEventHandlerWalkWithTimer(EnemyTimerStateEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 result;
+    u32 maskedEvent = event & 0xFFFF;
+    result = EntityEventHandlerWalk((Entity *)e, maskedEvent, arg2, arg3);
+    if (maskedEvent == EVT_TICK) {
+        if (e->stateDelay != 0) {
+            e->stateDelay -= 1;
+            if (e->stateDelay == 0) {
+                EntityProcessCallbackQueue((Entity *)e);
+            }
+        }
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapMovementCallback);
 
