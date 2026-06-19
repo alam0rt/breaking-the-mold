@@ -51,6 +51,7 @@ extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u32 event, u32 arg2, u32
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnParticle(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerCountdownToWalkWithSprite(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityFallingGravityWithCollision(Entity *e);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
@@ -70,6 +71,9 @@ void StartAnimationSequence(SpriteEntity *entity, s32 animData, s16 startFrame);
 void LaserMonkeyIdleState(Entity *e);
 void InitEnemyFallingState(Entity *e);
 void EnemyDeathWithParticles(Entity *e);
+void CollectibleIdleState(Entity *e);
+void InitConditionalCollectibleEntity(Entity *e);
+void CollectibleWalkState(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -1018,11 +1022,102 @@ void ConditionalCollectibleTick(ConditionalPhaseEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerCountdownToWalkWithSprite);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleWalkState);
+void CollectibleWalkState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitConditionalCollectibleEntity);
+    __asm__ volatile("" ::: "memory");
+    fn = ConditionalCollectibleTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityEventHandlerWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0xED209C94, 1);
+    fn = CollectibleIdleState;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleIdleState);
+void InitConditionalCollectibleEntity(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+
+    __asm__ volatile("" ::: "memory");
+    fn = ConditionalCollectibleTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    *(u8 *)((u8 *)e + 0x111) = 3;
+    __asm__ volatile("" ::: "memory");
+    fn = EntityEventHandlerCountdownToWalkWithSprite;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x6D209C95, 1);
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+    fn = CollectibleIdleState;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
+
+void CollectibleIdleState(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    void (*nextFn)();
+    s16 m1;
+
+    __asm__ volatile("" ::: "memory");
+    fn = CollectibleTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityEventHandlerIdle;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x6C289C1C, 1);
+    if (rand() & 1) {
+        nextFn = InitConditionalCollectibleEntity;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
+        goto setCollectibleNextState;
+    } else {
+        nextFn = CollectibleWalkState;
+    }
+    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
+setCollectibleNextState:
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = nextFn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitAnimatedTimedCollectible);
 
