@@ -19,6 +19,8 @@ extern void EntityStateSetWalk(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetEntityTargetFrame(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
+extern void EntitySetRenderFlags(Entity *e, u32 flags);
+extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
 extern Entity *InitEntityWithSprite(Entity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
 extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
 extern Entity *InitCollectibleEntity(Entity *e, u8 *spawn);
@@ -83,6 +85,7 @@ void CollectibleWalkState(Entity *e);
 void InitEntityWithDeathSpawn(Entity *e);
 void InitEnemyAnimatedWithDeathSpawn(Entity *e);
 void ProjectilePathFollowerTick(Entity *e);
+void EntityTimedStateSwitchTick(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -1447,7 +1450,53 @@ void DestroyEntityWithChildRemoval(Entity *e, u32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityFloatingWithCollisionTick);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntity_Alt);
+Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+    u8 *sprite;
+
+    InitEntitySprite(e, 0x88210498, 0x3CA, *(s16 *)(spawn + 8), *(s16 *)(spawn + 0xA) - 1, 0);
+    e->collisionVtable = &ALT_COLLECTIBLE_ENTITY_VTABLE;
+    *(s16 *)((u8 *)e + 0x10) = 0x384;
+    *(u8 **)((u8 *)e + 0x100) = spawn;
+    __asm__ volatile("" ::: "memory");
+    fn = EntityTimedStateSwitchTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x88210498, 1);
+    SetAnimationSpriteId(e, 0);
+    EntitySetRenderFlags(e, 0);
+    {
+        register s32 abr asm("$5");
+        u8 *sprite0;
+        s32 maskX;
+        s32 maskY;
+        s32 x;
+        s32 y;
+
+        sprite0 = *(u8 **)((u8 *)e + 0x34);
+        __asm__ volatile("" : "=r"(sprite0) : "0"(sprite0));
+        abr = 1;
+    __asm__ volatile("" : "=r"(abr) : "0"(abr));
+        sprite0[0xA] = 0;
+        sprite = *(u8 **)((u8 *)e + 0x34);
+        maskX = -0x40;
+        x = *(s16 *)(sprite + 0x10);
+        maskY = -0x100;
+        maskX = x & maskX;
+        y = *(s16 *)(sprite + 0x12);
+        *(s16 *)(sprite + 0x24) = GetTPage(sprite[0x32], abr, maskX, y & maskY);
+    }
+    SetupEntityScaleCallbacks(e);
+    *(s16 *)((u8 *)e + 0x12) = 0;
+    *(s16 *)((u8 *)e + 0x70) = 0;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimedStateSwitchTick);
 
