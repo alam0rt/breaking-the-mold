@@ -13,6 +13,7 @@ extern void *PARTICLE_EFFECT_VTABLE asm("D_80010A48");
 extern void *VFX_ENTITY_VTABLE_10A68 asm("D_80010A68");
 extern void *CALLBACK_ENTITY_EVENT_VTABLE asm("D_80010AD8");
 extern void *ROPE_SEGMENT_ENTITY_VTABLE asm("D_80010B28");
+extern void *VFX_ENTITY_VTABLE_10B78 asm("D_80010B78");
 extern void *FADE_EFFECT_ENTITY_VTABLE asm("D_80010BA8");
 extern void *TIMED_FADE_ENTITY_VTABLE asm("D_80010BC8");
 extern void *MENU_ITEM_ENTITY_VTABLE asm("D_80010970");
@@ -99,6 +100,12 @@ typedef struct BeamEffectEntity {
     /* 0x2A */ u16 timer;
 } BeamEffectEntity;
 
+typedef struct EntityWithOwnedData {
+    /* 0x00 */ u8 pad0[0x18];
+    /* 0x18 */ void *collisionVtable;
+    /* 0x1C */ void *ownedData;
+} EntityWithOwnedData;
+
 typedef struct ZOrderTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[8];
@@ -148,7 +155,14 @@ INCLUDE_ASM("asm/nonmatchings/effects", RenderRotatedTexturedQuad);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitMenuSpriteEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyEntityWithData);
+void DestroyEntityWithData(EntityWithOwnedData *e, s32 flags) {
+    e->collisionVtable = &VFX_ENTITY_VTABLE_10B78;
+    FreeFromHeap(g_pBlbHeapBase, e->ownedData, 0, 0);
+    e->collisionVtable = &TIMED_FADE_ENTITY_VTABLE;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RandomizedEntityBehaviorTick);
 
