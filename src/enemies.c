@@ -16,9 +16,9 @@ extern void CollectibleTickFinnMode(Entity *e);
 extern void EntityStateSetWalk(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
-extern Entity *InitEntityWithSprite(Entity *entity, void *spriteDef, s32 z, s16 x, s16 y);
+extern Entity *InitEntityWithSprite(Entity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
 extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
-extern Entity *InitCollectibleEntity(Entity *e, void *spawn);
+extern Entity *InitCollectibleEntity(Entity *e, u8 *spawn);
 extern void *PROJECTILE_PATH_ENTITY_VTABLE asm("D_80010C64");
 extern void *PATH_HAZARD_ENTITY_VTABLE asm("D_80010CE4");
 extern void *PATH_ENEMY_SOUND_VTABLE asm("D_80010DA4");
@@ -40,31 +40,129 @@ extern void *ALT_PATH_FOLLOWING_ENTITY_VTABLE asm("D_800111E8");
 extern void *ENEMY_ENTITY_VTABLE asm("D_80011228");
 extern void *ENEMY_FREE_ONLY_ENTITY_VTABLE asm("D_80011248");
 extern void RemoveEntityFromAllLists(GameState *gs, s32 idx);
-extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 void FreeEntityNoTeardown_80041468(Entity *e, u32 size);
 void EntityUpdateWithCollisionWrapper(Entity *e);
 void FreeEntityNoTeardown_80045eb4(Entity *e, u32 size);
 void FreeEntityNoTeardown_80046d28(Entity *e, u32 size);
-void StartAnimationSequence(u8 *entity, s32 animData, s16 startFrame);
+void StartAnimationSequence(SpriteEntity *entity, s32 animData, s16 startFrame);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
-u32   SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER asm("D_800A5A68");
-void *SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK asm("D_800A5A6C");
-u32   PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER asm("D_800A5AE8");
-void *PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK asm("D_800A5AEC");
-u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B08");
-void *HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B0C");
-u32   HAZARD_READY_STATE_MARKER asm("D_800A5B10");
-void *HAZARD_READY_STATE_CALLBACK asm("D_800A5B14");
+u32 SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER asm("D_800A5A68");
+EntityCallback SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK asm("D_800A5A6C");
+u32 PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER asm("D_800A5AE8");
+EntityCallback PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK asm("D_800A5AEC");
+u32 HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B08");
+EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B0C");
+u32 HAZARD_READY_STATE_MARKER asm("D_800A5B10");
+EntityCallback HAZARD_READY_STATE_CALLBACK asm("D_800A5B14");
+
+typedef struct CollectibleSpawnData {
+    /* 0x00 */ u8 pad0[8];
+    /* 0x08 */ s16 x;
+    /* 0x0A */ u16 y;
+} CollectibleSpawnData;
+
+typedef struct TimedCollectibleEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[4];
+    /* 0x104 */ u16 timer;
+} TimedCollectibleEntity;
+
+typedef struct EnemyTimerStateEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[4];
+    /* 0x104 */ u16 stateTimer;
+    /* 0x106 */ u8 pad106[0xA];
+    /* 0x110 */ u8 stateDelay;
+    /* 0x111 */ u8 pad111;
+    /* 0x112 */ u8 walkDelay;
+} EnemyTimerStateEntity;
+
+typedef struct SoundEmitterEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x24];
+    /* 0x124 */ u16 stunTimer;
+    /* 0x126 */ u8 pad126[2];
+    /* 0x128 */ s32 voiceId;
+} SoundEmitterEntity;
+
+typedef struct ConditionalPhaseEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x10];
+    /* 0x110 */ u8 framePhase;
+} ConditionalPhaseEntity;
+
+typedef struct HazardVoiceEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x10];
+    /* 0x110 */ s32 voiceId;
+} HazardVoiceEntity;
+
+typedef struct HazardTimerEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x10];
+    /* 0x110 */ u16 timer;
+} HazardTimerEntity;
+
+typedef struct TimedByteEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[4];
+    /* 0x104 */ u8 timer;
+} TimedByteEntity;
+
+typedef struct DeathSpawnTimerEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x12];
+    /* 0x112 */ u16 deathTimer;
+} DeathSpawnTimerEntity;
+
+typedef struct SoundPanningEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x18];
+    /* 0x118 */ u32 soundId;
+} SoundPanningEntity;
+
+typedef struct PlatformActivationSpawn {
+    /* 0x00 */ u8 pad0[0xC];
+    /* 0x0C */ s32 activateFrame;
+} PlatformActivationSpawn;
+
+typedef struct PlatformActivationEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[8];
+    /* 0x108 */ PlatformActivationSpawn *spawn;
+} PlatformActivationEntity;
+
+typedef struct SwitchBlockSpawn {
+    /* 0x00 */ u8 pad0[0x12];
+    /* 0x12 */ u16 tileId;
+} SwitchBlockSpawn;
+
+typedef struct SwitchFlagEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ SwitchBlockSpawn *spawn;
+} SwitchFlagEntity;
+
+typedef struct BackgroundSparkleEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 contactFlag;
+    /* 0x101 */ u8 revealTimer;
+} BackgroundSparkleEntity;
+
+typedef struct BackgroundSparkleChildContext {
+    /* 0x00 */ u8 pad0[0xA];
+    /* 0x0A */ u8 activeFlag;
+} BackgroundSparkleChildContext;
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
-Entity *InitCollectibleEntityFromSpawn(Entity *e, void *spawn, u32 spriteId) {
+Entity *InitCollectibleEntityFromSpawn(Entity *e, CollectibleSpawnData *spawn, u32 spriteId) {
     InitEntitySprite(e, spriteId, 0x3CA,
-                     *(s16 *)((u8 *)spawn + 0x8),
-                     (s16)(*(u16 *)((u8 *)spawn + 0xA) - 1), 0);
+                     spawn->x,
+                     (s16)(spawn->y - 1), 0);
     e->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
-    InitCollectibleEntity(e, spawn);
+    InitCollectibleEntity(e, (u8 *)spawn);
     return e;
 }
 
@@ -77,7 +175,7 @@ Entity *InitCollectibleEntityDirect(Entity *e, u32 spriteId, s16 x, s16 y) {
     return e;
 }
 
-Entity *CreateCollectibleAtPosition(Entity *e, void *spriteDef, s16 x, s16 y) {
+Entity *CreateCollectibleAtPosition(Entity *e, u8 *spriteDef, s16 x, s16 y) {
     InitEntityWithSprite(e, spriteDef, 0x3CA, x, y);
     e->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     InitCollectibleEntity(e, NULL);
@@ -94,15 +192,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckCollectibleOffscreen);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickCallback);
 
-void TimedCollectibleTickCallback(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x104);
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+void TimedCollectibleTickCallback(TimedCollectibleEntity *e) {
+    if (e->timer != 0) {
+        e->timer -= 1;
+        if (e->timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
         }
     }
-    CollectibleTickCallback(e);
+    CollectibleTickCallback((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickFinnMode);
@@ -117,15 +214,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleWithFlags);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleSparkleTickCallback);
 
-void TimedSparkleCollectibleTick(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x104);
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+void TimedSparkleCollectibleTick(TimedCollectibleEntity *e) {
+    if (e->timer != 0) {
+        e->timer -= 1;
+        if (e->timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
         }
     }
-    CollectibleSparkleTickCallback(e);
+    CollectibleSparkleTickCallback((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", AIEntityRandomBehaviorTick);
@@ -140,16 +236,16 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithDelayedWalk);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapWithAnimation);
 
-void EntityStartWalkWithTimer0x2d(void *e) {
-    *(u8 *)((u8 *)e + 0x112) = (rand() & 0xF) + 4;
-    *(u16 *)((u8 *)e + 0x104) = 0x2D;
-    EntityStateSetWalk(e);
+void EntityStartWalkWithTimer0x2d(EnemyTimerStateEntity *e) {
+    e->walkDelay = (rand() & 0xF) + 4;
+    e->stateTimer = 0x2D;
+    EntityStateSetWalk((Entity *)e);
 }
 
-void EntityStartWalkWithTimer10(void *e) {
-    *(u8 *)((u8 *)e + 0x112) = (rand() & 0xF) + 4;
-    *(u16 *)((u8 *)e + 0x104) = 0xA;
-    EntityStateSetWalk(e);
+void EntityStartWalkWithTimer10(EnemyTimerStateEntity *e) {
+    e->walkDelay = (rand() & 0xF) + 4;
+    e->stateTimer = 0xA;
+    EntityStateSetWalk((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetWalk);
@@ -162,21 +258,21 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetAttack);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntitySetSparkleCollectibleState);
 
-void EntityStateSetSparkle(void *e);
+void EntityStateSetSparkle(Entity *e);
 
-void EntitySetSparkleDelay3(void *e) {
-    *(u8 *)((u8 *)e + 0x110) = 3;
-    EntityStateSetSparkle(e);
+void EntitySetSparkleDelay3(EnemyTimerStateEntity *e) {
+    e->stateDelay = 3;
+    EntityStateSetSparkle((Entity *)e);
 }
 
-void EntitySetSparkleDelay2(void *e) {
-    *(u8 *)((u8 *)e + 0x110) = 2;
-    EntityStateSetSparkle(e);
+void EntitySetSparkleDelay2(EnemyTimerStateEntity *e) {
+    e->stateDelay = 2;
+    EntityStateSetSparkle((Entity *)e);
 }
 
-void EntitySetSparkleDelay1(void *e) {
-    *(u8 *)((u8 *)e + 0x110) = 1;
-    EntityStateSetSparkle(e);
+void EntitySetSparkleDelay1(EnemyTimerStateEntity *e) {
+    e->stateDelay = 1;
+    EntityStateSetSparkle((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSparkle);
@@ -185,25 +281,25 @@ extern u8 ENEMY_ANIM_SEQUENCE_4A_DATA[] asm("D_8009B55C");
 extern u8 ENEMY_ANIM_SEQUENCE_4B_DATA[] asm("D_8009B57C");
 extern u8 ENEMY_ANIM_SEQUENCE_4C_DATA[] asm("D_8009B59C");
 
-void StartAnimSequence4A(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_4A_DATA, 4);
+void StartAnimSequence4A(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_4A_DATA, 4);
 }
 
-void StartAnimSequence4B(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_4B_DATA, 4);
+void StartAnimSequence4B(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_4B_DATA, 4);
 }
 
-void StartAnimSequence4C(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_4C_DATA, 4);
+void StartAnimSequence4C(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_4C_DATA, 4);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEnemy);
 
-void DestroySoundEmitterEntity(SpriteEntity *e, u32 flags) {
-    e->base.collisionVtable = &PATH_ENEMY_SOUND_VTABLE;
-    StopSPUVoice(*(s32 *)((u8 *)e + 0x128));
-    e->base.collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
-    DestroyEntityAndFreeMemory(e, 0);
+void DestroySoundEmitterEntity(SoundEmitterEntity *e, u32 flags) {
+    e->sprite.base.collisionVtable = &PATH_ENEMY_SOUND_VTABLE;
+    StopSPUVoice(e->voiceId);
+    e->sprite.base.collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
@@ -211,20 +307,19 @@ void DestroySoundEmitterEntity(SpriteEntity *e, u32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterTickCallback);
 
-void SoundEmitterStunnedTickCallback(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x124);
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntitySetState(e, SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER,
+void SoundEmitterStunnedTickCallback(SoundEmitterEntity *e) {
+    if (e->stunTimer != 0) {
+        e->stunTimer -= 1;
+        if (e->stunTimer == 0) {
+            EntitySetState((Entity *)e, SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER,
                            SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK);
         }
     }
-    EntityUpdateCallback(e);
-    CheckCollectibleOffscreen(e);
+    EntityUpdateCallback((Entity *)e);
+    CheckCollectibleOffscreen((Entity *)e);
 }
 
-s32 EntitySimpleEventPassthrough(void *entity, u32 event) {
+s32 EntitySimpleEventPassthrough(Entity *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
@@ -243,11 +338,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitSpecialPickupEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TripleLaserMonkeyDeathTick);
 
-void TripleLaserMonkeyConditionalTick(Entity *e) {
-    if ((g_pGameState->frame_counter & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
-        EntityProcessCallbackQueue(e);
+void TripleLaserMonkeyConditionalTick(ConditionalPhaseEntity *e) {
+    if ((g_pGameState->frame_counter & 0x7F) == e->framePhase) {
+        EntityProcessCallbackQueue((Entity *)e);
     }
-    TripleLaserMonkeyDeathTick(e);
+    TripleLaserMonkeyDeathTick((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithCountdownToWalk);
@@ -262,15 +357,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitWalkingCollectibleEnemy);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyDeathWithParticles);
 
-void EntityTimerDeathWithParticles(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x104);
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+void EntityTimerDeathWithParticles(TimedCollectibleEntity *e) {
+    if (e->timer != 0) {
+        e->timer -= 1;
+        if (e->timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
         }
     }
-    EnemyDeathWithParticles(e);
+    EnemyDeathWithParticles((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnParticle);
@@ -309,16 +403,16 @@ extern u8 ENEMY_ANIM_SEQUENCE_3A_DATA[] asm("D_8009B5BC");
 extern u8 ENEMY_ANIM_SEQUENCE_3B_DATA[] asm("D_8009B5D4");
 extern u8 ENEMY_ANIM_SEQUENCE_9_FRAME_DATA[] asm("D_8009B5EC");
 
-void StartAnimSequence3A(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_3A_DATA, 3);
+void StartAnimSequence3A(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_3A_DATA, 3);
 }
 
-void StartAnimSequence3B(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_3B_DATA, 3);
+void StartAnimSequence3B(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_3B_DATA, 3);
 }
 
-void StartAnimSequence9Frames(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ENEMY_ANIM_SEQUENCE_9_FRAME_DATA, 9);
+void StartAnimSequence9Frames(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_9_FRAME_DATA, 9);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSoundEmittingEnemy);
@@ -337,10 +431,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySpawnerTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingHazard);
 
-void DestroySoundEntityWithVoice(SpriteEntity *e, u32 flags) {
-    e->base.collisionVtable = &PATH_HAZARD_ENTITY_VTABLE;
-    StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
-    DestroyEntityAndFreeMemory(e, 0);
+void DestroySoundEntityWithVoice(HazardVoiceEntity *e, u32 flags) {
+    e->sprite.base.collisionVtable = &PATH_HAZARD_ENTITY_VTABLE;
+    StopSPUVoice(e->voiceId);
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
@@ -352,11 +446,11 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityPathFollowerWithTriggerZone);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitLevelStateCollectible);
 
-void ConditionalCollectibleTick(Entity *e) {
-    if ((g_pGameState->frame_counter & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
-        EntityProcessCallbackQueue(e);
+void ConditionalCollectibleTick(ConditionalPhaseEntity *e) {
+    if ((g_pGameState->frame_counter & 0x7F) == e->framePhase) {
+        EntityProcessCallbackQueue((Entity *)e);
     }
-    CollectibleTickCallback(e);
+    CollectibleTickCallback((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerCountdownToWalkWithSprite);
@@ -375,15 +469,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleVariant);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityWithDeathSpawn);
 
-void EntityTimerCountdownDeathSpawn(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x112);
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+void EntityTimerCountdownDeathSpawn(DeathSpawnTimerEntity *e) {
+    if (e->deathTimer != 0) {
+        e->deathTimer -= 1;
+        if (e->deathTimer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
         }
     }
-    InitEntityWithDeathSpawn(e);
+    InitEntityWithDeathSpawn((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerAnimationSwitch);
@@ -402,9 +495,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityState_Idle);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemyAnimatedWithDeathSpawn);
 
-void SetEntityFacingDirection(void *e, s32 dir);
+void SetEntityFacingDirection(Entity *e, s32 dir);
 
-void EntitySetFacingRight(void *e) {
+void EntitySetFacingRight(Entity *e) {
     SetEntityFacingDirection(e, 2);
 }
 
@@ -420,9 +513,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitEntityWithChildSprite);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", DestroyEntityWithSoundAndChild);
 
-void CollectibleTickWithSoundPanning(void *e) {
-    UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x118));
-    CollectibleTickCallback(e);
+void CollectibleTickWithSoundPanning(SoundPanningEntity *e) {
+    UpdateEntitySoundPanning((Entity *)e, e->soundId);
+    CollectibleTickCallback((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnMultipleProjectiles);
@@ -537,7 +630,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntity_Alt);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimedStateSwitchTick);
 
-void EntityUpdateWithCollisionOffscreen(void *e) {
+void EntityUpdateWithCollisionOffscreen(Entity *e) {
     EntityUpdateCallback(e);
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
     CheckAndDisableChildEntityOffscreen(e);
@@ -547,21 +640,21 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableChildEntityOffscreen);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledPlatformEntity);
 
-void EntityConditionalActivateTick(Entity *e) {
-    if ((g_pGameState->frame_counter & 0x7F) == *(s32 *)(*(u8 **)((u8 *)e + 0x108) + 0xC)) {
-        EntitySetState(e, PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER,
+void EntityConditionalActivateTick(PlatformActivationEntity *e) {
+    if ((g_pGameState->frame_counter & 0x7F) == e->spawn->activateFrame) {
+        EntitySetState((Entity *)e, PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER,
                        PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK);
     }
-    EntityUpdateCallback(e);
-    CheckAndDisableSpawnDataOffscreen(e);
+    EntityUpdateCallback((Entity *)e);
+    CheckAndDisableSpawnDataOffscreen((Entity *)e);
 }
 
-void EntityUpdateWithSpawnDataCheck(void *entity) {
+void EntityUpdateWithSpawnDataCheck(Entity *entity) {
     EntityUpdateCallback(entity);
     CheckAndDisableSpawnDataOffscreen(entity);
 }
 
-void EntityUpdateWithCollisionSpawnCheck(void *e) {
+void EntityUpdateWithCollisionSpawnCheck(Entity *e) {
     EntityUpdateCallback(e);
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
     CheckAndDisableSpawnDataOffscreen(e);
@@ -569,7 +662,7 @@ void EntityUpdateWithCollisionSpawnCheck(void *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnDataOffscreen);
 
-s32 EntitySimpleEventPassthrough_V2(void *entity, u32 event) {
+s32 EntitySimpleEventPassthrough_V2(Entity *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
@@ -590,7 +683,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitDirectionalScaledEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", PlatformTimerTickCallback);
 
-void PlatformCollisionTickCallback(void *e) {
+void PlatformCollisionTickCallback(Entity *e) {
     EntityUpdateCallback(e);
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
     CheckAndDisableSpawnRefOffscreen(e);
@@ -608,26 +701,25 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBouncableClayEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffScreenChildCleanup);
 
-void EntityTick_CollisionWithCleanup(void *e) {
+void EntityTick_CollisionWithCleanup(Entity *e) {
     EntityUpdateCallback(e);
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 2);
     EntityOffScreenChildCleanup(e);
 }
 
-void HazardTimerTickCallback(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x110);
-    EntityUpdateCallback(e);
-    EntityOffScreenChildCleanup(e);
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntitySetState(e, HAZARD_TIMER_EXPIRED_STATE_MARKER,
+void HazardTimerTickCallback(HazardTimerEntity *e) {
+    EntityUpdateCallback((Entity *)e);
+    EntityOffScreenChildCleanup((Entity *)e);
+    if (e->timer != 0) {
+        e->timer -= 1;
+        if (e->timer == 0) {
+            EntitySetState((Entity *)e, HAZARD_TIMER_EXPIRED_STATE_MARKER,
                            HAZARD_TIMER_EXPIRED_STATE_CALLBACK);
         }
     }
 }
 
-s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
+s32 HazardEventHandler_0x1001(Entity *e, u32 ev, u32 a2, u32 a3) {
     if ((ev & 0xFFFF) == EVT_SET_READY) {
         EntitySetState(e, HAZARD_READY_STATE_MARKER,
                        HAZARD_READY_STATE_CALLBACK);
@@ -635,7 +727,7 @@ s32 HazardEventHandler_0x1001(void *e, u32 ev, u32 a2, u32 a3) {
     return 0;
 }
 
-s32 HazardEventHandler_0x1001_V2(void *e, u32 ev, u32 a2, u32 a3) {
+s32 HazardEventHandler_0x1001_V2(Entity *e, u32 ev, u32 a2, u32 a3) {
     u32 maskedEv = ev & 0xFFFF;
     if (maskedEv == EVT_SET_READY) {
         EntitySetState(e, HAZARD_READY_STATE_MARKER,
@@ -647,14 +739,14 @@ s32 HazardEventHandler_0x1001_V2(void *e, u32 ev, u32 a2, u32 a3) {
     return 0;
 }
 
-s32 EntityEventPassthrough_Event2(void *entity, u32 event) {
+s32 EntityEventPassthrough_Event2(Entity *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
     return 0;
 }
 
-extern void InterpolateTimedPathPosition(void *time, s16 *out, void *pathData, s16 duration, s32 unused);
+extern void InterpolateTimedPathPosition(u16 *time, s16 *out, u8 *pathData, s16 duration, s32 unused);
 
 void EntityPathMovementUpdate(TimedPathEntity *e) {
     s16 out[2];
@@ -680,26 +772,24 @@ INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_HiddenState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledMovingEntity);
 
-void TimedEntityTickCallback(Entity *e) {
-    u8 *ctr = (u8 *)e + 0x104;
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+void TimedEntityTickCallback(TimedByteEntity *e) {
+    if (e->timer != 0) {
+        e->timer -= 1;
+        if (e->timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
         }
     }
-    EntityUpdateCallback(e);
+    EntityUpdateCallback((Entity *)e);
 }
 
-void TimedEntityTickCallbackWithCollision(Entity *e) {
-    u8 *ctr = (u8 *)e + 0x104;
-    if (*ctr != 0) {
-        *ctr -= 1;
-        if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+void TimedEntityTickCallbackWithCollision(TimedByteEntity *e) {
+    if (e->timer != 0) {
+        e->timer -= 1;
+        if (e->timer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
         }
     }
-    EntityUpdateWithCollisionWrapper(e);
+    EntityUpdateWithCollisionWrapper((Entity *)e);
 }
 
 void EntityUpdateWithCollisionWrapper(Entity *e) {
@@ -707,10 +797,9 @@ void EntityUpdateWithCollisionWrapper(Entity *e) {
     CollisionCheckWrapper(e, 2, EVT_DAMAGE, 1);
 }
 
-s32 SwitchEventHandler_SetGameFlag(u8 *e, u32 event) {
+s32 SwitchEventHandler_SetGameFlag(SwitchFlagEntity *e, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
-        u8 *p = *(u8 **)(e + 0x100);
-        u16 val = *(u16 *)(p + 0x12);
+        u16 val = e->spawn->tileId;
         if ((u16)(val - 0x22) < 2 || val == 0x24) {
             *(u8 *)&g_pGameState->screen_shake_index = 0x14;
         }
@@ -748,7 +837,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterActivateTickCallback);
 
-s32 TeleporterEventPassthrough_Event2(void *entity, u32 event) {
+s32 TeleporterEventPassthrough_Event2(Entity *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
     }
@@ -775,7 +864,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitCameraTrackingEntity);
 
 void SoundEmitterDestroyCallback(Entity *e, u32 flags) {
     e->collisionVtable = &CAMERA_TRACKING_ENTITY_VTABLE;
-    StopSPUVoice(*(s32 *)((u8 *)e + 0x20));
+    StopSPUVoice((s32)e->renderCallback);
     e->collisionVtable = &ENTITY_FREE_ONLY_VTABLE;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
@@ -895,51 +984,51 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitItemRevealState);
 extern u8 ITEM_REVEAL_ANIM_SEQUENCE_7_FRAME_DATA[] asm("D_8009B7A4");
 extern u8 ITEM_REVEAL_ANIM_SEQUENCE_13_FRAME_DATA[] asm("D_8009B7DC");
 
-void SetEntitySpecialState_1(void *e) {
-    *(u8 *)((u8 *)e + 0x110) = 1;
-    EntityStateSetSpecial(e);
+void SetEntitySpecialState_1(EnemyTimerStateEntity *e) {
+    e->stateDelay = 1;
+    EntityStateSetSpecial((Entity *)e);
 }
 
-void SetEntitySpecialState_2(void *e) {
-    *(u8 *)((u8 *)e + 0x110) = 2;
-    EntityStateSetSpecial(e);
+void SetEntitySpecialState_2(EnemyTimerStateEntity *e) {
+    e->stateDelay = 2;
+    EntityStateSetSpecial((Entity *)e);
 }
 
-void SetEntitySpecialState_3(void *e) {
-    *(u8 *)((u8 *)e + 0x110) = 3;
-    EntityStateSetSpecial(e);
+void SetEntitySpecialState_3(EnemyTimerStateEntity *e) {
+    e->stateDelay = 3;
+    EntityStateSetSpecial((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSpecial);
 
-void StartAnimSequence7Frames(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_7_FRAME_DATA, 7);
+void StartAnimSequence7Frames(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_7_FRAME_DATA, 7);
 }
 
-void StartAnimSequence13Frames(void *e) {
-    StartAnimationSequence((u8 *)e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_13_FRAME_DATA, 13);
+void StartAnimSequence13Frames(SpriteEntity *e) {
+    StartAnimationSequence(e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_13_FRAME_DATA, 13);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEntity_Alt);
 
-void SoundEntityDestroyCallback(SpriteEntity *e, u32 flags) {
-    e->base.collisionVtable = &ALT_PATH_FOLLOWING_ENTITY_VTABLE;
-    StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
-    e->base.collisionVtable = &ENEMY_ENTITY_VTABLE;
-    DestroyEntityAndFreeMemory(e, 0);
+void SoundEntityDestroyCallback(SoundPanningEntity *e, u32 flags) {
+    e->sprite.base.collisionVtable = &ALT_PATH_FOLLOWING_ENTITY_VTABLE;
+    StopSPUVoice(e->soundId);
+    e->sprite.base.collisionVtable = &ENEMY_ENTITY_VTABLE;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
 }
 
-void FinnModeCollectibleTickCallback(void *e) {
-    UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x118));
-    CollectibleTickFinnMode(e);
+void FinnModeCollectibleTickCallback(SoundPanningEntity *e) {
+    UpdateEntitySoundPanning((Entity *)e, e->soundId);
+    CollectibleTickFinnMode((Entity *)e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyPathFollowWithFacingFlip);
 
-extern void SetEntitySpriteId(void *e, u32 spriteId, s32 flags);
+extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetWalkSprite);
 
@@ -982,9 +1071,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundParticleEmitter);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", ParticleEmitterTickCallback);
 
-s32 EntitySetReadyFlag(void *e, u16 mode) {
+s32 EntitySetReadyFlag(BackgroundSparkleEntity *e, u16 mode) {
     if (mode == EVT_TICK) {
-        *(u8 *)((u8 *)e + 0x100) = 1;
+        e->contactFlag = 1;
     }
     return 0;
 }
@@ -993,33 +1082,35 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleFadeTickCallback);
 
-s32 BackgroundSparkleContactEventHandler(Entity *e, u32 ev) {
+s32 BackgroundSparkleContactEventHandler(BackgroundSparkleEntity *sparkle, u32 ev) {
     if ((ev & 0xFFFF) == EVT_TICK) {
-        if (*(u8 *)((u8 *)e + 0x100) != 0) {
-            *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 0;
-            SetAnimationSpriteId(e, *(s16 *)((u8 *)e + 0xDA));
-            EntitySetRenderFlags(e, 0);
+        if (sparkle->contactFlag != 0) {
+            BackgroundSparkleChildContext *child = sparkle->sprite.base.spriteContext;
+            child->activeFlag = 0;
+            SetAnimationSpriteId((Entity *)sparkle, sparkle->sprite.currentFrame);
+            EntitySetRenderFlags((Entity *)sparkle, 0);
         }
     }
     return 0;
 }
 
-void InitBackgroundSparkleRevealState(void *e) {
-    *(u8 *)((u8 *)e + 0x100) = 1;
-    SetAnimationSpriteId(e, -1);
-    SetAnimationFrameCallback(e, 0x2421405);
+void InitBackgroundSparkleRevealState(BackgroundSparkleEntity *e) {
+    e->contactFlag = 1;
+    SetAnimationSpriteId((Entity *)e, -1);
+    SetAnimationFrameCallback((Entity *)e, 0x2421405);
 }
 
-void SetEntityAnimationState(Entity *e) {
-    *(u8 *)((u8 *)(*(void **)((u8 *)e + 0x34)) + 0xA) = 1;
-    *(u8 *)((u8 *)e + 0x100) = 0;
-    EntitySetRenderFlags(e, 1);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
-    SetAnimationFrameIndex(e, 0);
+void SetEntityAnimationState(BackgroundSparkleEntity *sparkle) {
+    BackgroundSparkleChildContext *child = sparkle->sprite.base.spriteContext;
+    child->activeFlag = 1;
+    sparkle->contactFlag = 0;
+    EntitySetRenderFlags((Entity *)sparkle, 1);
+    SetAnimationLoopFrame((Entity *)sparkle, 0x1084280);
+    SetAnimationSpriteCallback((Entity *)sparkle, 0x2421405);
+    SetAnimationFrameIndex((Entity *)sparkle, 0);
 }
 
-void func_8004727C(void *e) {
-    *(u8 *)((u8 *)e + 0x101) = 0x14;
+void func_8004727C(BackgroundSparkleEntity *e) {
+    e->revealTimer = 0x14;
 }
 
