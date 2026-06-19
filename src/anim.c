@@ -1,7 +1,7 @@
 #include "common.h"
 #include "functions.h"
 
-extern void *g_pBlbHeapBase;
+extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_Destroyed[];
 extern u8 g_EntityVtable_ResourceType1[];
 extern u8 g_EntityVtable_ResourceType2[];
@@ -12,11 +12,30 @@ extern u8 g_EntityVtable_PartialDestroy[];
 extern u8 g_EntityVtable_SimpleDestruct[];
 extern u8 g_EntityVtable_LevelDestroy[];
 
-extern void FreeMultiAllocResource(void *ptr, s32 type);
-extern void FreeResourceType2(void *ptr, s32 type);
-extern void FreeResourceType3(void *ptr, s32 type);
+extern void FreeMultiAllocResource(u8 *ptr, s32 type);
+extern void FreeResourceType2(u8 *ptr, s32 type);
+extern void FreeResourceType3(u8 *ptr, s32 type);
 
 typedef struct { s32 a; s32 b; } S32Pair;
+
+typedef struct SpriteContextCallbackTable {
+    /* 0x00 */ u8 pad00[0x10];
+    /* 0x10 */ s16 callbackTargetOffset;
+    /* 0x12 */ u8 pad12[2];
+    /* 0x14 */ void (*releaseVRAMSlot)(u8 *target, s32 mode);
+} SpriteContextCallbackTable;
+
+typedef struct SpriteRenderContext {
+    /* 0x00 */ u8 pad00[0x0C];
+    /* 0x0C */ SpriteContextCallbackTable *callbacks;
+} SpriteRenderContext;
+
+typedef struct LayerResourceEntity {
+    /* 0x00 */ u8 pad00[0x18];
+    /* 0x18 */ s32 collisionVtable;
+    /* 0x1C */ u8 *resource;
+    /* 0x20 */ u8 *renderContext;
+} LayerResourceEntity;
 
 typedef struct AnimEntity {
     u8 pad00[0xC0];
@@ -25,7 +44,9 @@ typedef struct AnimEntity {
     /* 0xC8 */ u32 pendingSpriteSource;
     u8 padCC[0xE0 - 0xCC];
     /* 0xE0 */ u16 animChangeFlags;
-    u8 padE2[0xF5 - 0xE2];
+    u8 padE2[0xF3 - 0xE2];
+    /* 0xF3 */ u8 pendingDirection;
+    /* 0xF4 */ u8 pendingLoopFlag;
     /* 0xF5 */ u8 pendingAnimActive;
 } AnimEntity;
 
@@ -132,7 +153,7 @@ void SetAnimationSpriteId(AnimEntity *entity, u32 spriteId) {
  * but with ANIM_CHG_TARGET_BY_VALUE (0x800) set so the stored value is
  * treated as a lookup key resolved via callback rather than a literal
  * frame index. Likely should be SetAnimationTargetFrameByValue. */
-void SetAnimationSpriteCallback(AnimEntity *entity, void *callback) {
+void SetAnimationSpriteCallback(AnimEntity *entity, u8 *callback) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x820;
 
@@ -165,7 +186,7 @@ void EntitySetRenderFlags(AnimEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x80;
 
-    *(u8 *)((u8 *)entity + 0xF4) = value;
+    entity->pendingLoopFlag = value;
     entity->animChangeFlags = newFlags;
     if ((newFlags & 3) == 0) {
         entity->animChangeFlags = flags | 0x81;
@@ -179,7 +200,7 @@ void func_8001D268(AnimEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x40;
 
-    *(u8 *)((u8 *)entity + 0xF3) = value;
+    entity->pendingDirection = value;
     entity->animChangeFlags = newFlags;
     if ((newFlags & 3) == 0) {
         entity->animChangeFlags = flags | 0x41;
@@ -274,7 +295,7 @@ INCLUDE_ASM("asm/nonmatchings/anim", UploadEntityTextureIfDirty);
  * lookup variants of the pending-frame setters. */
 INCLUDE_ASM("asm/nonmatchings/anim", FindFrameIndexByValue);
 
-extern void StepAnimationSequence(void *entity);
+extern void StepAnimationSequence(u8 *entity);
 
 /* Begins playback of a scripted animation callback sequence. Zeroes
  * sequenceStep (+0xE2), records sequenceLength (+0xE4) and the table
@@ -330,16 +351,16 @@ INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Standard);
  * the destruction-chain vtables (ResourceType1 -> Destroyed), and
  * optionally frees the entity body from the BLB heap when flag bit 0 is
  * set. Installed in the destroy slot of the standard layer vtable. */
-void EntityDestructor_FreeMultiAlloc(void *entity, s32 flags) {
+void EntityDestructor_FreeMultiAlloc(LayerResourceEntity *entity, s32 flags) {
     u8 *resource;
-    resource = *(u8 **)((u8 *)entity + 0x1C);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType1;
+    resource = entity->resource;
+    entity->collisionVtable = (s32)g_EntityVtable_ResourceType1;
     if (resource) {
         FreeMultiAllocResource(resource, 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
+    entity->collisionVtable = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -359,16 +380,16 @@ INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Medium);
  * EntityDestructor_FreeMultiAlloc but calls FreeResourceType2 on the
  * resource pointer at +0x1C. Installed in the destroy slot of the medium
  * layer vtable. */
-void EntityDestructor_FreeResourceType2(void *entity, s32 flags) {
+void EntityDestructor_FreeResourceType2(LayerResourceEntity *entity, s32 flags) {
     u8 *resource;
-    resource = *(u8 **)((u8 *)entity + 0x1C);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType2;
+    resource = entity->resource;
+    entity->collisionVtable = (s32)g_EntityVtable_ResourceType2;
     if (resource) {
         FreeResourceType2(resource, 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
+    entity->collisionVtable = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -382,16 +403,16 @@ INCLUDE_ASM("asm/nonmatchings/anim", InitLayerRenderContext_Small);
 /* Destructor for ResourceType3-backed entities. Calls FreeResourceType3
  * on the resource pointer at +0x1C; installed in the destroy slot of
  * the small layer vtable. */
-void EntityDestructor_FreeResourceType3(void *entity, s32 flags) {
+void EntityDestructor_FreeResourceType3(LayerResourceEntity *entity, s32 flags) {
     u8 *resource;
-    resource = *(u8 **)((u8 *)entity + 0x1C);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType3;
+    resource = entity->resource;
+    entity->collisionVtable = (s32)g_EntityVtable_ResourceType3;
     if (resource) {
         FreeResourceType3(resource, 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
+    entity->collisionVtable = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -409,16 +430,16 @@ INCLUDE_ASM("asm/nonmatchings/anim", InitLayerScrollContext);
  * the sprite-render allocation at +0x20 directly through the BLB heap
  * (no per-resource cleanup hook), then vtable-swaps to Destroyed and
  * optionally frees the entity body. */
-void FreeResourceType4(void *entity, s32 flags) {
+void FreeResourceType4(LayerResourceEntity *entity, s32 flags) {
     u8 *resource;
-    resource = *(u8 **)((u8 *)entity + 0x20);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_ResourceType4;
+    resource = entity->renderContext;
+    entity->collisionVtable = (s32)g_EntityVtable_ResourceType4;
     if (resource) {
         FreeFromHeap(g_pBlbHeapBase, resource, 0, 0);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
+    entity->collisionVtable = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
@@ -467,32 +488,32 @@ INCLUDE_ASM("asm/nonmatchings/anim", EntityApplyMovementCallbacks);
  * child's own destructor through its vtable before vtable-swapping self
  * to Destroyed and optionally freeing the entity body. Used by the
  * player entity and other sprite-with-shadow / sprite-with-halo setups. */
-void EntityDestructor_FreeWithChildRef(void *entity, s32 flags) {
-    u8 *child;
-    u8 *childRef;
+void EntityDestructor_FreeWithChildRef(SpriteEntity *entity, s32 flags) {
+    SpriteRenderContext *child;
+    SpriteContextCallbackTable *childCallbacks;
     u8 *resource;
 
-    resource = *(u8 **)((u8 *)entity + 0xB0);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_SpriteBase;
+    resource = entity->pPixelBuffer;
+    entity->base.collisionVtable = g_EntityVtable_SpriteBase;
     if (resource) {
         FreeFromHeap(g_pBlbHeapBase, resource, 0, 0);
     }
-    FreeFromHeap(g_pBlbHeapBase, *(void **)((u8 *)entity + 0x90), 4, 0);
-    child = *(u8 **)((u8 *)entity + 0x34);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_PartialDestroy;
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)entity->pSpriteAsset, 4, 0);
+    child = entity->base.spriteContext;
+    entity->base.collisionVtable = g_EntityVtable_PartialDestroy;
     if (child) {
-        childRef = *(u8 **)(child + 0xC);
-        ((void (*)(void *, s32))*(s32 *)(childRef + 0x14))(
-            (void *)(child + *(s16 *)(childRef + 0x10)), 3);
+        childCallbacks = child->callbacks;
+        childCallbacks->releaseVRAMSlot(&((u8 *)child)[childCallbacks->callbackTargetOffset], 3);
     }
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
+    entity->base.collisionVtable = g_EntityVtable_Destroyed;
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
     }
 }
 
 typedef struct EntityAccessorView {
-    u8 pad00[0x1C];
+    u8 pad00[0x18];
+    s32 collisionVtable; /* 0x18 */
     s32 field_1C;       /* 0x1C */
     s32 field_20;       /* 0x20 */
     s32 field_24;       /* 0x24 */
@@ -821,8 +842,8 @@ s32 func_800203E8(EntityAccessorView *e, s32 value) {
 /* Copies 8 bytes from src+0x38 into dst -- the render-bounds block
  * (renderOffsetX/Y + renderWidth/Height). Returns dst. "Snapshot the
  * sprite's render bbox" helper. */
-void *func_80020424(void *dst, void *src) {
-    __builtin_memcpy(dst, (u8 *)src + 0x38, 8);
+Vec4s16 *func_80020424(Vec4s16 *dst, Entity *src) {
+    __builtin_memcpy(dst, &src->renderOffsetX, 8);
     return dst;
 }
 
@@ -858,7 +879,7 @@ s32 func_800205A0(EntityAccessorView *e) {
  * at entity+0x2C/+0x30. Subsequent GetEntityYPosition / TransformYCoord
  * calls will route through this callback. */
 void func_800205AC(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)((u8 *)e + 0x2C) = val;
+    *(S32Pair *)&e->field_2C = val;
 }
 
 /* Y-coordinate transformer. Dispatches an arbitrary Y value through the
@@ -871,7 +892,7 @@ INCLUDE_ASM("asm/nonmatchings/anim", TransformYCoord);
 /* Installs an 8-byte [marker, fn] pair into the moveCallbackX FSM slot
  * at entity+0x24/+0x28. Counterpart to func_800205AC for the X axis. */
 void func_80020668(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)((u8 *)e + 0x24) = val;
+    *(S32Pair *)&e->field_24 = val;
 }
 
 /* X-coordinate transformer; mirror of TransformYCoord over the
@@ -882,7 +903,7 @@ INCLUDE_ASM("asm/nonmatchings/anim", TransformXCoord);
  * at entity+0x1C/+0x20. The function called by
  * InvokeEntityRenderCallback / the render-list walker each frame. */
 void func_80020724(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)((u8 *)e + 0x1C) = val;
+    *(S32Pair *)&e->field_1C = val;
 }
 
 /* Dispatches the entity's render callback through the FSM slot at
@@ -908,14 +929,14 @@ void func_800207D4(void) {
 void func_800207DC(void) {
 }
 
-void FreeEntityNoTeardown_80020818(void *entity, s32 size);
+void FreeEntityNoTeardown_80020818(EntityAccessorView *entity, s32 size);
 
 /* Minimal entity destructor: swap the vtable at +0x18 to Destroyed and,
  * if flag bit 0 is set, free the body via FreeEntityNoTeardown_80020818.
  * Used by entities that hold no owned resources beyond their own struct
  * (HUD helpers, particle slots, etc.). */
 void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_Destroyed;
+    entity->collisionVtable = (s32)g_EntityVtable_Destroyed;
     if (flags & 1) {
         FreeEntityNoTeardown_80020818(entity, 0x1C);
     }
@@ -925,6 +946,6 @@ void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
  * `size` arg is ignored -- naming reflects that it doesn't run any
  * destructor chain, just releases the bytes. Tail end of
  * EntityDestructor_Simple and friends. */
-void FreeEntityNoTeardown_80020818(void *entity, s32 size) {
-    FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+void FreeEntityNoTeardown_80020818(EntityAccessorView *entity, s32 size) {
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
 }
