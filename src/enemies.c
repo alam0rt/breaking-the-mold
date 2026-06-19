@@ -65,6 +65,8 @@ void FreeEntityNoTeardown_80045eb4(Entity *e, u32 size);
 void FreeEntityNoTeardown_80046d28(Entity *e, u32 size);
 void StartAnimationSequence(SpriteEntity *entity, s32 animData, s16 startFrame);
 void LaserMonkeyIdleState(Entity *e);
+void InitEnemyFallingState(Entity *e);
+void EnemyDeathWithParticles(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -635,11 +637,100 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnParticle);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityFallingGravityWithCollision);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemyPatrolState);
+void EnemyPatrolState(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    s16 m1;
+    s16 m2;
+    u32 spriteId;
+    register Entity *callArg asm("$4");
+
+    *(s16 *)((u8 *)e + 0x104) = 10;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    fn = EntityTimerDeathWithParticles;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    __asm__ volatile("" : "=r"(m1) : "0"(m1));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    fn = EntityEventHandlerWalk;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    callArg = e;
+    if (*(u8 *)((u8 *)e + 0x119)) {
+        __asm__ volatile("" ::: "$5");
+        spriteId = 0x60B93CBD;
+        goto setPatrolSprite;
+    }
+    __asm__ volatile("" ::: "$5");
+    spriteId = 0x60B9BCBD;
+setPatrolSprite:
+    SetEntitySpriteId(callArg, spriteId, 1);
+    fn = InitEnemyFallingState;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m2 = -1;
+    __asm__ volatile("" : "=r"(m2) : "0"(m2));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m2;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemyFallingState);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemyDeathState);
+void EnemyDeathState(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    s16 m1;
+    s16 m2;
+    u32 spriteId;
+    register Entity *callArg asm("$4");
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    fn = EnemyDeathWithParticles;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    __asm__ volatile("" : "=r"(m1) : "0"(m1));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    fn = EntityEventHandlerIdle;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    callArg = e;
+    if (*(u8 *)((u8 *)e + 0x119)) {
+        __asm__ volatile("" ::: "$5");
+        spriteId = 0x60AA1C9C;
+        goto setDeathSprite;
+    }
+    __asm__ volatile("" ::: "$5");
+    spriteId = 0x62AA1C9C;
+setDeathSprite:
+    SetEntitySpriteId(callArg, spriteId, 1);
+    fn = EnemyPatrolState;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m2 = -1;
+    __asm__ volatile("" : "=r"(m2) : "0"(m2));
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m2;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckEntityBehindCamera);
 
