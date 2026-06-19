@@ -17,6 +17,7 @@ extern void EntityEventHandlerIdle(Entity *e);
 extern s32 EntityEventHandlerWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityStateSetWalk(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
+extern void SetEntityTargetFrame(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
 extern Entity *InitEntityWithSprite(Entity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
 extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
@@ -49,6 +50,8 @@ extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u32 event, u32 arg2, u32 
 extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerSpawnParticle(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern void EntityFallingGravityWithCollision(Entity *e);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
 extern void TripleLaserMonkeyDeathTick(Entity *e);
@@ -684,7 +687,54 @@ setPatrolSprite:
     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitEnemyFallingState);
+void InitEnemyFallingState(Entity *e) {
+    PadSlot slot;
+    register void (*renderFn)() asm("$3");
+    register void (*tickFn)() asm("$7");
+    register void (*eventFn)() asm("$8");
+    s16 m1;
+    u32 spriteId;
+    u32 oldFlag;
+    register Entity *callArg asm("$4");
+
+    renderFn = EntityFallingGravityWithCollision;
+    tickFn = EnemyDeathWithParticles;
+    __asm__ volatile("" : "=r"(renderFn), "=r"(tickFn) : "0"(renderFn), "1"(tickFn));
+    oldFlag = *(u8 *)((u8 *)e + 0x119);
+    __asm__ volatile("" : "=r"(oldFlag) : "0"(oldFlag));
+    eventFn = EntityEventHandlerSpawnParticle;
+    __asm__ volatile("" : "=r"(eventFn) : "0"(eventFn));
+    *(s16 *)((u8 *)e + 0x116) = 0;
+    *(u32 *)((u8 *)e + 0x110) = 0;
+    __asm__ volatile("" ::: "memory");
+    *(u8 *)((u8 *)e + 0x119) = (oldFlag < 1);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = renderFn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = tickFn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = eventFn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    callArg = e;
+    if (*(u8 *)((u8 *)e + 0x119)) {
+        __asm__ volatile("" ::: "$5");
+        spriteId = 0x60A91C9C;
+        goto setFallingSprite;
+    }
+    __asm__ volatile("" ::: "$5");
+    spriteId = 0x61A91C9C;
+setFallingSprite:
+    SetEntitySpriteId(callArg, spriteId, 1);
+    SetEntityTargetFrame(e, 0x17);
+    SetAnimationSpriteId(e, 0x18);
+    SetAnimationFrameIndex(e, 0);
+}
 
 void EnemyDeathState(Entity *e) {
     PaddedSlotPair slot;
