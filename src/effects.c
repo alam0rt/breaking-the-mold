@@ -11,6 +11,7 @@ extern void ChangeRenderZOrder(GameState *gs, Entity *layer, u32 zOrder);
 extern void EntityTimerTickAndNotify(Entity *e);
 extern void *PARTICLE_EFFECT_VTABLE asm("D_80010A48");
 extern void *VFX_ENTITY_VTABLE_10A68 asm("D_80010A68");
+extern void *GRID_DISTORTION_EVENT_VTABLE asm("D_80010A30");
 extern void *CALLBACK_ENTITY_EVENT_VTABLE asm("D_80010AD8");
 extern void *VFX_ENTITY_VTABLE_10AE8 asm("D_80010AE8");
 extern void *PATH_ENTITY_EVENT_VTABLE asm("D_80010B00");
@@ -126,6 +127,14 @@ typedef struct PathFollowResourceEntity {
     /* 0x44 */ u8 pad44[4];
     /* 0x48 */ void *extraData;
 } PathFollowResourceEntity;
+
+typedef struct GridDistortionResourceEntity {
+    /* 0x000 */ u8 pad0[0xC];
+    /* 0x00C */ void *eventVtable;
+    /* 0x010 */ u8 pad10[0xEC];
+    /* 0x0FC */ void *gridData0;
+    /* 0x100 */ void *gridData1;
+} GridDistortionResourceEntity;
 
 typedef struct ZOrderTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -333,7 +342,15 @@ INCLUDE_ASM("asm/nonmatchings/effects", DebrisParticlePhysicsTick);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitGridDistortionEffect);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyGridDistortionEffect);
+void DestroyGridDistortionEffect(GridDistortionResourceEntity *e, s32 flags) {
+    e->eventVtable = &GRID_DISTORTION_EVENT_VTABLE;
+    FreeFromHeap(g_pBlbHeapBase, e->gridData0, 0, 0);
+    FreeFromHeap(g_pBlbHeapBase, e->gridData1, 0, 0);
+    FreeTextureResource(e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderGridDistortionEffect);
 
