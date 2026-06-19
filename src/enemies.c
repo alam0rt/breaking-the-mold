@@ -87,6 +87,8 @@ void InitEnemyAnimatedWithDeathSpawn(Entity *e);
 void ProjectilePathFollowerTick(Entity *e);
 void EntityTimedStateSwitchTick(Entity *e);
 void EntityUpdateWithCollisionOffscreen(Entity *e);
+void EntityConditionalActivateTick();
+void PlatformTimerTickCallback();
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -1580,7 +1582,25 @@ s32 EntityEventTimerCountdownWithGameState(TimedByteWithTileEntity *e, u32 event
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityHideAndDisable);
+void EntityHideAndDisable(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    s16 m1;
+
+    (*(u8 **)((u8 *)e + 0x34))[0xA] = 0;
+    EntitySetRenderFlags(e, 0);
+    fn = EntityConditionalActivateTick;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityShowAndActivate);
 
@@ -1602,7 +1622,25 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnRefOffscreen);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", PlatformEventHandlerSpawnEffect);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", PlatformHideAndDisable);
+void PlatformHideAndDisable(Entity *e) {
+    PaddedSlotPair slot;
+    void (*fn)();
+    s16 m1;
+
+    (*(u8 **)((u8 *)e + 0x34))[0xA] = 0;
+    EntitySetRenderFlags(e, 0);
+    fn = PlatformTimerTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", PlatformShowAndActivate);
 
