@@ -13,6 +13,7 @@ extern void EntityOffScreenChildCleanup(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void CollectibleTickCallback(Entity *e);
 extern void CollectibleTickFinnMode(Entity *e);
+extern void EntityEventHandlerIdle(Entity *e);
 extern void EntityEventHandlerWalk(Entity *e);
 extern void EntityStateSetWalk(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
@@ -1046,7 +1047,25 @@ void EnemySetWalkSprite(Entity *e) {
     SetEntitySpriteId(e, 0xE4CB8330, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);
+void EnemySetIdleSprite(Entity *e) {
+    TripadSlot slot;
+    void (*fn)();
+    s16 m1;
+    Entity *entity = e;
+    SetEntityFacingDirection(entity, 2);
+    fn = EntityEventHandlerIdle;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&entity->eventMarker = slot.s;
+    SetEntitySpriteId(entity, 0x458B0320, 1);
+    fn = EnemySetWalkSprite;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)((u8 *)entity + 0x98) = slot.s;
+}
 
 void EnemyDestroyCallback_0x80011228(SpriteEntity *entity, s32 flags) {
     entity->base.collisionVtable = &ENEMY_ENTITY_VTABLE;
