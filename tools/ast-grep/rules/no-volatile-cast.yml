@@ -1,0 +1,7 @@
+id: no-volatile-cast
+language: C
+severity: hint
+message: Volatile-qualified pointer cast is an obtuse way to force a reload; document why the compiler must not coalesce this load.
+note: "Usually a scheduling/codegen hack to match the original load ordering. If it's load-bearing for a byte match, leave a comment explaining what reordering it prevents."
+rule:
+  pattern: '*(volatile $TYPE *)$EXPR'

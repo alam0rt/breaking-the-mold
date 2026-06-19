@@ -1,0 +1,12 @@
+id: no-scalar-offset-deref
+language: C
+severity: hint
+message: Prefer struct field access over a scalar-cast offset dereference.
+note: "*(u16 *)(base + 0x10)-style expressions usually indicate a missing struct field, same as the byte-pointer-arithmetic case but through u8/u16/u32/s8/s16/s32 instead of u8. Add a typed field when the layout is known."
+rule:
+  pattern:
+    context: 'x = *($TYPE *)($BASE + $OFFSET);'
+    selector: pointer_expression
+constraints:
+  TYPE:
+    regex: '^(u8|u16|u32|s8|s16|s32)$'

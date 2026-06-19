@@ -1,0 +1,9 @@
+id: no-inline-asm
+language: C
+severity: hint
+message: Inline GNU asm statement is hard to reason about; prefer a C construct that produces the same codegen if one exists.
+note: "These are usually compiler-ordering fences (__asm__ volatile(\"\" ::: \"memory\")) or register-pinning hacks needed for a byte-exact match. They are not flagged on the asm(\"D_xxxxxxxx\") linker-symbol-rename declarator form, only on inline asm statements/expressions (which always carry the volatile qualifier in this codebase)."
+rule:
+  kind: gnu_asm_expression
+  has:
+    kind: gnu_asm_qualifier
