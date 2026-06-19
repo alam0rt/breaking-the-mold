@@ -23,6 +23,8 @@ extern void GlennYntisSelectRandomAnimState(Entity *e);
 extern void HazardActivateWithSound(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
+extern Entity *CreateFadeOverlayEntity(Entity *e);
+extern void AddToZOrderList(GameState *gs, Entity *entity);
 
 typedef struct BossTimedSpriteEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -404,7 +406,23 @@ s32 JoeHeadJoeBounceEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3) {
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDeathEventHandler);
+s32 JoeHeadJoeDeathEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3) {
+    u32 maskedEvent = event & 0xFFFF;
+    if (maskedEvent == 1) goto event_one;
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    goto out;
+event_one:
+    if (arg2 == 0x46384180) {
+        Entity *entity;
+        *(u8 *)((u8 *)g_pGameState + 0x170) = 0;
+        entity = CreateFadeOverlayEntity((Entity *)AllocateFromHeap(g_pBlbHeapBase, 0x24, 1, 0));
+        AddToZOrderList(g_pGameState, entity);
+    }
+out:
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeSelectAttackPattern);
 
