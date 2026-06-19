@@ -4,7 +4,8 @@ extern s32 GetLevelFlags();
 #include "Game/game_state.h"
 #include "globals.h"
 
-extern u8 D_80012120[];
+extern u8 SPECIAL_ENTITY_FALLBACK_VTABLE[] asm("D_80012120");
+void FreeSpecialEntity2120Memory(Entity *ptr, s32 size);
 
 
 /* Per-frame cheat-code detector: appends the latest pad-edge word to GameState's
@@ -38,14 +39,14 @@ void func_80082700(GameState *obj, u8 val) {
     obj->_reserved_198 = val;
 }
 
-extern u8 D_800A608C[];
+extern u8 SAVE_SLOT_NAME_TABLE[] asm("D_800A608C");
 extern s32 FindSaveSlotByName(u8 *name, u8 *slots);
 
 /* Look up the password/save slot index for the level currently embedded in
  * GameState. Forwards the LevelDataContext at +0x84 plus the global save-slot
  * name table (D_800A608C) to the generic lookup. */
 s32 FindSaveSlotForCurrentLevel(GameState *obj) {
-    return FindSaveSlotByName((u8 *)&obj->level_context, D_800A608C);
+    return FindSaveSlotByName((u8 *)&obj->level_context, SAVE_SLOT_NAME_TABLE);
 }
 
 /* GameState accessor: write boss defeat record (+0x19C boss_defeated,
@@ -175,8 +176,8 @@ void func_80082844(void) {
  * callback context lives at the static block D_80012120. Restores entity+0x18
  * to that fallback context, and (when flags&1) releases the entity body via
  * the BLB heap free wrapper. Installed via the standard entity destroy hook. */
-void SpecialEntityDestroyCallback_2120(void *entity, s32 flags) {
-    ((Entity *)entity)->collisionVtable = D_80012120;
+void SpecialEntityDestroyCallback_2120(Entity *entity, s32 flags) {
+    entity->collisionVtable = SPECIAL_ENTITY_FALLBACK_VTABLE;
     if (flags & 1) {
         FreeSpecialEntity2120Memory(entity, 0x1C);
     }
@@ -186,7 +187,7 @@ void SpecialEntityDestroyCallback_2120(void *entity, s32 flags) {
  * (g_pBlbHeapBase). Name is historical -- the function itself is generic and
  * the called signature accepts a second size arg (0x1C above) that this
  * decompiled prototype ignores; likely should be FreeFromBlbHeap. */
-void FreeSpecialEntity2120Memory(void *ptr) {
+void FreeSpecialEntity2120Memory(Entity *ptr, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, ptr, 0, 0);
 }
 

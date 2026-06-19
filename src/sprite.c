@@ -1,21 +1,41 @@
 #include "common.h"
 
-extern void *D_8001039C;
-extern u8 *g_pBlbHeapBase;
-extern void RenderTilemapHorizontalScroll(void *e);
-extern void RenderTilemapVerticalScroll(void *e);
-extern void SetupTilemapPrimitives(void *e);
+typedef struct BasicPrimObject {
+    /* 0x00 */ s16 x;
+    /* 0x02 */ s16 y;
+    /* 0x04 */ s16 unk4;
+    /* 0x06 */ s16 unk6;
+    /* 0x08 */ u16 id;
+    /* 0x0A */ u8 enabled;
+    /* 0x0B */ u8 pad0B;
+    /* 0x0C */ void *vtable;
+} BasicPrimObject;
 
-void *InitBasicEntityWithVtable(void *e, u16 val) {
-    u8 *p = (u8 *)e;
-    *(u32 *)(p + 0xC) = (u32)&D_8001039C;
-    *(u16 *)(p + 0x8) = val;
-    *(u16 *)(p + 0x0) = 0;
-    *(u16 *)(p + 0x2) = 0;
-    *(u16 *)(p + 0x4) = 0;
-    *(u16 *)(p + 0x6) = 0;
-    *(u8 *)(p + 0xA) = 1;
-    return e;
+typedef struct TilemapLayerRenderObject {
+    /* 0x00 */ s16 scrollX;
+    /* 0x02 */ s16 scrollY;
+    /* 0x04 */ u8 pad04[0x4C];
+    /* 0x50 */ struct {
+        s16 x;
+        s16 y;
+    } frameScroll[2];
+} TilemapLayerRenderObject;
+
+extern void *PRIM_OBJECT_BASE_VTABLE asm("D_8001039C");
+extern u8 *g_pBlbHeapBase;
+extern void RenderTilemapHorizontalScroll(TilemapLayerRenderObject *e);
+extern void RenderTilemapVerticalScroll(TilemapLayerRenderObject *e);
+extern void SetupTilemapPrimitives(TilemapLayerRenderObject *e);
+
+BasicPrimObject *InitBasicEntityWithVtable(BasicPrimObject *p, u16 val) {
+    p->vtable = &PRIM_OBJECT_BASE_VTABLE;
+    p->id = val;
+    p->x = 0;
+    p->y = 0;
+    p->unk4 = 0;
+    p->unk6 = 0;
+    p->enabled = 1;
+    return p;
 }
 
 INCLUDE_ASM("asm/nonmatchings/sprite", PrepareSpriteVRAMSlotForContext);
@@ -34,16 +54,14 @@ INCLUDE_ASM("asm/nonmatchings/sprite", InitTilemapLayerRendering);
 
 INCLUDE_ASM("asm/nonmatchings/sprite", FreeMultiAllocResource);
 
-void RenderTilemapLayerWithScroll(void *e) {
+void RenderTilemapLayerWithScroll(TilemapLayerRenderObject *e) {
     u8 idx;
-    u8 *p;
     RenderTilemapHorizontalScroll(e);
     RenderTilemapVerticalScroll(e);
     SetupTilemapPrimitives(e);
     idx = g_pBlbHeapBase[0xA088];
-    p = (u8 *)e + idx * 4;
-    *(s16 *)(p + 0x50) = -(*(s16 *)((u8 *)e + 0)) >> 4;
-    *(s16 *)(p + 0x52) = -(*(s16 *)((u8 *)e + 2)) >> 4;
+    e->frameScroll[idx].x = -e->scrollX >> 4;
+    e->frameScroll[idx].y = -e->scrollY >> 4;
 }
 
 INCLUDE_ASM("asm/nonmatchings/sprite", RenderTilemapHorizontalScroll);

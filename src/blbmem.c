@@ -7,9 +7,9 @@ typedef struct BLBEntityHeader {
     void *vtable;
 } BLBEntityHeader;
 
-extern u8 D_80012758[];
+extern u8 BLB_ENTITY_DESTROYED_VTABLE[] asm("D_80012758");
 
-void FreeBLBMemory(void *ptr, s32 size);
+void FreeBLBMemory(BLBEntityHeader *ptr, s32 size);
 
 /*
  * BLBEntityDestroyCallback_2758 @ 0x80082EF0.
@@ -19,7 +19,7 @@ void FreeBLBMemory(void *ptr, s32 size);
  * flags bit 0 — frees the 0x1C-byte entity back to the BLB heap.
  */
 void BLBEntityDestroyCallback_2758(BLBEntityHeader *entity, u32 flags) {
-    entity->vtable = D_80012758;
+    entity->vtable = BLB_ENTITY_DESTROYED_VTABLE;
     if (flags & 1) {
         FreeBLBMemory(entity, 0x1C);
     }
@@ -31,6 +31,6 @@ void BLBEntityDestroyCallback_2758(BLBEntityHeader *entity, u32 flags) {
  * The `size` parameter is unused — FreeFromHeap is invoked with 0/0 for
  * the trailing args. Name likely should be FreeFromBlbHeap.
  */
-void FreeBLBMemory(void *ptr, s32 size) {
+void FreeBLBMemory(BLBEntityHeader *ptr, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, ptr, 0, 0);
 }

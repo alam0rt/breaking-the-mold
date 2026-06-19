@@ -70,17 +70,17 @@ typedef struct GameGlobals {
 } GameGlobals;
 
 extern GameGlobals *g_pBlbHeapBase[]; /* unknown size forces absolute addressing */
-extern u8 D_80010344[];           /* PrimObject vtable (INIT_TABLES) */
-extern u8 D_8001039C[];           /* PrimObject base vtable (INIT_TABLES) */
+extern u8 PRIM_OBJECT_VTABLE[] asm("D_80010344");       /* PrimObject vtable (INIT_TABLES) */
+extern u8 PRIM_OBJECT_BASE_VTABLE[] asm("D_8001039C");  /* PrimObject base vtable (INIT_TABLES) */
 
 extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
-extern void SetDrawOffset(void *p, u16 *ofs);
-extern void SetDrawTPage(void *p, s32 dfe, s32 dtd, u16 tpage);
-extern void *AllocPrim20_Pool3(GameGlobals *g);
-extern void *AllocPrim24(GameGlobals *g);
-extern void *AllocPrim28(GameGlobals *g);
-extern void *AllocPrim36(GameGlobals *g);
-extern void memcpy(void *dst, void *src, s32 len);
+extern void SetDrawOffset(u8 *p, u16 *ofs);
+extern void SetDrawTPage(u8 *p, s32 dfe, s32 dtd, u16 tpage);
+extern u8 *AllocPrim20_Pool3(GameGlobals *g);
+extern u8 *AllocPrim24(GameGlobals *g);
+extern u8 *AllocPrim28(GameGlobals *g);
+extern u8 *AllocPrim36(GameGlobals *g);
+extern void memcpy(u8 *dst, u8 *src, s32 len);
 
 /*
  * Initialize a PrimObject - the per-sprite slot in the GPU primitive
@@ -89,17 +89,16 @@ extern void memcpy(void *dst, void *src, s32 len);
  * store is needed to byte-match), zeroes scratch coords, enables the
  * slot, and stamps the caller's id.
  */
-PrimObject *InitSpriteObject(void *arg, s16 id) {
-    PrimObject *p = arg;
+PrimObject *InitSpriteObject(PrimObject *p, s16 id) {
 
-    p->vtable = D_8001039C;
+    p->vtable = PRIM_OBJECT_BASE_VTABLE;
     p->enabled = 1;
     p->id = id;
     p->x = 0;
     p->y = 0;
     p->unk4 = 0;
     p->unk6 = 0;
-    p->vtable = D_80010344;
+    p->vtable = PRIM_OBJECT_VTABLE;
     p->primList = NULL;
     p->tpageMode = 0;
     return p;

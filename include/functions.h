@@ -24,20 +24,20 @@
 #include "Game/entity_events.h"
 
 /* ---- BLB heap -------------------------------------------------------------- */
-extern void *AllocateFromHeap(void *heap, s32 align, s32 size, s32 flags);
-extern void  FreeFromHeap(void *heap, void *ptr, s32 mode, s32 flags);
+extern u8   *AllocateFromHeap(u8 *heap, s32 align, s32 size, s32 flags);
+extern void  FreeFromHeap(u8 *heap, u8 *ptr, s32 mode, s32 flags);
 
 /* ---- Entity lifecycle / lists ---------------------------------------------- */
 extern void DestroyEntityAndFreeMemory(SpriteEntity *entity, s32 flags);
 extern void EntityProcessCallbackQueue(Entity *entity);
 extern void EntityUpdateCallback(Entity *entity);
-extern void FreeEntityLists(void *entity);
-extern void RemoveFromTickList(void *entity, void *child);
-extern u8   EntityApplyMovementCallbacks(void *entity, s16 x, s16 y);
-extern void AddEntityToSortedRenderList(void *list, void *entity);
+extern void FreeEntityLists(Entity *entity);
+extern void RemoveFromTickList(Entity *entity, Entity *child);
+extern u8   EntityApplyMovementCallbacks(Entity *entity, s16 x, s16 y);
+extern void AddEntityToSortedRenderList(u8 *list, Entity *entity);
 
 /* ---- Render primitives ----------------------------------------------------- */
-extern void AddPrim(void *ot, void *prim);
+extern void AddPrim(u8 *ot, u8 *prim);
 
 /* ---- Audio ----------------------------------------------------------------- */
 extern void PlaySoundEffect(u32 soundId, s32 volume, s32 param);

@@ -13,18 +13,18 @@ INCLUDE_ASM("asm/nonmatchings/movie", InitMovieStreamingBuffers);
 extern void DecDCTReset(s32 mode);
 extern void DecDCToutCallback(void (*cb)(void));
 extern s32 StSetRing(u8 *base, s32 size);
-extern void *StSetStream(s32 mode, s32 chan, s32 nsec, void (*cb)(void), s32 num);
+extern u8 *StSetStream(s32 mode, s32 chan, s32 nsec, void (*outCb)(void), void (*streamCb)(void));
 extern void StubMovieStreamCallback(void);
-extern void SeekAndStartCDRead(void *loc);
+extern void SeekAndStartCDRead(u8 *loc);
 
 /* Tentative def to unlock gp_rel via maspsx --use-comm-section. */
-u32 D_800A5A44;
+u8 *MOVIE_STREAM_BUFFER_BASE asm("D_800A5A44");
 
-void InitMovieDecoder(void *loc, void (*outCb)(void)) {
+void InitMovieDecoder(u8 *loc, void (*outCb)(void)) {
     DecDCTReset(0);
     DecDCToutCallback(outCb);
-    StSetRing((u8 *)D_800A5A44 + 0x67000, 0x100);
-    StSetStream(1, 1, -1, 0, (void *)StubMovieStreamCallback);
+    StSetRing(MOVIE_STREAM_BUFFER_BASE + 0x67000, 0x100);
+    StSetStream(1, 1, -1, 0, StubMovieStreamCallback);
     SeekAndStartCDRead(loc);
 }
 
@@ -41,11 +41,11 @@ INCLUDE_ASM("asm/nonmatchings/movie", DecodeStaticFrame);
 
 INCLUDE_ASM("asm/nonmatchings/movie", WaitForDecodeBufferSync);
 
-extern s32 CdControl(s32 cmd, void *param, void *result);
+extern s32 CdControl(s32 cmd, u8 *param, u8 *result);
 extern s32 CdRead2(s32 mode);
 extern void VSync(s32 mode);
 
-void SeekAndStartCDRead(void *loc) {
+void SeekAndStartCDRead(u8 *loc) {
     u8 mode = 0x80;
     do {
         while (CdControl(2, loc, 0) == 0);

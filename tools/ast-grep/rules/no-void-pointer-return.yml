@@ -2,7 +2,7 @@ id: no-void-pointer-return
 language: C
 severity: hint
 message: Prefer a concrete pointer return type over void* for functions.
-note: "Initializers and factories should usually return Entity*, SpriteEntity*, or the concrete entity type they initialize."
+note: "Initializers and factories should usually return Entity pointer, SpriteEntity pointer, or the concrete entity type they initialize."
 rule:
   all:
     - any:
@@ -17,3 +17,7 @@ rule:
         kind: pointer_declarator
         has:
           kind: function_declarator
+    - not:
+        any:
+          - pattern: 'void *memmove($$$ARGS)'
+          - pattern: 'void *memmove($$$ARGS) { $$$BODY }'

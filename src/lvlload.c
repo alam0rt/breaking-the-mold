@@ -4,8 +4,6 @@ extern s32 GetLevelFlags();
 #include "Game/game_state.h"
 #include "globals.h"
 
-extern u8 D_80012120[];
-
 typedef struct CheckpointEntityNode {
     /* 0x00 */ struct CheckpointEntityNode *next;
     /* 0x04 */ s32 entity_id;
@@ -35,8 +33,8 @@ INCLUDE_ASM("asm/nonmatchings/lvlload", DisplayTransitionSprite);
  * GetTileAttributeAtPosition. */
 INCLUDE_ASM("asm/nonmatchings/lvlload", SpawnPlayerAndEntities);
 
-extern u8 D_80012100[];
-extern void DestroyEntity(void *entity, s32 arg);
+extern u8 DEAD_ENTITY_VTABLE[] asm("D_80012100");
+extern void DestroyEntity(GameState *entity, s32 arg);
 
 /* Entity teardown helper. Replaces the entity's vtable (+0x18) with the
  * dead-entity stub D_80012100, frees the depth-bucket allocation at +0x16C
@@ -44,7 +42,7 @@ extern void DestroyEntity(void *entity, s32 arg);
  * and optionally frees the entity body itself (flags bit 0). */
 void DestroyEntityAndFreeResources(GameState *gameState, s32 flags) {
     void *depth_buckets = gameState->entity_pool_ptr;
-    gameState->postRenderCallbackContext = D_80012100;
+    gameState->postRenderCallbackContext = DEAD_ENTITY_VTABLE;
     if (depth_buckets) {
         FreeFromHeap(g_pBlbHeapBase, depth_buckets, 0, 0);
     }
@@ -61,7 +59,7 @@ void DestroyEntityAndFreeResources(GameState *gameState, s32 flags) {
  * level-advance, or checkpoint-restore based on flag state. */
 INCLUDE_ASM("asm/nonmatchings/lvlload", GameModeCallback);
 
-extern void AddToZOrderList(void *list, void *entity);
+extern void AddToZOrderList(GameState *list, Entity *entity);
 
 /* Checkpoint snapshot. Saves the live tick_list_head (+0x1C) and
  * frame_counter (+0x10C) into the checkpoint slots (+0x134 / +0x138),

@@ -125,7 +125,7 @@ typedef void (*EntityCallback)(Entity *entity);
  * (entity + markerLo [+ table entry arg], coordinate) and returns the
  * transformed coordinate. Verified in EntityBroadcastPointCollision
  * @ 0x8001B72C. */
-typedef s16 (*EntityCoordCallback)(void *target, s16 coord);
+typedef s16 (*EntityCoordCallback)(u8 *target, s16 coord);
 
 /* FSM marker encoding (applies to ALL marker+callback pairs; decoded from
  * DispatchEventToCollidingEntity @ 0x800226F8 and EntityBroadcastPointCollision
@@ -392,7 +392,8 @@ typedef struct {
     /* 0x136 */ s16      apexVelocity;          /* Jump apex velocity threshold */
     /* 0x138 */ u8       _pad138[4];
     /* 0x13C */ u8       timer13C;              /* Multi-purpose timer */
-    /* 0x13D */ u8       _pad13D[7];
+    /* 0x13D */ u8       _pad13D[3];
+    /* 0x140 */ Entity  *swirlPortalEntity;     /* Child portal/trail entity cleared when player releases it */
 
     /* Powerup system (0x144-0x14F) */
     /* 0x144 */ s16      powerupTimer;          /* Powerup duration countdown */
@@ -538,7 +539,7 @@ typedef struct {
     /* 0x100 */ u8       _pad100[4];
     /* 0x104 */ s16      pathOriginX;
     /* 0x106 */ s16      pathOriginY;
-    /* 0x108 */ void    *pathData;
+    /* 0x108 */ u8      *pathData;
     /* 0x10C */ s16      pathDuration;
     /* 0x10E */ u16      pathTime;
 } TimedPathEntity;  /* Size: 0x110 (272 bytes) */
@@ -568,7 +569,7 @@ typedef struct EntityListNode {
  * Each callback slot is 8 bytes: [s16 entity_offset, s16 pad, func_ptr]
  * The entity_offset is added to the entity pointer before calling.
  * ----------------------------------------------------------------------------- */
-typedef void (*EntitySlotCallback)(void *entity_adjusted);
+typedef void (*EntitySlotCallback)(u8 *entity_adjusted);
 
 /* Single callback slot (8 bytes) */
 typedef struct {

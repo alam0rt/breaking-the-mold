@@ -3,13 +3,12 @@
 #include "globals.h"
 
 typedef struct EntityWithSpuVoiceAt10c {
-    u8 pad0[0x18];
-    void *vtable;
-    u8 pad1[0x10C - 0x1C];
+    SpriteEntity sprite;
+    u8 pad100[0x10C - 0x100];
     u32 spuVoice;
 } EntityWithSpuVoiceAt10c;
 
-extern u8 D_80011D34[];
+extern u8 ENTITY_SPU_STOP_AT10C_VTABLE[] asm("D_80011D34");
 
 /* Entity destructor referenced from the +0x0C slot of vtable D_80011D34
  * (playst rodata). Swaps the entity vtable to the teardown vtable D_80011D34,
@@ -23,9 +22,9 @@ extern u8 D_80011D34[];
  * docs/symbol_addrs, PlayerDestroy's destructor is
  * `EntityDestructor_WithSPUVoiceStop` @ 0x80059B58, a different function. */
 void EntityDestructor_WithSPUStopAt10c(EntityWithSpuVoiceAt10c *entity, u32 flags) {
-    entity->vtable = D_80011D34;
+    entity->sprite.base.collisionVtable = ENTITY_SPU_STOP_AT10C_VTABLE;
     StopSPUVoice(entity->spuVoice);
-    DestroyEntityAndFreeMemory(entity, 0);
+    DestroyEntityAndFreeMemory(&entity->sprite, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }

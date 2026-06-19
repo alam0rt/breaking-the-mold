@@ -1,40 +1,52 @@
 #include "common.h"
 #include "functions.h"
 
-extern void *g_pBlbHeapBase;
-extern void *D_80010870;
-extern void *InitEntityWithSprite(void *entity, void *spriteDef, s32 z, s16 x, s16 y);
-extern void *InitEntitySprite(void *entity, void *def, s32 z, s16 x, s16 y, s32 flags);
-extern void InitPathFollowingDecorEntity(void *e, void *data, u8 flag);
+typedef struct DecorSpawnData {
+    /* 0x00 */ u8 pad00[8];
+    /* 0x08 */ s16 x;
+    /* 0x0A */ s16 y;
+} DecorSpawnData;
 
-void FreeEntityNoTeardown_8002c7d8(void *e, u32 size) {
+typedef struct SpecialTriggerEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x1D];
+    /* 0x11D */ u8 triggered;
+} SpecialTriggerEntity;
+
+extern u8 *g_pBlbHeapBase;
+extern u8 PATH_DECOR_COLLISION_VTABLE[] asm("D_80010870");
+extern SpriteEntity *InitEntityWithSprite(SpriteEntity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
+extern SpriteEntity *InitEntitySprite(SpriteEntity *entity, u8 *def, s32 z, s16 x, s16 y, s32 flags);
+extern void InitPathFollowingDecorEntity(TimedPathEntity *e, DecorSpawnData *data, u8 flag);
+
+void FreeEntityNoTeardown_8002c7d8(u8 *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
 }
 
-void *InitPathDecorEntity(void *e, u8 *data, void *spriteDef, u32 mask, u8 flag) {
-    InitEntitySprite(e, spriteDef, 0x3DE, *(s16 *)(data + 8), *(s16 *)(data + 0xA), mask & 0xFF);
-    ((Entity *)e)->collisionVtable = &D_80010870;
+TimedPathEntity *InitPathDecorEntity(TimedPathEntity *e, DecorSpawnData *data, u8 *spriteDef, u32 mask, u8 flag) {
+    InitEntitySprite(&e->sprite, spriteDef, 0x3DE, data->x, data->y, mask & 0xFF);
+    e->sprite.base.collisionVtable = PATH_DECOR_COLLISION_VTABLE;
     InitPathFollowingDecorEntity(e, data, flag);
     return e;
 }
 
-void *InitPathDecorEntityWithSprite(void *e, u8 *data, void *spriteDef, u8 flag) {
-    InitEntityWithSprite(e, spriteDef, 0x3DE, *(s16 *)(data + 8), *(s16 *)(data + 0xA));
-    ((Entity *)e)->collisionVtable = &D_80010870;
+TimedPathEntity *InitPathDecorEntityWithSprite(TimedPathEntity *e, DecorSpawnData *data, u8 *spriteDef, u8 flag) {
+    InitEntityWithSprite(&e->sprite, spriteDef, 0x3DE, data->x, data->y);
+    e->sprite.base.collisionVtable = PATH_DECOR_COLLISION_VTABLE;
     InitPathFollowingDecorEntity(e, data, flag);
     return e;
 }
 
-void *InitPathDecorNoData(void *e, s32 x, s32 y, void *spriteDef, u8 flag) {
-    InitEntitySprite(e, spriteDef, 0x3DE, (s16)x, (s16)y, flag);
-    ((Entity *)e)->collisionVtable = &D_80010870;
+TimedPathEntity *InitPathDecorNoData(TimedPathEntity *e, s32 x, s32 y, u8 *spriteDef, u8 flag) {
+    InitEntitySprite(&e->sprite, spriteDef, 0x3DE, (s16)x, (s16)y, flag);
+    e->sprite.base.collisionVtable = PATH_DECOR_COLLISION_VTABLE;
     InitPathFollowingDecorEntity(e, NULL, 1);
     return e;
 }
 
-void *InitPathDecorNoDataWithSprite(void *e, s32 x, s32 y, void *spriteDef) {
-    InitEntityWithSprite(e, spriteDef, 0x3DE, (s16)x, (s16)y);
-    ((Entity *)e)->collisionVtable = &D_80010870;
+TimedPathEntity *InitPathDecorNoDataWithSprite(TimedPathEntity *e, s32 x, s32 y, u8 *spriteDef) {
+    InitEntityWithSprite(&e->sprite, spriteDef, 0x3DE, (s16)x, (s16)y);
+    e->sprite.base.collisionVtable = PATH_DECOR_COLLISION_VTABLE;
     InitPathFollowingDecorEntity(e, NULL, 1);
     return e;
 }
@@ -45,12 +57,12 @@ INCLUDE_ASM("asm/nonmatchings/decor", UpdateDecorEntityTriggerColors);
 
 INCLUDE_ASM("asm/nonmatchings/decor", DecorEntityTickWithOffscreenCheck);
 
-void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
-    void *r = NULL;
+Entity *EntityCollisionHandler_SpecialTrigger(SpecialTriggerEntity *e, u16 event) {
+    Entity *r = NULL;
     if ((event & 0xFFFF) == EVT_SET_STATE_FLAG) {
-        r = e;
-        *(u8 *)((u8 *)e + 0x11D) = 1;
-        *(s16 *)((u8 *)e + 0x12) = 0;
+        r = &e->sprite.base;
+        e->triggered = 1;
+        e->sprite.base.collisionMask = 0;
     }
     return r;
 }
@@ -58,21 +70,21 @@ void *EntityCollisionHandler_SpecialTrigger(void *e, u16 event) {
 /* Two-bit collision dispatcher: on event 0x1016 marks the entity (+0x11D = 1,
  * clears the +0x12 word) and on event 2 forwards to EntityProcessCallbackQueue.
  * Returns the marked entity (only if 0x1016 fired) for chained handlers. */
-void *EntityCollision_FlagAndDispatch(Entity *e, u32 event) {
-    void *r = NULL;
+Entity *EntityCollision_FlagAndDispatch(SpecialTriggerEntity *e, u32 event) {
+    Entity *r = NULL;
     event &= 0xFFFF;
     if (event == EVT_SET_STATE_FLAG) {
-        *((u8 *)e + 0x11D) = 1;
-        *(s16 *)((u8 *)e + 0x12) = 0;
-        r = e;
+        e->triggered = 1;
+        e->sprite.base.collisionMask = 0;
+        r = &e->sprite.base;
     }
     if (event == EVT_TICK) {
-        EntityProcessCallbackQueue(e);
+        EntityProcessCallbackQueue(&e->sprite.base);
     }
     return r;
 }
 
-extern void InterpolateTimedPathPosition(void *time, s16 *out, void *pathData, s16 duration, s32 unused);
+extern void InterpolateTimedPathPosition(u16 *time, s16 *out, u8 *pathData, s16 duration, s32 unused);
 
 void EntityTick_PathFollowUpdate(TimedPathEntity *e) {
     s16 out[2];

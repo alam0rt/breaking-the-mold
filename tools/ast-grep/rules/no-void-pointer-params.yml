@@ -2,7 +2,7 @@ id: no-void-pointer-params
 language: C
 severity: hint
 message: Prefer concrete pointer parameter types over void* when the pointee layout is known.
-note: "For entity callbacks, use Entity*, SpriteEntity*, GameState*, or a subsystem-specific struct instead of void*."
+note: "For entity callbacks, use Entity pointer, SpriteEntity pointer, GameState pointer, or a subsystem-specific struct pointer instead of void pointer."
 rule:
   all:
     - kind: parameter_declaration

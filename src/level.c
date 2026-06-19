@@ -3,7 +3,7 @@
 
 extern s32 strcmp(const char *s1, const char *s2);
 extern s32 LoadAssetContainer(LevelDataContext *ctx, s32 arg1, s32 arg2);
-extern char D_800A6058[];
+extern char TERMINAL_LEVEL_NAME[] asm("D_800A6058");
 
 void ResetGameStateInputAndContext(LevelDataContext *ctx);
 void ClearContextOffsets68to7C(LevelDataContext *ctx);
@@ -65,7 +65,7 @@ u8 AdvancePlaybackSequence(LevelDataContext *ctx) {
     if (*(u8 *)(entry + 0xF36) == 2) {
         u8 slot = *(u8 *)(entry + 0xF92);
         u32 name = slot * 12 + blb;
-        if (strcmp((char *)(name + 0xF1C), D_800A6058) == 0) {
+        if (strcmp((char *)(name + 0xF1C), TERMINAL_LEVEL_NAME) == 0) {
             return 0;
         }
     }

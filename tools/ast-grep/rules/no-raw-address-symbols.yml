@@ -2,7 +2,7 @@ id: no-raw-address-symbols
 language: C
 severity: hint
 message: Rename raw address symbols to meaningful C identifiers with asm labels.
-note: "Prefer extern void *MEANINGFUL_NAME asm(\"D_800xxxxx\") and use MEANINGFUL_NAME at C call sites."
+note: "Prefer a meaningful C identifier with an asm label that preserves the raw D_800xxxxx linker symbol."
 rule:
   kind: identifier
   regex: '^D_[0-9A-Fa-f]{8}$'

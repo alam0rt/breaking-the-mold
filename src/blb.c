@@ -1,11 +1,17 @@
 #include "common.h"
 #include "functions.h"
 
-extern void *g_pBlbHeapBase;
+extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_SimpleDestruct[];
 extern u8 g_EntityVtable_LevelDestroy[];
 
 extern u8 CdBLB_ReadSectors(u16 arg0, u16 arg1);
+
+typedef struct BlbEntityWithSpriteSubobject {
+    /* 0x00 */ Entity base;
+    /* 0x80 */ u8 pad80[4];
+    /* 0x84 */ u8 spriteSubobject;
+} BlbEntityWithSpriteSubobject;
 
 /* u32->u16 trampoline around CdBLB_ReadSectors. Installed by LoadBLBHeader
  * as the streaming-read callback in InitLevelDataContext so the asset
@@ -14,24 +20,24 @@ u8 BLB_ReadSectorsWrapper(u32 sector, u32 count) {
     return CdBLB_ReadSectors((u16)sector, (u16)count);
 }
 
-extern void InitMenuEntityWithVtable(void *entity, s32 arg);
-extern void *PassThroughFunction(void *ptr);
-extern void RemoveEntityFromAllLists(void *entity, void *child);
-extern void RemoveEntityFromUpdateQueue(void *entity);
-extern void RemoveFromRenderList(void *entity);
+extern void InitMenuEntityWithVtable(Entity *entity, s32 arg);
+extern u8 *PassThroughFunction(u8 *ptr);
+extern void RemoveEntityFromAllLists(Entity *entity, Entity *child);
+extern void RemoveEntityFromUpdateQueue(Entity *entity);
+extern void RemoveFromRenderList(Entity *entity);
 void RemoveFromUpdateQueue(u8 *entity);
-extern void RemoveFromZOrderList(void *entity);
-extern void ClearEntityDefList(void *entity);
-extern void builtin_delete(void *ptr);
-extern void ConditionalDelete(void *ptr, s32 type);
+extern void RemoveFromZOrderList(u8 *entity);
+extern void ClearEntityDefList(u8 *entity);
+extern void builtin_delete(u8 *ptr);
+extern void ConditionalDelete(u8 *ptr, s32 type);
 
 /* Generic constructor for a BLB-heap-allocated entity: runs the standard
  * vtable init, patches the vtable ptr at +0x18 to g_EntityVtable_SimpleDestruct,
  * then pass-initialises the embedded sub-object at +0x84. */
-void *InitEntityWithTable(void *entity) {
-    InitMenuEntityWithVtable(entity, 0);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)g_EntityVtable_SimpleDestruct;
-    PassThroughFunction((void *)((u8 *)entity + 0x84));
+BlbEntityWithSpriteSubobject *InitEntityWithTable(BlbEntityWithSpriteSubobject *entity) {
+    InitMenuEntityWithVtable(&entity->base, 0);
+    entity->base.collisionVtable = g_EntityVtable_SimpleDestruct;
+    PassThroughFunction(&entity->spriteSubobject);
     return entity;
 }
 

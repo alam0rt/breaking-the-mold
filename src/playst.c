@@ -2,18 +2,18 @@
 #include "functions.h"
 #include "globals.h"
 
-extern s32 PlayerEntityEventHandler(void *e, u32 event);
-extern s32 PlayerEntityEventHandlerAlt(void *e, u32 event);
-extern void RemoveEntityFromAllLists(void *gs, void *entity);
+extern s32 PlayerEntityEventHandler(PlayerEntity *e, u32 event);
+extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event);
+extern void RemoveEntityFromAllLists(GameState *gs, Entity *entity);
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
-void PlayerClearSwirlPortalEntity(void *e) {
+void PlayerClearSwirlPortalEntity(PlayerEntity *e) {
     g_pGameState->camera_follow_direction = 0;
-    if (*(void **)((u8 *)e + 0x140) != NULL) {
-        RemoveEntityFromAllLists(g_pGameState, *(void **)((u8 *)e + 0x140));
-        *(void **)((u8 *)e + 0x140) = NULL;
+    if (e->swirlPortalEntity != NULL) {
+        RemoveEntityFromAllLists(g_pGameState, e->swirlPortalEntity);
+        e->swirlPortalEntity = NULL;
     }
 }
 
@@ -84,15 +84,15 @@ void PlayerState_FallWithRotation(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
 
-void PlayerState_QueuedCallbackTimer(Entity *e) {
-    u16 *ctr = (u16 *)&((PlayerEntity *)e)->_pad164[2];
+void PlayerState_QueuedCallbackTimer(PlayerEntity *e) {
+    u16 *ctr = (u16 *)&e->_pad164[2];
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
-            EntityProcessCallbackQueue(e);
+            EntityProcessCallbackQueue(&e->sprite.base);
         }
     }
-    PlayerTickCallback(e);
+    PlayerTickCallback(&e->sprite.base);
 }
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_UpdateAttachedEntity);
@@ -196,8 +196,8 @@ INCLUDE_ASM("asm/nonmatchings/playst", TryActivatePowerup);
  * (e->input->u2 — bit 1 = left, 2 = down, 4 = right, 8 = up). The
  * compiler short-circuits the four bit tests in the rather odd
  * 4 → 1 → 8 → 2 order seen in the original — preserved here for byte-match. */
-void PlayerPlaySoundOnDirectionInput(Entity *e) {
-    InputState *input = ((PlayerEntity *)e)->pInput;
+void PlayerPlaySoundOnDirectionInput(PlayerEntity *e) {
+    InputState *input = e->pInput;
     u16 flags = input->buttons_pressed;
     s32 a1 = 0;
     if (flags & 4) goto fire;
@@ -209,7 +209,7 @@ fire:
     a1 = 1;
 check:
     if ((u8)a1) {
-        PlayEntityPositionSound(e, 0x64221E61);
+        PlayEntityPositionSound(&e->sprite.base, 0x64221E61);
     }
 }
 

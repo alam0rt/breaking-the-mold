@@ -97,10 +97,12 @@ s32 PlatformEvent_QueueOnAnimReady(Entity *entity, u32 event) {
  * (lower 16). Likely should be renamed FinnAdvanceXByVelocity or
  * similar.
  */
-void func_80071778(Entity *entity) {
-    s32 pos = ((s32)entity->worldX << 16) + (u16)entity->velocityX + *(s32 *)((u8 *)entity + 0x104);
-    entity->worldX = pos >> 16;
-    entity->velocityX = (s16)pos;
+void func_80071778(FinnPlayerEntity *entity) {
+    s32 pos = ((s32)entity->sprite.base.worldX << 16) +
+              (u16)entity->sprite.base.velocityX +
+              (s32)entity->wakeEntity_or_velocityX;
+    entity->sprite.base.worldX = pos >> 16;
+    entity->sprite.base.velocityX = (s16)pos;
 }
 
 /*

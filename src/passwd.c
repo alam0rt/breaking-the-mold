@@ -5,8 +5,19 @@
 extern void SetReverbLevel(u8 level);
 extern void SetAudioVolume(u8 volume);
 extern void SetStereoMode(u8 mode);
-u8 D_800A6042;
-u8 D_800A6045;
+
+typedef struct OptionsMenuEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x2E];
+    /* 0x12E */ u8 reverbLevel;
+    /* 0x12F */ u8 audioVolume;
+    /* 0x130 */ u8 stereoMode;
+    /* 0x131 */ u8 pad131[0x0B];
+    /* 0x13C */ u16 demoCountdown;
+} OptionsMenuEntity;
+
+u8 MENU_BACKGROUND_COLOR_INDEX asm("D_800A6042");
+u8 MENU_SHARED_SELECTION_BYTE asm("D_800A6045");
 
 INCLUDE_ASM("asm/nonmatchings/passwd", InitPasswordDisplayEntity);
 
@@ -36,10 +47,10 @@ INCLUDE_ASM("asm/nonmatchings/passwd", InitMenuStage3);
 
 INCLUDE_ASM("asm/nonmatchings/passwd", InitMenuStage4);
 
-void ApplyAudioSettings(void *e) {
-    SetReverbLevel(*(u8 *)((u8 *)e + 0x12E));
-    SetAudioVolume(*(u8 *)((u8 *)e + 0x12F));
-    SetStereoMode((u8)(*(u8 *)((u8 *)e + 0x130) + 1));
+void ApplyAudioSettings(OptionsMenuEntity *e) {
+    SetReverbLevel(e->reverbLevel);
+    SetAudioVolume(e->audioVolume);
+    SetStereoMode((u8)(e->stereoMode + 1));
 }
 
 void UpdateBackgroundColor(void);
@@ -48,27 +59,26 @@ void UpdateBackgroundColorWrapper(void) {
     UpdateBackgroundColor();
 }
 
-extern u8 D_8009CBAC[];
-extern s16 D_800A5970;
-extern s16 D_800A596C;
-extern s16 D_800A596E;
+extern u8 MENU_BACKGROUND_COLOR_TABLE[] asm("D_8009CBAC");
+extern s16 MENU_BACKGROUND_R asm("D_800A5970");
+extern s16 MENU_BACKGROUND_G asm("D_800A596C");
+extern s16 MENU_BACKGROUND_B asm("D_800A596E");
 
 void UpdateBackgroundColor(void) {
-    u32 idx = D_800A6042 * 3;
-    D_800A5970 = D_8009CBAC[idx];
-    D_800A596C = D_8009CBAC[idx + 1];
-    D_800A596E = D_8009CBAC[idx + 2];
+    u32 idx = MENU_BACKGROUND_COLOR_INDEX * 3;
+    MENU_BACKGROUND_R = MENU_BACKGROUND_COLOR_TABLE[idx];
+    MENU_BACKGROUND_G = MENU_BACKGROUND_COLOR_TABLE[idx + 1];
+    MENU_BACKGROUND_B = MENU_BACKGROUND_COLOR_TABLE[idx + 2];
 }
 
 INCLUDE_ASM("asm/nonmatchings/passwd", MenuTickCallback);
 
-void DemoCountdownCallback(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x13C);
-    *ctr = *ctr - 1;
-    if (*ctr == 0) {
-        g_pGameState->direct_level_load = D_800A6045;
+void DemoCountdownCallback(OptionsMenuEntity *e) {
+    e->demoCountdown--;
+    if (e->demoCountdown == 0) {
+        g_pGameState->direct_level_load = MENU_SHARED_SELECTION_BYTE;
     }
-    EntityUpdateCallback(e);
+    EntityUpdateCallback(&e->sprite.base);
 }
 
 INCLUDE_ASM("asm/nonmatchings/passwd", MenuInputHandler);

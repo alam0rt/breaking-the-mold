@@ -2,7 +2,7 @@
 #include "functions.h"
 #include "globals.h"
 
-extern u8 D_80011804[];
+extern u8 PLAYER_CALLBACK_TABLE[] asm("D_80011804");
 
 #define PLAYER_TILE_PASSABLE                 0x65
 #define PLAYER_TILE_SPECIAL_MARKER           0x7D
@@ -36,7 +36,7 @@ INCLUDE_ASM("asm/nonmatchings/player", InitPlayerSpriteAvailability);
  * allocation when called with flags & 1.
  */
 void EntityDestructor_WithSPUVoiceStop(PlayerEntity *entity, s32 flags) {
-    entity->sprite.base.collisionVtable = D_80011804;
+    entity->sprite.base.collisionVtable = PLAYER_CALLBACK_TABLE;
     StopSPUVoice(entity->soundHandle);
     DestroyEntityAndFreeMemory((SpriteEntity *)entity, 0);
     if (flags & 1) {

@@ -1,5 +1,11 @@
 #include "common.h"
 
+typedef struct {
+    u8 _pad0000[0xA640];
+    void *heapStart;
+    u32 heapSize;
+} HeapConfigOwner;
+
 INCLUDE_ASM("asm/nonmatchings/vram", AllocateVRAMSlot);
 
 INCLUDE_ASM("asm/nonmatchings/vram", FreeVRAMSlot);
@@ -14,12 +20,12 @@ INCLUDE_ASM("asm/nonmatchings/vram", ProcessPendingVRAMSlotFrees);
 
 INCLUDE_ASM("asm/nonmatchings/vram", CalculateVRAMCoordinates);
 
-void InitHeapConfig(void *base, void *ptr, u32 size) {
-    *(void **)((u8 *)base + 0xA640) = ptr;
+void InitHeapConfig(HeapConfigOwner *base, u8 *ptr, u32 size) {
+    base->heapStart = ptr;
     if ((size >> 4) <= 0xFFFF) {
-        *(u32 *)((u8 *)base + 0xA644) = size;
+        base->heapSize = size;
     } else {
-        *(u32 *)((u8 *)base + 0xA644) = 0xFFFF0;
+        base->heapSize = 0xFFFF0;
     }
 }
 
