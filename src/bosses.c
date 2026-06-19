@@ -71,6 +71,14 @@ typedef struct KloggTriggerEntity {
     /* 0x134 */ u8 *triggerTarget;
 } KloggTriggerEntity;
 
+typedef struct GliderEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100;
+    /* 0x101 */ u8 readyFlag;
+    /* 0x102 */ u8 pad102[0x10D - 0x102];
+    /* 0x10D */ u8 directionFlag;
+} GliderEntity;
+
 typedef struct JoeHeadJoeEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x112 - 0x100];
@@ -89,6 +97,8 @@ typedef struct KloggBossEntity {
     /* 0x116 */ u16 voicePanTimer;
 } KloggBossEntity;
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
+u32   GLIDER_WAKE_STATE_MARKER asm("D_800A5B68");
+EntityCallback GLIDER_WAKE_STATE_CALLBACK asm("D_800A5B6C");
 u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98");
 EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C");
 u32   SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER asm("D_800A5BF0");
@@ -108,7 +118,31 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EntityTickWithTimer);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderFallTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GliderEventHandler);
+s32 GliderEventHandler(GliderEntity *e, u32 event, u32 arg2, u32 arg3) {
+    s32 maskedEvent = event & 0xFFFF;
+    if (maskedEvent == 0x1001) goto event_1001;
+    if (maskedEvent >= 0x1002) goto high_event;
+    if (maskedEvent == 1) goto event_1;
+    goto out;
+high_event:
+    if (maskedEvent == 0x1016) goto event_1016;
+    goto out;
+event_1001:
+    EntitySetState((Entity *)e, GLIDER_WAKE_STATE_MARKER, GLIDER_WAKE_STATE_CALLBACK);
+    goto out;
+event_1016:
+    e->readyFlag = 1;
+    goto out;
+event_1:
+    if (arg2 == 0x10D86282) goto direction_one;
+    if (arg2 != 0xB0C10420) goto out;
+    e->directionFlag = 0;
+    goto out;
+direction_one:
+    e->directionFlag = 1;
+out:
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderEventHandlerWithComplete);
 
