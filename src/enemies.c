@@ -86,6 +86,7 @@ void InitEntityWithDeathSpawn(Entity *e);
 void InitEnemyAnimatedWithDeathSpawn(Entity *e);
 void ProjectilePathFollowerTick(Entity *e);
 void EntityTimedStateSwitchTick(Entity *e);
+void EntityUpdateWithCollisionOffscreen(Entity *e);
 s32 EntityNullEventHandler(void);
 
 /* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
@@ -1498,7 +1499,29 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
     return e;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityTimedStateSwitchTick);
+void EntityTimedStateSwitchTick(Entity *e) {
+    PadSlot slot;
+    void (*fn)();
+    s16 m1;
+
+    EntityUpdateCallback(e);
+    if (((g_pGameState->frame_counter + *(s32 *)(*(u8 **)((u8 *)e + 0x100) + 0xC)) % 80) < 2) {
+        register Entity *callArg asm("$4");
+
+        callArg = e;
+        __asm__ volatile("" : "=r"(callArg) : "0"(callArg));
+        fn = EntityUpdateWithCollisionOffscreen;
+        __asm__ volatile("" : "=r"(fn) : "0"(fn));
+        (*(u8 **)((u8 *)e + 0x34))[0xA] = 1;
+        m1 = -1;
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)&e->tickMarker = slot.s;
+        SetEntitySpriteId(callArg, 0x88210498, 1);
+    }
+    CheckAndDisableChildEntityOffscreen(e);
+}
 
 void EntityUpdateWithCollisionOffscreen(Entity *e) {
     EntityUpdateCallback(e);
