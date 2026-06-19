@@ -527,6 +527,23 @@ typedef struct {
 } PathEnemyEntity;  /* Size: 0x120 (288 bytes) */
 
 /* -----------------------------------------------------------------------------
+ * TimedPathEntity (0x110 = 272 bytes)
+ *
+ * Compact path follower used by decor/platform-style entities. The path state
+ * begins immediately after SpriteEntity and is consumed by
+ * InterpolateTimedPathPosition.
+ * ----------------------------------------------------------------------------- */
+typedef struct {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8       _pad100[4];
+    /* 0x104 */ s16      pathOriginX;
+    /* 0x106 */ s16      pathOriginY;
+    /* 0x108 */ void    *pathData;
+    /* 0x10C */ s16      pathDuration;
+    /* 0x10E */ u16      pathTime;
+} TimedPathEntity;  /* Size: 0x110 (272 bytes) */
+
+/* -----------------------------------------------------------------------------
  * Entity List Node
  * Used for tick/render/collision linked lists in GameState
  * ----------------------------------------------------------------------------- */

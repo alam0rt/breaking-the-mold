@@ -49,10 +49,10 @@ extern u8 D_80011648[];
  * ClayballResetState to drop any leftover linked switch-block. */
 void *InitClayballWithSwitchBlock(void *entity, u8 *def, void *spawnContext, u8 flags) {
     InitEntitySprite(entity, spawnContext, 0x3C0, *(s16 *)(def + 0x8), (s16)(*(u16 *)(def + 0xA) - 1), 0);
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     *(void **)((u8 *)entity + 0x100) = def;
     GenericSpriteEntityInitCallback(entity, *(u16 *)(def + 0xC), flags, 0);
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80011648;
+    ((Entity *)entity)->collisionVtable = D_80011648;
     *(u8 *)((u8 *)entity + 0x11A) = 0;
     *(s32 *)((u8 *)entity + 0x124) = 0;
     ClayballResetState(entity);
@@ -128,12 +128,12 @@ extern void FreeEntityNoTeardown_80059674(void *entity, s32 size);
  * runs the generic destroy, and frees from the BLB heap when requested. */
 void ShrineyGuardDestroyWithSoundCleanup(void *entity, s32 flags) {
     u8 *e = (u8 *)entity;
-    *(u32 *)(e + 0x18) = (u32)D_80011628;
+    ((Entity *)entity)->collisionVtable = D_80011628;
     StopSPUVoice(*(s32 *)(e + 0x128));
     *(s32 *)(e + 0x128) = -1;
     StopSPUVoice(*(s32 *)(e + 0x12C));
     *(s32 *)(e + 0x12C) = -1;
-    *(u32 *)(e + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -147,7 +147,7 @@ void ShrineyGuardDestroyWithSoundCleanup(void *entity, s32 flags) {
  * compiler emitted one per clayball-variant init site because each one
  * referenced this destructor as a separate static callback. */
 void EntityDestroyCallback_Vt800116E8(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -156,7 +156,7 @@ void EntityDestroyCallback_Vt800116E8(void *entity, s32 flags) {
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
 void EntityDestroyCallback_Vt800116E8_800594a0(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -165,7 +165,7 @@ void EntityDestroyCallback_Vt800116E8_800594a0(void *entity, s32 flags) {
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
 void EntityDestroyCallback_Vt800116E8_80059504(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -174,7 +174,7 @@ void EntityDestroyCallback_Vt800116E8_80059504(void *entity, s32 flags) {
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
 void EntityDestroyCallback_Vt800116E8_80059568(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -183,7 +183,7 @@ void EntityDestroyCallback_Vt800116E8_80059568(void *entity, s32 flags) {
 
 /* Duplicate of EntityDestroyCallback_Vt800116E8 (clayball-variant copy). */
 void EntityDestroyCallback_Vt800116E8_800595cc(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_800116E8;
+    ((Entity *)entity)->collisionVtable = D_800116E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -205,7 +205,7 @@ void func_80059638(void) {
  * the no-teardown path. The naming "Simple11" reflects the D_8001170*8
  * vtable it installs; likely should be EntityDestroy_SmallClayballHelper. */
 void EntityDestructor_Simple11(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80011708;
+    ((Entity *)entity)->collisionVtable = D_80011708;
     if (flags & 1) {
         FreeEntityNoTeardown_80059674(entity, 0x1C);
     }

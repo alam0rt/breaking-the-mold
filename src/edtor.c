@@ -16,7 +16,7 @@ void func_8002C528(void *e) {
 }
 
 void EntityDestructor_Type0(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    ((Entity *)entity)->collisionVtable = &D_800105CC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -24,7 +24,7 @@ void EntityDestructor_Type0(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Type1(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    ((Entity *)entity)->collisionVtable = &D_800105CC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -32,7 +32,7 @@ void EntityDestructor_Type1(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Type2(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    ((Entity *)entity)->collisionVtable = &D_800105CC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -40,7 +40,7 @@ void EntityDestructor_Type2(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Type3(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    ((Entity *)entity)->collisionVtable = &D_800105CC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -48,7 +48,7 @@ void EntityDestructor_Type3(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Type4(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105CC;
+    ((Entity *)entity)->collisionVtable = &D_800105CC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -56,7 +56,7 @@ void EntityDestructor_Type4(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Type5(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800105EC;
+    ((Entity *)entity)->collisionVtable = &D_800105EC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -70,7 +70,7 @@ void func_8002C79C(void) {
 }
 
 void EntityDestructor_Type6_Simple(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_8001060C;
+    ((Entity *)entity)->collisionVtable = &D_8001060C;
     if (flag & 1) {
         FreeEntityNoTeardown_8002c7d8(entity, 0x1C);
     }

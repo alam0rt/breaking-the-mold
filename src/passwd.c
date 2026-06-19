@@ -1,10 +1,10 @@
 #include "common.h"
 #include "functions.h"
+#include "globals.h"
 
 extern void SetReverbLevel(u8 level);
 extern void SetAudioVolume(u8 volume);
 extern void SetStereoMode(u8 mode);
-extern u8 *g_pGameState;
 u8 D_800A6042;
 u8 D_800A6045;
 
@@ -66,7 +66,7 @@ void DemoCountdownCallback(Entity *e) {
     u16 *ctr = (u16 *)((u8 *)e + 0x13C);
     *ctr = *ctr - 1;
     if (*ctr == 0) {
-        g_pGameState[0x148] = D_800A6045;
+        g_pGameState->direct_level_load = D_800A6045;
     }
     EntityUpdateCallback(e);
 }

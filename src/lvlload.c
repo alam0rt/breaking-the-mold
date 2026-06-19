@@ -6,6 +6,11 @@ extern s32 GetLevelFlags();
 
 extern u8 D_80012120[];
 
+typedef struct CheckpointEntityNode {
+    /* 0x00 */ struct CheckpointEntityNode *next;
+    /* 0x04 */ s32 entity_id;
+} CheckpointEntityNode;
+
 /* Top-level level-load driver. Clears the prior level's entity lists, then
  * drives the BLB playback FSM (AdvancePlaybackSequence / SeekToLevelInSequence)
  * to stream CD sectors into the LevelDataContext (gs+0x84), dispatching each
@@ -37,15 +42,15 @@ extern void DestroyEntity(void *entity, s32 arg);
  * dead-entity stub D_80012100, frees the depth-bucket allocation at +0x16C
  * back to the BLB heap, calls DestroyEntity to detach it from all lists,
  * and optionally frees the entity body itself (flags bit 0). */
-void DestroyEntityAndFreeResources(void *entity, s32 flags) {
-    void *buckets = *(void **)((u8 *)entity + 0x16C);
-    *(u32 *)((u8 *)entity + 0x18) = (u32)D_80012100;
-    if (buckets) {
-        FreeFromHeap(g_pBlbHeapBase, buckets, 0, 0);
+void DestroyEntityAndFreeResources(GameState *gameState, s32 flags) {
+    void *depth_buckets = gameState->entity_pool_ptr;
+    gameState->postRenderCallbackContext = D_80012100;
+    if (depth_buckets) {
+        FreeFromHeap(g_pBlbHeapBase, depth_buckets, 0, 0);
     }
-    DestroyEntity(entity, 0);
+    DestroyEntity(gameState, 0);
     if (flags & 1) {
-        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+        FreeFromHeap(g_pBlbHeapBase, gameState, 0, 0);
     }
 }
 
@@ -56,20 +61,20 @@ void DestroyEntityAndFreeResources(void *entity, s32 flags) {
  * level-advance, or checkpoint-restore based on flag state. */
 INCLUDE_ASM("asm/nonmatchings/lvlload", GameModeCallback);
 
-extern void AddToZOrderList(u8 *obj, s32 zOrder);
+extern void AddToZOrderList(void *list, void *entity);
 
 /* Checkpoint snapshot. Saves the live tick_list_head (+0x1C) and
  * frame_counter (+0x10C) into the checkpoint slots (+0x134 / +0x138),
  * sets checkpoint_active (+0x14A) and pause_freeze (+0x63), clears the
  * tick list, then re-adds the GameState entity via AddToZOrderList. Run
  * when the player touches a checkpoint pickup. */
-void SaveCheckpointState(void *entity) {
-    *(u32 *)((u8 *)entity + 0x138) = *(u32 *)((u8 *)entity + 0x10C);
-    *(u32 *)((u8 *)entity + 0x134) = *(u32 *)((u8 *)entity + 0x1C);
-    *(u8 *)((u8 *)entity + 0x14A) = 1;
-    *(u8 *)((u8 *)entity + 0x63) = 1;
-    *(u32 *)((u8 *)entity + 0x1C) = 0;
-    AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
+void SaveCheckpointState(GameState *gameState) {
+    gameState->checkpoint_saved_frame_counter = gameState->frame_counter;
+    gameState->checkpoint_entity_list = gameState->tick_list_head;
+    gameState->checkpoint_active = 1;
+    gameState->pause_freeze_flag = 1;
+    gameState->tick_list_head = NULL;
+    AddToZOrderList(gameState, gameState->player_entity_alt);
 }
 
 /* Inverse of SaveCheckpointState. Restores the saved tick list (+0x134 ->
@@ -82,22 +87,22 @@ INCLUDE_ASM("asm/nonmatchings/lvlload", RestoreCheckpointEntities);
  * nodes at gs+0x134), unlinks the node whose id matches target, and frees
  * it. Returns 1 on hit, 0 if not found. Called when a respawnable pickup
  * is consumed so it won't reappear on the next checkpoint respawn. */
-s32 RemoveCheckpointEntityById(s32 gameState, s32 target) {
-    s32 *node = *(s32 **)(gameState + 0x134);
-    s32 *prev = 0;
+s32 RemoveCheckpointEntityById(GameState *gameState, s32 target) {
+    CheckpointEntityNode *node = (CheckpointEntityNode *)gameState->checkpoint_entity_list;
+    CheckpointEntityNode *prev = NULL;
 
-    while (node != 0) {
-        if (*(s32 *)((s32)node + 4) == target) {
-            if (prev == 0) {
-                *(s32 *)(gameState + 0x134) = *node;
+    while (node != NULL) {
+        if (node->entity_id == target) {
+            if (prev == NULL) {
+                gameState->checkpoint_entity_list = (EntityListNode *)node->next;
             } else {
-                *prev = *node;
+                prev->next = node->next;
             }
-            FreeFromHeap(g_pBlbHeapBase, (void *)node, 8, 0);
+            FreeFromHeap(g_pBlbHeapBase, node, 8, 0);
             return 1;
         }
         prev = node;
-        node = *(s32 **)(s32)node;
+        node = node->next;
     }
     return 0;
 }
@@ -113,41 +118,41 @@ INCLUDE_ASM("asm/nonmatchings/lvlload", PauseGameAndShowMenu);
  * fade_out_active (+0x151), hides the pause menu HUD, and arms the 22-frame
  * fade countdown (+0x160 = 0x16). GameModeCallback completes the transition
  * when the countdown reaches 0. */
-void PauseGameWithFadeOut(u8 *obj) {
+void PauseGameWithFadeOut(GameState *gameState) {
     PlaySoundEffect(FX_BUTTON_UNPAUSE, 0xA0, 1);
-    obj[0x151] = 1;
-    HidePauseMenuHUD(*(s32 *)&obj[0x14C]);
-    obj[0x160] = 0x16;
+    gameState->fade_out_active = 1;
+    HidePauseMenuHUD((s32)gameState->hud_entity_ptr);
+    gameState->pause_countdown = 0x16;
 }
 
 /* Triggers a fade-out and queues advance-to-next-level: sets fade_out_active
  * (+0x151), starts the 22-frame fade countdown (+0x160), and sets
  * next_level_flag (+0x147). Used by the pause menu's Quit/Continue option. */
-void SetNextLevelFlagWithFade(u8 *obj) {
-    obj[0x151] = 1;
-    obj[0x160] = 0x16;
-    obj[0x147] = 1;
+void SetNextLevelFlagWithFade(GameState *gameState) {
+    gameState->fade_out_active = 1;
+    gameState->pause_countdown = 0x16;
+    gameState->next_level_flag = 1;
 }
 
 extern void ResumeAllVoicePitches(void);
-extern void ClearTickList(void *entity);
+extern void ClearTickList(GameState *gameState);
 
 /* Unpause. Resumes SPU voices, restores saved frame_counter and
  * pause_freeze byte (+0x154/+0x158 -> +0x10C/+0x63), clears menu_active and
  * fade_out flags, swaps the saved tick list back via ClearTickList, and if
  * the cheat flag at +0x18D is set re-adds the player to the render list. */
-void UnpauseGameAndRestoreEntities(void *entity) {
+void UnpauseGameAndRestoreEntities(GameState *gameState) {
     ResumeAllVoicePitches();
-    *(u32 *)((u8 *)entity + 0x10C) = *(u32 *)((u8 *)entity + 0x154);
-    *(u8 *)((u8 *)entity + 0x63) = *(u8 *)((u8 *)entity + 0x158);
-    *(u8 *)((u8 *)entity + 0x151) = 0;
-    *(u8 *)((u8 *)entity + 0x150) = 0;
-    ClearTickList(entity);
-    *(u32 *)((u8 *)entity + 0x1C) = *(u32 *)((u8 *)entity + 0x15C);
-    *(u32 *)((u8 *)entity + 0x15C) = 0;
-    if (*(u8 *)((u8 *)entity + 0x18D)) {
-        AddToZOrderList(entity, *(void **)((u8 *)entity + 0x2C));
-        *(u8 *)((u8 *)entity + 0x18D) = 0;
+    gameState->frame_counter = gameState->saved_frame_counter;
+    gameState->pause_freeze_flag = gameState->saved_freeze_flag;
+    gameState->fade_out_active = 0;
+    gameState->menu_active = 0;
+    ClearTickList(gameState);
+    gameState->tick_list_head = gameState->saved_tick_list;
+    gameState->saved_tick_list = NULL;
+    if (gameState->player_readd_flag) {
+        AddToZOrderList(gameState, gameState->player_entity_alt);
+        gameState->player_readd_flag = 0;
     }
 }
 
@@ -157,18 +162,18 @@ void UnpauseGameAndRestoreEntities(void *entity) {
  * GameState entity out of the tick list, frees its entity lists, re-adds
  * it to the sorted render list, and stashes the entity-defs pointer
  * (+0x28 -> +0x13C) so SetupAndStartLevel can restore it on the next level. */
-void ClearEntitiesAndFadeToBlack(void *entity) {
-    void *field2c = *(void **)((u8 *)entity + 0x2C);
-    *(u8 *)((u8 *)entity + 0x145) = 1;
-    *(u8 *)((u8 *)entity + 0x130) = 1;
-    *(u8 *)((u8 *)entity + 0x131) = 0;
-    *(u8 *)((u8 *)entity + 0x132) = 0;
-    *(u8 *)((u8 *)entity + 0x133) = 0;
-    RemoveFromTickList(entity, field2c);
-    FreeEntityLists(entity);
-    AddEntityToSortedRenderList(entity, *(void **)((u8 *)entity + 0x2C));
-    *(u32 *)((u8 *)entity + 0x13C) = *(u32 *)((u8 *)entity + 0x28);
-    *(u32 *)((u8 *)entity + 0x28) = 0;
+void ClearEntitiesAndFadeToBlack(GameState *gameState) {
+    void *player_entity = gameState->player_entity_alt;
+    gameState->level_transition_complete = 1;
+    gameState->bg_color_change_flag = 1;
+    gameState->bg_color_r_pending = 0;
+    gameState->bg_color_g_pending = 0;
+    gameState->bg_color_b_pending = 0;
+    RemoveFromTickList(gameState, player_entity);
+    FreeEntityLists(gameState);
+    AddEntityToSortedRenderList(gameState, gameState->player_entity_alt);
+    gameState->entity_defs_backup = gameState->entity_spawn_list;
+    gameState->entity_spawn_list = NULL;
 }
 
 /* Trigger-zone subId -> RGB tint lookup. Reads the subId parameter,

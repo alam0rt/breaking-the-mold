@@ -120,7 +120,7 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitEntityType0x3DE);
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntitySpawnExplosionPieces);
 
 void EntityDestructor_Vtable0x80010870_A(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -128,7 +128,7 @@ void EntityDestructor_Vtable0x80010870_A(void *entity, s32 flags) {
 }
 
 void EntityDestructor_VtableAndHeapFree(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -136,7 +136,7 @@ void EntityDestructor_VtableAndHeapFree(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_B(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -144,7 +144,7 @@ void EntityDestructor_Vtable0x80010870_B(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_C(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -152,7 +152,7 @@ void EntityDestructor_Vtable0x80010870_C(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_D(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -160,7 +160,7 @@ void EntityDestructor_Vtable0x80010870_D(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_E(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -168,7 +168,7 @@ void EntityDestructor_Vtable0x80010870_E(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_F(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -176,7 +176,7 @@ void EntityDestructor_Vtable0x80010870_F(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_G(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -184,7 +184,7 @@ void EntityDestructor_Vtable0x80010870_G(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_H(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -192,7 +192,7 @@ void EntityDestructor_Vtable0x80010870_H(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_I(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -200,7 +200,7 @@ void EntityDestructor_Vtable0x80010870_I(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_J(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -208,7 +208,7 @@ void EntityDestructor_Vtable0x80010870_J(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_K(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -216,7 +216,7 @@ void EntityDestructor_Vtable0x80010870_K(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_L(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -224,7 +224,7 @@ void EntityDestructor_Vtable0x80010870_L(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_M(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -232,7 +232,7 @@ void EntityDestructor_Vtable0x80010870_M(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_N(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -240,7 +240,7 @@ void EntityDestructor_Vtable0x80010870_N(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_O(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -248,7 +248,7 @@ void EntityDestructor_Vtable0x80010870_O(void *entity, s32 flags) {
 }
 
 void EntityDestructor_Vtable0x80010870_P(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010870;
+    ((Entity *)entity)->collisionVtable = &D_80010870;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -262,7 +262,7 @@ void func_80030CA0(void) {
 }
 
 void EntityDestructor_Vtable0x80010870_Q(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_80010890;
+    ((Entity *)entity)->collisionVtable = &D_80010890;
     if (flag & 1) {
         FreeEntityNoTeardown_80030cdc(entity, 0x1C);
     }

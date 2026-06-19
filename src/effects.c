@@ -330,7 +330,7 @@ void EntityFadeInTickCallback(void *e) {
 }
 
 void EntityDestroyCallback_Vt80010BA8(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
+    ((Entity *)entity)->collisionVtable = &D_80010BA8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -338,7 +338,7 @@ void EntityDestroyCallback_Vt80010BA8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010BA8_80038510(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
+    ((Entity *)entity)->collisionVtable = &D_80010BA8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -354,7 +354,7 @@ void func_8003857C(void *e, u8 val) {
 }
 
 void EntityDestroyWithFreeCallback1(void *entity, s32 flags) {
-    *(void **)((u8 *)entity + 0x18) = &D_800109F0;
+    ((Entity *)entity)->collisionVtable = &D_800109F0;
     FreeWithCallback(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -362,7 +362,7 @@ void EntityDestroyWithFreeCallback1(void *entity, s32 flags) {
 }
 
 void EntityDestroyWithFreeCallback2(void *entity, s32 flags) {
-    *(void **)((u8 *)entity + 0x18) = &D_800109F0;
+    ((Entity *)entity)->collisionVtable = &D_800109F0;
     FreeWithCallback(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -370,7 +370,7 @@ void EntityDestroyWithFreeCallback2(void *entity, s32 flags) {
 }
 
 void EntityDestroyWithFreeCallback3(void *entity, s32 flags) {
-    *(void **)((u8 *)entity + 0x18) = &D_800109F0;
+    ((Entity *)entity)->collisionVtable = &D_800109F0;
     FreeWithCallback(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -378,7 +378,7 @@ void EntityDestroyWithFreeCallback3(void *entity, s32 flags) {
 }
 
 void EntityDestroyWithFreeCallback4(void *entity, s32 flags) {
-    *(void **)((u8 *)entity + 0x18) = &D_80010A10;
+    ((Entity *)entity)->collisionVtable = &D_80010A10;
     FreeWithCallback(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -386,7 +386,7 @@ void EntityDestroyWithFreeCallback4(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010A48(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010A48;
+    ((Entity *)entity)->collisionVtable = &D_80010A48;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -394,7 +394,7 @@ void EntityDestroyCallback_Vt80010A48(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010A68(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010A68;
+    ((Entity *)entity)->collisionVtable = &D_80010A68;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -402,7 +402,7 @@ void EntityDestroyCallback_Vt80010A68(void *entity, s32 flags) {
 }
 
 void EntityDestroyResourceType4(void *entity, s32 flags) {
-    *(void **)((u8 *)entity + 0x18) = &D_80010A88;
+    ((Entity *)entity)->collisionVtable = &D_80010A88;
     FreeResourceType4(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -448,7 +448,7 @@ void func_80038888(void *e) {
 }
 
 void EntityDestroyCallback_Vt80010B28(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010B28;
+    ((Entity *)entity)->collisionVtable = &D_80010B28;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -460,7 +460,7 @@ u32 func_800388F8(void *e) {
 }
 
 void EntityDestroyCallback_Vt80010BA8_80038904(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010BA8;
+    ((Entity *)entity)->collisionVtable = &D_80010BA8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -474,7 +474,7 @@ void NopStub_80038970(void) {
 }
 
 void EntityDestroyCallback_Vt80010BC8(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_80010BC8;
+    ((Entity *)entity)->collisionVtable = &D_80010BC8;
     if (flag & 1) {
         FreeEntityNoTeardown_800389ac(entity, 0x1C);
     }

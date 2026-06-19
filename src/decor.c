@@ -13,28 +13,28 @@ void FreeEntityNoTeardown_8002c7d8(void *e, u32 size) {
 
 void *InitPathDecorEntity(void *e, u8 *data, void *spriteDef, u32 mask, u8 flag) {
     InitEntitySprite(e, spriteDef, 0x3DE, *(s16 *)(data + 8), *(s16 *)(data + 0xA), mask & 0xFF);
-    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    ((Entity *)e)->collisionVtable = &D_80010870;
     InitPathFollowingDecorEntity(e, data, flag);
     return e;
 }
 
 void *InitPathDecorEntityWithSprite(void *e, u8 *data, void *spriteDef, u8 flag) {
     InitEntityWithSprite(e, spriteDef, 0x3DE, *(s16 *)(data + 8), *(s16 *)(data + 0xA));
-    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    ((Entity *)e)->collisionVtable = &D_80010870;
     InitPathFollowingDecorEntity(e, data, flag);
     return e;
 }
 
 void *InitPathDecorNoData(void *e, s32 x, s32 y, void *spriteDef, u8 flag) {
     InitEntitySprite(e, spriteDef, 0x3DE, (s16)x, (s16)y, flag);
-    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    ((Entity *)e)->collisionVtable = &D_80010870;
     InitPathFollowingDecorEntity(e, NULL, 1);
     return e;
 }
 
 void *InitPathDecorNoDataWithSprite(void *e, s32 x, s32 y, void *spriteDef) {
     InitEntityWithSprite(e, spriteDef, 0x3DE, (s16)x, (s16)y);
-    *(void **)((u8 *)e + 0x18) = &D_80010870;
+    ((Entity *)e)->collisionVtable = &D_80010870;
     InitPathFollowingDecorEntity(e, NULL, 1);
     return e;
 }
@@ -74,18 +74,18 @@ void *EntityCollision_FlagAndDispatch(Entity *e, u32 event) {
 
 extern void InterpolateTimedPathPosition(void *time, s16 *out, void *pathData, s16 duration, s32 unused);
 
-void EntityTick_PathFollowUpdate(u8 *e) {
+void EntityTick_PathFollowUpdate(TimedPathEntity *e) {
     s16 out[2];
-    *(u16 *)(e + 0x10E) += 1;
+    e->pathTime += 1;
     InterpolateTimedPathPosition(
-        e + 0x10E,
+        &e->pathTime,
         out,
-        *(void **)(e + 0x108),
-        *(s16 *)(e + 0x10C),
+        e->pathData,
+        e->pathDuration,
         8
     );
-    *(s16 *)(e + 0x68) = *(u16 *)(e + 0x104) + (u16)out[0];
-    *(s16 *)(e + 0x6A) = *(u16 *)(e + 0x106) + (u16)out[1];
+    e->sprite.base.worldX = e->pathOriginX + (u16)out[0];
+    e->sprite.base.worldY = e->pathOriginY + (u16)out[1];
 }
 
 INCLUDE_ASM("asm/nonmatchings/decor", EntityTick_EasedMovementInterpolation);

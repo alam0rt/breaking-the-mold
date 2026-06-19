@@ -10,7 +10,7 @@ extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
 void PlayerClearSwirlPortalEntity(void *e) {
-    *(u8 *)((u8 *)g_pGameState + 0x62) = 0;
+    g_pGameState->camera_follow_direction = 0;
     if (*(void **)((u8 *)e + 0x140) != NULL) {
         RemoveEntityFromAllLists(g_pGameState, *(void **)((u8 *)e + 0x140));
         *(void **)((u8 *)e + 0x140) = NULL;
@@ -35,11 +35,11 @@ INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerColoredParticle);
 
 INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerDeathEffect);
 
-void ApplyRandomRGBEffect(void *e) {
-    *(u8 *)((u8 *)e + 0x15D) = rand();
-    *(u8 *)((u8 *)e + 0x15E) = rand();
-    *(u8 *)((u8 *)e + 0x15F) = rand();
-    *(u8 *)((u8 *)e + 0x1AE) = 1;
+void ApplyRandomRGBEffect(PlayerEntity *e) {
+    e->baseRGB[0] = rand();
+    e->baseRGB[1] = rand();
+    e->baseRGB[2] = rand();
+    e->damageFlag = 1;
 }
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerTickCallback);
@@ -48,15 +48,14 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_IdleRandom);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SimpleTick);
 
-void PlayerState_FrameCountTick(void *e) {
-    *(u16 *)((u8 *)e + 0x156) += 1;
+void PlayerState_FrameCountTick(PlayerEntity *e) {
+    e->jumpParam += 1;
     PlayerTickCallback(e);
 }
 
-void PlayerState_CooldownTick(void *e) {
-    u8 *p = (u8 *)e;
-    if (p[0x13C] != 0) {
-        p[0x13C]--;
+void PlayerState_CooldownTick(PlayerEntity *e) {
+    if (e->timer13C != 0) {
+        e->timer13C--;
     }
     PlayerTickCallback(e);
 }
@@ -66,18 +65,18 @@ void PlayerState_CooldownTick(void *e) {
  * the visual angle (entity+0x72) by +0x20 per frame, wrapping at 0x1000.
  * Tail-calls PlayerTickCallback for the standard sprite/animation tick. */
 void PlayerState_FallWithRotation(Entity *e) {
-    s32 vy = *(s32 *)((u8 *)e + 0x50);
+    s32 vy = e->scaleRender;
     if (vy != 0) {
         vy -= 0xC00;
-        *(s32 *)((u8 *)e + 0x50) = vy;
-        *(s32 *)((u8 *)e + 0x54) = vy;
+        e->scaleRender = vy;
+        e->scaleRender2 = vy;
     }
     {
-        u16 angle = *(u16 *)((u8 *)e + 0x72);
+        u16 angle = e->targetY;
         u16 new_angle = angle + 0x20;
-        *(u16 *)((u8 *)e + 0x72) = new_angle;
+        e->targetY = new_angle;
         if (new_angle >= 0x1000) {
-            *(u16 *)((u8 *)e + 0x72) = angle - 0xFE0;
+            e->targetY = angle - 0xFE0;
         }
     }
     PlayerTickCallback(e);
@@ -86,7 +85,7 @@ void PlayerState_FallWithRotation(Entity *e) {
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
 
 void PlayerState_QueuedCallbackTimer(Entity *e) {
-    u16 *ctr = (u16 *)((u8 *)e + 0x166);
+    u16 *ctr = (u16 *)&((PlayerEntity *)e)->_pad164[2];
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {
@@ -198,8 +197,8 @@ INCLUDE_ASM("asm/nonmatchings/playst", TryActivatePowerup);
  * compiler short-circuits the four bit tests in the rather odd
  * 4 → 1 → 8 → 2 order seen in the original — preserved here for byte-match. */
 void PlayerPlaySoundOnDirectionInput(Entity *e) {
-    void *p = *(void **)((u8 *)e + 0x100);
-    u16 flags = *(u16 *)((u8 *)p + 2);
+    InputState *input = ((PlayerEntity *)e)->pInput;
+    u16 flags = input->buttons_pressed;
     s32 a1 = 0;
     if (flags & 4) goto fire;
     if (flags & 1) goto fire;

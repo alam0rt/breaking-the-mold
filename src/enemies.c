@@ -2,9 +2,9 @@
 #include "functions.h"
 #include "Game/entity_events.h"
 #include "Game/callback_slot.h"
+#include "globals.h"
 
 extern void *g_pBlbHeapBase;
-extern u8 *g_pGameState;
 extern void CheckAndDisableSpawnDataOffscreen(void *entity);
 extern void CollisionCheckWrapper(void *e, s32 a, s32 b, s32 c);
 extern void CheckAndDisableChildEntityOffscreen(void *e);
@@ -58,7 +58,7 @@ void *InitCollectibleEntityFromSpawn(void *e, void *spawn, u32 spriteId) {
     InitEntitySprite(e, spriteId, 0x3CA,
                      *(s16 *)((u8 *)spawn + 0x8),
                      (s16)(*(u16 *)((u8 *)spawn + 0xA) - 1), 0);
-    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &D_80010DE4;
     InitCollectibleEntity(e, spawn);
     return e;
 }
@@ -67,14 +67,14 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleFromSpawn);
 
 void *InitCollectibleEntityDirect(void *e, u32 spriteId, s16 x, s16 y) {
     InitEntitySprite(e, spriteId, 0x3CA, x, y, 0);
-    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &D_80010DE4;
     InitCollectibleEntity(e, NULL);
     return e;
 }
 
 void *CreateCollectibleAtPosition(void *e, void *spriteDef, s16 x, s16 y) {
     InitEntityWithSprite(e, spriteDef, 0x3CA, x, y);
-    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &D_80010DE4;
     InitCollectibleEntity(e, NULL);
     return e;
 }
@@ -195,9 +195,9 @@ void StartAnimSequence4C(void *e) {
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEnemy);
 
 void DestroySoundEmitterEntity(void *e, u32 flags) {
-    *(void **)((u8 *)e + 0x18) = &D_80010DA4;
+    ((Entity *)e)->collisionVtable = &D_80010DA4;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x128));
-    *(void **)((u8 *)e + 0x18) = &D_80010DE4;
+    ((Entity *)e)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
@@ -238,7 +238,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitSpecialPickupEntity);
 INCLUDE_ASM("asm/nonmatchings/enemies", TripleLaserMonkeyDeathTick);
 
 void TripleLaserMonkeyConditionalTick(Entity *e) {
-    if ((*(s32 *)(g_pGameState + 0x10C) & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
+    if ((g_pGameState->frame_counter & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
         EntityProcessCallbackQueue(e);
     }
     TripleLaserMonkeyDeathTick(e);
@@ -332,7 +332,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySpawnerTickCallback);
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingHazard);
 
 void DestroySoundEntityWithVoice(void *e, u32 flags) {
-    *(void **)((u8 *)e + 0x18) = &D_80010CE4;
+    ((Entity *)e)->collisionVtable = &D_80010CE4;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
     DestroyEntityAndFreeMemory(e, 0);
     if (flags & 1) {
@@ -347,7 +347,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityPathFollowerWithTriggerZone);
 INCLUDE_ASM("asm/nonmatchings/enemies", InitLevelStateCollectible);
 
 void ConditionalCollectibleTick(Entity *e) {
-    if ((*(s32 *)(g_pGameState + 0x10C) & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
+    if ((g_pGameState->frame_counter & 0x7F) == *(u8 *)((u8 *)e + 0x110)) {
         EntityProcessCallbackQueue(e);
     }
     CollectibleTickCallback(e);
@@ -422,7 +422,7 @@ void CollectibleTickWithSoundPanning(void *e) {
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnMultipleProjectiles);
 
 void EntityDestroyCallback_Vt80010C64(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010C64;
+    ((Entity *)entity)->collisionVtable = &D_80010C64;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -430,7 +430,7 @@ void EntityDestroyCallback_Vt80010C64(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -438,7 +438,7 @@ void EntityDestroyCallback_Vt80010DE4(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_800410bc(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -446,7 +446,7 @@ void EntityDestroyCallback_Vt80010DE4_800410bc(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_80041120(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -454,7 +454,7 @@ void EntityDestroyCallback_Vt80010DE4_80041120(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010E04(void *entity, u32 flag) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010E04;
+    ((Entity *)entity)->collisionVtable = &D_80010E04;
     if (flag & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
@@ -465,7 +465,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", func_800411CC);
 INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityFromHeapContext);
 
 void EntityDestroyCallback_Vt80010DE4_80041230(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -473,7 +473,7 @@ void EntityDestroyCallback_Vt80010DE4_80041230(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_80041294(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -481,7 +481,7 @@ void EntityDestroyCallback_Vt80010DE4_80041294(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_800412f8(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -489,7 +489,7 @@ void EntityDestroyCallback_Vt80010DE4_800412f8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_8004135c(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -497,7 +497,7 @@ void EntityDestroyCallback_Vt80010DE4_8004135c(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80010DE4_800413c0(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80010DE4;
+    ((Entity *)entity)->collisionVtable = &D_80010DE4;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -511,7 +511,7 @@ void NopStub_8004142c(void) {
 }
 
 void EntityDestroyCallback_Vt80010E04_80041434(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_80010E04;
+    ((Entity *)entity)->collisionVtable = &D_80010E04;
     if (flag & 1) {
         FreeEntityNoTeardown_80041468(entity, 0x1C);
     }
@@ -542,7 +542,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableChildEntityOffscreen);
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledPlatformEntity);
 
 void EntityConditionalActivateTick(Entity *e) {
-    if ((*(s32 *)(g_pGameState + 0x10C) & 0x7F) == *(s32 *)(*(u8 **)((u8 *)e + 0x108) + 0xC)) {
+    if ((g_pGameState->frame_counter & 0x7F) == *(s32 *)(*(u8 **)((u8 *)e + 0x108) + 0xC)) {
         EntitySetState(e, D_800A5AE8, D_800A5AEC);
     }
     EntityUpdateCallback(e);
@@ -646,18 +646,18 @@ s32 EntityEventPassthrough_Event2(void *entity, u32 event) {
 
 extern void InterpolateTimedPathPosition(void *time, s16 *out, void *pathData, s16 duration, s32 unused);
 
-void EntityPathMovementUpdate(u8 *e) {
+void EntityPathMovementUpdate(TimedPathEntity *e) {
     s16 out[2];
-    *(u16 *)(e + 0x10E) += 1;
+    e->pathTime += 1;
     InterpolateTimedPathPosition(
-        e + 0x10E,
+        &e->pathTime,
         out,
-        *(void **)(e + 0x108),
-        *(s16 *)(e + 0x10C),
+        e->pathData,
+        e->pathDuration,
         8
     );
-    *(s16 *)(e + 0x68) = *(u16 *)(e + 0x104) + (u16)out[0];
-    *(s16 *)(e + 0x6A) = *(u16 *)(e + 0x106) + (u16)out[1];
+    e->sprite.base.worldX = e->pathOriginX + (u16)out[0];
+    e->sprite.base.worldY = e->pathOriginY + (u16)out[1];
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_IdleState);
@@ -702,14 +702,14 @@ s32 SwitchEventHandler_SetGameFlag(u8 *e, u32 event) {
         u8 *p = *(u8 **)(e + 0x100);
         u16 val = *(u16 *)(p + 0x12);
         if ((u16)(val - 0x22) < 2 || val == 0x24) {
-            g_pGameState[0x11A] = 0x14;
+            *(u8 *)&g_pGameState->screen_shake_index = 0x14;
         }
     }
     return 0;
 }
 
-void EntityIncrementWorldX(void *e) {
-    *(s16 *)((u8 *)e + 0x68) += 1;
+void EntityIncrementWorldX(Entity *e) {
+    e->worldX += 1;
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityHideWithTimer);
@@ -764,9 +764,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffscreenParentCleanupTick);
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCameraTrackingEntity);
 
 void SoundEmitterDestroyCallback(void *e, u32 flags) {
-    *(void **)((u8 *)e + 0x18) = &D_80011048;
+    ((Entity *)e)->collisionVtable = &D_80011048;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x20));
-    *(void **)((u8 *)e + 0x18) = &D_800111C8;
+    ((Entity *)e)->collisionVtable = &D_800111C8;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
@@ -775,7 +775,7 @@ void SoundEmitterDestroyCallback(void *e, u32 flags) {
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterWithPanningTick);
 
 void EntityDestroyCallback_Vt80011068(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011068;
+    ((Entity *)entity)->collisionVtable = &D_80011068;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -783,7 +783,7 @@ void EntityDestroyCallback_Vt80011068(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011088(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011088;
+    ((Entity *)entity)->collisionVtable = &D_80011088;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -791,7 +791,7 @@ void EntityDestroyCallback_Vt80011088(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt800110A8(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800110A8;
+    ((Entity *)entity)->collisionVtable = &D_800110A8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -799,14 +799,14 @@ void EntityDestroyCallback_Vt800110A8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt800111C8(void *e, u32 flags) {
-    *(void **)((u8 *)e + 0x18) = &D_800111C8;
+    ((Entity *)e)->collisionVtable = &D_800111C8;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
     }
 }
 
 void EntityDestroyCallback_Vt800110E8(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800110E8;
+    ((Entity *)entity)->collisionVtable = &D_800110E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -814,7 +814,7 @@ void EntityDestroyCallback_Vt800110E8(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011108(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011108;
+    ((Entity *)entity)->collisionVtable = &D_80011108;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -822,7 +822,7 @@ void EntityDestroyCallback_Vt80011108(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011128(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011128;
+    ((Entity *)entity)->collisionVtable = &D_80011128;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -830,7 +830,7 @@ void EntityDestroyCallback_Vt80011128(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011148(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011148;
+    ((Entity *)entity)->collisionVtable = &D_80011148;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -838,7 +838,7 @@ void EntityDestroyCallback_Vt80011148(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011168(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011168;
+    ((Entity *)entity)->collisionVtable = &D_80011168;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -846,7 +846,7 @@ void EntityDestroyCallback_Vt80011168(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011188(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011188;
+    ((Entity *)entity)->collisionVtable = &D_80011188;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -860,7 +860,7 @@ void NopStub_80045e78(void) {
 }
 
 void EntityDestroyCallback_Vt800111C8_80045e80(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_800111C8;
+    ((Entity *)entity)->collisionVtable = &D_800111C8;
     if (flag & 1) {
         FreeEntityNoTeardown_80045eb4(entity, 0x1C);
     }
@@ -915,9 +915,9 @@ void StartAnimSequence13Frames(void *e) {
 INCLUDE_ASM("asm/nonmatchings/enemies", InitPathFollowingEntity_Alt);
 
 void SoundEntityDestroyCallback(void *e, u32 flags) {
-    *(void **)((u8 *)e + 0x18) = &D_800111E8;
+    ((Entity *)e)->collisionVtable = &D_800111E8;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x118));
-    *(void **)((u8 *)e + 0x18) = &D_80011228;
+    ((Entity *)e)->collisionVtable = &D_80011228;
     DestroyEntityAndFreeMemory(e, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
@@ -938,7 +938,7 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetWalkSprite);
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetIdleSprite);
 
 void EnemyDestroyCallback_0x80011228(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011228;
+    ((Entity *)entity)->collisionVtable = &D_80011228;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -946,7 +946,7 @@ void EnemyDestroyCallback_0x80011228(void *entity, s32 flags) {
 }
 
 void EntityDestroyCallback_Vt80011228(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011228;
+    ((Entity *)entity)->collisionVtable = &D_80011228;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -960,7 +960,7 @@ void NopStub_80046cec(void) {
 }
 
 void EntityDestroyCallback_Vt80011248(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_80011248;
+    ((Entity *)entity)->collisionVtable = &D_80011248;
     if (flag & 1) {
         FreeEntityNoTeardown_80046d28(entity, 0x1C);
     }

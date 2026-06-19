@@ -4,7 +4,14 @@
 
 extern u8 D_80011804[];
 
-s32 CheckTileCollisionOverride(void *entity, u8 *tile);
+#define PLAYER_TILE_PASSABLE                 0x65
+#define PLAYER_TILE_SPECIAL_MARKER           0x7D
+#define PLAYER_TILE_INVINCIBLE_OVERRIDE_C9   0xC9
+#define PLAYER_TILE_INVINCIBLE_OVERRIDE_CB   0xCB
+#define PLAYER_TILE_INVINCIBLE_RANGE1_OFFSET 0x4B
+#define PLAYER_TILE_INVINCIBLE_RANGE2_OFFSET 0x23
+
+s32 CheckTileCollisionOverride(PlayerEntity *entity, u8 *tile);
 
 /*
  * Constructor for the main platformer PlayerEntity (0x1B4 used, 0x3E8
@@ -28,11 +35,10 @@ INCLUDE_ASM("asm/nonmatchings/player", InitPlayerSpriteAvailability);
  * (+0x174), then tears down the entity and optionally frees its heap
  * allocation when called with flags & 1.
  */
-void EntityDestructor_WithSPUVoiceStop(void *entity, s32 flags) {
-    u8 *e = (u8 *)entity;
-    *(u32 *)(e + 0x18) = (u32)D_80011804;
-    StopSPUVoice(*(s32 *)(e + 0x174));
-    DestroyEntityAndFreeMemory(entity, 0);
+void EntityDestructor_WithSPUVoiceStop(PlayerEntity *entity, s32 flags) {
+    entity->sprite.base.collisionVtable = D_80011804;
+    StopSPUVoice(entity->soundHandle);
+    DestroyEntityAndFreeMemory((SpriteEntity *)entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
@@ -49,43 +55,45 @@ INCLUDE_ASM("asm/nonmatchings/player", CheckWallCollision);
 /*
  * Ceiling presence probe at (x, y-0x40) - roughly head height for a
  * normal-size player. Returns true when the tile there is NOT the
- * passable tile 0x65 (i.e. something solid is overhead).
+ * passable tile PLAYER_TILE_PASSABLE (i.e. something solid is overhead).
  */
-s32 CheckCollisionAbove40(void *entity) {
+s32 CheckCollisionAbove40(Entity *entity) {
     u8 tile;
-    s16 x = *(s16 *)((u8 *)entity + 0x68);
-    s16 y = (s16)(*(u16 *)((u8 *)entity + 0x6A) - 0x40);
+    s16 x = entity->worldX;
+    s16 y = entity->worldY - 0x40;
     tile = EntityApplyMovementCallbacks(entity, x, y);
-    CheckTileCollisionOverride(entity, &tile);
-    return tile != 0x65;
+    CheckTileCollisionOverride((PlayerEntity *)entity, &tile);
+    return tile != PLAYER_TILE_PASSABLE;
 }
 
 /*
  * Specific tile-type probe one pixel higher than CheckCollisionAbove40
- * (y-0x41). Returns true only when the overhead tile is exactly 0x7D -
+ * (y-0x41). Returns true only when the overhead tile is exactly
+ * PLAYER_TILE_SPECIAL_MARKER -
  * a special marker tile (likely water surface / hazard signal above).
  */
-s32 CheckCollisionAbove41(void *entity) {
+s32 CheckCollisionAbove41(Entity *entity) {
     u8 tile;
-    s16 x = *(s16 *)((u8 *)entity + 0x68);
-    s16 y = (s16)(*(u16 *)((u8 *)entity + 0x6A) - 0x41);
+    s16 x = entity->worldX;
+    s16 y = entity->worldY - 0x41;
     tile = EntityApplyMovementCallbacks(entity, x, y);
-    CheckTileCollisionOverride(entity, &tile);
-    return tile == 0x7D;
+    CheckTileCollisionOverride((PlayerEntity *)entity, &tile);
+    return tile == PLAYER_TILE_SPECIAL_MARKER;
 }
 
 /*
  * Tile-type probe one pixel below the player's feet (y+1). Returns true
- * when the underlying tile is exactly 0x7D - the same special marker as
- * Above41, consistent with a water-surface / submerged-hazard check.
+ * when the underlying tile is exactly PLAYER_TILE_SPECIAL_MARKER - the
+ * same special marker as Above41, consistent with a water-surface /
+ * submerged-hazard check.
  */
-s32 CheckCollisionBelow1(void *entity) {
+s32 CheckCollisionBelow1(Entity *entity) {
     u8 tile;
-    s16 x = *(s16 *)((u8 *)entity + 0x68);
-    s16 y = (s16)(*(u16 *)((u8 *)entity + 0x6A) + 1);
+    s16 x = entity->worldX;
+    s16 y = entity->worldY + 1;
     tile = EntityApplyMovementCallbacks(entity, x, y);
-    CheckTileCollisionOverride(entity, &tile);
-    return tile == 0x7D;
+    CheckTileCollisionOverride((PlayerEntity *)entity, &tile);
+    return tile == PLAYER_TILE_SPECIAL_MARKER;
 }
 
 /*
@@ -139,14 +147,14 @@ INCLUDE_ASM("asm/nonmatchings/player", IsEntityNearSoundTrigger);
 /*
  * Powerup-aware tile filter: when the player's invincibilityTimer
  * (+0x128) is non-zero, rewrites certain destructible tile codes
- * (0xB5-0xB7, 0xC9, 0xCB, 0xDD-0xDF) to the passable tile 0x65,
+ * (0xB5-0xB7, 0xC9, 0xCB, 0xDD-0xDF) to the passable tile,
  * letting an invincible/charged player phase through them.
  */
-s32 CheckTileCollisionOverride(void *entity, u8 *tile) {
+s32 CheckTileCollisionOverride(PlayerEntity *entity, u8 *tile) {
     u8 t = *tile;
-    if ((u8)(t + 0x4B) < 3 || (t & 0xFF) == 0xC9 || (t & 0xFF) == 0xCB || (u8)(t + 0x23) < 3) {
-        if (*(u8 *)((u8 *)entity + 0x128) != 0) {
-            *tile = 0x65;
+    if ((u8)(t + PLAYER_TILE_INVINCIBLE_RANGE1_OFFSET) < 3 || (t & 0xFF) == PLAYER_TILE_INVINCIBLE_OVERRIDE_C9 || (t & 0xFF) == PLAYER_TILE_INVINCIBLE_OVERRIDE_CB || (u8)(t + PLAYER_TILE_INVINCIBLE_RANGE2_OFFSET) < 3) {
+        if (entity->invincibilityTimer != 0) {
+            *tile = PLAYER_TILE_PASSABLE;
             return 0;
         }
         return 1;

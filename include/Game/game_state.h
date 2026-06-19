@@ -163,8 +163,8 @@ typedef struct {
     /* 0x133 */ u8   bg_color_b_pending;         /* Pending BG B component */
     
     /* Checkpoint system (0x134-0x14F) */
-    /* 0x134 */ void *checkpoint_entity_list;    /* Saved entity tick list for checkpoint respawn */
-    /* 0x138 */ u32  checkpoint_saved_score;     /* Saves frame_counter at checkpoint */
+    /* 0x134 */ EntityListNode *checkpoint_entity_list; /* Saved entity tick list for checkpoint respawn */
+    /* 0x138 */ u32  checkpoint_saved_frame_counter; /* Saves frame_counter at checkpoint */
     /* 0x13C */ void *entity_defs_backup;        /* Backed up entity defs ptr in ClearEntitiesAndFadeToBlack */
     /* 0x140 */ InputState *input_state_ptr;     /* Input state pointer, also stored in player entity[0x40] */
     /* 0x144 */ u8   level_clear_pending;        /* Level clear pending flag (triggers ClearEntitiesAndFadeToBlack) */
@@ -187,7 +187,7 @@ typedef struct {
     /* 0x154 */ u32  saved_frame_counter;        /* Saved frame counter for pause restore */
     /* 0x158 */ u8   saved_freeze_flag;          /* Saved pause state byte */
     /* 0x159 */ u8   _pad_159[3];                /* Padding to 4-byte alignment */
-    /* 0x15C */ void *saved_tick_list;           /* Saved tick list for pause restore */
+    /* 0x15C */ EntityListNode *saved_tick_list; /* Saved tick list for pause restore */
     /* 0x160 */ u8   pause_countdown;            /* Pause fade countdown (0x16 = 22 frames) */
     /* 0x161 */ u8   spawn_freeze_flag;          /* Spawn freezing flag (set by checkpoint) */
     /* 0x162 */ u8   _pad_162[2];                /* Padding to 4-byte alignment */

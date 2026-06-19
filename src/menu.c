@@ -94,7 +94,7 @@ Entity *InitMenuCursorEntity(Entity *entity, s16 x, s16 y) {
     s16 m1;
     void (*fn)(Entity *);
     InitEntityWithSprite(entity, &D_8009CBDC, 0x7D0, x, y);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_800120AC;
+    entity->collisionVtable = &D_800120AC;
     __asm__ volatile("" ::: "memory");
     m1 = -1;
     fn = (void (*)(Entity *))GetWorldPositionX;
@@ -192,7 +192,7 @@ Entity *InitMenuButtonEntity(Entity *entity, s16 x, s16 y) {
     s16 m1;
     void (*fn)(Entity *);
     InitEntityWithSprite(entity, &D_8009CBE8, 0x7D0, x, y);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_8001208C;
+    entity->collisionVtable = &D_8001208C;
     __asm__ volatile("" ::: "memory");
     m1 = -1;
     fn = (void (*)(Entity *))GetWorldPositionX;
@@ -264,7 +264,7 @@ void MenuSetEntityIdle2(Entity *entity) {
  * move-callbacks. Returns the button entity. */
 Entity *InitMenuButtonWithSpriteId(Entity *entity, u32 spriteId, s16 x, s16 y) {
     InitEntitySprite(entity, spriteId, 0x3E8, x, y, 0);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80012034;
+    entity->collisionVtable = &D_80012034;
     AttachCursorToButton(entity);
     return entity;
 }
@@ -275,7 +275,7 @@ Entity *InitMenuButtonWithSpriteId(Entity *entity, u32 spriteId, s16 x, s16 y) {
  * Sets vtable=D_80012034 then AttachCursorToButton. */
 Entity *InitMenuButtonWithSpritePtr(Entity *entity, void *spriteDef, s16 x, s16 y) {
     InitEntityWithSprite(entity, spriteDef, 0x3E8, x, y);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80012034;
+    entity->collisionVtable = &D_80012034;
     AttachCursorToButton(entity);
     return entity;
 }
@@ -382,9 +382,9 @@ void Menu_PlayConfirmSound(void) {
  * +0x109 -- these gate which Menu_Play*SoundIfEnabled helpers fire. */
 Entity *InitMenuPasswordButton(Entity *entity, s16 x, s16 y, u8 typeByte, u8 backFlag) {
     InitEntitySprite(entity, SPR_MENU_BUTTON_NAV, 0x3E8, x, y, 0);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80012034;
+    entity->collisionVtable = &D_80012034;
     AttachCursorToButton(entity);
-    *(s32 *)((u8 *)entity + 0x18) = (s32)&D_80011FDC;
+    entity->collisionVtable = &D_80011FDC;
     *((u8 *)entity + 0x108) = typeByte;
     *((u8 *)entity + 0x109) = backFlag;
     return entity;

@@ -1,7 +1,7 @@
 #include "common.h"
 #include "functions.h"
+#include "globals.h"
 
-extern u8 *g_pGameState;
 extern void *g_pBlbHeapBase;
 extern void *D_800112E8;
 extern void *D_80011308;
@@ -234,16 +234,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStartLoopAttackState);
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardDeathState);
 
 void ShrineyGuardDeathCallback(u8 *e) {
-    g_pGameState[0x148] = e[0x110];
+    g_pGameState->direct_level_load = e[0x110];
     e[0x106] = 1;
 }
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBoss);
 
 void JoeHeadJoeBossDestructor(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011288;
+    ((Entity *)entity)->collisionVtable = &D_80011288;
     *(s32 *)((u8 *)entity + 0x118) = -1;
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011388;
+    ((Entity *)entity)->collisionVtable = &D_80011388;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -299,14 +299,14 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDeathAnimState);
 void KloggDeathCallback(u8 *e) {
     u8 *p = *(u8 **)(e + 0x34);
     p[0xA] = 0;
-    g_pGameState[0x148] = e[0x110];
+    g_pGameState->direct_level_load = e[0x110];
     e[0x106] = 1;
 }
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBoss);
 
 void KloggDestroyCallback(void *e, u32 flags) {
-    *(void **)((u8 *)e + 0x18) = &D_80011268;
+    ((Entity *)e)->collisionVtable = &D_80011268;
     StopSPUVoice(*(s32 *)((u8 *)e + 0x110));
     *(s32 *)((u8 *)e + 0x110) = -1;
     DestroyEntityAndFreeMemory(e, 0);
@@ -361,13 +361,13 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EnemyDefeatState);
 void MonkeyMageDeathCallback(u8 *e) {
     u8 *p = *(u8 **)(e + 0x34);
     p[0xA] = 0;
-    g_pGameState[0x148] = e[0x106];
+    g_pGameState->direct_level_load = e[0x106];
 }
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MonkeyMageDestroyCallback);
 
 void MonkeyMagePartDestroyCallback(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011388;
+    ((Entity *)entity)->collisionVtable = &D_80011388;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -375,7 +375,7 @@ void MonkeyMagePartDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMagePlatformDestroyCallback(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800112E8;
+    ((Entity *)entity)->collisionVtable = &D_800112E8;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -383,7 +383,7 @@ void MonkeyMagePlatformDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageForceFieldDestroyCallback(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011328;
+    ((Entity *)entity)->collisionVtable = &D_80011328;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -391,7 +391,7 @@ void MonkeyMageForceFieldDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageAuxDestroyCallback(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011348;
+    ((Entity *)entity)->collisionVtable = &D_80011348;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -399,7 +399,7 @@ void MonkeyMageAuxDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageBossPartDestroyCallback(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011368;
+    ((Entity *)entity)->collisionVtable = &D_80011368;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -407,7 +407,7 @@ void MonkeyMageBossPartDestroyCallback(void *entity, s32 flags) {
 }
 
 void MonkeyMageHUDDestroyCallback(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011388;
+    ((Entity *)entity)->collisionVtable = &D_80011388;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -423,7 +423,7 @@ void func_8004F02C(void) {
 extern void *D_800113A8;
 
 void MonkeyMageSimpleDestroyCallback(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_800113A8;
+    ((Entity *)entity)->collisionVtable = &D_800113A8;
     if (flag & 1) {
         FreeEntityAllocOnly(entity, 0x1C);
     }

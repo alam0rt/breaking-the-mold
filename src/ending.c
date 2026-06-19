@@ -28,7 +28,7 @@ INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsCompleteTick);
 INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsFadeOutTick);
 
 void EndingEntityDestroyCallback_1E54(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011E54;
+    ((Entity *)entity)->collisionVtable = &D_80011E54;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -36,7 +36,7 @@ void EndingEntityDestroyCallback_1E54(void *entity, s32 flags) {
 }
 
 void EndingEntityDestroyCallback_1E74(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80011E74;
+    ((Entity *)entity)->collisionVtable = &D_80011E74;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -55,7 +55,7 @@ void func_80079DEC(void) {
 }
 
 void EndingEntityDestroyCallback_2034(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    ((Entity *)entity)->collisionVtable = &D_80012034;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -63,7 +63,7 @@ void EndingEntityDestroyCallback_2034(void *entity, s32 flags) {
 }
 
 void EndingEntityDestroyCallback_2034_V2(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    ((Entity *)entity)->collisionVtable = &D_80012034;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -71,7 +71,7 @@ void EndingEntityDestroyCallback_2034_V2(void *entity, s32 flags) {
 }
 
 void EndingEntityDestroyCallback_2034_V3(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    ((Entity *)entity)->collisionVtable = &D_80012034;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -79,7 +79,7 @@ void EndingEntityDestroyCallback_2034_V3(void *entity, s32 flags) {
 }
 
 void EndingEntityDestroyCallback_2034_V4(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    ((Entity *)entity)->collisionVtable = &D_80012034;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -103,7 +103,7 @@ void func_80079FA8(void) {
 }
 
 void EndingEntityDestroyCallback_2034_V5(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_80012034;
+    ((Entity *)entity)->collisionVtable = &D_80012034;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -111,7 +111,7 @@ void EndingEntityDestroyCallback_2034_V5(void *entity, s32 flags) {
 }
 
 void EndingEntityDestroyCallback_208C(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_8001208C;
+    ((Entity *)entity)->collisionVtable = &D_8001208C;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -119,7 +119,7 @@ void EndingEntityDestroyCallback_208C(void *entity, s32 flags) {
 }
 
 void EndingEntityDestroyCallback_20AC(void *entity, s32 flags) {
-    *(u32 *)((u8 *)entity + 0x18) = (u32)&D_800120AC;
+    ((Entity *)entity)->collisionVtable = &D_800120AC;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
@@ -133,7 +133,7 @@ void func_8007A0E4(void) {
 }
 
 void EndingEntityDestroyCallback_20CC(void *entity, u32 flag) {
-    *(void **)((u8 *)entity + 0x18) = &D_800120CC;
+    ((Entity *)entity)->collisionVtable = &D_800120CC;
     if (flag & 1) {
         FreeEntityNoTeardown_8007a120(entity, 0x1C);
     }
