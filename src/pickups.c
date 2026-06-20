@@ -230,9 +230,68 @@ void DecorSetSpriteActive(Entity *e) {
     SetEntitySpriteId(e, 0x980861A3, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartAnimation);
+/* Decor-entity initializer that installs the standard "offscreen tick +
+ * flag-and-dispatch collision + queued sprite-active state" trio of
+ * callback slots and swaps to sprite 0x880161A7. Three CallbackSlot
+ * block-copies bracket a SetEntitySpriteId call; cc1 caches the
+ * shared markerHi (-1) in $s0 across the SetEntitySpriteId call
+ * because the same scalar `m1` value is reused on both sides.
+ *
+ * Match recipe: one TripadSlot scratch is reused for all three
+ * installs (cc1 reloads sp+0x14 / sp+0x18 each time), and `m1 = -1;`
+ * is set ONCE so the value survives the call in a callee-saved reg. */
+void DecorStartAnimation(SpriteEntity *e) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)(Entity *);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartAnimationAlt);
+    do {} while (0);
+    fn = (void (*)(Entity *))DecorEntityTickWithOffscreenCheck;
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->base.tickMarker = u.s;
+    fn = (void (*)(Entity *))EntityCollision_FlagAndDispatch;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->base.eventMarker = u.s;
+    SetEntitySpriteId((Entity *)e, 0x880161A7, 1);
+    fn = (void (*)(Entity *))DecorSetSpriteActive;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->queuedStateMarker = u.s;
+}
+
+/* Twin of DecorStartAnimation but selects a different sprite
+ * (0x91106183 instead of 0x880161A7). Same triple-slot install
+ * pattern, same cached `m1 = -1` reuse across SetEntitySpriteId. */
+void DecorStartAnimationAlt(SpriteEntity *e) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)(Entity *);
+
+    do {} while (0);
+    fn = (void (*)(Entity *))DecorEntityTickWithOffscreenCheck;
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->base.tickMarker = u.s;
+    fn = (void (*)(Entity *))EntityCollision_FlagAndDispatch;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->base.eventMarker = u.s;
+    SetEntitySpriteId((Entity *)e, 0x91106183, 1);
+    fn = (void (*)(Entity *))DecorSetSpriteActive;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->queuedStateMarker = u.s;
+}
 
 void CollectibleExtraLifeTickCallback(PowerupCollectibleEntity *e);
 
