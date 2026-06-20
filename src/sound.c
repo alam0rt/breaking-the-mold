@@ -6,7 +6,14 @@ extern void SpuQuit(void);
 extern void SpuSetCommonCDVolume(s16 l, s16 r);
 extern s32 PlaySoundEffect(s32 id, s32 a1, s32 a2);
 extern void ProcessCDStreamState(void);
+extern void PlayCDAudioTrack(s32 track, s32 channel);
 extern s32 GAME_SOUND_EFFECT_ID_TABLE[] asm("D_8009CE64");
+/* Level music lookup tables: stride-2 pairs of (track_id, channel)
+ * indexed by (scene*6 + (sub-1)). Both labels alias the same byte
+ * stream; declared as separate externs so cc1 emits the natural
+ * two-base-pointer pattern seen in StartCDAudioForLevel. */
+extern u8 CD_LEVEL_TRACK_TABLE[]   asm("D_8009CFD8");
+extern u8 CD_LEVEL_CHANNEL_TABLE[] asm("D_8009CFD9");
 /* Tentative defs to unlock gp_rel via maspsx --use-comm-section. */
 u32 CD_STREAM_TICK_COUNTER asm("D_800A6074");
 u32 SPU_UPLOAD_USED_BYTES asm("D_800A6078");
@@ -111,6 +118,28 @@ void SetVoicePanning(s32 voice_index, s16 pan_pos) {
     }
 }
 
+/* Start CD-XA streaming track for a level/sub-stage combination.
+ * Indexes a 2-byte-stride table at D_8009CFD8 by (scene*6 + (sub-1));
+ * each entry is (track_id, channel). Validates scene<26 and 1<=sub<=6,
+ * skips if the resolved track_id>=5 (only 5 CD-XA tracks available).
+ * Marks CD streaming as active on success.
+ *
+ * SHELVED (60-byte diff): structurally matches with body:
+ *     s32 t = sub - 1;
+ *     if ((scene & 0xFF) >= 0x1A) return;
+ *     if ((u8)t >= 6) return;
+ *     s32 s6 = (scene & 0xff) * 6;
+ *     s32 idx = ((t & 0xff) + s6) * 2;
+ *     if (CD_LEVEL_TRACK_TABLE[idx] < 5) {
+ *         PlayCDAudioTrack(CD_LEVEL_TRACK_TABLE[idx],
+ *                          CD_LEVEL_CHANNEL_TABLE[idx]);
+ *         CD_STREAM_ACTIVE = 1;
+ *     }
+ * but cc1 fills the early-return branch-delay slot with `sw ra, 0x10(sp)`
+ * (correct but binary-different from TARGET, which fills the slot with
+ * the `addiu v1, a1, -1` from the second bounds check). No C-source
+ * idiom is known to force the prologue store to land before the first
+ * branch in this delay-slot scheduler. */
 INCLUDE_ASM("asm/nonmatchings/sound", StartCDAudioForLevel);
 
 void StopCDStreaming(void) {
