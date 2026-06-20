@@ -1585,16 +1585,10 @@ void InitSwitchMovingState(Entity *e) {
     fn = EntityUpdateWithCollisionWrapper;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker,   m1, fn);
     fn = EntityIncrementWorldX;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->renderMarker = slot.s;
+    SLOT_STORE(slot.s, e->renderMarker, m1, fn);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSwitchBlockEntity);
@@ -1831,10 +1825,7 @@ void EnemySetWalkSprite(Entity *e) {
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0xE4CB8330, 1);
 }
 
@@ -1846,16 +1837,10 @@ void EnemySetIdleSprite(Entity *e) {
     SetEntityFacingDirection(entity, 2);
     fn = EntityEventHandlerIdle;
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&entity->eventMarker = slot.s;
+    SLOT_STORE(slot.s, entity->eventMarker, m1, fn);
     SetEntitySpriteId(entity, 0x458B0320, 1);
     fn = EnemySetWalkSprite;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)((u8 *)entity + 0x98) = slot.s;
+    SLOT_STORE(slot.s, *(CallbackSlot *)((u8 *)entity + 0x98), m1, fn);
 }
 
 void EnemyDestroyCallback_0x80011228(SpriteEntity *entity, s32 flags) {
