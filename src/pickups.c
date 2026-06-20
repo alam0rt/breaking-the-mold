@@ -8,6 +8,7 @@ extern u8 DECOR_ENTITY_DESTRUCTOR_VTABLE[] asm("D_80010870");
 extern u8 DECOR_SIMPLE_ALLOC_VTABLE[] asm("D_80010890");
 extern u8 SUPERWILLIE_VTABLE[] asm("D_800106B0");
 extern u8 PHOENIX_HAND_VTABLE[] asm("D_80010790");
+extern u8 YELLOW_BIRD_VTABLE[] asm("D_80010810");
 extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
@@ -95,7 +96,37 @@ INCLUDE_ASM("asm/nonmatchings/pickups", func_8002D978);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", TriggerFadeOut);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitYellowBirdCollectible);
+void CollectibleYellowBirdTickCallback(InteractiveDecorEntity *e);
+
+/* Yellow-bird collectible constructor. Same path-following decor shape
+ * as InitSuperWillieCollectible, but the entity is set up with the
+ * MASK-CLEAR variant of InitEntitySprite (final arg 0 rather than 1)
+ * and overrides the collision vtable to the bird-specific D_80010810.
+ * The per-frame behaviour lives in CollectibleYellowBirdTickCallback.
+ * Sprite id 0xC87CA082, vtable override D_80010810.
+ *
+ * Match recipe: identical to InitSuperWillieCollectible — TripadSlot
+ * for the 0x38 frame plus the two `do {} while (0);` boundaries that
+ * pin the callback `la` into $v1 above the marker stores. */
+TimedPathEntity *InitYellowBirdCollectible(TimedPathEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0xC87CA082, 0x3DE, data->x, data->y, 0);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity(e, data, 0);
+    e->sprite.base.collisionVtable = YELLOW_BIRD_VTABLE;
+    do {} while (0);
+    fn = (void (*)())CollectibleYellowBirdTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleYellowBirdTickCallback);
 
