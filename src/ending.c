@@ -1,7 +1,13 @@
 #include "common.h"
 #include "functions.h"
+#include "Game/entity.h"
+#include "Game/callback_slot.h"
 
 extern u8 *g_pBlbHeapBase;
+/* PlaySoundEffect actually returns the SPU channel index used (stored to
+ * +0x150 in EndingCreditsDelayTick). functions.h declares it void; alias
+ * here to capture v0. */
+extern s32 PlaySoundEffectRet(u32 soundId, s32 volume, s32 channel) asm("PlaySoundEffect");
 extern void ResetGameStateInputAndContext(void);
 extern u8 ENDING_ENTITY_VTABLE_20CC[] asm("D_800120CC");
 extern u8 ENDING_ENTITY_VTABLE_1E54[] asm("D_80011E54");
@@ -24,13 +30,55 @@ typedef struct EndingSequenceEntity {
     /* 0x64 */ u32 argB;
 } EndingSequenceEntity;
 
+/* Extended entity used by the ending-credits tick chain. The sprite base
+ * runs 0x00..0xFF; the credits-specific scroll/delay/sound state lives at
+ * 0x100+. Fields used by the tick callbacks observed in asm:
+ *   +0x140/+0x142 word pair (cleared in RevealTick)
+ *   +0x144         scroll-y (?) seeded from arg in RevealTick
+ *   +0x148         delay counter (u8, decremented per tick)
+ *   +0x149,+0x14C  scroll-state flags (u8) */
+typedef struct EndingCreditsEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8           pad100[0x48];
+    /* 0x148 */ u8           delayCounter;
+    /* 0x149 */ u8           pad149[7];
+    /* 0x150 */ s32          soundHandle;
+} EndingCreditsEntity;
+
+extern void EndingTickCallback(Entity *e);
+extern void EndingCreditsScrollTick(EndingCreditsEntity *e);
+
 INCLUDE_ASM("asm/nonmatchings/ending", EndingTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/ending", TriggerEndingSequence);
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsRevealTick);
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsDelayTick);
+/* Per-tick delay handler installed at the start of the ending-credits
+ * sequence. Decrements the delay counter at +0x148 and, when it reaches
+ * zero, replaces the entity's tick slot with EndingCreditsScrollTick
+ * (marker 0xFFFF0000 via the stack-staged 8-byte block-copy idiom) and
+ * kicks the scroll SFX. Always falls through to EndingTickCallback. */
+void EndingCreditsDelayTick(EndingCreditsEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+
+    e->delayCounter--;
+    if (e->delayCounter == 0) {
+        m1 = -1;
+        fn = (void (*)())EndingCreditsScrollTick;
+        /* Pin fn to $v1 so cc1 keeps $v0 alive for m1=-1 and emits
+         * `li v0,-1` in the bnez delay slot. */
+        __asm__ volatile("" : "=r"(fn) : "0"(fn));
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+        e->soundHandle = PlaySoundEffectRet(0x121941C4, 0xA0, 0);
+    }
+    EndingTickCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsScrollTick);
 
