@@ -168,7 +168,7 @@ local bss(start, kind, vram) = {
         c('73794', 'memmove'),
 
         // =====================================================================
-        // PSY-Q
+        // PSY-Q - LEAVE AS IS - NO POINT YET IN TOUCHING SONY LIBRARY
         // =====================================================================
         c('73800', 'libs/libcd'),
         asm('79AE4', 'libs/libgpu'),

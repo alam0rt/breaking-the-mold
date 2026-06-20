@@ -801,6 +801,87 @@ commonly saves 1-2 instructions in the output.
 **Applies to:** CheckPointInBox — the `goto` pattern produced a byte-perfect
 match where multiple `return 0` statements did not.
 
+### 6i: Register barrier on a *pointer* local forces a pre-store `move`
+
+Sometimes the target materialises a pointer it already holds in a callee-saved
+register (`$s0`) into a fresh **caller-saved** temp right before a final store:
+
+```asm
+move  $v0, $s0          # copy entity ptr into a scratch reg
+sb    $zero, 0x34($v0)  # ...then store through the copy
+```
+
+Idiomatic C (`e->field = 0;`, even through a cast) coalesces this away and
+stores directly through `$s0`. To reproduce the copy, give the access its own
+pointer local and pin it with the same register barrier used for callback
+addresses (6e/Quirk 5):
+
+```c
+OverlayCallbackEntity *o;
+...
+o = (OverlayCallbackEntity *)e;
+__asm__ volatile("" : "=r"(o) : "0"(o));  /* blocks coalescing into $s0 */
+o->hiddenFlag = 0;                         /* -> move $v0,$s0; sb $zero,0x34($v0) */
+```
+
+This generalises the `fn`-barrier trick (Quirk 5) from function pointers to
+**any** pointer the original copied into a fresh register before a trailing
+use. Reach for it only when the *single* remaining diff is a spurious/missing
+`move $vN, $sN` ahead of a store — it is load-bearing noise, not logic.
+
+**Applies to:** `InitScrollingLayerEntity` (effects.c) — last diff after the
+slot install was exactly this trailing `move`/`sb` pair.
+
+### 6j: A packed register arg (two `s16`s in one reg) is a by-value struct
+
+When the prologue spills an incoming arg register to its home slot and then
+reads *halves* of it back with `lh`/`lhu` (rather than `sll/sra` shifts), the
+parameter is a small **by-value struct**, not an `s32` you bit-twiddle:
+
+```asm
+sw   $a2, 0x38($sp)     # spill the packed arg to its home
+lh   $v0, 0x3A($sp)     # high half  -> .b
+lh   $t0, 0x38($sp)     # low half   -> .a
+```
+
+```c
+typedef struct { s16 a; s16 b; } ScrollLayerDims;   /* occupies one reg */
+void InitScrollingLayerEntity(Entity *e, s32 ctx, ScrollLayerDims dims, ...) {
+    InitLayerScrollContext(e, ctx, a3, dims.a, dims.b, flags);  /* spill + lh halves */
+}
+```
+
+Modelling it as `s32` + `(s16)x`/`(s16)(x>>16)` produces shift/extract code
+instead of the spill-then-`lh` the target uses. The struct member order maps
+directly to the home-slot offsets (`.a` = low half / lower address).
+
+**Applies to:** `InitScrollingLayerEntity` — `a2` carried two `s16`s consumed
+as separate args to `InitLayerScrollContext`.
+
+### Case study: matching InitScrollingLayerEntity from idiomatic C (2026-06-20)
+
+A worked example of the "idiomatic first, then armor the artifacts" loop, useful
+as a template for the rest of the entity-FSM tier (playst/bosses/effects/pickups/finn):
+
+1. **Idiomatic C nailed the *shape* on the first compile** — the call, the
+   vtable/allocSize stores, the slot install and the flag clear were all in the
+   right place. Only three cc1 artifacts needed control, each with an existing idiom:
+   - **Frame size** off by 8 → use a padded slot type (`TripadSlot`) instead of a
+     bare `CallbackSlot` to pin the 0x30 frame (Quirk 3).
+   - **Slot-store coloring/order** (fn must color to `$v1`, `-1` to `$v0`; store
+     `markerLo` before `markerHi`; `la fn` hoisted) → named `fn`/`m1` locals +
+     `fn`-register-barrier + `m1 = -1` placed *after* the fn barrier (Quirk 5/6e).
+   - **Trailing `move $v0,$s0`** before the flag store → pointer barrier (6i).
+2. **Replacing `INCLUDE_ASM` with the matching C left the whole-ROM SHA1
+   unchanged** — the fastest correctness proof: `tools/fdiff.sh <off> <size>` says
+   `MATCH` for the function, and the binary is byte-identical to the shelved-asm
+   build. (A pre-existing whole-ROM mismatch on a prototype branch does not mask
+   this — fdiff is per-function.)
+
+Takeaway for the tier: the slot pattern's obtuseness is **bounded and templated**.
+Write the clean version, run fdiff, and apply only the specific armor each diff
+calls for from this section. Don't pre-emptively sprinkle barriers.
+
 ---
 
 ## GCC 2.7.2 source-level validation (root-cause investigation)
