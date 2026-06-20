@@ -58,7 +58,27 @@ INCLUDE_ASM("asm/nonmatchings/vram", AllocateVRAMSlotAligned);
 
 INCLUDE_ASM("asm/nonmatchings/vram", FindFreeVRAMSlotEntry);
 
-INCLUDE_ASM("asm/nonmatchings/vram", GetMaxVRAMSlotSize);
+/* Walks the VRAM slot linked-list (head at base+0xA29C, indices are
+ * byte values, next-pointer is the byte at +0xA08F of each entry,
+ * size byte is at +0xA090). Returns the maximum slot size seen along
+ * the chain. Terminator is 0xFF. */
+u8 GetMaxVRAMSlotSize(s32 base) {
+    u8 maxSize;
+    u8 idx;
+    s32 entry;
+
+    maxSize = 0;
+    idx = *(u8 *)(base + 0xA29C);
+    while (idx != 0xFF) {
+        entry = base + (u32)idx * 6;
+        idx = *(u8 *)(entry + 0xA090);
+        if (maxSize < idx) {
+            maxSize = idx;
+        }
+        idx = *(u8 *)(entry + 0xA08F);
+    }
+    return maxSize;
+}
 
 INCLUDE_ASM("asm/nonmatchings/vram", FreeAndCoalesceVRAMSlot);
 
