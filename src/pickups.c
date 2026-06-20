@@ -10,6 +10,9 @@ extern u8 SUPERWILLIE_VTABLE[] asm("D_800106B0");
 extern u8 PHOENIX_HAND_VTABLE[] asm("D_80010790");
 extern u8 YELLOW_BIRD_VTABLE[] asm("D_80010810");
 extern u8 HAMSTER_SHIELD_VTABLE[] asm("D_800106D0");
+extern u8 TRANSPARENT_DECOR_VTABLE[] asm("D_800107B0");
+extern u8 SCALE_RESET_VTABLE[] asm("D_80010710");
+extern u8 SINGLE_FRAME_DECOR_VTABLE[] asm("D_80010730");
 extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
@@ -196,7 +199,36 @@ INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartAnimation);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartAnimationAlt);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitTransparentDecorEntity);
+void CollectibleExtraLifeTickCallback(PowerupCollectibleEntity *e);
+
+/* Twin of InitHamsterShieldCollectible (same +0xF6 visibility + spriteContext
+ * +0x37 clears) but for the "transparent decor" pickup variant — uses a
+ * different sprite (0xA9240484) + vtable override (D_800107B0) and re-
+ * uses CollectibleExtraLifeTickCallback as the tick (extra-life award).
+ *
+ * Match recipe: same TripadSlot + dual `do {} while (0);` armor as the
+ * other Init*Collectible siblings. */
+PowerupCollectibleEntity *InitTransparentDecorEntity(PowerupCollectibleEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0xA9240484, 0x3DE, data->x, data->y, 1);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
+    e->sprite.base.collisionVtable = TRANSPARENT_DECOR_VTABLE;
+    do {} while (0);
+    fn = (void (*)())CollectibleExtraLifeTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    e->sprite.visibility = 0;
+    ((u8 *)e->sprite.base.spriteContext)[0x37] = 0;
+    return e;
+}
 
 /* Single-hit "extra life" pickup. Twin of CollectibleClaySingleTickCallback
  * but for the 1-up powerup. The collected/box-collision check is
