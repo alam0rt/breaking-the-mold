@@ -19,6 +19,7 @@ extern void FinnHandleInput(Entity *e);
 extern void FinnVehicleMovementUpdate(Entity *e);
 extern void FinnUpdateRotationSprite(Entity *e);
 extern void EntityUpdateCallback(Entity *e);
+extern void FinnTick_LevelExitCountdown(Entity *e);
 
 typedef struct FinnSubentityStateFlags {
     /* 0x000 */ SpriteEntity sprite;
@@ -52,6 +53,17 @@ typedef struct FinnVoiceEntity {
     /* 0x100 */ u8 pad100[0x114 - 0x100];
     /* 0x114 */ s32 voiceHandle;
 } FinnVoiceEntity;
+
+/* Used by FinnTick_LevelExitCountdown / FinnStateInit_SetTimerAndTick.
+ * +0x118 is a u8 down-counter decremented each tick; when it hits 0 the
+ * tick callback flips +0x11A from 0 to 1. */
+typedef struct FinnLevelExitEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x118 - 0x100];
+    /* 0x118 */ u8 exitTimer;
+    /* 0x119 */ u8 pad119;
+    /* 0x11A */ u8 exitFlag;
+} FinnLevelExitEntity;
 
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32 FINN_DEATH_EXPLOSION_STATE_MARKER asm("D_800A5F8C");
@@ -293,6 +305,25 @@ void RunnState_SetAdvanceLevelAndHide(Entity *e) {
     EntitySetRenderFlags(e, 0);
 }
 
+/* Initializer for the level-exit state: arms the down-counter at 0x5C
+ * frames, clears the exit-fired flag, and installs FinnTick_LevelExitCountdown
+ * as the per-frame tick callback (marker 0xFFFF0000 = direct call).
+ *
+ * Equivalent to:
+ *   void FinnStateInit_SetTimerAndTick(FinnLevelExitEntity *e) {
+ *       PadSlot slot;
+ *       e->exitFlag = 0;
+ *       e->exitTimer = 0x5C;
+ *       slot.s.markerLo = 0;
+ *       slot.s.markerHi = -1;
+ *       slot.s.fn = (void (*)())FinnTick_LevelExitCountdown;
+ *       *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+ *   }
+ *
+ * cc1 schedules the two byte stores (exitFlag at 0x11A, exitTimer at 0x118)
+ * and the m1=-1 prep in a different order than TARGET regardless of source
+ * order, volatile, or register-pin tricks — leaves a 270-byte diff that
+ * couldn't be coaxed. Leaving as INCLUDE_ASM. */
 INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetTimerAndTick);
 
 s32 IsTileTypeSolidOrHazard(s32 unused, u8 *tilePtr) {
