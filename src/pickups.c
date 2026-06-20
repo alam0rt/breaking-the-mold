@@ -39,9 +39,23 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitGreenBulletsCollectible);
 extern u8 CheckEntityBoxCollision(Entity *e, u16 mask);
 extern void AddPlayerOrbs(PlayerState *ps, s8 count);
 extern void AddSwirlys(PlayerState *ps, s8 count);
+extern void AddPlayerLives(PlayerState *ps, s8 count);
+extern void AddPhoenixHands(PlayerState *ps, s8 count);
+extern void AddSuperWillies(PlayerState *ps, s8 count);
 extern void InitDecorEntityWithScreenOffset(Entity *e, s32 dx, s32 dy, s32 flag);
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
+
+/* Powerup-collectible (extra life, phoenix hand, super willie...) shape:
+ * extends InteractiveDecorEntity with a sub-entity pointer at +0x100 that
+ * gets a +0x12 (collisionMask) field stamped with 7 just before the
+ * award call. The stamp goes into the award's delay slot. */
+typedef struct PowerupCollectibleEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ Entity *labelEntity;
+    /* 0x104 */ u8 pad104[0x11D - 0x104];
+    /* 0x11D */ u8 triggerState;
+} PowerupCollectibleEntity;
 
 /* Twin of CollectibleClaySingleTickCallback for the swirly-orb pickup
  * variant. Same offscreen-cull + box-collision dispatch shape, but
@@ -140,11 +154,42 @@ INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartAnimationAlt);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitTransparentDecorEntity);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleExtraLifeTickCallback);
+/* Single-hit "extra life" pickup. Twin of CollectibleClaySingleTickCallback
+ * but for the 1-up powerup. The collected/box-collision check is
+ * identical; on a hit it (a) stamps `labelEntity->collisionMask = 7` to
+ * activate the floating "1UP" label sub-entity, (b) awards a life via
+ * AddPlayerLives(PLAYER_STATE_DATA, 1), (c) spawns the standard pickup
+ * VFX at (0x118, 0xF), and (d) plays sound 0x428254E2.
+ *
+ * Match recipe: keep the collisionMask store on the line BEFORE the
+ * award call -- cc1 folds the `sh v0, 0x12(v1)` into the jal's delay
+ * slot exactly as TARGET does. */
+void CollectibleExtraLifeTickCallback(PowerupCollectibleEntity *e) {
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0 ||
+        CheckEntityBoxCollision((Entity *)e, 2) != 0) {
+        e->labelEntity->collisionMask = 7;
+        AddPlayerLives(PLAYER_STATE_DATA, 1);
+        InitDecorEntityWithScreenOffset((Entity *)e, 0x118, 0xF, 1);
+        PlayEntityPositionSound((Entity *)e, 0x428254E2);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitPhoenixHandCollectible);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", CollectiblePhoenixHandTickCallback);
+/* Phoenix Hand pickup -- same shape as CollectibleExtraLifeTickCallback
+ * but awards a phoenix hand via AddPhoenixHands, spawns VFX at (0x18,
+ * 0xC8) and plays sound 0x44C26454. */
+void CollectiblePhoenixHandTickCallback(PowerupCollectibleEntity *e) {
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0 ||
+        CheckEntityBoxCollision((Entity *)e, 2) != 0) {
+        e->labelEntity->collisionMask = 7;
+        AddPhoenixHands(PLAYER_STATE_DATA, 1);
+        InitDecorEntityWithScreenOffset((Entity *)e, 0x18, 0xC8, 1);
+        PlayEntityPositionSound((Entity *)e, 0x44C26454);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitPhartHeadCollectible);
 
@@ -172,7 +217,19 @@ INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleHamsterShieldTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitSuperWillieCollectible);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleSuperWillieTickCallback);
+/* Super Willie pickup -- same shape as CollectibleExtraLifeTickCallback
+ * but awards a super willie via AddSuperWillies, spawns VFX at (0x118,
+ * 0x88) and plays sound 0xE48744C4. */
+void CollectibleSuperWillieTickCallback(PowerupCollectibleEntity *e) {
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0 ||
+        CheckEntityBoxCollision((Entity *)e, 2) != 0) {
+        e->labelEntity->collisionMask = 7;
+        AddSuperWillies(PLAYER_STATE_DATA, 1);
+        InitDecorEntityWithScreenOffset((Entity *)e, 0x118, 0x88, 1);
+        PlayEntityPositionSound((Entity *)e, 0xE48744C4);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitEntity_PathDecor2);
 
