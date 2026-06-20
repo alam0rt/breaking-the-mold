@@ -558,7 +558,22 @@ INCLUDE_ASM("asm/nonmatchings/effects", RenderRippleExpandEffect);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitScaledMenuEntityWithChild);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyRippleExpandEffect);
+extern void *SCALED_MENU_VTABLE asm("D_80010980");
+
+/* Sister of DestroyOscillatingScaleEntity for the scaled-menu / ripple
+ * expand effect entity (initialized by InitScaledMenuEntityWithChild).
+ * Same two-stage destructor shape, but the child sub-entity sits at
+ * +0x20 (renderCallback slot, repurposed as a pointer) instead of +0x1C,
+ * and the intermediate vtable is SCALED_MENU_VTABLE (D_80010980). */
+void DestroyRippleExpandEffect(Entity *e, s32 flags) {
+    e->collisionVtable = &SCALED_MENU_VTABLE;
+    RemoveFromRenderList(g_pGameState, (void *)e->renderCallback);
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e->renderCallback, 0, 0);
+    e->collisionVtable = &TIMED_FADE_ENTITY_VTABLE;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 void CountdownTimerTickCallback(CountdownTimerEntity *e) {
     u8 v = e->timer - 1;
@@ -601,7 +616,21 @@ INCLUDE_ASM("asm/nonmatchings/effects", RenderSpotlightBeamEffect);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitMenuEntityWithChildAndParams);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroySpotlightBeamEffect);
+extern void *MENU_ENTITY_CHILD_PARAMS_VTABLE asm("D_80010950");
+
+/* Sister of DestroyOscillatingScaleEntity for the menu/spotlight-beam
+ * entity (initialized by InitMenuEntityWithChildAndParams). Same
+ * two-stage destructor shape with child at +0x20 (renderCallback slot)
+ * and intermediate vtable MENU_ENTITY_CHILD_PARAMS_VTABLE (D_80010950). */
+void DestroySpotlightBeamEffect(Entity *e, s32 flags) {
+    e->collisionVtable = &MENU_ENTITY_CHILD_PARAMS_VTABLE;
+    RemoveFromRenderList(g_pGameState, (void *)e->renderCallback);
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e->renderCallback, 0, 0);
+    e->collisionVtable = &TIMED_FADE_ENTITY_VTABLE;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 void BeamEffectTickWithRotation(BeamEffectEntity *e) {
     s16 timer;
@@ -698,7 +727,23 @@ INCLUDE_ASM("asm/nonmatchings/effects", HandleEventAndChangeZOrder);
 
 INCLUDE_ASM("asm/nonmatchings/effects", CreateFadeOverlayEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyTimedFadeEntity);
+extern void *FADE_OVERLAY_VTABLE asm("D_800108D0");
+
+/* Sister of DestroyOscillatingScaleEntity for the timed-fade overlay
+ * entity (e.g. created by CreateFadeOverlayEntity). Same two-stage
+ * destructor shape: tear down the child at +0x1C and free it, swap the
+ * vtable to TIMED_FADE_ENTITY_VTABLE, then conditionally free the
+ * wrapper. Only difference is the intermediate vtable: D_800108D0
+ * (FADE_OVERLAY_VTABLE) instead of D_80010910. */
+void DestroyTimedFadeEntity(Entity *e, s32 flags) {
+    e->collisionVtable = &FADE_OVERLAY_VTABLE;
+    RemoveFromRenderList(g_pGameState, (void *)e->renderMarker);
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e->renderMarker, 0, 0);
+    e->collisionVtable = &TIMED_FADE_ENTITY_VTABLE;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 void EntityFadeInTickCallback(FadeInEntity *e) {
     s16 v = e->alpha + 8;
