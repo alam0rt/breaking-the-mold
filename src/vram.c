@@ -35,6 +35,17 @@ INCLUDE_ASM("asm/nonmatchings/vram", FreeFromHeap);
 
 INCLUDE_ASM("asm/nonmatchings/vram", InitHeapFreeList);
 
+/* Fill the entire heap region with a 32-bit pattern. Uses the heap
+ * start pointer + size from base+0xA640/0xA644 (HeapConfigOwner) to
+ * compute the byte-addressed end pointer, then memset32's the region.
+ *
+ * SHELVED (60-byte diff = register swap): structure matches with body
+ *     s32 *p = base->heapStart;
+ *     s32 *end = (s32 *)((u8 *)p + base->heapSize);
+ *     if (p != end) { do { *p++ = fillValue; } while (p != end); }
+ * but cc1 picks $v1 for `p` (loop variable) and $v0 for `end`/intermediates
+ * while TARGET swaps them. The choice is binary-different but otherwise
+ * cycle-equivalent; no source-order or naming trick coaxes cc1 to swap. */
 INCLUDE_ASM("asm/nonmatchings/vram", func_80014928);
 
 INCLUDE_ASM("asm/nonmatchings/vram", ClearHeapBlocks);
