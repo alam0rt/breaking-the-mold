@@ -630,7 +630,28 @@ void EntityInitSoundEmitterState(SoundEmitterEntity *e) {
     SetEntitySpriteId((Entity *)e, *e->spriteIdPtr, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemyEnterSoundEmitterState);
+/* Sound-emitter "enter idle/stunned" entry: faces the enemy down (dir=2),
+ * installs the idle/sound-emit handlers, switches sprite to the second
+ * id in the table (e->spriteIdPtr[1]), and queues EntityInitSoundEmitterState
+ * as the next state callback (so the enemy automatically re-arms after
+ * the stun timer). */
+void EnemyEnterSoundEmitterState(SoundEmitterEntity *e) {
+    TripadSlot slot;
+    void (*fn)();
+    s16 m1;
+    Entity *entity = (Entity *)e;
+    SpriteEntity *spriteEntity = (SpriteEntity *)e;
+
+    SetEntityFacingDirection(entity, 2);
+    fn = (void (*)())EntityEventHandlerIdle;
+    m1 = -1;
+    SLOT_STORE(slot.s, entity->eventMarker, m1, fn);
+    fn = SoundEmitterTickCallback;
+    SLOT_STORE(slot.s, entity->tickMarker, m1, fn);
+    SetEntitySpriteId(entity, e->spriteIdPtr[1], 1);
+    fn = EntityInitSoundEmitterState;
+    SLOT_STORE(slot.s, spriteEntity->queuedStateMarker, m1, fn);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSpecialPickupEntity);
 
