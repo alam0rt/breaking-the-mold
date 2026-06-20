@@ -934,23 +934,14 @@ void CollectibleWalkState(Entity *e) {
     fn = ConditionalCollectibleTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0xED209C94, 1);
     fn = CollectibleIdleState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    SLOT_STORE(slot.s, ((SpriteEntity *)e)->queuedStateMarker, m1, fn);
 }
 
 void InitConditionalCollectibleEntity(Entity *e) {
@@ -962,28 +953,19 @@ void InitConditionalCollectibleEntity(Entity *e) {
     fn = ConditionalCollectibleTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker, m1, fn);
     ((u8 *)e)[0x111] = 3;
     __asm__ volatile("" ::: "memory");
     fn = EntityEventHandlerCountdownToWalkWithSprite;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0x6D209C95, 1);
     SetAnimationLoopFrame(e, 0x1084280);
     SetAnimationSpriteCallback(e, 0x2421405);
     SetAnimationFrameIndex(e, 0);
     fn = CollectibleIdleState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    SLOT_STORE(slot.s, ((SpriteEntity *)e)->queuedStateMarker, m1, fn);
 }
 
 void CollectibleIdleState(Entity *e) {
@@ -996,16 +978,10 @@ void CollectibleIdleState(Entity *e) {
     fn = CollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker,  m1, fn);
     fn = EntityEventHandlerIdle;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0x6C289C1C, 1);
     if (rand() & 1) {
         nextFn = InitConditionalCollectibleEntity;
@@ -1014,10 +990,7 @@ void CollectibleIdleState(Entity *e) {
         nextFn = CollectibleWalkState;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = nextFn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    SLOT_STORE(slot.s, ((SpriteEntity *)e)->queuedStateMarker, m1, nextFn);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitAnimatedTimedCollectible);
@@ -1061,21 +1034,12 @@ void InitEntityState_Idle(Entity *e) {
     fn = EntityTimerCountdownDeathSpawn;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0x60181A0C, 1);
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     if (((u8 *)e)[0x110]) {
         nextFn = InitEnemyAnimatedWithDeathSpawn;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
@@ -1083,10 +1047,7 @@ void InitEntityState_Idle(Entity *e) {
         nextFn = InitEntityRandomIdleOrAnimated;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = nextFn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], ((SpriteEntity *)e)->queuedStateMarker, m1, nextFn);
 }
 
 void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
@@ -1103,28 +1064,16 @@ void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
     __asm__ volatile("" : "=r"(tickFn), "=r"(eventFn), "=r"(spriteId) : "0"(tickFn), "1"(eventFn), "2"(spriteId));
     ((u8 *)e)[0x111] = ((u8 *)e)[0x110];
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = tickFn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = eventFn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, tickFn);
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, eventFn);
     SetEntitySpriteId(e, spriteId, 1);
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     SetAnimationLoopFrame(e, 0x1084280);
     SetAnimationSpriteCallback(e, 0x44D4C8D8);
     SetAnimationFrameIndex(e, 0);
     fn = InitEntityRandomIdleOrAnimated;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], ((SpriteEntity *)e)->queuedStateMarker, m1, fn);
     EntitySetCallback(e, ENEMY_ANIMATED_CALLBACK_MARKER, ENEMY_ANIMATED_CALLBACK_FN);
 }
 
@@ -1145,21 +1094,12 @@ void InitEntityState_Animated(Entity *e) {
     fn = InitEntityWithDeathSpawn;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
     fn = EntityEventHandlerTimerCountdown;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0x611C5804, 1);
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     SetAnimationLoopFrame(e, 0x1084280);
     SetAnimationSpriteCallback(e, 0x2421405);
     SetAnimationFrameIndex(e, 0);
@@ -1170,10 +1110,7 @@ void InitEntityState_Animated(Entity *e) {
         nextFn = InitEntityRandomIdleOrAnimated;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = nextFn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], ((SpriteEntity *)e)->queuedStateMarker, m1, nextFn);
 }
 
 Entity *InitProjectilePathEntity(Entity *e, s16 x, s16 y) {
