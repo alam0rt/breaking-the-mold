@@ -1,9 +1,10 @@
 #include "common.h"
 #include "functions.h"
+#include "globals.h"
 #include "Game/entity.h"
 #include "Game/callback_slot.h"
+#include "Game/game_state.h"
 
-extern u8 *g_pBlbHeapBase;
 /* PlaySoundEffect actually returns the SPU channel index used (stored to
  * +0x150 in EndingCreditsDelayTick). functions.h declares it void; alias
  * here to capture v0. */
@@ -16,6 +17,7 @@ extern u8 ENDING_ENTITY_VTABLE_1EB4[] asm("D_80011EB4");
 extern u8 ENDING_ENTITY_VTABLE_2034[] asm("D_80012034");
 extern u8 ENDING_ENTITY_VTABLE_208C[] asm("D_8001208C");
 extern u8 ENDING_ENTITY_VTABLE_20AC[] asm("D_800120AC");
+extern u8 ENDING_FADE_STEP_TABLE[] asm("D_8009CBBC");
 
 typedef struct EndingEntityWithState {
     /* 0x000 */ SpriteEntity sprite;
@@ -33,20 +35,33 @@ typedef struct EndingSequenceEntity {
 /* Extended entity used by the ending-credits tick chain. The sprite base
  * runs 0x00..0xFF; the credits-specific scroll/delay/sound state lives at
  * 0x100+. Fields used by the tick callbacks observed in asm:
- *   +0x140/+0x142 word pair (cleared in RevealTick)
- *   +0x144         scroll-y (?) seeded from arg in RevealTick
- *   +0x148         delay counter (u8, decremented per tick)
- *   +0x149,+0x14C  scroll-state flags (u8) */
+ *   +0x136 scroll-counter (ScrollTick)        +0x148 delay counter
+ *   +0x142 scroll-counter (ScrollTick2)       +0x149 flag (FadeOutTick)
+ *   +0x144 scroll-y position                  +0x14A fade counter
+ *   +0x150 SPU sound-effect handle */
 typedef struct EndingCreditsEntity {
     /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8           pad100[0x48];
+    /* 0x100 */ u8           pad100[0x36];
+    /* 0x136 */ u16          scrollCounter1;
+    /* 0x138 */ u8           pad138[0x8];
+    /* 0x140 */ u16          field140;
+    /* 0x142 */ u16          scrollCounter2;
+    /* 0x144 */ u16          scrollY;
+    /* 0x146 */ u8           pad146[2];
     /* 0x148 */ u8           delayCounter;
-    /* 0x149 */ u8           pad149[7];
+    /* 0x149 */ u8           flag149;
+    /* 0x14A */ u8           fadeCounter;
+    /* 0x14B */ u8           pad14B;
+    /* 0x14C */ u8           flag14C;
+    /* 0x14D */ u8           pad14D[3];
     /* 0x150 */ s32          soundHandle;
 } EndingCreditsEntity;
 
 extern void EndingTickCallback(Entity *e);
 extern void EndingCreditsScrollTick(EndingCreditsEntity *e);
+extern void EndingCreditsScrollTick2(EndingCreditsEntity *e);
+extern void EndingCreditsCompleteTick(EndingCreditsEntity *e);
+extern void EndingCreditsFadeOutTick(EndingCreditsEntity *e);
 
 INCLUDE_ASM("asm/nonmatchings/ending", EndingTickCallback);
 
@@ -80,12 +95,102 @@ void EndingCreditsDelayTick(EndingCreditsEntity *e) {
     EndingTickCallback((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsScrollTick);
+/* Per-tick scroll handler installed once the delay elapses. Every 4 frames
+ * (frame_counter % 4 == 0), advances scrollY by 1 until scrollCounter1
+ * runs out, then swaps in EndingCreditsScrollTick2 for the second phase.
+ * Always falls through to EndingTickCallback for the usual housekeeping. */
+void EndingCreditsScrollTick(EndingCreditsEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsScrollTick2);
+    if ((g_pGameState->frame_counter & 0x3) == 0) {
+        if (e->scrollCounter1 != 0) {
+            e->scrollCounter1--;
+            e->scrollY++;
+        } else {
+            m1 = -1;
+            fn = (void (*)())EndingCreditsScrollTick2;
+            __asm__ volatile("" : "=r"(fn) : "0"(fn));
+            slot.s.markerLo = 0;
+            slot.s.markerHi = m1;
+            slot.s.fn = fn;
+            *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+        }
+    }
+    EndingTickCallback((Entity *)e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsCompleteTick);
+/* Phase 2 of the credits scroll (installed by EndingCreditsScrollTick once
+ * its scrollCounter1 hits zero). Same shape as ScrollTick: every 4th frame
+ * advance scrollY by 1 until scrollCounter2 runs out, then swap in
+ * EndingCreditsCompleteTick. */
+void EndingCreditsScrollTick2(EndingCreditsEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
 
+    if ((g_pGameState->frame_counter & 0x3) == 0) {
+        if (e->scrollCounter2 != 0) {
+            e->scrollCounter2--;
+            e->scrollY++;
+        } else {
+            m1 = -1;
+            fn = (void (*)())EndingCreditsCompleteTick;
+            __asm__ volatile("" : "=r"(fn) : "0"(fn));
+            slot.s.markerLo = 0;
+            slot.s.markerHi = m1;
+            slot.s.fn = fn;
+            *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+        }
+    }
+    EndingTickCallback((Entity *)e);
+}
+
+/* Phase 3 / "complete" tick: every 4th frame, advances scrollY until
+ * field140 runs out, then stops the scroll-SFX voice, plays the
+ * completion SFX (0x40023E30), sets flag149=1, and installs either
+ * EndingTickCallback (if flag14C is set) or EndingCreditsFadeOutTick +
+ * the fade-SFX (0x02990901) for the final fade-out phase. */
+void EndingCreditsCompleteTick(EndingCreditsEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+
+    if ((g_pGameState->frame_counter & 0x3) == 0) {
+        if (e->field140 != 0) {
+            e->field140--;
+            e->scrollY++;
+        } else {
+            StopSPUVoice(e->soundHandle);
+            e->soundHandle = -1;
+            PlaySoundEffect(0x40023E30u, 0xA0, 0);
+            e->flag149 = 1;
+            if (e->flag14C == 0) {
+                fn = (void (*)())EndingCreditsFadeOutTick;
+                m1 = -1;
+                slot.s.markerLo = 0;
+                slot.s.markerHi = m1;
+                slot.s.fn = fn;
+                *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+                PlaySoundEffect(0x02990901u, 0xA0, 0);
+            } else {
+                fn = (void (*)())EndingTickCallback;
+                m1 = -1;
+                slot.s.markerLo = 0;
+                slot.s.markerHi = m1;
+                slot.s.fn = fn;
+                *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+            }
+        }
+    }
+    EndingTickCallback((Entity *)e);
+}
+
+/* Final fade-out tick: each frame, advances entity->worldX by a step
+ * looked up from ENDING_FADE_STEP_TABLE indexed by fadeCounter, then
+ * increments the counter. After 32 ticks (counter reaches 0x20), sets
+ * flag149=1 and installs EndingTickCallback as the resting tick. */
 INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsFadeOutTick);
 
 void EndingEntityDestroyCallback_1E54(SpriteEntity *entity, s32 flags) {
