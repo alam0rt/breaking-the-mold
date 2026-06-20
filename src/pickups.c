@@ -36,7 +36,26 @@ EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC");
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitGreenBulletsCollectible);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntity_CollectWithSwirlyEffect);
+extern u8 CheckEntityBoxCollision(Entity *e, u16 mask);
+extern void AddPlayerOrbs(PlayerState *ps, s8 count);
+extern void AddSwirlys(PlayerState *ps, s8 count);
+extern void InitDecorEntityWithScreenOffset(Entity *e, s32 dx, s32 dy, s32 flag);
+extern void PlayEntityPositionSound(Entity *e, u32 soundId);
+extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
+
+/* Twin of CollectibleClaySingleTickCallback for the swirly-orb pickup
+ * variant. Same offscreen-cull + box-collision dispatch shape, but
+ * grants a swirly instead of an orb, spawns the VFX at (0x98, 0x16),
+ * and uses sound id 0x02847462. */
+void DecorEntity_CollectWithSwirlyEffect(InteractiveDecorEntity *e) {
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0 ||
+        CheckEntityBoxCollision((Entity *)e, 2) != 0) {
+        AddSwirlys(PLAYER_STATE_DATA, 1);
+        InitDecorEntityWithScreenOffset((Entity *)e, 0x98, 0x16, 1);
+        PlayEntityPositionSound((Entity *)e, 0x02847462);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitDecorEntityWithHUDIcon);
 
@@ -55,12 +74,6 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitYellowBirdCollectible);
 INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleYellowBirdTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitClayballWithRandomColor);
-
-extern u8 CheckEntityBoxCollision(Entity *e, u16 mask);
-extern void AddPlayerOrbs(PlayerState *ps, s8 count);
-extern void InitDecorEntityWithScreenOffset(Entity *e, s32 dx, s32 dy, s32 flag);
-extern void PlayEntityPositionSound(Entity *e, u32 soundId);
-extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
 
 /* Single-hit clay-ball pickup tick. Runs the standard offscreen-cull
  * decor tick first; if the ball has either already been triggered
