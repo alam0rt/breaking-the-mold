@@ -307,11 +307,63 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitUniverseEnemaCollectible);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleUniverseEnemaTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitSingleFrameDecorEntity);
+void TriggerCollectible100CTickCallback(Entity *e);
+
+/* "100C" trigger-collectible constructor. Same path-following decor
+ * shape as the other Init*Collectible siblings; uses sprite 0x08624580,
+ * vtable override D_80010730, tick TriggerCollectible100CTickCallback.
+ * Differs by pre-loading targetX (+0x70) = 1 before the slot install so
+ * the per-frame tick sees a non-zero target on its first call (drives
+ * the trigger sweep). */
+TimedPathEntity *InitSingleFrameDecorEntity(TimedPathEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0x08624580, 0x3DE, data->x, data->y, 0);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity(e, data, 0);
+    e->sprite.base.collisionVtable = SINGLE_FRAME_DECOR_VTABLE;
+    e->sprite.base.targetX = 1;
+    do {} while (0);
+    fn = (void (*)())TriggerCollectible100CTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", TriggerCollectible100CTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitScaleResetCollectible);
+void ScaleResetCollectibleTickCallback(Entity *e);
+
+/* Twin of InitSingleFrameDecorEntity but for the scale-reset pickup
+ * variant. Sprite 0x8C30008C, vtable override D_80010710, tick
+ * ScaleResetCollectibleTickCallback. Same targetX=1 priming and dual
+ * `do {} while (0);` armor. */
+TimedPathEntity *InitScaleResetCollectible(TimedPathEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0x8C30008C, 0x3DE, data->x, data->y, 0);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity(e, data, 0);
+    e->sprite.base.collisionVtable = SCALE_RESET_VTABLE;
+    e->sprite.base.targetX = 1;
+    do {} while (0);
+    fn = (void (*)())ScaleResetCollectibleTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", ScaleResetCollectibleTickCallback);
 
