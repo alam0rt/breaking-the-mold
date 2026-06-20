@@ -440,7 +440,29 @@ void ShrineyGuardAttackCounterState(Entity *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardSetAttackState);
+/* Switches the boss into its attack-windup state: installs BossEventHandler
+ * on the +0x08 event slot and ShrineyGuardIdleTickCallback on the +0x00 tick
+ * slot, then switches the sprite to 0x4C106054 (attack-windup animation). */
+void ShrineyGuardSetAttackState(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = (void (*)())BossEventHandler;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = ShrineyGuardIdleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x4C106054, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardSetLoopingAttackState);
 

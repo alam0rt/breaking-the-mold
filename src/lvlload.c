@@ -177,8 +177,28 @@ void ClearEntitiesAndFadeToBlack(GameState *gameState) {
 /* Trigger-zone subId -> RGB tint lookup. Reads the subId parameter,
  * subtracts 0x15, and indexes a 3-byte-stride table at D_8009D9C0
  * (20 entries, subIds 0x15..0x28), writing R/G/B to the three out-byte
- * pointers. Returns 1 on hit, 0 if out of range. */
-INCLUDE_ASM("asm/nonmatchings/lvlload", HandleGenericTriggerZone);
+ * pointers. Returns 1 on hit, 0 if out of range. The leading unused
+ * argument is genuinely unused -- the function immediately reloads
+ * a0 from sp+0x10 (the 5th-arg slot) to use as the B output ptr.
+ *
+ * Source quirk: the table is named via three distinct gp_rel symbols
+ * D_8009D9C0 / D_8009D9C1 / D_8009D9C2 -- one per color channel -- each
+ * indexed by `idx * 3`. */
+extern u8 TRIGGER_ZONE_R_TABLE[] asm("D_8009D9C0");
+extern u8 TRIGGER_ZONE_G_TABLE[] asm("D_8009D9C1");
+extern u8 TRIGGER_ZONE_B_TABLE[] asm("D_8009D9C2");
+
+s32 HandleGenericTriggerZone(s32 unused, u8 zoneId, u8 *outR, u8 *outG,
+                              u8 *outB) {
+    if ((u8)(zoneId - 0x15) < 0x14) {
+        u8 idx = zoneId - 0x15;
+        *outR = TRIGGER_ZONE_R_TABLE[idx * 3];
+        *outG = TRIGGER_ZONE_G_TABLE[idx * 3];
+        *outB = TRIGGER_ZONE_B_TABLE[idx * 3];
+        return 1;
+    }
+    return 0;
+}
 
 /* Post-death cleanup that strips one-shot entities before respawn. Walks
  * the live tick list (+0x1C) removing type-0x08 entities whose +0x70 flag

@@ -20,6 +20,7 @@ extern void FinnVehicleMovementUpdate(Entity *e);
 extern void FinnUpdateRotationSprite(Entity *e);
 extern void EntityUpdateCallback(Entity *e);
 extern void FinnTick_LevelExitCountdown(Entity *e);
+extern void SetAnimationActive(Entity *entity, u8 value);
 
 typedef struct FinnSubentityStateFlags {
     /* 0x000 */ SpriteEntity sprite;
@@ -105,7 +106,22 @@ void SetEntityStateFlagWithValue(FinnSubentityStateFlags *e, u8 val) {
     e->stateFlag = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_SetIdleSpriteAndPause);
+/* Subentity state switch: clears the event-callback slot, switches sprite
+ * to 0xC87CA082 (the idle sprite), and pauses the animation if the
+ * paused-flag at +0x10E is not already set. Used by FINNCallback_DispatchTo
+ * to put a subentity into its "frozen idle" state. */
+void FinnSubState_SetIdleSpriteAndPause(FinnSubentityStateFlags *e) {
+    PaddedSlotPair slot;
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
+    SetEntitySpriteId((Entity *)e, 0xC87CA082, 1);
+    if (e->pad10E == 0) {
+        SetAnimationActive((Entity *)e, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubState_FaceRightAndAnimate);
 

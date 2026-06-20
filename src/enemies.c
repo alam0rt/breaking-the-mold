@@ -1663,7 +1663,30 @@ void EntityPathMovementUpdate(TimedPathEntity *e) {
     e->sprite.base.worldY = e->pathOriginY + (u16)out[1];
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_IdleState);
+/* Returns the BounceClay enemy to idle: re-installs
+ * EntityTick_CollisionWithCleanup on the +0x00 tick slot and
+ * HazardEventHandler_0x1001 on the +0x08 event slot, then switches the
+ * sprite to 0xF175320E (idle animation). Called after a bounce settles. */
+void BounceClay_IdleState(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = EntityTick_CollisionWithCleanup;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = (void (*)())HazardEventHandler_0x1001;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0xF175320E, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_DestroyingState);
 
