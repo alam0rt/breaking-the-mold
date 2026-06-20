@@ -9,7 +9,8 @@ extern void *MONKEY_MAGE_BOSS_VTABLE asm("D_80011308");
 extern void *BOSS_AUX_ENTITY_VTABLE asm("D_80011328");
 extern void *MONKEY_MAGE_AUX_VTABLE asm("D_80011348");
 extern void *BOSS_PARTICLE_SPAWN_VTABLE asm("D_80011368");
-extern void *BOSS_SPU_CLEANUP_VTABLE asm("D_80011388");
+extern u8 BOSS_SPU_CLEANUP_VTABLE[] asm("D_80011388");
+extern u8 BOSS_SPU_STOP_PRE_VTABLE[] asm("D_800112C8");
 extern void *KLOGG_BOSS_VTABLE asm("D_80011268");
 extern void *JOE_HEAD_JOE_BOSS_VTABLE asm("D_80011288");
 extern void *MONKEY_MAGE_SIMPLE_ALLOC_VTABLE asm("D_800113A8");
@@ -313,7 +314,41 @@ INCLUDE_ASM("asm/nonmatchings/bosses", BossHPBarTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitGlennYntisBoss);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestructor_WithSPUStop);
+/* Entity layout for the boss-class destructor below — has an SPU voice
+ * handle at +0x118 (vs +0x10C used elsewhere). */
+typedef struct BossWithSpuVoiceEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x118 - 0x100];
+    /* 0x118 */ s32 voiceHandle;
+} BossWithSpuVoiceEntity;
+
+/* Destructor referenced from boss vtables. Three-phase teardown:
+ *   1. Swap collisionVtable to BOSS_SPU_STOP_PRE_VTABLE (D_800112C8) so the
+ *      SPU callback (if any) sees the "stopping" vtable, then call
+ *      StopSPUVoice with the handle at +0x118.
+ *   2. Clear voiceHandle to -1, swap collisionVtable to
+ *      BOSS_SPU_CLEANUP_VTABLE (D_80011388), then DestroyEntityAndFreeMemory.
+ *   3. If flags bit 0 set, return the BLB-heap allocation.
+ *
+ * Both vtable writes target the same +0x18 field (collisionVtable); the
+ * intermediate D_800112C8 swap is the boss-specific quirk that distinguishes
+ * this from playdtor's single-vtable destructor.
+ *
+ * Match recipe: the lw of voiceHandle MUST be on the line BEFORE the
+ * lui/addiu for D_800112C8 because cc1 schedules it into the StopSPUVoice
+ * call's delay slot. Likewise the -1 store at +0x118 is folded into the
+ * second vtable lui's delay slot. Writing the function as a flat sequence
+ * (no temps) produces this. */
+void EntityDestructor_WithSPUStop(BossWithSpuVoiceEntity *e, u32 flags) {
+    e->sprite.base.collisionVtable = BOSS_SPU_STOP_PRE_VTABLE;
+    StopSPUVoice(e->voiceHandle);
+    e->voiceHandle = -1;
+    e->sprite.base.collisionVtable = BOSS_SPU_CLEANUP_VTABLE;
+    DestroyEntityAndFreeMemory(&e->sprite, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 void Hazard_TickWithBehaviorTransition(Entity *e) {
     HazardTimerEntity *entity = (HazardTimerEntity *)e;
