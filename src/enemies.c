@@ -686,15 +686,18 @@ void EnemyPatrolState(Entity *e) {
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
     *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    /* Pin e into $a0 early so SetEntitySpriteId's `move a0,s0` lands in the
+     * branch delay slot of the lbu below.  The `$a1` clobber forces GCC to
+     * re-materialize the high half of the sprite-id immediate in each arm
+     * instead of hoisting a shared `lui` above the branch. */
     callArg = e;
-    if (*(u8 *)((u8 *)e + 0x119)) {
+    if (((u8 *)e)[0x119]) {
         __asm__ volatile("" ::: "$5");
         spriteId = 0x60B93CBD;
-        goto setPatrolSprite;
+    } else {
+        __asm__ volatile("" ::: "$5");
+        spriteId = 0x60B9BCBD;
     }
-    __asm__ volatile("" ::: "$5");
-    spriteId = 0x60B9BCBD;
-setPatrolSprite:
     SetEntitySpriteId(callArg, spriteId, 1);
     fn = InitEnemyFallingState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
@@ -740,15 +743,15 @@ void InitEnemyFallingState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = eventFn;
     *(CallbackSlot *)&e->eventMarker = slot.s;
+    /* See EnemyPatrolState for why $a0 is pinned early and $a1 is clobbered. */
     callArg = e;
-    if (*(u8 *)((u8 *)e + 0x119)) {
+    if (((u8 *)e)[0x119]) {
         __asm__ volatile("" ::: "$5");
         spriteId = 0x60A91C9C;
-        goto setFallingSprite;
+    } else {
+        __asm__ volatile("" ::: "$5");
+        spriteId = 0x61A91C9C;
     }
-    __asm__ volatile("" ::: "$5");
-    spriteId = 0x61A91C9C;
-setFallingSprite:
     SetEntitySpriteId(callArg, spriteId, 1);
     SetEntityTargetFrame(e, 0x17);
     SetAnimationSpriteId(e, 0x18);
@@ -781,15 +784,15 @@ void EnemyDeathState(Entity *e) {
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
     *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    /* See EnemyPatrolState for why $a0 is pinned early and $a1 is clobbered. */
     callArg = e;
-    if (*(u8 *)((u8 *)e + 0x119)) {
+    if (((u8 *)e)[0x119]) {
         __asm__ volatile("" ::: "$5");
         spriteId = 0x60AA1C9C;
-        goto setDeathSprite;
+    } else {
+        __asm__ volatile("" ::: "$5");
+        spriteId = 0x62AA1C9C;
     }
-    __asm__ volatile("" ::: "$5");
-    spriteId = 0x62AA1C9C;
-setDeathSprite:
     SetEntitySpriteId(callArg, spriteId, 1);
     fn = EnemyPatrolState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
