@@ -88,11 +88,39 @@ u8 AdvancePlaybackSequence(LevelDataContext *ctx) {
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/level", SetSequenceIndexByMode);
+void SetSequenceIndexByMode(LevelDataContext *ctx, u8 mode, u8 skip) {
+    BlbHeader *header;
+    u8 i;
+
+    for (i = 1; i < ((BlbHeader *)ctx->blb_header)->sequence_count; i++) {
+        header = (BlbHeader *)ctx->blb_header;
+        if (header->sequence_modes[i] == mode) {
+            if (skip == 0) {
+                ctx->current_sequence_index = i - 1;
+                return;
+            }
+            skip--;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/level", SeekToLevelInSequence);
 
-INCLUDE_ASM("asm/nonmatchings/level", FindSaveSlotByName);
+void FindSaveSlotByName(LevelDataContext *ctx, const char *name) {
+    BlbHeader *header;
+    u8 i;
+
+    for (i = 0; i < ((BlbHeader *)ctx->blb_header)->sequence_count; i++) {
+        header = (BlbHeader *)ctx->blb_header;
+        if (header->sequence_modes[i] == 1) {
+            u8 target = header->sequence_targets[i];
+            if (strcmp(header->movies[target].movie_id, name) == 0) {
+                ctx->current_sequence_index = i - 1;
+                return;
+            }
+        }
+    }
+}
 
 void AdvanceLevelSequence(LevelDataContext *ctx) {
     ctx->current_sequence_index = ((BlbHeader *)ctx->blb_header)->sequence_count - 2;
