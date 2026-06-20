@@ -1456,7 +1456,7 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
 
     InitEntitySprite(e, 0x88210498, 0x3CA, *(s16 *)(spawn + 8), *(s16 *)(spawn + 0xA) - 1, 0);
     e->collisionVtable = &ALT_COLLECTIBLE_ENTITY_VTABLE;
-    *(s16 *)((u8 *)e + 0x10) = 0x384;
+    e->allocSize = 0x384;
     *(u8 **)((u8 *)e + 0x100) = spawn;
     __asm__ volatile("" ::: "memory");
     fn = EntityTimedStateSwitchTick;
@@ -1477,12 +1477,12 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
         s32 x;
         s32 y;
 
-        sprite0 = *(u8 **)((u8 *)e + 0x34);
+        sprite0 = (u8 *)e->spriteContext;
         __asm__ volatile("" : "=r"(sprite0) : "0"(sprite0));
         abr = 1;
     __asm__ volatile("" : "=r"(abr) : "0"(abr));
         sprite0[0xA] = 0;
-        sprite = *(u8 **)((u8 *)e + 0x34);
+        sprite = (u8 *)e->spriteContext;
         maskX = -0x40;
         x = *(s16 *)(sprite + 0x10);
         maskY = -0x100;
@@ -1491,8 +1491,8 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
         *(s16 *)(sprite + 0x24) = GetTPage(sprite[0x32], abr, maskX, y & maskY);
     }
     SetupEntityScaleCallbacks(e);
-    *(s16 *)((u8 *)e + 0x12) = 0;
-    *(s16 *)((u8 *)e + 0x70) = 0;
+    e->collisionMask = 0;
+    e->targetX = 0;
     return e;
 }
 
@@ -1509,7 +1509,7 @@ void EntityTimedStateSwitchTick(Entity *e) {
         __asm__ volatile("" : "=r"(callArg) : "0"(callArg));
         fn = EntityUpdateWithCollisionOffscreen;
         __asm__ volatile("" : "=r"(fn) : "0"(fn));
-        (*(u8 **)((u8 *)e + 0x34))[0xA] = 1;
+        ((u8 *)e->spriteContext)[0xA] = 1;
         m1 = -1;
         slot.s.markerLo = 0;
         slot.s.markerHi = m1;
@@ -1582,7 +1582,7 @@ void EntityHideAndDisable(Entity *e) {
     void (*fn)();
     s16 m1;
 
-    (*(u8 **)((u8 *)e + 0x34))[0xA] = 0;
+    ((u8 *)e->spriteContext)[0xA] = 0;
     EntitySetRenderFlags(e, 0);
     fn = EntityConditionalActivateTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
@@ -1649,7 +1649,7 @@ void PlatformHideAndDisable(Entity *e) {
     void (*fn)();
     s16 m1;
 
-    (*(u8 **)((u8 *)e + 0x34))[0xA] = 0;
+    ((u8 *)e->spriteContext)[0xA] = 0;
     EntitySetRenderFlags(e, 0);
     fn = PlatformTimerTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
