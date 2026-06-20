@@ -331,24 +331,22 @@ void RunnState_SetAdvanceLevelAndHide(Entity *e) {
 
 /* Initializer for the level-exit state: arms the down-counter at 0x5C
  * frames, clears the exit-fired flag, and installs FinnTick_LevelExitCountdown
- * as the per-frame tick callback (marker 0xFFFF0000 = direct call).
- *
- * Equivalent to:
- *   void FinnStateInit_SetTimerAndTick(FinnLevelExitEntity *e) {
- *       PadSlot slot;
- *       e->exitFlag = 0;
- *       e->exitTimer = 0x5C;
- *       slot.s.markerLo = 0;
- *       slot.s.markerHi = -1;
- *       slot.s.fn = (void (*)())FinnTick_LevelExitCountdown;
- *       *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
- *   }
- *
- * cc1 schedules the two byte stores (exitFlag at 0x11A, exitTimer at 0x118)
- * and the m1=-1 prep in a different order than TARGET regardless of source
- * order, volatile, or register-pin tricks — leaves a 270-byte diff that
- * couldn't be coaxed. Leaving as INCLUDE_ASM. */
-INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetTimerAndTick);
+ * as the per-frame tick callback (marker 0xFFFF0000 = direct call). */
+void FinnStateInit_SetTimerAndTick(FinnLevelExitEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    e->exitFlag = 0;
+    e->exitTimer = 0x5C;
+    do {} while (0);
+    fn = (void (*)())FinnTick_LevelExitCountdown;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+}
 
 s32 IsTileTypeSolidOrHazard(s32 unused, u8 *tilePtr) {
     u8 tile = *tilePtr;
