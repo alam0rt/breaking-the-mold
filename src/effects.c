@@ -355,7 +355,38 @@ void FlushDepthBucketsGlobal(void) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitAlternateEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyCompoundEntity);
+extern void *ALTERNATE_ENTITY_INTERMEDIATE_VTABLE asm("D_80010AB8");
+extern void RemoveFromRenderList(GameState *gs, void *slot);
+
+typedef struct CompoundEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[4];
+    /* 0x104 */ void *child;
+} CompoundEntity;
+
+/* Compound-entity destructor: an alternate-entity wrapper that owns a
+ * detached child render-list slot at +0x104 (allocated by
+ * InitAlternateEntity). Always swaps the vtable to the intermediate
+ * D_80010AB8 (unconditionally, via beqz delay-slot store); if a child
+ * is present, removes it from the render list and frees its allocation;
+ * then calls DestroyEntityAndFreeMemory for the rest of the teardown,
+ * and finally frees the wrapper if flags & 1.
+ *
+ * Match recipe: vtable store on the line BEFORE the if-check so cc1
+ * folds it into the beqz delay slot (where it runs unconditionally).
+ * Two separate e->child reads bracket the RemoveFromRenderList call
+ * exactly as TARGET does. */
+void DestroyCompoundEntity(CompoundEntity *e, s32 flags) {
+    e->sprite.base.collisionVtable = &ALTERNATE_ENTITY_INTERMEDIATE_VTABLE;
+    if (e->child != NULL) {
+        RemoveFromRenderList(g_pGameState, e->child);
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e->child, 0, 0);
+    }
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", SetupAlternateEntitySpriteContext);
 
@@ -670,7 +701,6 @@ INCLUDE_ASM("asm/nonmatchings/effects", OscillateScaleAndRotationTick);
 INCLUDE_ASM("asm/nonmatchings/effects", InitFadeMenuEntityWithChild);
 
 extern void *OSCILLATING_SCALE_VTABLE asm("D_80010910");
-extern void RemoveFromRenderList(GameState *gs, void *slot);
 
 /* Two-stage destructor for the fade-menu/oscillating-scale entity
  * (initialized by InitFadeMenuEntityWithChild). Stage 1: swap vtable to
