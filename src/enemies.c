@@ -665,7 +665,7 @@ void EnemyPatrolState(Entity *e) {
     u32 spriteId;
     register Entity *callArg asm("$4");
 
-    *(s16 *)((u8 *)e + 0x104) = 10;
+    ((EnemyTimerStateEntity *)e)->stateTimer = 10;
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = 0;
     slot.s[0].fn = NULL;
@@ -1169,7 +1169,7 @@ void InitEntityState_Idle(Entity *e) {
     void (*nextFn)();
     s16 m1;
 
-    *(s16 *)((u8 *)e + 0x112) = 0x3C;
+    ((DeathSpawnTimerEntity *)e)->deathTimer = 0x3C;
     __asm__ volatile("" ::: "memory");
     fn = EntityTimerCountdownDeathSpawn;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
