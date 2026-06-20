@@ -13,6 +13,7 @@ extern u8 HAMSTER_SHIELD_VTABLE[] asm("D_800106D0");
 extern u8 TRANSPARENT_DECOR_VTABLE[] asm("D_800107B0");
 extern u8 SCALE_RESET_VTABLE[] asm("D_80010710");
 extern u8 SINGLE_FRAME_DECOR_VTABLE[] asm("D_80010730");
+extern u8 ICON_1970_VTABLE[] asm("D_800106F0");
 extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
@@ -367,7 +368,33 @@ TimedPathEntity *InitScaleResetCollectible(TimedPathEntity *e, DecorSpawnData *d
 
 INCLUDE_ASM("asm/nonmatchings/pickups", ScaleResetCollectibleTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", Init1970IconEntity);
+void Collectible1970IconTickCallback(PowerupCollectibleEntity *e);
+
+/* "1970 icon" pickup constructor. Same shape as InitHamsterShieldCollectible
+ * (visibility/spriteContext[0x37] clears after the slot install) but with
+ * sprite 0x88A28194, vtable override D_800106F0, tick
+ * Collectible1970IconTickCallback. */
+PowerupCollectibleEntity *Init1970IconEntity(PowerupCollectibleEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0x88A28194, 0x3DE, data->x, data->y, 1);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
+    e->sprite.base.collisionVtable = ICON_1970_VTABLE;
+    do {} while (0);
+    fn = (void (*)())Collectible1970IconTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    e->sprite.visibility = 0;
+    ((u8 *)e->sprite.base.spriteContext)[0x37] = 0;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", Collectible1970IconTickCallback);
 
