@@ -4,6 +4,50 @@
 #include "Game/callback_slot.h"
 #include "globals.h"
 
+/* -----------------------------------------------------------------------------
+ * Local helpers for the FSM callback-slot install/clear pattern.
+ *
+ * The engine stores each callback as an 8-byte {markerLo, markerHi, fn} slot
+ * scattered through the Entity struct (see include/Game/callback_slot.h).
+ * cc1 2.7.2 -O2 emits the install/copy sequence cleanly when the slot is
+ * built on the stack and assigned through a scratch local — these macros
+ * wrap that boilerplate.
+ *
+ * Usage:
+ *   PaddedSlotPair slot;        (* or PadSlot for the 0x28-frame variant *)
+ *   void (*fn)();
+ *   s16  m1;
+ *   ...
+ *   SLOT_CLEAR(slot.s[0], e->renderMarker);
+ *   fn = MyTickFn;
+ *   __asm__ volatile("" : "=r"(fn) : "0"(fn));
+ *   m1 = -1;
+ *   SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
+ *   fn = MyEventFn;
+ *   __asm__ volatile("" : "=r"(fn) : "0"(fn));
+ *   SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
+ *
+ * The caller-owned `fn = X; __asm__ barrier;` keeps cc1 from hoisting the
+ * lui/addiu for the callback address above unrelated stack ops — without it
+ * the byte match breaks (see docs/compiler-quirks.md Quirk 5 and
+ * memories/repo/decomp-patterns.md). `m1 = -1` is positioned between the
+ * first fn-barrier and the first SLOT_STORE so cc1 emits `li v0,-1` between
+ * `la fn` and the markerHi store, then reuses the register on later stores.
+ * -------------------------------------------------------------------------- */
+#define SLOT_CLEAR(scratch, dest_field) do { \
+    (scratch).markerLo = 0; \
+    (scratch).markerHi = 0; \
+    (scratch).fn = NULL; \
+    *(CallbackSlot *)&(dest_field) = (scratch); \
+} while (0)
+
+#define SLOT_STORE(scratch, dest_field, m1_val, fn_val) do { \
+    (scratch).markerLo = 0; \
+    (scratch).markerHi = (m1_val); \
+    (scratch).fn = (fn_val); \
+    *(CallbackSlot *)&(dest_field) = (scratch); \
+} while (0)
+
 extern void *g_pBlbHeapBase;
 extern void CheckAndDisableSpawnDataOffscreen(Entity *entity);
 extern void CollisionCheckWrapper(Entity *e, s32 a, s32 b, s32 c);
@@ -340,23 +384,14 @@ void EntityStateSetIdle(Entity *e) {
     u32 *spriteIds;
     __asm__ volatile("" ::: "memory");
 
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     fn = TimedSparkleCollectibleTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
     fn = EntityEventHandlerWithRandomWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
     spriteIds = *(u32 **)((u8 *)e + 0x114);
     SetEntitySpriteId(e, spriteIds[3], 1);
 }
