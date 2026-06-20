@@ -7,11 +7,26 @@ typedef struct {
 } LayerRenderSlot;
 
 extern void FreeAllLayerRenderSlots(LayerRenderSlot *base);
+extern void builtin_delete(void *ptr);
 
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots);
 
 INCLUDE_ASM("asm/nonmatchings/layer", ClearLayerRenderSlotsFromIndex);
 
+/* Standard 0x80011228-style destructor for the layer-renderer object:
+ * walks every render slot tearing it down, then (if flags & 1) frees
+ * the object via the C++ delete entry point.
+ *
+ * SHELVED: 405-byte diff because cc1 emits `move v0, a0` BEFORE the
+ * prologue (the C++ destructor's implicit `return this`), and cc1's
+ * C frontend won't reproduce that pre-prologue write even when the
+ * function signature returns the pointer. Equivalent C:
+ *   LayerRenderSlot *DestroyLayerRendererObject(LayerRenderSlot *obj, s32 flags) {
+ *       FreeAllLayerRenderSlots(obj);
+ *       if (flags & 1) builtin_delete(obj);
+ *       return obj;
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/layer", DestroyLayerRendererObject);
 
 INCLUDE_ASM("asm/nonmatchings/layer", LoadSpriteFramesToVRAM);

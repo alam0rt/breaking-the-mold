@@ -413,7 +413,22 @@ void FinnSpawnCountdownTickCallback(FinnSpawnCountdownEntity *e) {
     EntityUpdateCallback((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnExitMoveRightTickCallback);
+/* Per-frame tick after Finn has spawned: shoves the entity 5 pixels to
+ * the right each frame and, once it crosses (camera_limit_x - 0xA0)
+ * (the right edge of the level minus a screen-width's worth of pixels),
+ * clears its own render slot to remove the post-exit sprite from the
+ * frame buffer chain. */
+void FinnExitMoveRightTickCallback(Entity *e) {
+    PaddedSlotPair slot;
+
+    e->worldX += 5;
+    if (e->worldX >= g_pGameState->camera_limit_x - 0xA0) {
+        slot.s[0].markerLo = 0;
+        slot.s[0].markerHi = 0;
+        slot.s[0].fn = NULL;
+        *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", InitEntity_FinnScaledSprite);
 
