@@ -66,6 +66,7 @@ extern void CollectibleTickFinnMode(Entity *e);
 extern void EntityEventHandlerIdle(Entity *e);
 extern s32 EntityEventHandlerWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityStateSetWalk(Entity *e);
+extern void SoundEmitterTickCallback(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetEntityTargetFrame(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
@@ -224,7 +225,8 @@ typedef struct PlatformActivationRefEntity {
 
 typedef struct SoundEmitterEntity {
     /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x24];
+    /* 0x100 */ u8 pad100[0x20];
+    /* 0x120 */ u32 *spriteIdPtr;
     /* 0x124 */ u16 stunTimer;
     /* 0x126 */ u8 pad126[2];
     /* 0x128 */ s32 voiceId;
@@ -608,7 +610,25 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityFollowPathWithWrapping);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyStartMovingWithSound);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityInitSoundEmitterState);
+/* Re-arms a sound-emitter enemy to its walking-and-emitting state:
+ * installs EntityEventHandlerWalk on the +0x08 event slot and
+ * SoundEmitterTickCallback on the +0x00 tick slot, then switches the
+ * sprite to *e->spriteIdPtr (sprite-id table loaded via the +0x120
+ * pointer). Called when the enemy transitions back to active state. */
+void EntityInitSoundEmitterState(SoundEmitterEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = (void (*)())EntityEventHandlerWalk;
+    do {} while (0);
+    m1 = -1;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
+    fn = SoundEmitterTickCallback;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker, m1, fn);
+    SetEntitySpriteId((Entity *)e, *e->spriteIdPtr, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EnemyEnterSoundEmitterState);
 

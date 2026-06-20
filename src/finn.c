@@ -20,6 +20,7 @@ extern void FinnVehicleMovementUpdate(Entity *e);
 extern void FinnUpdateRotationSprite(Entity *e);
 extern void EntityUpdateCallback(Entity *e);
 extern void FinnTick_LevelExitCountdown(Entity *e);
+extern void FinnExitMoveRightTickCallback(Entity *e);
 extern void SetAnimationActive(Entity *entity, u8 value);
 
 typedef struct FinnSubentityStateFlags {
@@ -48,6 +49,13 @@ typedef struct FinnStateValueEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u32 stateValue;
 } FinnStateValueEntity;
+
+/* Used by FinnSpawnCountdownTickCallback: u8 down-counter at +0x100; when
+ * it hits 0 the render slot is overwritten with FinnExitMoveRightTickCallback. */
+typedef struct FinnSpawnCountdownEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 spawnCountdown;
+} FinnSpawnCountdownEntity;
 
 typedef struct FinnVoiceEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -380,7 +388,30 @@ void FreeEntityNoTeardown_80070548(Entity *e, u32 size) {
 
 INCLUDE_ASM("asm/nonmatchings/finn", InitEntity_FinnSpawnCountdown);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnSpawnCountdownTickCallback);
+/* Per-frame tick: decrements the u8 spawn-countdown at +0x100. When it
+ * reaches 0, swaps the entity's render slot to FinnExitMoveRightTickCallback
+ * (the post-spawn movement driver). Also pins the entity as the current
+ * player-entity pointer so HUD/camera routines see it. */
+void FinnSpawnCountdownTickCallback(FinnSpawnCountdownEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    EntityCallback fn;
+
+    g_pGameState->player_entity_ptr = e;
+    if (e->spawnCountdown != 0) {
+        e->spawnCountdown--;
+        if (e->spawnCountdown == 0) {
+            fn = FinnExitMoveRightTickCallback;
+            m1 = -1;
+            do {} while (0);
+            slot.s.markerLo = 0;
+            slot.s.markerHi = m1;
+            slot.s.fn = fn;
+            *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s;
+        }
+    }
+    EntityUpdateCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnExitMoveRightTickCallback);
 

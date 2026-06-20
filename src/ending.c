@@ -41,7 +41,8 @@ typedef struct EndingSequenceEntity {
  *   +0x150 SPU sound-effect handle */
 typedef struct EndingCreditsEntity {
     /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8           pad100[0x36];
+    /* 0x100 */ u32          destroyFlag;
+    /* 0x104 */ u8           pad104[0x32];
     /* 0x136 */ u16          scrollCounter1;
     /* 0x138 */ u8           pad138[0x8];
     /* 0x140 */ u16          field140;
@@ -215,6 +216,22 @@ u32 func_80079D74(EndingEntityWithState *e) {
 
 INCLUDE_ASM("asm/nonmatchings/ending", func_80079D80);
 
+/* Destructor for the credit-scroll entity: stores the flags arg into
+ * the entity's destroyFlag (+0x100) BEFORE doing anything else (cc1
+ * emits this as a pre-prologue sw), then sets the collision vtable,
+ * tears down the entity, and finally frees it if (flags & 1).
+ *
+ * SHELVED: 275-byte diff because cc1 schedules the `e->destroyFlag =
+ * flags;` store AFTER the prologue saves (using $s0=flags via $s1=e)
+ * instead of TARGET's pre-prologue `sw a1, 0x100(a0)` (using raw
+ * argument registers). Equivalent C:
+ *   void EndingEntityDestroyCallback(EndingCreditsEntity *e, u32 flags) {
+ *       e->destroyFlag = flags;
+ *       e->sprite.base.collisionVtable = ENDING_ENTITY_VTABLE_1EB4;
+ *       DestroyEntityAndFreeMemory(&e->sprite, 0);
+ *       if (flags & 1) FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback);
 
 void func_80079DEC(void) {
