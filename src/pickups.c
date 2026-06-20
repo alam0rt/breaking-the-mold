@@ -9,6 +9,7 @@ extern u8 DECOR_SIMPLE_ALLOC_VTABLE[] asm("D_80010890");
 extern u8 SUPERWILLIE_VTABLE[] asm("D_800106B0");
 extern u8 PHOENIX_HAND_VTABLE[] asm("D_80010790");
 extern u8 YELLOW_BIRD_VTABLE[] asm("D_80010810");
+extern u8 HAMSTER_SHIELD_VTABLE[] asm("D_800106D0");
 extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
@@ -286,7 +287,38 @@ INCLUDE_ASM("asm/nonmatchings/pickups", Init1970IconEntity);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", Collectible1970IconTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitHamsterShieldCollectible);
+void CollectibleHamsterShieldTickCallback(PowerupCollectibleEntity *e);
+
+/* Hamster-shield pickup constructor. Mirrors the SuperWillie/PhoenixHand
+ * shape (path-following decor, vtable override, tick install) but adds
+ * two follow-up state clears so the powerup spawns "visible and
+ * unflipped":
+ *   - SpriteEntity.visibility (+0xF6) = 0  (0 == visible)
+ *   - spriteContext[0x37] = 0              (clears flip/state byte on the
+ *                                           render context)
+ * Sprite id 0x80E85EA0, vtable override D_800106D0, tick
+ * CollectibleHamsterShieldTickCallback. */
+PowerupCollectibleEntity *InitHamsterShieldCollectible(PowerupCollectibleEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0x80E85EA0, 0x3DE, data->x, data->y, 1);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
+    e->sprite.base.collisionVtable = HAMSTER_SHIELD_VTABLE;
+    do {} while (0);
+    fn = (void (*)())CollectibleHamsterShieldTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    e->sprite.visibility = 0;
+    ((u8 *)e->sprite.base.spriteContext)[0x37] = 0;
+    return e;
+}
 
 /* Hamster-shield pickup -- variant of the PowerupCollectible shape that
  * awards swirly-Qs and hamsters together and picks the sound based on
