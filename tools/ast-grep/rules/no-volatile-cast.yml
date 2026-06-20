@@ -2,6 +2,21 @@ id: no-volatile-cast
 language: C
 severity: hint
 message: Volatile-qualified pointer cast is an obtuse way to force a reload; document why the compiler must not coalesce this load.
-note: "Usually a scheduling/codegen hack to match the original load ordering. If it's load-bearing for a byte match, leave a comment explaining what reordering it prevents."
+note: "Usually a scheduling/codegen hack to match the original load ordering. If it's load-bearing for a byte match, leave a `// @hack: <what reordering this prevents>` comment on the line directly above the containing statement; the rule then treats the cast as deliberately kept armor and stops firing. Untagged volatile casts indicate either missing documentation or a real opportunity to remove the hack."
 rule:
-  pattern: '*(volatile $TYPE *)$EXPR'
+  any:
+    - kind: declaration
+      has:
+        kind: pointer_expression
+        pattern: '*(volatile $TYPE *)$EXPR'
+        stopBy: end
+    - kind: expression_statement
+      has:
+        kind: pointer_expression
+        pattern: '*(volatile $TYPE *)$EXPR'
+        stopBy: end
+  not:
+    follows:
+      kind: comment
+      regex: 'hack|HACK|@|match'
+      stopBy: neighbor

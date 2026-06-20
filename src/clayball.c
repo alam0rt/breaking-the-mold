@@ -6,6 +6,16 @@
 extern u8 CLAYBALL_TEARDOWN_VTABLE[] asm("D_800116E8");
 extern u8 SMALL_CLAYBALL_HELPER_VTABLE[] asm("D_80011708");
 
+/* Common per-entity spawn definition header used by clayball/circular-platform
+ * constructors: opaque header followed by world position (+0x8/+0xA) and a
+ * u16 init parameter (+0xC) consumed by GenericSpriteEntityInitCallback. */
+typedef struct ClayballSpawnDef {
+    /* 0x00 */ u8  pad00[8];
+    /* 0x08 */ s16 worldX;
+    /* 0x0A */ u16 worldY;
+    /* 0x0C */ u16 initParam;
+} ClayballSpawnDef;
+
 typedef struct SwitchClayballEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 *spawnDef;
@@ -65,10 +75,11 @@ extern u8 SWITCH_CLAYBALL_GAMEPLAY_VTABLE[] asm("D_80011648");
  * gameplay vtable SWITCH_CLAYBALL_GAMEPLAY_VTABLE, clears live state (+0x11A,+0x124) and calls
  * ClayballResetState to drop any leftover linked switch-block. */
 SwitchClayballEntity *InitClayballWithSwitchBlock(SwitchClayballEntity *entity, u8 *def, u8 *spawnContext, u8 flags) {
-    InitEntitySprite(&entity->sprite, spawnContext, 0x3C0, *(s16 *)(def + 0x8), (s16)(*(u16 *)(def + 0xA) - 1), 0);
+    ClayballSpawnDef *defData = (ClayballSpawnDef *)def;
+    InitEntitySprite(&entity->sprite, spawnContext, 0x3C0, defData->worldX, (s16)(defData->worldY - 1), 0);
     entity->sprite.base.collisionVtable = CLAYBALL_TEARDOWN_VTABLE;
     entity->spawnDef = def;
-    GenericSpriteEntityInitCallback(&entity->sprite, *(u16 *)(def + 0xC), flags, 0);
+    GenericSpriteEntityInitCallback(&entity->sprite, defData->initParam, flags, 0);
     entity->sprite.base.collisionVtable = SWITCH_CLAYBALL_GAMEPLAY_VTABLE;
     entity->active = 0;
     entity->linkedEntity = NULL;

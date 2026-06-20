@@ -23,14 +23,22 @@ INCLUDE_ASM("asm/nonmatchings/sound", InitSPUDefaults);
 
 INCLUDE_ASM("asm/nonmatchings/sound", UploadAudioToSPU);
 
-extern u8 SPU_UPLOAD_BLOCK_TABLE[] asm("D_8009CFB0");
+/* SPU upload-block log entry (12 bytes/entry). Tracks one upload's byte
+ * size so PopSPUUploadBlock can rewind SPU_UPLOAD_USED_BYTES on free.
+ * Only `sz` is read in this file; the trailing 10 bytes are opaque. */
+typedef struct {
+    /* 0x00 */ u16 sz;
+    /* 0x02 */ u8  _pad02[10];
+} SpuUploadBlock;
+
+extern SpuUploadBlock SPU_UPLOAD_BLOCK_TABLE[] asm("D_8009CFB0");
 
 void PopSPUUploadBlock(void) {
     u8 cnt = SPU_UPLOAD_BLOCK_COUNT;
     if (cnt != 0) {
         u16 sz;
         cnt--;
-        sz = *(u16 *)(SPU_UPLOAD_BLOCK_TABLE + (u8)cnt * 12);
+        sz = SPU_UPLOAD_BLOCK_TABLE[(u8)cnt].sz;
         SPU_UPLOAD_BLOCK_COUNT = cnt;
         SPU_UPLOAD_USED_BYTES -= sz;
     }
@@ -82,13 +90,22 @@ INCLUDE_ASM("asm/nonmatchings/sound", CalculateStereoVolume);
 extern void CalculateStereoVolume(s16 *out, s32 vol, s32 pan);
 extern void SpuSetVoiceVolume(s32 voice, s16 volL, s16 volR);
 extern u8 VOICE_SOUND_INDEX_TABLE[] asm("D_8009CC18");
-extern u8 SOUND_DEFINITION_TABLE[] asm("D_8009CC68");
+
+/* Sound-definition table entry (12 bytes/entry). First field is the base
+ * mixer volume passed to CalculateStereoVolume; the other 10 bytes hold
+ * envelope / pitch / category data not touched here. */
+typedef struct {
+    /* 0x00 */ s16 volume;
+    /* 0x02 */ u8  _pad02[10];
+} SoundDefinition;
+
+extern SoundDefinition SOUND_DEFINITION_TABLE[] asm("D_8009CC68");
 
 void SetVoicePanning(s32 voice_index, s16 pan_pos) {
     s16 vols[2];
     if ((u32)voice_index < 0x18) {
         CalculateStereoVolume(&vols[0],
-                              *(s16 *)(SOUND_DEFINITION_TABLE + VOICE_SOUND_INDEX_TABLE[voice_index] * 12),
+                              SOUND_DEFINITION_TABLE[VOICE_SOUND_INDEX_TABLE[voice_index]].volume,
                               pan_pos);
         SpuSetVoiceVolume(voice_index, vols[0], vols[1]);
     }

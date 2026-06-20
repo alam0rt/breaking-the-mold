@@ -25,7 +25,7 @@ extern void *RESOURCE_TYPE4_ENTITY_VTABLE asm("D_80010A88");
 extern void *VFX_ENTITY_VTABLE_10A10 asm("D_80010A10");
 extern void FreeResourceType4(Entity *e, s32 mode);
 extern void FreeWithCallback(Entity *e, s32 mode);
-extern void FreeTextureResource(void *e, s32 mode);
+extern void FreeTextureResource(Entity *e, s32 mode);
 
 typedef struct DecorEventEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -443,7 +443,7 @@ SpriteEntity *InitPlayerDeathParticle(SpriteEntity *e, s32 spawnArg) {
 
     CreatePlayerParticleEntity((Entity *)e, spawnArg);
     e->base.collisionVtable = &PARTICLE_FADE_VTABLE;
-    *((u8 *)e + 0x84) = 0x40;
+    e->_pad80[4] = 0x40;
     do {} while (0);
     fn = (void (*)())EntityFadeOutTickCallback;
     m1 = -1;

@@ -1,5 +1,6 @@
 #include "common.h"
 #include "Game/level_data_context.h"
+#include "Game/blb.h"
 
 typedef struct LevelShapeHeader {
     /* 0x00 */ u16 field0;
@@ -10,6 +11,15 @@ typedef struct LevelShapeHeader {
     /* 0x0A */ u16 levelHeight;
     /* 0x0C */ u16 spawnX;
     /* 0x0E */ u16 spawnY;
+    /* 0x10 */ u16 tile_count_a;            /* Used in GetTotalTileCount + func_8007B55C + func_8007B574 */
+    /* 0x12 */ u16 tile_count_b;
+    /* 0x14 */ u16 tile_count_c;            /* func_8007B574 returns this */
+    /* 0x16 */ u16 field16;                 /* GetTileHeaderField16 */
+    /* 0x18 */ u16 flags;                   /* GetLevelFlags */
+    /* 0x1A */ u16 field1A;                 /* GetTileHeaderField1A */
+    /* 0x1C */ u16 field1C;                 /* GetAsset100Field1C */
+    /* 0x1E */ u16 entity_count;            /* GetEntityCount */
+    /* 0x20 */ u16 world_index;             /* GetTileHeaderWorldIndex */
 } LevelShapeHeader;
 
 typedef struct LevelListEntry {
@@ -45,6 +55,24 @@ typedef struct SpriteContext {
     /* 0x13 */ u8 decodeEnabled;
 } SpriteContext;
 
+/* 12-byte TOC entry shape shared by the palette container, tilemap
+ * container, and anim-offsets container: opaque first 12 bytes followed
+ * by a u32 byte-offset (from the table base) to the entry's payload. */
+typedef struct {
+    /* 0x00 */ u8  _pad00[0xC];
+    /* 0x0C */ u32 data_offset;
+} BlbToc12Entry;
+
+/* Per-layer payload pointed to by anim_offsets entries. The leading 6
+ * bytes are a small header (two u16s + the width word at +4) followed
+ * by the packed tile-index stream. */
+typedef struct {
+    /* 0x00 */ u16 _hdr00;
+    /* 0x02 */ u16 _hdr02;
+    /* 0x04 */ u16 width;
+    /* 0x06 */ u8  data[1];
+} TilemapLayerPayload;
+
 void ClearSpriteContext(SpriteContext *ctx);
 void InitSpriteContext(SpriteContext *ctx);
 extern u8 DecodeRLESpriteCore(u8 *unused, u8 *src, u16 size, u8 *dst);
@@ -54,87 +82,88 @@ u8 *SPRITE_TOC_TABLE asm("D_800A6060");
 u8 *SPRITE_DATA_TABLE asm("D_800A6064");
 
 u8 GetLevelCount(LevelDataContext *ctx) {
-    return *(u8 *)(ctx->blb_header + 0xF31);
+    return ((BlbHeader *)ctx->blb_header)->level_count;
 }
 
 u8 GetLevelAssetIndex(LevelDataContext *ctx, u8 index) {
-    u8 *p = (u8 *)(ctx->blb_header + index * 112 + 0xC);
-    return *p;
+    return ((BlbHeader *)ctx->blb_header)->levels[index].level_index;
 }
 
 u8 *func_8007A9E8(LevelDataContext *ctx, u8 index) {
-    return (u8 *)(ctx->blb_header + index * 112 + 0x56);
+    return (u8 *)((BlbHeader *)ctx->blb_header)->levels[index].level_id;
 }
 
 char *getLevelName(LevelDataContext *ctx, u8 index) {
-    return (char *)(ctx->blb_header + index * 112 + 0x5B);
+    return ((BlbHeader *)ctx->blb_header)->levels[index].name;
 }
 
 u8 GetLevelFlagByIndex(LevelDataContext *ctx, u8 index) {
-    u8 *p = (u8 *)(ctx->blb_header + index * 112 + 0xD);
-    return *p;
+    return ((BlbHeader *)ctx->blb_header)->levels[index].password_selectable;
 }
 
 u8 GetCurrentLevelAssetIndex(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) == 3) {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        u32 world = blb + slot * 0x70;
-        return *(u8 *)(world + 0xC);
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] == 3) {
+        u8 slot = header->sequence_targets[idx];
+        return header->levels[slot].level_index;
     }
     return 0;
 }
 
 char *GetCurrentLevelDisplayName(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) != 3) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] != 3) {
         return NULL;
     }
     {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        u32 world = blb + slot * 0x70;
-        return (char *)(world + 0x56);
+        u8 slot = header->sequence_targets[idx];
+        return header->levels[slot].level_id;
     }
 }
 
 char *func_8007AADC(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    u8 kind = *(u8 *)(entry + 0xF36);
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 kind = header->sequence_modes[idx];
     u8 slot;
     if (kind < 3) {
         return NULL;
     }
     if (kind == 3) {
-        slot = *(u8 *)(entry + 0xF92);
+        slot = header->sequence_targets[idx];
     } else if (kind == 6) {
-        slot = *(u8 *)(entry + 0xF91);
+        /* Off-by-one alias into the sequence tables: mode-6 entries read
+         * one byte earlier than mode-3, landing on the trailing byte of
+         * sequence_modes (idx == 0) or on sequence_targets[idx - 1]
+         * (idx > 0). Expressed as a u8 array view over the whole header
+         * so the read crosses the field boundary cleanly. */
+        slot = ((u8 *)header)[0xF91 + idx];
     } else {
         return NULL;
     }
-    return (char *)(blb + slot * 112 + 0x5B);
+    return header->levels[slot].name;
 }
 
 u8 GetLoadingScreenMinDisplayTime(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    u8 mode = *(u8 *)(entry + 0xF36);
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 mode = header->sequence_modes[idx];
     if ((u32)(mode - 4) < 2) {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        return *(u8 *)(blb + (slot << 4) + 0xCD1);
+        u8 slot = header->sequence_targets[idx];
+        return header->sectors[slot].flags;
     }
     return 0;
 }
 
 u8 GetLoadingScreenMaxDisplayTime(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    u8 mode = *(u8 *)(entry + 0xF36);
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 mode = header->sequence_modes[idx];
     if ((u32)(mode - 4) < 2) {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        return *(u8 *)(blb + (slot << 4) + 0xCD2);
+        u8 slot = header->sequence_targets[idx];
+        return header->sectors[slot].display_timeout;
     }
     return 0;
 }
@@ -144,90 +173,86 @@ INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorOffset);
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorCount);
 
 u8 GetAssetCount(LevelDataContext *ctx) {
-    return *(u8 *)(ctx->blb_header + 0xF32);
+    return ((BlbHeader *)ctx->blb_header)->movie_count;
 }
 
 u8 *GetMovieEntryByIndex(LevelDataContext *ctx, u8 index) {
-    return (u8 *)(index * 28 + ctx->blb_header + 0xB64);
+    return (u8 *)((BlbHeader *)ctx->blb_header)->movies[index].movie_id;
 }
 
 u8 *func_8007AD10(LevelDataContext *ctx, u8 index) {
-    return (u8 *)(index * 28 + ctx->blb_header + 0xB69);
+    return (u8 *)((BlbHeader *)ctx->blb_header)->movies[index].short_name;
 }
 
 char *GetCurrentMovieReserved(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) != 1) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] != 1) {
         return NULL;
     }
     {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        u32 movie = slot * 28 + blb;
-        return (char *)(movie + 0xB64);
+        u8 slot = header->sequence_targets[idx];
+        return header->movies[slot].movie_id;
     }
 }
 
 u8 *GetMovieDataForLevel(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) != 1) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] != 1) {
         return NULL;
     }
     {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        u32 movie = slot * 28 + blb;
-        return (u8 *)(movie + 0xB69);
+        u8 slot = header->sequence_targets[idx];
+        return (u8 *)header->movies[slot].short_name;
     }
 }
 
 char *GetCurrentMovieFilename(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) != 1) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] != 1) {
         return NULL;
     }
     {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        u32 movie = slot * 28 + blb;
-        return (char *)(movie + 0xB6C);
+        u8 slot = header->sequence_targets[idx];
+        return header->movies[slot].iso_path;
     }
 }
 
 u16 GetMovieFrameField00(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) == 1) {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        u32 movie = blb + slot * 28;
-        return *(u16 *)(movie + 0xB60);
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] == 1) {
+        u8 slot = header->sequence_targets[idx];
+        return header->movies[slot]._reserved;
     }
     return 0;
 }
 
 u16 GetMovieSectorCount(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    if (*(u8 *)(entry + 0xF36) != 1) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    if (header->sequence_modes[idx] != 1) {
         return 0;
     }
     {
-        u32 off = *(u8 *)(entry + 0xF92) * 28;
-        return *(u16 *)(blb + off + 0xB62);
+        u8 slot = header->sequence_targets[idx];
+        return header->movies[slot].sector_count;
     }
 }
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentModeReservedData);
 
 u8 func_8007AFA4(LevelDataContext *ctx) {
-    u32 blb = ctx->blb_header;
-    u32 entry = blb + ctx->current_sequence_index;
-    u8 flag = *(u8 *)(entry + 0xF36);
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 flag = header->sequence_modes[idx];
     if (flag == 6) return 1;
     if (flag != 3) return 0;
     {
-        u8 slot = *(u8 *)(entry + 0xF92);
-        LevelListEntry *p = (LevelListEntry *)(blb + slot * 112);
+        u8 slot = header->sequence_targets[idx];
+        LevelListEntry *p = (LevelListEntry *)&header->levels[slot];
         return p->extraFlag;
     }
 }
@@ -263,15 +288,15 @@ u8 *GetSpawnPosition(u8 *dst, LevelDataContext *ctx) {
 }
 
 u16 GetLevelFlags(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x18);
+    return ((LevelShapeHeader *)ctx->tile_header)->flags;
 }
 
 u16 GetTileHeaderWorldIndex(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x20);
+    return ((LevelShapeHeader *)ctx->tile_header)->world_index;
 }
 
 u16 GetTileHeaderField1A(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x1A);
+    return ((LevelShapeHeader *)ctx->tile_header)->field1A;
 }
 
 u8 *GetTileHeaderPtr(LevelDataContext *ctx) {
@@ -290,10 +315,10 @@ u8 GetPaletteGroupCount(LevelDataContext *ctx) {
 
 u8 *GetPaletteDataPtr(LevelDataContext *ctx, u8 idx) {
     u8 *base = (u8 *)ctx->palette_container;
-    u8 *entry;
+    BlbToc12Entry *entry;
     if (base == NULL) return NULL;
-    entry = base + idx * 12;
-    return base + *(s32 *)(entry + 0xC);
+    entry = (BlbToc12Entry *)(base + idx * 12);
+    return base + entry->data_offset;
 }
 
 u8 *GetPaletteAnimData(LevelDataContext *ctx) {
@@ -301,26 +326,24 @@ u8 *GetPaletteAnimData(LevelDataContext *ctx) {
 }
 
 u32 GetTotalTileCount(LevelDataContext *ctx) {
-    u32 th = ctx->tile_header;
-    return *(u16 *)(th + 0x10) + *(u16 *)(th + 0x12) + *(u16 *)(th + 0x14);
+    LevelShapeHeader *th = (LevelShapeHeader *)ctx->tile_header;
+    return th->tile_count_a + th->tile_count_b + th->tile_count_c;
 }
 
 u32 func_8007B55C(LevelDataContext *ctx) {
-    u32 th = ctx->tile_header;
-    return *(u16 *)(th + 0x10) + *(u16 *)(th + 0x12);
+    LevelShapeHeader *th = (LevelShapeHeader *)ctx->tile_header;
+    return th->tile_count_a + th->tile_count_b;
 }
 
 u16 func_8007B574(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x14);
+    return ((LevelShapeHeader *)ctx->tile_header)->tile_count_c;
 }
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilePixelData);
 
 u8 *GetAnimatedTileData(LevelDataContext *ctx, u32 idx) {
-    u8 *header = (u8 *)ctx->tile_header;
-    u16 a = *(u16 *)(header + 0x10);
-    u16 b = *(u16 *)(header + 0x12);
-    u16 sum = (u16)(a + b);
+    LevelShapeHeader *header = (LevelShapeHeader *)ctx->tile_header;
+    u16 sum = (u16)(header->tile_count_a + header->tile_count_b);
     u8 **arr;
     idx--;
     if (idx < sum) return NULL;
@@ -342,9 +365,9 @@ u16 GetLayerCount(LevelDataContext *ctx) {
 }
 
 u8 *GetTilemapDataPtr(LevelDataContext *ctx, u16 index) {
-    u32 base = ctx->tilemap_container;
-    u32 off = index * 12;
-    return (u8 *)(base + *(u32 *)(base + off + 0xC));
+    u8 *base = (u8 *)ctx->tilemap_container;
+    BlbToc12Entry *entry = (BlbToc12Entry *)(base + index * 12);
+    return base + entry->data_offset;
 }
 
 u8 *GetLayerEntry(LevelDataContext *ctx, u16 index) {
@@ -376,7 +399,7 @@ u8 *GetTileAttributeData(LevelDataContext *ctx) {
 }
 
 u16 GetEntityCount(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x1E);
+    return ((LevelShapeHeader *)ctx->tile_header)->entity_count;
 }
 
 u8 *GetEntityDataPtr(LevelDataContext *ctx) {
@@ -384,7 +407,7 @@ u8 *GetEntityDataPtr(LevelDataContext *ctx) {
 }
 
 u16 GetAsset100Field1C(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x1C);
+    return ((LevelShapeHeader *)ctx->tile_header)->field1C;
 }
 
 u32 GetLevelDataContextField3C(LevelDataContext *ctx) {
@@ -403,9 +426,9 @@ u16 GetTilemapLayerWidth(LevelDataContext *ctx, u16 layer_idx) {
     u8 *layers = (u8 *)ctx->anim_offsets;
     if (layers != NULL) {
         u16 idx = (layer_idx - 1) & 0xFFFF;
-        u8 *entry = layers + idx * 12;
-        u32 offset = *(u32 *)(entry + 0xC);
-        return *(u16 *)(layers + offset + 4);
+        BlbToc12Entry *entry = (BlbToc12Entry *)(layers + idx * 12);
+        u32 offset = entry->data_offset;
+        return ((TilemapLayerPayload *)(layers + offset))->width;
     }
     return 0;
 }
@@ -414,9 +437,9 @@ u8 *GetTilemapLayerDataPtr(LevelDataContext *ctx, u16 layer_idx) {
     u8 *layers = (u8 *)ctx->anim_offsets;
     if (layers != NULL) {
         u16 idx = (layer_idx - 1) & 0xFFFF;
-        u8 *entry = layers + idx * 12;
-        u32 offset = *(u32 *)(entry + 0xC);
-        return layers + offset + 6;
+        BlbToc12Entry *entry = (BlbToc12Entry *)(layers + idx * 12);
+        u32 offset = entry->data_offset;
+        return ((TilemapLayerPayload *)(layers + offset))->data;
     }
     return NULL;
 }
@@ -424,7 +447,7 @@ u8 *GetTilemapLayerDataPtr(LevelDataContext *ctx, u16 layer_idx) {
 INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilemapLayerIndex);
 
 u16 GetTileHeaderField16(LevelDataContext *ctx) {
-    return *(u16 *)(ctx->tile_header + 0x16);
+    return ((LevelShapeHeader *)ctx->tile_header)->field16;
 }
 
 u8 *GetVehicleDataPtr(LevelDataContext *ctx) {

@@ -95,6 +95,7 @@ void SetEntityTargetFrame(AnimEntity *entity, u32 value) {
     entity->pendingLoopFrame = (u16)value;
     entity->animChangeFlags = newFlags;
     if (orFlags & 0x4) {
+        /* @hack: volatile reload forces cc1 to re-fetch animChangeFlags after the store above, matching the target's lhu-after-sh sequence. */
         u16 flags2 = *(volatile u16 *)&entity->animChangeFlags;
         u32 loopVal = entity->pendingLoopFrame;
         entity->pendingFrame = loopVal;
@@ -119,6 +120,7 @@ void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
     flags |= 0x410;
     entity->animChangeFlags = flags;
     if (flags & 0x4) {
+        /* @hack: volatile reload forces cc1 to re-fetch animChangeFlags after the store above, matching the target's lhu-after-sh sequence. */
         u16 flags2 = *(volatile u16 *)&entity->animChangeFlags;
         u32 loopVal = entity->pendingLoopFrame;
         entity->pendingFrame = loopVal;

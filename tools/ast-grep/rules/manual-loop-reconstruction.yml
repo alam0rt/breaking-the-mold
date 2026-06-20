@@ -2,6 +2,12 @@ id: manual-loop-reconstruction
 language: C
 severity: hint
 message: "guard + do-while with the same condition is a while/for loop written out."
-note: "`if (c) { do { ... } while (c); }` is the raw-decompiler shape of `while (c) { ... }` (and, when the condition variable is stepped in-body, of a `for`). The same-condition requirement is enforced by reusing the `$C` metavariable. CAUTION — unlike the cosmetic rules, this rewrite CAN change codegen: the if+do-while form is sometimes the load-bearing one that actually byte-matches (e.g. hand-rolled libc like memmove.c). Treat this as a candidate only, and ALWAYS re-verify with fdiff + `make clean && make check` after rewriting. Reader-pattern from the soul-re decomp; see docs/matching-conventions.md."
+note: "`if (c) { do { ... } while (c); }` is the raw-decompiler shape of `while (c) { ... }` (and, when the condition variable is stepped in-body, of a `for`). The same-condition requirement is enforced by reusing the `$C` metavariable. CAUTION — unlike the cosmetic rules, this rewrite CAN change codegen: the if+do-while form is sometimes the load-bearing one that actually byte-matches (e.g. hand-rolled libc like memmove.c). Treat this as a candidate only, and ALWAYS re-verify with fdiff + `make clean && make check` after rewriting. Tag with a `// @hack: <why>` comment directly above the `if` to mark the shape as deliberately-kept and silence this hint. Reader-pattern from the soul-re decomp; see docs/matching-conventions.md."
 rule:
+  kind: if_statement
   pattern: 'if ($C) { do { $$$BODY } while ($C); }'
+  not:
+    follows:
+      kind: comment
+      regex: 'hack|HACK|@|match'
+      stopBy: neighbor

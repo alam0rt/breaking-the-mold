@@ -13,6 +13,40 @@ typedef struct BlbEntityWithSpriteSubobject {
     /* 0x84 */ u8 spriteSubobject;
 } BlbEntityWithSpriteSubobject;
 
+/* BLB-allocated entity layout (only fields this file touches are named).
+ * NOTE: distinct from the engine's Entity at include/Game/entity.h despite
+ * the partial overlap -- +0x3C in particular is a per-instance helper buffer
+ * pointer here, where Entity stores renderWidth (s16). The destructor at
+ * DestroyEntity, the tick-queue free in RemoveFromUpdateQueue, and the
+ * Z-order child array touched by RemoveFromZOrderList confirm the layout. */
+typedef struct {
+    /* 0x000 */ u8    _pad000[0x18];
+    /* 0x018 */ void *vtable;            /* same slot as Entity.collisionVtable */
+    /* 0x01C */ u8    _pad01C[0x3C - 0x1C];
+    /* 0x03C */ void *helperBuffer;      /* arbitrary per-instance buffer freed via builtin_delete */
+    /* 0x040 */ u8    _pad040[0x104 - 0x40];
+    /* 0x104 */ s16   tickQueueCount;
+    /* 0x106 */ u8    _pad106[2];
+    /* 0x108 */ void *tickQueue;
+} BlbEntity;
+
+/* BLB heap header. The queue-busy latch at +0xA08A is the single field
+ * read/written here; the rest of the heap holds the bump allocator state
+ * and entity instances. */
+typedef struct {
+    /* 0x0000 */ u8  _pad0000[0xA08A];
+    /* 0xA08A */ s16 queueBusyLatch;
+} BlbHeapHeader;
+
+/* BLB entity vtable subset. Only the two fields used by EntityTickLoop are
+ * named; the full table has more slots but they aren't read in this file. */
+typedef struct {
+    /* 0x00 */ u8   _pad00[0x10];
+    /* 0x10 */ s16  argOffset;            /* added to entity ptr before calling tickFn */
+    /* 0x12 */ u8   _pad12[2];
+    /* 0x14 */ void (*tickFn)(void *);
+} BlbEntityVtable;
+
 /* u32->u16 trampoline around CdBLB_ReadSectors. Installed by LoadBLBHeader
  * as the streaming-read callback in InitLevelDataContext so the asset
  * loader can call back into the CD layer with a stable signature. */
@@ -52,16 +86,17 @@ INCLUDE_ASM("asm/nonmatchings/blb", LoadBLBHeader);
  * the embedded sub-object at +0x84, swaps the vtable to LevelDestroy, then
  * (if flags&1) frees the entity itself back to the BLB heap. */
 void DestroyEntity(u8 *entity, s32 flags) {
-    *(s32 *)(entity + 0x18) = (s32)g_EntityVtable_SimpleDestruct;
+    BlbEntity *e = (BlbEntity *)entity;
+    e->vtable = g_EntityVtable_SimpleDestruct;
     RemoveFromUpdateQueue(entity);
     RemoveFromZOrderList(entity);
     ClearEntityDefList(entity);
     FreeEntityLists(entity);
-    if (*(s32 *)(entity + 0x3C) != 0) {
-        builtin_delete(*(void **)(entity + 0x3C));
+    if (e->helperBuffer != NULL) {
+        builtin_delete(e->helperBuffer);
     }
     ConditionalDelete(entity + 0x84, 2);
-    *(s32 *)(entity + 0x18) = (s32)g_EntityVtable_LevelDestroy;
+    e->vtable = g_EntityVtable_LevelDestroy;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
@@ -73,12 +108,13 @@ void DestroyEntity(u8 *entity, s32 flags) {
  * the engine-wide RemoveEntityFromUpdateQueue @ 0x80021E50. */
 void RemoveFromUpdateQueue(u8 *entity) {
     u8 *heap = (u8 *)g_pBlbHeapBase;
+    BlbEntity *e = (BlbEntity *)entity;
 
-    *(s16 *)(heap + 0xA08A) = 0;
-    if (*(s32 *)(entity + 0x108) != 0) {
-        FreeFromHeap(heap, *(void **)(entity + 0x108), 0, 0);
-        *(s32 *)(entity + 0x108) = 0;
-        *(s16 *)(entity + 0x104) = 0;
+    ((BlbHeapHeader *)heap)->queueBusyLatch = 0;
+    if (e->tickQueue != NULL) {
+        FreeFromHeap(heap, e->tickQueue, 0, 0);
+        e->tickQueue = NULL;
+        e->tickQueueCount = 0;
     }
 }
 
@@ -118,10 +154,9 @@ void EntityTickLoop(EntityListHead *list) {
     node = list->head;
     while (node) {
         u8 *entity = (u8 *)node->entity;
-        u8 *vtable = *(u8 **)(entity + 0x18);
-        s16 offset = *(s16 *)(vtable + 0x10);
-        void (*fn)(void *) = (void (*)(void *))*(s32 *)(vtable + 0x14);
-        fn((void *)(entity + offset));
+        BlbEntityVtable *vtable = (BlbEntityVtable *)((BlbEntity *)entity)->vtable;
+        s16 offset = vtable->argOffset;
+        vtable->tickFn((void *)(entity + offset));
         node = node->next;
     }
 }

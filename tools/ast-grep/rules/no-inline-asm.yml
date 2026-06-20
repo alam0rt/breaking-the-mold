@@ -2,8 +2,16 @@ id: no-inline-asm
 language: C
 severity: hint
 message: Inline GNU asm statement is hard to reason about; prefer a C construct that produces the same codegen if one exists.
-note: "These are usually compiler-ordering fences (__asm__ volatile(\"\" ::: \"memory\")) or register-pinning hacks needed for a byte-exact match. They are not flagged on the asm(\"D_xxxxxxxx\") linker-symbol-rename declarator form, only on inline asm statements/expressions (which always carry the volatile qualifier in this codebase)."
+note: "These are usually compiler-ordering fences (__asm__ volatile(\"\" ::: \"memory\")) or register-pinning hacks needed for a byte-exact match. They are not flagged on the asm(\"D_xxxxxxxx\") linker-symbol-rename declarator form, only on inline asm statements/expressions (which always carry the volatile qualifier in this codebase). Tagging the containing statement with a `// @hack: <why>` comment on the line directly above silences this hint (and the companion `untagged-asm-barrier` warning), marking the barrier as deliberately kept armor."
 rule:
-  kind: gnu_asm_expression
+  kind: expression_statement
   has:
-    kind: gnu_asm_qualifier
+    kind: gnu_asm_expression
+    has:
+      kind: gnu_asm_qualifier
+    stopBy: end
+  not:
+    follows:
+      kind: comment
+      regex: 'hack|HACK|@|match'
+      stopBy: neighbor

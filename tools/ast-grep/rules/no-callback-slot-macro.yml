@@ -2,9 +2,25 @@ id: no-callback-slot-macro
 language: C
 severity: warning
 message: Callback-slot install hidden in a SLOT_STORE/SLOT_CLEAR macro; expand to explicit struct-value writes.
-note: "These macros hide the byte-match armor (scratch struct, barrier placement, m1=-1 ordering) behind a clean-looking call site. Real PSX source (Glover) used simple one-line punning macros like `*(ULONG*)&field = packed`, never multi-statement armor blocks, and never barriers at all (those were added by the decomp to force our compiler). Prefer an explicit `*(CallbackSlot *)&e->tickMarker = slot;` struct-value write, with any unavoidable forcing hack kept visible and tagged `// @hack: <why>`. See docs/matching-conventions.md."
+note: "These macros hide the byte-match armor (scratch struct, barrier placement, m1=-1 ordering) behind a clean-looking call site. Real PSX source (Glover) used simple one-line punning macros like `*(ULONG*)&field = packed`, never multi-statement armor blocks, and never barriers at all (those were added by the decomp to force our compiler). Prefer an explicit `*(CallbackSlot *)&e->tickMarker = slot;` struct-value write, with any unavoidable forcing hack kept visible and tagged `// @hack: <why>`. See docs/matching-conventions.md. Tag the leading statement of a SLOT_* block with a `// @hack: <why>` comment on the line directly above to mark the macro use as deliberately-kept armor; the rule then walks back across any consecutive SLOT_* siblings to find that single tag and stops firing for the whole block."
 rule:
-  kind: call_expression
+  kind: expression_statement
   has:
-    field: function
-    regex: '^SLOT_(STORE|CLEAR)$'
+    kind: call_expression
+    has:
+      field: function
+      regex: '^SLOT_(STORE|CLEAR)$'
+    stopBy: end
+  not:
+    follows:
+      any:
+        - kind: comment
+          regex: 'hack|HACK|@|match'
+        - kind: expression_statement
+          has:
+            kind: call_expression
+            has:
+              field: function
+              regex: '^SLOT_(STORE|CLEAR)$'
+            stopBy: end
+      stopBy: end

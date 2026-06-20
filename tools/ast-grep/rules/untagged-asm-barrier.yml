@@ -2,11 +2,12 @@ id: untagged-asm-barrier
 language: C
 severity: warning
 message: "Untagged inline-asm barrier/fence; tag it `// @hack: <why>` or replace with a C construct."
-note: "Inline asm in this codebase is almost always a compiler-ordering fence (`__asm__ volatile(\"\" ::: \"memory\")`) or a register-coloring/la-hoist barrier (`__asm__ volatile(\"\" : \"=r\"(x) : \"0\"(x))`) needed only to coax our gcc-2.7.2 into the original compiler's output. The original authors never wrote these. Per docs/matching-conventions.md such armor is acceptable scaffolding ONLY if it is visible and tagged: put a `// @hack: <what reordering this prevents>` comment on the line directly above. This is the convention-violation companion to the broader `no-inline-asm` cleanup hint, and does not fire when the barrier is already tagged."
+note: "Inline asm in this codebase is almost always a compiler-ordering fence (`__asm__ volatile(\"\" ::: \"memory\")`) or a register-coloring/la-hoist barrier (`__asm__ volatile(\"\" : \"=r\"(x) : \"0\"(x))`) needed only to coax our gcc-2.7.2 into the original compiler's output. The original authors never wrote these. Per docs/matching-conventions.md such armor is acceptable scaffolding ONLY if it is visible and tagged: put a `// @hack: <what reordering this prevents>` comment on the line directly above. This is the convention-violation companion to the broader `no-inline-asm` cleanup hint, and does not fire when the barrier is already tagged. File-scope `__asm__(\".include ...\")` directives are NOT barriers and are excluded by the `volatile` qualifier check."
 rule:
   kind: expression_statement
   has:
     kind: gnu_asm_expression
+    regex: '\bvolatile\b'
     stopBy: end
   not:
     follows:

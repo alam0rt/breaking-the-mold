@@ -169,8 +169,10 @@ void func_8006ED08(PlayerEntity *e, u8 r, u8 g, u8 b) {
     u8 *ptr = e->sprite.base.spriteContext;
     u8 t1, t2;
     e->currentRGB[0] = r;
+    /* @hack: volatile reload forces cc1 to re-fetch the byte just stored (instead of reusing the register), matching the target's lbu after sb sequence. */
     t1 = *(volatile u8 *)&e->currentRGB[0];
     e->currentRGB[1] = g;
+    /* @hack: volatile reload forces cc1 to re-fetch the byte just stored (matches target instruction order). */
     t2 = *(volatile u8 *)&e->currentRGB[1];
     e->currentRGB[2] = b;
     ptr[0x34] = t1;

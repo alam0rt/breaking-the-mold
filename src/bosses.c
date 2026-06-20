@@ -96,6 +96,14 @@ typedef struct KloggBossEntity {
     /* 0x114 */ u8 pad114[2];
     /* 0x116 */ u16 voicePanTimer;
 } KloggBossEntity;
+
+/* Minimal view of the sprite-render context attached to an Entity via
+ * Entity.spriteContext (+0x34). Only the active/visible byte is needed
+ * by the death callbacks here. */
+typedef struct SpriteRenderContextRef {
+    /* 0x00 */ u8 pad00[0xA];
+    /* 0x0A */ u8 activeFlag;
+} SpriteRenderContextRef;
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   GLIDER_WAKE_STATE_MARKER asm("D_800A5B68");
 EntityCallback GLIDER_WAKE_STATE_CALLBACK asm("D_800A5B6C");
@@ -323,7 +331,7 @@ void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)((u8 *)e + 0x98) = slot.s;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
 }
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSelectRandomAnimState);
@@ -481,7 +489,7 @@ s32 JoeHeadJoeDeathEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3) {
 event_one:
     if (arg2 == 0x46384180) {
         Entity *entity;
-        *(u8 *)((u8 *)g_pGameState + 0x170) = 0;
+        g_pGameState->level_active = 0;
         entity = CreateFadeOverlayEntity((Entity *)AllocateFromHeap(g_pBlbHeapBase, 0x24, 1, 0));
         AddToZOrderList(g_pGameState, entity);
     }
@@ -516,8 +524,9 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeReturnToIdleStateAlt);
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDeathAnimState);
 
 void KloggDeathCallback(u8 *e) {
-    u8 *p = *(u8 **)(e + 0x34);
-    p[0xA] = 0;
+    Entity *entity = (Entity *)e;
+    SpriteRenderContextRef *p = entity->spriteContext;
+    p->activeFlag = 0;
     g_pGameState->direct_level_load = e[0x110];
     e[0x106] = 1;
 }
@@ -586,8 +595,9 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EnemySpriteState);
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyDefeatState);
 
 void MonkeyMageDeathCallback(u8 *e) {
-    u8 *p = *(u8 **)(e + 0x34);
-    p[0xA] = 0;
+    Entity *entity = (Entity *)e;
+    SpriteRenderContextRef *p = entity->spriteContext;
+    p->activeFlag = 0;
     g_pGameState->direct_level_load = e[0x106];
 }
 
