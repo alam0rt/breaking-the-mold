@@ -449,7 +449,7 @@ void EntityStateSetSparkle(Entity *e) {
     s16 m1;
     u32 *spriteIds;
 
-    *(u8 *)((u8 *)e + 0x111) = 1;
+    ((u8 *)e)[0x111] = 1;
     __asm__ volatile("" ::: "memory");
     fn = EntityGroundSnapWithAnimation;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
@@ -588,7 +588,7 @@ void InitTripleLaserMonkeyAttackState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    *(u8 *)((u8 *)e + 0x111) = 3;
+    ((u8 *)e)[0x111] = 3;
     __asm__ volatile("" ::: "memory");
     fn = EntityEventHandlerWithCountdownToWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
@@ -629,12 +629,10 @@ void LaserMonkeyIdleState(Entity *e) {
     if (rand() & 1) {
         nextFn = InitTripleLaserMonkeyAttackState;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-        goto setNextState;
     } else {
         nextFn = LaserMonkeyWalkState;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-setNextState:
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = nextFn;
@@ -722,14 +720,14 @@ void InitEnemyFallingState(Entity *e) {
     renderFn = EntityFallingGravityWithCollision;
     tickFn = EnemyDeathWithParticles;
     __asm__ volatile("" : "=r"(renderFn), "=r"(tickFn) : "0"(renderFn), "1"(tickFn));
-    oldFlag = *(u8 *)((u8 *)e + 0x119);
+    oldFlag = ((u8 *)e)[0x119];
     __asm__ volatile("" : "=r"(oldFlag) : "0"(oldFlag));
     eventFn = EntityEventHandlerSpawnParticle;
     __asm__ volatile("" : "=r"(eventFn) : "0"(eventFn));
     *(s16 *)((u8 *)e + 0x116) = 0;
     *(u32 *)((u8 *)e + 0x110) = 0;
     __asm__ volatile("" ::: "memory");
-    *(u8 *)((u8 *)e + 0x119) = (oldFlag < 1);
+    ((u8 *)e)[0x119] = (oldFlag < 1);
     m1 = -1;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
@@ -1081,7 +1079,7 @@ void InitConditionalCollectibleEntity(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    *(u8 *)((u8 *)e + 0x111) = 3;
+    ((u8 *)e)[0x111] = 3;
     __asm__ volatile("" ::: "memory");
     fn = EntityEventHandlerCountdownToWalkWithSprite;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
@@ -1125,12 +1123,10 @@ void CollectibleIdleState(Entity *e) {
     if (rand() & 1) {
         nextFn = InitConditionalCollectibleEntity;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-        goto setCollectibleNextState;
     } else {
         nextFn = CollectibleWalkState;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-setCollectibleNextState:
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = nextFn;
@@ -1193,15 +1189,13 @@ void InitEntityState_Idle(Entity *e) {
     slot.s[0].markerHi = 0;
     slot.s[0].fn = NULL;
     *(CallbackSlot *)&e->renderMarker = slot.s[0];
-    if (*(u8 *)((u8 *)e + 0x110)) {
+    if (((u8 *)e)[0x110]) {
         nextFn = InitEnemyAnimatedWithDeathSpawn;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-        goto setIdleNextState;
     } else {
         nextFn = InitEntityRandomIdleOrAnimated;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-setIdleNextState:
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = nextFn;
@@ -1220,7 +1214,7 @@ void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
     eventFn = EntityEventHandlerAnimationSwitch;
     spriteId = 0x400C9A1D;
     __asm__ volatile("" : "=r"(tickFn), "=r"(eventFn), "=r"(spriteId) : "0"(tickFn), "1"(eventFn), "2"(spriteId));
-    *(u8 *)((u8 *)e + 0x111) = *(u8 *)((u8 *)e + 0x110);
+    ((u8 *)e)[0x111] = ((u8 *)e)[0x110];
     m1 = -1;
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
@@ -1259,7 +1253,7 @@ void InitEntityState_Animated(Entity *e) {
     void (*nextFn)();
     s16 m1;
 
-    *(u8 *)((u8 *)e + 0x111) = (rand() & 3) + 2;
+    ((u8 *)e)[0x111] = (rand() & 3) + 2;
     __asm__ volatile("" ::: "memory");
     fn = InitEntityWithDeathSpawn;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
@@ -1282,15 +1276,13 @@ void InitEntityState_Animated(Entity *e) {
     SetAnimationLoopFrame(e, 0x1084280);
     SetAnimationSpriteCallback(e, 0x2421405);
     SetAnimationFrameIndex(e, 0);
-    if (*(u8 *)((u8 *)e + 0x110)) {
+    if (((u8 *)e)[0x110]) {
         nextFn = InitEnemyAnimatedWithDeathSpawn;
         __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-        goto setAnimatedNextState;
     } else {
         nextFn = InitEntityRandomIdleOrAnimated;
+        __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
     }
-    __asm__ volatile("" : "=r"(nextFn) : "0"(nextFn));
-setAnimatedNextState:
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = nextFn;
@@ -1312,7 +1304,7 @@ Entity *InitProjectilePathEntity(Entity *e, s16 x, s16 y) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->renderMarker = slot.s;
-    *(u8 *)((u8 *)e + 0x100) = 0;
+    ((u8 *)e)[0x100] = 0;
     SetupEntityScaleCallbacks(e);
     return e;
 }
@@ -1578,7 +1570,7 @@ s32 EntityEventTimerCountdownWithGameState(TimedByteWithTileEntity *e, u32 event
         } else {
             tileId = e->tileRecord->tileId;
             if ((u16)(tileId - 0x22) < 2 || tileId == 0x24) {
-                *(u8 *)((u8 *)g_pGameState + 0x11A) = 0x14;
+                ((u8 *)g_pGameState)[0x11A] = 0x14;
             }
         }
     }
