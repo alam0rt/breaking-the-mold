@@ -418,7 +418,48 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityTimerDespawnCallback);
 
 INCLUDE_ASM("asm/nonmatchings/effects", UpdateAndUploadSpriteToVRAM);
 
-INCLUDE_ASM("asm/nonmatchings/effects", InitPlayerDeathParticle);
+/* Sprite render context (Entity.spriteContext) fields touched here. */
+typedef struct ParticleRenderCtx {
+    /* 0x00 */ u8  pad0[0x10];
+    /* 0x10 */ s16 x;
+    /* 0x12 */ s16 y;
+    /* 0x14 */ u8  pad14[0x10];
+    /* 0x24 */ s16 tpage;
+    /* 0x26 */ u8  pad26[0xC];
+    /* 0x32 */ u8  depth;
+} ParticleRenderCtx;
+
+extern Entity *CreatePlayerParticleEntity(Entity *e, s32 spawnArg);
+extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
+extern void *PARTICLE_FADE_VTABLE asm("D_800109D0");
+void EntityFadeOutTickCallback(Entity *e);
+
+/* Fading sprite fragment spawned on player death: semi-transparent (blend mode
+ * 1) + a fade-out tick = the dissolving death debris. */
+SpriteEntity *InitPlayerDeathParticle(SpriteEntity *e, s32 spawnArg) {
+    ParticleRenderCtx *ctx;
+    PaddedEntSlot u;
+    s16 m1;
+    void (*fn)();
+    s32 cx, cy;
+
+    CreatePlayerParticleEntity((Entity *)e, spawnArg);
+    e->base.collisionVtable = &PARTICLE_FADE_VTABLE;
+    *((u8 *)e + 0x84) = 0x40;
+    __asm__ volatile("" ::: "memory");
+    fn = (void (*)())EntityFadeOutTickCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(EntCallbackSlot *)&e->base.tickMarker = u.s;
+    ctx = (ParticleRenderCtx *)e->base.spriteContext;
+    cx = ctx->x;
+    cy = ctx->y;
+    ctx->tpage = GetTPage(ctx->depth, 1, cx & -0x40, cy & -0x100);
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", EntityFadeOutTickCallback);
 
