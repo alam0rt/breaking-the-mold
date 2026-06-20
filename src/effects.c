@@ -512,7 +512,21 @@ void CountdownTimerTickCallback(CountdownTimerEntity *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", RippleEffectRenderCallback);
+/* Per-frame render callback for ripple-expand effects: projects the
+ * entity's local world position (+0x24/+0x26) into the child primitive's
+ * screen-space coords (-camera), then bumps the child's phase byte at
+ * +0x3A7 to 1 so the next tick of the ripple shader sees fresh input. */
+void RippleEffectRenderCallback(RippleExpandEntity *e) {
+    GameState *gs = g_pGameState;
+    void *child;
+    s32 cx, cy;
+    cx = gs->camera_x;
+    *(s16 *)((u8 *)*(void **)((u8 *)e + 0x20) + 0) = *(u16 *)((u8 *)e + 0x24) - cx;
+    cy = gs->camera_y;
+    *(s16 *)((u8 *)*(void **)((u8 *)e + 0x20) + 2) = *(u16 *)((u8 *)e + 0x26) - cy;
+    child = *(void **)((u8 *)e + 0x20);
+    *((u8 *)child + 0x3A7) = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", ExpiredEntityDespawnEvent);
 
@@ -543,7 +557,21 @@ void BeamEffectTickWithRotation(BeamEffectEntity *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", BeamEffectRenderCallback);
+/* Per-frame render callback for spotlight-beam effects: copies the
+ * entity's local world position (+0x24/+0x26) into the linked render
+ * primitive's screen-space coords (-camera) and copies a third u16
+ * field (+0x28, the beam's tip-height parameter) to the primitive's
+ * +0x90 slot for the shader stage to pick up. Pure projection helper -
+ * the actual draw call is handled elsewhere by the primitive renderer. */
+void BeamEffectRenderCallback(BeamEffectEntity *e) {
+    GameState *gs = g_pGameState;
+    s32 cx, cy;
+    cx = gs->camera_x;
+    *(s16 *)((u8 *)e->child + 0) = *(u16 *)((u8 *)e + 0x24) - cx;
+    cy = gs->camera_y;
+    *(s16 *)((u8 *)e->child + 2) = *(u16 *)((u8 *)e + 0x26) - cy;
+    *(s16 *)((u8 *)e->child + 0x90) = *(u16 *)((u8 *)e + 0x28);
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", BeamEffectDespawnEvent);
 
