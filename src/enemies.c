@@ -1124,10 +1124,7 @@ Entity *InitProjectilePathEntity(Entity *e, s16 x, s16 y) {
     fn = ProjectilePathFollowerTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->renderMarker = slot.s;
+    SLOT_STORE(slot.s, e->renderMarker, m1, fn);
     ((u8 *)e)[0x100] = 0;
     SetupEntityScaleCallbacks(e);
     return e;
@@ -1286,10 +1283,7 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
     fn = EntityTimedStateSwitchTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker, m1, fn);
     SetEntitySpriteId(e, 0x88210498, 1);
     SetAnimationSpriteId(e, 0);
     EntitySetRenderFlags(e, 0);
@@ -1335,10 +1329,7 @@ void EntityTimedStateSwitchTick(Entity *e) {
         __asm__ volatile("" : "=r"(fn) : "0"(fn));
         ((u8 *)e->spriteContext)[0xA] = 1;
         m1 = -1;
-        slot.s.markerLo = 0;
-        slot.s.markerHi = m1;
-        slot.s.fn = fn;
-        *(CallbackSlot *)&e->tickMarker = slot.s;
+        SLOT_STORE(slot.s, e->tickMarker, m1, fn);
         SetEntitySpriteId(callArg, 0x88210498, 1);
     }
     CheckAndDisableChildEntityOffscreen(e);
@@ -1411,14 +1402,8 @@ void EntityHideAndDisable(Entity *e) {
     fn = EntityConditionalActivateTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker, m1, fn);
+    SLOT_CLEAR(slot.s[0], e->eventMarker);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityShowAndActivate);
@@ -1434,24 +1419,15 @@ void InitPlatformEntityState(Entity *e) {
     fn = EntityUpdateWithCollisionSpawnCheck;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker, m1, fn);
     fn = EntitySimpleEventPassthrough_V2;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, *(u32 *)(*(u8 **)((u8 *)e + 0x100) + 4), 1);
     SetAnimationLoopFrame(e, 0x20140828);
     fn = EntityHideAndDisable;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    SLOT_STORE(slot.s, ((SpriteEntity *)e)->queuedStateMarker, m1, fn);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitDirectionalScaledEntity);
@@ -1478,14 +1454,8 @@ void PlatformHideAndDisable(Entity *e) {
     fn = PlatformTimerTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker, m1, fn);
+    SLOT_CLEAR(slot.s[0], e->eventMarker);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", PlatformShowAndActivate);
