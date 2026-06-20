@@ -640,7 +640,32 @@ INCLUDE_ASM("asm/nonmatchings/effects", OscillateScaleAndRotationTick);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitFadeMenuEntityWithChild);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DestroyOscillatingScaleEntity);
+extern void *OSCILLATING_SCALE_VTABLE asm("D_80010910");
+extern void RemoveFromRenderList(GameState *gs, void *slot);
+
+/* Two-stage destructor for the fade-menu/oscillating-scale entity
+ * (initialized by InitFadeMenuEntityWithChild). Stage 1: swap vtable to
+ * OSCILLATING_SCALE_VTABLE (D_80010910 = the entity's own active vtable,
+ * a no-op-looking but actually a destruction-safe normalization), then
+ * tear down the child sub-entity at +0x1C by removing it from the render
+ * list and freeing its allocation. Stage 2: swap to the final destroyed
+ * vtable (TIMED_FADE_ENTITY_VTABLE = D_80010BC8) and conditionally free
+ * the wrapper entity itself (flags & 1).
+ *
+ * Match recipe: write the intermediate vtable assignment on the line
+ * BEFORE the RemoveFromRenderList call so cc1 folds the sw into jal's
+ * delay slot. Access e->renderMarker twice (not via a cached local) so
+ * cc1 emits two separate loads bracketing the function call as TARGET
+ * does. */
+void DestroyOscillatingScaleEntity(Entity *e, s32 flags) {
+    e->collisionVtable = &OSCILLATING_SCALE_VTABLE;
+    RemoveFromRenderList(g_pGameState, (void *)e->renderMarker);
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e->renderMarker, 0, 0);
+    e->collisionVtable = &TIMED_FADE_ENTITY_VTABLE;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", FadeAndExpireEntityTick);
 
