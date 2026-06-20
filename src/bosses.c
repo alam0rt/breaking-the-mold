@@ -25,6 +25,7 @@ extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern Entity *CreateFadeOverlayEntity(Entity *e);
 extern void AddToZOrderList(GameState *gs, Entity *entity);
+extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
 
 typedef struct BossTimedSpriteEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -317,7 +318,25 @@ void HazardStopSoundAlt(BossVoiceEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleActiveState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSetPhaseFromHP);
+/* Re-arms a boss-state countdown (+0x112 = idleTimeout) to (5 - boss_hp)
+ * frames, picks a fresh idle animation via GlennYntisSelectRandomAnimState,
+ * then installs HazardActivateWithSound on the queued-state slot
+ * (sprite.queuedStateMarker @ +0x98). Used when a phase transition starts. */
+void GlennYntisSetPhaseFromHP(ShrineyGuardEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    e->idleTimeout = 5 - PLAYER_STATE_DATA->boss_hp;
+    GlennYntisSelectRandomAnimState((Entity *)e);
+    fn = HazardActivateWithSound;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
+}
 
 void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
     PadSlot slot;

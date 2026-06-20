@@ -11,12 +11,23 @@ extern void DecorEntityTickWithOffscreenCheck(Entity *e);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 extern void CheckpointSwampTickCallback(Entity *e);
+extern void EntityCollisionHandler_SpecialTrigger(Entity *e);
+extern void EntityCollision_FlagAndDispatch(Entity *e);
 
 typedef struct InteractiveDecorEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x11D - 0x100];
     /* 0x11D */ u8 triggerState;
 } InteractiveDecorEntity;
+
+/* Animated decor whose tick fires on a random timer (e.g. blinking eyes,
+ * flickering background effects). +0x120 is the down-counter byte armed
+ * by DecorSetRandomTimer / DecorStartWithRandomTimer. */
+typedef struct DecorRandomTimerEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x120 - 0x100];
+    /* 0x120 */ u8 randomTimer;
+} DecorRandomTimerEntity;
 
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8");
@@ -128,9 +139,51 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitEntity_PathDecor2);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorCollisionTickWithSpawnAndSound);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorSetRandomTimer);
+/* Re-arms the random-tick countdown (+0x120 = randomTimer) to
+ * (rand() & 0x7F) + 0x30 frames (0x30..0xAF), switches sprite to
+ * 0xA9228088, and re-installs EntityCollisionHandler_SpecialTrigger as
+ * the collision/event handler on the +0x08 slot. Used as a re-entry
+ * tick for animated decor whose state flips back to "idle" after each
+ * random interval. */
+void DecorSetRandomTimer(DecorRandomTimerEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorStartWithRandomTimer);
+    e->randomTimer = (rand() & 0x7F) + 0x30;
+    SetEntitySpriteId((Entity *)e, 0xA9228088, 1);
+    fn = EntityCollisionHandler_SpecialTrigger;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+}
+
+/* One-shot setup for an animated decor that fires on a random timer:
+ * switches sprite to 0x093080C8, installs EntityCollision_FlagAndDispatch
+ * on the +0x08 event slot, and queues DecorSetRandomTimer on the +0x98
+ * queued-state slot so the timer arms on the next callback dispatch. */
+void DecorStartWithRandomTimer(DecorRandomTimerEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    SetEntitySpriteId((Entity *)e, 0x093080C8, 1);
+    fn = EntityCollision_FlagAndDispatch;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    fn = (void (*)())DecorSetRandomTimer;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitInteractiveDecorEntity);
 
