@@ -316,7 +316,55 @@ ColoredOverlayEntity *InitColoredOverlayEntity(ColoredOverlayEntity *e, u8 r, u8
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderFullScreenTileOverlay);
 
-INCLUDE_ASM("asm/nonmatchings/effects", InitScrollingLayerEntity);
+/* 8-byte FSM callback slot: { markerLo, markerHi, fn }. { 0, -1, fn } means
+ * "direct call fn(entity, ...)". Assigned by value into the entity's slot. */
+typedef struct EntCallbackSlot {
+    /* 0x0 */ s16 markerLo;
+    /* 0x2 */ s16 markerHi;
+    /* 0x4 */ void (*fn)();
+} EntCallbackSlot;
+
+/* Padded wrapper: the leading/trailing s32 pad pins the original's 0x30 stack
+ * frame (the bare 8-byte slot yields a 0x28 frame). Only .s is used. */
+typedef struct PaddedEntSlot {
+    s32             pad;
+    EntCallbackSlot s;
+    s32             pad2;
+} PaddedEntSlot;
+
+/* The scroll context takes a packed pair of s16s by value in one register. */
+typedef struct ScrollLayerDims {
+    /* 0x0 */ s16 a;
+    /* 0x2 */ s16 b;
+} ScrollLayerDims;
+
+extern void InitLayerScrollContext(Entity *e, s32 ctx, s16 a, s16 b, s16 c, u8 flags);
+s32 OverlayEntityCallback(OverlayCallbackEntity *e, u32 ev);
+
+void InitScrollingLayerEntity(Entity *e, s32 ctx, ScrollLayerDims dims, s16 a3, u8 flags) {
+    PaddedEntSlot u;
+    s16 m1;
+    void (*fn)();
+    OverlayCallbackEntity *o;
+
+    InitLayerScrollContext(e, ctx, a3, dims.a, dims.b, flags);
+    e->collisionVtable = &RESOURCE_TYPE4_ENTITY_VTABLE;
+    e->allocSize = 0x44C;
+    /* fn-first + register barrier pins the la-hoist and fn->$v1 / -1->$v0
+     * coloring; m1 after the barrier orders markerLo before markerHi. */
+    __asm__ volatile("" ::: "memory");
+    fn = (void (*)())OverlayEntityCallback;
+    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(EntCallbackSlot *)&e->eventMarker = u.s;
+    /* separate pointer + barrier reproduces the `move $v0,$s0` before the store */
+    o = (OverlayCallbackEntity *)e;
+    __asm__ volatile("" : "=r"(o) : "0"(o));
+    o->hiddenFlag = 0;
+}
 
 s32 OverlayEntityCallback(OverlayCallbackEntity *e, u32 ev) {
     if ((ev & 0xFFFF) == EVT_TICK) {

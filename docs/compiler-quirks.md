@@ -873,14 +873,31 @@ as a template for the rest of the entity-FSM tier (playst/bosses/effects/pickups
      `fn`-register-barrier + `m1 = -1` placed *after* the fn barrier (Quirk 5/6e).
    - **Trailing `move $v0,$s0`** before the flag store → pointer barrier (6i).
 2. **Replacing `INCLUDE_ASM` with the matching C left the whole-ROM SHA1
-   unchanged** — the fastest correctness proof: `tools/fdiff.sh <off> <size>` says
-   `MATCH` for the function, and the binary is byte-identical to the shelved-asm
-   build. (A pre-existing whole-ROM mismatch on a prototype branch does not mask
-   this — fdiff is per-function.)
+   matching** (`make clean && make check` → `✓ BUILD MATCHES`): the C is
+   byte-identical to the shelved asm. `tools/fdiff.sh <off> <size>` confirms the
+   single function (`MATCH`); it is per-function so it stays meaningful even when
+   a whole-ROM check is mid-flux.
+3. **The armor is load-bearing — do NOT mistake it for optional.** An earlier
+   pass *appeared* to match a barrier-free struct-value version; that `MATCH` was
+   a **stale incremental build** (the prior barrier-built `.o` was reused). Under
+   `make clean` the bare version regresses: `0x28` frame, `markerHi` stored before
+   `markerLo`, and no `move $v0,$s0`. All three armor pieces above are required to
+   match this function *in isolation*. The clean struct-value form is the right
+   *model* of the original source, but reproducing its codegen needs the armor to
+   stand in for context we collapsed away (the inline slot macro, surrounding
+   register pressure).
 
-Takeaway for the tier: the slot pattern's obtuseness is **bounded and templated**.
-Write the clean version, run fdiff, and apply only the specific armor each diff
-calls for from this section. Don't pre-emptively sprinkle barriers.
+> **Measurement discipline:** never trust a `MATCH`/SHA1 from an incremental
+> build when reporting a result as final. The Makefile's `%.o: %.c` rule has **no
+> header-dependency tracking** (no `-MMD`/`.d` includes), so header edits silently
+> leave stale objects; even `.c`-only loops can desync mid-session. `make clean`
+> (or a dedicated `make verify` = `clean && check`) before any authoritative
+> claim. Keep plain `make check` incremental for the fast per-function loop.
+
+Takeaway for the tier: the slot pattern's obtuseness is **bounded and templated**
+— write the clean version, fdiff, and apply only the specific armor each diff
+calls for from this section (don't pre-emptively sprinkle barriers) — but the
+armor that *is* needed is mandatory, not decorative. Verify under `make clean`.
 
 ---
 
