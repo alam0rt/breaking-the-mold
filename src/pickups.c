@@ -91,7 +91,41 @@ void DecorEntity_CollectWithSwirlyEffect(InteractiveDecorEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitDecorEntityWithHUDIcon);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", EntityDestructor_FreeRenderListAt120);
+extern u8 DECOR_HUD_ICON_INTERMEDIATE_VTABLE[] asm("D_80010830");
+extern void RemoveFromRenderList(GameState *gs, void *slot);
+extern void DestroyEntityAndFreeMemory(SpriteEntity *e, s32 flags);
+
+/* Decor entity that owns a detached render-list slot at +0x120 (the
+ * HUD-icon child allocated by InitDecorEntityWithHUDIcon). */
+typedef struct DecorChildSlotEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x120 - 0x100];
+    /* 0x120 */ void *childSlot;
+} DecorChildSlotEntity;
+
+/* Destructor for decor entities that own a detached render-list slot at
+ * +0x120 (typically allocated by InitDecorEntityWithHUDIcon). Always
+ * swaps to the HUD-icon intermediate vtable D_80010830, unconditionally
+ * removes the child slot from the render list and frees it, then
+ * transitions to DECOR_ENTITY_DESTRUCTOR_VTABLE (D_80010870) for the
+ * DestroyEntityAndFreeMemory teardown, and finally frees the wrapper
+ * if flags & 1.
+ *
+ * Match recipe: vtable stores end up in the delay slots of the
+ * RemoveFromRenderList and DestroyEntityAndFreeMemory calls (so they
+ * run BEFORE each callee), achieved by writing them on the source
+ * lines that immediately precede the calls. Same shape as
+ * DestroyCompoundEntity but without the NULL-child guard. */
+void EntityDestructor_FreeRenderListAt120(DecorChildSlotEntity *e, s32 flags) {
+    e->sprite.base.collisionVtable = DECOR_HUD_ICON_INTERMEDIATE_VTABLE;
+    RemoveFromRenderList(g_pGameState, e->childSlot);
+    FreeFromHeap(g_pBlbHeapBase, (u8 *)e->childSlot, 0, 0);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleOrbTickCallback);
 
