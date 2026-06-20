@@ -67,6 +67,7 @@ extern void EntityEventHandlerIdle(Entity *e);
 extern s32 EntityEventHandlerWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityStateSetWalk(Entity *e);
 extern void SoundEmitterTickCallback(Entity *e);
+extern void AnimatedEntityToggleSpriteA(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetEntityTargetFrame(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
@@ -1038,7 +1039,30 @@ INCLUDE_ASM("asm/nonmatchings/enemies", AnimatedEntityToggleSpriteA);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", AnimatedEntityToggleSpriteB);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EnemySetLoopingAnimation);
+/* Enemy state init for the "looping animation" mode (e.g. a fan, spinning
+ * thing, or animated decor): sets the +0x110 byte flag, switches sprite
+ * to 0x212A9C2D, configures the animation loop range + sprite callback,
+ * resets the frame index, and installs AnimatedEntityToggleSpriteA on the
+ * queued-state slot (+0x98) so the next state pulse toggles the second
+ * sprite. */
+void EnemySetLoopingAnimation(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    ((u8 *)e)[0x110] = 1;
+    SetEntitySpriteId(e, 0x212A9C2D, 1);
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+    fn = AnimatedEntityToggleSpriteA;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitTimerBasedMenuEntity);
 
