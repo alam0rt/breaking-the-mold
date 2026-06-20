@@ -7,6 +7,7 @@ extern void *g_pBlbHeapBase;
 extern u8 DECOR_ENTITY_DESTRUCTOR_VTABLE[] asm("D_80010870");
 extern u8 DECOR_SIMPLE_ALLOC_VTABLE[] asm("D_80010890");
 extern u8 SUPERWILLIE_VTABLE[] asm("D_800106B0");
+extern u8 PHOENIX_HAND_VTABLE[] asm("D_80010790");
 extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
@@ -186,7 +187,39 @@ void CollectibleExtraLifeTickCallback(PowerupCollectibleEntity *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitPhoenixHandCollectible);
+void CollectiblePhoenixHandTickCallback(PowerupCollectibleEntity *e);
+
+/* Phoenix Hand pickup constructor. Mirrors InitSuperWillieCollectible's
+ * shape with two additional 16.16 fixed-point writes at +0x50/+0x54
+ * (scaleRender / scaleRender2) preloaded to 0x8000 (= 0.5) so the
+ * pickup spawns at half scale before the per-frame tick takes over.
+ * Sprite id 0x9158A0F6, vtable override D_80010790, tick
+ * CollectiblePhoenixHandTickCallback.
+ *
+ * Match recipe: same TripadSlot + `do {} while (0);` armor as the
+ * SuperWillie twin to pin the `la` of the callback into $v1 above the
+ * marker stores. */
+PowerupCollectibleEntity *InitPhoenixHandCollectible(PowerupCollectibleEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0x9158A0F6, 0x3DE, data->x, data->y, 1);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
+    e->sprite.base.collisionVtable = PHOENIX_HAND_VTABLE;
+    e->sprite.base.scaleRender = 0x8000;
+    e->sprite.base.scaleRender2 = 0x8000;
+    do {} while (0);
+    fn = (void (*)())CollectiblePhoenixHandTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    return e;
+}
 
 /* Phoenix Hand pickup -- same shape as CollectibleExtraLifeTickCallback
  * but awards a phoenix hand via AddPhoenixHands, spawns VFX at (0x18,
