@@ -638,23 +638,14 @@ void EnemyPatrolState(Entity *e) {
     register Entity *callArg asm("$4");
 
     ((EnemyTimerStateEntity *)e)->stateTimer = 10;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     fn = EntityTimerDeathWithParticles;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
     /* Pin e into $a0 early so SetEntitySpriteId's `move a0,s0` lands in the
      * branch delay slot of the lbu below.  The `$a1` clobber forces GCC to
      * re-materialize the high half of the sprite-id immediate in each arm
@@ -671,10 +662,7 @@ void EnemyPatrolState(Entity *e) {
     fn = InitEnemyFallingState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m2 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m2;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], ((SpriteEntity *)e)->queuedStateMarker, m2, fn);
 }
 
 void InitEnemyFallingState(Entity *e) {
@@ -699,18 +687,9 @@ void InitEnemyFallingState(Entity *e) {
     __asm__ volatile("" ::: "memory");
     ((u8 *)e)[0x119] = (oldFlag < 1);
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = renderFn;
-    *(CallbackSlot *)&e->renderMarker = slot.s;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = tickFn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = eventFn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->renderMarker, m1, renderFn);
+    SLOT_STORE(slot.s, e->tickMarker,   m1, tickFn);
+    SLOT_STORE(slot.s, e->eventMarker,  m1, eventFn);
     /* See EnemyPatrolState for why $a0 is pinned early and $a1 is clobbered. */
     callArg = e;
     if (((u8 *)e)[0x119]) {
@@ -734,23 +713,14 @@ void EnemyDeathState(Entity *e) {
     u32 spriteId;
     register Entity *callArg asm("$4");
 
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     fn = EnemyDeathWithParticles;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
     fn = EntityEventHandlerIdle;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
     /* See EnemyPatrolState for why $a0 is pinned early and $a1 is clobbered. */
     callArg = e;
     if (((u8 *)e)[0x119]) {
@@ -764,10 +734,7 @@ void EnemyDeathState(Entity *e) {
     fn = EnemyPatrolState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m2 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m2;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], ((SpriteEntity *)e)->queuedStateMarker, m2, fn);
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckEntityBehindCamera);
@@ -785,16 +752,10 @@ void InitCollectibleTimer0x1e_SpriteC(TimedCollectibleEntity *e) {
     fn = TimedCollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
     SetEntitySpriteId((Entity *)e, 0x6B9A6F, 1);
 }
 
@@ -807,16 +768,10 @@ void InitCollectibleTimer0x1e(TimedCollectibleEntity *e) {
     fn = TimedCollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
     SetEntitySpriteId((Entity *)e, 0x21A81D54, 1);
 }
 
@@ -829,16 +784,10 @@ void InitCollectibleTimer0x3c_SpriteA(TimedCollectibleEntity *e) {
     fn = TimedCollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
     SetEntitySpriteId((Entity *)e, 0x6B9A6F, 1);
 }
 
@@ -851,16 +800,10 @@ void InitCollectibleTimer0x3c_SpriteB(TimedCollectibleEntity *e) {
     fn = TimedCollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
     SetEntitySpriteId((Entity *)e, 0x21A81D54, 1);
 }
 
@@ -873,16 +816,10 @@ void InitShooterEnemyStateA(EnemyTimerStateEntity *e) {
     fn = CollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerSpawnProjectile;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
     SetEntitySpriteId((Entity *)e, 0xA0299A4D, 1);
 }
 
@@ -895,16 +832,10 @@ void InitShooterEnemyStateB(EnemyTimerStateEntity *e) {
     fn = CollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerSpawnProjectile;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->sprite.base.eventMarker, m1, fn);
     SetEntitySpriteId((Entity *)e, 0x21229C5C, 1);
 }
 
@@ -916,16 +847,10 @@ void InitCollectibleIdleState(Entity *e) {
     fn = CollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker,  m1, fn);
     fn = EntityEventHandlerIdle;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0x53209C1C, 1);
 }
 
@@ -937,16 +862,10 @@ void InitCollectibleIdleStateB(Entity *e) {
     fn = CollectibleTickCallback;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SLOT_STORE(slot.s, e->tickMarker,  m1, fn);
     fn = EntityEventHandlerIdle;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s.markerLo = 0;
-    slot.s.markerHi = m1;
-    slot.s.fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SLOT_STORE(slot.s, e->eventMarker, m1, fn);
     SetEntitySpriteId(e, 0x20211E5F, 1);
 }
 
