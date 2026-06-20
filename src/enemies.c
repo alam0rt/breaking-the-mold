@@ -68,6 +68,7 @@ extern s32 EntityEventHandlerWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntityStateSetWalk(Entity *e);
 extern void SoundEmitterTickCallback(Entity *e);
 extern void AnimatedEntityToggleSpriteA(Entity *e);
+extern void AnimatedEntityToggleSpriteB(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern void SetEntityTargetFrame(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
@@ -1035,6 +1036,32 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitSoundEmittingEnemy);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnWalkingEnemy);
 
+/* Animated-decor toggle state A: half of a bidirectional A<->B sprite
+ * toggle (entity types 112-114 "AnimatedDecor", e.g. SoundPlatform).
+ * Reads the extended EntityDefinition pointer at +0x100 to pick a
+ * "speed/step" byte: 8 if entityType == 0x2F (SoundPlatform family),
+ * otherwise 3 - stored at +0x110. Then loads the variant-A sprite
+ * (0x35289FAE) and standard animation triad, and queues B as the next
+ * state so the next pulse swaps to the sister function.
+ *
+ * SHELVED (15-byte diff): structurally matches with body:
+ *     void *def = *(void **)((u8 *)e + 0x100);
+ *     ((u8 *)e)[0x110] = (*(u16 *)((u8 *)def + 0x12) == 0x2F) ? 8 : 3;
+ *     do {} while (0);
+ *     SetEntitySpriteId(e, 0x35289FAE, 1);
+ *     SetAnimationLoopFrame(e, 0x1084280);
+ *     SetAnimationSpriteCallback(e, 0x2421405);
+ *     SetAnimationFrameIndex(e, 0);
+ *     fn = AnimatedEntityToggleSpriteB;
+ *     do {} while (0);
+ *     m1 = -1;
+ *     slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+ *     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+ * but cc1 picks $a0 for the (3|8) conditional result while TARGET picks
+ * $v0; the values are stored to +0x110 in the next instruction so the
+ * register choice is binary-different but semantically equivalent. No
+ * known C idiom forces cc1 to prefer $v0 over $a0 for a short-lived
+ * compare result immediately stored to memory. */
 INCLUDE_ASM("asm/nonmatchings/enemies", AnimatedEntityToggleSpriteA);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", AnimatedEntityToggleSpriteB);
