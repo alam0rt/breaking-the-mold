@@ -52,11 +52,11 @@ INCLUDE_ASM("asm/nonmatchings/pickups", CheckpointSwampTickCallback);
 
 void DecorSetSpriteIdle(Entity *e) {
     PaddedSlotPair slot;
-    void (*fn)();
     s16 m1;
-    __asm__ volatile("" ::: "memory");
+    void (*fn)();
+    do {} while (0);
     fn = CheckpointSwampTickCallback;
-    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    do {} while (0);
     m1 = -1;
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
@@ -71,11 +71,11 @@ void DecorSetSpriteIdle(Entity *e) {
 
 void DecorSetSpriteActive(Entity *e) {
     PadSlot slot;
-    void (*fn)();
     s16 m1;
-    __asm__ volatile("" ::: "memory");
+    void (*fn)();
+    do {} while (0);
     fn = CheckpointSwampTickCallback;
-    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    do {} while (0);
     m1 = -1;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;

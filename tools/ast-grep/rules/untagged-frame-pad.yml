@@ -1,0 +1,18 @@
+id: untagged-frame-pad
+language: C
+severity: warning
+message: "Untagged volatile local; if this is a frame-size match hack, tag it `// @hack: <why>`."
+note: "A `volatile` local variable is almost always a frame-size/stack-layout hack to force cc1 to match the original stack frame (the SH-decomp `volatile s32 pad;` trick). It is the PREFERRED form of that armor (cleaner than inventing a padded struct type), but per docs/matching-conventions.md it must be tagged so a future reader knows the line is load-bearing and why. Add a `// @hack: frame size` comment on the line directly above, or remove it if it is not actually required for the match. (Module-level `volatile` globals for ISR/MMIO are legitimate and not flagged.)"
+rule:
+  kind: declaration
+  has:
+    kind: type_qualifier
+    regex: '^volatile$'
+  inside:
+    kind: compound_statement
+    stopBy: end
+  not:
+    follows:
+      kind: comment
+      regex: 'hack|HACK|@|match'
+      stopBy: neighbor

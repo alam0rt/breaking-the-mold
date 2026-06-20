@@ -136,9 +136,9 @@ Entity *InitMenuCursorEntity(Entity *entity, s16 x, s16 y) {
     void (*fn)(Entity *);
     InitEntityWithSprite(entity, MENU_CURSOR_SPRITE_TABLE, 0x7D0, x, y);
     entity->collisionVtable = MENU_CURSOR_VTABLE;
-    __asm__ volatile("" ::: "memory");
-    m1 = -1;
+    do {} while (0);
     fn = (void (*)(Entity *))GetWorldPositionX;
+    m1 = -1;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
@@ -233,9 +233,9 @@ Entity *InitMenuButtonEntity(Entity *entity, s16 x, s16 y) {
     void (*fn)(Entity *);
     InitEntityWithSprite(entity, MENU_HIGHLIGHT_SPRITE_TABLE, 0x7D0, x, y);
     entity->collisionVtable = MENU_HIGHLIGHT_VTABLE;
-    __asm__ volatile("" ::: "memory");
-    m1 = -1;
+    do {} while (0);
     fn = (void (*)(Entity *))GetWorldPositionX;
+    m1 = -1;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;

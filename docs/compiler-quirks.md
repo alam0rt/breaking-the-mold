@@ -1,5 +1,9 @@
 # Compiler Quirks & Toolchain Findings
 
+> This doc explains *why* cc1 needs each nudge (codegen mechanics). For *how to
+> apply* armor without obtuse source — tagging hacks, `volatile pad` over padded
+> struct types, offset-named fields — see **`docs/matching-conventions.md`**.
+
 Findings from the first real matching session (2026-06-12), decompiling the
 tail of the `Game/RENDER` module (`func_80019F2C` / `func_80019F88`). These
 constraints shape how every future function must be decompiled.
@@ -167,6 +171,16 @@ selecting between an aligned `lw×4/sw×4` loop and an unaligned
 branch and not match.
 
 ## Quirk 5 (open): sched1 `la` hoisting in the slot-install sequence
+
+> **Update 2026-06-23 — practical resolution via `do {} while (0);`.**
+> For the broader slot-installer family (NOT the two CLUT-effect functions
+> below), a much cleaner armor exists: an empty `do {} while (0);` creates
+> an AST-level basic-block boundary that `sched1` respects. See
+> **Quirk 6k** for the full pattern, when it does/doesn't apply, and the
+> migration verdict (~25 functions across enemies.c/effects.c/pickups.c/
+> menu.c/bosses.c). The two CLUT functions (`SetTexturePageParams`,
+> `InitCLUTColorLerpEffect`) are still at the 140 floor — `do {} while (0);`
+> does not help there.
 
 Remaining 5-instruction diff in both CLUT functions: the original emits
 
@@ -857,6 +871,213 @@ directly to the home-slot offsets (`.a` = low half / lower address).
 
 **Applies to:** `InitScrollingLayerEntity` — `a2` carried two `s16`s consumed
 as separate args to `InitLayerScrollContext`.
+
+### 6k: `do {} while (0);` is a basic-block boundary the scheduler obeys
+
+**Discovered 2026-06-23 while cleaning the entity-FSM slot-installer family
+(enemies.c, effects.c, pickups.c, menu.c, bosses.c).**
+
+cc1 2.7.2's `sched1` (basic-block instruction scheduler) operates **within**
+basic blocks; it will freely reorder loads/stores across plain statements but
+will not move instructions across a basic-block boundary. An empty
+`do {} while (0);` introduces a BB boundary at the AST level (the implicit
+`if (0) goto top;` is dead-code-eliminated, but the BB split survives until
+late). This produces a **zero-instruction scheduling fence** — strictly
+cleaner than `__asm__ volatile("" ::: "memory")` because no clobber list,
+no register impact, no obscure idiom.
+
+This is the **preferred armor #3 in `docs/matching-conventions.md`**. It is
+now empirically validated as a drop-in replacement for **most** slot-installer
+armor that previously used the `__asm__ volatile` fence + per-`fn`-pointer
+register barrier pair (Quirk 5 / 6e).
+
+#### Pattern: multi-slot installer (≥ 2 slot stores)
+
+```c
+void InitFooState(Entity *e) {
+    PaddedSlotPair slot;        /* frame-pin: a padded local */
+    s16 m1;                     /* named locals control coloring (6b) */
+    void (*fn)();
+    do {} while (0);            /* @hack BB boundary — pins sched */
+    m1 = -1;
+    fn = FooTickCallback;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    /* ...more slot stores reusing m1/fn... */
+}
+```
+
+A single `do {} while (0);` right after the preamble (any callees, vtable
+stores, sprite-table writes) is sufficient. The fn pointer colors to `$v1`
+and `-1` colors to `$v0` without further nudging.
+
+#### Pattern: single-slot tail installer
+
+A function whose body is just *one* slot store followed by a tail call
+(`SetEntitySpriteId` etc.) needs **two** boundaries:
+
+```c
+void EnemySetWalkSprite(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {} while (0);            /* @hack pins `sw ra` ordering */
+    fn = EntityEventHandlerWalk;
+    do {} while (0);            /* @hack pins fn coloring */
+    m1 = -1;
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0xE4CB8330, 1);
+}
+```
+
+Without the entry boundary, cc1 schedules `sw ra` out of position; without
+the second boundary the fn-pointer `la` hoists above `li -1`.
+
+#### Assignment order matters per function
+
+cc1 sometimes emits the fn `lui/addiu` pair **before** `li -1`, sometimes
+**after**. The C must mirror it:
+
+| Target order            | Source assignment order |
+|-------------------------|-------------------------|
+| `la fn → $v1; li -1 → $v0` | `fn = ...; m1 = -1;`    |
+| `li -1 → $v0; la fn → $v1` | `m1 = -1; fn = ...;`    |
+
+The InitCollectibleTimer / InitShooter / InitMenu* families want fn-first;
+the InitCollectibleIdleState family wants m1-first. Check `fdiff` of the
+first two instructions after the preamble and pick accordingly.
+
+#### When `do {} while (0);` is NOT enough — keep the fn-barrier
+
+These cases still need the explicit `__asm__ volatile("" : "=r"(fn) : "0"(fn));`
+form (Quirk 5 / 6e):
+
+1. **Rand-conditional fn pointers.** When `fn` is assigned inside *both* arms
+   of an `if (rand()...) { fn = A; } else { fn = B; }` and used after the
+   merge, cc1 will hoist the `la` outside the branches unless a register
+   barrier in each arm holds it in place. `do {} while (0);` between the
+   branches and the slot store does not help.
+   *Examples:* `LaserMonkeyIdleState`, `CollectibleIdleState`,
+   `InitEntityState_Idle/Animated`.
+2. **Pointer-coalesce barriers (6i).** A trailing `move $vN, $sN; sb $zero, ...`
+   needs the named-pointer + register-barrier idiom — the BB boundary does
+   not block coalescing of the underlying SSA value.
+   *Example:* `InitScrollingLayerEntity` keeps the `o` pointer barrier
+   even after the slot armor migrated to `do {} while (0);`.
+3. **Triple register-asm with sprite IDs.** Functions that pin
+   `tickFn`/`eventFn`/`spriteId` to specific physical registers via the
+   `register T x asm("$N");` + multi-output barrier idiom are encoding a
+   call-arg shape, not a scheduling problem.
+   *Example:* `InitEnemyAnimatedWithDeathSpawn`.
+
+#### Empirical: only the EMPTY form works (do not wrap the body)
+
+Replacing the empty `do {} while (0);` with a body-wrapping
+`do { ...slot stores... } while (0);` form **regresses** to the original
+bug. Tested 2026-06-23 on `DecorSetSpriteActive` (pickups.c) by rewriting:
+
+```c
+do {} while (0);
+fn = CheckpointSwampTickCallback;
+do {} while (0);
+m1 = -1;
+slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+*(CallbackSlot *)&e->tickMarker = slot.s;
+```
+
+into
+
+```c
+do {
+    fn = CheckpointSwampTickCallback;
+    m1 = -1;
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+} while (0);
+```
+
+Diff (`la fn → $v0 AFTER markerHi store`, instead of `$v1 BEFORE`):
+
+```
+< 8002e614: lui v1, ...           ; target: la fn into $v1 FIRST
+< 8002e618: addiu v1, ...
+< 8002e61c: li v0, -1
+< 8002e620: sh zero, 20(sp)
+< 8002e624: sh v0, 22(sp)
+< 8002e628: sw v1, 24(sp)
+---
+> 8002e614: sh zero, 20(sp)        ; ours: stores first, fn into $v0 later
+> 8002e618: li v0, -1
+> 8002e61c: sh v0, 22(sp)
+> 8002e620: lui v0, ...
+> 8002e624: addiu v0, ...
+> 8002e628: sw v0, 24(sp)
+```
+
+The wrapped form's body-BB gets coalesced back into the surrounding code by
+some pre-`sched1` pass (likely `cse1` or `jump1` tail-merge). The empty form
+has no body to merge with, so the boundary survives all the way to scheduling.
+
+**Corollary tested 2026-06-23: per-slot macro `SLOT_STORE(...) do { ... } while (0)` also fails.**
+Redefining the existing comma-expression `SLOT_STORE`/`SLOT_CLEAR` macros in
+`src/enemies.c` as do-while wrappers (the canonical single-statement-safe
+macro idiom) regresses ~50% of the slot installers. Specifically:
+
+| Pattern | Result |
+|---------|--------|
+| Multi-slot with pre-store `do {} while (0);` (EnemyPatrolState, etc.) | ✓ MATCH |
+| Single-slot tail installer (EnemySetWalkSprite-style) | ✗ extra `nop` before `addiu sp` |
+| Rand-conditional fn (InitEntityState_Animated) | ✗ shifts whole prologue |
+| Single-slot inline-store (InitCollectibleEntity_Alt) | ✗ |
+
+The extra BB boundary *inside* every SLOT_STORE expansion gives cc1 too many
+basic blocks to schedule against the single-slot/rand patterns — `sched1`
+fills different delay slots, frame layout shifts. The comma-expression form
+is therefore the **mandatory** macro shape for our codebase, even though
+classical C style prefers the do-while wrapper. The
+[matching-conventions.md](matching-conventions.md) recommendation to *expand
+the macros to explicit struct-value stores per call site* is the cleaner
+long-term direction (see effects.c / pickups.c / menu.c / bosses.c) — the
+existing macro stays for back-compat only.
+
+**Implication for inferring original source.** The 1998 C almost certainly
+used per-slot macros (`INSTALL_TICK(e, fn)`, `INSTALL_EVENT(e, fn)`) whose
+body was a `do { ... } while (0);` wrapper — that's the universally idiomatic
+single-statement-macro form. The fact that the wrapper itself is
+*load-bearing* (without it, scheduling collapses) is incidental: the original
+devs got matching codegen for free from the macro's BB structure. Our
+flattened explicit-local form has lost the macro and emits bare
+`do {} while (0);` markers in the spots where the macro's BB boundaries
+would have landed. Functionally equivalent to the original codegen,
+semantically less honest about *why* the boundaries exist.
+
+We cannot reconstruct the original macro shape from this side, because:
+1. We don't know how many slots the original macro inlined per call (one,
+   two, or all four installer slots in one expansion).
+2. The original may have had per-slot-kind macros (TICK vs EVENT vs RENDER)
+   that we've collapsed.
+3. Whatever shape the original used, cc1's BB collapsing means a small change
+   in macro body layout produces visibly different codegen — so any guess
+   we'd make can't be empirically validated against the binary.
+
+The best we can do is the current form: bare `do {} while (0);` markers
+tagged `// @hack basic-block boundary required for match` at the call site.
+
+#### Migration verdict
+
+After applying the pattern across ~25 functions in `src/enemies.c`,
+`src/effects.c`, `src/pickups.c`, `src/menu.c`, and `src/bosses.c`,
+whole-ROM SHA1 still matches `5a14b65cb44813bfed1ee53c6a3f4456bc230f97`.
+The `do {} while (0);` form replaces ~90% of slot-installer
+`__asm__ volatile("" ::: "memory");` + `__asm__ volatile("" : "=r"(fn) : "0"(fn));`
+pairs with a single semantically-meaningful line.
+
+**Applies to:** entire slot-installer family — see `src/enemies.c`,
+`src/pickups.c`, `src/menu.c`, `src/bosses.c::HazardSelectRandomBehavior`,
+`src/effects.c::{InitScrollingLayerEntity,InitPlayerDeathParticle}`.
 
 ### Case study: matching InitScrollingLayerEntity from idiomatic C (2026-06-20)
 

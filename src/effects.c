@@ -350,11 +350,8 @@ void InitScrollingLayerEntity(Entity *e, s32 ctx, ScrollLayerDims dims, s16 a3, 
     InitLayerScrollContext(e, ctx, a3, dims.a, dims.b, flags);
     e->collisionVtable = &RESOURCE_TYPE4_ENTITY_VTABLE;
     e->allocSize = 0x44C;
-    /* fn-first + register barrier pins the la-hoist and fn->$v1 / -1->$v0
-     * coloring; m1 after the barrier orders markerLo before markerHi. */
-    __asm__ volatile("" ::: "memory");
+    do {} while (0);
     fn = (void (*)())OverlayEntityCallback;
-    __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
@@ -362,6 +359,7 @@ void InitScrollingLayerEntity(Entity *e, s32 ctx, ScrollLayerDims dims, s16 a3, 
     *(EntCallbackSlot *)&e->eventMarker = u.s;
     /* separate pointer + barrier reproduces the `move $v0,$s0` before the store */
     o = (OverlayCallbackEntity *)e;
+    /* @hack: pointer barrier prevents cc1 from coalescing `o` back into $s0 so the trailing `move $v0,$s0; sb $zero,...` sequence is emitted (Quirk 6i). */
     __asm__ volatile("" : "=r"(o) : "0"(o));
     o->hiddenFlag = 0;
 }
@@ -446,9 +444,8 @@ SpriteEntity *InitPlayerDeathParticle(SpriteEntity *e, s32 spawnArg) {
     CreatePlayerParticleEntity((Entity *)e, spawnArg);
     e->base.collisionVtable = &PARTICLE_FADE_VTABLE;
     *((u8 *)e + 0x84) = 0x40;
-    __asm__ volatile("" ::: "memory");
+    do {} while (0);
     fn = (void (*)())EntityFadeOutTickCallback;
-    __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
     u.s.markerLo = 0;
     u.s.markerHi = m1;

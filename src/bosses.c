@@ -313,12 +313,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSetPhaseFromHP);
 
 void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
     PadSlot slot;
-    void (*fn)();
     s16 m1;
+    void (*fn)();
     e->idleTimeout = 0;
     GlennYntisSelectRandomAnimState((Entity *)e);
     fn = HazardActivateWithSound;
-    __asm__ volatile("" : "=r"(fn) : "0"(fn));
+    do {} while (0);
     m1 = -1;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;

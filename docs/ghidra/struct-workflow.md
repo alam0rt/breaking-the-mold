@@ -164,3 +164,48 @@ Recommended structs to create:
 6. `TileHeader` (36 bytes, Asset 100)
 
 Each struct should be created incrementally as fields are verified through code analysis.
+
+## Headless REST server: write-side validation (gotchas)
+
+The headless GhidraMCP server (`make ghidra-mcp`, HTTP on `127.0.0.1:8089`) is the
+usable interface for batch edits — the `mcp__ghidra__` bridge could not discover the
+headless instance, so drive it directly with `curl`. Read is GET with a query param;
+**writes are JSON POST** (form-encoded POST is silently rejected — it reports the
+arg as missing).
+
+```bash
+# READ (GET, query param):
+curl "http://127.0.0.1:8089/decompile_function?address=0x80037434"
+
+# WRITE (POST, JSON body) — form/-d key=val does NOT work, must be JSON:
+curl -X POST http://127.0.0.1:8089/set_plate_comment \
+  -H 'Content-Type: application/json' \
+  -d '{"address":"0x800374B4","comment":"..."}'
+```
+
+Confirmed mutation endpoints: `set_plate_comment`, `set_decompiler_comment`,
+`set_disassembly_comment`, `rename_function`, `rename_data`, `set_function_prototype`.
+
+Two validators will warn (and the warnings are noise for this project):
+
+1. **Plate-comment section check.** `set_plate_comment` expects the comment to
+   contain `Algorithm:`, `Parameters:`, and `Returns:` sections (Purpose/Notes are
+   also conventional). Omitting them still succeeds but returns
+   `"warnings":["Plate comment missing Algorithm section", ...]`. Keep the
+   structured layout to silence it.
+
+2. **Function-name linter (conflicts with our convention).** `rename_function`
+   lints names to verb + PascalCase, no underscores (it suggests verbs like
+   `Initialize`/`Get`/`Set`). Our project deliberately uses `Init*` and keeps a
+   `_<sprite-hash>` suffix for traceability (e.g. `InitFlyingProjectile_168254B5`).
+   The rename **still applies** — treat the PascalCase/underscore/verb warnings as
+   expected and ignore them; follow the existing repo naming convention, not the
+   linter.
+
+`rename_function` params are **camelCase** (`oldName`/`newName`), not snake_case —
+the snake_case form errors with "Old function name is required". The `list_functions`
+`filter` param is currently ignored (returns the unfiltered list); verify a rename by
+re-decompiling the address instead.
+
+> Note: this is GhidraMCP **tooling** behavior, not a cc1 codegen quirk — kept here
+> rather than in `docs/compiler-quirks.md`, which is strictly about the compiler.

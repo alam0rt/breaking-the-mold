@@ -12,6 +12,7 @@ void SpuSetVoiceVolume(s32 voice, s16 volL, s16 volR) {
 
     voiceRegs[0] = volL;
     voiceRegs[1] = volR;
+    /* @hack: memory fence keeps both SPU register stores before spu_Fw1ts() (HW-ordering; matches PSY-Q libvoice). */
     __asm__ volatile ("" : : : "memory");
     spu_Fw1ts();
 }
@@ -22,6 +23,7 @@ void SpuSetVoicePitch(s32 voice, u16 pitch) {
     voiceRegs = (u8 *)((voice << 4) + (s32)SPU_REGISTER_BASE[0]);
 
     *(u16 *)(voiceRegs + 4) = pitch;
+    /* @hack: memory fence keeps the pitch store before spu_Fw1ts() (HW-ordering; matches PSY-Q libvoice). */
     __asm__ volatile ("" : : : "memory");
     spu_Fw1ts();
 }
@@ -39,5 +41,6 @@ void SpuSetCommonCDVolume(s16 left, s16 right) {
 
     *(s16 *)(spuBase + 0x1B0) = left;
     *(s16 *)(spuBase + 0x1B2) = right;
+    /* @hack: memory fence keeps both CD-volume register stores together at function end (HW-ordering; matches PSY-Q libvoice). */
     __asm__ volatile ("" : : : "memory");
 }
