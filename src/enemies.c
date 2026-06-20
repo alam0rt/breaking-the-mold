@@ -34,19 +34,19 @@
  * first fn-barrier and the first SLOT_STORE so cc1 emits `li v0,-1` between
  * `la fn` and the markerHi store, then reuses the register on later stores.
  * -------------------------------------------------------------------------- */
-#define SLOT_CLEAR(scratch, dest_field) do { \
-    (scratch).markerLo = 0; \
-    (scratch).markerHi = 0; \
-    (scratch).fn = NULL; \
-    *(CallbackSlot *)&(dest_field) = (scratch); \
-} while (0)
+#define SLOT_CLEAR(scratch, dest_field) ( \
+    (scratch).markerLo = 0, \
+    (scratch).markerHi = 0, \
+    (scratch).fn = NULL, \
+    *(CallbackSlot *)&(dest_field) = (scratch) \
+)
 
-#define SLOT_STORE(scratch, dest_field, m1_val, fn_val) do { \
-    (scratch).markerLo = 0; \
-    (scratch).markerHi = (m1_val); \
-    (scratch).fn = (fn_val); \
-    *(CallbackSlot *)&(dest_field) = (scratch); \
-} while (0)
+#define SLOT_STORE(scratch, dest_field, m1_val, fn_val) ( \
+    (scratch).markerLo = 0, \
+    (scratch).markerHi = (m1_val), \
+    (scratch).fn = (fn_val), \
+    *(CallbackSlot *)&(dest_field) = (scratch) \
+)
 
 extern void *g_pBlbHeapBase;
 extern void CheckAndDisableSpawnDataOffscreen(Entity *entity);
@@ -356,23 +356,14 @@ void EntityStateSetWalk(Entity *e) {
     u32 *spriteIds;
     __asm__ volatile("" ::: "memory");
 
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
     fn = AIEntityRandomBehaviorTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->tickMarker,  m1, fn);
     fn = EntityEventHandlerWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
     spriteIds = *(u32 **)((u8 *)e + 0x114);
     SetEntitySpriteId(e, spriteIds[1], 1);
 }
@@ -406,23 +397,14 @@ void EntityStateSetAttack(EnemyTimerStateEntity *e) {
     e->stateDelay = 3;
     __asm__ volatile("" ::: "memory");
 
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = 0;
-    slot.s[0].fn = NULL;
-    *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s[0];
+    SLOT_CLEAR(slot.s[0], e->sprite.base.renderMarker);
     fn = TimedSparkleCollectibleTick;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->sprite.base.tickMarker,  m1, fn);
     fn = EntityEventHandlerWithDelayedWalk;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
-    slot.s[0].markerLo = 0;
-    slot.s[0].markerHi = m1;
-    slot.s[0].fn = fn;
-    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
+    SLOT_STORE(slot.s[0], e->sprite.base.eventMarker, m1, fn);
     spriteIds = *(u32 **)((u8 *)e + 0x114);
     SetEntitySpriteId((Entity *)e, spriteIds[5], 1);
     SetAnimationLoopFrame((Entity *)e, 0x1084280);
