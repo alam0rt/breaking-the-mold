@@ -206,7 +206,15 @@ INCLUDE_ASM("asm/nonmatchings/entity", EntityBroadcastPointCollision);
 
 /* Leaf primitive: pack (X1,Y1,X2,Y2) into two $a1/$a2 word pairs and call
  * the shared CheckBoxCollision AABB tester. */
-INCLUDE_ASM("asm/nonmatchings/entity", CheckEntityBoxCollision);
+u8 CheckEntityBoxCollision(Entity *entity, u16 collisionMask) {
+    extern u32 CheckBoxCollision(GameState *gs, BoxCorner minCorner,
+                                  BoxCorner maxCorner, u16 mask);
+    CalculateEntityScreenBounds(entity);
+    return (u8)CheckBoxCollision(g_pGameState,
+                                  *(BoxCorner *)&entity->screenX1,
+                                  *(BoxCorner *)&entity->screenX2,
+                                  collisionMask);
+}
 
 /* --- Off-screen culling family. Variants:
  *     *OffScreen            : full XY test, moveCallback FSM + parallax scale

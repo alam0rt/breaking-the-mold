@@ -337,7 +337,15 @@ Entity *InitCollectibleEntityFromSpawn(Entity *e, CollectibleSpawnData *spawn, u
     return e;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleFromSpawn);
+/* Same shape as InitCollectibleEntityFromSpawn but takes a sprite-table
+ * pointer (resolved through InitEntityWithSprite) instead of a packed
+ * sprite-ID, and uses z=0x3CA. */
+Entity *CreateCollectibleFromSpawn(Entity *e, CollectibleSpawnData *spawn, u8 *spriteDef) {
+    InitEntityWithSprite(e, spriteDef, 0x3CA, spawn->x, (s16)(spawn->y - 1));
+    e->collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
+    InitCollectibleEntity(e, (u8 *)spawn);
+    return e;
+}
 
 Entity *InitCollectibleEntityDirect(Entity *e, u32 spriteId, s16 x, s16 y) {
     InitEntitySprite(e, spriteId, 0x3CA, x, y, 0);
