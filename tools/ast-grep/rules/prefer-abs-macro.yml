@@ -1,0 +1,9 @@
+id: prefer-abs-macro
+language: C
+severity: hint
+message: "In-place negate-if-negative is the `ABS()` idiom; prefer `x = ABS(x)`."
+note: "`if (x < 0) x = -x;` is the absolute-value idiom. This codebase defines `ABS(x)` in include/common.h as `((x) < 0 ? -(x) : (x))`, and the build uses -fno-builtin (so no libc `abs` call is emitted). Because `ABS` is a macro expanding to the same ternary, the rewrite is normally codegen-neutral — but still verify with fdiff. Reader-pattern from the soul-re decomp; see docs/matching-conventions.md."
+rule:
+  any:
+    - pattern: 'if ($X < 0) { $X = -$X; }'
+    - pattern: 'if ($X < 0) $X = -$X;'

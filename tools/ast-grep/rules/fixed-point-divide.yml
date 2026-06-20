@@ -1,0 +1,12 @@
+id: fixed-point-divide
+language: C
+severity: hint
+message: "Signed fixed-point rounding bias; this is likely a `/ 2^n` divide written out."
+note: "`if (x < 0) x += 0xFFF;` followed by `x >>= 12` is signed division by a power of two: the `+ (2^n - 1)` bias makes negative division round toward zero, exactly what `x / 4096` compiles to under -O2. Consider rewriting the whole idiom as `x / (BIAS + 1)` (e.g. `x / 4096`) for readability — gcc re-emits the same bias+shift, so it is normally codegen-neutral, but verify with fdiff. The rule keys on the bias-add (BIAS = 2^n - 1) because the trailing shift is a separate statement ast-grep can't bind to the same variable. Reader-pattern from the soul-re decomp; see docs/matching-conventions.md."
+rule:
+  any:
+    - pattern: 'if ($X < 0) { $X += $BIAS; }'
+    - pattern: 'if ($X < 0) $X += $BIAS;'
+constraints:
+  BIAS:
+    regex: '^0[xX](1|3|7)?[fF]+$'

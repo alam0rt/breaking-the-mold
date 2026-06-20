@@ -1,0 +1,16 @@
+id: raw-inverse-bitmask
+language: C
+severity: hint
+message: "Bit-clear written as a raw inverse mask; prefer `&= ~FLAG` to show which bits are cleared."
+note: "A `&=` with a hex literal that has the high bit set (e.g. `flags &= 0xF7FF`) is almost always clearing a single bit, written as the literal complement. The original author almost certainly wrote `flags &= ~0x800` (or `&= ~FLAG_NAME`), which says *what* is being cleared instead of *what survives*. Rewrite to the `~` form, ideally with a named flag. Pattern borrowed from the soul-re decomp's reader-pattern catalog; see docs/matching-conventions.md. Heuristic only — legitimate wide masks (e.g. a genuine 0x80000000 test) may trip it; verify before rewriting."
+rule:
+  kind: assignment_expression
+  pattern: $LHS &= $MASK
+constraints:
+  MASK:
+    all:
+      # high bit set: the mask is "mostly ones" -> likely a complement of a flag
+      - regex: '^0[xX][89aAbBcCdDeEfF]'
+      # but NOT a 2^n-1 "keep the low N bits" mask (0xFF, 0x7FF, 0xFFFF, ...),
+      # which is a legitimate truncation, not an inverse bit-clear
+      - not: { regex: '^0[xX](1|3|7)?[fF]+$' }

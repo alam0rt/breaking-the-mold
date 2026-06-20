@@ -20,6 +20,17 @@ Clarity checks (`hint`):
 - `no-raw-address-symbols`: flag direct `D_800xxxxx` C identifiers so they can become meaningful asm-labeled names.
 - `no-volatile-cast`: `*(volatile T *)` reload hacks.
 - `no-inline-asm`: any inline asm (broad cleanup lens — "could this be C?").
+Reader-pattern checks (`hint`) — turn raw decompiler output into plausible original C (from the soul-re `DECOMPILATION.MD` catalog; see `docs/matching-conventions.md`). Split by codegen risk:
+
+*Codegen-neutral (the rewrite compiles identically — safe readability wins, still fdiff to be sure):*
+
+- `raw-inverse-bitmask`: `flags &= 0xF7FF` style bit-clears that should be `&= ~0x800`/`~FLAG`. Excludes `2^n-1` keep-low-bits truncation masks (`& 0xFF`, `& 0xFFFF`).
+- `prefer-abs-macro`: `if (x < 0) x = -x;` → `x = ABS(x)` (the `ABS` macro in common.h; -fno-builtin means no libc call).
+- `fixed-point-divide`: `if (x < 0) x += 0xFFF; x >>= 12;` (bias = `2^n - 1`) → `x / 4096`; gcc re-emits the same bias+shift for signed power-of-two division.
+
+*Codegen-affecting (the current form may be load-bearing — re-verify with `make clean && make check`):*
+
+- `manual-loop-reconstruction`: `if (c) { do { ... } while (c); }` → `while`/`for` (same condition enforced via metavar). The if+do-while form sometimes IS the matching one (e.g. hand-rolled libc), so this is a candidate only.
 
 Matching-convention checks (`warning`) — encode `docs/matching-conventions.md`:
 
