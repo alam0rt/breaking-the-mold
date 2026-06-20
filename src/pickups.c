@@ -42,6 +42,7 @@ extern void AddSwirlys(PlayerState *ps, s8 count);
 extern void AddPlayerLives(PlayerState *ps, s8 count);
 extern void AddPhoenixHands(PlayerState *ps, s8 count);
 extern void AddSuperWillies(PlayerState *ps, s8 count);
+extern void AwardSwirlyQsAndHamsters(PlayerState *ps, s8 count);
 extern void InitDecorEntityWithScreenOffset(Entity *e, s32 dx, s32 dy, s32 flag);
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
@@ -213,7 +214,27 @@ INCLUDE_ASM("asm/nonmatchings/pickups", Collectible1970IconTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitHamsterShieldCollectible);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleHamsterShieldTickCallback);
+/* Hamster-shield pickup -- variant of the PowerupCollectible shape that
+ * awards swirly-Qs and hamsters together and picks the sound based on
+ * the post-award hamster_count. When the player just hit hamster_count
+ * == 3 (the cap), use the special "max-reached" sound 0xC2906565;
+ * otherwise the normal pickup sound 0x42906465.
+ *
+ * Match recipe: the (cond ? a : b) ternary in the call argument lets
+ * cc1 schedule the lui-of-the-default before the comparison and stick
+ * the ori-of-the-default into the bne delay slot, exactly mirroring
+ * TARGET's split lui/ori. */
+void CollectibleHamsterShieldTickCallback(PowerupCollectibleEntity *e) {
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0 ||
+        CheckEntityBoxCollision((Entity *)e, 2) != 0) {
+        e->labelEntity->collisionMask = 7;
+        AwardSwirlyQsAndHamsters(PLAYER_STATE_DATA, 1);
+        InitDecorEntityWithScreenOffset((Entity *)e, 0xD0, 0x1C, 1);
+        PlayEntityPositionSound((Entity *)e,
+            (PLAYER_STATE_DATA->hamster_count == 3) ? 0xC2906565 : 0x42906465);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitSuperWillieCollectible);
 
