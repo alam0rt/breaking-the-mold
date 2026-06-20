@@ -247,7 +247,40 @@ s32 KloggEventHandlerWithTrigger(KloggTriggerEntity *e, u32 event, u32 arg2, u32
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityFollowPathTick);
+/* Layout for an entity that walks through a fixed sequence of (x,y)
+ * waypoints. Each entry in the path table is 4 bytes: an s16 x and an
+ * s16 y stored consecutively. nextWaypointIndex is bumped on every
+ * tick until it reaches waypointCount; from that point on the entity
+ * falls through to its queued state instead. */
+typedef struct FollowPathEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8 pad100[0x139 - 0x100];
+    /* 0x139 */ u8 nextWaypointIndex;
+    /* 0x13A */ u8 waypointCount;
+    /* 0x13B */ u8 pad13B;
+    /* 0x13C */ s16 *path;
+} FollowPathEntity;
+
+/* Single-step waypoint follower. While there are still entries left,
+ * copies the current path[idx].x/.y into the entity's worldX/worldY
+ * (+0x68/+0x6A) and bumps the counter. Once the counter hits the total
+ * waypoint count, dispatches to the queued state via
+ * EntityProcessCallbackQueue (which is what wakes up the entity's
+ * pending FSM event, typically "arrived at destination").
+ *
+ * Match notes: cc1 re-reads e->nextWaypointIndex *three* times — once
+ * for the bounds check / first index, once between the +0x68 and +0x6A
+ * stores, and once for the increment-and-store. Writing it that way
+ * in C is the only thing that lines up the lbu/sll/addu sequence. */
+void EntityFollowPathTick(FollowPathEntity *e) {
+    if (e->nextWaypointIndex >= e->waypointCount) {
+        EntityProcessCallbackQueue((Entity *)e);
+        return;
+    }
+    e->sprite.base.worldX = e->path[e->nextWaypointIndex * 2 + 0];
+    e->sprite.base.worldY = e->path[e->nextWaypointIndex * 2 + 1];
+    e->nextWaypointIndex = e->nextWaypointIndex + 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyWithEffects);
 
