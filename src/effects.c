@@ -203,6 +203,63 @@ INCLUDE_ASM("asm/nonmatchings/effects", DestroyVRAMSlotEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderVRAMSlotOverlay);
 
+/* PSY-Q RECT (libgpu): 8-byte rectangle struct used by VRAM transfer
+ * primitives. Defined locally here since no project-wide header pulls
+ * it in. Matches the standard libgpu layout (TYPES.H). */
+typedef struct VRAMTransferRect {
+    s16 x;
+    s16 y;
+    s16 w;
+    s16 h;
+} VRAMTransferRect;
+
+extern void StoreImage(VRAMTransferRect *r, u_long *p);
+extern void DrawSync(s32 mode);
+
+/* VRAM slot entity layout — first 0x10 bytes are the basic-entity header
+ * (initialized by InitBasicEntityWithVtable). +0x10 holds the AllocateVRAMSlot
+ * return code (1=ok, 0=failed). +0x16/+0x18 are the raw VRAM pixel
+ * coordinates of the allocated slot. */
+typedef struct VRAMSlotEntity {
+    /* 0x00 */ u8 pad0[0x10];
+    /* 0x10 */ u8 vramAllocOk;
+    /* 0x11 */ u8 pad11[5];
+    /* 0x16 */ u16 vramX;
+    /* 0x18 */ u16 vramY;
+} VRAMSlotEntity;
+
+/* SHELVED: 1-instruction diff — cc1 fuses the `sltiu`+`move a0,v0` pair
+ * that TARGET emits into a single `sltiu a0,v0,1`. Specifically:
+ *   TARGET:   sltiu v0,v0,1     CURRENT:  sltiu a0,v0,1
+ *             move  a0,v0                 (fused into above)
+ *
+ * Variations tried (all produced the fused output): single-return with
+ * result=0 default + conditional store, if-else with explicit result=0
+ * branch, separate `cmp` and `result` locals with do-while-0 barrier
+ * between them, `result = !((u16)pixel ^ 0x3C0F)` vs `result = ((..)==0)`,
+ * `if (cmp == 0) result = 1;` conditional store form.
+ *
+ * Reads a single pixel from VRAM at the entity's allocated slot using
+ * StoreImage (1x1 RECT), syncs the GPU, returns 1 iff that pixel ==
+ * 0x3C0F (a sentinel "filled-slot" color in 15bpp PSX packing). Returns
+ * 0 if no slot was ever allocated.
+ *
+ * Equivalent C body (kept for documentation - shelved to ASM include):
+ *   s32 CheckVRAMSlotPixelColor(VRAMSlotEntity *e) {
+ *       VRAMTransferRect r;
+ *       u_long pixel;
+ *       s32 result = 0;
+ *       if (e->vramAllocOk != 0) {
+ *           r.x = (s16)e->vramX;
+ *           r.y = (s16)e->vramY;
+ *           r.w = 1;
+ *           r.h = 1;
+ *           StoreImage(&r, &pixel);
+ *           DrawSync(0);
+ *           result = !((u16)pixel ^ 0x3C0F);
+ *       }
+ *       return result;
+ *   } */
 INCLUDE_ASM("asm/nonmatchings/effects", CheckVRAMSlotPixelColor);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitPasswordEntity);
