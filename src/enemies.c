@@ -673,7 +673,6 @@ void EnemyPatrolState(Entity *e) {
     fn = EntityTimerDeathWithParticles;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    __asm__ volatile("" : "=r"(m1) : "0"(m1));
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
@@ -700,7 +699,6 @@ void EnemyPatrolState(Entity *e) {
     fn = InitEnemyFallingState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m2 = -1;
-    __asm__ volatile("" : "=r"(m2) : "0"(m2));
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m2;
     slot.s[0].fn = fn;
@@ -771,7 +769,6 @@ void EnemyDeathState(Entity *e) {
     fn = EnemyDeathWithParticles;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m1 = -1;
-    __asm__ volatile("" : "=r"(m1) : "0"(m1));
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
@@ -795,7 +792,6 @@ void EnemyDeathState(Entity *e) {
     fn = EnemyPatrolState;
     __asm__ volatile("" : "=r"(fn) : "0"(fn));
     m2 = -1;
-    __asm__ volatile("" : "=r"(m2) : "0"(m2));
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m2;
     slot.s[0].fn = fn;
