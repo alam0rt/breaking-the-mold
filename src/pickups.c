@@ -661,7 +661,43 @@ INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandler);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandlerExt);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", DecorPlaySoundAndAnimate);
+extern void DecorEntityCollisionHandlerExt(Entity *e);
+extern void DecorEntityDestroyWithParticles(Entity *e);
+
+/* Plays a positional sound (0x40023E30) then installs the standard
+ * three-callback decor animation set: offscreen-cull tick at +0x00,
+ * the extended collision handler at +0x08, sprite 0xBB781481, and
+ * a queued destroy-with-particles callback at +0x98.
+ *
+ * Match recipe: same shape as DecorStartAnimation but with a leading
+ * PlayEntityPositionSound call. cc1 schedules `sw s0` into the call's
+ * delay slot, then emits the first slot install. No `do {} while (0);`
+ * armor needed since the function call provides a basic-block boundary
+ * for the prologue scheduler. */
+void DecorPlaySoundAndAnimate(SpriteEntity *e) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)(Entity *);
+
+    PlayEntityPositionSound((Entity *)e, 0x40023E30);
+    fn = (void (*)(Entity *))DecorEntityTickWithOffscreenCheck;
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->base.tickMarker = u.s;
+    fn = (void (*)(Entity *))DecorEntityCollisionHandlerExt;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->base.eventMarker = u.s;
+    SetEntitySpriteId((Entity *)e, 0xBB781481, 1);
+    fn = (void (*)(Entity *))DecorEntityDestroyWithParticles;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->queuedStateMarker = u.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityDestroyWithParticles);
 
