@@ -26,6 +26,7 @@ extern void *VFX_ENTITY_VTABLE_10A10 asm("D_80010A10");
 extern void FreeResourceType4(Entity *e, s32 mode);
 extern void FreeWithCallback(Entity *e, s32 mode);
 extern void FreeTextureResource(Entity *e, s32 mode);
+extern void UpdateEntityRender(Entity *e);
 
 typedef struct DecorEventEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -210,6 +211,21 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityDestructor_WithVRAMSlotFree);
 
 INCLUDE_ASM("asm/nonmatchings/effects", MultiPartEntityTick);
 
+/* Wraps UpdateEntityRender with a second pass that projects the entity's
+ * worldX/worldY into screen-space and writes them into the s16 pair at
+ * (e->renderScreenPos + 0/+2). The function lives at the delay slot of
+ * MultiPartEntityTick's `jr $ra` and therefore starts with a leading nop
+ * that's actually MultiPartEntityTick's delay slot — cc1 won't emit a
+ * leading nop for the next function, so this stays as INCLUDE_ASM.
+ *
+ * SHELVED (Quirk-5 family — leading-nop from previous function's delay
+ * slot). Equivalent C:
+ *   void EntityRenderCallbackUpdateScreenPos(EntityWithRenderTarget *e) {
+ *       UpdateEntityRender((Entity *)e);
+ *       e->renderScreenPos[0] = e->base.worldX - g_pGameState->camera_x;
+ *       e->renderScreenPos[1] = e->base.worldY - g_pGameState->camera_y;
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/effects", EntityRenderCallbackUpdateScreenPos);
 
 INCLUDE_ASM("asm/nonmatchings/effects", MultiPartEntityRenderTick);

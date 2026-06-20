@@ -21,6 +21,8 @@ extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
 extern void HazardActivateWithSound(Entity *e);
+extern void GlennYntisAttackEventHandler(Entity *e);
+extern void CollectibleTickCallback(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
 extern Entity *CreateFadeOverlayEntity(Entity *e);
@@ -355,11 +357,77 @@ void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSelectRandomAnimState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisIdleAnimState);
+/* Glenn Yntis boss "idle anim" state: installs the attack event handler
+ * on the event slot (+0x08) and CollectibleTickCallback on the tick slot
+ * (+0x00), switches sprite to 0x2D688254 (boss idle frame), and clears
+ * the +0x111 active-timer byte. Called by GlennYntisSelectRandomAnimState
+ * when the idle animation is picked. */
+void GlennYntisIdleAnimState(ShrineyGuardEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisAnimStateB);
+    do {} while (0);
+    fn = GlennYntisAttackEventHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    fn = CollectibleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x2D688254, 1);
+    e->activeTimer = 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisAnimStateC);
+/* Sibling of GlennYntisIdleAnimState — same handler/tick install, just
+ * uses sprite-id 0x2B79835D (alt boss frame B). */
+void GlennYntisAnimStateB(ShrineyGuardEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = GlennYntisAttackEventHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    fn = CollectibleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x2B79835D, 1);
+    e->activeTimer = 0;
+}
+
+/* Sibling of GlennYntisIdleAnimState — same handler/tick install, just
+ * uses sprite-id 0x69588258 (alt boss frame C). */
+void GlennYntisAnimStateC(ShrineyGuardEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = GlennYntisAttackEventHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    fn = CollectibleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x69588258, 1);
+    e->activeTimer = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisDefeatedState);
 
