@@ -2145,6 +2145,38 @@ s32 EntitySetReadyFlag(BackgroundSparkleEntity *e, u16 mode) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleEntity);
 
+/* Per-tick fade-in/fade-out animator for background sparkle effects.
+ * Counts down revealTimer from its initial value, and uses it to drive a
+ * triangle-wave R/G tint on the sprite context: brightness ramps up from
+ * 0x40 to 0x150 over the first 11 ticks, then back down. Blue stays
+ * pegged at 0x40 to give the sparkle a warm white-yellow tone. When
+ * revealTimer hits 0 the fade stops being touched and EntityUpdateCallback
+ * is called bare so the sparkle is just rendered statically.
+ *
+ * SHELVED (1030-byte diff, structurally complete): body matches with
+ *     u8 t;
+ *     if (e->revealTimer != 0) {
+ *         s32 fade = (s32)e->revealTimer - 1;
+ *         t = fade;                                      // forces move v0,v1
+ *         e->revealTimer = t;
+ *         if (t < 0xB) {
+ *             brightness = fade << 4;
+ *         } else {
+ *             brightness = (0x14 - fade) << 4;
+ *         }
+ *         brightness += 0x40;
+ *         u8 *color = e->sprite.base.spriteContext;
+ *         color[0x34] = brightness;
+ *         color[0x35] = brightness;
+ *         color[0x36] = 0x40;
+ *     }
+ *     EntityUpdateCallback((Entity *)e);
+ * but cc1 cross-jumps the if/else arms: it places the simple then-arm's
+ * `sll fade<<4` in the bnez delay slot and merges both arms into the
+ * fall-through common-code path, eliminating the `j L134` that TARGET
+ * keeps. Inline-asm barriers in either arm only partially help (swaps
+ * arm order, still removes the j). No clean C-level idiom defeats cc1's
+ * tail-merge for this specific shape. */
 INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleFadeTickCallback);
 
 s32 BackgroundSparkleContactEventHandler(BackgroundSparkleEntity *sparkle, u32 ev) {
