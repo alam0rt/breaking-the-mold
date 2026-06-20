@@ -597,6 +597,50 @@ void CollectibleSuperWillieTickCallback(PowerupCollectibleEntity *e) {
     }
 }
 
+extern u8 PATH_DECOR2_VTABLE[] asm("D_80010690");
+extern u8 D_8009B228[];
+extern Entity *InitEntityWithSprite(SpriteEntity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
+extern void DecorCollisionTickWithSpawnAndSound(Entity *e);
+extern s32 rand(void);
+
+/* gp_rel tentative defs for the (marker, callback) state pair installed
+ * by InitEntity_PathDecor2 -- marker is 0xFFFF0000 (direct call) and the
+ * callback is DecorSetRandomTimer. */
+u32 DECOR_RANDOM_TIMER_STATE_MARKER asm("D_800A59C8");
+EntityCallback DECOR_RANDOM_TIMER_STATE_CALLBACK asm("D_800A59CC");
+
+/* SHELVED: register-allocation diff. Equivalent C is below but cc1
+ * allocates `entity` to $s0 and `data` to $s1, while the original
+ * assigns them in reverse ($s1/$s0). Function body is otherwise
+ * byte-identical. Same family as InitSuperWillieCollectible (which
+ * DOES match) but the trailing EntitySetState + rand + randomTimer
+ * writes shift register pressure enough to flip the allocation.
+ *
+ *   DecorRandomTimerEntity *InitEntity_PathDecor2(
+ *           DecorRandomTimerEntity *e, DecorSpawnData *data) {
+ *       TripadSlot u;
+ *       s16 m1;
+ *       void (*fn)();
+ *
+ *       InitEntityWithSprite(&e->sprite, D_8009B228, 0x3DE,
+ *                            data->x, data->y);
+ *       e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+ *       InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
+ *       e->sprite.base.collisionVtable = PATH_DECOR2_VTABLE;
+ *       do {} while (0);
+ *       fn = (void (*)())DecorCollisionTickWithSpawnAndSound;
+ *       do {} while (0);
+ *       m1 = -1;
+ *       u.s.markerLo = 0;
+ *       u.s.markerHi = m1;
+ *       u.s.fn = fn;
+ *       *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+ *       EntitySetState((Entity *)e, DECOR_RANDOM_TIMER_STATE_MARKER,
+ *                      DECOR_RANDOM_TIMER_STATE_CALLBACK);
+ *       e->randomTimer = (rand() & 0x3F) + 8;
+ *       return e;
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/pickups", InitEntity_PathDecor2);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorCollisionTickWithSpawnAndSound);

@@ -200,7 +200,7 @@ void FreeSpecialEntity2120Memory(Entity *ptr, s32 size) {
  * GameMode FSM dispatch (event_marker/event_callback @ +0x00..+0x04) ->
  * EntityTickLoop -> WaitForVBlankIfNeeded -> RenderEntities -> DrawSync(0) ->
  * postRenderCallbackContext dispatch ((**(ctx+0x1C))(ctx,0)) -> DrawSync(0) ->
- * optional VSync stall when D_800A5958 & 6 -> ProcessDebugMenuInput ->
+ * optional VSync stall when g_GameFlags & 6 -> ProcessDebugMenuInput ->
  * FlushDebugFontAndEndFrame (which performs the OT flush + buffer swap). */
 INCLUDE_ASM("asm/nonmatchings/main", main);
 
@@ -210,9 +210,13 @@ INCLUDE_ASM("asm/nonmatchings/main", main);
 INCLUDE_ASM("asm/nonmatchings/main", func_80082BE8);
 
 /* Debug menu / level-select overlay -- runs once per frame at end-of-tick when
- * the global debug flag bit (D_800A5958 & 0x80) is set. Renders the level-name
- * list via FntPrint with a selector arrow, handles up/down nav via the pad
- * flags read out of D_800A6120, and on Start (button bit 0x40) commits the
+ * the global debug flag bit (g_GameFlags & 0x80) is set. Renders the level-name
+ * list (g_DebugMenuItemNames[i] -> "sub 01".."sub 10") via FntPrint with a
+ * selector arrow ("> " / "  "), handles up/down nav via the pad flags read
+ * out of g_pCurrentInputState, and on Start (button bit 0x40) commits the
  * selection by stuffing the chosen level index into GameState.direct_level_load
- * (+0x148) via SetSequenceIndexByMode. */
+ * (+0x148) via SetSequenceIndexByMode.
+ *
+ * See docs/analysis/prototype-debug-prints.md §5 for the global/struct naming
+ * basis (this is the only intact debug HUD in retail). */
 INCLUDE_ASM("asm/nonmatchings/main", ProcessDebugMenuInput);

@@ -17,6 +17,7 @@
 #include "common.h"
 #include "Game/game_state.h"
 #include "Game/player_state.h"
+#include "Game/input_state.h"
 
 /* =============================================================================
  * PRIMARY GAME STRUCTURES
@@ -180,8 +181,7 @@ extern u8 g_GameBLBFile[40];
 extern u8 g_FrameReady;            /* 0x800A595A - set by VSync IRQ when previous frame finished */
 extern u8 g_SwapInFlight;          /* 0x800A595B - nonzero while a buffer swap is in flight */
 
-/* Game flags (bit 0x80 = debug menu enabled) */
-extern u32 g_GameFlags;            /* 0x800A5950 */
+/* Game flags — see the DEBUG MENU section below for the full declaration. */
 
 /* BLB heap base pointer (first word of sdata, also GP value) */
 extern void* g_pBlbHeapBase;       /* 0x800A5954 */
@@ -191,9 +191,9 @@ extern GameState* g_pGameState;    /* 0x800A5960 */
 
 /* Input state pointers */
 extern PlayerState* g_pPlayerState; /* 0x800A597C - Player persistent state pointer (points to 0x8009B1D8) */
-extern void* g_pPlayer1Input;      /* 0x800A5764 - Player 1 input */
-extern void* g_pPlayer2Input;      /* 0x800A5768 - Player 2 input */
-extern void* g_pCurrentInputState; /* 0x800A576C - Active input */
+extern InputState* g_pPlayer1Input;     /* 0x800A5764 - Player 1 input */
+extern InputState* g_pPlayer2Input;     /* 0x800A5768 - Player 2 input */
+extern InputState* g_pCurrentInputState;/* 0x800A6120 - Active input (defaults to g_pPlayer1Input); read by ProcessDebugMenuInput */
 
 /* Default background color */
 extern u8 g_DefaultBGColorR;       /* 0x800A5770 */
@@ -212,13 +212,30 @@ extern u8 g_CurrentGameMode;       /* 0x800A6082 */
 
 /* =============================================================================
  * DEBUG MENU (enabled when g_GameFlags & 0x80)
+ *
+ * Surviving FntPrint HUD in retail; entry point ProcessDebugMenuInput
+ * @ 0x80082C10 (called once per frame from main when the gate bit is set).
+ * See docs/analysis/prototype-debug-prints.md §5.
  * ============================================================================= */
+
+extern u16 g_GameFlags;             /* 0x800A5958 - bit 0x80 = debug menu */
+extern u16 g_DebugMenuScrollTop;    /* 0x800A60B8 - first visible item index */
+extern u16 g_DebugMenuCursor;       /* 0x800A60BA - currently selected item */
+extern u8  g_TotalMenuItems;        /* 0x800A60C0 - upper bound on cursor */
 
 /* Debug menu item name pointers (10 entries)
  * Address: 0x8009DDE0
- * Points to strings at 0x800A60C4: "sub 01", "sub 02", etc.
+ * Points to strings at 0x800A60C4: "sub 01", "sub 02", ..., "sub 10".
+ * Index N can be replaced with the "END2" sentinel string at 0x800A60A8
+ * to mark the menu's end-of-list, which switches the selection-commit
+ * path from mode-1 to mode-4 in SetSequenceIndexByMode.
  */
-extern char* g_MenuItemNames[10];
+extern char* g_DebugMenuItemNames[10];
+extern char  g_DebugMenuSentinelStr[8];  /* 0x800A60A8 "END2" */
+extern char  g_DebugMenuSubLevelStrs[10][8]; /* 0x800A60C4 "sub NN" packed */
+extern char  g_DebugMenuArrowStr[4];     /* 0x800A6114 "> "   cursor prefix */
+extern char  g_DebugMenuIndentStr[4];    /* 0x800A6118 "  "   indent prefix */
+extern char  g_DebugMenuNewlineStr[2];   /* 0x800A611C "\n" */
 
 /* =============================================================================
  * SPU/AUDIO BUFFERS
