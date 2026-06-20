@@ -6,6 +6,7 @@
 extern void *g_pBlbHeapBase;
 extern u8 DECOR_ENTITY_DESTRUCTOR_VTABLE[] asm("D_80010870");
 extern u8 DECOR_SIMPLE_ALLOC_VTABLE[] asm("D_80010890");
+extern u8 SUPERWILLIE_VTABLE[] asm("D_800106B0");
 extern void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size);
 extern void CollisionCheckWrapper(Entity *e, u32 a, u32 b, u32 c);
 extern void DecorEntityTickWithOffscreenCheck(Entity *e);
@@ -14,6 +15,15 @@ extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 extern void CheckpointSwampTickCallback(Entity *e);
 extern void EntityCollisionHandler_SpecialTrigger(Entity *e);
 extern void EntityCollision_FlagAndDispatch(Entity *e);
+extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
+
+typedef struct DecorSpawnData {
+    /* 0x00 */ u8 pad00[8];
+    /* 0x08 */ s16 x;
+    /* 0x0A */ s16 y;
+} DecorSpawnData;
+
+extern void InitPathFollowingDecorEntity(TimedPathEntity *e, DecorSpawnData *data, u8 flag);
 
 typedef struct InteractiveDecorEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -236,7 +246,42 @@ void CollectibleHamsterShieldTickCallback(PowerupCollectibleEntity *e) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitSuperWillieCollectible);
+void CollectibleSuperWillieTickCallback(PowerupCollectibleEntity *e);
+
+/* Super Willie pickup constructor. Builds the +0x100 path-following decor
+ * shape (sprite id 0x902C0002, z=0x3DE), routes it through the shared
+ * PATH_DECOR vtable + InitPathFollowingDecorEntity, then overrides the
+ * collision vtable to the Super-Willie-specific D_800106B0 and installs
+ * CollectibleSuperWillieTickCallback as the per-frame tick. Twin of the
+ * other powerup-collectible Inits (PhoenixHand/HamsterShield) but with
+ * no extra +0x50/+0x54/+0xF6 state writes — the pickup behaviour lives
+ * entirely in the tick callback.
+ *
+ * Match recipe: TripadSlot pins the 0x38 frame (slot at sp+0x1C with
+ * 4-byte pads either side); the named `fn`/`m1` locals + the explicit
+ * `e->...collisionVtable = D_80010870` BEFORE the
+ * InitPathFollowingDecorEntity call let cc1 fold the matching vtable
+ * `sw $v0, 0x18($s1)` into the jal's delay slot, then re-emit the
+ * D_800106B0 store as a standalone op in the post-call sequence. */
+PowerupCollectibleEntity *InitSuperWillieCollectible(PowerupCollectibleEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite((Entity *)e, 0x902C0002, 0x3DE, data->x, data->y, 1);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
+    e->sprite.base.collisionVtable = SUPERWILLIE_VTABLE;
+    do {} while (0);
+    fn = (void (*)())CollectibleSuperWillieTickCallback;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    return e;
+}
 
 /* Super Willie pickup -- same shape as CollectibleExtraLifeTickCallback
  * but awards a super willie via AddSuperWillies, spawns VFX at (0x118,
