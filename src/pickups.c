@@ -1,5 +1,6 @@
 #include "common.h"
 #include "functions.h"
+#include "globals.h"
 #include "Game/callback_slot.h"
 
 extern void *g_pBlbHeapBase;
@@ -55,7 +56,32 @@ INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleYellowBirdTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitClayballWithRandomColor);
 
-INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleClaySingleTickCallback);
+extern u8 CheckEntityBoxCollision(Entity *e, u16 mask);
+extern void AddPlayerOrbs(PlayerState *ps, s8 count);
+extern void InitDecorEntityWithScreenOffset(Entity *e, s32 dx, s32 dy, s32 flag);
+extern void PlayEntityPositionSound(Entity *e, u32 soundId);
+extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
+
+/* Single-hit clay-ball pickup tick. Runs the standard offscreen-cull
+ * decor tick first; if the ball has either already been triggered
+ * (+0x11D == 1) OR is currently overlapping the player's hit-box
+ * (CheckEntityBoxCollision returns true), grants one orb to the player,
+ * spawns a tiny VFX decor at (+0x18,+0x16) and plays the pickup sound
+ * (0x4A806042).
+ *
+ * Match recipe: the bnez over CheckEntityBoxCollision short-circuits the
+ * box-check when triggerState is already set. Naming variables and
+ * keeping the boolean OR shape as `if (a || b)` produces TARGET's
+ * branch-on-flag-or-call layout. */
+void CollectibleClaySingleTickCallback(InteractiveDecorEntity *e) {
+    DecorEntityTickWithOffscreenCheck((Entity *)e);
+    if (e->triggerState != 0 ||
+        CheckEntityBoxCollision((Entity *)e, 2) != 0) {
+        AddPlayerOrbs(PLAYER_STATE_DATA, 1);
+        InitDecorEntityWithScreenOffset((Entity *)e, 0x18, 0x16, 1);
+        PlayEntityPositionSound((Entity *)e, 0x4A806042);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/pickups", InitPlatformDecorEntity);
 
