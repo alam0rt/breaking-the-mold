@@ -144,6 +144,8 @@ u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98");
 EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C");
 u32   HAZARD_STOP_SOUND_STATE_MARKER asm("D_800A5BC0");
 EntityCallback HAZARD_STOP_SOUND_STATE_CALLBACK asm("D_800A5BC4");
+u32   HAZARD_IDLE_WITH_SOUND_STATE_MARKER asm("D_800A5BC8");
+EntityCallback HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK asm("D_800A5BCC");
 u32   GLENN_YNTIS_ANIM_B_STATE_MARKER asm("D_800A5BD0");
 EntityCallback GLENN_YNTIS_ANIM_B_STATE_CALLBACK asm("D_800A5BD4");
 u32   GLENN_YNTIS_ANIM_IDLE_STATE_MARKER asm("D_800A5BD8");
@@ -564,7 +566,36 @@ void CollectibleAnimState(Entity *e) {
     *(CallbackSlot *)&se->queuedStateMarker = slot.s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", HazardIdleWithSound);
+void HazardIdleWithSound(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, 0x62318245);
+    do {} while (0);
+    fn = (void (*)())GlennYntisAttackEventHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = CollectibleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x407801D0, 1);
+    ((u8 *)e)[0x111] = 0;
+    ((u8 *)e)[0x112] = 0;
+    do {} while (0);
+    fn = HazardActivateWithSound;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    EntitySetCallback(e, HAZARD_IDLE_WITH_SOUND_STATE_MARKER,
+                      HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK);
+}
 
 void HazardStopSoundAlt(BossVoiceEntity *e) {
     StopSPUVoice(e->voiceHandle);
