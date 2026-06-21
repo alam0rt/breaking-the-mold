@@ -2017,7 +2017,21 @@ s32 EntityEventHandlerWalkWithTimer(EnemyTimerStateEntity *e, u32 event, u32 arg
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapMovementCallback);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", InitItemSparkleIdleState);
+extern void CollectibleScaledTickCallback(Entity *e);
+
+void InitItemSparkleIdleState(Entity *e) {
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    SLOT_CLEAR(slot.s[0], e->renderMarker);
+    fn = (void (*)())CollectibleScaledTickCallback;
+    m1 = -1;
+    SLOT_STORE(slot.s[0], e->tickMarker, m1, fn);
+    fn = EntityEventHandlerIdle;
+    SLOT_STORE(slot.s[0], e->eventMarker, m1, fn);
+    SetEntitySpriteId(e, 0xB4011101, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitItemRevealState);
 
