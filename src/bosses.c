@@ -33,6 +33,13 @@ extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntityFacingDirection(Entity *e, s32 dir);
 extern void JoeHeadJoeMoveAndCheckAttack(Entity *e);
 extern void ShrineyGuardMoveCallback(Entity *e);
+extern void EntityTickWithTimer(Entity *e);
+extern void GliderStartFallState(Entity *e);
+extern void EntityTickWithReadyCheck(Entity *e);
+extern s32 GliderEventHandlerWithCounter();
+extern void GliderSetActiveState(Entity *e);
+extern void GliderWaitState(Entity *e);
+void KloggDeathCallback(u8 *e);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
@@ -217,7 +224,30 @@ check_complete:
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderEventHandlerWithCounter);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GliderStateInit_WakeUp);
+void GliderStateInit_WakeUp(Entity *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = EntityTickWithReadyCheck;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = (void (*)())GliderEventHandlerWithCounter;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x883D14B4, 1);
+    fn = GliderSetActiveState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderSetActiveState);
 
