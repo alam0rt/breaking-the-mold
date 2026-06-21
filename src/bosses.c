@@ -1184,7 +1184,43 @@ void ShrineyGuardAttackAnimState(Entity *e) {
  * +0x00, sprite-id 0x08192250 (READY pose), and queues
  * BossRandomAttackChoice on +0x98 so the windup completion advances the
  * FSM. This is the "stand up and re-aim" moment between slams. */
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardReadyAttackState);
+/* ShrineyGuardReadyAttackState — sets stunActive (+0x115) = 1, readyFlag
+ * (+0x10C) = 0, calls SetEntityFacingDirection(e, 2), installs
+ * ShrineyGuardActiveEventHandler on +0x08, clears activeTimer (+0x111),
+ * installs EnemyUpdateWithCollisionAndDeath on +0x00, sprite 0x08192250,
+ * clears render slot, queues BossRandomAttackChoice on +0x98. */
+void ShrineyGuardReadyAttackState(Entity *e) {
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    ((u8 *)e)[0x115] = 1;
+    ((u8 *)e)[0x10C] = 0;
+    SetEntityFacingDirection(e, 2);
+    fn = (void (*)())ShrineyGuardActiveEventHandler;
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    ((u8 *)e)[0x111] = 0;
+    do {} while (0);
+    fn = EnemyUpdateWithCollisionAndDeath;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SetEntitySpriteId(e, 0x08192250, 1);
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    fn = BossRandomAttackChoice;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+}
 
 /* Entered from BossEventHandler/event 0x1002 (damage but hp > 0). Sets
  * stunTimer (+0x113) = 5, clears stunActive (+0x115), sets readyFlag
