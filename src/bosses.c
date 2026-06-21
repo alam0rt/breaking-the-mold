@@ -1114,7 +1114,37 @@ void JoeHeadJoeClearVoice(JoeHeadJoeEntity *e) {
     e->voiceHandle = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeSetFacingAndAttack);
+/* JoeHeadJoeSetFacingAndAttack — faces the player (direction = 2), clears
+ * the misc counter at +0x117, re-arms the standard tick + bounce-event
+ * handlers, sets the attack sprite (0x8A3809F2), and queues
+ * JoeHeadJoeSetIdleState on the queued-state slot so the boss returns to
+ * idle once the attack callback finishes. The byte-clear at +0x117 lives
+ * in the SetEntityFacingDirection delay slot. */
+void JoeHeadJoeSetFacingAndAttack(JoeHeadJoeEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    ((u8 *)e)[0x117] = 0;
+    SetEntityFacingDirection((Entity *)e, 2);
+    fn = JoeHeadJoeUpdateWithCollisionCheck;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    fn = (void (*)())JoeHeadJoeBounceEventHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x8A3809F2, 1);
+    fn = JoeHeadJoeSetIdleState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
+}
 
 /* JoeHeadJoeEnterActiveState — install active-mode callbacks on a Joe-Head-
  * Joe boss. Resets the per-state misc counter at +0x117 and arms the
