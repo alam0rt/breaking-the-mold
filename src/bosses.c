@@ -249,7 +249,30 @@ void GliderStateInit_WakeUp(Entity *e) {
     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GliderSetActiveState);
+void GliderSetActiveState(Entity *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = EntityTickWithReadyCheck;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = (void (*)())GliderEventHandlerWithComplete;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x10057441, 1);
+    fn = GliderWaitState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderWaitState);
 
