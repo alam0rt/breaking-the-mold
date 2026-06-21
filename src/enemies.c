@@ -118,7 +118,7 @@ extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
 extern void TripleLaserMonkeyDeathTick(Entity *e);
 extern s32 EntityEventHandler0x1001_1002_1008(Entity *e, u32 event, u32 arg2, u32 arg3);
-extern s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern void EntityGroundSnapWithAnimation(Entity *e);
 extern void SetEntityFacingDirection(Entity *e, s32 dir);
 extern void SetAnimationLoopFrame(Entity *e, u32 frame);
@@ -458,7 +458,32 @@ INCLUDE_ASM("asm/nonmatchings/enemies", AIEntityRandomBehaviorTick);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandler0x1001_1002_1008);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandler0x1001_1002_1008_V2);
+s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 unused, u32 attacker) {
+    u8 *e8 = (u8 *)e;
+    s32 result = 0;
+    switch (event) {
+    case EVT_TOKEN_QUERY:
+        e8[0x106] = 1;
+        if (attacker == *(s32 *)(e8 + 0x108)) {
+            *(s32 *)(e8 + 0x108) = 0;
+        }
+        result = (s32)e;
+        break;
+    case EVT_SET_READY:
+        e8[0x106] = 1;
+        break;
+    case EVT_TOKEN_CLAIM:
+        if (*(s32 *)(e8 + 0x108) == 0) {
+            *(s32 *)(e8 + 0x108) = attacker;
+            result = 1;
+        }
+        break;
+    }
+    if (event == EVT_TICK) {
+        EntityProcessCallbackQueue(e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithRandomWalk);
 
