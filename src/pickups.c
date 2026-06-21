@@ -701,6 +701,36 @@ void DecorEntityTickWithCollision(InteractiveDecorEntity *e) {
     }
 }
 
+extern void SpawnEntityOrTriggerZone(Entity *e);
+
+/* SHELVED: branch-layout diff. Equivalent C:
+ *
+ *   Entity *DecorEntityCollisionHandler(InteractiveDecorEntity *e,
+ *                                       u32 event, u32 arg2) {
+ *       Entity *r = NULL;
+ *       event &= 0xFFFF;
+ *       if (event == 0x1016) {
+ *           r = (Entity *)e;
+ *           e->triggerState = 1;
+ *           e->sprite.base.collisionMask = 0;
+ *       }
+ *       if (event == 0x1001) {
+ *           EntitySetState((Entity *)e,
+ *                          DECOR_TRIGGERED_STATE_MARKER,
+ *                          DECOR_TRIGGERED_STATE_CALLBACK);
+ *       } else if (event == 1) {
+ *           if (arg2 == 0x10022814) {
+ *               SpawnEntityOrTriggerZone((Entity *)e);
+ *           }
+ *       }
+ *       return r;
+ *   }
+ *
+ * Original places the event==1 path OUT OF LINE (via beq-ahead) and
+ * uses TWO registers for `r` ($v1 in the 0x1016 block, then `move s0,
+ * v1` to a callee-save spill across the call sites). No source form
+ * I tried (if/else-if swap, switch, goto, inverted predicates) gets
+ * cc1 to pick that layout. */
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandler);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandlerExt);
