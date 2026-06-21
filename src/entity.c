@@ -196,7 +196,16 @@ s32 CheckBoxOverlap(Entity *entity, BoxCorner minCorner, BoxCorner maxCorner) {
 /* --- Broadcast collision family. Each walks a candidate list (player vs
  *     world, vs enemies, vs pickups...) and dispatches the per-entity
  *     collision FSM with a query box/point. --- */
-INCLUDE_ASM("asm/nonmatchings/entity", CollisionCheckWrapper);
+void CollisionCheckWrapper(Entity *entity, u16 a1, u16 a2, u32 a3) {
+    extern void DispatchEventToCollidingEntity(GameState *gs, BoxCorner minCorner,
+                                  BoxCorner maxCorner, u32 a, u32 b, u32 c,
+                                  Entity *e);
+    CalculateEntityScreenBounds(entity);
+    DispatchEventToCollidingEntity(g_pGameState,
+                                  *(BoxCorner *)&entity->screenX1,
+                                  *(BoxCorner *)&entity->screenX2,
+                                  a1, a2, a3, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity", EntityBroadcastBoxCollision);
 
