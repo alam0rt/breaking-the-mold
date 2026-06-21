@@ -502,7 +502,31 @@ void GlennYntisAnimStateC(ShrineyGuardEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisDefeatedState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisVictoryCallback);
+void GlennYntisVictoryCallback(u8 *e_raw) {
+    Entity *entity = (Entity *)e_raw;
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    g_pGameState->direct_level_load = e_raw[0x110];
+    ((SpriteRenderContextRef *)entity->spriteContext)->activeFlag = 0;
+    SetAnimationActive(entity, 0);
+
+    fn = CollectibleTickCallback;
+    do {} while (0);
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&entity->tickMarker = slot.s[0];
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&entity->renderMarker = slot.s[0];
+
+    e_raw[0x106] = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitShrineyGuardBoss);
 
