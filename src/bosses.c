@@ -23,6 +23,7 @@ extern void JoeHeadJoeSetIdleState(Entity *e);
 extern void EnemyUpdateWithCollisionAndDeath(Entity *e);
 extern void EnemyTickWithCollision(Entity *e);
 extern s32 ShrineyGuardAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 GlennYntisDamageEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void SetAnimationLoopFrame(Entity *e, u32 frame);
 extern void SetAnimationSpriteCallback(Entity *e, u32 spriteId);
 extern void SetAnimationFrameIndex(Entity *e, s32 frame);
@@ -410,7 +411,37 @@ void HazardStopSound(BossVoiceEntity *e) {
     e->voiceHandle = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleAnimState);
+void CollectibleAnimState(Entity *e) {
+    SpriteEntity *se = (SpriteEntity *)e;
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = (void (*)())GlennYntisDamageEventHandler;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = CollectibleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0xC8F90114, 1);
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+    ((u8 *)e)[0x111] = 3;
+    do {} while (0);
+    fn = GlennYntisSetPhaseFromHP;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&se->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HazardIdleWithSound);
 
