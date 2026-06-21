@@ -32,6 +32,7 @@ extern u32  PlayEntityPositionSound(Entity *e, u32 soundId);
 extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntityFacingDirection(Entity *e, s32 dir);
 extern void JoeHeadJoeMoveAndCheckAttack(Entity *e);
+extern void ShrineyGuardMoveCallback(Entity *e);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
@@ -912,7 +913,29 @@ s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u
  * (+0x10C) = 1 and clears stunActive (+0x115). This is what kicks off
  * the horizontal slam: until this frame the boss was rooted; from this
  * frame on MoveCallback drives the velocity ramp. */
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackEventHandler);
+s32 ShrineyGuardAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3) {
+    ShrineyGuardEntity *se = (ShrineyGuardEntity *)e;
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    s32 ret;
+    u32 evt;
+
+    evt = event & 0xFFFF;
+    ret = BossEventHandler(e, evt, arg2, arg3);
+    if (evt == 1 && arg2 == 0x01084280) {
+        fn = ShrineyGuardMoveCallback;
+        do {} while (0);
+        m1 = -1;
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)&se->sprite.base.renderMarker = slot.s;
+        se->readyFlag = 1;
+        se->stunActive = 0;
+    }
+    return ret;
+}
 
 /* Movement callback installed mid-animation by AttackEventHandler. Each
  * tick:
