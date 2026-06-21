@@ -1102,11 +1102,39 @@ void ShrineyGuardSetAttackState(Entity *e) {
 /* Variant of ShrineyGuardSetAttackState used for the chained/looping
  * attack: same handler+tick install but the sprite-id is 0x40106054 (the
  * LOOP_LINK frame), and additionally calls SetAnimationLoopFrame
- * (0xC00200C9, 2) plus SetAnimationSpriteCallback(0x02421405) to drive
- * the looping-attack second-loop, and queues ShrineyGuardSetAttackState
- * on the +0x98 queued-state slot so each loop iteration falls through to
- * a single-attack windup. */
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardSetLoopingAttackState);
+ * (0xC00200C9) with ((u8*)e)[0x111]=2 packed in the delay slot, plus
+ * SetAnimationSpriteCallback(0x02421405) + SetAnimationFrameIndex(0)
+ * to drive the looping-attack second-loop, and queues
+ * ShrineyGuardSetAttackState on the +0x98 queued-state slot so each loop
+ * iteration falls through to a single-attack windup. */
+void ShrineyGuardSetLoopingAttackState(Entity *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = (void (*)())ShrineyGuardActiveEventHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = ShrineyGuardIdleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x40106054, 1);
+    ((u8 *)e)[0x111] = 2;
+    SetAnimationLoopFrame(e, 0xC00200C9);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+    fn = ShrineyGuardSetAttackState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 /* Passive idle state, dispatched from the FINISH_ATTACK marker (after the
  * boss has slammed 3 times). Installs ShrineyGuardActiveEventHandler on
