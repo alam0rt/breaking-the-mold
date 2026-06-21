@@ -18,6 +18,8 @@ extern void *MONKEY_MAGE_SIMPLE_ALLOC_VTABLE asm("D_800113A8");
 extern s32 EntityMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 BossEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 JoeHeadJoeAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern void JoeHeadJoeUpdateWithCollisionCheck(Entity *e);
+extern void JoeHeadJoeSetIdleState(Entity *e);
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
@@ -694,9 +696,59 @@ void JoeHeadJoeClearVoiceAlt(JoeHeadJoeEntity *e) {
     e->voiceHandle = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeReturnToIdleState);
+void JoeHeadJoeReturnToIdleState(JoeHeadJoeEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeReturnToIdleStateAlt);
+    ((u8 *)e)[0x117] = 0;
+    do {} while (0);
+    fn = JoeHeadJoeUpdateWithCollisionCheck;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    fn = (void (*)())JoeHeadJoeBounceEventHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0xB081DBB, 1);
+    fn = JoeHeadJoeSetIdleState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
+}
+
+void JoeHeadJoeReturnToIdleStateAlt(JoeHeadJoeEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    ((u8 *)e)[0x117] = 0;
+    do {} while (0);
+    fn = JoeHeadJoeUpdateWithCollisionCheck;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    fn = (void (*)())JoeHeadJoeBounceEventHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0xB0811BB, 1);
+    fn = JoeHeadJoeSetIdleState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDeathAnimState);
 
