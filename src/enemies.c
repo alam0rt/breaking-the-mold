@@ -108,7 +108,7 @@ extern void AIEntityRandomBehaviorTick(Entity *e);
 extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
-extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnParticle(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerCountdownToWalkWithSprite(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerTimerCountdown(Entity *e, u32 event, u32 arg2, u32 arg3);
@@ -774,6 +774,11 @@ void TripleLaserMonkeyConditionalTick(ConditionalPhaseEntity *e) {
     TripleLaserMonkeyDeathTick((Entity *)e);
 }
 
+/* Idle-skeleton switch + EVT_TICK predecrement of +0x111; at 0 runs
+ * SetAnimationFrameCallback and installs EntityEventHandlerWalk into the
+ * eventMarker slot. SHELVED: same result register-coloring split as the other
+ * countdown handlers (TARGET births `result` in dead $a0, copies to $s1 across
+ * the EVT_TICK call; cc1 keeps it in $s1 throughout). Permuter territory. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithCountdownToWalk);
 
 void LaserMonkeyWalkState(Entity *e) {
