@@ -1258,7 +1258,10 @@ void ShrineyGuardReadyAttackState(Entity *e) {
  * installs ShrineyGuardStunTickCallback on +0x00, sprite-id 0x2C182010
  * (LOOP_START / stun pose), and queues ShrineyGuardAttackCounterState
  * on +0x98 so after the 5-frame stun the boss decides whether to repeat
- * or finish its attack chain. */
+ * or finish its attack chain.
+ *
+ * SKIP: cc1 register allocator picks v1 for fn-ptr load (v0 busy with byte
+ * write constants 5/2), produces same 57 instrs but different reg choice. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStartLoopAttackState);
 
 /* Entered from BossEventHandler/event 0x1002 when boss_hp reaches 0.

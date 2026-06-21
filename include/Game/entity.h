@@ -153,7 +153,16 @@ struct Entity {
     /* 0x17 */ u8              pad17;            /* Padding (extended types may use) */
     
     /* Collision System (0x18-0x1F) */
-    /* 0x18 */ void           *collisionVtable;  /* Collision handler vtable */
+    /* 0x18 */ void           *collisionVtable;  /* Collision handler vtable.
+                                                  * For the player entity, swaps between:
+                                                  *   g_PlayerCallbackTable    (0x80011804) -- alive
+                                                  *   g_EntityVtable_Destroyed (0x800104AC) -- dead/transition
+                                                  * Death timeline (verified 20260621_104346):
+                                                  *   T-2: hitbox shrinks (death sprite)
+                                                  *   T+0: vtable -> Destroyed, frame_counter=0, PS.lives--
+                                                  *   T+2: vtable -> PlayerCallbackTable, position warps
+                                                  *        to GS.spawn_{x,y}, eventCallback ->
+                                                  *        PlayerEvent_ZoneTriggerHandler. */
     /* 0x1C */ s32             renderMarker;     /* Render callback marker */
     
     /* Render Callback (0x20-0x23) */

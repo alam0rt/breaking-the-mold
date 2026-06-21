@@ -60,8 +60,11 @@ typedef struct {
     /* 0x20 */ EntityListNode *render_list_head; /* Z-sorted entity render list */
     /* 0x24 */ EntityListNode *collision_list_head; /* Entity collision/update queue */
     /* 0x28 */ EntityListNode *entity_spawn_list;   /* Raw 24-byte entity defs from Asset 501 */
-    /* 0x2C */ void *player_entity_alt;          /* Player entity (alternate reference for collision) */
-    /* 0x30 */ void *player_entity_ptr;          /* Main player entity pointer */
+    /* 0x2C */ void *player_entity_alt;          /* Shadow of +0x30. Struct watcher (20260621_104346)
+                                                    confirms +0x2C and +0x30 receive identical values
+                                                    across all 4 observed level/respawn writes
+                                                    (frames 238, 665, 3096, 3185); jaccard=1.0. */
+    /* 0x30 */ void *player_entity_ptr;          /* Main player entity pointer. See note on +0x2C. */
     
     /* Deferred entity removal (0x34-0x3B) - from MarkEntityForDeferredRemoval @ 0x80020d74 */
     /* 0x34 */ void *pending_removal_entity;     /* Entity marked for deferred removal */
@@ -85,7 +88,11 @@ typedef struct {
     /* 0x54 */ s16  player_render_offset_x;
     /* 0x56 */ s16  player_render_offset_y;
     
-    /* Scroll limit flags (0x58-0x5B) */
+    /* Scroll limit flags (0x58-0x5B).
+     * Struct watcher (20260621_104346) shows all four bytes flip in lockstep
+     * across every observed level/teleport transition (frames 238, 3096, 3183);
+     * jaccard=1.0. Almost certainly written as a single 32-bit word
+     * (0x00000000 on level-data wipe, 0x01010101 on level activation). */
     /* 0x58 */ u8   scroll_limit_left;
     /* 0x59 */ u8   scroll_limit_top;
     /* 0x5A */ u8   scroll_limit_right;

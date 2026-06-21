@@ -54,6 +54,16 @@ void PlayerState_FrameCountTick(PlayerEntity *e) {
     PlayerTickCallback(e);
 }
 
+/* Bounce-cooldown tick installed by the bounce-on-enemy collision path
+ * (PlayerCallback_CollisionHandlerWithQueue @ 0x8005CEC8). Per-frame
+ * decrement of the cooldown timer at +0x13C, then tail-call into
+ * PlayerTickCallback for animation + state-transition. NOTE: this
+ * function does NOT itself check timer13C == 0 — the state-exit
+ * transition happens inside PlayerTickCallback (which the trace
+ * confirms is running every frame regardless of the wrapper). The
+ * struct_watch trace from 2026-06-21 captured this tick running for
+ * 5319+ consecutive frames during the Shriney Guard fight while
+ * pFrameTable pointed at 0x801388E0 (bounce-cooldown anim). */
 void PlayerState_CooldownTick(PlayerEntity *e) {
     if (e->timer13C != 0) {
         e->timer13C--;

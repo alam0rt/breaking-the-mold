@@ -292,3 +292,23 @@ for (i = 0; i < 10; i++) {
 ```
 
 Clayball entities (`EntityType057_WaypointClayball*`) set these flags when collected.
+
+### Runtime confirmation (struct_watcher, 20260621_104346)
+
+Observed in `game_watcher/logs/struct_watch_20260621_104346.jsonl`:
+
+| Frame | Event |
+|---|---|
+| 238 | Password load: `PS.clayball_flag_0 0→1` (carried in password payload) |
+| 3021 | Bonus-room entry: `PS.clayball_flag_0 1→0` AND `PS.total_1ups 0→1` in same frame |
+
+Confirms `clayball_flag_N` is a **redeemable token** (not a permanent collected-flag): the password preserves uncollected redemptions across sessions, and they get consumed into `total_1ups` only when the player actually reaches the bonus-room trigger. The vtable swap to `g_EntityVtable_Destroyed` on the same frame as the flag clear indicates the clayball entity is destroyed as part of the redemption.
+
+### 100-orb → 1UP wrap (verified)
+
+Frame 4312 in the same trace:
+```
+orb_count: 98 → 1   (delta -97)
+lives:     3 → 4
+```
+The −97 delta is two orbs being picked up in the same tick (98+3 = 101 → wraps to 1, +1 life). Confirms the implementation is `(orb_count += n) >= 100` with subtraction-of-100 wrap rather than per-orb modulo.

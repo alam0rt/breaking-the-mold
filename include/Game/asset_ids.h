@@ -208,6 +208,31 @@
 #define SPR_BONUS_CLAYBALL                 0x10882010u  /* Type 093 bonus/score clayball */
 #define SPR_LEVEL_FLAG2_EXTRA              0x168254b5u  /* level-flag-2 extra sprite (LoadLevelSpriteAssets) */
 
+/* ---- Boss sprite roster, BOSS namespace (id = 0x08280150 ^ rotl(calcHash, 27))
+ * Substituting these constants is documentation only — the consuming
+ * functions live in asm/ and use the bare u32 literals. The grouping mirrors
+ * the FSM in src/bosses.c (Shriney Guard is fully documented; the other
+ * bosses' sprite slots are recorded as RE labels). */
+
+/* SHRINEY GUARD (MEGA level 5) — see src/bosses.c "SHRINEY GUARD" section.   */
+#define SPR_SHRINEY_GUARD_BASE             0xa8482860u  /* InitEntitySprite hash (0xA2 x 0xF0) */
+#define SPR_SHRINEY_GUARD_IDLE             0x09382152u  /* passive idle pose                  */
+#define SPR_SHRINEY_GUARD_WINDUP           0x4c106054u  /* attack-windup (bounce target)      */
+#define SPR_SHRINEY_GUARD_LOOP_LINK        0x40106054u  /* first frame of looping-attack chain*/
+#define SPR_SHRINEY_GUARD_LOOP_START       0x2c182010u  /* looping-attack stun-window pose    */
+#define SPR_SHRINEY_GUARD_READY            0x08192250u  /* re-aim pose between slams          */
+#define SPR_SHRINEY_GUARD_SLAM             0x085860d4u  /* slam animation (MoveCallback runs) */
+#define SPR_SHRINEY_GUARD_DEATH            0x0a1820d4u  /* death pose                         */
+/* Animation hashes used by Shriney Guard via Set{AnimationLoopFrame,Sprite Callback}. */
+#define ANIM_SHRINEY_GUARD_SLAM_KEYFRAME   0x01084280u  /* slam keyframe (triggers MoveCallback install) */
+#define ANIM_SHRINEY_GUARD_LOOP_KEYFRAME   0xc00200c9u  /* looping-attack second-loop frame   */
+#define ANIM_SHRINEY_GUARD_FINISHED_CB     0x02421405u  /* anim-finished callback hash        */
+
+/* GLENN YNTIS (GLEN level 2 mini-boss) — shares boss vtable family with Shriney. */
+#define SPR_GLENN_YNTIS_ANIM_A             0x2d688254u  /* GlennYntisIdleAnimState (boss frame A)*/
+#define SPR_GLENN_YNTIS_ANIM_B             0x2b79835du  /* GlennYntisAnimStateB (boss frame B)   */
+#define SPR_GLENN_YNTIS_ANIM_C             0x69588258u  /* GlennYntisAnimStateC (boss frame C)   */
+
 /* ---- Footstep surface variants referenced by the remap table @0x8009d0fc ----
  * modes 5/6 (ELECTRIC/SQUISH) are referenced by the table but absent from the
  * shipped asset-id list (cut/unused). Names cracked 5/5 per row; ids are real

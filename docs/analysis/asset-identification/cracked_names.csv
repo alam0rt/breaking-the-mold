@@ -1,11 +1,11 @@
 id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x00000000,0,9,type500,,uncracked,,,
-0x0005c699,378521,11,sprite,MENU,uncracked,,,VISUAL [HIGH]: Small skull face (MENU)
+0x0005c699,378521,11,sprite,MENU,uncracked,,,
 0x000ac607,706055,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,uncracked,,,
 0x000cc8f8,837880,13,sprite,FOOD;TMPL,uncracked,,,
 0x000f0106,983302,16,type500,,uncracked,,,
 0x00100125,1048869,12,type500,,uncracked,,,
-0x001822d8,1581784,13,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_FOOTSTEP_LEFT_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x001822d8,1581784,13,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
 0x001882e0,1606368,14,audio,BOIL;CAVE;EGGS;EVIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x00248e52,2395730,14,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_RUN_FAST,raw_calchash_fxconv,Klaymen fast-run footstep variant; in g_SoundRemapTable family with FX_KLAY_LAND and FX_KLAY_FOOTSTEP_QUIET
 0x002e2414,3023892,13,sprite,FOOD,uncracked,,,
@@ -14,26 +14,26 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x003c0171,3932529,14,type500,,uncracked,,,
 0x004a981c,4888604,12,sprite,BOIL;CLOU;MOSS,uncracked,,,
 0x004c9138,5017912,12,sprite,CLOU;CRYS;SOAR,uncracked,,,
-0x006b9a6f,7051887,18,sprite,FOOD;SNOW,uncracked,,,VISUAL [HIGH]: Yellow centurion/troop mech enemy (FOOD/SNOW)
+0x006b9a6f,7051887,18,sprite,FOOD;SNOW,uncracked,,,
 0x006e0046,7209030,15,type500,,uncracked,,,
 0x00880c1e,8915998,13,audio,MENU,verified,FX_MENU_PASSWORD,raw_calchash_fxconv,Password digit-press/type sound (PasswordDigitInputHandler line 101730 + PasswordBackspaceHandler line 101780 + EndingCredits line 103646)
 0x00ae0046,11403334,15,type500,,uncracked,,,
 0x00c60046,12976198,12,type500,,uncracked,,,
 0x00ce0610,13501968,11,sprite,CSTL;FOOD;SEVN;TMPL,uncracked,,,
-0x00e2f188,14872968,10,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [visual-user]: Number glyph frames 0-9
+0x00e2f188,14872968,10,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x00e49240,14979648,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_HURT,raw_calchash_brute,KLAY player hurt sound (was wrong-ns candidate BIG_WHITE_DIE)
 0x0101820a,16876042,13,type700,,uncracked,,,wrong-ns(wrap):SHE_HAS_AILS_ITS/combo
-0x0120e27a,18932346,12,audio,BRG1;SOAR,verified,FX_KLAY_FOOTSTEP_RIGHT_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
-0x012484d2,19170514,14,audio,BRG1;SOAR,verified,FX_KLAY_RUN_FAST_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x0120e27a,18932346,12,audio,BRG1;SOAR,uncracked,,,
+0x012484d2,19170514,14,audio,BRG1;SOAR,uncracked,,,
 0x01680261,23593569,13,audio,KLOG,uncracked,,,
 0x01a5b0d3,27635923,12,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x02098010,34177040,10,sprite,TMPL,uncracked,,,VISUAL [HIGH]: Chain link sprite (TMPL)
-0x02102152,34611538,12,audio,BOIL;FOOD,verified,FX_OBJECT_SMOKE,template_attack,level-affinity:BOIL;FOOD; boiler and food-factory smoke FX
-0x0220a173,35692915,11,audio,FOOD,verified,FX_OBJECT_SPLASH,template_attack,level-affinity:FOOD only; food-level liquid splash
-0x022e3442,36582466,17,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Wizard boss cloaked figure (WIZZ)
+0x02098010,34177040,10,sprite,TMPL,uncracked,,,
+0x02102152,34611538,12,audio,BOIL;FOOD,uncracked,,,
+0x0220a173,35692915,11,audio,FOOD,uncracked,,,
+0x022e3442,36582466,17,sprite,WIZZ,uncracked,,,
 0x0239cb33,37342003,15,sprite,HEAD,uncracked,,,
-0x0244655d,38036829,11,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Red ring/halo/donut (WIZZ)
-0x024d704e,38629454,15,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Green tadpole projectile (WIZZ)
+0x0244655d,38036829,11,sprite,WIZZ,uncracked,,,
+0x024d704e,38629454,15,sprite,WIZZ,uncracked,,,
 0x024e981c,38705180,14,sprite,BOIL;CLOU;MOSS,uncracked,,,
 0x02804e67,41963111,14,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x02841e65,42212965,16,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
@@ -41,36 +41,36 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x02a10c60,44108896,15,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x02a48626,44336678,15,audio,FINN,uncracked,,,
 0x02c00e64,46141028,14,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
-0x02e900c0,48824512,13,audio,MENU,uncracked,,,
-0x02ed1470,49091696,15,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Wizard boss variant (WIZZ)
-0x0305a4f5,50701557,14,sprite,MENU,uncracked,,,"VISUAL [HIGH]: Skull face sprite (MENU, 42 frames)"
+0x02e900c0,48824512,13,audio,MENU,verified,FX_MENU_DOOR_OPEN,probe_fx_vocab,Pair with FX_MENU_DOOR_CLOSE (0x21e90ca0); both MENU-only audio; menu UI door open/close sound
+0x02ed1470,49091696,15,sprite,WIZZ,uncracked,,,
+0x0305a4f5,50701557,14,sprite,MENU,uncracked,,,
 0x03ecb851,65845329,11,audio,BOIL,uncracked,,,
-0x04041001,67375105,11,audio,WIZZ,verified,FX_BOSS_WIZARD_TAUNT_3,wide_per_level,level-affinity:WIZZ only; Wizard boss taunt _3 (sister-pair math)
+0x04041001,67375105,11,audio,WIZZ,uncracked,,,
 0x04084011,67649553,8,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x0408c01e,67682334,11,sprite,EVIL;FOOD;MOSS;SOAR,uncracked,,,
 0x040a2110,67772688,11,sprite,FINN,uncracked,,,
 0x0428801e,69763102,13,sprite,EVIL;FOOD;MOSS;SOAR,uncracked,,,
-0x0434ce72,70569586,16,audio,CLOU,verified,FX_KLAY_RUN_FAST_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
-0x0462e0bb,73588923,10,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_FOOTSTEP_RIGHT_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
-0x0478a37a,75015034,15,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_FOOTSTEP_RIGHT_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x0434ce72,70569586,16,audio,CLOU,verified,FX_KLAY_RUN_FAST_SOFT,raw_calchash_fxconv,Cloud-level soft variant of FX_KLAY_RUN_FAST (CLOU is the cloud-walking level)
+0x0462e0bb,73588923,10,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
+0x0478a37a,75015034,15,audio,BOIL;CSTL;TMPL,uncracked,,,
 0x04835000,75714560,11,sprite,RUNN,uncracked,,,
-0x04a68e56,78024278,16,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_RUN_FAST_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
-0x04dce858,81586264,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_QUIET_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x04a68e56,78024278,16,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
+0x04dce858,81586264,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_QUIET_SOFT,raw_calchash_fxconv,Cloud-level soft variant of FX_KLAY_FOOTSTEP_QUIET
 0x052aa082,86679682,14,sprite,EGGS,uncracked,,,
 0x0538a2ea,87597802,18,sprite,EGGS,uncracked,,,
 0x06101db0,101719472,17,sprite,HEAD,uncracked,,,
 0x0628a800,103327744,12,sprite,EGGS,uncracked,,,
 0x069480a0,110395552,13,sprite,RUNN,uncracked,,,
 0x069580a0,110461088,14,sprite,RUNN,uncracked,,,wrong-ns(wrap):SHE_JOE_AMITY_PEN/combo
-0x06e0a824,115386404,11,audio,CAVE;CSTL;EGGS;EVIL;SCIE;WEED,verified,FX_OBJECT_ELEVATOR,template_attack,level-affinity:CAVE;CSTL;EGGS;EVIL;SCIE;WEED (6 levels with elevators)
+0x06e0a824,115386404,11,audio,CAVE;CSTL;EGGS;EVIL;SCIE;WEED,uncracked,,,
 0x0708a4a0,118006944,14,sprite,EGGS,uncracked,,,
-0x08041001,134483969,9,audio,WIZZ,verified,FX_BOSS_WIZARD_TAUNT_2,wide_per_level,level-affinity:WIZZ only; Wizard boss taunt _2 (sister-pair math)
-0x08089081,134779009,9,audio,WIZZ,verified,FX_BOSS_WIZARD_ATTACK,wide_per_level,level-affinity:WIZZ only; Wizard boss attack FX; prior:wrong-ns(wrap):S2_APEX_304/combo
-0x080c8300,135037696,11,sprite,EVIL,uncracked,,,"VISUAL [MED]: Curtain/wall texture (green/blue vertical bars, EVIL/FINN/RUNN)"
+0x08041001,134483969,9,audio,WIZZ,uncracked,,,
+0x08089081,134779009,9,audio,WIZZ,uncracked,,,wrong-ns(wrap):S2_APEX_304/combo
+0x080c8300,135037696,11,sprite,EVIL,uncracked,,,
 0x08148300,135561984,11,sprite,EVIL;FINN;RUNN,uncracked,,,
 0x08148ac2,135563970,14,audio,EGGS,uncracked,,,
 0x08188300,135824128,11,sprite,EVIL;FINN;RUNN,uncracked,,,
-0x08192250,135864912,11,sprite,MEGA,uncracked,,,VISUAL [HIGH]: MEGA boss skeleton with skull-head (MEGA)
+0x08192250,135864912,11,sprite,MEGA,uncracked,,,
 0x081c8302,136086274,13,sprite,EVIL;FINN;RUNN,uncracked,,,
 0x081d8300,136151808,13,sprite,EVIL;FINN;RUNN,uncracked,,,
 0x081e8300,136217344,13,sprite,EVIL;FINN;RUNN,uncracked,,,
@@ -78,26 +78,26 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x082c0536,137102646,15,sprite,EVIL;SCIE,uncracked,,,
 0x082e03d8,137233368,16,sprite,EVIL,uncracked,,,
 0x083488e2,137660642,15,sprite,KLOG,uncracked,,,
-0x085860d4,140009684,9,sprite,MEGA,uncracked,,,wrong-ns(wrap):T_DMG_POWER/combo; VISUAL [HIGH]: MEGA boss skeleton (MEGA)
+0x085860d4,140009684,9,sprite,MEGA,uncracked,,,wrong-ns(wrap):T_DMG_POWER/combo
 0x085c8300,140280576,11,sprite,FINN,uncracked,,,wrong-ns(wrap):MOVE_BIG_OVER/combo
-0x08624580,140658048,11,sprite,BRG1;SOAR,uncracked,,,VISUAL [HIGH]: Small green chevron/triangle pickup
+0x08624580,140658048,11,sprite,BRG1;SOAR,uncracked,,,
 0x086e44c0,141444288,13,audio,EVIL,uncracked,,,
 0x08814c64,142691428,12,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x088c5011,143413265,7,sprite,FINN,uncracked,,,
 0x08b9135c,146346844,16,sprite,GLEN,uncracked,,,
 0x08ba0250,146408016,12,sprite,GLEN,uncracked,,,
-0x08bc8013,146571283,9,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss cluster sprite (KLOG)
-0x08de7215,148795925,9,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Green tadpole projectile variant (WIZZ)
+0x08bc8013,146571283,9,sprite,KLOG,uncracked,,,
+0x08de7215,148795925,9,sprite,WIZZ,uncracked,,,
 0x092b8480,153846912,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x093080c8,154173640,13,sprite,BRG1;CAVE;CRYS;SNOW;SOAR,uncracked,,,
-0x09382152,154673490,13,sprite,MEGA,uncracked,,,VISUAL [HIGH]: MEGA boss skeleton (MEGA)
+0x09382152,154673490,13,sprite,MEGA,uncracked,,,
 0x09406d8a,155217290,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,uncracked,,,
 0x09993072,161034354,13,sprite,MEGA,uncracked,,,
 0x09ce0610,164496912,11,sprite,CSTL;FOOD;SEVN;TMPL,uncracked,,,
 0x0a08c490,168346768,9,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
-0x0a1820d4,169353428,12,sprite,MEGA,uncracked,,,VISUAL [HIGH]: MEGA boss body (MEGA)
+0x0a1820d4,169353428,12,sprite,MEGA,uncracked,,,
 0x0a3a4051,171589713,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x0a409040,172003392,9,audio,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ,verified,FX_OBJECT_WILLIE,attack_all_vocab_d4,level-affinity:10 levels; entity-WILLIE confirmed via sprite sister-pair
+0x0a409040,172003392,9,audio,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x0a921e2c,177348140,17,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x0aa18900,178358528,11,sprite,KLOG,uncracked,,,
 0x0aabc010,179027984,9,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
@@ -105,70 +105,70 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x0ad0f813,181467155,6,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,PAUSED,anchor,
 0x0b0811bb,185078203,15,sprite,HEAD,uncracked,,,
 0x0b081dbb,185081275,17,sprite,HEAD,uncracked,,,
-0x0b2084d0,186680528,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [visual-confirmed]: Klaymen running (variant)
+0x0b2084d0,186680528,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x0b290ba2,187239330,19,sprite,HEAD,uncracked,,,
 0x0bbb70ac,196833452,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL;WEED,uncracked,,,
 0x0c01c014,201441300,8,sprite,GLEN,uncracked,,,
 0x0c3082c3,204505795,13,audio,KLOG,uncracked,,,
-0x0c34aa22,204778018,14,sprite,KLOG,uncracked,,,"VISUAL [HIGH]: Klogg-ball projectile (yellow ball, KLOG)"
+0x0c34aa22,204778018,14,sprite,KLOG,uncracked,,,
 0x0c78005c,209191004,13,sprite,GLEN,uncracked,,,
 0x0cce0610,214828560,11,sprite,CSTL;FOOD;SEVN;TMPL,uncracked,,,
-0x0e041001,235147265,11,audio,WIZZ,verified,FX_BOSS_WIZARD_TAUNT_1,wide_per_level,level-affinity:WIZZ only; Wizard boss taunt _1 (sister-pair math)
+0x0e041001,235147265,11,audio,WIZZ,uncracked,,,
 0x0e0ac230,235586096,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x0e3889be,238586302,18,sprite,HEAD,uncracked,,,
 0x1000c042,268484674,10,audio,BOIL;BRG1;CRYS;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL,verified,FX_SKULL_FOOTSTEP_LEFT,raw_brute_audio_fx,
 0x10031015,268636181,12,type700,,uncracked,,,
 0x10050221,268763681,13,type700,,uncracked,,,wrong-ns(wrap):SHE_THE_AGE_DESK/combo
-0x10057441,268792897,12,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Blue blob projectile (WIZZ)
+0x10057441,268792897,12,sprite,WIZZ,uncracked,,,
 0x10094096,269041814,13,sprite,MENU,uncracked,,,
 0x1063bb49,274971465,15,audio,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x10882010,277356560,8,sprite,EVIL,uncracked,,,
-0x10904443,277890115,11,audio,CRYS,verified,FX_AMBIENT_CRYSTAL,template_attack,level-affinity:CRYS (Crystal); crystal ambient hum; prior:wrong-ns(wrap):FLYING_P1_960/combo
+0x10904443,277890115,11,audio,CRYS,uncracked,,,wrong-ns(wrap):FLYING_P1_960/combo
 0x10965446,278287430,16,audio,FOOD,uncracked,,,
-0x10b85810,280516624,12,sprite,FINN,uncracked,,,"VISUAL [HIGH]: FINN player directional sprite (Klaymen-flame, frame/dir 1)"
-0x10b91810,280565776,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 2)
-0x10b9181c,280565788,16,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 3)
-0x10b94810,280578064,12,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 4)
-0x10b9481c,280578076,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 5)
-0x10b95010,280580112,12,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 6)
-0x10b9501c,280580124,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 7)
-0x10b95a10,280582672,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 8)
-0x10b95a1c,280582684,16,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 9)
-0x10b95c10,280583184,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir A)
-0x10b95c1c,280583196,16,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir B)
-0x10b97810,280590352,12,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir C)
-0x10b9781c,280590364,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir D)
-0x10b9d810,280614928,12,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir E)
-0x10b9d81c,280614940,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir F)
-0x10bb5810,280713232,14,sprite,FINN,uncracked,,,VISUAL [HIGH]: FINN player directional sprite (frame/dir 16)
-0x10f0e983,284223875,10,audio,TMPL,verified,FX_AMBIENT_WATERFALL_LARGE,template_attack,level-affinity:TMPL (Temple); ambient waterfall
+0x10b85810,280516624,12,sprite,FINN,uncracked,,,
+0x10b91810,280565776,14,sprite,FINN,uncracked,,,
+0x10b9181c,280565788,16,sprite,FINN,uncracked,,,
+0x10b94810,280578064,12,sprite,FINN,uncracked,,,
+0x10b9481c,280578076,14,sprite,FINN,uncracked,,,
+0x10b95010,280580112,12,sprite,FINN,uncracked,,,
+0x10b9501c,280580124,14,sprite,FINN,uncracked,,,
+0x10b95a10,280582672,14,sprite,FINN,uncracked,,,
+0x10b95a1c,280582684,16,sprite,FINN,uncracked,,,
+0x10b95c10,280583184,14,sprite,FINN,uncracked,,,
+0x10b95c1c,280583196,16,sprite,FINN,uncracked,,,
+0x10b97810,280590352,12,sprite,FINN,uncracked,,,
+0x10b9781c,280590364,14,sprite,FINN,uncracked,,,
+0x10b9d810,280614928,12,sprite,FINN,uncracked,,,
+0x10b9d81c,280614940,14,sprite,FINN,uncracked,,,
+0x10bb5810,280713232,14,sprite,FINN,uncracked,,,
+0x10f0e983,284223875,10,audio,TMPL,uncracked,,,
 0x112ae088,288022664,13,sprite,EGGS,uncracked,,,
 0x11eac4c0,300598464,13,audio,EVIL,uncracked,,,
 0x12308128,305168680,15,sprite,RUNN,uncracked,,,
 0x12800031,310378545,9,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW,uncracked,,,wrong-ns(wrap):ARAL_RIGHT/combo
-0x146ce002,342679554,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_DIE_EXPLODE,attack_all_vocab_d4,level-affinity:24 levels (universal); klay death FX
+0x146ce002,342679554,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1546b710,356955920,14,audio,PHRO;SCIE,uncracked,,,
-0x168254b5,377640117,14,sprite,FINN,uncracked,,,"VISUAL [HIGH]: Player projectile (green ring/oval, FINN)"
-0x181c3854,404502612,14,sprite,WIZZ,uncracked,,,wrong-ns(wrap):WAYPOINT_PHRO_20/combo; VISUAL [HIGH]: Skull-bar weapon (WIZZ)
+0x168254b5,377640117,14,sprite,FINN,uncracked,,,
+0x181c3854,404502612,14,sprite,WIZZ,uncracked,,,wrong-ns(wrap):WAYPOINT_PHRO_20/combo
 0x18248010,405045264,9,sprite,KLOG,uncracked,,,
-0x1828e640,405333568,11,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_LAND_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x1828e640,405333568,11,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
 0x18298210,405373456,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1847c001,407355393,8,type700,,uncracked,,,
 0x18ce0610,416155152,11,sprite,CSTL;FOOD;SEVN;TMPL,uncracked,,,
-0x18e88310,417891088,9,sprite,GLEN,uncracked,,,VISUAL [HIGH]: Glenn Yntis boss death animation frame 2
-0x18e88510,417891600,9,sprite,GLEN,uncracked,,,VISUAL [HIGH]: Glenn Yntis boss death animation frame 3
-0x18e88910,417892624,9,sprite,GLEN,uncracked,,,VISUAL [HIGH]: Glenn Yntis boss death animation frame 4
+0x18e88310,417891088,9,sprite,GLEN,uncracked,,,
+0x18e88510,417891600,9,sprite,GLEN,uncracked,,,
+0x18e88910,417892624,9,sprite,GLEN,uncracked,,,
 0x18e8c704,417908484,11,sprite,GLEN,uncracked,,,
-0x193ca112,423403794,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss cluster (KLOG)
+0x193ca112,423403794,13,sprite,KLOG,uncracked,,,
 0x1a202d81,438316417,13,sprite,RUNN,uncracked,,,
 0x1a28c11a,438878490,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1a2ab594,439006612,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1a2c8516,439125270,15,sprite,KLOG,uncracked,,,
 0x1a3109b2,439421362,17,sprite,HEAD,uncracked,,,
-0x1b280858,455608408,15,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg shrine/tower with player on top (KLOG)
-0x1b280c33,455609395,15,sprite,KLOG,uncracked,,,"VISUAL [HIGH]: Klogg shrine with player (KLOG, variant)"
+0x1b280858,455608408,15,sprite,KLOG,uncracked,,,
+0x1b280c33,455609395,15,sprite,KLOG,uncracked,,,
 0x1b301085,456134789,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x1b610064,459341924,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_OBJECT_PHOENIX_FLY,attack_all_vocab_d4,level-affinity:19 levels (universal); OBJECT_PHOENIX entity
+0x1b610064,459341924,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1c395196,473518486,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1c3aa013,473604115,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x1c8c2437,478946359,12,sprite,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
@@ -184,35 +184,35 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x204e44c0,542000320,12,audio,EVIL,uncracked,,,
 0x205e40c2,543047874,13,audio,EVIL,uncracked,,,
 0x21229c5c,555916380,15,sprite,FOOD;SNOW,uncracked,,,
-0x212a9c2d,556440621,16,sprite,TMPL,uncracked,,,VISUAL [HIGH]: Brown alien sloth/bear creature (TMPL)
-0x21842018,562307096,8,sprite,FINN,uncracked,,,wrong-ns(wrap):END_05_SET/combo; VISUAL [HIGH]: Klaymen base/player sprite (FINN)
+0x212a9c2d,556440621,16,sprite,TMPL,uncracked,,,
+0x21842018,562307096,8,sprite,FINN,uncracked,,,wrong-ns(wrap):END_05_SET/combo
 0x21a81d54,564665684,15,sprite,FOOD;SNOW,uncracked,,,
-0x21e90ca0,568921248,14,audio,MENU,uncracked,,,
+0x21e90ca0,568921248,14,audio,MENU,verified,FX_MENU_DOOR_CLOSE,probe_fx_vocab,Pair with FX_MENU_DOOR_OPEN (0x02e900c0); both MENU-only audio; menu UI door open/close sound
 0x222222d8,572662488,13,sprite,EVIL,uncracked,,,
 0x2222b64a,572700234,15,audio,CSTL;MOSS,uncracked,,,
 0x222cb0e2,573354210,15,audio,BOIL;CAVE;CLOU;CRYS;CSTL;EGGS;FOOD;GLID;MOSS;PHRO;SEVN;SNOW;TMPL;WEED,uncracked,,,
 0x222d9098,573411480,14,sprite,EVIL;SCIE,uncracked,,,
-0x22a4aa42,581216834,12,audio,BRG1;CAVE;CRYS;SNOW;SOAR,verified,FX_OBJECT_HAMSTER,attack_all_vocab_d4,level-affinity:5 levels; entity-HAMSTER confirmed via sprite sister-pair
+0x22a4aa42,581216834,12,audio,BRG1;CAVE;CRYS;SNOW;SOAR,uncracked,,,
 0x23683294,594031252,13,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x24002913,603990291,9,sprite,FOOD;SNOW,uncracked,,,wrong-ns(wrap):SAGE_019_TO/combo
-0x246166fa,610363130,14,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FOOTSTEP_RIGHT_NORMAL,template_attack,level-affinity:21 levels (universal); klay footstep
-0x2470e0f2,611377394,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_RIGHT_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x246166fa,610363130,14,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x2470e0f2,611377394,10,audio,CLOU,verified,FX_KLAY_FOOTSTEP_RIGHT_SOFT,raw_calchash_fxconv,Cloud-level soft variant of FX_KLAY_FOOTSTEP_RIGHT
 0x2524e089,623173769,10,sprite,EGGS,uncracked,,,
-0x25d2c8d8,634570968,11,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_FOOTSTEP_QUIET_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x25d2c8d8,634570968,11,audio,BOIL;CSTL;TMPL,uncracked,,,
 0x262e0319,640549657,15,sprite,EVIL,uncracked,,,
 0x282b8491,673940625,10,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x28a0c119,681623833,5,sprite,MENU,uncracked,,,wrong-ns(wrap):2_R_ARE/combo; VISUAL [HIGH]: Three crowned ducklings/characters (MENU)
-0x28c080df,683704543,7,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,"wrong-ns(wrap):RAT_ADZE/combo; VISUAL [HIGH]: DEMO text stamp (renders the word ""DEMO"" on screen)"
+0x28a0c119,681623833,5,sprite,MENU,uncracked,,,wrong-ns(wrap):2_R_ARE/combo
+0x28c080df,683704543,7,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,wrong-ns(wrap):RAT_ADZE/combo
 0x28ce0610,684590608,9,sprite,CSTL;FOOD;SEVN;TMPL,uncracked,,,
 0x292e8480,690914432,13,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x29808408,696288264,8,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_EXPLODE_NORMAL,template_attack,level-affinity:22 levels (universal); generic explosion
+0x29808408,696288264,8,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x29c0e211,700506641,2,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,NO,anchor,
-0x2a6e0410,711853072,11,sprite,EGGS,uncracked,,,"VISUAL [HIGH]: Klaymen hands/arms reaching (EGGS, localized)"
+0x2a6e0410,711853072,11,sprite,EGGS,uncracked,,,
 0x2ad0f011,718336017,3,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,YES,anchor,
-0x2b2ca36b,724345707,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,verified,FX_OBJECT_CHECKPOINT,template_attack,level-affinity:16 levels (universal); checkpoint flag activation
-0x2b3889b2,725125554,15,sprite,HEAD,uncracked,,,"VISUAL [HIGH]: Joe-Head-Joe boss face (dreadlocks/braids, HEAD)"
+0x2b2ca36b,724345707,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,uncracked,,,
+0x2b3889b2,725125554,15,sprite,HEAD,uncracked,,,
 0x2b79835d,729383773,14,sprite,GLEN,uncracked,,,
-0x2c182010,739778576,8,sprite,MEGA,uncracked,,,VISUAL [HIGH]: MEGA boss body (MEGA)
+0x2c182010,739778576,8,sprite,MEGA,uncracked,,,
 0x2cda4604,752502276,11,sprite,BRG1;PHRO;SOAR,uncracked,,,
 0x2d688254,761823828,11,sprite,GLEN,uncracked,,,
 0x2e809804,780179460,10,sprite,KLOG,uncracked,,,
@@ -225,15 +225,15 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x3080840d,813728781,9,sprite,MENU,uncracked,,,wrong-ns(wrap):OR_062_MAIN/combo
 0x30808e0d,813731341,11,sprite,MENU,uncracked,,,wrong-ns(wrap):2_FACING_PART/combo
 0x3099991b,815372571,13,sprite,MENU,uncracked,,,
-0x30a0c119,815841561,7,sprite,MENU,uncracked,,,"VISUAL [HIGH]: Three crowned ducklings (MENU, 76 frames)"
+0x30a0c119,815841561,7,sprite,MENU,uncracked,,,
 0x31190002,823721986,14,type700,,uncracked,,,wrong-ns(wrap):SHE_EASY_FISH_ALL/combo
 0x3128adf0,824749552,15,audio,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x323ac9be,842713534,18,sprite,HEAD,uncracked,,,
-0x326e0410,846070800,13,sprite,FOOD;TMPL,uncracked,,,VISUAL [MED]: Localized sprite (FOOD/TMPL) - sister of 0x2a6e0410
-0x33808e1b,864063003,12,sprite,MENU,uncracked,,,VISUAL [visual-user]: Menu cursor animation frame
+0x326e0410,846070800,13,sprite,FOOD;TMPL,uncracked,,,
+0x33808e1b,864063003,12,sprite,MENU,uncracked,,,
 0x34014841,872499265,11,audio,KLOG;RUNN,uncracked,,,
 0x344210b1,876744881,11,sprite,FINN,uncracked,,,
-0x35289fae,891854766,22,sprite,TMPL,uncracked,,,VISUAL [HIGH]: Brown alien creature variant (TMPL)
+0x35289fae,891854766,22,sprite,TMPL,uncracked,,,
 0x3838801a,943226906,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x38a0c119,950059289,6,sprite,MENU,uncracked,,,wrong-ns(wrap):R3_F_GEM/combo
 0x392cb014,959229972,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
@@ -252,24 +252,24 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x400c991d,1074567453,14,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x400c9a1d,1074567709,14,sprite,PHRO;SCIE,uncracked,,,
 0x40106054,1074815060,10,sprite,MEGA,uncracked,,,
-0x401106da,1074857690,17,audio,BOIL;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,verified,FX_KLAY_FOOTSTEP_LEFT_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x401106da,1074857690,17,audio,BOIL;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,verified,FX_KLAY_FOOTSTEP_LEFT_SOFT,raw_calchash_fxconv,Soft-surface variant of FX_KLAY_FOOTSTEP_LEFT (cloud-like surfaces across multiple levels)
 0x40110e26,1074859558,18,audio,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x40189a1d,1075354141,14,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
-0x402044c9,1075856585,13,audio,MEGA,verified,FX_BOSS_MEGA_TURN,attack_all_vocab_d4,level-affinity:MEGA only; MEGA boss state change
-0x40400270,1077936752,11,audio,BRG1;SOAR,verified,FX_KLAY_FOOTSTEP_LEFT_WOOD,footstep_remap_table,"COLLISION: also =calcHash(FX_FINN_DIE_4) (prior brute guess, likely false-pos); footstep wins on ROM table 0x8009d0fc mode1/WOOD/slot0 + 5/5 row coherence"
+0x402044c9,1075856585,13,audio,MEGA,uncracked,,,
+0x40400270,1077936752,11,audio,BRG1;SOAR,verified,FX_FINN_DIE_4,raw_calchash_brute,FINN boss death variant 4 (was wrong-ns candidate TO_GROUND_SNO)
 0x40489938,1078499640,13,sprite,CLOU;CRYS;SOAR,uncracked,,,
 0x404c5919,1078745369,12,sprite,SCIE;SNOW,uncracked,,,
 0x407801d0,1081606608,14,sprite,GLEN,uncracked,,,
-0x407801dc,1081606620,16,sprite,GLEN,uncracked,,,VISUAL [HIGH]: Spider robot (GLEN boss area)
+0x407801dc,1081606620,16,sprite,GLEN,uncracked,,,
 0x40784034,1081622580,12,audio,RUNN,uncracked,,,
-0x40815801,1082218497,10,audio,WIZZ,verified,FX_BOSS_WIZARD_HIT,wide_per_level,level-affinity:WIZZ only; Wizard boss hit FX
+0x40815801,1082218497,10,audio,WIZZ,uncracked,,,
 0x40864668,1082541672,15,audio,BRG1,verified,FX_PICKUP_GROW,raw_calchash_fxconv,Scale Reset / Grow collectible pickup - InitScaleResetCollectible (line 29038); CollectibleScaledTickCallback plays at 29126
-0x408a1c10,1082792976,13,sprite,CAVE,uncracked,,,VISUAL [MED]: Yellow disc/pickup (CAVE level)
+0x408a1c10,1082792976,13,sprite,CAVE,uncracked,,,
 0x408a2c10,1082797072,11,sprite,FOOD,uncracked,,,
 0x408a6461,1082811489,11,audio,BOIL;CLOU;TMPL,verified,FX_PICKUP_1970,raw_calchash_fxconv,1970 hamster icon pickup (Init1970IconEntity); paired with FX_PICKUP_1970_03 for 3rd hamster
 0x40b18011,1085374481,9,sprite,MENU,uncracked,,,
-0x40b28011,1085440017,9,sprite,MENU,uncracked,,,"VISUAL [HIGH]: Klaymen with arms up holding object (MENU, yellow garb)"
-0x40b48011,1085571089,9,sprite,MENU,uncracked,,,VISUAL [HIGH]: Klaymen with arms up (MENU variant)
+0x40b28011,1085440017,9,sprite,MENU,uncracked,,,
+0x40b48011,1085571089,9,sprite,MENU,uncracked,,,
 0x40c0d0e4,1086378212,11,audio,CAVE;EGGS;GLID;WEED,uncracked,,,
 0x40c21c10,1086462992,11,sprite,BRG1,uncracked,,,
 0x40c22c10,1086467088,9,sprite,SCIE,uncracked,,,wrong-ns(wrap):S_ROOM_POST/combo
@@ -284,16 +284,16 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x410800f9,1091043577,14,sprite,FOOD;TMPL,uncracked,,,
 0x410808f9,1091045625,15,sprite,FOOD;TMPL,uncracked,,,
 0x410818f9,1091049721,16,sprite,FOOD;TMPL,uncracked,,,
-0x412e8311,1093567249,14,audio,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,verified,FX_KLAY_UNIVERSE_ENEMA,attack_all_vocab_d4,level-affinity:13 levels; powerup FX (UNIVERSE_ENEMA is known item)
+0x412e8311,1093567249,14,audio,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x4148c374,1095287668,13,audio,RUNN,uncracked,,,
 0x41ca1c10,1103764496,13,sprite,CRYS,uncracked,,,
 0x421586c2,1108707010,18,audio,EGGS;GLEN,uncracked,,,
-0x421d1000,1109200896,16,audio,MENU,verified,FX_MENU_SKULL_SCREAM,attack_all_vocab_d4,level-affinity:MENU only; menu sting
+0x421d1000,1109200896,16,audio,MENU,uncracked,,,
 0x422a0225,1110049317,16,sprite,CLOU,uncracked,,,
 0x424129a1,1111566753,13,audio,WIZZ,uncracked,,,
 0x42464cc8,1111903432,16,audio,CRYS;CSTL;PHRO;SNOW,uncracked,,,
-0x424d1840,1112348736,16,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Wizard boss (WIZZ variant)
-0x42590440,1113130048,15,audio,MENU,verified,FX_MENU_WILLIE_EXIT,template_attack,level-affinity:MENU only; willie powerup menu exit THERE IS ALSO FX_MENU_WILLIE_ENTER
+0x424d1840,1112348736,16,sprite,WIZZ,uncracked,,,
+0x42590440,1113130048,15,audio,MENU,uncracked,,,
 0x425a399c,1113209244,17,sprite,BOIL;CLOU;MOSS,uncracked,,,
 0x4260c8b5,1113639093,11,sprite,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ,uncracked,,,
 0x428254e2,1115837666,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,verified,FX_PICKUP_ONE_UP,raw_calchash_fxconv,Extra Life collectible pickup jingle - CollectibleExtraLifeTickCallback line 28480 ('life collect jingle')
@@ -307,93 +307,93 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x44c26454,1153590356,10,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;MOSS;SNOW;TMPL,verified,FX_PICKUP_PHOENIX,raw_calchash_fxconv,Phoenix Hand collectible pickup (projectile ammo) - CollectiblePhoenixHandTickCallback line 28560; sets ranged-attack count via AddPhoenixHands
 0x44ca1c10,1154096144,13,sprite,TMPL,uncracked,,,
 0x44d4c8d8,1155908824,12,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FOOTSTEP_QUIET,raw_calchash_fxconv,Klaymen quiet-walk footstep; in g_SoundRemapTable family with FX_KLAY_LAND and FX_KLAY_RUN_FAST
-0x44d6c8cd,1154926797,14,audio,BRG1;SOAR,verified,FX_KLAY_FOOTSTEP_QUIET_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x44d6c8cd,1154926797,14,audio,BRG1;SOAR,uncracked,,,
 0x45310a04,1160841732,18,audio,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x458b0320,1166738208,17,sprite,BRG1;SOAR,uncracked,,,
-0x46269090,1176932496,15,sprite,WIZZ,uncracked,,,"VISUAL [HIGH]: Klaymen with arms up (WIZZ, localized)"
+0x46269090,1176932496,15,sprite,WIZZ,uncracked,,,
 0x462c6040,1177313344,14,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,
-0x46346040,1177837632,14,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,verified,FX_PLAYER_SWIM_PRE,template_attack,level-affinity:10 levels (mostly aquatic); swim pre-roll
+0x46346040,1177837632,14,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,
 0x46386040,1178099776,14,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,
 0x463e6040,1178492992,16,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,
-0x48017101,1208054017,9,audio,WIZZ,verified,FX_BOSS_WIZARD_BEAM,wide_per_level,level-affinity:WIZZ only; Wizard boss beam projectile; prior:wrong-ns(wrap):BAR_TRY_YOU/combo
+0x48017101,1208054017,9,audio,WIZZ,uncracked,,,wrong-ns(wrap):BAR_TRY_YOU/combo
 0x48204012,1210073106,9,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x48209640,1210095168,13,audio,KLOG,verified,FX_BOSS_KLOGG_FIRE_3,template_attack,level-affinity:KLOG only; FIRE_1/FIRE_2/FIRE_3 numbered sequence
-0x4824c0c5,1210368197,11,audio,MEGA,verified,FX_BOSS_MEGA_SPIT,template_attack,level-affinity:MEGA only; MEGA boss projectile spit (sibling of FX_BOSS_MEGA_TURN/IDLE/DIE)
-0x486002db,1214251739,12,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_FOOTSTEP_LEFT_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x48209640,1210095168,13,audio,KLOG,uncracked,,,
+0x4824c0c5,1210368197,11,audio,MEGA,uncracked,,,
+0x486002db,1214251739,12,audio,BOIL;CSTL;TMPL,uncracked,,,
 0x48608484,1214284932,11,sprite,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ,uncracked,,,
 0x4860c074,1214300276,9,audio,RUNN,uncracked,,,
-0x486492c4,1214550724,14,audio,KLOG,verified,FX_BOSS_KLOGG_IDLE,attack_all_vocab_d4,level-affinity:KLOG only; KLOGG boss idle
+0x486492c4,1214550724,14,audio,KLOG,uncracked,,,
 0x48ca1c10,1221205008,11,sprite,CAVE;CRYS,uncracked,,,
 0x48d81135,1222119733,11,sprite,GLEN,uncracked,,,
 0x48f843d4,1224229844,13,sprite,GLEN,uncracked,,,
 0x49289c14,1227398164,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x492c8430,1227654192,13,sprite,WIZZ,uncracked,,,"VISUAL [HIGH]: Wizard boss main sprite (WIZZ, localized)"
-0x49609640,1231066688,13,audio,KLOG,verified,FX_BOSS_KLOGG_FIRE_1,template_attack,level-affinity:KLOG only; FIRE_1/FIRE_2/FIRE_3 numbered sequence
-0x49a09640,1235260992,13,audio,KLOG,verified,FX_BOSS_KLOGG_FIRE_2,template_attack,level-affinity:KLOG only; FIRE_1/FIRE_2/FIRE_3 numbered sequence
-0x4a1ea052,1243521106,13,sprite,GLEN,uncracked,,,"VISUAL [HIGH]: Spider robot variant (GLEN, localized)"
-0x4a3ea110,1245618448,13,sprite,MENU,uncracked,,,VISUAL [HIGH]: Menu door reveal animation (door opens to show monkey)
-0x4a4ec094,1246675092,11,sprite,GLEN,uncracked,,,"VISUAL [HIGH]: Spider robot variant (GLEN, localized)"
+0x492c8430,1227654192,13,sprite,WIZZ,uncracked,,,
+0x49609640,1231066688,13,audio,KLOG,uncracked,,,
+0x49a09640,1235260992,13,audio,KLOG,uncracked,,,
+0x4a1ea052,1243521106,13,sprite,GLEN,uncracked,,,
+0x4a3ea110,1245618448,13,sprite,MENU,uncracked,,,
+0x4a4ec094,1246675092,11,sprite,GLEN,uncracked,,,
 0x4a60ca40,1247886912,9,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_JUMP,raw_calchash_brute,KLAY player jump sound
-0x4a806042,1249927234,9,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,verified,FX_PICKUP_OBJECT,attack_all_vocab_d4,level-affinity:20 levels (universal); PICKUP family prefix
-0x4aee0118,1257111832,13,sprite,MEGA,uncracked,,,VISUAL [HIGH]: MEGA boss sprite (localized)
-0x4baf8200,1269793280,15,sprite,MEGA,uncracked,,,VISUAL [HIGH]: WIZZ boss sprite (localized)
-0x4c02d240,1275253312,12,audio,KLOG,verified,FX_BOSS_KLOGG_HIT_1,template_attack,level-affinity:KLOG only; HIT/HIT_1/HIT_2/HIT_3 numbered sequence
-0x4c106054,1276141652,10,sprite,MEGA,uncracked,,,VISUAL [HIGH]: Large skeleton boss / Shriney Guard variant (MEGA)
-0x4c22d240,1277350464,13,audio,KLOG,verified,FX_BOSS_KLOGG_HIT,attack_all_vocab_d4,level-affinity:KLOG only; KLOGG boss base HIT
-0x4c2a8850,1277855824,13,sprite,WIZZ,uncracked,,,"VISUAL [HIGH]: Green tadpole projectile (WIZZ, localized)"
-0x4c60f249,1281421897,10,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x4c62d240,1281544768,12,audio,KLOG,verified,FX_BOSS_KLOGG_HIT_2,template_attack,level-affinity:KLOG only; HIT/HIT_1/HIT_2/HIT_3 numbered sequence
-0x4ca2d240,1285739072,12,audio,KLOG,verified,FX_BOSS_KLOGG_HIT_3,template_attack,level-affinity:KLOG only; HIT/HIT_1/HIT_2/HIT_3 numbered sequence
-0x4cddccd8,1289604312,14,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,verified,FX_KLAY_FOOTSTEP_QUIET_ECHO,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
-0x4d09d01c,1292488732,13,sprite,GLEN,uncracked,,,VISUAL [MED]: Red juice/potion bottle (GLEN)
+0x4a806042,1249927234,9,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,uncracked,,,
+0x4aee0118,1257111832,13,sprite,MEGA,uncracked,,,
+0x4baf8200,1269793280,15,sprite,MEGA,uncracked,,,
+0x4c02d240,1275253312,12,audio,KLOG,uncracked,,,
+0x4c106054,1276141652,10,sprite,MEGA,uncracked,,,
+0x4c22d240,1277350464,13,audio,KLOG,uncracked,,,
+0x4c2a8850,1277855824,13,sprite,WIZZ,uncracked,,,
+0x4c60f249,1281421897,10,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_BUTTON_UNPAUSE,fn_context_PauseGameWithFadeOut,Pause-menu fade-out (unpause/resume) sound; sister to FX_BUTTON_PAUSE; played by PauseGameWithFadeOut before HidePauseMenuHUD
+0x4c62d240,1281544768,12,audio,KLOG,uncracked,,,
+0x4ca2d240,1285739072,12,audio,KLOG,uncracked,,,
+0x4cddccd8,1289604312,14,audio,BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;MEGA;PHRO;SCIE;TMPL,uncracked,,,
+0x4d09d01c,1292488732,13,sprite,GLEN,uncracked,,,
 0x4e05b540,1308996928,15,anim,,uncracked,,,
 0x50008340,1342210880,13,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FART,raw_calchash_brute,KLAY player fart sound (signature Skullmonkeys gag)
-0x502141c3,1344356803,15,audio,MEGA,verified,FX_BOSS_MEGA_ROLL,wide_per_level,level-affinity:MEGA only; MEGA boss roll attack (sibling of MEGA_TURN/SPIT/IDLE)
+0x502141c3,1344356803,15,audio,MEGA,uncracked,,,
 0x5024100c,1344540684,16,type700,,uncracked,,,
-0x502840c3,1344815299,14,audio,HEAD;MEGA,verified,FX_BOSS_MEGA_DIE,attack_all_vocab_d4,level-affinity:HEAD;MEGA (boss only); MEGA boss death
+0x502840c3,1344815299,14,audio,HEAD;MEGA,uncracked,,,
 0x50408b61,1346407265,13,audio,EVIL;GLEN;SCIE,uncracked,,,
 0x50412804,1346447364,12,type700,,uncracked,,,
-0x5050c643,1347470915,12,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_LAND_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x5050c643,1347470915,12,audio,BOIL;CSTL;TMPL,uncracked,,,
 0x506e8654,1349420628,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x507883c3,1350075331,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MOSS;SEVN;SNOW;SOAR;WEED;WIZZ,verified,FX_KLAY_DIE_FALL,raw_calchash_fxconv,Klaymen death-by-falling sound across all gameplay levels
 0x50f08207,1357939207,12,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_HIT_HEAD,raw_calchash_fxconv,Klaymen ceiling-bump sound when jumping up into a ceiling (PlayerCallback_FallingPhysicsMain land-on-ceiling branch)
 0x5101c047,1359069255,13,audio,GLEN,uncracked,,,
 0x51200640,1361053248,16,audio,FOOD,verified,FX_SKULL_FIRE_02,raw_calchash_brute,SKULL projectile fire variant
-0x512061c1,1361076673,13,audio,MEGA,verified,FX_BOSS_MEGA_IDLE,attack_all_vocab_d4,level-affinity:MEGA only; MEGA boss idle; prior:wrong-ns(wrap):TYPE_JOE_CHOOSE/combo
-0x512c8430,1361871920,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Monkey/enemy character bank - localized sister
+0x512061c1,1361076673,13,audio,MEGA,uncracked,,,wrong-ns(wrap):TYPE_JOE_CHOOSE/combo
+0x512c8430,1361871920,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x518b11b2,1368068530,18,sprite,FOOD,uncracked,,,
 0x51910816,1368459286,15,audio,GLID;SCIE;SOAR;TMPL,uncracked,,,wrong-ns(wrap):SHE_FAR_HAND_ANZUS/combo
 0x52186e1c,1377332764,16,sprite,FOOD,uncracked,,,
 0x5238cd10,1379454224,15,sprite,RUNN,uncracked,,,
-0x523ea110,1379836176,15,sprite,EGGS,uncracked,,,"VISUAL [HIGH]: Klaymen arms reaching (EGGS, localized)"
-0x524ec094,1380892820,13,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Common primary character bank (Klaymen) - localized
+0x523ea110,1379836176,15,sprite,EGGS,uncracked,,,
+0x524ec094,1380892820,13,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x52a08394,1386251156,14,sprite,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,uncracked,,,
-0x52ee0118,1391329560,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: MEGA boss bank (localized)
-0x53209c1c,1394646044,17,sprite,FOOD;SNOW,uncracked,,,VISUAL [HIGH]: Yellow centurion mech (FOOD/SNOW sister)
-0x53608b64,1398836068,18,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_SHOOT_NORMAL,template_attack,level-affinity:22 levels (universal); klay shoot FX
-0x53af8200,1404011008,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,"VISUAL [HIGH]: Yellow centurion mech (FOOD/SNOW, localized sister)"
-0x542a8850,1412073552,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Monkey/enemy character bank - localized
+0x52ee0118,1391329560,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x53209c1c,1394646044,17,sprite,FOOD;SNOW,uncracked,,,
+0x53608b64,1398836068,18,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x53af8200,1404011008,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x542a8850,1412073552,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x54608016,1415610390,12,sprite,BOIL;CAVE;EVIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
-0x563ba142,1446748482,19,audio,GLID;SCIE;SOAR;TMPL,verified,FX_OBJECT_GLIDEY_BIRD,attack_all_vocab_d4,level-affinity:GLID;SCIE;SOAR;TMPL (fly levels); GLIDEY entity
+0x563ba142,1446748482,19,audio,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x56a1c2c0,1453441728,15,audio,GLEN,uncracked,,,
-0x5821c242,1478607426,13,audio,CLOU,verified,FX_KLAY_LAND_SOFT,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x5821c242,1478607426,13,audio,CLOU,verified,FX_KLAY_LAND_SOFT,raw_calchash_fxconv,Klaymen soft cloud landing sound (CLOU level)
 0x5822c080,1478672512,11,sprite,TMPL,uncracked,,,
 0x5838cc16,1480117270,14,sprite,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
 0x5860c640,1482737216,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_LAND,raw_calchash_brute,Klaymen jump-land sound; ScummVM anchor (Neverhood::Klaymen::hmLandOnFeet+hmJumpToGrabRelease)
-0x5862f614,1482880532,11,audio,KLOG,verified,FX_BOSS_KLOGG_EXPLOSION,template_attack,level-affinity:KLOG only; KLOGG boss explosion FX
-0x5870c6e8,1483785960,15,audio,BRG1;SOAR,verified,FX_KLAY_LAND_WOOD,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x5862f614,1482880532,11,audio,KLOG,uncracked,,,
+0x5870c6e8,1483785960,15,audio,BRG1;SOAR,uncracked,,,
 0x5900c41e,1493222430,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,scummvm_anchor,Klaymen_idleblink_anim,scummvm_xref_klaymen.cpp,Neverhood::Klaymen::stIdleBlink startAnimation
-0x5a088840,1510508608,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss full body large (KLOG)
+0x5a088840,1510508608,13,sprite,KLOG,uncracked,,,
 0x5a204c30,1512066096,13,sprite,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,uncracked,,,
 0x5a2082f2,1512080114,15,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x5a89815f,1518960991,14,sprite,BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;FOOD;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x5ab9815f,1522106719,16,sprite,BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;FOOD;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x5ad9815f,1524203871,14,sprite,BOIL;BRG1;CLOU;CRYS;CSTL;EVIL;FOOD;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x5d2ce434,1563223092,14,sprite,BOIL;BRG1;CLOU;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW;TMPL,uncracked,,,
-0x5d40a249,1564516937,11,audio,BOIL;BRG1;FOOD;MEGA;PHRO;SCIE;SNOW,verified,FX_KLAY_IDLE_SCREAM,attack_all_vocab_d4,level-affinity:7 levels; klay vocal
-0x5e269090,1579585680,15,sprite,MENU,uncracked,,,"VISUAL [HIGH]: Klaymen with arms up (MENU, localized)"
+0x5d40a249,1564516937,11,audio,BOIL;BRG1;FOOD;MEGA;PHRO;SCIE;SNOW,uncracked,,,
+0x5e269090,1579585680,15,sprite,MENU,uncracked,,,
 0x60041650,1610880592,13,audio,CSTL,uncracked,,,
-0x60181a0c,1612192268,16,sprite,PHRO;SCIE,uncracked,,,VISUAL [HIGH]: Skull-mage enemy (PHRO/SCIE)
+0x60181a0c,1612192268,16,sprite,PHRO;SCIE,uncracked,,,
 0x603588e8,1614121192,17,audio,HEAD,verified,FX_BOSS_HEAD_IDLE_01,raw_brute_audio_fx,
 0x60680076,1617428598,13,audio,RUNN,uncracked,,,
 0x606c8061,1617723489,11,audio,KLOG,uncracked,,,
@@ -409,26 +409,26 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x60b98cbd,1622772925,15,sprite,BRG1;PHRO;TMPL,uncracked,,,
 0x60b9bcbd,1622785213,15,sprite,BRG1,uncracked,,,
 0x60de1050,1625165904,12,sprite,WIZZ,uncracked,,,
-0x611c5804,1629247492,15,sprite,PHRO;SCIE,uncracked,,,VISUAL [HIGH]: Skull-mage enemy variant (PHRO/SCIE)
+0x611c5804,1629247492,15,sprite,PHRO;SCIE,uncracked,,,
 0x61200640,1629488704,14,audio,FOOD;SNOW,verified,FX_SKULL_FIRE_01,raw_calchash_brute,SKULL projectile fire
 0x612010c9,1629491401,14,audio,HEAD,verified,FX_BOSS_HEAD_HIT,raw_brute_audio_fx,
-0x612c8430,1630307376,13,sprite,FOOD;SNOW,uncracked,,,"VISUAL [HIGH]: Yellow centurion mech (FOOD/SNOW, localized)"
+0x612c8430,1630307376,13,sprite,FOOD;SNOW,uncracked,,,
 0x61581a0c,1633163788,16,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x61841021,1636044833,11,audio,EVIL;SCIE;WIZZ,uncracked,,,
-0x61981a0c,1637358092,16,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,VISUAL [visual-user]: Plain monkey enemy
+0x61981a0c,1637358092,16,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0x61a91c9c,1638472860,17,sprite,BRG1,uncracked,,,
 0x62000441,1644168257,11,audio,BRG1;SOAR,uncracked,,,
-0x620ec210,1645134352,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,uncracked,,,VISUAL [HIGH]: Repeated stage object/creature bank - localized
+0x620ec210,1645134352,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,uncracked,,,
 0x6220a452,1646306386,11,audio,CSTL;MOSS,uncracked,,,
 0x62318245,1647411781,14,audio,GLEN,uncracked,,,
 0x62aa1c9c,1655315612,17,sprite,BRG1,uncracked,,,
-0x62ee0118,1659765016,13,sprite,BRG1,uncracked,,,VISUAL [HIGH]: MEGA boss bank sister (localized)
-0x63848e59,1669631577,13,sprite,MENU,uncracked,,,VISUAL [visual-user]: Menu cursor
-0x63af8200,1672446464,15,sprite,FOOD;SNOW,uncracked,,,"VISUAL [HIGH]: Yellow centurion mech (FOOD/SNOW, localized sister)"
+0x62ee0118,1659765016,13,sprite,BRG1,uncracked,,,
+0x63848e59,1669631577,13,sprite,MENU,uncracked,,,
+0x63af8200,1672446464,15,sprite,FOOD;SNOW,uncracked,,,
 0x64221e61,1679957601,17,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MENU;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x646c2cc0,1684810944,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x64bb1cbe,1689984190,21,sprite,BRG1;PHRO;TMPL,uncracked,,,
-0x65281e40,1697128000,18,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x65281e40,1697128000,18,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_BUTTON_PAUSE,combine_vocab_d3,Pause-menu entry sound; played before SaveAndMuteAllVoicePitches and gameState->menu_active=1; sister to FX_BUTTON_UNPAUSE (0x4c60f249)
 0x657c322c,1702638124,18,sprite,CSTL;FOOD;HEAD;MOSS;PHRO;SNOW,uncracked,,,
 0x66017821,1711372321,12,audio,WIZZ,uncracked,,,
 0x662096e9,1713411817,17,audio,HEAD,uncracked,,,
@@ -440,55 +440,55 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x69588258,1767408216,11,sprite,GLEN,uncracked,,,
 0x69c04050,1774207056,6,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,CONTINUE,anchor,
 0x69c8f473,1774777459,8,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,QUIT GAME,anchor,
-0x6a351094,1781862548,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified-anchor,<PREFIX>UNIVERSE_ENEMA_1,prefix_sister_math,VISUAL [HIGH]: Sparkle/star particle (large); identity = Universe-Enema pickup (frame 1) via prefix_h=0x88200080 sh=27 ^ rotl(calcHash(tail) sh)
+0x6a351094,1781862548,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x6ae1a244,1793172036,10,audio,FINN,uncracked,,,
-0x6c22083a,1814169658,14,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Joe-Head-Joe boss face close-up (dreadlocked head)
+0x6c22083a,1814169658,14,sprite,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
 0x6c289c1c,1814600732,14,sprite,CSTL,uncracked,,,
-0x6c351094,1815416980,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Sparkle/star particle (small/variant of 0x6a351094)
+0x6c351094,1815416980,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x6d209c95,1830853781,13,sprite,CSTL,uncracked,,,
 0x7000c248,1879097928,11,audio,PHRO;SCIE,verified,FX_SKULL_EAT,raw_brute_strict_fx,skullbot eat sound in skullbot-enemy levels
 0x7003474c,1879263052,17,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x70204350,1881162576,12,audio,BRG1;FOOD,verified,FX_SKULL_LAND_02,raw_calchash_brute,SKULL enemy land variant
 0x70404350,1883259728,10,audio,BRG1;PHRO;TMPL,verified,FX_SKULL_LAND_01,raw_calchash_brute,SKULL enemy land
 0x70a09ce1,1889574113,14,audio,HEAD,uncracked,,,
-0x70d006d8,1892681432,13,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_KLAY_FOOTSTEP_LEFT_NORMAL,template_attack,level-affinity:21 levels (universal); klay footstep mirror of RIGHT
+0x70d006d8,1892681432,13,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x71030240,1896022592,15,audio,BRG1,verified,FX_RAT_DASH_END,raw_brute_audio_fx,
 0x72000210,1912603152,11,type700,,uncracked,,,
 0x72a7d455,1923601493,14,audio,GLEN,uncracked,,,
 0x74044081,1946435713,11,audio,RUNN,uncracked,,,wrong-ns(wrap):COINS_EVIL_25/combo
 0x74182b40,1947740992,16,audio,FOOD;TMPL,verified,FX_SKULL_BITE_01,raw_calchash_brute,SKULL bite/chomp
 0x746048f1,1952467185,12,audio,RUNN,uncracked,,,
-0x75189608,1964545544,17,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,VISUAL [visual-user]: Plain monkey enemy variant
-0x760106c1,1979778753,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_BUTTON_POWERUP,template_attack,level-affinity:19 levels (universal); button activates powerup
+0x75189608,1964545544,17,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
+0x760106c1,1979778753,16,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x7622c165,1981989221,15,audio,GLEN,uncracked,,,
 0x7623c165,1982054757,16,audio,GLEN,uncracked,,,
 0x78100250,2014315088,11,audio,PHRO;SCIE,uncracked,,,
-0x78d909e0,2027489760,15,sprite,SNOW,uncracked,,,VISUAL [HIGH]: Blue snowball/ice ball (SNOW)
-0x7a0ec210,2047787536,11,sprite,EGGS,uncracked,,,"VISUAL [HIGH]: Klaymen hands reaching (EGGS, localized)"
+0x78d909e0,2027489760,15,sprite,SNOW,uncracked,,,
+0x7a0ec210,2047787536,11,sprite,EGGS,uncracked,,,
 0x7a318245,2050064965,14,audio,GLEN,uncracked,,,
 0x7c108242,2081456706,13,audio,EVIL;FOOD;MOSS;SOAR,verified,FX_SKULL_FLY_01,raw_brute_aggressive_fx,
 0x7c108244,2081456708,13,audio,CLOU;CRYS;SOAR,verified,FX_SKULL_FLY_02,raw_brute_aggressive_fx,
-0x800da102,2148376834,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss death animation frame 1
-0x800da116,2148376854,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss death animation frame 2
-0x800da11a,2148376858,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss death animation frame 3
-0x800da132,2148376882,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss death animation frame 4
-0x800da152,2148376914,13,sprite,KLOG,uncracked,,,VISUAL [HIGH]: Klogg boss death animation frame 5
+0x800da102,2148376834,13,sprite,KLOG,uncracked,,,
+0x800da116,2148376854,13,sprite,KLOG,uncracked,,,
+0x800da11a,2148376858,13,sprite,KLOG,uncracked,,,
+0x800da132,2148376882,13,sprite,KLOG,uncracked,,,
+0x800da152,2148376914,13,sprite,KLOG,uncracked,,,
 0x80282799,2150115225,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,uncracked,,,
 0x804c881c,2152499228,12,sprite,BRG1,uncracked,,,
 0x8068815c,2154332508,13,sprite,GLEN,uncracked,,,wrong-ns(wrap):DIE_NEW_FEAR_YES/combo
-0x80729081,2154991745,12,sprite,BRG1;GLID;SCIE;SNOW;TMPL;WEED,uncracked,,,VISUAL [HIGH]: Tutorial sign / hint totem; multi-frame with text: CLAY BALL/SWIRLY Q/UNIVERSE ENEMA/SUPER WILLIE/SLAPPY HAMSTER
+0x80729081,2154991745,12,sprite,BRG1;GLID;SCIE;SNOW;TMPL;WEED,uncracked,,,
 0x80808846,2155907142,12,audio,SEVN,uncracked,,,
-0x80a0c240,2158019136,10,audio,SNOW,verified,FX_AMBIENT_BLIZZARD,template_attack,level-affinity:SNOW only; snow level blizzard ambient
+0x80a0c240,2158019136,10,audio,SNOW,uncracked,,,
 0x80b92212,2159616530,13,sprite,TMPL,uncracked,,,
-0x80e85ea0,2162712224,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Hamster Shield orbit icon (green @ symbol)
-0x81100030,2165309488,12,sprite,MENU,uncracked,,,"VISUAL [HIGH]: Controller mapping screen: ""3 / NOT USED / JUMP / SHOOT / FAST RUN"" (MENU)"
+0x80e85ea0,2162712224,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x81100030,2165309488,12,sprite,MENU,uncracked,,,
 0x8139a088,2168037512,15,sprite,EGGS,uncracked,,,
 0x81421850,2168592464,13,sprite,WIZZ,uncracked,,,
 0x815900d0,2170093776,14,sprite,EVIL;SCIE,uncracked,,,
 0x82421850,2185369680,13,sprite,WIZZ,uncracked,,,
 0x826ca852,2188159058,13,audio,BOIL,uncracked,,,
 0x82886816,2189977622,11,sprite,BOIL;CAVE;CRYS;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,
-0x83248e62,2200211042,19,audio,BOIL;CSTL;TMPL,verified,FX_KLAY_RUN_FAST_METAL,footstep_remap_table,surface variant; ROM table 0x8009d0fc[mode*5+slot]; round-trips calcHash exact
+0x83248e62,2200211042,19,audio,BOIL;CSTL;TMPL,uncracked,,,
 0x84004480,2214610048,12,sprite,BOIL,uncracked,,,
 0x8429153c,2217284924,19,sprite,EVIL;SCIE,uncracked,,,
 0x8508000a,2231894026,15,sprite,EVIL;FINN;RUNN,uncracked,,,
@@ -496,41 +496,41 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x8569a090,2238292112,12,sprite,EGGS,uncracked,,,
 0x880161a7,2281791911,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,uncracked,,,
 0x8818a018,2283315224,9,sprite,BRG1;CAVE;CRYS;CSTL;EGGS;FOOD;GLID;HEAD;MOSS;TMPL;WEED;WIZZ,uncracked,,,
-0x88210498,2283865240,13,sprite,CSTL;MOSS,uncracked,,,"VISUAL [HIGH]: Klaymen on fire animation (orange flame, CSTL/MOSS)"
-0x88329285,2285015685,14,sprite,BRG1;GLID;SCIE;SNOW;TMPL;WEED,uncracked,,,VISUAL [HIGH]: Shadow/decoration for tutorial sign 0x80729081
+0x88210498,2283865240,13,sprite,CSTL;MOSS,uncracked,,,
+0x88329285,2285015685,14,sprite,BRG1;GLID;SCIE;SNOW;TMPL;WEED,uncracked,,,
 0x883d14b4,2285704372,18,sprite,WIZZ,uncracked,,,
-0x88783718,2289579800,14,sprite,CAVE;CRYS;EGGS;FOOD;GLID;HEAD;MEGA;SCIE;TMPL;WEED,uncracked,,,VISUAL [HIGH]: Moving Platform A (hopping/floating)
+0x88783718,2289579800,14,sprite,CAVE;CRYS;EGGS;FOOD;GLID;HEAD;MEGA;SCIE;TMPL;WEED,uncracked,,,
 0x888da193,2290983315,10,sprite,KLOG,uncracked,,,
-0x88a16190,2292277648,9,sprite,SEVN,uncracked,,,VISUAL [HIGH]: Purple/blue starburst portal (SEVN)
-0x88a28194,2292351380,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: 1970 hamster collectible sprite
-0x88b9833c,2293859132,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [visual-confirmed]: Klaymen (player) running/leaping cycle
+0x88a16190,2292277648,9,sprite,SEVN,uncracked,,,
+0x88a28194,2292351380,11,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x88b9833c,2293859132,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x8a1940e1,2316910817,14,sprite,HEAD,uncracked,,,
-0x8a3809f2,2318928370,18,sprite,HEAD,uncracked,,,VISUAL [HIGH]: Joe-Head-Joe full body silhouette (HEAD)
-0x8a7ce022,2323439650,12,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,VISUAL [HIGH]: Yellow gold demon/dragon enemy (GLID/SCIE/SOAR/TMPL)
-0x8ab92024,2327388196,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [visual-confirmed]: LOADING screen text + Klaymen
+0x8a3809f2,2318928370,18,sprite,HEAD,uncracked,,,
+0x8a7ce022,2323439650,12,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,
+0x8ab92024,2327388196,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x8b603980,2338339200,14,sprite,EVIL;GLEN;SCIE,uncracked,,,
 0x8b7ce0b2,2340217010,13,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,
-0x8c29e08c,2351554700,13,sprite,GLEN,uncracked,,,VISUAL [MED]: Red potion/bottle (GLEN)
-0x8c30008c,2351956108,15,sprite,BRG1,verified-anchor,<PREFIX>GROW,prefix_sister_math,identity = Grow pickup via prefix_h=0x88200080 sh=27 ^ rotl(calcHash(GROW) sh)
-0x8c510186,2354119046,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified-anchor,<PREFIX>FARTHEAD,prefix_sister_math,VISUAL [HIGH]: Phart Head feather/horn collectible; ANCHOR for PREFIX_H/SH derivation
+0x8c29e08c,2351554700,13,sprite,GLEN,uncracked,,,
+0x8c30008c,2351956108,15,sprite,BRG1,uncracked,,,
+0x8c510186,2354119046,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x8d01c734,2365703988,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0x902c0002,2418802690,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified-anchor,<PREFIX>WILLIE,prefix_sister_math,VISUAL [MED]: Super Willie collectible icon; identity confirmed via prefix-sister math
+0x902c0002,2418802690,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x90805c51,2424331345,11,audio,EGGS,uncracked,,,
 0x90810000,2424373248,11,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified,FX_MENU_SELECT,fn_context_Menu_PlaySelectSoundIfEnabled,UI menu confirm/select sound (fn_ctx; was wrong-ns candidate U_TRIPLE_MANA)
 0x908254e5,2424460517,15,audio,PHRO,uncracked,,,
-0x90985240,2425901632,14,audio,TMPL,verified,FX_AMBIENT_CHAINS,template_attack,level-affinity:TMPL only; temple chains rattle ambient
-0x90a19011,2426507281,10,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,VISUAL [HIGH]: Yellow gold demon variant (GLID/SCIE/SOAR/TMPL)
+0x90985240,2425901632,14,audio,TMPL,uncracked,,,
+0x90a19011,2426507281,10,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x90b102a1,2427519649,15,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0x90c24401,2428650497,9,audio,SEVN,uncracked,,,
-0x90d85954,2430097748,14,audio,PHRO,verified,FX_AMBIENT_FOUNTAIN,template_attack,level-affinity:PHRO; fountain water ambient; prior:wrong-ns(wrap):DIE_FIFI_ATONING/combo
+0x90d85954,2430097748,14,audio,PHRO,uncracked,,,wrong-ns(wrap):DIE_FIFI_ATONING/combo
 0x91106183,2433769859,13,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL;WEED,uncracked,,,
-0x9158a0f6,2438504694,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,VISUAL [HIGH]: Phoenix Hand projectile sprite (green hand)
-0x9180d446,2441139270,14,audio,CAVE,verified,FX_AMBIENT_CAVERN,template_attack,level-affinity:CAVE (Cavern); cave/cavern ambient
+0x9158a0f6,2438504694,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0x9180d446,2441139270,14,audio,CAVE,uncracked,,,
 0x91a9d01d,2443825181,13,sprite,PHRO;SCIE,uncracked,,,
-0x9291d400,2459030528,13,audio,TMPL,verified,FX_AMBIENT_RIVER,template_attack,level-affinity:TMPL (Temple); river ambient
+0x9291d400,2459030528,13,audio,TMPL,uncracked,,,
 0x9299c307,2459550471,15,sprite,MOSS,uncracked,,,
-0x92af8810,2460977168,15,sprite,BRG1,uncracked,,,VISUAL [MED]: Localized sprite (per regional probe)
-0x92f8f1c0,2465788352,14,audio,MEGA,verified,FX_AMBIENT_WATERFALL_SMALL,template_attack,level-affinity:MEGA boss; smaller waterfall ambient
+0x92af8810,2460977168,15,sprite,BRG1,uncracked,,,
+0x92f8f1c0,2465788352,14,audio,MEGA,uncracked,,,
 0x93043811,2466527249,13,sprite,BOIL;CAVE;CSTL;EGGS;GLID;MOSS;SEVN;SNOW;WEED,uncracked,,,wrong-ns(wrap):SHE_THE_AOL_ARTS/combo
 0x9389b8c4,2475276484,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,uncracked,,,
 0x9629a000,2519310336,14,sprite,EGGS,uncracked,,,
@@ -543,36 +543,36 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0x991003c2,2567963586,17,audio,BOIL;BRG1;CRYS;MOSS;PHRO;SCIE;SNOW;SOAR;TMPL,verified,FX_SKULL_FOOTSTEP_RIGHT,raw_brute_audio_fx,
 0x9918a8e2,2568530146,16,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x9940bb40,2571156288,13,audio,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ,uncracked,,,
-0x9980d651,2575357521,10,audio,BOIL;EVIL,verified,FX_AMBIENT_BOILER,template_attack,"level-affinity:BOIL;EVIL; boiler/furnace ambient (BOIL=Boiler level, EVIL also has boilers); prior:wrong-ns(wrap):BLACK_17_404/combo"
+0x9980d651,2575357521,10,audio,BOIL;EVIL,uncracked,,,wrong-ns(wrap):BLACK_17_404/combo
 0x9b0ab1c6,2601169350,18,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0x9b2204a0,2602697888,17,sprite,BOIL,uncracked,,,
 0x9c6584d2,2623898834,15,sprite,BRG1,uncracked,,,
-0x9cc87050,2630381648,9,audio,SCIE,verified,FX_AMBIENT_LIGHTNING,template_attack,level-affinity:SCIE (Science); electrical/lightning ambient
+0x9cc87050,2630381648,9,audio,SCIE,uncracked,,,
 0x9d406340,2638242624,12,audio,BOIL;CRYS;FOOD;HEAD;MEGA;PHRO;SCIE;SEVN;SNOW;TMPL;WEED;WIZZ,scummvm_anchor,Klaymen_idlehead_sound,scummvm_xref_klaymen.cpp,Neverhood::Klaymen::hmIdleHeadOff playSound
 0x9d4dc260,2639118944,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0xa00a0c30,2685013040,13,sprite,CAVE,uncracked,,,VISUAL [MED]: Sparkle/confetti particles (CAVE)
-0xa0149114,2685702420,12,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Green cross/plus icon (WIZZ)
+0xa00a0c30,2685013040,13,sprite,CAVE,uncracked,,,
+0xa0149114,2685702420,12,sprite,WIZZ,uncracked,,,
 0xa0299a4d,2687081037,16,sprite,FOOD;SNOW,uncracked,,,
 0xa06088c9,2690681033,11,audio,HEAD,verified,FX_BOSS_HEAD_WALK,raw_brute_audio_fx,
 0xa0824440,2692891712,10,audio,FOOD,uncracked,,,
 0xa0cc18d0,2697730256,12,sprite,WIZZ,uncracked,,,
-0xa0cc1cd0,2697731280,13,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Bone/arm sprite (WIZZ)
+0xa0cc1cd0,2697731280,13,sprite,WIZZ,uncracked,,,
 0xa116220c,2702582284,15,sprite,HEAD,uncracked,,,
 0xa2034840,2718124096,13,audio,WEED,uncracked,,,
 0xa628e009,2787696649,10,sprite,EGGS,uncracked,,,
-0xa8482860,2823301216,10,sprite,MEGA,uncracked,,,VISUAL [HIGH]: Skull-on-bar weapon sprite (MEGA)
+0xa8482860,2823301216,10,sprite,MEGA,uncracked,,,
 0xa89d0ad0,2828864208,14,sprite,BRG1;CAVE;CRYS;SNOW;SOAR,uncracked,,,
-0xa9228088,2837610632,12,sprite,BRG1;CAVE;CRYS;SNOW;SOAR,verified-anchor,<PREFIX>HAMSTER,prefix_sister_math,identity = Hamster pickup via prefix_h=0x88200080 sh=27 ^ rotl(calcHash(HAMSTER) sh)
-0xa9240484,2837709956,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,verified-anchor,<PREFIX>ONE_UP,prefix_sister_math,VISUAL [HIGH]: 1-Up extra life collectible icon; identity confirmed via prefix-sister math
-0xa9387d8c,2839051660,17,sprite,CLOU,uncracked,,,"VISUAL [HIGH]: ""1970"" text label sprite (yellow text)"
-0xb0107444,2953868356,13,audio,TMPL,verified,FX_AMBIENT_DRIP_4,template_attack,level-affinity:TMPL (Temple); part of DRIP_1..6 numbered series
+0xa9228088,2837610632,12,sprite,BRG1;CAVE;CRYS;SNOW;SOAR,uncracked,,,
+0xa9240484,2837709956,14,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
+0xa9387d8c,2839051660,17,sprite,CLOU,uncracked,,,
+0xb0107444,2953868356,13,audio,TMPL,uncracked,,,
 0xb01c25f0,2954634736,16,sprite,CLOU;CRYS;CSTL;EGGS;EVIL;MOSS;SEVN;SOAR;WEED;WIZZ,uncracked,,,
-0xb0807444,2961208388,11,audio,TMPL,verified,FX_AMBIENT_DRIP_1,template_attack,level-affinity:TMPL (Temple); part of DRIP_1..6 numbered series
-0xb0b07444,2964354116,13,audio,TMPL,verified,FX_AMBIENT_DRIP_2,template_attack,level-affinity:TMPL (Temple); part of DRIP_1..6 numbered series
-0xb0d07444,2966451268,11,audio,TMPL,verified,FX_AMBIENT_DRIP_3,template_attack,level-affinity:TMPL (Temple); part of DRIP_1..6 numbered series
+0xb0807444,2961208388,11,audio,TMPL,uncracked,,,
+0xb0b07444,2964354116,13,audio,TMPL,uncracked,,,
+0xb0d07444,2966451268,11,audio,TMPL,uncracked,,,
 0xb12c0854,2972452948,16,sprite,EGGS;GLID;WEED,uncracked,,,
-0xb1907444,2979034180,13,audio,TMPL,verified,FX_AMBIENT_DRIP_5,template_attack,level-affinity:TMPL (Temple); part of DRIP_1..6 numbered series
-0xb2907444,2995811396,13,audio,TMPL,verified,FX_AMBIENT_DRIP_6,template_attack,level-affinity:TMPL (Temple); part of DRIP_1..6 numbered series
+0xb1907444,2979034180,13,audio,TMPL,uncracked,,,
+0xb2907444,2995811396,13,audio,TMPL,uncracked,,,
 0xb4011101,3019968769,13,sprite,BRG1;PHRO;SOAR,uncracked,,,
 0xb468d0c6,3026768070,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0xb69c8356,3063710550,17,sprite,CSTL,uncracked,,,
@@ -585,10 +585,10 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0xba094800,3121170432,12,sprite,CAVE;EGGS;GLID;WEED,uncracked,,,
 0xbb781481,3145208961,15,sprite,BOIL;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;SCIE;SEVN;SNOW;SOAR;TMPL;WEED,uncracked,,,
 0xbe68d0c6,3194540230,15,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0xbebce258,3200049752,13,sprite,CSTL;SOAR,uncracked,,,VISUAL [HIGH]: Red axe weapon sprite (CSTL/SOAR)
+0xbebce258,3200049752,13,sprite,CSTL;SOAR,uncracked,,,
 0xc00200c9,3221356745,14,audio,MEGA,verified,FX_GUM_PIERCE_DN,raw_brute_audio_fx,
 0xc0034658,3221440088,15,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;MOSS;SEVN;SNOW;SOAR;TMPL,verified,FX_PICKUP_FARTHEAD,raw_calchash_fxconv,Phart Head collectible pickup (extras) - CollectiblePhartHeadTickCallback line 28702; sets extras count via AddPhartHeads
-0xc0099011,3221852177,11,audio,WIZZ,verified,FX_BOSS_WIZARD_IDLE,wide_per_level,level-affinity:WIZZ only; Wizard boss idle FX
+0xc0099011,3221852177,11,audio,WIZZ,uncracked,,,
 0xc0608a40,3227552320,13,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0xc2820c70,3263302768,15,audio,EGGS;GLID;WEED,uncracked,,,wrong-ns(wrap):SHE_BIG_DOYLE_ASAP/combo
 0xc2906565,3264243045,14,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;FOOD;GLID;MOSS;PHRO;RUNN;SCIE;SNOW;SOAR;TMPL;WEED,uncracked,,,
@@ -605,20 +605,20 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0xc8830661,3364030049,14,audio,BRG1;SOAR,verified,FX_BIRD_FLY_01,raw_brute_aggressive_fx,
 0xc88a346a,3364500586,16,audio,BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;GLID;MOSS,verified,FX_PICKUP_UNIVERSE_ENEMA,raw_calchash_fxconv,Universe Enema (screen-clearing attack) collectible pickup - CollectibleUniverseEnemaTickCallback line 28836
 0xc89e9158,3365835096,15,sprite,EVIL,uncracked,,,
-0xc8f90114,3371761940,13,sprite,GLEN,uncracked,,,VISUAL [visual-confirmed]: GLEN boss / large enemy creature
+0xc8f90114,3371761940,13,sprite,GLEN,uncracked,,,
 0xc92884e2,3374875874,17,audio,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0xc9387d8c,3375922572,19,sprite,CLOU,uncracked,,,VISUAL [HIGH]: 1970 hamster collectible (CLOU level variant)
+0xc9387d8c,3375922572,19,sprite,CLOU,uncracked,,,
 0xca1006c0,3390047936,16,audio,BOIL;FOOD;HEAD;MEGA;MENU;PHRO;SCIE;SNOW,uncracked,,,
 0xca1b20cb,3390775499,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;MEGA;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0xca223f46,3391242054,20,audio,TMPL,uncracked,,,
-0xca282402,3391628290,14,sprite,WIZZ,uncracked,,,VISUAL [HIGH]: Yellow energy bar (WIZZ)
+0xca282402,3391628290,14,sprite,WIZZ,uncracked,,,
 0xcaadc032,3400384562,13,sprite,KLOG,uncracked,,,
 0xcc6c8070,3429662832,13,audio,GLEN;KLOG,uncracked,,,
 0xd02dc3d5,3492660181,17,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;HEAD;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
-0xd0a14440,3500229696,14,audio,BRG1,verified,FX_AMBIENT_WIND,template_attack,level-affinity:BRG1 (Bridge1); wind ambient
+0xd0a14440,3500229696,14,audio,BRG1,uncracked,,,
 0xd0a5f094,3500535956,13,sprite,GLID;SCIE;SOAR;TMPL,uncracked,,,
 0xd0b04444,3501212740,15,audio,FINN,uncracked,,,
-0xd0cc5442,3503051842,15,audio,HEAD;SOAR,verified,FX_AMBIENT_TORCH,template_attack,level-affinity:HEAD;SOAR; torch crackle ambient
+0xd0cc5442,3503051842,15,audio,HEAD;SOAR,uncracked,,,
 0xd144ab00,3510938368,14,audio,BOIL;FOOD;HEAD;MEGA;PHRO;SCIE;SNOW,uncracked,,,
 0xd167c005,3513237509,14,sprite,PHRO;SCIE,uncracked,,,
 0xd2801814,3531610132,14,sprite,CAVE;CRYS;EGGS;MOSS,uncracked,,,wrong-ns(wrap):SHE_DAY_DORM_BOSS/combo
@@ -634,7 +634,7 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0xe00e991d,3759053085,15,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0xe0880448,3767010376,13,audio,BOIL;BRG1;CAVE;CRYS;CSTL;EGGS;EVIL;FOOD;GLID;MOSS;PHRO;SCIE;SNOW;TMPL,verified,FX_PICKUP_SHIELD,raw_calchash_fxconv,Halo/Shield activation sound (PlayerInitTransform when powerup_flags bit 0 newly set; sister of FX_PICKUP_1970_03 third-hamster trigger)
 0xe0c00650,3770680912,10,audio,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,verified,FX_SKULL_SCREAM_01,raw_calchash_brute,SKULL death scream
-0xe289c059,3800678489,10,sprite,MENU,uncracked,,,VISUAL [HIGH]: Lit candle sprite (MENU)
+0xe289c059,3800678489,10,sprite,MENU,uncracked,,,
 0xe398d28d,3818443405,15,sprite,BOIL;BRG1;CRYS;MOSS;SCIE;SNOW;SOAR;TMPL,uncracked,,,
 0xe4834384,3833807748,15,sprite,BRG1;PHRO;SOAR,uncracked,,,
 0xe48744c4,3834070212,16,audio,CLOU;CSTL;EVIL;MOSS;WEED,verified,FX_PICKUP_SUPER_WILLIE,raw_calchash_fxconv,Super Willie transformation collectible pickup (CollectibleSuperWillieTickCallback line 29479; AddSuperWillies increments player_state->super_willies)
@@ -644,10 +644,10 @@ id_hex,id_dec,floor,type,levels,status,name,method,alts
 0xe7443a6f,3880008303,19,sprite,CSTL;FOOD;MOSS;PHRO;SNOW,uncracked,,,
 0xe8628689,3898771081,12,sprite,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,uncracked,,,
 0xec000027,3959423015,12,sprite,BRG1;PHRO;SOAR,uncracked,,,
-0xec95689b,3969214619,12,sprite,MENU,uncracked,,,VISUAL [MED]: Brown box / chest (MENU)
+0xec95689b,3969214619,12,sprite,MENU,uncracked,,,
 0xed209c94,3978337428,15,sprite,CSTL,uncracked,,,
-0xf03391e9,4029911529,19,audio,HEAD,verified,FX_BOSS_HEAD_ATTACK_01,template_attack,level-affinity:HEAD only; JOEHEADJOE boss attack
-0xf033a1e9,4029915625,17,audio,HEAD,verified,FX_BOSS_HEAD_ATTACK_02,template_attack,level-affinity:HEAD only; JOEHEADJOE boss attack
+0xf03391e9,4029911529,19,audio,HEAD,uncracked,,,
+0xf033a1e9,4029915625,17,audio,HEAD,uncracked,,,
 0xf175320e,4050989582,19,sprite,CSTL;FOOD;MOSS;PHRO;SNOW,uncracked,,,
 0xf2810224,4068540964,15,audio,HEAD,verified,FX_SKULL_GRUNT_01,raw_calchash_fxconv,Joe-Head-Joe boss grunt when bouncing/landing (line 58039; follows FX_SKULL_<ACTION>_NN convention used by FX_SKULL_LAND_01/02 + FX_SKULL_SCREAM_01)
 0xf8494814,4165552148,11,sprite,CAVE;EGGS;GLID;WEED,uncracked,,,wrong-ns(wrap):RUNN_MUSIC_P2/combo

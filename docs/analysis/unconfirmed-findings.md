@@ -2627,3 +2627,37 @@ the pattern of menu/player spawning (which use sprite IDs directly).
 
 *Last updated: January 10, 2026*
 
+
+## InitEntityStruct (@0x8001A0C8) — near-match shelved (register coloring)
+
+The base entity constructor is fully decoded but **not yet byte-matched**; left
+as `INCLUDE_ASM` in `src/entity.c` (build stays green). Closest C draft +
+permuter harness: `nonmatchings/InitEntityStruct/` (`base.c`).
+
+What is confirmed (instruction-for-instruction, same count/order/offsets/imms):
+- Each FSM `[marker, callback]` pair is written as **two `s16` halves**
+  (`sh` lo/hi) + the `sw` callback — i.e. a `{ s16 markerLo; s16 markerHi;
+  void(*fn)(); }` slot, NOT the `s32 marker` the global `Entity` struct shows.
+  (The global struct must stay `s32` for the dispatch readers, so the
+  constructor uses a local `FsmSlot` overlay cast.)
+- The event slot is installed via the **stack-staged 8-byte struct copy**
+  idiom (`{0,-1,StubReturnZero}` → `eventMarker`), slot at `sp+4`.
+- A **padded local wrapper pins the 0x38 stack frame** (bare 8-byte slot only
+  yields 0x8): `struct { s32 pad; FsmSlot s; u8 tail[0x2C]; }`.
+- Six 16.16 scale fields (0x50..0x64) primed to 0x10000; field write order in
+  the C must follow the non-monotonic asm order exactly.
+
+Sole remaining diff: **register coloring**. The original holds the entity
+pointer in `$v0` (`move $v0,$a0` at entry) and loads `StubReturnZero` into
+`$a0`, so the event-slot struct copy's `lw $a0,8($sp)` clobbers `$a0` while the
+entity survives in `$v0`. Our codegen keeps the entity in `$a0` and uses
+`$v0/$v1` as the copy temps — a clean `{v0,v1,a0}` rotation, identical
+otherwise. `__asm__ ("":"=r"(p):"0"(p))` barriers are a no-op here; `+r` is
+rejected by gcc 2.7.2. A 150s permuter run (default weights) plateaued ~1270
+without reaching 0 — needs a targeted decl-order / pointer-staging idiom (cf.
+the solved `InitScrollingLayerEntity` case study in compiler-quirks.md 6i/6j),
+or a longer permuter run with `perm_reorder_decls`/`perm_ins_block` boosted.
+
+NOTE (env): during this session an external process repeatedly reverted
+uncommitted edits to `src/entity.c` back to HEAD. Commit promptly when the
+match lands.

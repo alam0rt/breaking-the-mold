@@ -27,10 +27,8 @@
 #endif
 
 #if INCLUDE_ASM_USE_MACRO_INC
-/* @match: injects splat's macro.inc into every TU so .include'd asm in INCLUDE_ASM() resolves. */
 __asm__(".include \"include/macro.inc\"\n");
 #else
-/* @match: injects splat's labels.inc into every TU so .include'd asm in INCLUDE_ASM() resolves. */
 __asm__(".include \"include/labels.inc\"\n");
 #endif
 

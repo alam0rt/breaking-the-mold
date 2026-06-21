@@ -182,6 +182,11 @@ s32 DecorHandleCallback(DecorEventEntity *e, u16 event) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitBlbOverlayEntity);
 
+/* RenderRotatedTexturedQuad @ 0x800310AC — builds a rotated textured POLY_FT4
+ * (corner box -> RotMatrixZ -> RotTrans) and AddPrim's it. Logic-complete C
+ * draft matches 200/200 instructions and opcode set; ~80 lines of scheduling /
+ * stack-layout / coloring remain (needs permuter). Draft + analysis kept in
+ * docs/analysis/decomp-drafts/RenderRotatedTexturedQuad.c. */
 INCLUDE_ASM("asm/nonmatchings/effects", RenderRotatedTexturedQuad);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitMenuSpriteEntity);
