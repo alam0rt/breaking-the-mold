@@ -201,7 +201,12 @@ void FreeSpecialEntity2120Memory(Entity *ptr, s32 size) {
  * EntityTickLoop -> WaitForVBlankIfNeeded -> RenderEntities -> DrawSync(0) ->
  * postRenderCallbackContext dispatch ((**(ctx+0x1C))(ctx,0)) -> DrawSync(0) ->
  * optional VSync stall when g_GameFlags & 6 -> ProcessDebugMenuInput ->
- * FlushDebugFontAndEndFrame (which performs the OT flush + buffer swap). */
+ * FlushDebugFontAndEndFrame (which performs the OT flush + buffer swap).
+ *
+ * SHELVED C draft (see docs/analysis/decomp-drafts/main.c). Annotator-assisted
+ * decompilation got within ~7 instructions (frame size 0x30 vs 0x40, missing
+ * s2/s3 register usage), but the mode-dispatch register allocation (s4=argOff,
+ * s5=cb) is hard to coerce from cc1 without specific register pinning. */
 INCLUDE_ASM("asm/nonmatchings/main", main);
 
 /* Leftover function epilogue at 0x80082BE8 -- restores s0-s5/ra and returns.
