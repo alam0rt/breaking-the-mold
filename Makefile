@@ -663,12 +663,67 @@ ifndef SCRIPT
 endif
 	$(PCSX) $(PCSX_CPU) -lua_stdout -iso $(ISO) -dofile $(SCRIPT) -run
 
-# Struct watcher with auto-launch (dynarec; no breakpoints needed).
-# Usage: make watcher [SCRIPT=scripts/struct_watcher.lua]
+# Struct watcher with auto-launch (dynarec).
+# Usage: make watcher [SCRIPT=scripts/struct_watcher.lua] [LEVEL=5] [STAGE=0]
+# LEVEL/STAGE: polls BLB header via vsync and patches level/stage indices
+# once the header is loaded (no breakpoints, dynarec-safe).
 WATCHER_SCRIPT ?= scripts/struct_watcher.lua
 watcher:
 	@mkdir -p game_watcher/logs
+ifdef LEVEL
+	@echo "Boot override: Level $(LEVEL), Stage $(or $(STAGE),0) (dynarec, vsync poller)"
+	@cp $(WATCHER_SCRIPT) /tmp/struct_watcher_override.lua
+	@echo "" >> /tmp/struct_watcher_override.lua
+	@echo "-- Boot override appended by make watcher (dynarec, vsync polled)" >> /tmp/struct_watcher_override.lua
+	@echo "do" >> /tmp/struct_watcher_override.lua
+	@echo "  local LVL, STG = $(LEVEL), $(or $(STAGE),0)" >> /tmp/struct_watcher_override.lua
+	@echo "  local m = PCSX.getMemPtr()" >> /tmp/struct_watcher_override.lua
+	@echo "  local function r8(a) return m[bit.band(a,0x1FFFFF)] end" >> /tmp/struct_watcher_override.lua
+	@echo "  local function w8(a,v) m[bit.band(a,0x1FFFFF)] = bit.band(v,0xFF) end" >> /tmp/struct_watcher_override.lua
+	@echo "  local applied, written = false, 0" >> /tmp/struct_watcher_override.lua
+	@echo "  local lst" >> /tmp/struct_watcher_override.lua
+	@echo "  lst = PCSX.Events.createEventListener('GPU::Vsync', function()" >> /tmp/struct_watcher_override.lua
+	@echo "    if applied then return end" >> /tmp/struct_watcher_override.lua
+	@echo "    if r8(0x800AF311) == 0 then return end  -- BLB header not loaded yet" >> /tmp/struct_watcher_override.lua
+	@echo "    w8(0x800AF316, 3)         -- game_mode = level" >> /tmp/struct_watcher_override.lua
+	@echo "    w8(0x800AF372, LVL)        -- level index" >> /tmp/struct_watcher_override.lua
+	@echo "    w8(0x800AF373, STG)        -- stage index" >> /tmp/struct_watcher_override.lua
+	@echo "    written = written + 1" >> /tmp/struct_watcher_override.lua
+	@echo "    if written >= 60 then       -- ~1s of forcing, then stop" >> /tmp/struct_watcher_override.lua
+	@echo "      applied = true" >> /tmp/struct_watcher_override.lua
+	@echo "      lst:remove()" >> /tmp/struct_watcher_override.lua
+	@echo "      print(string.format('[BOOT] override applied: level=%d stage=%d (forced %d frames)', LVL, STG, written))" >> /tmp/struct_watcher_override.lua
+	@echo "    end" >> /tmp/struct_watcher_override.lua
+	@echo "  end)" >> /tmp/struct_watcher_override.lua
+	@echo "  print(string.format('[BOOT] watcher will override to level=%d stage=%d once BLB header loads', LVL, STG))" >> /tmp/struct_watcher_override.lua
+	@echo "end" >> /tmp/struct_watcher_override.lua
+ifeq ($(LEVEL),4)
+	@echo "" >> /tmp/struct_watcher_override.lua
+	@echo "-- FINN vehicle overlay watch (FinnPlayerEntity, fields beyond 0x80)" >> /tmp/struct_watcher_override.lua
+	@echo "do" >> /tmp/struct_watcher_override.lua
+	@echo "  local function _finn_player_ptr()" >> /tmp/struct_watcher_override.lua
+	@echo "    local gs_off = bit.band(0x8009DC40, 0x1FFFFF)" >> /tmp/struct_watcher_override.lua
+	@echo "    local pe = mem_word(gs_off + 0x30)" >> /tmp/struct_watcher_override.lua
+	@echo "    if not is_valid_ptr(pe) then return nil end" >> /tmp/struct_watcher_override.lua
+	@echo "    return pe" >> /tmp/struct_watcher_override.lua
+	@echo "  end" >> /tmp/struct_watcher_override.lua
+	@echo "  add_watch('FINN', _finn_player_ptr, 'FinnPlayerEntity', 1)" >> /tmp/struct_watcher_override.lua
+	@echo "  set_field_filter('FINN', {" >> /tmp/struct_watcher_override.lua
+	@echo "    'pInput'," >> /tmp/struct_watcher_override.lua
+	@echo "    'wakeEntity_or_velocityX'," >> /tmp/struct_watcher_override.lua
+	@echo "    'velocityY_or_stateCallback'," >> /tmp/struct_watcher_override.lua
+	@echo "    'rotationAngle'," >> /tmp/struct_watcher_override.lua
+	@echo "    'rotationSpriteBucket'," >> /tmp/struct_watcher_override.lua
+	@echo "    'rotationVelocity'," >> /tmp/struct_watcher_override.lua
+	@echo "    'soundHandle_or_inputFlags'," >> /tmp/struct_watcher_override.lua
+	@echo "  })" >> /tmp/struct_watcher_override.lua
+	@echo "  print('[FINN] vehicle overlay watch installed (rotation/heading fields)')" >> /tmp/struct_watcher_override.lua
+	@echo "end" >> /tmp/struct_watcher_override.lua
+endif
+	$(PCSX) -dynarec -lua_stdout -iso $(ISO) -dofile /tmp/struct_watcher_override.lua -run
+else
 	$(PCSX) -dynarec -lua_stdout -iso $(ISO) -dofile $(WATCHER_SCRIPT) -run
+endif
 
 # Run inline Lua code
 # Usage: make lua-exec CODE='print("hello")'

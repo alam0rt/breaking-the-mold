@@ -2443,6 +2443,11 @@ g_EntityVtable_SimpleDestruct = 0x800104CC; // size:0x20
 g_EntityVtable_LevelDestroy = 0x800104EC; // size:0x20
 g_EntityVtable_ResourceType1 = 0x8001042C; // size:0x20
 g_EntityVtable_ResourceType2 = 0x8001040C; // size:0x20
+
+// Player-specific callback table (see PlayerCallbackTable in include/Game/entity.h).
+// Installed on Player.collisionVtable while the player is alive; swapped to
+// g_EntityVtable_Destroyed at death T+0 and restored at respawn T+2.
+g_PlayerCallbackTable = 0x80011804; // size:0x80
 g_EntityVtable_ResourceType3 = 0x800103EC; // size:0x20
 g_EntityVtable_ResourceType4 = 0x800103CC; // size:0x20
 
