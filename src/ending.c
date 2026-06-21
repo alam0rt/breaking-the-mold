@@ -192,7 +192,26 @@ void EndingCreditsCompleteTick(EndingCreditsEntity *e) {
  * looked up from ENDING_FADE_STEP_TABLE indexed by fadeCounter, then
  * increments the counter. After 32 ticks (counter reaches 0x20), sets
  * flag149=1 and installs EndingTickCallback as the resting tick. */
-INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsFadeOutTick);
+void EndingCreditsFadeOutTick(EndingCreditsEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    e->sprite.base.worldX = (u16)e->sprite.base.worldX + ENDING_FADE_STEP_TABLE[e->fadeCounter];
+    e->fadeCounter++;
+    if ((u8)e->fadeCounter >= 0x20) {
+        e->flag149 = 1;
+        do {} while (0);
+        fn = (void (*)())EndingTickCallback;
+        do {} while (0);
+        m1 = -1;
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    }
+    EndingTickCallback((Entity *)e);
+}
 
 void EndingEntityDestroyCallback_1E54(SpriteEntity *entity, s32 flags) {
     entity->base.collisionVtable = ENDING_ENTITY_VTABLE_1E54;
