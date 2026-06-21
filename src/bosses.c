@@ -24,9 +24,12 @@ extern void EnemyUpdateWithCollisionAndDeath(Entity *e);
 extern void EnemyTickWithCollision(Entity *e);
 extern s32 ShrineyGuardAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 GlennYntisDamageEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 GlennYntisEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void SetAnimationLoopFrame(Entity *e, u32 frame);
 extern void SetAnimationSpriteCallback(Entity *e, u32 spriteId);
 extern void SetAnimationFrameIndex(Entity *e, s32 frame);
+extern u32  PlayEntityPositionSound(Entity *e, u32 soundId);
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
@@ -406,7 +409,36 @@ INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisAttackEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisDeathEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", HazardActivateWithSound);
+/* HazardActivateWithSound — entry state for a sound-emitting hazard.
+ * Spawns a positional voice (id 0x7A318245), stashes its handle at +0x118
+ * so HazardStopSound can release it later, primes the behaviour timer at
+ * +0x114 to 0x12C (300 frames), installs the Glenn-Yntis event handler and
+ * the Hazard tick (which decrements the timer and dispatches to
+ * HAZARD_TIMER_EXPIRED_STATE), sets the active sprite (0x8068815C), and
+ * queues the HAZARD_STOP_SOUND_STATE on the regular queued-state slot. */
+void HazardActivateWithSound(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, 0x7A318245);
+    *(u16 *)((u8 *)e + 0x114) = 0x12C;
+    do {} while (0);
+    fn = (void (*)())GlennYntisEventHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = Hazard_TickWithBehaviorTransition;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x8068815C, 1);
+    EntitySetCallback(e, HAZARD_STOP_SOUND_STATE_MARKER,
+                      HAZARD_STOP_SOUND_STATE_CALLBACK);
+}
 
 void HazardStopSound(BossVoiceEntity *e) {
     StopSPUVoice(e->voiceHandle);
