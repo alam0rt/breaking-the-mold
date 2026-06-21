@@ -1,0 +1,16 @@
+id: function-needs-comment
+language: C
+severity: hint
+message: "Non-static function definition has no preceding comment; add a plate comment describing behavior."
+note: "This codebase's convention is a block comment directly above each function describing what it does (its reverse-engineered behavior). That comment is the project's institutional memory — the next agent reads it before the code. A non-`static` function with no preceding comment is undocumented surface area. Add a `/* ... */` (or `//`) comment on the line directly above. NOTE: this enforces presence, not correctness — comments in this clean-room project can be wrong (see CLAUDE.md), so a comment is necessary but not sufficient. `static` helpers are intentionally exempt to keep the rule low-noise."
+rule:
+  all:
+    - kind: function_definition
+    - not:
+        follows:
+          kind: comment
+          stopBy: neighbor
+    - not:
+        has:
+          kind: storage_class_specifier
+          regex: '^static$'

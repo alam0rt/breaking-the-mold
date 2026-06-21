@@ -1,0 +1,20 @@
+id: no-floating-point
+language: C
+severity: warning
+message: "Floating-point type in PSX code; the original is almost certainly fixed-point."
+note: "The PlayStation 1 CPU (R3000A) has no FPU. The original game used integer/fixed-point math (typically 12-bit fractional, see the `fixed-point-divide` rule). A `float`/`double` in decompiled C is therefore almost always a transcription error, not real original code — re-read the asm and express it as fixed-point integers. If a float genuinely is correct (extremely rare), keep it and silence this with a `// @hack: <why>` comment on the line directly above."
+rule:
+  all:
+    - kind: primitive_type
+      regex: '^(float|double)$'
+    - not:
+        follows:
+          kind: comment
+          regex: 'hack|HACK|@|match'
+          stopBy: neighbor
+    # The canonical `typedef float f32; typedef double f64;` aliases in
+    # common.h are the one legitimate definitional spot — don't flag them.
+    - not:
+        inside:
+          kind: type_definition
+          stopBy: end

@@ -1,0 +1,13 @@
+id: no-raw-address-literal
+language: C
+severity: hint
+message: "Raw 0x80xxxxxx RAM address used as a literal; name it with an asm-labeled symbol."
+note: "A bare `0x800xxxxx`/`0x801xxxxx` integer literal is a hardcoded RAM address (RAM base is 0x80010000). It should be a meaningful C identifier backed by an asm label (the same goal as the `no-raw-address-symbols` rule, which catches the `D_800xxxxx` identifier form — this rule catches the literal form that escapes into call args and assignments). Hardcoded addresses also defeat the duplicate-symbol scan: the same address frequently appears in several files (e.g. 0x80010870, 0x8001D080). Replace with a named extern/symbol; if the value is genuinely a non-pointer magic constant that merely looks like an address, tag it `// @hack: <why>` on the line directly above."
+rule:
+  kind: number_literal
+  regex: '^0[xX]80[01][0-9A-Fa-f]{5}$'
+  not:
+    follows:
+      kind: comment
+      regex: 'hack|HACK|@|match'
+      stopBy: neighbor

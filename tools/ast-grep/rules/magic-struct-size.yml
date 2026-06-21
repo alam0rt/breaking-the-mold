@@ -1,0 +1,15 @@
+id: magic-struct-size
+language: C
+severity: hint
+message: "Numeric size literal in memset/memcpy/malloc; prefer sizeof(...) when the type is known."
+note: "A hardcoded byte count as the size argument to memset/memcpy/malloc (e.g. `memset(e, 0, 0x3A8)`) usually means a struct size that should be `sizeof(*e)` / `sizeof(StructType)`. Naming it makes the layout self-documenting and survives struct edits. Keep the literal only if the size is genuinely not a `sizeof` (e.g. a sub-range copy or a known fixed buffer); in that case a `// @hack:`/explanatory comment on the line above clarifies intent. Codegen note: with the known struct size, `sizeof` produces the same immediate, so this is usually a codegen-neutral readability win — still fdiff to confirm."
+rule:
+  any:
+    - pattern: 'memset($PTR, $V, $N)'
+    - pattern: 'memcpy($DST, $SRC, $N)'
+    - pattern:
+        context: 'x = malloc($N);'
+        selector: call_expression
+constraints:
+  N:
+    kind: number_literal

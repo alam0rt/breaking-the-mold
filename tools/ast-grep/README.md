@@ -20,6 +20,13 @@ Clarity checks (`hint`):
 - `no-raw-address-symbols`: flag direct `D_800xxxxx` C identifiers so they can become meaningful asm-labeled names.
 - `no-volatile-cast`: `*(volatile T *)` reload hacks.
 - `no-inline-asm`: any inline asm (broad cleanup lens — "could this be C?").
+- `no-raw-address-literal`: bare `0x80[01]xxxxx` RAM-address integer literals escaping into call args/assignments (the literal companion to `no-raw-address-symbols`, which catches the `D_800xxxxx` identifier form). Skips the identifier-embedded form (`EntityDestructor_Vtable0x80010870_A`), which is already a named symbol.
+- `magic-struct-size`: numeric size literal as the size arg to `memset`/`memcpy`/`malloc` (e.g. `memset(e, 0, 0x3A8)`) that usually wants `sizeof(...)`. `sizeof` forms are exempt. (Authoring note: bare `malloc($N)` parses as a type-cast, so that alternative uses a `context:`/`selector:` call wrapper.)
+- `function-needs-comment`: a non-`static` `function_definition` with no comment on the line directly above. The plate comment is this project's institutional memory; this enforces *presence*, not correctness. `static` helpers are exempt to limit noise. (Currently surfaces the full ~491-function documentation backlog by design — it shrinks as functions are documented.)
+
+Correctness check (`warning`):
+
+- `no-floating-point`: a `float`/`double` `primitive_type` in code. The R3000A has no FPU, so the original is fixed-point — a float is almost always a transcription error, not style. The canonical `typedef float f32; typedef double f64;` aliases (inside a `type_definition`) are exempt; tag a genuine, deliberate float with `// @hack: <why>`.
 Reader-pattern checks (`hint`) — turn raw decompiler output into plausible original C (from the soul-re `DECOMPILATION.MD` catalog; see `docs/matching-conventions.md`). Split by codegen risk:
 
 *Codegen-neutral (the rewrite compiles identically — safe readability wins, still fdiff to be sure):*
