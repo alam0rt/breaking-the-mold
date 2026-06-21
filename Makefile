@@ -174,7 +174,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force
 
 # Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
@@ -200,7 +200,9 @@ help:
 	@echo "Targets:"
 	@echo "  all              - Build the project (default, byte-matching)"
 	@echo "  config           - Render $(SPLAT_CONFIG) from $(SPLAT_CONFIG_SRC)"
-	@echo "  extract          - Extract/disassemble binary using splat"
+	@echo "  extract          - Extract/disassemble binary using splat (auto-annotates ASM)"
+	@echo "  annotate-asm     - Annotate ASM files in place (idempotent)"
+	@echo "  annotate-asm-force - Re-annotate all ASM files (no skip)"
 	@echo "  expected         - Copy original binary to expected/"
 	@echo "  check            - Verify build matches original (quick)"
 	@echo "  verify           - Alias for 'check' (for compatibility)"
@@ -265,6 +267,7 @@ extract: $(SPLAT_CONFIG)
 	@echo "Extracting binary using splat..."
 	$(SPLAT) $(SPLAT_CONFIG)
 	@touch $(LD_SCRIPT)
+	@$(MAKE) --no-print-directory annotate-asm
 	@echo "Extraction complete. ASM files in $(ASM_DIR)/"
 
 # Generate linker script and ASM files if they don't exist
@@ -272,6 +275,29 @@ $(LD_SCRIPT): $(SPLAT_CONFIG) $(BASEROM)
 	@echo "Running splat to generate linker script and ASM..."
 	$(SPLAT) $(SPLAT_CONFIG)
 	@touch $(LD_SCRIPT)
+
+# Annotate splat-extracted .s files in place with symbol/struct/asset/callee
+# context (idempotent via --skip-annotated; annotations are `#` comments so
+# the assembler ignores them and the build stays byte-identical).
+ANNOTATE := $(PYTHON) tools/asm_annotate.py
+ANNOTATE_DIRS := $(ASM_DIR)/nonmatchings $(ASM_DIR)/libs
+.PHONY: annotate-asm annotate-asm-force
+annotate-asm:
+	@if [ -d $(ASM_DIR) ]; then \
+		echo "Annotating ASM files (skipping already-annotated)..."; \
+		find $(ANNOTATE_DIRS) -name '*.s' -print0 2>/dev/null \
+			| xargs -0 -r $(ANNOTATE) --overwrite --no-color --skip-annotated; \
+	else \
+		echo "No $(ASM_DIR)/ to annotate (run 'make extract' first)."; \
+	fi
+annotate-asm-force:
+	@if [ -d $(ASM_DIR) ]; then \
+		echo "Re-annotating ALL ASM files (no skip)..."; \
+		find $(ANNOTATE_DIRS) -name '*.s' -print0 2>/dev/null \
+			| xargs -0 -r $(ANNOTATE) --overwrite --no-color; \
+	else \
+		echo "No $(ASM_DIR)/ to annotate (run 'make extract' first)."; \
+	fi
 
 # -----------------------------------------------------------------------------
 # Compilation Rules
@@ -537,9 +563,21 @@ ISO ?= disks/pal/sles-01090.iso01.iso
 ELF := $(BUILD_DIR)/$(PROJECT).elf
 GDB_PORT := 3333
 
-# PCSX-Redux executable (via nixGL for GPU access)
-# Note: \# escapes the hash which Make treats as comment
-PCSX := nix run --impure github:nix-community/nixGL\#nixGLIntel -- pcsx-redux
+# PCSX-Redux GPU wrapper. Override with `make emu GPU=intel` if needed.
+# Auto-detect: NVIDIA if /dev/nvidia0 exists, else Intel.
+# Valid values: nvidia, intel, default, none (none = run pcsx-redux directly, on NixOS)
+GPU ?= $(shell test -e /dev/nvidia0 && echo nvidia || echo intel)
+# NVIDIA driver is unfree; nixGL needs NIXPKGS_ALLOW_UNFREE=1 to build it.
+# Optimus/PRIME laptops also need __NV_PRIME_RENDER_OFFLOAD=1 and SDL_VIDEODRIVER=x11
+# so the window is created via X11 (not Wayland EGL) and offloaded to the dGPU.
+NIXGL_intel   := nix run --impure github:nix-community/nixGL\#nixGLIntel --
+NIXGL_nvidia  := NIXPKGS_ALLOW_UNFREE=1 SDL_VIDEODRIVER=x11 __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia nix run --impure github:nix-community/nixGL\#nixGLNvidia --
+NIXGL_default := nix run --impure github:nix-community/nixGL --
+NIXGL_none    :=
+NIXGL_WRAPPER := $(NIXGL_$(GPU))
+
+# PCSX-Redux executable (wrapped for host GPU access)
+PCSX := $(NIXGL_WRAPPER) pcsx-redux
 
 # Launch PCSX-Redux emulator with GDB server (runs in foreground)
 # NOTE: Web server must be enabled manually in GUI:
@@ -610,15 +648,27 @@ snapshot:
 	python3 scripts/ram_snapshot.py -v -o /tmp/skullmonkeys_snapshot.json
 	@echo "Saved to /tmp/skullmonkeys_snapshot.json"
 
-# Run a Lua script in PCSX-Redux
+# Run a Lua script in PCSX-Redux.
 # Usage: make lua SCRIPT=scripts/hello.lua
-# Note: -interpreter -debugger required for breakpoints to work
+#        make lua SCRIPT=scripts/breaks.lua BREAK=1  # use -interpreter for breakpoints
+#
+# Default uses -dynarec (fast). Breakpoints via PCSX.addBreakpoint() require
+# the interpreter -- pass BREAK=1 to switch.
+PCSX_CPU := $(if $(BREAK),-interpreter -debugger,-dynarec)
+
 lua:
 ifndef SCRIPT
-	@echo "Usage: make lua SCRIPT=scripts/hello.lua"
+	@echo "Usage: make lua SCRIPT=scripts/hello.lua [BREAK=1]"
 	@exit 1
 endif
-	$(PCSX) -interpreter -debugger -lua_stdout -iso $(ISO) -dofile $(SCRIPT) -run
+	$(PCSX) $(PCSX_CPU) -lua_stdout -iso $(ISO) -dofile $(SCRIPT) -run
+
+# Struct watcher with auto-launch (dynarec; no breakpoints needed).
+# Usage: make watcher [SCRIPT=scripts/struct_watcher.lua]
+WATCHER_SCRIPT ?= scripts/struct_watcher.lua
+watcher:
+	@mkdir -p game_watcher/logs
+	$(PCSX) -dynarec -lua_stdout -iso $(ISO) -dofile $(WATCHER_SCRIPT) -run
 
 # Run inline Lua code
 # Usage: make lua-exec CODE='print("hello")'
