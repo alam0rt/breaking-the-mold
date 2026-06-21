@@ -22,6 +22,10 @@ extern void JoeHeadJoeUpdateWithCollisionCheck(Entity *e);
 extern void JoeHeadJoeSetIdleState(Entity *e);
 extern void EnemyUpdateWithCollisionAndDeath(Entity *e);
 extern void EnemyTickWithCollision(Entity *e);
+extern s32 ShrineyGuardAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern void SetAnimationLoopFrame(Entity *e, u32 frame);
+extern void SetAnimationSpriteCallback(Entity *e, u32 spriteId);
+extern void SetAnimationFrameIndex(Entity *e, s32 frame);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
@@ -909,8 +913,31 @@ void ShrineyGuardIdleState(Entity *e) {
  * trigger can start the ramp from zero. Sets the anim loop frame to
  * 0x01084280 (so the keyframe fires) and the sprite callback to
  * 0x02421405 (the shared anim-finished hash). */
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackAnimState);
+void ShrineyGuardAttackAnimState(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
 
+    do {} while (0);
+    fn = (void (*)())ShrineyGuardAttackEventHandler;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = EnemyUpdateWithCollisionAndDeath;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x85860D4, 1);
+    *(u32 *)((u8 *)e + 0x118) = 0;
+    ((u8 *)e)[0x11C] = 0;
+    SetAnimationLoopFrame(e, 0x1084280);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationFrameIndex(e, 0);
+}
 /* Entered from the D_800A5C08 marker (set by MoveCallback when the slam
  * velocity decays to 0). Sets stunActive (+0x115) = 1, calls
  * SetEntityFacingDirection(e, 2) (face the player), clears readyFlag
