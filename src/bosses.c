@@ -38,6 +38,8 @@ extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState();
 extern void HazardActivateWithSound(Entity *e);
 extern void GlennYntisAttackEventHandler(Entity *e);
+extern void EntitySetRenderFlags(Entity *e, u32 flags);
+extern void EntityDestroyWithEffects(Entity *e);
 extern void CollectibleTickCallback(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
@@ -313,7 +315,26 @@ void EntityStopSound(BossVoice144Entity *e) {
     e->voiceHandle = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleDestroyState);
+/* CollectibleDestroyState — destruction state for a collectible boss.
+ * The original entity (e1) carries a "linked sprite" at +0x134 (e2);
+ * this re-enables e2's sprite render context, clears its +0x100 status
+ * byte, restores its render flags, resets the collect-anim sequence
+ * (loopFrame/spriteCallback/frameIndex), then destroys e1 with its
+ * VFX, sets e1 to anim frame 8, and stamps +0x111 = 2 to mark the
+ * post-destroy state for the next queue tick. */
+void CollectibleDestroyState(Entity *e1) {
+    SpriteEntity *e2 = *(SpriteEntity **)((u8 *)e1 + 0x134);
+
+    ((SpriteRenderContextRef *)e2->base.spriteContext)->activeFlag = 1;
+    ((u8 *)e2)[0x100] = 0;
+    EntitySetRenderFlags((Entity *)e2, 1);
+    SetAnimationLoopFrame((Entity *)e2, 0x1084280);
+    SetAnimationSpriteCallback((Entity *)e2, 0x2421405);
+    SetAnimationFrameIndex((Entity *)e2, 0);
+    EntityDestroyWithEffects(e1);
+    ((u8 *)e1)[0x111] = 2;
+    SetAnimationFrameIndex(e1, 8);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggChaseState);
 
