@@ -105,8 +105,8 @@ extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 extern void AIEntityRandomBehaviorTick(Entity *e);
-extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
-extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerWithRandomWalk(Entity *e, u16 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandlerWithDelayedWalk(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnProjectile(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWithCountdownToWalk(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerSpawnParticle(Entity *e, u32 event, u32 arg2, u32 arg3);
@@ -117,7 +117,7 @@ extern void EntityFallingGravityWithCollision(Entity *e);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
 extern void TripleLaserMonkeyDeathTick(Entity *e);
-extern s32 EntityEventHandler0x1001_1002_1008(Entity *e, u32 event, u32 arg2, u32 arg3);
+extern s32 EntityEventHandler0x1001_1002_1008(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern void EntityGroundSnapWithAnimation(Entity *e);
 extern void SetEntityFacingDirection(Entity *e, s32 dir);
@@ -456,6 +456,12 @@ void TimedSparkleCollectibleTick(TimedCollectibleEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", AIEntityRandomBehaviorTick);
 
+/* Same 0x1001/0x1002/0x1008 switch skeleton as EntityEventHandlerIdle, plus an
+ * EVT_TICK countdown on +0x110 (queue at 0, SetAnimationSpriteId(-1) at 1).
+ * SHELVED: register-coloring split only — TARGET births `result` in the dead
+ * $a2 arg reg during the switch and copies to $s0 only across the post-tick
+ * calls; cc1 here keeps `result` in $s0 throughout. Same instruction count,
+ * permuter territory. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandler0x1001_1002_1008);
 
 s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 unused, u32 attacker) {
@@ -485,8 +491,38 @@ s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 unused, u32 
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithRandomWalk);
+s32 EntityEventHandlerWithRandomWalk(Entity *e, u16 event, u32 unused, u32 attacker) {
+    s32 result = 0;
+    switch (event) {
+    case EVT_TOKEN_QUERY:
+        ((u8 *)e)[0x106] = 1;
+        if (attacker == *(s32 *)((u8 *)e + 0x108)) {
+            *(s32 *)((u8 *)e + 0x108) = 0;
+        }
+        result = (s32)e;
+        break;
+    case EVT_SET_READY:
+        ((u8 *)e)[0x106] = 1;
+        break;
+    case EVT_TOKEN_CLAIM:
+        if (*(s32 *)((u8 *)e + 0x108) == 0) {
+            *(s32 *)((u8 *)e + 0x108) = attacker;
+            result = 1;
+        }
+        break;
+    }
+    if (event == EVT_TICK) {
+        ((u8 *)e)[0x112] = (rand() & 0xF) + 8;
+        EntityStateSetWalk(e);
+    }
+    return result;
+}
 
+/* Idle-skeleton switch + EVT_TICK delay countdown (rand/SetWalk at 0,
+ * SetAnimationSpriteId(-1) at 1). SHELVED: same result register-coloring split
+ * as EntityEventHandler0x1001_1002_1008 — TARGET births `result` in the dead
+ * $a0 arg reg during the switch and copies to $s1 across the post-tick calls;
+ * cc1 keeps it in $s1 throughout. Permuter territory. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithDelayedWalk);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapWithAnimation);
