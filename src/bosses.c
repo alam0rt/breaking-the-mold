@@ -30,6 +30,8 @@ extern void SetAnimationSpriteCallback(Entity *e, u32 spriteId);
 extern void SetAnimationFrameIndex(Entity *e, s32 frame);
 extern u32  PlayEntityPositionSound(Entity *e, u32 soundId);
 extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
+extern void SetEntityFacingDirection(Entity *e, s32 dir);
+extern void JoeHeadJoeMoveAndCheckAttack(Entity *e);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
@@ -1114,7 +1116,39 @@ void JoeHeadJoeClearVoice(JoeHeadJoeEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeSetFacingAndAttack);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEnterActiveState);
+/* JoeHeadJoeEnterActiveState — install active-mode callbacks on a Joe-Head-
+ * Joe boss. Resets the per-state misc counter at +0x117 and arms the
+ * "active" flag at +0x116, installs the standard
+ * JoeHeadJoeUpdateWithCollisionCheck tick + JoeHeadJoeBounceEventHandler
+ * event handlers, sets the active sprite (0x1A3109B2), and queues the
+ * JoeHeadJoeMoveAndCheckAttack callback on the queued-state slot. */
+void JoeHeadJoeEnterActiveState(JoeHeadJoeEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    ((u8 *)e)[0x117] = 0;
+    ((u8 *)e)[0x116] = 1;
+    do {} while (0);
+    fn = JoeHeadJoeUpdateWithCollisionCheck;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    fn = (void (*)())JoeHeadJoeBounceEventHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x1A3109B2, 1);
+    fn = JoeHeadJoeMoveAndCheckAttack;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeMoveAndCheckAttack);
 
