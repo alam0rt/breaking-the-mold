@@ -207,7 +207,16 @@ void CollisionCheckWrapper(Entity *entity, u16 a1, u16 a2, u32 a3) {
                                   a1, a2, a3, entity);
 }
 
-INCLUDE_ASM("asm/nonmatchings/entity", EntityBroadcastBoxCollision);
+void EntityBroadcastBoxCollision(Entity *entity, u16 a1, u16 a2, u32 a3) {
+    extern void BroadcastBoxCollision(GameState *gs, BoxCorner minCorner,
+                                  BoxCorner maxCorner, u32 a, u32 b, u32 c,
+                                  Entity *e);
+    CalculateEntityScreenBounds(entity);
+    BroadcastBoxCollision(g_pGameState,
+                                  *(BoxCorner *)&entity->screenX1,
+                                  *(BoxCorner *)&entity->screenX2,
+                                  a1, a2, a3, entity);
+}
 
 INCLUDE_ASM("asm/nonmatchings/entity", CheckEntityPointCollisionWithOffsets);
 
