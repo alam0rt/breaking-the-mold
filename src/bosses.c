@@ -1504,7 +1504,33 @@ void EnemyIdleTimerState(Entity *e) {
     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EnemySpriteState);
+void EnemySpriteState(Entity *e) {
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->renderMarker = slot.s[0];
+    fn = KloggUpdateWithSound;
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    fn = (void (*)())EntityCollision_EnemyHitWithCallback;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    SetEntitySpriteId(e, 0x08BC8013, 1);
+    fn = KloggSetMoveState;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyDefeatState);
 
