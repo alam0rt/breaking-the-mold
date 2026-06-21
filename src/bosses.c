@@ -35,7 +35,7 @@ extern void JoeHeadJoeMoveAndCheckAttack(Entity *e);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
-extern void GlennYntisSelectRandomAnimState(Entity *e);
+extern void GlennYntisSelectRandomAnimState();
 extern void HazardActivateWithSound(Entity *e);
 extern void GlennYntisAttackEventHandler(Entity *e);
 extern void CollectibleTickCallback(Entity *e);
@@ -130,6 +130,12 @@ u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98");
 EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C");
 u32   HAZARD_STOP_SOUND_STATE_MARKER asm("D_800A5BC0");
 EntityCallback HAZARD_STOP_SOUND_STATE_CALLBACK asm("D_800A5BC4");
+u32   GLENN_YNTIS_ANIM_B_STATE_MARKER asm("D_800A5BD0");
+EntityCallback GLENN_YNTIS_ANIM_B_STATE_CALLBACK asm("D_800A5BD4");
+u32   GLENN_YNTIS_ANIM_IDLE_STATE_MARKER asm("D_800A5BD8");
+EntityCallback GLENN_YNTIS_ANIM_IDLE_STATE_CALLBACK asm("D_800A5BDC");
+u32   GLENN_YNTIS_ANIM_C_STATE_MARKER asm("D_800A5BE0");
+EntityCallback GLENN_YNTIS_ANIM_C_STATE_CALLBACK asm("D_800A5BE4");
 u32   SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER asm("D_800A5BF0");
 EntityCallback SHRINEY_GUARD_IDLE_TIMEOUT_STATE_CALLBACK asm("D_800A5BF4");
 u32   SHRINEY_GUARD_REPEAT_ATTACK_STATE_MARKER asm("D_800A5C10");
@@ -556,7 +562,40 @@ void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
     *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisSelectRandomAnimState);
+/* GlennYntisSelectRandomAnimState — rolls rand() & 7 and dispatches to
+ * one of three anim sub-states via EntitySetState (so the next-frame
+ * processor consumes it). Distribution: r in [0,3) → AnimStateB,
+ * r in [3,6) → IdleAnimState, r in [6,8) → AnimStateC. Then queues
+ * HazardActivateWithSound on the queued-state slot to re-emit the
+ * sound-effect on the following tick. */
+void GlennYntisSelectRandomAnimState(SpriteEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    u32 r;
+    u32 marker;
+    EntityCallback cb;
+
+    r = rand() & 7;
+    if (r < 3) {
+        marker = GLENN_YNTIS_ANIM_B_STATE_MARKER;
+        cb = GLENN_YNTIS_ANIM_B_STATE_CALLBACK;
+    } else if (r < 6) {
+        marker = GLENN_YNTIS_ANIM_IDLE_STATE_MARKER;
+        cb = GLENN_YNTIS_ANIM_IDLE_STATE_CALLBACK;
+    } else {
+        marker = GLENN_YNTIS_ANIM_C_STATE_MARKER;
+        cb = GLENN_YNTIS_ANIM_C_STATE_CALLBACK;
+    }
+    EntitySetState((Entity *)e, marker, cb);
+    fn = HazardActivateWithSound;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->queuedStateMarker = slot.s;
+}
 
 /* Glenn Yntis boss "idle anim" state: installs the attack event handler
  * on the event slot (+0x08) and CollectibleTickCallback on the tick slot
