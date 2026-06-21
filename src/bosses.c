@@ -21,6 +21,8 @@ extern s32 JoeHeadJoeAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3
 extern void JoeHeadJoeUpdateWithCollisionCheck(Entity *e);
 extern void JoeHeadJoeSetIdleState(Entity *e);
 extern void EnemyUpdateWithCollisionAndDeath(Entity *e);
+extern void EnemyTickWithCollision(Entity *e);
+void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
@@ -307,7 +309,31 @@ INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleRiseState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleFloatState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleIdleWaitState);
+void CollectibleIdleWaitState(u8 *e_raw) {
+    Entity *entity = (Entity *)e_raw;
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    g_pGameState->direct_level_load = e_raw[0x140];
+    ((SpriteRenderContextRef *)entity->spriteContext)->activeFlag = 0;
+    SetAnimationActive(entity, 0);
+
+    fn = EnemyTickWithCollision;
+    do {} while (0);
+    m1 = -1;
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = m1;
+    slot.s[0].fn = fn;
+    *(CallbackSlot *)&entity->tickMarker = slot.s[0];
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&entity->renderMarker = slot.s[0];
+
+    e_raw[0x106] = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntitySwapChildPointer);
 
@@ -389,7 +415,40 @@ void HazardStopSoundAlt(BossVoiceEntity *e) {
     e->voiceHandle = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", CollectibleActiveState);
+/* Switches GlennYntis into the active boss state: installs the attack
+ * event handler on +0x08, CollectibleTickCallback on the tick slot, sets
+ * the active sprite (0x407801DC), clears the attack-counter and phase
+ * timer (+0x111/+0x112), then queues GlennYntisSetPhaseFromHP on the
+ * queued-state slot. */
+void CollectibleActiveState(Entity *e) {
+    SpriteEntity *se = (SpriteEntity *)e;
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = (void (*)())GlennYntisAttackEventHandler;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    fn = CollectibleTickCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x407801DC, 1);
+    ((u8 *)e)[0x111] = 0;
+    ((u8 *)e)[0x112] = 0;
+    do {} while (0);
+    fn = GlennYntisSetPhaseFromHP;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&se->queuedStateMarker = slot.s;
+}
 
 /* Re-arms a boss-state countdown (+0x112 = idleTimeout) to (5 - boss_hp)
  * frames, picks a fresh idle animation via GlennYntisSelectRandomAnimState,
@@ -528,10 +587,121 @@ void GlennYntisVictoryCallback(u8 *e_raw) {
     e_raw[0x106] = 1;
 }
 
+/* =========================================================================
+ *  SHRINEY GUARD (a.k.a. "Shriney Guard" / boss of MEGA level 5)
+ * =========================================================================
+ *
+ *  Entity type  : ENTITY_TYPE_101_BOSS_SHRINEY_GUARD (0x65)
+ *  Vtable       : SHRINEY_GUARD_VTABLE  @ D_800112A8
+ *  Aux alloc    : 0x2710 (10000) bytes from BLB heap (auxiliary sprite stack)
+ *  Init sprite  : 0xA8482860  (DOWN_MOUNTLET — boss base sprite, 0xA2 x 0xF0)
+ *  Sprite roster:
+ *      0xA8482860  BASE       — initial sprite (set in InitEntitySprite)
+ *      0x09382152  IDLE       — passive idle pose
+ *      0x4C106054  WINDUP     — attack windup (single-attack path)
+ *      0x40106054  LOOP_LINK  — first frame of the looping-attack chain
+ *      0x2C182010  LOOP_START — looping attack stun-window stance
+ *      0x08192250  READY      — facing the player just before a slam
+ *      0x085860D4  SLAM       — the actual slam animation (movement-driven)
+ *      0x0A1820D4  DEATH      — death pose (set in ShrineyGuardDeathState)
+ *  Anim helpers:
+ *      SetAnimationLoopFrame(0x01084280) — slam-anim loop frame id
+ *      SetAnimationLoopFrame(0xC00200C9) — looping-attack second-loop id
+ *      SetAnimationSpriteCallback(0x02421405) — anim-finished callback hash
+ *
+ *  Health: PlayerState.boss_hp (PLAYER_STATE_DATA[+0x1D]) is set to 3 by
+ *  InitShrineyGuardBoss. BossEventHandler decrements it on damage event 0x1002
+ *  and dispatches into ShrineyGuardStartLoopAttackState while hp>0, or
+ *  ShrineyGuardDeathState when hp reaches 0. Confirmed by runtime trace
+ *  game_watcher/logs/struct_watch_20260621_110109.jsonl (boss_hp 3→2→1→0,
+ *  three damage hits, then respawn on player death):
+ *      f0405: spawn (boss_hp 0->3)
+ *      f0592: hit 1 (shake=19, hp 3->2)
+ *      f0805: hit 2 (shake=19, hp 2->1)
+ *      f0929: player death  (shake=28)
+ *      f1053: respawn (boss_hp 0->3)
+ *      f1180,f1360,f1541: three damage hits → death (shake=19 throughout)
+ *
+ *  FSM markers (gp_rel pair: marker | callback):
+ *      D_800A5BE8/EC  init-state         → BossRandomAttackChoice
+ *      D_800A5BF0/F4  idle-timeout fires → ShrineyGuardAttackCounterState
+ *      D_800A5BF8/FC  damage to death    → ShrineyGuardDeathState
+ *      D_800A5C00/04  damage but alive   → ShrineyGuardStartLoopAttackState
+ *      D_800A5C08/0C  slam decel == 0    → ShrineyGuardReadyAttackState
+ *      D_800A5C10/14  repeat (<3 attacks)→ ShrineyGuardAttackAnimState
+ *      D_800A5C18/1C  finish (3 attacks) → ShrineyGuardIdleState
+ *  (markers are tag 0xFFFF0000 so EntitySetState matches against them.)
+ *
+ *  Per-entity scratch layout (overlay on SpriteEntity, see ShrineyGuardEntity
+ *  typedef above):
+ *      +0x10C  readyFlag   — 0=idle, 1=slam-armed (set by AttackEventHandler),
+ *                            2=stun/death (set by StartLoop & DeathState)
+ *      +0x110  destLevel   — level number written to GS.direct_level_load on
+ *                            victory (read from EntitySpawnData[+0xC] in init)
+ *      +0x111  activeTimer — ShrineyGuardActiveEventHandler decrement target
+ *      +0x112  idleTimeout — frames until boss issues next attack (init 0xB4
+ *                            = 180 frames; BossRandomAttackChoice resets 0x5A)
+ *      +0x113  stunTimer   — StartLoopAttackState arms with 5; StunTick decays
+ *      +0x114  attackCounter — number of consecutive slams (resets at 3)
+ *      +0x115  stunActive  — 1 while ReadyAttack windup is playing
+ *      +0x118  slamVelocity  (s32, 16.16 fixed)  — see MoveCallback below
+ *      +0x11C  slamFrameCounter (u8)             — see MoveCallback below
+ *
+ *  Slam physics (ShrineyGuardMoveCallback):
+ *      max velocity = 0x50000   (~5.0 world-units per frame)
+ *      accel        = +0x8000   (~0.5/frame) for the first 25 (0x19) frames
+ *      decel        = -0x1800   (~0.094/frame) after frame 25
+ *      direction    = sign from entity facing byte (+0x74: 0=right, 1=left)
+ *      total slam   ≈ 78 frames (~1.56 s at 50fps) before vel reaches 0
+ *      on vel == 0  → EntitySetState(D_800A5C08, ShrineyGuardReadyAttackState)
+ *
+ *  Magic event ARG constants (consumed by BossEventHandler, event==0x0001):
+ *      0x400B43A0  spawn directional projectile  (offset ±0x38 X from facing)
+ *      0x18443181  set GS+0x11A = 0x14           (intro/cinematic trigger)
+ *      0x46384180  clear GS.level_active +
+ *                  CreateFadeOverlayEntity()     (level-end fade)
+ *  Magic event ARG (consumed by ShrineyGuardAttackEventHandler, event==1):
+ *      0x01084280  player landed on head: install ShrineyGuardMoveCallback on
+ *                  +0x1C/0x20 movement slot, set readyFlag=1, stunActive=0
+ *
+ *  Companion entities:
+ *    - The shriney-styled sound-emitting CLAYBALL (entity type 0x5D) shares
+ *      a name prefix but is implemented in clayball.c
+ *      (InitBonusClayballEntity / ShrineyGuardSoundUpdateTick /
+ *       ShrineyGuardEventWithSound / ShrineyGuardDestroyWithSoundCleanup).
+ *      It is the audio-driven rolling variant the boss summons; it manages
+ *      its own SPU voices and is NOT the boss entity itself.
+ *
+ *  Cross-references:
+ *      docs/systems/boss-ai/boss-shriney-guard.md  (per-boss design notes)
+ *      docs/systems/boss-entity-pattern.md         (shared boss layout)
+ *      docs/systems/player/trace-findings.md       (runtime trace evidence)
+ * ========================================================================= */
+
+/* Boss-entity constructor invoked from EntityType101_Boss_ShrineyGuard_Init
+ * in entinit.c. Allocates the 0x2710-byte auxiliary sprite stack from the
+ * BLB heap, copies the player-state boss_hp byte (now 3) into aux[+0x100],
+ * pointer-chases EntitySpawnData[+0xC] into main[+0x110] to remember the
+ * destination level, installs SHRINEY_GUARD_VTABLE at +0x18, writes
+ * PLAYER_STATE_DATA[+0x1D] = 3 (boss HP), then EntitySetState into the
+ * D_800A5BE8 marker which dispatches BossRandomAttackChoice. Finally sets
+ * the idle timeout (+0x112) to 0xB4 (180 frames) and arms +0x115. */
 INCLUDE_ASM("asm/nonmatchings/bosses", InitShrineyGuardBoss);
 
+/* Shared enemy per-tick driver used by the Shriney Guard, Glenn Yntis and
+ * other "hit-on-bounce" enemies. Runs the entity's own update callback,
+ * then — unless readyFlag (+0x10C) == 2 (stunned/death lockout) — invokes
+ * the standard collision wrapper (CollisionCheckWrapper(2, 0x1000)) which
+ * dispatches events 0x1001/0x1002 to whoever hits the boss. Finally
+ * inspects the +0x106 death flag and runs the queued callback slot at
+ * +0x98/0x9C if the entity has been marked dead. */
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyUpdateWithCollisionAndDeath);
 
+/* Per-tick callback installed by ShrineyGuardIdleState. Decrements the
+ * idle-timeout byte and, when it hits 0, transitions through
+ * D_800A5BF0 → ShrineyGuardAttackCounterState (i.e. boss has been idle
+ * long enough; pick the next attack). Always also runs the shared
+ * EnemyUpdateWithCollisionAndDeath tick so collision still fires. */
 void ShrineyGuardIdleTickCallback(Entity *e) {
     ShrineyGuardEntity *entity = (ShrineyGuardEntity *)e;
     if (entity->idleTimeout != 0) {
@@ -544,6 +714,10 @@ void ShrineyGuardIdleTickCallback(Entity *e) {
     EnemyUpdateWithCollisionAndDeath(e);
 }
 
+/* Per-tick callback installed by ShrineyGuardStartLoopAttackState. Counts
+ * the 5-frame stun window down; once it elapses the boss is re-armed by
+ * clearing stunActive (+0x115) and re-asserting readyFlag (+0x10C) = 1, so
+ * the next player-bounce hit will trigger AttackEventHandler again. */
 void ShrineyGuardStunTickCallback(Entity *e) {
     ShrineyGuardEntity *entity = (ShrineyGuardEntity *)e;
     if (entity->stunTimer != 0) {
@@ -556,8 +730,33 @@ void ShrineyGuardStunTickCallback(Entity *e) {
     EnemyUpdateWithCollisionAndDeath(e);
 }
 
+/* Master event dispatcher for boss-class entities (shared by Shriney
+ * Guard, Glenn Yntis, Joe-Head-Joe, Klogg). Handles:
+ *   event 0x0001 (script triggers) — fires several arg2-keyed magic
+ *     constants:
+ *       0x400B43A0 → spawn a directional projectile via
+ *                    InitDirectionalPositionEntity (X offset ±0x38 based
+ *                    on facing +0x74).
+ *       0x18443181 → write GS+0x11A = 0x14 (intro/cinematic flag).
+ *       0x46384180 → clear GS.level_active + spawn a fade-overlay entity
+ *                    (CreateFadeOverlayEntity), triggering the end-of-
+ *                    level transition.
+ *   event 0x1001 (player bounce land)  — sets readyFlag (+0x10C)=1 unless
+ *     stunActive (+0x115) already set; dispatches the queued state slot.
+ *   event 0x1002 (player attack hit)   — decrements PLAYER_STATE_DATA
+ *     [+0x1D] (boss_hp). If hp>0 → EntitySetState(D_800A5C00,
+ *     ShrineyGuardStartLoopAttackState). If hp==0 → EntitySetState
+ *     (D_800A5BF8, ShrineyGuardDeathState).
+ *   event 0x1008 (force-death/cleanup) — synchronous teardown path. */
 INCLUDE_ASM("asm/nonmatchings/bosses", BossEventHandler);
 
+/* Wrapper-event-handler installed by ShrineyGuardReadyAttackState /
+ * StartLoopAttackState / DeathState. Forwards events to BossEventHandler
+ * (so damage/spawn/level-end still works) but also services event 0x0002
+ * which is the per-tick "anim heartbeat" — used to count down activeTimer
+ * (+0x111) and call SetAnimationSpriteId(-1) to drop the current animation
+ * once it reaches zero (effectively a finite-time sprite). When the timer
+ * is already 0, advances the queued-state slot. */
 s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u32 arg3) {
     s32 result;
     u32 maskedEvent = event & 0xFFFF;
@@ -575,10 +774,33 @@ s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u
     return result;
 }
 
+/* Event handler installed by ShrineyGuardAttackAnimState (the slam-anim).
+ * On event 0x0001 with arg2 == 0x01084280 (an anim-keyframe trigger fired
+ * from inside the slam animation), it overwrites the entity's movement
+ * slot (+0x1C/0x20) with ShrineyGuardMoveCallback, sets readyFlag
+ * (+0x10C) = 1 and clears stunActive (+0x115). This is what kicks off
+ * the horizontal slam: until this frame the boss was rooted; from this
+ * frame on MoveCallback drives the velocity ramp. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackEventHandler);
 
+/* Movement callback installed mid-animation by AttackEventHandler. Each
+ * tick:
+ *   - increment +0x11C (slamFrameCounter, u8) — gated against 0xFF
+ *   - if slamFrameCounter < 0x19 (25): add 0x8000 to +0x118
+ *     (slamVelocity, s32 16.16), clamp at 0x50000 (~5.0/frame)
+ *   - else: subtract 0x1800 from slamVelocity; if it reaches 0 dispatch
+ *     EntitySetState(D_800A5C08, ShrineyGuardReadyAttackState).
+ *   - apply ±slamVelocity to (worldX hi:lo at +0x68:+0x6C) according to
+ *     facing byte (+0x74) — 0 = move right, 1 = move left.
+ * Net effect: a 25-frame acceleration ramp followed by a 53-frame decel,
+ * ~78 frames total (≈1.56 s at 50 fps PAL). */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardMoveCallback);
 
+/* State entered from D_800A5BE8 (init) and from the idle-timeout marker.
+ * Resets idleTimeout to 0x5A (90 frames ≈ 1.8 s — the time the boss
+ * "shows" its next attack), then 50/50 RNG picks between the single
+ * attack-windup path (ShrineyGuardSetAttackState) and the looping
+ * attack path (ShrineyGuardSetLoopingAttackState). */
 void BossRandomAttackChoice(Entity *e) {
     ShrineyGuardEntity *entity = (ShrineyGuardEntity *)e;
     entity->idleTimeout = 0x5A;
@@ -589,6 +811,12 @@ void BossRandomAttackChoice(Entity *e) {
     }
 }
 
+/* Reached when the idle-timeout marker fires (boss has been idle long
+ * enough). Counts how many slams have already been queued in this idle
+ * cycle (+0x114, attackCounter): if < 3 → loop back through
+ * SHRINEY_GUARD_REPEAT_ATTACK_STATE (ShrineyGuardAttackAnimState);
+ * otherwise reset counter and dispatch SHRINEY_GUARD_FINISH_ATTACK_STATE
+ * (ShrineyGuardIdleState) so the boss returns to the idle pose. */
 void ShrineyGuardAttackCounterState(Entity *e) {
     ShrineyGuardEntity *entity = (ShrineyGuardEntity *)e;
     u8 *counter = &entity->attackCounter;
@@ -603,9 +831,11 @@ void ShrineyGuardAttackCounterState(Entity *e) {
     }
 }
 
-/* Switches the boss into its attack-windup state: installs BossEventHandler
- * on the +0x08 event slot and ShrineyGuardIdleTickCallback on the +0x00 tick
- * slot, then switches the sprite to 0x4C106054 (attack-windup animation). */
+/* Switches the boss into its single attack-windup state: installs
+ * BossEventHandler on the +0x08 event slot and ShrineyGuardIdleTickCallback
+ * on the +0x00 tick slot, then switches the sprite to 0x4C106054
+ * (WINDUP — animation frame the player can bounce on to trigger the
+ * slam via AttackEventHandler/0x01084280). */
 void ShrineyGuardSetAttackState(Entity *e) {
     PadSlot slot;
     s16 m1;
@@ -627,8 +857,21 @@ void ShrineyGuardSetAttackState(Entity *e) {
     SetEntitySpriteId(e, 0x4C106054, 1);
 }
 
+/* Variant of ShrineyGuardSetAttackState used for the chained/looping
+ * attack: same handler+tick install but the sprite-id is 0x40106054 (the
+ * LOOP_LINK frame), and additionally calls SetAnimationLoopFrame
+ * (0xC00200C9, 2) plus SetAnimationSpriteCallback(0x02421405) to drive
+ * the looping-attack second-loop, and queues ShrineyGuardSetAttackState
+ * on the +0x98 queued-state slot so each loop iteration falls through to
+ * a single-attack windup. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardSetLoopingAttackState);
 
+/* Passive idle state, dispatched from the FINISH_ATTACK marker (after the
+ * boss has slammed 3 times). Installs ShrineyGuardActiveEventHandler on
+ * +0x08, clears activeTimer (+0x111) = 0, installs
+ * EnemyUpdateWithCollisionAndDeath on +0x00, sets sprite-id 0x09382152
+ * (IDLE pose), and queues BossRandomAttackChoice on the +0x98 queued-state
+ * slot so the next idle-timeout will pick a fresh attack pattern. */
 void ShrineyGuardIdleState(Entity *e) {
     SpriteEntity *se = (SpriteEntity *)e;
     PadSlot slot;
@@ -658,14 +901,53 @@ void ShrineyGuardIdleState(Entity *e) {
     *(CallbackSlot *)&se->queuedStateMarker = slot.s;
 }
 
+/* Slam-animation state, dispatched via the REPEAT_ATTACK marker (and
+ * also re-entered each loop iteration). Installs ShrineyGuardAttack
+ * EventHandler on +0x08 and EnemyUpdateWithCollisionAndDeath on +0x00,
+ * sprite-id 0x085860D4 (SLAM frame), clears slamVelocity (+0x118) and
+ * slamFrameCounter (+0x11C) so the upcoming AttackEventHandler/0x01084280
+ * trigger can start the ramp from zero. Sets the anim loop frame to
+ * 0x01084280 (so the keyframe fires) and the sprite callback to
+ * 0x02421405 (the shared anim-finished hash). */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackAnimState);
 
+/* Entered from the D_800A5C08 marker (set by MoveCallback when the slam
+ * velocity decays to 0). Sets stunActive (+0x115) = 1, calls
+ * SetEntityFacingDirection(e, 2) (face the player), clears readyFlag
+ * (+0x10C) = 0, installs ShrineyGuardActiveEventHandler on +0x08, clears
+ * activeTimer (+0x111) = 0, installs EnemyUpdateWithCollisionAndDeath on
+ * +0x00, sprite-id 0x08192250 (READY pose), and queues
+ * BossRandomAttackChoice on +0x98 so the windup completion advances the
+ * FSM. This is the "stand up and re-aim" moment between slams. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardReadyAttackState);
 
+/* Entered from BossEventHandler/event 0x1002 (damage but hp > 0). Sets
+ * stunTimer (+0x113) = 5, clears stunActive (+0x115), sets readyFlag
+ * (+0x10C) = 2 (stun lockout — prevents EnemyUpdateWithCollisionAndDeath
+ * from re-firing collision until the stun expires), installs
+ * ShrineyGuardActiveEventHandler on +0x08, clears activeTimer (+0x111) = 0,
+ * installs ShrineyGuardStunTickCallback on +0x00, sprite-id 0x2C182010
+ * (LOOP_START / stun pose), and queues ShrineyGuardAttackCounterState
+ * on +0x98 so after the 5-frame stun the boss decides whether to repeat
+ * or finish its attack chain. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStartLoopAttackState);
 
+/* Entered from BossEventHandler/event 0x1002 when boss_hp reaches 0.
+ * Sprite-id 0x0A1820D4 (DEATH pose), writes g_pGameState[+0x19C] = 1 and
+ * g_pGameState[+0x19D] = entity[+0x110] (the destination-level number
+ * cached at init), sets readyFlag (+0x10C) = 2 (death lockout), installs
+ * ShrineyGuardActiveEventHandler + EnemyUpdateWithCollisionAndDeath,
+ * EntitySetRenderFlags(e, 0) to drop visibility, and queues
+ * ShrineyGuardDeathCallback on +0x98 so the next queued-state dispatch
+ * actually triggers the level transition. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardDeathState);
 
+/* Final death tick: copies the cached destination-level byte (+0x110,
+ * set at init from EntitySpawnData[+0xC]) into GS.direct_level_load
+ * (== 99 in vanilla MEGA → main menu / credits) and sets the entity-dead
+ * flag (+0x106) = 1 so the entity-manager garbage-collects the boss next
+ * tick. The DispatcherTickCallback running game-state then sees
+ * direct_level_load != 0 and performs the cross-level transition. */
 void ShrineyGuardDeathCallback(u8 *e) {
     g_pGameState->direct_level_load = e[0x110];
     e[0x106] = 1;
