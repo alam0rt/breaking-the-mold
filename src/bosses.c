@@ -39,6 +39,8 @@ extern void EntityTickWithReadyCheck(Entity *e);
 extern s32 GliderEventHandlerWithCounter();
 extern void GliderSetActiveState(Entity *e);
 extern void GliderWaitState(Entity *e);
+extern void KloggMoveToTargetPosition(Entity *e);
+extern void KloggSpawnProjectilesCallback(Entity *e);
 void KloggDeathCallback(u8 *e);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
@@ -1441,7 +1443,35 @@ INCLUDE_ASM("asm/nonmatchings/bosses", KloggMoveToTargetPosition);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", KloggSpawnProjectilesCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", KloggSetMoveState);
+void KloggSetMoveState(Entity *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = KloggMoveToTargetPosition;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+    fn = KloggUpdateWithSound;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = (void (*)())EnemyHitMessageHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0x193CA112, 1);
+    fn = KloggSpawnProjectilesCallback;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyIdleTimerState);
 
