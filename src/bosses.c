@@ -20,6 +20,7 @@ extern s32 BossEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 JoeHeadJoeAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void JoeHeadJoeUpdateWithCollisionCheck(Entity *e);
 extern void JoeHeadJoeSetIdleState(Entity *e);
+extern void EnemyUpdateWithCollisionAndDeath(Entity *e);
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState(Entity *e);
@@ -604,7 +605,34 @@ void ShrineyGuardSetAttackState(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardSetLoopingAttackState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardIdleState);
+void ShrineyGuardIdleState(Entity *e) {
+    SpriteEntity *se = (SpriteEntity *)e;
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = (void (*)())ShrineyGuardActiveEventHandler;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    ((u8 *)e)[0x111] = 0;
+    do {} while (0);
+    fn = EnemyUpdateWithCollisionAndDeath;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    SetEntitySpriteId(e, 0x9382152, 1);
+    fn = BossRandomAttackChoice;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&se->queuedStateMarker = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardAttackAnimState);
 
