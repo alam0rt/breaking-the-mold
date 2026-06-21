@@ -63,7 +63,7 @@ extern void EntityOffScreenChildCleanup(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void CollectibleTickCallback(Entity *e);
 extern void CollectibleTickFinnMode(Entity *e);
-extern void EntityEventHandlerIdle(Entity *e);
+extern s32 EntityEventHandlerIdle(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandlerWalk(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern void EntityStateSetWalk(Entity *e);
 extern void SoundEmitterTickCallback(Entity *e);
@@ -411,7 +411,32 @@ s32 EntityEventHandlerWalk(Entity *e, u16 event, u32 unused, u32 attacker) {
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerIdle);
+s32 EntityEventHandlerIdle(Entity *e, u16 event, u32 unused, u32 attacker) {
+    u8 *e8 = (u8 *)e;
+    s32 result = 0;
+    switch (event) {
+    case EVT_TOKEN_QUERY:
+        e8[0x106] = 1;
+        if (attacker == *(s32 *)(e8 + 0x108)) {
+            *(s32 *)(e8 + 0x108) = 0;
+        }
+        result = (s32)e;
+        break;
+    case EVT_SET_READY:
+        e8[0x106] = 1;
+        break;
+    case EVT_TOKEN_CLAIM:
+        if (*(s32 *)(e8 + 0x108) == 0) {
+            *(s32 *)(e8 + 0x108) = attacker;
+            result = 1;
+        }
+        break;
+    }
+    if (event == EVT_TICK) {
+        EntityProcessCallbackQueue(e);
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SpawnCollectibleParticles);
 
