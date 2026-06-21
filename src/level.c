@@ -104,7 +104,44 @@ void SetSequenceIndexByMode(LevelDataContext *ctx, u8 mode, u8 skip) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/level", SeekToLevelInSequence);
+void SeekToLevelInSequence(LevelDataContext *ctx, u8 world_id, u8 dec_flag, u8 back_walk_flag) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    s16 i = 0;
+
+    if (header->sequence_count != 0) {
+        do {
+            if (header->sequence_modes[i] == 3) {
+                u8 slot = header->sequence_targets[i];
+                if (header->levels[slot].level_index == (world_id & 0xFF)) {
+                    ctx->current_sequence_index = i - 1;
+                    if (back_walk_flag & 0xFF) {
+                        i--;
+                        if (i >= 0) {
+                            BlbHeader *h;
+                            do {
+                                h = (BlbHeader *)ctx->blb_header;
+                                if (h->sequence_modes[i] == 1) {
+                                    ctx->current_sequence_index = i - 1;
+                                    return;
+                                }
+                                if (h->sequence_modes[i] == 3) {
+                                    break;
+                                }
+                                i--;
+                            } while (i >= 0);
+                        }
+                    }
+                    if (dec_flag & 0xFF) {
+                        ctx->current_sequence_index--;
+                    }
+                    return;
+                }
+            }
+            i++;
+            header = (BlbHeader *)ctx->blb_header;
+        } while (i < header->sequence_count);
+    }
+}
 
 void FindSaveSlotByName(LevelDataContext *ctx, const char *name) {
     BlbHeader *header;

@@ -2,7 +2,7 @@
 #include "functions.h"
 #include "globals.h"
 
-extern u8 PLAYER_CALLBACK_TABLE[] asm("D_80011804");
+extern u8 PLAYER_CALLBACK_TABLE[] asm("g_PlayerCallbackTable");
 
 #define PLAYER_TILE_PASSABLE                 0x65
 #define PLAYER_TILE_SPECIAL_MARKER           0x7D
