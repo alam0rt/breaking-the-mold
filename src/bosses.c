@@ -1708,9 +1708,60 @@ void FreeEntityAllocOnly(Entity *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F098);
+extern u8 D_8009C09C[];
+extern u8 D_8009C11C[];
 
-INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F114);
+s16 func_8004F098(s32 arg0) {
+    char a;
+    s32 sign;
+    u32 t;
+    u32 new_var;
+    s32 r;
+    a = arg0;
+    sign = 0;
+    if ((u32)(a & 0xFF) >= 0x80) {
+        a = arg0 - 0x80;
+        sign = 1;
+    }
+    t = a & 0xFF;
+    if (t == 0x40) {
+        r = 0x100;
+    } else if (t < 0x40) {
+        r = D_8009C09C[t];
+    } else {
+        r = *(D_8009C11C - (new_var = t));
+    }
+    if ((sign & 0xFF) != 0) {
+        r = -r;
+    }
+    return (s16)r;
+}
+
+s16 func_8004F114(s32 arg0) {
+    char a;
+    s32 sign;
+    u32 t;
+    u32 new_var;
+    s32 r;
+    a = arg0 + 0x40;
+    sign = 0;
+    if ((u32)(a & 0xFF) >= 0x80) {
+        a = arg0 - 0x40;
+        sign = 1;
+    }
+    t = a & 0xFF;
+    if (t == 0x40) {
+        r = 0x100;
+    } else if (t < 0x40) {
+        r = D_8009C09C[t];
+    } else {
+        r = *(D_8009C11C - (new_var = t));
+    }
+    if ((sign & 0xFF) != 0) {
+        r = -r;
+    }
+    return (s16)r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F190);
 
