@@ -912,7 +912,50 @@ void func_80020724(EntityAccessorView *e, S32Pair val) {
  * +0x1C/+0x20: resolves the marker (direct call or slot-table entry),
  * adjusts the entity pointer by the encoded offset, and invokes the
  * stored fn. The per-frame "draw this entity" entry point. */
+#ifdef NON_MATCHING
+/* Dispatches the entity's render callback through the FSM slot at +0x1C/+0x20.
+ *
+ * NON-MATCHING — structurally correct, register-coloring residual only.
+ * Key finding (m2c): this is a 4-ARGUMENT FORWARDER, not the 1-arg
+ * `fn(entity)` dispatch that Ghidra shows. Ghidra collapses it to 1 arg (its
+ * `short in_a2` local was the only tell that a2 is a live input); m2c models
+ * a2/a3 as params that are forwarded to the resolved callback. On THIS
+ * structure cc1's global allocator already matches (m->$t0, arg->$a2 — see the
+ * -dg RTL dump); the only residual is a reload/delay-slot relay (target emits a
+ * redundant `move $v0,$a1; move $t0,$v0` where we emit one `move $t0,$a1`).
+ * decomp-permuter best score 75 (correct 33-instr length, ~1-2 reg relabels);
+ * not yet byte-0. */
+typedef void (*RenderCB)();
+typedef struct { s32 arg; RenderCB fn; } RenderFrameSlot;
+
+void InvokeEntityRenderCallback(Entity *e, RenderCB a1, s32 a2, RenderCB a3) {
+    s16 m = ((s16 *)&e->renderMarker)[1];
+    s32 adj;
+    s32 lo;
+    if (m == 0) {
+        return;
+    }
+    if (m > 0) {
+        RenderFrameSlot *base =
+            *(RenderFrameSlot **)((u8 *)e + *(s16 *)&e->renderCallback);
+        a2 = base[m - 1].arg;
+        do {} while (0);
+        a3 = base[m - 1].fn;
+        a1 = a3;
+    } else {
+        a1 = (RenderCB)e->renderCallback;
+    }
+    lo = ((s16 *)&e->renderMarker)[0];
+    if (m > 0) {
+        adj = (s16)a2 + lo;
+    } else {
+        adj = lo;
+    }
+    a1((Entity *)((u8 *)e + adj), a1, a2, a3);
+}
+#else
 INCLUDE_ASM("asm/nonmatchings/anim", InvokeEntityRenderCallback);
+#endif
 
 /* Getter: returns the low 16 bits of moveMarkerY at +0x2C as u16
  * (the FSM marker's offset half). */
