@@ -733,6 +733,11 @@ extern void SpawnEntityOrTriggerZone(Entity *e);
  * cc1 to pick that layout. */
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandler);
 
+/* SHELVED: decomp-permuter plateaued at score 825 (base 1010) after a long
+ * sustained run on Sauron (64-core, j24) — no score-0 path found. The residual
+ * is register-coloring/scheduling, not structure; randomization alone hasn't
+ * cracked it. Parked for now; revisit with targeted PERM_* macros once the
+ * exact blocking instructions are isolated. */
 INCLUDE_ASM("asm/nonmatchings/pickups", DecorEntityCollisionHandlerExt);
 
 extern void DecorEntityCollisionHandlerExt(Entity *e);
