@@ -853,13 +853,83 @@ Vec4s16 *func_80020424(Vec4s16 *dst, Entity *src) {
  * moveCallbackY FSM slot (+0x2C/+0x30) so the answer respects any
  * platform-rider / transform callbacks installed on the entity; falls
  * back to the raw worldY (+0x6A) if no callback is installed. Adds the
- * marker low s16 as an offset before calling. */
-INCLUDE_ASM("asm/nonmatchings/anim", GetEntityYPosition);
+ * marker low s16 as an offset before calling. Same FSM-slot dispatch +
+ * register-pin match as TransformYCoord, but val is the loaded worldY. */
+typedef s16 (*XformCB)();
+typedef struct { s32 arg; XformCB fn; } XformSlot;
+
+s16 GetEntityYPosition(Entity *e) {
+    s16 m = ((s16 *)&e->moveMarkerY)[1];
+    s32 val = *(u16 *)&e->worldY;
+    register XformCB fn asm("$6"); /* $a2 home */
+    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
+    register s32 r asm("$2"); /* $v0 home: forces move v0,a1; sll v0,v0 */
+    s32 arg;
+    s32 adj;
+    s32 lo;
+    s16 s;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            XformSlot *base =
+                *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackY);
+            arg = base[s - 1].arg;
+            ft = base[s - 1].fn;
+            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
+            fn = ft;                          /* emits move $a2,$t1 */
+        } else {
+            fn = (XformCB)e->moveCallbackY;
+        }
+        lo = ((s16 *)&e->moveMarkerY)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        return (s16)fn((u8 *)e + adj, (s16)val);
+    }
+    r = val;
+    __asm__ volatile("" : : "r"(r)); /* materialize r in $v0 -> sll v0,v0 */
+    return (s16)r;
+}
 
 /* The public "where is this entity X" query. Mirror of GetEntityYPosition
  * over the moveCallbackX FSM slot (+0x24/+0x28); returns the raw worldX
  * (+0x68) when no callback is installed. */
-INCLUDE_ASM("asm/nonmatchings/anim", GetEntityXPosition);
+s16 GetEntityXPosition(Entity *e) {
+    s16 m = ((s16 *)&e->moveMarkerX)[1];
+    s32 val = *(u16 *)&e->worldX;
+    register XformCB fn asm("$6"); /* $a2 home */
+    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
+    register s32 r asm("$2"); /* $v0 home: forces move v0,a1; sll v0,v0 */
+    s32 arg;
+    s32 adj;
+    s32 lo;
+    s16 s;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            XformSlot *base =
+                *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackX);
+            arg = base[s - 1].arg;
+            ft = base[s - 1].fn;
+            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
+            fn = ft;                          /* emits move $a2,$t1 */
+        } else {
+            fn = (XformCB)e->moveCallbackX;
+        }
+        lo = ((s16 *)&e->moveMarkerX)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        return (s16)fn((u8 *)e + adj, (s16)val);
+    }
+    r = val;
+    __asm__ volatile("" : : "r"(r)); /* materialize r in $v0 -> sll v0,v0 */
+    return (s16)r;
+}
 
 /* Getter: returns worldY at +0x6A (raw, no callback dispatch). */
 s16 func_80020588(EntityAccessorView *e) {
@@ -896,9 +966,6 @@ void func_800205AC(EntityAccessorView *e, S32Pair val) {
  * a volatile barrier on `ft` to block the coalesce, and a separate `s16 s = m;`
  * to route the survivor through $v0. The 2-arg callback signature
  * (s16 (*)(u8*, s16)) and the s16 passthrough/return are the only differences. */
-typedef s16 (*XformCB)();
-typedef struct { s32 arg; XformCB fn; } XformSlot;
-
 s16 TransformYCoord(Entity *e, s16 val) {
     s16 m = ((s16 *)&e->moveMarkerY)[1];
     register XformCB fn asm("$6"); /* $a2 home */
