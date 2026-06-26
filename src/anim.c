@@ -1,5 +1,6 @@
 #include "common.h"
 #include "functions.h"
+#include "Game/fsm_dispatch.h"
 
 extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_Destroyed[];
@@ -861,9 +862,9 @@ typedef struct { s32 arg; XformCB fn; } XformSlot;
 s16 GetEntityYPosition(Entity *e) {
     s16 m = ((s16 *)&e->moveMarkerY)[1];
     s32 val = *(u16 *)&e->worldY;
-    register XformCB fn asm("$6"); /* $a2 home */
-    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
-    register s32 r asm("$2"); /* $v0 home: forces move v0,a1; sll v0,v0 */
+    FSM_REG(XformCB, fn, "$6"); /* $a2 home */
+    FSM_REG(XformCB, ft, "$9"); /* $t1 then-fn (relays) */
+    FSM_REG(s32, r, "$2");      /* $v0 home: forces move v0,a1; sll v0,v0 */
     s32 arg;
     s32 adj;
     s32 lo;
@@ -875,8 +876,7 @@ s16 GetEntityYPosition(Entity *e) {
                 *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackY);
             arg = base[s - 1].arg;
             ft = base[s - 1].fn;
-            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
-            fn = ft;                          /* emits move $a2,$t1 */
+            FSM_RELAY(fn, ft); /* emits move $a2,$t1 */
         } else {
             fn = (XformCB)e->moveCallbackY;
         }
@@ -889,7 +889,7 @@ s16 GetEntityYPosition(Entity *e) {
         return (s16)fn((u8 *)e + adj, (s16)val);
     }
     r = val;
-    __asm__ volatile("" : : "r"(r)); /* materialize r in $v0 -> sll v0,v0 */
+    FSM_KEEP_LIVE(r); /* materialize r in $v0 -> sll v0,v0 */
     return (s16)r;
 }
 
@@ -899,9 +899,9 @@ s16 GetEntityYPosition(Entity *e) {
 s16 GetEntityXPosition(Entity *e) {
     s16 m = ((s16 *)&e->moveMarkerX)[1];
     s32 val = *(u16 *)&e->worldX;
-    register XformCB fn asm("$6"); /* $a2 home */
-    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
-    register s32 r asm("$2"); /* $v0 home: forces move v0,a1; sll v0,v0 */
+    FSM_REG(XformCB, fn, "$6"); /* $a2 home */
+    FSM_REG(XformCB, ft, "$9"); /* $t1 then-fn (relays) */
+    FSM_REG(s32, r, "$2");      /* $v0 home: forces move v0,a1; sll v0,v0 */
     s32 arg;
     s32 adj;
     s32 lo;
@@ -913,8 +913,7 @@ s16 GetEntityXPosition(Entity *e) {
                 *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackX);
             arg = base[s - 1].arg;
             ft = base[s - 1].fn;
-            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
-            fn = ft;                          /* emits move $a2,$t1 */
+            FSM_RELAY(fn, ft); /* emits move $a2,$t1 */
         } else {
             fn = (XformCB)e->moveCallbackX;
         }
@@ -927,7 +926,7 @@ s16 GetEntityXPosition(Entity *e) {
         return (s16)fn((u8 *)e + adj, (s16)val);
     }
     r = val;
-    __asm__ volatile("" : : "r"(r)); /* materialize r in $v0 -> sll v0,v0 */
+    FSM_KEEP_LIVE(r); /* materialize r in $v0 -> sll v0,v0 */
     return (s16)r;
 }
 
@@ -968,8 +967,8 @@ void func_800205AC(EntityAccessorView *e, S32Pair val) {
  * (s16 (*)(u8*, s16)) and the s16 passthrough/return are the only differences. */
 s16 TransformYCoord(Entity *e, s16 val) {
     s16 m = ((s16 *)&e->moveMarkerY)[1];
-    register XformCB fn asm("$6"); /* $a2 home */
-    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
+    FSM_REG(XformCB, fn, "$6"); /* $a2 home */
+    FSM_REG(XformCB, ft, "$9"); /* $t1 then-fn (relays) */
     s32 arg;
     s32 adj;
     s32 lo;
@@ -981,8 +980,7 @@ s16 TransformYCoord(Entity *e, s16 val) {
                 *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackY);
             arg = base[s - 1].arg;
             ft = base[s - 1].fn;
-            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
-            fn = ft;                          /* emits move $a2,$t1 */
+            FSM_RELAY(fn, ft); /* emits move $a2,$t1 */
         } else {
             fn = (XformCB)e->moveCallbackY;
         }
@@ -1007,8 +1005,8 @@ void func_80020668(EntityAccessorView *e, S32Pair val) {
  * moveCallbackX FSM slot (+0x24/+0x28). Same register-pinning match recipe. */
 s16 TransformXCoord(Entity *e, s16 val) {
     s16 m = ((s16 *)&e->moveMarkerX)[1];
-    register XformCB fn asm("$6"); /* $a2 home */
-    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
+    FSM_REG(XformCB, fn, "$6"); /* $a2 home */
+    FSM_REG(XformCB, ft, "$9"); /* $t1 then-fn (relays) */
     s32 arg;
     s32 adj;
     s32 lo;
@@ -1020,8 +1018,7 @@ s16 TransformXCoord(Entity *e, s16 val) {
                 *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackX);
             arg = base[s - 1].arg;
             ft = base[s - 1].fn;
-            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
-            fn = ft;                          /* emits move $a2,$t1 */
+            FSM_RELAY(fn, ft); /* emits move $a2,$t1 */
         } else {
             fn = (XformCB)e->moveCallbackX;
         }
@@ -1063,8 +1060,8 @@ typedef struct { s32 arg; RenderCB fn; } RenderFrameSlot;
 
 void InvokeEntityRenderCallback(Entity *e, RenderCB a1_, s32 a2, RenderCB a3_) {
     s16 m = ((s16 *)&e->renderMarker)[1];
-    register RenderCB fn asm("$5"); /* $a1 home */
-    register RenderCB ft asm("$7"); /* $a3 then-fn (relays) */
+    FSM_REG(RenderCB, fn, "$5"); /* $a1 home */
+    FSM_REG(RenderCB, ft, "$7"); /* $a3 then-fn (relays) */
     s32 adj;
     s32 lo;
     s16 s;
@@ -1077,8 +1074,7 @@ void InvokeEntityRenderCallback(Entity *e, RenderCB a1_, s32 a2, RenderCB a3_) {
             *(RenderFrameSlot **)((u8 *)e + *(s16 *)&e->renderCallback);
         a2 = base[s - 1].arg;
         ft = base[s - 1].fn;
-        __asm__ volatile("" : : "r"(ft)); /* block coalesce */
-        fn = ft;                          /* emits move $a1,$a3 */
+        FSM_RELAY(fn, ft); /* emits move $a1,$a3 */
     } else {
         fn = (RenderCB)e->renderCallback;
     }
