@@ -888,8 +888,47 @@ void func_800205AC(EntityAccessorView *e, S32Pair val) {
  * moveCallbackY FSM slot (+0x2C/+0x30) and returns the transformed value;
  * if no callback is installed, returns the input unchanged. Used by
  * collision/render code to project an arbitrary Y into the entity's
- * local space (e.g. platform-rider offset). */
-INCLUDE_ASM("asm/nonmatchings/anim", TransformYCoord);
+ * local space (e.g. platform-rider offset).
+ *
+ * Same FSM-slot dispatch shape as InvokeEntityRenderCallback, matched with the
+ * same register-pinning trick: `fn` pinned to $a2 (call's fn home), `ft` pinned
+ * to $t1 (the then-branch slot fn that relays into $a2 via a delay-slot move),
+ * a volatile barrier on `ft` to block the coalesce, and a separate `s16 s = m;`
+ * to route the survivor through $v0. The 2-arg callback signature
+ * (s16 (*)(u8*, s16)) and the s16 passthrough/return are the only differences. */
+typedef s16 (*XformCB)();
+typedef struct { s32 arg; XformCB fn; } XformSlot;
+
+s16 TransformYCoord(Entity *e, s16 val) {
+    s16 m = ((s16 *)&e->moveMarkerY)[1];
+    register XformCB fn asm("$6"); /* $a2 home */
+    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
+    s32 arg;
+    s32 adj;
+    s32 lo;
+    s16 s;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            XformSlot *base =
+                *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackY);
+            arg = base[s - 1].arg;
+            ft = base[s - 1].fn;
+            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
+            fn = ft;                          /* emits move $a2,$t1 */
+        } else {
+            fn = (XformCB)e->moveCallbackY;
+        }
+        lo = ((s16 *)&e->moveMarkerY)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        return (s16)fn((u8 *)e + adj, (s16)val);
+    }
+    return val;
+}
 
 /* Installs an 8-byte [marker, fn] pair into the moveCallbackX FSM slot
  * at entity+0x24/+0x28. Counterpart to func_800205AC for the X axis. */
@@ -898,8 +937,37 @@ void func_80020668(EntityAccessorView *e, S32Pair val) {
 }
 
 /* X-coordinate transformer; mirror of TransformYCoord over the
- * moveCallbackX FSM slot (+0x24/+0x28). */
-INCLUDE_ASM("asm/nonmatchings/anim", TransformXCoord);
+ * moveCallbackX FSM slot (+0x24/+0x28). Same register-pinning match recipe. */
+s16 TransformXCoord(Entity *e, s16 val) {
+    s16 m = ((s16 *)&e->moveMarkerX)[1];
+    register XformCB fn asm("$6"); /* $a2 home */
+    register XformCB ft asm("$9"); /* $t1 then-fn (relays) */
+    s32 arg;
+    s32 adj;
+    s32 lo;
+    s16 s;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            XformSlot *base =
+                *(XformSlot **)((u8 *)e + *(s16 *)&e->moveCallbackX);
+            arg = base[s - 1].arg;
+            ft = base[s - 1].fn;
+            __asm__ volatile("" : : "r"(ft)); /* block coalesce */
+            fn = ft;                          /* emits move $a2,$t1 */
+        } else {
+            fn = (XformCB)e->moveCallbackX;
+        }
+        lo = ((s16 *)&e->moveMarkerX)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        return (s16)fn((u8 *)e + adj, (s16)val);
+    }
+    return val;
+}
 
 /* Installs an 8-byte [marker, fn] pair into the renderCallback FSM slot
  * at entity+0x1C/+0x20. The function called by
@@ -912,50 +980,49 @@ void func_80020724(EntityAccessorView *e, S32Pair val) {
  * +0x1C/+0x20: resolves the marker (direct call or slot-table entry),
  * adjusts the entity pointer by the encoded offset, and invokes the
  * stored fn. The per-frame "draw this entity" entry point. */
-#ifdef NON_MATCHING
-/* Dispatches the entity's render callback through the FSM slot at +0x1C/+0x20.
- *
- * NON-MATCHING — structurally correct, register-coloring residual only.
- * Key finding (m2c): this is a 4-ARGUMENT FORWARDER, not the 1-arg
- * `fn(entity)` dispatch that Ghidra shows. Ghidra collapses it to 1 arg (its
- * `short in_a2` local was the only tell that a2 is a live input); m2c models
- * a2/a3 as params that are forwarded to the resolved callback. On THIS
- * structure cc1's global allocator already matches (m->$t0, arg->$a2 — see the
- * -dg RTL dump); the only residual is a reload/delay-slot relay (target emits a
- * redundant `move $v0,$a1; move $t0,$v0` where we emit one `move $t0,$a1`).
- * decomp-permuter best score 75 (correct 33-instr length, ~1-2 reg relabels);
- * not yet byte-0. */
+/* MATCHED. This is a 4-ARGUMENT FORWARDER (not the 1-arg `fn(entity)` Ghidra
+ * shows): a2/a3 are live inputs forwarded to the resolved callback. The match
+ * required forcing the register-coloring that cc1's allocator wouldn't pick on
+ * its own:
+ *   - `fn` pinned to $a1 (call's fn-pointer home), `ft` pinned to $a3 (the
+ *     then-branch slot-table fn that relays into $a1).
+ *   - the empty `volatile` asm barrier on `ft` keeps it live past its def so
+ *     the coalescer can't merge it away — this forces the `move $a1,$a3` relay
+ *     in the `j` delay slot instead of a direct load into $a1.
+ *   - the separate `s16 s = m;` copy reproduces the survivor routed through
+ *     $v0 first (`move $v0,$a1; move $t0,$v0`) rather than straight to $t0. */
 typedef void (*RenderCB)();
 typedef struct { s32 arg; RenderCB fn; } RenderFrameSlot;
 
-void InvokeEntityRenderCallback(Entity *e, RenderCB a1, s32 a2, RenderCB a3) {
+void InvokeEntityRenderCallback(Entity *e, RenderCB a1_, s32 a2, RenderCB a3_) {
     s16 m = ((s16 *)&e->renderMarker)[1];
+    register RenderCB fn asm("$5"); /* $a1 home */
+    register RenderCB ft asm("$7"); /* $a3 then-fn (relays) */
     s32 adj;
     s32 lo;
+    s16 s;
     if (m == 0) {
         return;
     }
-    if (m > 0) {
+    s = m;
+    if (s > 0) {
         RenderFrameSlot *base =
             *(RenderFrameSlot **)((u8 *)e + *(s16 *)&e->renderCallback);
-        a2 = base[m - 1].arg;
-        do {} while (0);
-        a3 = base[m - 1].fn;
-        a1 = a3;
+        a2 = base[s - 1].arg;
+        ft = base[s - 1].fn;
+        __asm__ volatile("" : : "r"(ft)); /* block coalesce */
+        fn = ft;                          /* emits move $a1,$a3 */
     } else {
-        a1 = (RenderCB)e->renderCallback;
+        fn = (RenderCB)e->renderCallback;
     }
     lo = ((s16 *)&e->renderMarker)[0];
-    if (m > 0) {
+    if (s > 0) {
         adj = (s16)a2 + lo;
     } else {
         adj = lo;
     }
-    a1((Entity *)((u8 *)e + adj), a1, a2, a3);
+    fn((Entity *)((u8 *)e + adj), fn, a2, ft);
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/anim", InvokeEntityRenderCallback);
-#endif
 
 /* Getter: returns the low 16 bits of moveMarkerY at +0x2C as u16
  * (the FSM marker's offset half). */
