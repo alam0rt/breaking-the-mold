@@ -252,12 +252,6 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_IdleInputHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkSpeedCheck);
-
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateIfNotWalkingLeft);
-
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_EntitySetStateProxy);
-
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithJump);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithFall);
