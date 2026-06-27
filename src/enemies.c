@@ -1893,7 +1893,29 @@ void BounceClay_IdleState(Entity *e) {
     SetEntitySpriteId(e, 0xF175320E, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_DestroyingState);
+/* Destroying state for a bounce-clay hazard: arms the +0x110 timer, installs
+ * the hazard timer tick + event passthrough, swaps to the destroying sprite,
+ * and queues BounceClay_HiddenState as the next state. */
+void BounceClay_HiddenState(Entity *e);
+
+void BounceClay_DestroyingState(HazardTimerEntity *e) {
+    TripadSlot slot;
+    void (*fn)();
+    s16 m1;
+    Entity *entity = (Entity *)e;
+    SpriteEntity *spriteEntity = (SpriteEntity *)e;
+
+    e->timer = 0x12C;
+    do {} while (0);
+    fn = (void (*)())HazardTimerTickCallback;
+    m1 = -1;
+    SLOT_STORE(slot.s, entity->tickMarker, m1, fn);
+    fn = (void (*)())EntityEventPassthrough_Event2;
+    SLOT_STORE(slot.s, entity->eventMarker, m1, fn);
+    SetEntitySpriteId(entity, 0x657C322C, 1);
+    fn = BounceClay_HiddenState;
+    SLOT_STORE(slot.s, spriteEntity->queuedStateMarker, m1, fn);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", HazardActiveState);
 
