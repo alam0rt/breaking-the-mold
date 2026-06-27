@@ -1897,7 +1897,25 @@ INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_DestroyingState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", HazardActiveState);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", BounceClay_HiddenState);
+/* Hidden state for a bounce-clay hazard: clears the event slot, installs the
+ * hazard timer tick, sets the hidden sprite + blank anim, drops render flags,
+ * and clears the child sprite-context active byte. */
+void BounceClay_HiddenState(Entity *e) {
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    slot.s[0].markerLo = 0; slot.s[0].markerHi = 0; slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->eventMarker = slot.s[0];
+    fn = HazardTimerTickCallback;
+    m1 = -1;
+    do { slot.s[0].markerLo = 0; slot.s[0].markerHi = m1; slot.s[0].fn = fn; } while (0);
+    *(CallbackSlot *)&e->tickMarker = slot.s[0];
+    SetEntitySpriteId(e, 0xE7443A6F, 1);
+    SetAnimationSpriteId(e, 0);
+    EntitySetRenderFlags(e, 0);
+    *((u8 *)e->spriteContext + 0xA) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledMovingEntity);
 
