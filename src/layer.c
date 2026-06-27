@@ -97,9 +97,26 @@ Entity *ZeroEntityField(Entity *e) {
     return e;
 }
 
+/* Scan the 20-entry layer-render-slot table (base @ gp+8 = D_800A595C) for
+ * the slot whose entity pointer matches `needle`, writing &slot (or NULL if
+ * absent) through *out. Equivalent C (shelved):
+ *   void FindLayerSlotByEntityPointer(LayerRenderSlot **out, Entity *needle) {
+ *       LayerRenderSlot *base = g_LayerRenderSlots; // gp+8
+ *       LayerRenderSlot *slot; s16 i;
+ *       for (i = 0; i < 20; i++) { slot = &base[i];
+ *           if (slot->entity == needle) goto found; }
+ *       slot = NULL;
+ *   found: *out = slot;
+ *   }
+ *
+ * MIS-SPLIT FIXED: splat had carved the loop-continuation+epilogue off as a
+ * bogus FindNextLayerSlotByEntityPointer symbol. Merged into this single
+ * 0x54-byte function in symbol_addrs.txt. SHELVED as ASM (not matched yet):
+ * the gp-relative base load `lw a3,8(gp)` (the small global at 0x800A595C)
+ * resolves absolute/off-by-4 through the existing D_800A595C alias, which is
+ * shared with entinit.c — needs the gp+8 small-symbol naming untangled
+ * first. */
 INCLUDE_ASM("asm/nonmatchings/layer", FindLayerSlotByEntityPointer);
-
-INCLUDE_ASM("asm/nonmatchings/layer", FindNextLayerSlotByEntityPointer);
 
 INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableEntryByValue);
 
