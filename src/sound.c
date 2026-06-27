@@ -124,27 +124,27 @@ void SetVoicePanning(s32 voice_index, s16 pan_pos) {
  * skips if the resolved track_id>=5 (only 5 CD-XA tracks available).
  * Marks CD streaming as active on success.
  *
- * SHELVED — but the documented delay-slot blocker is now SOLVED. Combining
- * the two bounds checks into a single `&&` condition makes cc1 hoist the
- * `addiu v1,a1,-1` (sub-1) into the first branch's delay slot exactly like
- * TARGET (the old draft's separate-`if` form mis-filled it with `sw ra`).
- * With `u8 scene, s32 sub` params the prologue + both checks + the call are
- * byte-exact; the ONLY residual is a single `andi v1,v1,0xff` re-mask of
- * `(u8)t` for the index — cc1 CSE's the bounds-check mask instead of
- * re-emitting it. Near-match base (1-instruction coloring diff, permuter
- * territory):
- *   void StartCDAudioForLevel(u8 scene, s32 sub) {
- *       s32 t = sub - 1, idx;
- *       if (scene < 0x1A && (u8)t < 6) {
- *           idx = ((u8)t + scene * 6) * 2;
- *           if (CD_LEVEL_TRACK_TABLE[idx] < 5) {
- *               PlayCDAudioTrack(CD_LEVEL_TRACK_TABLE[idx],
- *                                CD_LEVEL_CHANNEL_TABLE[idx]);
- *               CD_STREAM_ACTIVE = 1;
- *           }
- *       }
- *   } */
-INCLUDE_ASM("asm/nonmatchings/sound", StartCDAudioForLevel);
+ * Two keys to the match: (1) the single `&&` condition makes cc1 hoist the
+ * `sub-1` computation into the first branch's delay slot like TARGET (a
+ * separate-`if` form mis-fills it with `sw ra`); (2) computing `scene*6`
+ * into its own temp before re-narrowing `(u8)t` for the index keeps cc1
+ * from CSE-ing the bounds-check mask, so it re-emits the `andi`. */
+void StartCDAudioForLevel(u8 scene, s32 sub) {
+    s32 t = sub - 1;
+    u8 ti;
+    s32 s6;
+    s32 idx;
+    if (scene < 0x1A && (u8)t < 6) {
+        s6 = scene * 6;
+        ti = t;
+        idx = (ti + s6) * 2;
+        if (CD_LEVEL_TRACK_TABLE[idx] < 5) {
+            PlayCDAudioTrack(CD_LEVEL_TRACK_TABLE[idx],
+                             CD_LEVEL_CHANNEL_TABLE[idx]);
+            CD_STREAM_ACTIVE = 1;
+        }
+    }
+}
 
 void StopCDStreaming(void) {
     StopCDAudio();
