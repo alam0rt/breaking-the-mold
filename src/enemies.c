@@ -2189,7 +2189,29 @@ void SetEntitySpecialState_3(EnemyTimerStateEntity *e) {
     EntityStateSetSpecial((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetSpecial);
+extern void EntityGroundSnapMovementCallback();
+
+/* Switches an entity into its "special collectible" state: installs the
+ * ground-snap render-move callback, the scaled collectible tick, and the
+ * walk-with-timer event handler (all direct-call), then sets the sprite. */
+void EntityStateSetSpecial(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    do {} while (0);
+    fn = EntityGroundSnapMovementCallback;
+    m1 = -1;
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)&e->renderMarker = slot.s;
+    fn = CollectibleScaledTickCallback;
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = slot.s;
+    fn = EntityEventHandlerWalkWithTimer;
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)&e->eventMarker = slot.s;
+    SetEntitySpriteId(e, 0xE6830101, 1);
+}
 
 void StartAnimSequence7Frames(SpriteEntity *e) {
     StartAnimationSequence(e, (s32)ITEM_REVEAL_ANIM_SEQUENCE_7_FRAME_DATA, 7);
