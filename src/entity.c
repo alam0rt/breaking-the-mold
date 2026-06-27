@@ -81,16 +81,12 @@ s32 GetWorldPositionY(Entity *entity, s16 localY) {
  * entity's per-axis render scale at +0x58 (NOT the layer parallax scale at
  * +0x60), then add camera_x. Real background-layer parallax lives in
  * UpdateParallaxLayerPosition, which scales the camera by +0x60. */
-INCLUDE_ASM("asm/nonmatchings/entity", CalculateParallaxXOffset);
-
-INCLUDE_ASM("asm/nonmatchings/entity", CalculateParallaxXOffsetAlt);
-
-/* value + camera_x. Byte-identical to GetWorldPositionX above. Its `addu
- * v0,v0,v1; jr ra` tail (label .L8001A350) is a SHARED epilogue that
- * CalculateParallaxXOffset/Alt `j` into, so it can't be converted to C until
- * those tail-merged neighbors are decompiled too (else: undefined ref to
- * .L8001A350 at link). */
-INCLUDE_ASM("asm/nonmatchings/entity", WorldToScreenX);
+s32 CalculateParallaxXOffset(Entity *entity, s16 value) {
+    if (entity->scalePowerupX == 0x10000) {
+        return (s32)value + (s32)g_pGameState->camera_x;
+    }
+    return ((s32)value * entity->scalePowerupX >> 16) + (s32)g_pGameState->camera_x;
+}
 
 /* Y-axis sibling of CalculateParallaxXOffsetAlt. Scales by +0x5C (entity
  * render scale, not parallax) then adds camera_y. */
