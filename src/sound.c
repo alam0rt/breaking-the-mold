@@ -92,6 +92,14 @@ void StopAllSPUVoices(void) {
     ACTIVE_SPU_VOICE_MASK = 0;
 }
 
+/* CalculateStereoVolume @ 0x8007C818 (0x210). Stereo pan law: out[0]=left,
+ * out[1]=right from (vol, pan 0..0x1E0); /160 slope = 0x66666667 magic-mul,
+ * final /4 = reverb scale. SHELVED: m2c structure transcribed (see git
+ * history / draft) compiles to 116 instrs vs target 132 — cc1 CSEs the
+ * repeated `(s16)pan` sign-extends and `vol/160` divisions that the original
+ * duplicates per branch. Needs the per-branch duplication forced (volatile /
+ * re-read barriers) before the permuter can finish; 16-instr gap is too wide
+ * for the permuter alone. */
 INCLUDE_ASM("asm/nonmatchings/sound", CalculateStereoVolume);
 
 extern void CalculateStereoVolume(s16 *out, s32 vol, s32 pan);
