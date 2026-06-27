@@ -207,12 +207,10 @@ void FreeSpecialEntity2120Memory(Entity *ptr, s32 size) {
  * decompilation got within ~7 instructions (frame size 0x30 vs 0x40, missing
  * s2/s3 register usage), but the mode-dispatch register allocation (s4=argOff,
  * s5=cb) is hard to coerce from cc1 without specific register pinning. */
+/* Spans 0x800828B0..0x80082C10 (0x360). main() is an infinite loop, so its
+ * (unreachable) register-restore epilogue at 0x80082BE8 was carved off by
+ * splat as a bogus func_80082BE8 — re-absorbed by extending main's size. */
 INCLUDE_ASM("asm/nonmatchings/main", main);
-
-/* Leftover function epilogue at 0x80082BE8 -- restores s0-s5/ra and returns.
- * Almost certainly the trailing prologue/epilogue of a function that the
- * splitter could not attach to main; effectively unreachable orphan code. */
-INCLUDE_ASM("asm/nonmatchings/main", func_80082BE8);
 
 /* Debug menu / level-select overlay -- runs once per frame at end-of-tick when
  * the global debug flag bit (g_GameFlags & 0x80) is set. Renders the level-name
