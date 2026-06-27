@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "globals.h"
 #include "Game/entity_events.h"
+#include "Game/fsm_dispatch.h"
 
 extern void *g_pBlbHeapBase;
 extern void FlushDepthBuckets(GameState *entity);
@@ -489,13 +490,13 @@ s32 OverlayEntityCallback(OverlayCallbackEntity *e, u32 ev) {
     return 0;
 }
 
-/* func_80034B10 @ 0x80034B10 (0xA8) — entity event handler: if entity flag
- * +0x34 is set, dispatches g_pGameState's FSM callback (marker +0x8/0xA, fn
- * +0xC) with arg 3, passing entity+0x20 as a2. Splat had carved the dispatch
- * body off as a bogus InvokeGameStateCallback symbol (it reads $a3 set by this
- * head); merged into one function. SHELVED as asm: the dispatch tail is the
- * InvokeEntityRenderCallback FSM-slot idiom — match via the FSM_REG/FSM_RELAY
- * register-pin recipe in src/anim.c. */
+/* func_80034B10 @ 0x80034B10 (0xA8) — if entity flag +0x34 is set, dispatch
+ * g_pGameState's event FSM callback (marker +0x8/0xA, fn +0xC) with eventId 3,
+ * forwarding entity+0x20 as arg and the entity as srcEntity. Same FSM-slot
+ * forwarder shape as InvokeEntityRenderCallback. Structurally complete C
+ * (instruction-perfect) in nonmatchings/func_80034B10; residual is adj-block
+ * register coloring (v0/v1 vs t0) + the marker survivor's v0-staging move.
+ * Permuter finishing the coloring. */
 INCLUDE_ASM("asm/nonmatchings/effects", func_80034B10);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitEntity_168254b5);
