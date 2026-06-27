@@ -275,20 +275,28 @@ INCLUDE_ASM("asm/nonmatchings/effects", MultiPartEntityTick);
 
 /* Wraps UpdateEntityRender with a second pass that projects the entity's
  * worldX/worldY into screen-space and writes them into the s16 pair at
- * (e->renderScreenPos + 0/+2). The function lives at the delay slot of
- * MultiPartEntityTick's `jr $ra` and therefore starts with a leading nop
- * that's actually MultiPartEntityTick's delay slot — cc1 won't emit a
- * leading nop for the next function, so this stays as INCLUDE_ASM.
- *
- * SHELVED (Quirk-5 family — leading-nop from previous function's delay
- * slot). Equivalent C:
- *   void EntityRenderCallbackUpdateScreenPos(EntityWithRenderTarget *e) {
- *       UpdateEntityRender((Entity *)e);
- *       e->renderScreenPos[0] = e->base.worldX - g_pGameState->camera_x;
- *       e->renderScreenPos[1] = e->base.worldY - g_pGameState->camera_y;
- *   }
- */
-INCLUDE_ASM("asm/nonmatchings/effects", EntityRenderCallbackUpdateScreenPos);
+ * (e->renderScreenPos + 0/+2). (The leading nop that previously looked
+ * like part of this function was MultiPartEntityTick's `jr $ra` delay
+ * slot — splat had the boundary 4 bytes too early; fixed in
+ * symbol_addrs.txt.) */
+typedef struct EntityWithRenderTarget {
+    u8 pad00[0x68];
+    u16 worldX;            /* 0x68 */
+    u16 worldY;            /* 0x6A */
+    u8 pad6C[0x118 - 0x6C];
+    s16 *renderScreenPos;  /* 0x118 */
+} EntityWithRenderTarget;
+
+void EntityRenderCallbackUpdateScreenPos(EntityWithRenderTarget *e) {
+    GameState *gs;
+    s32 cx, cy;
+    UpdateEntityRender((Entity *)e);
+    gs = g_pGameState;
+    cx = gs->camera_x;
+    e->renderScreenPos[0] = e->worldX - cx;
+    cy = gs->camera_y;
+    e->renderScreenPos[1] = e->worldY - cy;
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", MultiPartEntityRenderTick);
 
