@@ -40,6 +40,11 @@ PyYAML>=6.0
 toml>=0.10.0
 intervaltree>=3.1.0
 
+# Embedded SQL engine for struct_watcher JSONL log analysis.
+# Used by tools/struct_db.py for cross-watch joins, mark-windowing,
+# multi-session comparisons, etc. Reads JSONL directly via read_json_auto.
+duckdb>=0.10.0
+
 # -----------------------------------------------------------------------------
 # String processing
 # -----------------------------------------------------------------------------
