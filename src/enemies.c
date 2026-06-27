@@ -1219,7 +1219,33 @@ void DestroySoundEntityWithVoice(HazardVoiceEntity *e, u32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterIdleTickCallback);
+void EntityPathFollowerWithTriggerZone(Entity *e);
+
+/* Idle tick for a path-following sound emitter: pans its voice, and once the
+ * global frame counter has advanced past 0xAA (and the render slot is empty),
+ * installs the path-follower render callback. Then runs the standard
+ * update + damage collision check. */
+void SoundEmitterIdleTickCallback(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    UpdateEntitySoundPanning(e, *(u32 *)((u8 *)e + 0x110));
+    if (*(s32 *)((u8 *)e + 0x104) != 0) {
+        if (*(s16 *)((u8 *)e + 0x1E) == 0) {
+            if (g_pGameState->frame_counter >= 0xAA) {
+                do {} while (0);
+                fn = EntityPathFollowerWithTriggerZone;
+                do {} while (0);
+                m1 = -1;
+                slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+                *(CallbackSlot *)&e->renderMarker = slot.s;
+            }
+        }
+    }
+    EntityUpdateCallback(e);
+    CollisionCheckWrapper(e, 2, 0x1000, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityPathFollowerWithTriggerZone);
 
