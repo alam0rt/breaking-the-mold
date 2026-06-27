@@ -10,10 +10,15 @@ extern void FreeAllLayerRenderSlots(LayerRenderSlot *base);
 extern void builtin_delete(void *ptr);
 
 /* ClearAllLayerRenderSlots @ 0x80018D54 — merged its mis-split loop tail
- * (ClearLayerRenderSlotsFromIndex, an internal back-branch target). Body is
- * instruction-perfect as `do { base[i].entity = NULL; i++; } while (i<0x14)`;
- * only the final `addu base,index` operand order differs (cc1 canonicalizes
- * the computed index first). Permuter base in nonmatchings/ClearAllLayerRenderSlots. */
+ * (ClearLayerRenderSlotsFromIndex, an internal back-branch target) into one
+ * 0x3C function. Body is `do { slot=&base[i]; slot->entity=NULL; i++; }
+ * while (i<0x14)` (take the slot addr into a temp so the final `addu` is
+ * base-first, matching cc1's operand order).
+ * UNMATCHABLE AS STANDALONE C: the original is exactly 15 instrs ending in
+ * `jr ra` whose delay slot bleeds into the next function (DestroyLayerRendererObject)
+ * — there is NO trailing nop. cc1 emits `jr ra; nop` for a leaf, making the
+ * function 0x40 and shifting everything after (breaks the INIT_TABLES vtable
+ * pointer at 0x800103b8). Keep as asm. */
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots);
 
 /* Standard 0x80011228-style destructor for the layer-renderer object:
