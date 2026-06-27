@@ -111,11 +111,16 @@ Entity *ZeroEntityField(Entity *e) {
  *
  * MIS-SPLIT FIXED: splat had carved the loop-continuation+epilogue off as a
  * bogus FindNextLayerSlotByEntityPointer symbol. Merged into this single
- * 0x54-byte function in symbol_addrs.txt. SHELVED as ASM (not matched yet):
- * the gp-relative base load `lw a3,8(gp)` (the small global at 0x800A595C)
- * resolves absolute/off-by-4 through the existing D_800A595C alias, which is
- * shared with entinit.c — needs the gp+8 small-symbol naming untangled
- * first. */
+ * 0x54-byte function in symbol_addrs.txt. SHELVED as ASM (two blockers):
+ *  1. gp-rel base load `lw a3,8(gp)`: D_800A595C is INITIALIZED small data
+ *     (.word D_8009AE58 in the sdata segment), so the usual tentative-def +
+ *     --use-comm-section trick does NOT work — it adds storage and shifts
+ *     the whole sdata segment by 8 (g_pBlbHeapBase etc. move). A plain
+ *     `extern` emits absolute. Needs the initialized global defined in this
+ *     TU (and removed from the splat data segment) to get gp-rel.
+ *  2. loop branch-sense: with the global stubbed, the body matches except
+ *     TARGET uses `beq`(match)->shared-store while cc1 picks `bne`(skip);
+ *     permuter floored at 160, never 0. */
 INCLUDE_ASM("asm/nonmatchings/layer", FindLayerSlotByEntityPointer);
 
 INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableEntryByValue);
