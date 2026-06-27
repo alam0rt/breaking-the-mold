@@ -9,9 +9,12 @@ typedef struct {
 extern void FreeAllLayerRenderSlots(LayerRenderSlot *base);
 extern void builtin_delete(void *ptr);
 
+/* ClearAllLayerRenderSlots @ 0x80018D54 — merged its mis-split loop tail
+ * (ClearLayerRenderSlotsFromIndex, an internal back-branch target). Body is
+ * instruction-perfect as `do { base[i].entity = NULL; i++; } while (i<0x14)`;
+ * only the final `addu base,index` operand order differs (cc1 canonicalizes
+ * the computed index first). Permuter base in nonmatchings/ClearAllLayerRenderSlots. */
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots);
-
-INCLUDE_ASM("asm/nonmatchings/layer", ClearLayerRenderSlotsFromIndex);
 
 /* Standard 0x80011228-style destructor for the layer-renderer object:
  * walks every render slot tearing it down, then (if flags & 1) frees
