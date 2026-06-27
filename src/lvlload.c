@@ -76,10 +76,35 @@ void SaveCheckpointState(GameState *gameState) {
 }
 
 /* Inverse of SaveCheckpointState. Restores the saved tick list (+0x134 ->
- * +0x1C) and frame_counter (+0x138 -> +0x10C), then walks the saved-list
- * nodes, re-adding each entity via AddToZOrderList and freeing the wrapper
- * node from the BLB heap. Called on respawn. */
-INCLUDE_ASM("asm/nonmatchings/lvlload", RestoreCheckpointEntities);
+ * +0x1C) and frame_counter (+0x138 -> +0x10C), then walks the live tick-list
+ * nodes (captured before the swap), re-adding each entity via AddToZOrderList
+ * and freeing the wrapper node from the BLB heap. Called on respawn.
+ *
+ * The explicit `goto` loop reproduces cc1's unrotated top-test + back-jump
+ * loop form (a plain while/for rotates to a bottom-test); the `do {} while(0)`
+ * around the body is a basic-block barrier that pins node->s0 / gameState->s1. */
+void RestoreCheckpointEntities(GameState *gameState) {
+    EntityListNode *node;
+    EntityListNode *cur;
+
+    gameState->checkpoint_active = 0;
+    gameState->pause_freeze_flag = 0;
+    gameState->frame_counter = gameState->checkpoint_saved_frame_counter;
+    RemoveFromTickList((Entity *)gameState, gameState->player_entity_alt);
+    node = gameState->tick_list_head;
+    gameState->tick_list_head = gameState->checkpoint_entity_list;
+    gameState->checkpoint_entity_list = NULL;
+loop:
+    if (node != NULL) {
+        do {
+            cur = node;
+            AddToZOrderList(gameState, node->entity);
+            node = node->next;
+            FreeFromHeap(g_pBlbHeapBase, cur, 8, 0);
+        } while (0);
+        goto loop;
+    }
+}
 
 /* Walks the checkpoint-saved entity list (singly-linked 8-byte {next,id}
  * nodes at gs+0x134), unlinks the node whose id matches target, and frees
