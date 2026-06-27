@@ -798,7 +798,6 @@ EntityDestroyCallback_Vt80010DE4 = 0x80041058; // size:0x64
 EntityDestroyCallback_Vt80010DE4_800410bc = 0x800410BC; // size:0x64
 EntityDestroyCallback_Vt80010DE4_80041120 = 0x80041120; // size:0x64
 EntityDestroyCallback_Vt80010E04 = 0x80041184; // size:0x48
-FreeEntityFromHeapContext = 0x80041208; // size:0x28
 EntityDestroyCallback_Vt80010DE4_80041230 = 0x80041230; // size:0x64
 EntityDestroyCallback_Vt80010DE4_80041294 = 0x80041294; // size:0x64
 EntityDestroyCallback_Vt80010DE4_800412f8 = 0x800412F8; // size:0x64

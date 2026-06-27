@@ -1548,9 +1548,13 @@ void EntityDestroyCallback_Vt80010E04(Entity *entity, u32 flag) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", func_800411CC);
-
-INCLUDE_ASM("asm/nonmatchings/enemies", FreeEntityFromHeapContext);
+void func_800411CC(SpriteEntity *entity, s32 flags) {
+    entity->base.collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
+    DestroyEntityAndFreeMemory(entity, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+    }
+}
 
 void EntityDestroyCallback_Vt80010DE4_80041230(SpriteEntity *entity, s32 flags) {
     entity->base.collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
