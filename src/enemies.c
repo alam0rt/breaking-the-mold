@@ -1940,7 +1940,30 @@ void EntityIncrementWorldX(Entity *e) {
     e->worldX += 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityHideWithTimer);
+extern void InitSwitchActivatedState(Entity *e);
+
+/* Hides an entity for 0x1E ticks: arms the byte timer at +0x104, clears the
+ * child sub-entity's active byte (+0x34 -> +0xA), drops render flags, then
+ * installs the timed-tick callback, clears the event slot, and queues
+ * InitSwitchActivatedState to fire when the timer elapses. */
+void EntityHideWithTimer(TimedByteEntity *e) {
+    PaddedSlotPair slot;
+    s16 m1;
+    void (*fn)();
+
+    e->timer = 0x1E;
+    *((u8 *)e->sprite.base.spriteContext + 0xA) = 0;
+    EntitySetRenderFlags((Entity *)e, 0);
+    fn = TimedEntityTickCallback;
+    m1 = -1;
+    slot.s[0].markerLo = 0; slot.s[0].markerHi = m1; slot.s[0].fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s[0];
+    slot.s[0].markerLo = 0; slot.s[0].markerHi = 0; slot.s[0].fn = NULL;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
+    fn = InitSwitchActivatedState;
+    slot.s[0].markerLo = 0; slot.s[0].markerHi = m1; slot.s[0].fn = fn;
+    *(CallbackSlot *)((u8 *)e + 0x98) = slot.s[0];
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSwitchActivatedState);
 
