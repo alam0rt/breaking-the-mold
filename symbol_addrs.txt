@@ -587,7 +587,6 @@ InitColoredOverlayEntity = 0x80034894; // size:0x7C
 RenderFullScreenTileOverlay = 0x80034910; // size:0x144
 InitScrollingLayerEntity = 0x80034A54; // size:0x90
 OverlayEntityCallback = 0x80034AE4; // size:0x2C
-InvokeGameStateCallback = 0x80034B2C; // size:0x8C
 InitEntity_168254b5 = 0x80034BB8; // size:0xF0
 EntityTick_FrictionAndParallaxScale = 0x80034CA8; // size:0x220
 InitDebrisParticleEntity = 0x80034EC8; // size:0x224

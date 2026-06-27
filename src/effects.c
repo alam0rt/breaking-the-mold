@@ -489,9 +489,14 @@ s32 OverlayEntityCallback(OverlayCallbackEntity *e, u32 ev) {
     return 0;
 }
 
+/* func_80034B10 @ 0x80034B10 (0xA8) — entity event handler: if entity flag
+ * +0x34 is set, dispatches g_pGameState's FSM callback (marker +0x8/0xA, fn
+ * +0xC) with arg 3, passing entity+0x20 as a2. Splat had carved the dispatch
+ * body off as a bogus InvokeGameStateCallback symbol (it reads $a3 set by this
+ * head); merged into one function. SHELVED as asm: the dispatch tail is the
+ * InvokeEntityRenderCallback FSM-slot idiom — match via the FSM_REG/FSM_RELAY
+ * register-pin recipe in src/anim.c. */
 INCLUDE_ASM("asm/nonmatchings/effects", func_80034B10);
-
-INCLUDE_ASM("asm/nonmatchings/effects", InvokeGameStateCallback);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitEntity_168254b5);
 
