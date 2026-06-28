@@ -560,13 +560,12 @@ void Menu_PlayConfirmSoundIfEnabled(MenuButtonEntity *entity) {
  * from the position table for the currently-selected level, gives it
  * zOrder 0x4B0, stores it at +0x114 and pushes it onto the render list.
  *
- * SHELVED: scheduling diff. Original cc1 sets up all 3 AllocateFromHeap
- * arg constants (a1=0x100, a2=1, a3=0) BEFORE the field stores, then
- * interleaves +0x10C between the arg setup, and places `sw s4, 0x118`
- * in the jal delay slot. Mine groups all stores together and puts
- * `move a3, zero` in the delay slot, making the function 1 instruction
- * (4 bytes) longer -- which cascades downstream by 4 bytes, breaking
- * SHA1. Permuter candidate. */
+ * Level-icon child read from the position table for the selected level.
+ * m2c-clean structure (params/fields confirmed). SHELVED: residual is an
+ * s0/s1 swap (entity wants $s0, levelCount $s1) plus the AllocateFromHeap
+ * arg-scheduling — target sets a1/a2/a3 early and fills the jal delay slot
+ * with `sw s4,0x118`, cc1 groups stores and lands `move a3,zero` there (1
+ * instr longer). Structurally-complete base parked in nonmatchings/; permuter. */
 INCLUDE_ASM("asm/nonmatchings/menu", InitMenuLevelSelectButton);
 
 /* Level-select counterpart of MenuActivateButtonWithReset -- same body:
