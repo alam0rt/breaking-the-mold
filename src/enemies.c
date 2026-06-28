@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "Game/entity_events.h"
 #include "Game/callback_slot.h"
+#include "Game/fsm_dispatch.h"
 #include "globals.h"
 
 /* -----------------------------------------------------------------------------
@@ -997,6 +998,15 @@ void EnemyDeathState(Entity *e) {
     *(CallbackSlot *)&se->queuedStateMarker = slot.s[0];
 }
 
+typedef s16 (*XformCB)();
+typedef struct { s32 arg; XformCB fn; } XformSlot;
+extern void CalculateEntityRenderBounds(Entity *e, void *bounds);
+
+/* True if the entity (after parallax) sits more than 0x140 px left of the
+ * camera. Resolves its X via the moveCallbackX FSM slot (GetEntityXPosition
+ * dispatch shape, fn $a2 / then-fn $s3), passing the render-bounds value from
+ * CalculateEntityRenderBounds. Instruction-perfect; residual is a 2-instr
+ * coloring (final (s16)val sra lands $a1 vs target $v0). Permuter. */
 INCLUDE_ASM("asm/nonmatchings/enemies", CheckEntityBehindCamera);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSnoBloEnemy);
