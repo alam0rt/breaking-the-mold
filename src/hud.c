@@ -1,5 +1,6 @@
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/asset_ids.h"
 
 extern void PlaySoundEffect(u32 id, s32 vol, s32 ch);
 extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
@@ -70,7 +71,7 @@ void ToggleMenuSelectionHighlight(PauseMenuToggleEntity *entity) {
 s32 ToggleMenuOptionState(OptionsMenuTripleEntity *entity) {
     u8 *color;
 
-    PlaySoundEffect(0x90810000u, 0xa0, 1);
+    PlaySoundEffect(FX_MENU_SELECT, 0xa0, 1);
 
     if (entity->pressLatch == 0) {
         if (entity->pressedState == 0) {
@@ -78,9 +79,9 @@ s32 ToggleMenuOptionState(OptionsMenuTripleEntity *entity) {
         }
         entity->pressLatch = 1;
         entity->pressedState = 1;
-        SetEntitySpriteId(entity->label, 0x69C8F473, 1);
-        SetEntitySpriteId(entity->itemA, 0x2AD0F011, 1);
-        SetEntitySpriteId(entity->itemB, 0x29C0E211, 1);
+        SetEntitySpriteId(entity->label, SPR_QUIT_GAME, 1);
+        SetEntitySpriteId(entity->itemA, SPR_YES, 1);
+        SetEntitySpriteId(entity->itemB, SPR_NO, 1);
         color = (u8 *)entity->itemA->spriteContext;
         color[0x34] = 0x40;
         color[0x35] = 0x40;
@@ -95,9 +96,9 @@ s32 ToggleMenuOptionState(OptionsMenuTripleEntity *entity) {
         }
         entity->pressLatch = 0;
         entity->pressedState = 0;
-        SetEntitySpriteId(entity->label, 0x0AD0F813, 1);
-        SetEntitySpriteId(entity->itemA, 0x69C04050, 1);
-        SetEntitySpriteId(entity->itemB, 0x68C0F413, 1);
+        SetEntitySpriteId(entity->label, SPR_PAUSED, 1);
+        SetEntitySpriteId(entity->itemA, SPR_CONTINUE, 1);
+        SetEntitySpriteId(entity->itemB, SPR_QUIT, 1);
         color = (u8 *)entity->itemA->spriteContext;
         color[0x34] = 0x80;
         color[0x35] = 0x80;

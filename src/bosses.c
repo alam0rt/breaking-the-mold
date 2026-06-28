@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/asset_ids.h"
 #include "functions.h"
 #include "Game/callback_slot.h"
 #include "globals.h"
@@ -826,7 +827,7 @@ void GlennYntisVictoryCallback(u8 *e_raw) {
  *      0x0A1820D4  DEATH      — death pose (set in ShrineyGuardDeathState)
  *  Anim helpers:
  *      SetAnimationLoopFrame(0x01084280) — slam-anim loop frame id
- *      SetAnimationLoopFrame(0xC00200C9) — looping-attack second-loop id
+ *      SetAnimationLoopFrame(FX_GUM_PIERCE_DN) — looping-attack second-loop id
  *      SetAnimationSpriteCallback(0x02421405) — anim-finished callback hash
  *
  *  Health: PlayerState.boss_hp (PLAYER_STATE_DATA[+0x1D]) is set to 3 by
@@ -1102,7 +1103,7 @@ void ShrineyGuardSetAttackState(Entity *e) {
 /* Variant of ShrineyGuardSetAttackState used for the chained/looping
  * attack: same handler+tick install but the sprite-id is 0x40106054 (the
  * LOOP_LINK frame), and additionally calls SetAnimationLoopFrame
- * (0xC00200C9) with ((u8*)e)[0x111]=2 packed in the delay slot, plus
+ * (FX_GUM_PIERCE_DN) with ((u8*)e)[0x111]=2 packed in the delay slot, plus
  * SetAnimationSpriteCallback(0x02421405) + SetAnimationFrameIndex(0)
  * to drive the looping-attack second-loop, and queues
  * ShrineyGuardSetAttackState on the +0x98 queued-state slot so each loop
@@ -1126,7 +1127,7 @@ void ShrineyGuardSetLoopingAttackState(Entity *e) {
     *(CallbackSlot *)&e->tickMarker = slot.s;
     SetEntitySpriteId(e, 0x40106054, 1);
     ((u8 *)e)[0x111] = 2;
-    SetAnimationLoopFrame(e, 0xC00200C9);
+    SetAnimationLoopFrame(e, FX_GUM_PIERCE_DN);
     SetAnimationSpriteCallback(e, 0x2421405);
     SetAnimationFrameIndex(e, 0);
     fn = ShrineyGuardSetAttackState;

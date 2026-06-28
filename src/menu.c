@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/asset_ids.h"
 #include "functions.h"
 #include "Game/entity.h"
 #include "Game/entity_events.h"
@@ -470,7 +471,7 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButton);
  * git history. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuDeactivateButton);
 
-/* Plays the confirm/select SFX (PlaySoundEffect(0x90810000, 0xA0, 0))
+/* Plays the confirm/select SFX (PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0))
  * unconditionally and sets the gp-relative debounce byte D_800A6045 to
  * 1 so the *IfEnabled variants below know a sound has already been
  * issued this frame. (Unlocked: see the D_800A6045 .comm note above.) */
@@ -529,7 +530,7 @@ INCLUDE_ASM("asm/nonmatchings/menu", FINN_ClearSubentityState);
 
 /* Conditional select-SFX helper. If entity+0x108 (the type byte set by
  * InitMenuPasswordButton) is nonzero, calls
- * PlaySoundEffect(0x90810000, 0xA0, 0) and copies that type byte into
+ * PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0) and copies that type byte into
  * the gp-relative D_800A6045 debounce flag. Lets only "real" buttons
  * (non-zero type) emit the click sound. (Unlocked: D_800A6045 .comm.) */
 void Menu_PlaySelectSoundIfEnabled(MenuButtonEntity *entity) {
@@ -541,7 +542,7 @@ void Menu_PlaySelectSoundIfEnabled(MenuButtonEntity *entity) {
 
 /* Conditional confirm-SFX helper. If entity+0x109 (the back-flag byte
  * set by InitMenuPasswordButton) is nonzero, calls
- * PlaySoundEffect(0x90810000, 0xA0, 0) and writes 1 to D_800A6045.
+ * PlaySoundEffect(FX_MENU_SELECT, 0xA0, 0) and writes 1 to D_800A6045.
  * Used so only the password screen's "back/confirm" button actually
  * fires the confirm sound. (Unlocked: D_800A6045 .comm.) */
 void Menu_PlayConfirmSoundIfEnabled(MenuButtonEntity *entity) {

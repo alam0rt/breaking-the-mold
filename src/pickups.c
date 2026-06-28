@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/asset_ids.h"
 #include "functions.h"
 #include "globals.h"
 #include "Game/callback_slot.h"
@@ -338,7 +339,7 @@ PowerupCollectibleEntity *InitTransparentDecorEntity(PowerupCollectibleEntity *e
  * identical; on a hit it (a) stamps `labelEntity->collisionMask = 7` to
  * activate the floating "1UP" label sub-entity, (b) awards a life via
  * AddPlayerLives(PLAYER_STATE_DATA, 1), (c) spawns the standard pickup
- * VFX at (0x118, 0xF), and (d) plays sound 0x428254E2.
+ * VFX at (0x118, 0xF), and (d) plays sound FX_PICKUP_ONE_UP.
  *
  * Match recipe: keep the collisionMask store on the line BEFORE the
  * award call -- cc1 folds the `sh v0, 0x12(v1)` into the jal's delay
@@ -350,7 +351,7 @@ void CollectibleExtraLifeTickCallback(PowerupCollectibleEntity *e) {
         e->labelEntity->collisionMask = 7;
         AddPlayerLives(PLAYER_STATE_DATA, 1);
         InitDecorEntityWithScreenOffset((Entity *)e, 0x118, 0xF, 1);
-        PlayEntityPositionSound((Entity *)e, 0x428254E2);
+        PlayEntityPositionSound((Entity *)e, FX_PICKUP_ONE_UP);
     }
 }
 
@@ -390,7 +391,7 @@ PowerupCollectibleEntity *InitPhoenixHandCollectible(PowerupCollectibleEntity *e
 
 /* Phoenix Hand pickup -- same shape as CollectibleExtraLifeTickCallback
  * but awards a phoenix hand via AddPhoenixHands, spawns VFX at (0x18,
- * 0xC8) and plays sound 0x44C26454. */
+ * 0xC8) and plays sound FX_PICKUP_PHOENIX. */
 void CollectiblePhoenixHandTickCallback(PowerupCollectibleEntity *e) {
     DecorEntityTickWithOffscreenCheck((Entity *)e);
     if (e->triggerState != 0 ||
@@ -398,7 +399,7 @@ void CollectiblePhoenixHandTickCallback(PowerupCollectibleEntity *e) {
         e->labelEntity->collisionMask = 7;
         AddPhoenixHands(PLAYER_STATE_DATA, 1);
         InitDecorEntityWithScreenOffset((Entity *)e, 0x18, 0xC8, 1);
-        PlayEntityPositionSound((Entity *)e, 0x44C26454);
+        PlayEntityPositionSound((Entity *)e, FX_PICKUP_PHOENIX);
     }
 }
 
@@ -594,7 +595,7 @@ PowerupCollectibleEntity *InitSuperWillieCollectible(PowerupCollectibleEntity *e
 
 /* Super Willie pickup -- same shape as CollectibleExtraLifeTickCallback
  * but awards a super willie via AddSuperWillies, spawns VFX at (0x118,
- * 0x88) and plays sound 0xE48744C4. */
+ * 0x88) and plays sound FX_PICKUP_SUPER_WILLIE. */
 void CollectibleSuperWillieTickCallback(PowerupCollectibleEntity *e) {
     DecorEntityTickWithOffscreenCheck((Entity *)e);
     if (e->triggerState != 0 ||
@@ -602,7 +603,7 @@ void CollectibleSuperWillieTickCallback(PowerupCollectibleEntity *e) {
         e->labelEntity->collisionMask = 7;
         AddSuperWillies(PLAYER_STATE_DATA, 1);
         InitDecorEntityWithScreenOffset((Entity *)e, 0x118, 0x88, 1);
-        PlayEntityPositionSound((Entity *)e, 0xE48744C4);
+        PlayEntityPositionSound((Entity *)e, FX_PICKUP_SUPER_WILLIE);
     }
 }
 

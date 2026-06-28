@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/asset_ids.h"
 #include "functions.h"
 #include "Game/entity_events.h"
 #include "Game/callback_slot.h"
@@ -1483,7 +1484,7 @@ void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
     SetEntitySpriteId(e, spriteId, 1);
     SLOT_CLEAR(slot.s[0], e->renderMarker);
     SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x44D4C8D8);
+    SetAnimationSpriteCallback(e, FX_KLAY_FOOTSTEP_QUIET);
     SetAnimationFrameIndex(e, 0);
     fn = InitEntityRandomIdleOrAnimated;
     do {} while (0);
