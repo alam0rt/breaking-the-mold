@@ -188,11 +188,51 @@ s16 CalculateScaledXCoord(Entity *e, s32 val) {
 }
 
 /*
- * Mirror of TransformYCoordinateWithScale on the X axis: walks the X
- * animation-transform chain (+0x24/+0x26/+0x28) and divides by entity
- * scale (+0x58). Effectively a sibling of CalculateScaledXCoord.
+ * X mirror of TransformYCoordinateWithScale: FSM-slot dispatch over
+ * moveCallbackX (+0x24/0x26/0x28), rounds the result UP to the next 0x10
+ * boundary ((r & ~0xF) + 0x10 — note the Y twin only masks down, no +0x10),
+ * then divides by scalePowerupX (+0x58). The 0xC000 rounding special-case
+ * tests the same scalePowerupX field it just divided by (load reused, not
+ * reloaded).
  */
-INCLUDE_ASM("asm/nonmatchings/player", TransformXCoordinateWithScale);
+s16 TransformXCoordinateWithScale(Entity *e, s32 val) {
+    s16 m = ((s16 *)&e->moveMarkerX)[1];
+    FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
+    FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
+    FSM_REG(s32, arg, "$6");         /* $a2 */
+    FSM_REG(s32, adj, "$2");         /* $v0 */
+    s32 vt = val;                    /* saved copy of val used by the call path */
+    s32 lo;
+    s16 s;
+    s32 r;
+    s32 q;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            ScaleCoordSlot *base =
+                *(ScaleCoordSlot **)((u8 *)e + *(s16 *)&e->moveCallbackX);
+            arg = base[s - 1].arg;
+            tf = base[s - 1].fn;
+            FSM_RELAY(fn, tf); /* emits move $t0,$a3 */
+        } else {
+            fn = (ScaleCoordCB)e->moveCallbackX;
+        }
+        lo = ((s16 *)&e->moveMarkerX)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        r = fn((u8 *)e + adj, (s16)vt);
+    } else {
+        r = val;
+    }
+    q = (((r & ~0xF) + 0x10) << 16) / e->scalePowerupX;
+    if (e->scalePowerupX == 0xC000 && (u32)((q & 3) - 1) < 2) {
+        q++;
+    }
+    return (s16)q;
+}
 
 /*
  * Y counterpart of CalculateScaledXCoord (slots at +0x2C/+0x2E/+0x30).
