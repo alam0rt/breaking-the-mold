@@ -745,6 +745,9 @@ void DestroySoundEmitterEntity(SoundEmitterEntity *e, u32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", SoundEmitterTickCallback);
 
+/* Tick while a sound-emitter enemy is stunned: counts the stun timer down and,
+ * at 0, transitions to the stun-expired state; then runs the normal update +
+ * offscreen cull each frame. */
 void SoundEmitterStunnedTickCallback(SoundEmitterEntity *e) {
     if (e->stunTimer != 0) {
         e->stunTimer -= 1;
@@ -757,6 +760,9 @@ void SoundEmitterStunnedTickCallback(SoundEmitterEntity *e) {
     CheckCollectibleOffscreen((Entity *)e);
 }
 
+/* Minimal event handler: pumps the callback queue on EVT_TICK, ignores
+ * everything else, always returns 0. Installed by entities whose only
+ * per-frame need is advancing queued state transitions. */
 s32 EntitySimpleEventPassthrough(Entity *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
         EntityProcessCallbackQueue(entity);
@@ -815,6 +821,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitSpecialPickupEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TripleLaserMonkeyDeathTick);
 
+/* Triple-laser-monkey tick: fires its queued transition once every 0x80 frames
+ * (when the low 7 bits of the global frame counter match this entity's phase
+ * offset), then runs the per-frame death/laser tick. */
 void TripleLaserMonkeyConditionalTick(ConditionalPhaseEntity *e) {
     if ((g_pGameState->frame_counter & 0x7F) == e->framePhase) {
         EntityProcessCallbackQueue((Entity *)e);
