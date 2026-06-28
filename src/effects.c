@@ -324,7 +324,6 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitHUDIconEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", Render_RotatingStarEffect);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_80032DD8);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitPathFollowEntity);
 
@@ -341,7 +340,6 @@ void DestroyPathFollowEntity(PathFollowResourceEntity *e, s32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderPathEntitySegments);
 
-INCLUDE_ASM("asm/nonmatchings/effects", func_800335A4);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitPathFollowEntityAlt);
 
