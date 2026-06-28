@@ -578,6 +578,15 @@ void EntityStateSetIdle(Entity *e) {
     SetEntitySpriteId(e, spriteIds[3], 1);
 }
 
+/* EntityStateSetRandomBehavior @ 0x8003C1A8 — same EntityStateSetWalk/Idle
+ * 3-slot install idiom (event/render-clear/tick), but the event handler is
+ * chosen by rand()&1 (EntityEventHandlerWithRandomWalk vs EntityEventHandlerWalk),
+ * sprite from e->+0x114->+0x10. SHELVED: the rand-conditional fn choice fights
+ * cc1's branch codegen. Target emits the diamond — if-branch lui RandomWalk + j
+ * over the else, m1=-1 in the beqz delay slot (m1 $v0, fn $v1). Both if/else and
+ * the ternary hoist the first fn above the branch (44 instrs vs 48, no j); a
+ * forced goto adds the j but spills m1 to $s1. Instruction count differs, so the
+ * permuter can't bridge it. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetRandomBehavior);
 
 void EntityStateSetAttack(EnemyTimerStateEntity *e) {
