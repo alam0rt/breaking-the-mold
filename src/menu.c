@@ -187,13 +187,33 @@ s32 MenuEntityCallback(Entity *entity, u32 event) {
  * SetEntitySpriteId, and queues InitRunnLevelEntity at +0x98/+0x9C so
  * the run animation kicks in when the timer expires.
  *
- * SHELVED: 4-instruction scheduling diff. cc1 in the original hoists
- * `li s1, -1` (the marker constant) BEFORE the timer write (between
- * the rand-bitmask chain and the `sh v0, 0x100(s0)`); modern cc1
- * places it after. Tried statement reorderings; either shifts the diff
- * around or grows it. Close enough that decomp-permuter would likely
- * close it. */
-INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuIdleAnimation);
+ * Random hold timer at +0x100, TimerEntityTick tick slot, cleared event
+ * slot, sprite 0x5C699, queues InitRunnLevelEntity at +0x98. */
+void SetupMenuIdleAnimation(Entity *entity) {
+    PaddedSlotPair u;
+    register s16 m1 asm("$17"); /* $s1 (entity stays $s0) */
+    void (*fn)(Entity *);
+
+    *(s16 *)((u8 *)entity + 0x100) = (s16)((rand() & 0x7F) + 0xF0);
+    do {
+        fn = (void (*)(Entity *))TimerEntityTick;
+        m1 = -1;
+        u.s[0].markerLo = 0;
+        u.s[0].markerHi = m1;
+    } while (0);
+    u.s[0].fn = fn;
+    *(MenuCallbackSlot *)&entity->tickMarker = u.s[0];
+    u.s[0].markerLo = 0;
+    u.s[0].markerHi = 0;
+    u.s[0].fn = NULL;
+    *(MenuCallbackSlot *)&entity->eventMarker = u.s[0];
+    SetEntitySpriteId(entity, 0x5C699, 1);
+    fn = (void (*)(Entity *))InitRunnLevelEntity;
+    u.s[0].markerLo = 0;
+    u.s[0].markerHi = m1;
+    u.s[0].fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x98) = u.s[0];
+}
 
 /* Transition handler that swaps the menu character from idle to its
  * active running animation. Installs EntityUpdateCallback at the tick
