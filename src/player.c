@@ -97,13 +97,55 @@ s32 CheckCollisionBelow1(Entity *entity) {
     return tile == PLAYER_TILE_SPECIAL_MARKER;
 }
 
+typedef s32 (*ScaleCoordCB)();
+typedef struct { s32 arg; ScaleCoordCB fn; } ScaleCoordSlot;
+
 /*
- * Runs the entity's Y animation/transform chain (callback slot at
- * sprite+0x2E/+0x30/+0x2C) then divides by the level/world scale at
- * +0x58, with a special rounding case for scale == 0xC000. Converts a
- * sprite-local Y value into world/screen Y.
+ * Runs the entity's Y transform-callback chain on `val` (FSM-slot dispatch
+ * over moveCallbackY at +0x2C/0x2E/0x30, same as CalculateScaledYCoord),
+ * masks the result down to a 0x10 boundary, then divides by scalePowerupY
+ * (+0x5C). Special rounding: when scalePowerupX (+0x58) == 0xC000 and the
+ * quotient mod 4 is 1 or 2, round up by one. Converts a sprite-local Y into
+ * world/screen Y.
  */
-INCLUDE_ASM("asm/nonmatchings/player", TransformYCoordinateWithScale);
+s16 TransformYCoordinateWithScale(Entity *e, s32 val) {
+    s16 m = ((s16 *)&e->moveMarkerY)[1];
+    FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
+    FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
+    FSM_REG(s32, arg, "$6");         /* $a2 */
+    FSM_REG(s32, adj, "$2");         /* $v0 */
+    s32 vt = val;                    /* saved copy of val used by the call path */
+    s32 lo;
+    s16 s;
+    s32 r;
+    s32 q;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            ScaleCoordSlot *base =
+                *(ScaleCoordSlot **)((u8 *)e + *(s16 *)&e->moveCallbackY);
+            arg = base[s - 1].arg;
+            tf = base[s - 1].fn;
+            FSM_RELAY(fn, tf); /* emits move $t0,$a3 */
+        } else {
+            fn = (ScaleCoordCB)e->moveCallbackY;
+        }
+        lo = ((s16 *)&e->moveMarkerY)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        r = fn((u8 *)e + adj, (s16)vt);
+    } else {
+        r = val;
+    }
+    q = ((r & ~0xF) << 16) / e->scalePowerupY;
+    if (e->scalePowerupX == 0xC000 && (u32)((q & 3) - 1) < 2) {
+        q++;
+    }
+    return (s16)q;
+}
 
 /*
  * X counterpart of CalculateScaledYCoord (slots at +0x24/+0x26/+0x28).
@@ -111,9 +153,6 @@ INCLUDE_ASM("asm/nonmatchings/player", TransformYCoordinateWithScale);
  * DOWN to a 0x10 boundary (& ~0xF, vs the Y twin's | 0xF round-up), then
  * scales it into world space by dividing by scalePowerupX (+0x58).
  */
-typedef s32 (*ScaleCoordCB)();
-typedef struct { s32 arg; ScaleCoordCB fn; } ScaleCoordSlot;
-
 s16 CalculateScaledXCoord(Entity *e, s32 val) {
     s16 m = ((s16 *)&e->moveMarkerX)[1];
     FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
