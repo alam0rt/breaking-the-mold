@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "globals.h"
 #include "Game/callback_slot.h"
+#include "Game/fsm_dispatch.h"
 
 extern void *g_pBlbHeapBase;
 extern u8 DECOR_ENTITY_DESTRUCTOR_VTABLE[] asm("D_80010870");
@@ -131,9 +132,17 @@ INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleOrbTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", EntityRenderWithScaledPosition);
 
+/* func_8002D978 @ 0x8002D978 (0xAC) — if entity flag +0x124 is set, dispatch
+ * g_pGameState's event FSM callback (marker +0x8/0xA, fn +0xC) with eventId 3,
+ * arg 0. Same FSM forwarder as func_80034B10 but with NO forwarded entity arg.
+ * Merged its mis-split dispatch body (bogus TriggerFadeOut symbol, an internal
+ * $a3-flowing continuation). SHELVED: the body never reads $a3(e), yet the
+ * target keeps a dead `move a3,a0; lbu 0x124(a3)` (relic of the head having
+ * been a separate function preserving e across the a0:=g_pGameState load). As
+ * one C function cc1 reads the flag straight from $a0 and drops the move (2
+ * instrs short) — the dead-value preservation can't be coaxed without shifting
+ * the rest of the allocation. */
 INCLUDE_ASM("asm/nonmatchings/pickups", func_8002D978);
-
-INCLUDE_ASM("asm/nonmatchings/pickups", TriggerFadeOut);
 
 void CollectibleYellowBirdTickCallback(InteractiveDecorEntity *e);
 

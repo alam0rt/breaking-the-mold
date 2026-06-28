@@ -485,7 +485,6 @@ InitDecorEntityWithHUDIcon = 0x8002D5C8; // size:0x104
 EntityDestructor_FreeRenderListAt120 = 0x8002D6CC; // size:0x9C
 CollectibleOrbTickCallback = 0x8002D768; // size:0x144
 EntityRenderWithScaledPosition = 0x8002D8AC; // size:0xCC
-TriggerFadeOut = 0x8002D994; // size:0x90
 InitYellowBirdCollectible = 0x8002DA24; // size:0xA4
 CollectibleYellowBirdTickCallback = 0x8002DAC8; // size:0x114
 InitClayballWithRandomColor = 0x8002DBDC; // size:0x264
