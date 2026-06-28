@@ -106,12 +106,47 @@ s32 CheckCollisionBelow1(Entity *entity) {
 INCLUDE_ASM("asm/nonmatchings/player", TransformYCoordinateWithScale);
 
 /*
- * X counterpart of TransformYCoordinateWithScale - applies the X-side
- * animation transform chain (slots at +0x24/+0x26/+0x28) and divides
- * by entity scale at +0x58. Likely should be named TransformX... for
- * symmetry; "CalculateScaled" is misleading vs. its Y-coord twin.
+ * X counterpart of CalculateScaledYCoord (slots at +0x24/+0x26/+0x28).
+ * Runs the entity's X transform-callback chain on `val`, masks the result
+ * DOWN to a 0x10 boundary (& ~0xF, vs the Y twin's | 0xF round-up), then
+ * scales it into world space by dividing by scalePowerupX (+0x58).
  */
-INCLUDE_ASM("asm/nonmatchings/player", CalculateScaledXCoord);
+typedef s32 (*ScaleCoordCB)();
+typedef struct { s32 arg; ScaleCoordCB fn; } ScaleCoordSlot;
+
+s16 CalculateScaledXCoord(Entity *e, s32 val) {
+    s16 m = ((s16 *)&e->moveMarkerX)[1];
+    FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
+    FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
+    FSM_REG(s32, arg, "$6");         /* $a2 */
+    FSM_REG(s32, adj, "$2");         /* $v0 */
+    s32 vt = val;                    /* saved copy of val used by the call path */
+    s32 lo;
+    s16 s;
+    s32 r;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            ScaleCoordSlot *base =
+                *(ScaleCoordSlot **)((u8 *)e + *(s16 *)&e->moveCallbackX);
+            arg = base[s - 1].arg;
+            tf = base[s - 1].fn;
+            FSM_RELAY(fn, tf); /* emits move $t0,$a3 */
+        } else {
+            fn = (ScaleCoordCB)e->moveCallbackX;
+        }
+        lo = ((s16 *)&e->moveMarkerX)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        r = fn((u8 *)e + adj, (s16)vt);
+    } else {
+        r = val;
+    }
+    return (s16)(((r & ~0xF) << 16) / e->scalePowerupX);
+}
 
 /*
  * Mirror of TransformYCoordinateWithScale on the X axis: walks the X
@@ -127,9 +162,6 @@ INCLUDE_ASM("asm/nonmatchings/player", TransformXCoordinateWithScale);
  * $t0 with arg/$a2 and table-fn/$a3 homes), nudges the result up by 0xF,
  * then scales it into world space by dividing by scalePowerupY (+0x5C).
  */
-typedef s32 (*ScaleCoordCB)();
-typedef struct { s32 arg; ScaleCoordCB fn; } ScaleCoordSlot;
-
 s16 CalculateScaledYCoord(Entity *e, s32 val) {
     s16 m = ((s16 *)&e->moveMarkerY)[1];
     FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
