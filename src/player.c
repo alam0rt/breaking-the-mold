@@ -291,6 +291,12 @@ INCLUDE_ASM("asm/nonmatchings/player", PlayerApplyPositionWithCollision);
  * arg via stack) is < 10. Used by sound triggers but likely should be
  * named generically (IsEntityNearPoint/EntityWithinSlopeRange).
  */
+/* IsEntityNearSoundTrigger @0x8005A3F8 — structurally-perfect C exists
+ * (same 115 instrs / shape) but has a pervasive coupled saved-register
+ * renumbering across the two inline FSM-slot dispatches (target homes
+ * yval->$a1 / Y-survivor->$a3 / refY->$s6; natural C picks $a3/$t0/$s5).
+ * Parked as a permuter base in tools/decomp-permuter/nonmatchings/
+ * IsEntityNearSoundTrigger; needs a permuter run to settle the coloring. */
 INCLUDE_ASM("asm/nonmatchings/player", IsEntityNearSoundTrigger);
 
 /*
