@@ -312,11 +312,28 @@ s32 MenuButtonCallback(Entity *entity, u32 event) {
  * +0x98/+0x9C so the next callback-queue dispatch settles back to the
  * idle sprite.
  *
- * SHELVED: Quirk-5 lui-hoist scheduling diff. Same family as
- * MenuActivateButton; TripadSlot pins the 0x30 frame correctly but
- * cc1 in the original schedules `li s1, -1` immediately after the
- * `sw s1, ...` save (instr 4) while modern cc1 places it later. */
-INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuButtonAnimation);
+ * MenuButtonCallback event slot, sprite 0x63848E59, queues
+ * MenuSetEntityIdle2 at +0x98. */
+void SetupMenuButtonAnimation(Entity *entity) {
+    TripadSlot u;
+    register s16 m1 asm("$17"); /* $s1 */
+    void (*fn)(Entity *);
+
+    do {
+        fn = (void (*)(Entity *))MenuButtonCallback;
+        m1 = -1;
+        u.s.markerLo = 0;
+        u.s.markerHi = m1;
+    } while (0);
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)&entity->eventMarker = u.s;
+    SetEntitySpriteId(entity, 0x63848E59, 1);
+    fn = MenuSetEntityIdle2;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x98) = u.s;
+}
 
 /* Tail-call helper: clears the event-callback pair at +0x08/+0x0C and
  * switches the sprite id to SPR_MENU_HIGHLIGHT_IDLE (the primary "idle"
