@@ -1,6 +1,7 @@
 #include "common.h"
 #include "functions.h"
 #include "Game/callback_slot.h"
+#include "Game/fsm_dispatch.h"
 #include "globals.h"
 
 extern void *g_pBlbHeapBase;
@@ -88,9 +89,58 @@ INCLUDE_ASM("asm/nonmatchings/finn", func_8006E0CC);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FINNRenderCallback_UpdateScaledPosition);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006E130);
+/* If entity flag +0x2C is set, dispatch g_pGameState's event FSM callback
+ * (marker +0x8/0xA, fn +0xC) with eventId 3, forwarding entity+0x24 as the arg
+ * and the entity as srcEntity. Same FSM-slot forwarder as func_80034B10 (the
+ * dispatch body was mis-split as a bogus FINNCallback_DispatchToStateHandler
+ * symbol; merged here). fn/then-fn pinned to $t2/$t1. */
+typedef void (*GsEventCB)();
+typedef struct { s32 arg; GsEventCB fn; } GsEventSlot;
 
-INCLUDE_ASM("asm/nonmatchings/finn", FINNCallback_DispatchToStateHandler);
+void func_8006E130(Entity *e) {
+    GameState *gs;
+    s32 arg;
+    u8 *gsb;
+    s16 m;
+    FSM_REG(GsEventCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsEventCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    FSM_REG(s32, slotArg, "$8");   /* $t0 slot arg */
+    s32 adj;
+    s16 sCopy;
+    int slotArgWide;
+    s32 lo;
+    FSM_REG(s16, s, "$11");        /* $t3 marker survivor (staged via $v0) */
+
+    if (*(u8 *)((u8 *)e + 0x2C) == 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    arg = *(s32 *)((u8 *)e + 0x24);
+    gsb = (u8 *)gs;
+    if (m == 0) {
+        return;
+    }
+    s = m;
+    sCopy = s;
+    if (s > 0) {
+        GsEventSlot *base =
+            *(GsEventSlot **)(gsb + *(s16 *)&gs->event_callback);
+        slotArg = base[sCopy - 1].arg;
+        ft = base[sCopy - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsEventCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (sCopy > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, arg, e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", CreateYellowBirdEntity);
 

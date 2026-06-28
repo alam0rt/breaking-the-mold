@@ -1428,7 +1428,6 @@ EntityDestructor_FreeResourceAt24 = 0x8006DF88; // size:0x80
 FinnSubentityUpdatePositionFromParent = 0x8006E008; // size:0x7C
 FINNRenderCallback_UpdateScreenPosition = 0x8006E098; // size:0x34
 FINNRenderCallback_UpdateScaledPosition = 0x8006E0D8; // size:0x58
-FINNCallback_DispatchToStateHandler = 0x8006E14C; // size:0x8C
 CreateYellowBirdEntity = 0x8006E1D8; // size:0x1B0
 EntityTick_FollowPlayerWithInterpolation = 0x8006E388; // size:0x3F4
 FinnSubentityFollowWithDistanceCheck = 0x8006E77C; // size:0x134
