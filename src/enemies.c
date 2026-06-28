@@ -376,6 +376,9 @@ INCLUDE_ASM("asm/nonmatchings/enemies", CheckCollectibleOffscreen);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickCallback);
 
+/* Per-frame tick for a collectible with a countdown: decrements the +0x100
+ * timer and, when it hits 0, fires the queued state-transition callback, then
+ * runs the standard collectible tick (offscreen cull + collision pickup). */
 void TimedCollectibleTickCallback(TimedCollectibleEntity *e) {
     if (e->timer != 0) {
         e->timer -= 1;
@@ -388,6 +391,15 @@ void TimedCollectibleTickCallback(TimedCollectibleEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleTickFinnMode);
 
+/* Attack-token arbitration handler installed while the enemy is in its WALK
+ * state. Despite "Walk", the body does no movement — it manages the
+ * single-attacker token at +0x108 (holder id) and the +0x106 "ready" flag:
+ *   EVT_TOKEN_QUERY  - mark ready; if `attacker` is the current holder, release
+ *                      the token; return self (the candidate).
+ *   EVT_SET_READY    - mark ready.
+ *   EVT_TOKEN_CLAIM  - claim the token if free, returning 1 on success.
+ * (NAME reflects the installing state, not behavior — see EntityEventHandlerIdle
+ * for the identical logic + an EVT_TICK callback-queue pump.) */
 s32 EntityEventHandlerWalk(Entity *e, u16 event, u32 unused, u32 attacker) {
     u8 *e8 = (u8 *)e;
     s32 result = 0;
@@ -412,6 +424,9 @@ s32 EntityEventHandlerWalk(Entity *e, u16 event, u32 unused, u32 attacker) {
     return result;
 }
 
+/* Attack-token arbitration installed while IDLE — identical token/ready logic
+ * to EntityEventHandlerWalk, plus it pumps the callback queue on EVT_TICK (so
+ * an idle enemy still advances its queued state transitions). */
 s32 EntityEventHandlerIdle(Entity *e, u16 event, u32 unused, u32 attacker) {
     u8 *e8 = (u8 *)e;
     s32 result = 0;
@@ -465,6 +480,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", AIEntityRandomBehaviorTick);
  * permuter territory. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandler0x1001_1002_1008);
 
+/* Behaviorally identical to EntityEventHandlerIdle (attack-token arbitration +
+ * EVT_TICK callback-queue pump) — a second copy at its own address. NAME is a
+ * placeholder (the hash is just the three handled event ids 0x1001/2/8); it's
+ * really another idle-state token handler. */
 s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 unused, u32 attacker) {
     u8 *e8 = (u8 *)e;
     s32 result = 0;
@@ -492,6 +511,9 @@ s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 unused, u32 
     return result;
 }
 
+/* Attack-token arbitration (same as Idle) but on EVT_TICK it arms a random
+ * walk-hold timer at +0x112 (rand()&0xF + 8 frames) and transitions the enemy
+ * into its walk state — i.e. idle enemies that periodically wander. */
 s32 EntityEventHandlerWithRandomWalk(Entity *e, u16 event, u32 unused, u32 attacker) {
     s32 result = 0;
     switch (event) {
@@ -528,12 +550,15 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithDelayedWalk);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapWithAnimation);
 
+/* Enter walk state with a random walk-hold (rand()&0xF + 4 frames) and a
+ * 0x2D-frame state timer before the next transition. */
 void EntityStartWalkWithTimer0x2d(EnemyTimerStateEntity *e) {
     e->walkDelay = (rand() & 0xF) + 4;
     e->stateTimer = 0x2D;
     EntityStateSetWalk((Entity *)e);
 }
 
+/* As EntityStartWalkWithTimer0x2d but with a shorter 0xA-frame state timer. */
 void EntityStartWalkWithTimer10(EnemyTimerStateEntity *e) {
     e->walkDelay = (rand() & 0xF) + 4;
     e->stateTimer = 0xA;
@@ -589,6 +614,9 @@ void EntityStateSetIdle(Entity *e) {
  * permuter can't bridge it. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetRandomBehavior);
 
+/* Enter the ATTACK state: arms the 3-frame state delay, installs the
+ * sparkle tick + delayed-walk event handler, swaps to attack sprite
+ * (spriteIds[5]), and sets the attack animation (loop/callback frames). */
 void EntityStateSetAttack(EnemyTimerStateEntity *e) {
     PaddedSlotPair slot;
     s16 m1;
@@ -612,6 +640,9 @@ void EntityStateSetAttack(EnemyTimerStateEntity *e) {
     SetAnimationFrameIndex((Entity *)e, 0);
 }
 
+/* Sparkle-collectible "revealed" state: faces dir 2, installs position-offset
+ * render + sparkle tick + token-arbitration event handler, swaps to the
+ * sparkle sprite (spriteIds[2]) at anim frame 2. */
 void EntitySetSparkleCollectibleState(Entity *e) {
     PadSlot slot;
     s16 m1;
@@ -637,6 +668,8 @@ void EntitySetSparkleCollectibleState(Entity *e) {
 
 void EntityStateSetSparkle(Entity *e);
 
+/* EntitySetSparkleDelay{3,2,1}: enter the sparkle state with the state-delay
+ * counter preset to 3/2/1 frames respectively (staggers multi-sparkle reveals). */
 void EntitySetSparkleDelay3(EnemyTimerStateEntity *e) {
     e->stateDelay = 3;
     EntityStateSetSparkle((Entity *)e);
@@ -652,6 +685,9 @@ void EntitySetSparkleDelay1(EnemyTimerStateEntity *e) {
     EntityStateSetSparkle((Entity *)e);
 }
 
+/* Sparkle "spawning" state: sets the +0x111 active flag, installs ground-snap
+ * render + sparkle tick + token-arbitration event handler, swaps to the first
+ * sprite (spriteIds[0]) and starts its sparkle animation. */
 void EntityStateSetSparkle(Entity *e) {
     PadSlot slot;
     s16 m1;
@@ -681,6 +717,8 @@ extern u8 ENEMY_ANIM_SEQUENCE_4A_DATA[] asm("D_8009B55C");
 extern u8 ENEMY_ANIM_SEQUENCE_4B_DATA[] asm("D_8009B57C");
 extern u8 ENEMY_ANIM_SEQUENCE_4C_DATA[] asm("D_8009B59C");
 
+/* StartAnimSequence4{A,B,C}: kick off a 4-frame canned animation sequence from
+ * the corresponding ENEMY_ANIM_SEQUENCE_4{A,B,C}_DATA table. */
 void StartAnimSequence4A(SpriteEntity *e) {
     StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_4A_DATA, 4);
 }
