@@ -389,8 +389,8 @@ void CollectibleDestroyState(Entity *e1) {
     ((SpriteRenderContextRef *)e2->base.spriteContext)->activeFlag = 1;
     ((u8 *)e2)[0x100] = 0;
     EntitySetRenderFlags((Entity *)e2, 1);
-    SetAnimationLoopFrame((Entity *)e2, 0x1084280);
-    SetAnimationSpriteCallback((Entity *)e2, 0x2421405);
+    SetAnimationLoopFrame((Entity *)e2, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback((Entity *)e2, ANIM_FINISHED_CB);
     SetAnimationFrameIndex((Entity *)e2, 0);
     EntityDestroyWithEffects(e1);
     ((u8 *)e1)[0x111] = 2;
@@ -555,8 +555,8 @@ void CollectibleAnimState(Entity *e) {
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
     SetEntitySpriteId(e, 0xC8F90114, 1);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
     ((u8 *)e)[0x111] = 3;
     do {} while (0);
@@ -730,7 +730,7 @@ void GlennYntisIdleAnimState(ShrineyGuardEntity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
-    SetEntitySpriteId((Entity *)e, 0x2D688254, 1);
+    SetEntitySpriteId((Entity *)e, SPR_GLENN_YNTIS_ANIM_A, 1);
     e->activeTimer = 0;
 }
 
@@ -753,7 +753,7 @@ void GlennYntisAnimStateB(ShrineyGuardEntity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
-    SetEntitySpriteId((Entity *)e, 0x2B79835D, 1);
+    SetEntitySpriteId((Entity *)e, SPR_GLENN_YNTIS_ANIM_B, 1);
     e->activeTimer = 0;
 }
 
@@ -776,7 +776,7 @@ void GlennYntisAnimStateC(ShrineyGuardEntity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
-    SetEntitySpriteId((Entity *)e, 0x69588258, 1);
+    SetEntitySpriteId((Entity *)e, SPR_GLENN_YNTIS_ANIM_C, 1);
     e->activeTimer = 0;
 }
 
@@ -826,9 +826,9 @@ void GlennYntisVictoryCallback(u8 *e_raw) {
  *      0x085860D4  SLAM       — the actual slam animation (movement-driven)
  *      0x0A1820D4  DEATH      — death pose (set in ShrineyGuardDeathState)
  *  Anim helpers:
- *      SetAnimationLoopFrame(0x01084280) — slam-anim loop frame id
- *      SetAnimationLoopFrame(FX_GUM_PIERCE_DN) — looping-attack second-loop id
- *      SetAnimationSpriteCallback(0x02421405) — anim-finished callback hash
+ *      SetAnimationLoopFrame(ANIM_LOOP_DEFAULT) — slam-anim loop frame id
+ *      SetAnimationLoopFrame(ANIM_SHRINEY_GUARD_LOOP_KEYFRAME) — looping-attack second-loop id
+ *      SetAnimationSpriteCallback(ANIM_FINISHED_CB) — anim-finished callback hash
  *
  *  Health: PlayerState.boss_hp (PLAYER_STATE_DATA[+0x1D]) is set to 3 by
  *  InitShrineyGuardBoss. BossEventHandler decrements it on damage event 0x1002
@@ -882,7 +882,7 @@ void GlennYntisVictoryCallback(u8 *e_raw) {
  *      0x46384180  clear GS.level_active +
  *                  CreateFadeOverlayEntity()     (level-end fade)
  *  Magic event ARG (consumed by ShrineyGuardAttackEventHandler, event==1):
- *      0x01084280  player landed on head: install ShrineyGuardMoveCallback on
+ *      ANIM_LOOP_DEFAULT  player landed on head: install ShrineyGuardMoveCallback on
  *                  +0x1C/0x20 movement slot, set readyFlag=1, stunActive=0
  *
  *  Companion entities:
@@ -996,7 +996,7 @@ s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u
 }
 
 /* Event handler installed by ShrineyGuardAttackAnimState (the slam-anim).
- * On event 0x0001 with arg2 == 0x01084280 (an anim-keyframe trigger fired
+ * On event 0x0001 with arg2 == ANIM_LOOP_DEFAULT (an anim-keyframe trigger fired
  * from inside the slam animation), it overwrites the entity's movement
  * slot (+0x1C/0x20) with ShrineyGuardMoveCallback, sets readyFlag
  * (+0x10C) = 1 and clears stunActive (+0x115). This is what kicks off
@@ -1012,7 +1012,7 @@ s32 ShrineyGuardAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3) {
 
     evt = event & 0xFFFF;
     ret = BossEventHandler(e, evt, arg2, arg3);
-    if (evt == 1 && arg2 == 0x01084280) {
+    if (evt == 1 && arg2 == ANIM_LOOP_DEFAULT) {
         fn = ShrineyGuardMoveCallback;
         do {} while (0);
         m1 = -1;
@@ -1078,7 +1078,7 @@ void ShrineyGuardAttackCounterState(Entity *e) {
  * BossEventHandler on the +0x08 event slot and ShrineyGuardIdleTickCallback
  * on the +0x00 tick slot, then switches the sprite to 0x4C106054
  * (WINDUP — animation frame the player can bounce on to trigger the
- * slam via AttackEventHandler/0x01084280). */
+ * slam via AttackEventHandler/ANIM_LOOP_DEFAULT). */
 void ShrineyGuardSetAttackState(Entity *e) {
     PadSlot slot;
     s16 m1;
@@ -1097,14 +1097,14 @@ void ShrineyGuardSetAttackState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x4C106054, 1);
+    SetEntitySpriteId(e, SPR_SHRINEY_GUARD_WINDUP, 1);
 }
 
 /* Variant of ShrineyGuardSetAttackState used for the chained/looping
  * attack: same handler+tick install but the sprite-id is 0x40106054 (the
  * LOOP_LINK frame), and additionally calls SetAnimationLoopFrame
- * (FX_GUM_PIERCE_DN) with ((u8*)e)[0x111]=2 packed in the delay slot, plus
- * SetAnimationSpriteCallback(0x02421405) + SetAnimationFrameIndex(0)
+ * (ANIM_SHRINEY_GUARD_LOOP_KEYFRAME) with ((u8*)e)[0x111]=2 packed in the delay slot, plus
+ * SetAnimationSpriteCallback(ANIM_FINISHED_CB) + SetAnimationFrameIndex(0)
  * to drive the looping-attack second-loop, and queues
  * ShrineyGuardSetAttackState on the +0x98 queued-state slot so each loop
  * iteration falls through to a single-attack windup. */
@@ -1125,10 +1125,10 @@ void ShrineyGuardSetLoopingAttackState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x40106054, 1);
+    SetEntitySpriteId(e, SPR_SHRINEY_GUARD_LOOP_LINK, 1);
     ((u8 *)e)[0x111] = 2;
-    SetAnimationLoopFrame(e, FX_GUM_PIERCE_DN);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_SHRINEY_GUARD_LOOP_KEYFRAME);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
     fn = ShrineyGuardSetAttackState;
     slot.s.markerLo = 0;
@@ -1164,7 +1164,7 @@ void ShrineyGuardIdleState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x9382152, 1);
+    SetEntitySpriteId(e, SPR_SHRINEY_GUARD_IDLE, 1);
     fn = BossRandomAttackChoice;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
@@ -1176,10 +1176,10 @@ void ShrineyGuardIdleState(Entity *e) {
  * also re-entered each loop iteration). Installs ShrineyGuardAttack
  * EventHandler on +0x08 and EnemyUpdateWithCollisionAndDeath on +0x00,
  * sprite-id 0x085860D4 (SLAM frame), clears slamVelocity (+0x118) and
- * slamFrameCounter (+0x11C) so the upcoming AttackEventHandler/0x01084280
+ * slamFrameCounter (+0x11C) so the upcoming AttackEventHandler/ANIM_LOOP_DEFAULT
  * trigger can start the ramp from zero. Sets the anim loop frame to
- * 0x01084280 (so the keyframe fires) and the sprite callback to
- * 0x02421405 (the shared anim-finished hash). */
+ * ANIM_LOOP_DEFAULT (so the keyframe fires) and the sprite callback to
+ * ANIM_FINISHED_CB (the shared anim-finished hash). */
 void ShrineyGuardAttackAnimState(Entity *e) {
     PadSlot slot;
     s16 m1;
@@ -1198,11 +1198,11 @@ void ShrineyGuardAttackAnimState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x85860D4, 1);
+    SetEntitySpriteId(e, SPR_SHRINEY_GUARD_SLAM, 1);
     *(u32 *)((u8 *)e + 0x118) = 0;
     ((u8 *)e)[0x11C] = 0;
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
 }
 /* Entered from the D_800A5C08 marker (set by MoveCallback when the slam
@@ -1239,7 +1239,7 @@ void ShrineyGuardReadyAttackState(Entity *e) {
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s[0];
-    SetEntitySpriteId(e, 0x08192250, 1);
+    SetEntitySpriteId(e, SPR_SHRINEY_GUARD_READY, 1);
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = 0;
     slot.s[0].fn = NULL;

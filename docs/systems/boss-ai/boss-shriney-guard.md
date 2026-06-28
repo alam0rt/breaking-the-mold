@@ -75,9 +75,9 @@ under the `SPR_SHRINEY_GUARD_*` and `ANIM_SHRINEY_GUARD_*` group.
 | `SPR_SHRINEY_GUARD_READY` | `0x08192250` | Re-aim pose between slams (`ShrineyGuardReadyAttackState`) |
 | `SPR_SHRINEY_GUARD_SLAM` | `0x085860D4` | Slam animation – `MoveCallback` runs (`ShrineyGuardAttackAnimState`) |
 | `SPR_SHRINEY_GUARD_DEATH` | `0x0A1820D4` | Death pose (`ShrineyGuardDeathState`) |
-| `ANIM_SHRINEY_GUARD_SLAM_KEYFRAME` | `0x01084280` | Slam-anim keyframe → triggers `MoveCallback` install via `AttackEventHandler` |
+| `ANIM_LOOP_DEFAULT` | `0x01084280` | Shared engine loop-frame hash; Shriney's `AttackEventHandler` compares `arg2` against it to trigger `MoveCallback` install (not Shriney-exclusive — also used across `src/enemies.c`) |
 | `ANIM_SHRINEY_GUARD_LOOP_KEYFRAME` | `0xC00200C9` | Looping-attack second-loop frame |
-| `ANIM_SHRINEY_GUARD_FINISHED_CB` | `0x02421405` | Shared anim-finished callback hash |
+| `ANIM_FINISHED_CB` | `0x02421405` | Shared engine anim-finished callback hash (not Shriney-exclusive) |
 
 The "9-sprite multi-entity" listed in
 [`docs/systems/boss-entity-pattern.md`](../boss-entity-pattern.md) is

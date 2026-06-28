@@ -223,10 +223,15 @@
 #define SPR_SHRINEY_GUARD_READY            0x08192250u  /* re-aim pose between slams          */
 #define SPR_SHRINEY_GUARD_SLAM             0x085860d4u  /* slam animation (MoveCallback runs) */
 #define SPR_SHRINEY_GUARD_DEATH            0x0a1820d4u  /* death pose                         */
-/* Animation hashes used by Shriney Guard via Set{AnimationLoopFrame,Sprite Callback}. */
-#define ANIM_SHRINEY_GUARD_SLAM_KEYFRAME   0x01084280u  /* slam keyframe (triggers MoveCallback install) */
+/* Shared engine-wide animation hashes (NOT Shriney-specific: passed to
+ * SetAnimationLoopFrame / SetAnimationSpriteCallback by many enemy and boss
+ * states alike — see src/enemies.c as well as the Shriney FSM). Shriney's
+ * AttackEventHandler also compares arg2 against ANIM_LOOP_DEFAULT. */
+#define ANIM_LOOP_DEFAULT                  0x01084280u  /* default loop-frame keyframe hash   */
+#define ANIM_FINISHED_CB                   0x02421405u  /* default anim-finished callback hash*/
+/* Shriney-only looping-attack second-loop frame (collides in value with
+ * FX_GUM_PIERCE_DN; appears only in docs/comments, no raw literal in src/). */
 #define ANIM_SHRINEY_GUARD_LOOP_KEYFRAME   0xc00200c9u  /* looping-attack second-loop frame   */
-#define ANIM_SHRINEY_GUARD_FINISHED_CB     0x02421405u  /* anim-finished callback hash        */
 
 /* GLENN YNTIS (GLEN level 2 mini-boss) — shares boss vtable family with Shriney. */
 #define SPR_GLENN_YNTIS_ANIM_A             0x2d688254u  /* GlennYntisIdleAnimState (boss frame A)*/

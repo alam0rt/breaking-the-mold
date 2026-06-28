@@ -636,8 +636,8 @@ void EntityStateSetAttack(EnemyTimerStateEntity *e) {
     *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
     spriteIds = e->spriteIds;
     SetEntitySpriteId((Entity *)e, spriteIds[5], 1);
-    SetAnimationLoopFrame((Entity *)e, 0x1084280);
-    SetAnimationSpriteCallback((Entity *)e, 0x2421405);
+    SetAnimationLoopFrame((Entity *)e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback((Entity *)e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex((Entity *)e, 0);
 }
 
@@ -709,8 +709,8 @@ void EntityStateSetSparkle(Entity *e) {
     *(CallbackSlot *)&e->eventMarker = slot.s;
     spriteIds = ((EnemyTimerStateEntity *)e)->spriteIds;
     SetEntitySpriteId(e, spriteIds[0], 1);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
 }
 
@@ -1229,8 +1229,8 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnWalkingEnemy);
  *     ((u8 *)e)[0x110] = (*(u16 *)((u8 *)def + 0x12) == 0x2F) ? 8 : 3;
  *     do {} while (0);
  *     SetEntitySpriteId(e, 0x35289FAE, 1);
- *     SetAnimationLoopFrame(e, 0x1084280);
- *     SetAnimationSpriteCallback(e, 0x2421405);
+ *     SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+ *     SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
  *     SetAnimationFrameIndex(e, 0);
  *     fn = AnimatedEntityToggleSpriteB;
  *     do {} while (0);
@@ -1259,8 +1259,8 @@ void EnemySetLoopingAnimation(Entity *e) {
 
     ((u8 *)e)[0x110] = 1;
     SetEntitySpriteId(e, 0x212A9C2D, 1);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
     fn = AnimatedEntityToggleSpriteA;
     do {} while (0);
@@ -1364,8 +1364,8 @@ void InitConditionalCollectibleEntity(Entity *e) {
     slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
     *(CallbackSlot *)&e->eventMarker = slot.s;
     SetEntitySpriteId(e, 0x6D209C95, 1);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
     fn = CollectibleIdleState;
     slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
@@ -1483,8 +1483,10 @@ void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
     SLOT_STORE(slot.s[0], e->eventMarker, m1, eventFn);
     SetEntitySpriteId(e, spriteId, 1);
     SLOT_CLEAR(slot.s[0], e->renderMarker);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, FX_KLAY_FOOTSTEP_QUIET);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    /* Animation-callback hash; value collides with FX_KLAY_FOOTSTEP_QUIET but
+     * is unrelated (this is a generic enemy, not Klaymen). */
+    SetAnimationSpriteCallback(e, 0x44D4C8D8); /* NOLINT_ASSET_ID: hash collision */
     SetAnimationFrameIndex(e, 0);
     fn = InitEntityRandomIdleOrAnimated;
     do {} while (0);
@@ -1517,8 +1519,8 @@ void InitEntityState_Animated(Entity *e) {
     SetEntitySpriteId(e, 0x611C5804, 1);
     /* @hack: SLOT_CLEAR routes the scratch-build + struct-value-store through the macro so the marker/fn write order matches the original codegen; see memories/repo/decomp-patterns.md. */
     SLOT_CLEAR(slot.s[0], e->renderMarker);
-    SetAnimationLoopFrame(e, 0x1084280);
-    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
     SetAnimationFrameIndex(e, 0);
     if (((u8 *)e)[0x110]) {
         nextFn = InitEnemyAnimatedWithDeathSpawn;
@@ -2503,7 +2505,7 @@ s32 BackgroundSparkleContactEventHandler(BackgroundSparkleEntity *sparkle, u32 e
 void InitBackgroundSparkleRevealState(BackgroundSparkleEntity *e) {
     e->contactFlag = 1;
     SetAnimationSpriteId((Entity *)e, -1);
-    SetAnimationFrameCallback((Entity *)e, 0x2421405);
+    SetAnimationFrameCallback((Entity *)e, ANIM_FINISHED_CB);
 }
 
 void SetEntityAnimationState(BackgroundSparkleEntity *sparkle) {
@@ -2511,8 +2513,8 @@ void SetEntityAnimationState(BackgroundSparkleEntity *sparkle) {
     child->activeFlag = 1;
     sparkle->contactFlag = 0;
     EntitySetRenderFlags((Entity *)sparkle, 1);
-    SetAnimationLoopFrame((Entity *)sparkle, 0x1084280);
-    SetAnimationSpriteCallback((Entity *)sparkle, 0x2421405);
+    SetAnimationLoopFrame((Entity *)sparkle, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback((Entity *)sparkle, ANIM_FINISHED_CB);
     SetAnimationFrameIndex((Entity *)sparkle, 0);
 }
 

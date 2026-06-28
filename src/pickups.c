@@ -198,7 +198,7 @@ void CollectibleClaySingleTickCallback(InteractiveDecorEntity *e) {
         CheckEntityBoxCollision((Entity *)e, 2) != 0) {
         AddPlayerOrbs(PLAYER_STATE_DATA, 1);
         InitDecorEntityWithScreenOffset((Entity *)e, 0x18, 0x16, 1);
-        PlayEntityPositionSound((Entity *)e, 0x4A806042);
+        PlayEntityPositionSound((Entity *)e, FX_PICKUP_OBJECT);
     }
 }
 
@@ -305,19 +305,20 @@ void DecorStartAnimationAlt(SpriteEntity *e) {
 
 void CollectibleExtraLifeTickCallback(PowerupCollectibleEntity *e);
 
-/* Twin of InitHamsterShieldCollectible (same +0xF6 visibility + spriteContext
- * +0x37 clears) but for the "transparent decor" pickup variant — uses a
- * different sprite (0xA9240484) + vtable override (D_800107B0) and re-
- * uses CollectibleExtraLifeTickCallback as the tick (extra-life award).
+/* Extra-life (1-up) pickup init — the "transparent decor" vtable variant.
+ * Twin of InitHamsterShieldCollectible (same +0xF6 visibility + spriteContext
+ * +0x37 clears) but uses the one-up sprite (SPR_PREFIX_ONE_UP) + vtable
+ * override (D_800107B0) and CollectibleExtraLifeTickCallback as the tick
+ * (extra-life award). Spawned by EntityType011_ExtraLife_Init.
  *
  * Match recipe: same TripadSlot + dual `do {} while (0);` armor as the
  * other Init*Collectible siblings. */
-PowerupCollectibleEntity *InitTransparentDecorEntity(PowerupCollectibleEntity *e, DecorSpawnData *data) {
+PowerupCollectibleEntity *InitExtraLifeCollectible(PowerupCollectibleEntity *e, DecorSpawnData *data) {
     TripadSlot u;
     s16 m1;
     void (*fn)();
 
-    InitEntitySprite((Entity *)e, 0xA9240484, 0x3DE, data->x, data->y, 1);
+    InitEntitySprite((Entity *)e, SPR_PREFIX_ONE_UP, 0x3DE, data->x, data->y, 1);
     e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
     e->sprite.base.collisionVtable = TRANSPARENT_DECOR_VTABLE;
@@ -453,7 +454,7 @@ TimedPathEntity *InitScaleResetCollectible(TimedPathEntity *e, DecorSpawnData *d
     s16 m1;
     void (*fn)();
 
-    InitEntitySprite((Entity *)e, 0x8C30008C, 0x3DE, data->x, data->y, 0);
+    InitEntitySprite((Entity *)e, SPR_PREFIX_GROW, 0x3DE, data->x, data->y, 0);
     e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     InitPathFollowingDecorEntity(e, data, 0);
     e->sprite.base.collisionVtable = SCALE_RESET_VTABLE;
@@ -578,7 +579,7 @@ PowerupCollectibleEntity *InitSuperWillieCollectible(PowerupCollectibleEntity *e
     s16 m1;
     void (*fn)();
 
-    InitEntitySprite((Entity *)e, 0x902C0002, 0x3DE, data->x, data->y, 1);
+    InitEntitySprite((Entity *)e, SPR_PREFIX_WILLIE, 0x3DE, data->x, data->y, 1);
     e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     InitPathFollowingDecorEntity((TimedPathEntity *)e, data, 0);
     e->sprite.base.collisionVtable = SUPERWILLIE_VTABLE;
@@ -667,7 +668,7 @@ void DecorSetRandomTimer(DecorRandomTimerEntity *e) {
     void (*fn)();
 
     e->randomTimer = (rand() & 0x7F) + 0x30;
-    SetEntitySpriteId((Entity *)e, 0xA9228088, 1);
+    SetEntitySpriteId((Entity *)e, SPR_PREFIX_HAMSTER, 1);
     fn = EntityCollisionHandler_SpecialTrigger;
     do {} while (0);
     m1 = -1;

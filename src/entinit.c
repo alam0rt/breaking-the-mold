@@ -467,12 +467,12 @@ void EntityType007_Clayball_Init(EntityList *list, EntitySpawnData *spawnData) {
     AddToUpdateQueue(list, entity);
 }
 
-extern Entity *InitTransparentDecorEntity(Entity *entity, EntitySpawnData *spawnData);
+extern Entity *InitExtraLifeCollectible(Entity *entity, EntitySpawnData *spawnData);
 
 /* Type 011: extra-life pickup (inner init is the transparent-decor variant). */
 void EntityType011_ExtraLife_Init(EntityList *list, EntitySpawnData *spawnData) {
     Entity *entity = AllocateFromHeap(g_pBlbHeapBase, 0x120, 1, 0);
-    entity = InitTransparentDecorEntity(entity, spawnData);
+    entity = InitExtraLifeCollectible(entity, spawnData);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }

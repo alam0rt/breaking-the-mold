@@ -328,7 +328,7 @@ void SetupMenuButtonAnimation(Entity *entity) {
     } while (0);
     u.s.fn = fn;
     *(MenuCallbackSlot *)&entity->eventMarker = u.s;
-    SetEntitySpriteId(entity, 0x63848E59, 1);
+    SetEntitySpriteId(entity, SPR_MENU_HIGHLIGHT_ACTIVE, 1);
     fn = MenuSetEntityIdle2;
     u.s.markerLo = 0;
     u.s.markerHi = m1;
