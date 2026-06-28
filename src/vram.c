@@ -78,14 +78,20 @@ INCLUDE_ASM("asm/nonmatchings/vram", InitHeapFreeList);
  * start pointer + size from base+0xA640/0xA644 (HeapConfigOwner) to
  * compute the byte-addressed end pointer, then memset32's the region.
  *
- * SHELVED (60-byte diff = register swap): structure matches with body
- *     s32 *p = base->heapStart;
- *     s32 *end = (s32 *)((u8 *)p + base->heapSize);
- *     if (p != end) { do { *p++ = fillValue; } while (p != end); }
- * but cc1 picks $v1 for `p` (loop variable) and $v0 for `end`/intermediates
- * while TARGET swaps them. The choice is binary-different but otherwise
- * cycle-equivalent; no source-order or naming trick coaxes cc1 to swap. */
-INCLUDE_ASM("asm/nonmatchings/vram", func_80014928);
+ * p/end pinned to $v0/$v1 to match the target's loop-var coloring (cc1
+ * otherwise swaps them; no source-order trick works, but the pin does). */
+void func_80014928(HeapConfigOwner *base, s32 fillValue) {
+    register s32 *p asm("$2");   /* $v0 — loop pointer */
+    register s32 *end asm("$3"); /* $v1 */
+    p = base->heapStart;
+    end = (s32 *)((u8 *)p + base->heapSize);
+    if (p != end) {
+        do {
+            *p = fillValue;
+            p += 1;
+        } while (p != end);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/vram", ClearHeapBlocks);
 
