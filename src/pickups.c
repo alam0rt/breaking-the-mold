@@ -443,11 +443,11 @@ TimedPathEntity *InitSingleFrameDecorEntity(TimedPathEntity *e, DecorSpawnData *
 
 INCLUDE_ASM("asm/nonmatchings/pickups", TriggerCollectible100CTickCallback);
 
-void ScaleResetCollectibleTickCallback(Entity *e);
+void CollectibleScaleResetTickCallback(Entity *e);
 
 /* Twin of InitSingleFrameDecorEntity but for the scale-reset pickup
  * variant. Sprite 0x8C30008C, vtable override D_80010710, tick
- * ScaleResetCollectibleTickCallback. Same targetX=1 priming and dual
+ * CollectibleScaleResetTickCallback. Same targetX=1 priming and dual
  * `do {} while (0);` armor. */
 TimedPathEntity *InitScaleResetCollectible(TimedPathEntity *e, DecorSpawnData *data) {
     TripadSlot u;
@@ -460,7 +460,7 @@ TimedPathEntity *InitScaleResetCollectible(TimedPathEntity *e, DecorSpawnData *d
     e->sprite.base.collisionVtable = SCALE_RESET_VTABLE;
     e->sprite.base.targetX = 1;
     do {} while (0);
-    fn = (void (*)())ScaleResetCollectibleTickCallback;
+    fn = (void (*)())CollectibleScaleResetTickCallback;
     do {} while (0);
     m1 = -1;
     u.s.markerLo = 0;
@@ -470,7 +470,7 @@ TimedPathEntity *InitScaleResetCollectible(TimedPathEntity *e, DecorSpawnData *d
     return e;
 }
 
-INCLUDE_ASM("asm/nonmatchings/pickups", ScaleResetCollectibleTickCallback);
+INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleScaleResetTickCallback);
 
 void Collectible1970IconTickCallback(PowerupCollectibleEntity *e);
 
