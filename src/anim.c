@@ -340,6 +340,17 @@ INCLUDE_ASM("asm/nonmatchings/anim", EntitySetState);
  * Used for cleanup that must run before the next state change: stopping
  * sounds, clearing flags, restoring hitboxes, removing helper entities,
  * re-enabling input, completing checkpoint/powerup effects. */
+/* EntitySetCallback @ 0x8001EC18 (0xA8) — fires the entity's pending
+ * exit-callback (InvokeEntityRenderCallback forwarder on the +0xA8/0xAA/0xAC
+ * slot, fn pinned $a1, then-fn relays via $t1), then installs the new
+ * (marker, fn) from arg1/arg2. SHELVED: dispatch half matches, but cc1 promotes
+ * the two new-slot args to callee-saved $s1/$s2 (frame 0x28) whereas the target
+ * spills them to the incoming-arg stack area and reloads after the call (frame
+ * 0x20) — a 4-instr storage-strategy gap the permuter can't bridge (extra
+ * instrs). Dispatch half follows the [[invoke-entity-render-callback-wall]]
+ * recipe: marker s16@0xAA, table base @0xAC, lo@0xA8, fn pinned $a1 forwarded
+ * as 2nd arg, then-fn relays via $t1, call fn(e+adj, fn, marker). The blocker
+ * is forcing cc1 to spill the two new-slot args to stack instead of $s1/$s2. */
 INCLUDE_ASM("asm/nonmatchings/anim", EntitySetCallback);
 
 /* Constructor for a "standard" (large, >128x128) parallax background
