@@ -207,7 +207,33 @@ INCLUDE_ASM("asm/nonmatchings/menu", SetupMenuIdleAnimation);
  * markerHi. Modern cc1 does `sw s0; li s0, -1` immediately together
  * and stores markerHi first. Same diff class as SetupMenuIdleAnimation
  * (4-instr reorder). Permuter candidate. */
-INCLUDE_ASM("asm/nonmatchings/menu", InitRunnLevelEntity);
+void InitRunnLevelEntity(Entity *entity) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)(Entity *);
+
+    /* do-while fences the fn-load/m1 setup after the reg saves, matching the
+     * target's prologue schedule (sw ra; sw s0; lui fn; li s0,-1). */
+    do {
+        fn = (void (*)(Entity *))EntityUpdateCallback;
+        m1 = -1;
+        u.s.markerLo = 0;
+        u.s.markerHi = m1;
+    } while (0);
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)&entity->tickMarker = u.s;
+    fn = (void (*)(Entity *))MenuEntityCallback;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)&entity->eventMarker = u.s;
+    SetEntitySpriteId(entity, 0x305A4F5, 1);
+    fn = SetupMenuIdleAnimation;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(MenuCallbackSlot *)((u8 *)entity + 0x98) = u.s;
+}
 
 /* Allocates+inits a "button highlight" SpriteEntity from the D_8009CBE8
  * sprite table at z-order 0x7D0 (2000), with sign-extended s16 (x,y)
