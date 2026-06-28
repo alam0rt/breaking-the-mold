@@ -114,13 +114,10 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerEvent_ZoneTriggerHandlerAlt);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetAndProcessQueue);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005C080);
-
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEvent_ZoneTriggerHandlerV2);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateAndProcessQueue);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005C1A4);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEntityEventHandler);
 
@@ -162,31 +159,26 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ThrowEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ThrowSetStateAndSpawn);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005DDC0);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CheckpointEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CheckpointSaveAndSpawnHUD);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005E150);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ProjectileEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ProjectileSetStateAndSpawn);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005E430);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_BaseEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateWithQueueProcess);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005E554);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathAnimEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathAnimSetStateHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005EA60);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathSpawnMenuEntities);
 
