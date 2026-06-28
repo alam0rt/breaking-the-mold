@@ -50,7 +50,7 @@ extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void GlennYntisSelectRandomAnimState();
 extern void HazardActivateWithSound(Entity *e);
-extern void GlennYntisAttackEventHandler(Entity *e);
+extern s32 GlennYntisAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetRenderFlags(Entity *e, u32 flags);
 extern void EntityDestroyWithEffects(Entity *e);
 extern void CollectibleTickCallback(Entity *e);
@@ -719,7 +719,7 @@ void GlennYntisIdleAnimState(ShrineyGuardEntity *e) {
     void (*fn)();
 
     do {} while (0);
-    fn = GlennYntisAttackEventHandler;
+    fn = (void (*)())GlennYntisAttackEventHandler;
     m1 = -1;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
@@ -742,7 +742,7 @@ void GlennYntisAnimStateB(ShrineyGuardEntity *e) {
     void (*fn)();
 
     do {} while (0);
-    fn = GlennYntisAttackEventHandler;
+    fn = (void (*)())GlennYntisAttackEventHandler;
     m1 = -1;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
@@ -765,7 +765,7 @@ void GlennYntisAnimStateC(ShrineyGuardEntity *e) {
     void (*fn)();
 
     do {} while (0);
-    fn = GlennYntisAttackEventHandler;
+    fn = (void (*)())GlennYntisAttackEventHandler;
     m1 = -1;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
