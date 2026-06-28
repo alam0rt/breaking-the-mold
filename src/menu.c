@@ -451,6 +451,15 @@ INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButtonWithReset);
  * — original schedules `lui a1` for the 0x39900619 constant immediately
  * after the prologue, mine after the byte/load pair. Closest C draft in
  * git history. */
+/* FINN_ClearSubentityState @ 0x80075858 — clears sub-entity (parent+0x100)
+ * event slot (block-copy idiom), zeros parent+0x104, sets the cleared sprite
+ * 0x39900619, sets +0xA=1 on parent+0x34. Body is instruction-perfect; the
+ * lone diff is cc1 hoisting the `lui/ori a1` sprite-id constant to the top of
+ * the prologue, where the target keeps it after the entity field ops (sw ra;
+ * lw sub; sb +0x104) and before the slot-clear block. Resisted do-while
+ * barriers, a sid-local hoist, and the permuter (plateau 120) — a cc1 scheduler
+ * heuristic. Siblings MenuDeactivateLevelSelectButton /
+ * MenuDeactivateSkullIconButton share this exact body + blocker. */
 INCLUDE_ASM("asm/nonmatchings/menu", FINN_ClearSubentityState);
 
 /* Conditional select-SFX helper. If entity+0x108 (the type byte set by
