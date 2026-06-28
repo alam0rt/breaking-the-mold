@@ -1037,9 +1037,9 @@
 0x80059D28 |    92 | Game/PLAYER     | -               | CheckCollisionAbove40
 0x80059D84 |    92 | Game/PLAYER     | -               | CheckCollisionAbove41
 0x80059DE0 |    92 | Game/PLAYER     | -               | CheckCollisionBelow1
-0x80059E3C |   264 | Game/PLAYER     | -               | TransformYCoordinateWithScale
+0x80059E3C |   264 | Game/PLAYER     | -               | TransformYCoordWithScaleSnapped
 0x80059F44 |   228 | Game/PLAYER     | -               | PlayerScaleYByHeight
-0x8005A028 |   264 | Game/PLAYER     | -               | TransformXCoordinateWithScale
+0x8005A028 |   264 | Game/PLAYER     | -               | TransformXCoordWithScaleSnapped
 0x8005A130 |   232 | Game/PLAYER     | -               | PlayerScaleXByWidth
 0x8005A218 |   480 | Game/PLAYER     | collision       | PlayerApplyPositionWithCollision
 0x8005A3F8 |   460 | Game/PLAYER     | -               | IsEntityNearSoundTrigger

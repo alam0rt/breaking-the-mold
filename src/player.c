@@ -100,15 +100,24 @@ s32 CheckCollisionBelow1(Entity *entity) {
 typedef s32 (*ScaleCoordCB)();
 typedef struct { s32 arg; ScaleCoordCB fn; } ScaleCoordSlot;
 
-/*
- * Runs the entity's Y transform-callback chain on `val` (FSM-slot dispatch
- * over moveCallbackY at +0x2C/0x2E/0x30, same as CalculateScaledYCoord),
- * masks the result down to a 0x10 boundary, then divides by scalePowerupY
- * (+0x5C). Special rounding: when scalePowerupX (+0x58) == 0xC000 and the
- * quotient mod 4 is 1 or 2, round up by one. Converts a sprite-local Y into
- * world/screen Y.
- */
-s16 TransformYCoordinateWithScale(Entity *e, s32 val) {
+/* ---- Entity coordinate-transform + scale family ----------------------------
+ * Four siblings that map a coordinate through the entity's move-callback FSM
+ * slot (same dispatch as anim.c Transform{X,Y}Coord) and then divide by the
+ * entity's powerup scale to project it into world/screen space. They differ
+ * only in axis, in how the pre-divide value is rounded, and whether they apply
+ * the 0xC000 "snap":
+ *   TransformYCoordWithScale         Y  round up   (val | 0xF)          / scaleY(+0x5C)
+ *   TransformXCoordWithScale         X  round down (val & ~0xF)         / scaleX(+0x58)
+ *   TransformYCoordWithScaleSnapped  Y  round down (val & ~0xF)         / scaleY  + snap
+ *   TransformXCoordWithScaleSnapped  X  round up   ((val & ~0xF)+0x10)  / scaleX  + snap
+ * Snap: when scalePowerupX == 0xC000 (the 0.75 zoom) and the quotient mod 4 is
+ * 1 or 2, nudge the result up by one to correct fixed-point rounding.
+ * Match recipe (all four): $t0/$a2/$a3/$v0 register pins, s32 `val`, and the
+ * player.o --expand-div flag for the signed-division trap guards.
+ * ------------------------------------------------------------------------- */
+
+/* Y axis, round DOWN, /scaleY, with 0xC000 snap. See family header above. */
+s16 TransformYCoordWithScaleSnapped(Entity *e, s32 val) {
     s16 m = ((s16 *)&e->moveMarkerY)[1];
     FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
     FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
@@ -147,13 +156,8 @@ s16 TransformYCoordinateWithScale(Entity *e, s32 val) {
     return (s16)q;
 }
 
-/*
- * X counterpart of CalculateScaledYCoord (slots at +0x24/+0x26/+0x28).
- * Runs the entity's X transform-callback chain on `val`, masks the result
- * DOWN to a 0x10 boundary (& ~0xF, vs the Y twin's | 0xF round-up), then
- * scales it into world space by dividing by scalePowerupX (+0x58).
- */
-s16 CalculateScaledXCoord(Entity *e, s32 val) {
+/* X axis, round DOWN, /scaleX, no snap. See family header above. */
+s16 TransformXCoordWithScale(Entity *e, s32 val) {
     s16 m = ((s16 *)&e->moveMarkerX)[1];
     FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
     FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
@@ -187,15 +191,9 @@ s16 CalculateScaledXCoord(Entity *e, s32 val) {
     return (s16)(((r & ~0xF) << 16) / e->scalePowerupX);
 }
 
-/*
- * X mirror of TransformYCoordinateWithScale: FSM-slot dispatch over
- * moveCallbackX (+0x24/0x26/0x28), rounds the result UP to the next 0x10
- * boundary ((r & ~0xF) + 0x10 — note the Y twin only masks down, no +0x10),
- * then divides by scalePowerupX (+0x58). The 0xC000 rounding special-case
- * tests the same scalePowerupX field it just divided by (load reused, not
- * reloaded).
- */
-s16 TransformXCoordinateWithScale(Entity *e, s32 val) {
+/* X axis, round UP ((val & ~0xF)+0x10), /scaleX, with 0xC000 snap. See family
+ * header. The snap reuses the just-divided scalePowerupX load (not reloaded). */
+s16 TransformXCoordWithScaleSnapped(Entity *e, s32 val) {
     s16 m = ((s16 *)&e->moveMarkerX)[1];
     FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
     FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
@@ -234,14 +232,8 @@ s16 TransformXCoordinateWithScale(Entity *e, s32 val) {
     return (s16)q;
 }
 
-/*
- * Y counterpart of CalculateScaledXCoord (slots at +0x2C/+0x2E/+0x30).
- * Runs the entity's Y transform-callback chain on `val` (same FSM-slot
- * dispatch as TransformYCoord in anim.c, but the call target is pinned to
- * $t0 with arg/$a2 and table-fn/$a3 homes), nudges the result up by 0xF,
- * then scales it into world space by dividing by scalePowerupY (+0x5C).
- */
-s16 CalculateScaledYCoord(Entity *e, s32 val) {
+/* Y axis, round UP (val | 0xF), /scaleY, no snap. See family header above. */
+s16 TransformYCoordWithScale(Entity *e, s32 val) {
     s16 m = ((s16 *)&e->moveMarkerY)[1];
     FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
     FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */

@@ -109,7 +109,7 @@ object.)
 
 | VRAM start | inferred unit | anchors |
 |---|---|---|
-| `0x800596A4`* | `player.c` — create/init + collision/coord primitives | `CreatePlayerEntity`, `CheckWallCollision`, `TransformYCoordinateWithScale` |
+| `0x800596A4`* | `player.c` — create/init + collision/coord primitives | `CreatePlayerEntity`, `CheckWallCollision`, `TransformYCoordWithScaleSnapped` |
 | `0x8005A630` [R] | `player_states.c` — the big player FSM | `PlayerTickCallback`, `PlayerState_*`, `PlayerCallback_*` |
 | `0x8006E008` [N] | `finn.c` — FINN vehicle + subentity | `Finn*`, `FINN*`, `CreateGlidePlayerEntity` |
 
