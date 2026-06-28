@@ -445,11 +445,13 @@ void AttachCursorToButton(MenuButtonEntity *parent) {
  * MenuSetEntityIdle2 at +0x98/+0x9C so the highlight settles back to
  * idle on the next callback-queue dispatch.
  *
- * SHELVED: Quirk-5 lui-hoist scheduling diff. TripadSlot pins the 0x30
- * frame correctly, but cc1 in the original schedules `lui a1` /
- * `ori a1` for the sprite-id constant BEFORE the prologue saves to fill
- * delay slots, while modern cc1 sequences them after the saves. Same
- * class as MenuDeactivateButton. Closest draft kept in git history. */
+ * Marks parent+0x104 active, installs MenuButtonCallback on the sub-entity
+ * (parent+0x100) event slot, sets sprite 0x63848E59, queues MenuSetEntityIdle2
+ * at +0x98. Instruction-perfect (recipe + m1 $s1); SHELVED on the sprite-id
+ * lui/ori a1 scheduling — target materializes it BEFORE the slot block, cc1
+ * after, and it resists source nudges (pin $a1 + assign-in-fence) and the
+ * permuter (plateau 120, same as FINN_ClearSubentityState). This is the
+ * lui-hoist dead-end family, NOT the crackable prologue-fence one. */
 INCLUDE_ASM("asm/nonmatchings/menu", MenuActivateButton);
 #if 0
 /* See git log for the C draft (TripadSlot u; ...; SetEntitySpriteId(
