@@ -364,6 +364,7 @@ DEPS := $(shell find $(BUILD_DIR) -name '*.d' 2>/dev/null)
 #
 # No overrides are active by default.
 $(BUILD_DIR)/src/anim.o: MASPSX_EXTRA_FLAGS := --expand-div
+$(BUILD_DIR)/src/player.o: MASPSX_EXTRA_FLAGS := --expand-div
 
 # NOTE: --use-comm-section is now applied GLOBALLY (see MASPSX_FLAGS above) since
 # it is the default ccpsx behaviour, so menu.o no longer needs a per-file override.
@@ -534,8 +535,13 @@ check-lua: lint-lua
 	@echo "✓ All Lua scripts have valid syntax"
 
 # Lint all code
-lint: lint-lua lint-decomp
+lint: lint-lua lint-decomp check-asset-ids
 	@echo "Linting complete!"
+
+# Flag raw asset-id literals in src/ that should use an asset_ids.h constant.
+# Exits non-zero if any remain, so it gates `make lint`.
+check-asset-ids:
+	@$(PYTHON) tools/check_asset_ids.py
 
 # Decomp-specific checks (struct redefs, broken INCLUDE_ASM paths, duplicates)
 lint-decomp:

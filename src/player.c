@@ -1,6 +1,7 @@
 #include "common.h"
 #include "functions.h"
 #include "globals.h"
+#include "Game/fsm_dispatch.h"
 
 extern u8 PLAYER_CALLBACK_TABLE[] asm("g_PlayerCallbackTable");
 
@@ -121,11 +122,48 @@ INCLUDE_ASM("asm/nonmatchings/player", TransformXCoordinateWithScale);
 
 /*
  * Y counterpart of CalculateScaledXCoord (slots at +0x2C/+0x2E/+0x30).
- * Animation-transform + scale division for a Y coordinate; likely should
- * be named TransformY... matching its sibling, the existing "Scaled"
- * naming is inconsistent with the twin pair above.
+ * Runs the entity's Y transform-callback chain on `val` (same FSM-slot
+ * dispatch as TransformYCoord in anim.c, but the call target is pinned to
+ * $t0 with arg/$a2 and table-fn/$a3 homes), nudges the result up by 0xF,
+ * then scales it into world space by dividing by scalePowerupY (+0x5C).
  */
-INCLUDE_ASM("asm/nonmatchings/player", CalculateScaledYCoord);
+typedef s32 (*ScaleCoordCB)();
+typedef struct { s32 arg; ScaleCoordCB fn; } ScaleCoordSlot;
+
+s16 CalculateScaledYCoord(Entity *e, s32 val) {
+    s16 m = ((s16 *)&e->moveMarkerY)[1];
+    FSM_REG(ScaleCoordCB, fn, "$8"); /* $t0 call target */
+    FSM_REG(ScaleCoordCB, tf, "$7"); /* $a3 table-fn that relays into $t0 */
+    FSM_REG(s32, arg, "$6");         /* $a2 */
+    FSM_REG(s32, adj, "$2");         /* $v0 */
+    s32 vt = val;                    /* saved copy of val used by the call path */
+    s32 lo;
+    s16 s;
+    s32 r;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            ScaleCoordSlot *base =
+                *(ScaleCoordSlot **)((u8 *)e + *(s16 *)&e->moveCallbackY);
+            arg = base[s - 1].arg;
+            tf = base[s - 1].fn;
+            FSM_RELAY(fn, tf); /* emits move $t0,$a3 */
+        } else {
+            fn = (ScaleCoordCB)e->moveCallbackY;
+        }
+        lo = ((s16 *)&e->moveMarkerY)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        r = fn((u8 *)e + adj, (s16)vt);
+    } else {
+        r = val;
+    }
+    r |= 0xF;
+    return (s16)((r << 16) / e->scalePowerupY);
+}
 
 /*
  * Combines both X and Y animation/transform callbacks for the player,
