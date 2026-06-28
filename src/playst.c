@@ -264,19 +264,14 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_FallInputHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CrouchClimbInputHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_80060C18);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateSimple);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_80060C4C);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CrouchClimbTickHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_80060DB4);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStatePassthrough);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_80060DE8);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DebugCameraInput);
 
