@@ -832,7 +832,7 @@ void GlennYntisVictoryCallback(u8 *e_raw) {
  *
  *  Health: PlayerState.boss_hp (PLAYER_STATE_DATA[+0x1D]) is set to 3 by
  *  InitShrineyGuardBoss. BossEventHandler decrements it on damage event 0x1002
- *  and dispatches into ShrineyGuardStartLoopAttackState while hp>0, or
+ *  and dispatches into ShrineyGuardStartLoopingAttackState while hp>0, or
  *  ShrineyGuardDeathState when hp reaches 0. Confirmed by runtime trace
  *  game_watcher/logs/struct_watch_20260621_110109.jsonl (boss_hp 3→2→1→0,
  *  three damage hits, then respawn on player death):
@@ -847,7 +847,7 @@ void GlennYntisVictoryCallback(u8 *e_raw) {
  *      D_800A5BE8/EC  init-state         → BossRandomAttackChoice
  *      D_800A5BF0/F4  idle-timeout fires → ShrineyGuardAttackCounterState
  *      D_800A5BF8/FC  damage to death    → ShrineyGuardDeathState
- *      D_800A5C00/04  damage but alive   → ShrineyGuardStartLoopAttackState
+ *      D_800A5C00/04  damage but alive   → ShrineyGuardStartLoopingAttackState
  *      D_800A5C08/0C  slam decel == 0    → ShrineyGuardReadyAttackState
  *      D_800A5C10/14  repeat (<3 attacks)→ ShrineyGuardAttackAnimState
  *      D_800A5C18/1C  finish (3 attacks) → ShrineyGuardIdleState
@@ -935,7 +935,7 @@ void ShrineyGuardIdleTickCallback(Entity *e) {
     EnemyUpdateWithCollisionAndDeath(e);
 }
 
-/* Per-tick callback installed by ShrineyGuardStartLoopAttackState. Counts
+/* Per-tick callback installed by ShrineyGuardStartLoopingAttackState. Counts
  * the 5-frame stun window down; once it elapses the boss is re-armed by
  * clearing stunActive (+0x115) and re-asserting readyFlag (+0x10C) = 1, so
  * the next player-bounce hit will trigger AttackEventHandler again. */
@@ -966,7 +966,7 @@ void ShrineyGuardStunTickCallback(Entity *e) {
  *     stunActive (+0x115) already set; dispatches the queued state slot.
  *   event 0x1002 (player attack hit)   — decrements PLAYER_STATE_DATA
  *     [+0x1D] (boss_hp). If hp>0 → EntitySetState(D_800A5C00,
- *     ShrineyGuardStartLoopAttackState). If hp==0 → EntitySetState
+ *     ShrineyGuardStartLoopingAttackState). If hp==0 → EntitySetState
  *     (D_800A5BF8, ShrineyGuardDeathState).
  *   event 0x1008 (force-death/cleanup) — synchronous teardown path. */
 INCLUDE_ASM("asm/nonmatchings/bosses", BossEventHandler);
@@ -1263,7 +1263,7 @@ void ShrineyGuardReadyAttackState(Entity *e) {
  *
  * SKIP: cc1 register allocator picks v1 for fn-ptr load (v0 busy with byte
  * write constants 5/2), produces same 57 instrs but different reg choice. */
-INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStartLoopAttackState);
+INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardStartLoopingAttackState);
 
 /* Entered from BossEventHandler/event 0x1002 when boss_hp reaches 0.
  * Sprite-id 0x0A1820D4 (DEATH pose), writes g_pGameState[+0x19C] = 1 and
