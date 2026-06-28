@@ -10,44 +10,27 @@ INCLUDE_ASM("asm/nonmatchings/vram", AllocateVRAMSlot);
 
 extern void FreeAndCoalesceVRAMSlot(s32 base, u32 packed, u8 sizeBlocks);
 
-/* SHELVED: 10-byte diff — pure cc1 register-allocation choice for the
- * `xBlocks & 0xFFFF` mask:
- *   TARGET:  andi a3,v0,0xffff  →  or a1,a3,a1   (preserves v0, masks into a3)
- *   CURRENT: andi v0,v0,0xffff  →  or a1,v0,a1   (clobbers v0)
- *
- * No source-level expression (bitmask, (u16) cast, lhu reload, u16/u32
- * locals, explicit pack-via-tmp) has been found that nudges cc1 to pick
- * a3 over v0 for this mask. Everything else matches: frame 0x28, caller-
- * arg-save spills at sp+0x2C/0x30, dual sh barriers at sp+0x10/0x12.
- *
- * Releases a VRAM slot back to the coalescing free-list. Inputs:
- *   vramBase    - blbHeaderBufferBase (slot-table base; *vramBase is the
- *                 x-origin used to convert pixel-x into block coordinates).
- *   packedXY    - packed (x | y<<16) pixel position of the slot's TL corner.
- *   packedSize  - low half unused; HIGH half = height in pixels (signed).
- *
- * Converts pixel coords to block coords:
- *   xBlocks = (x - *vramBase) >> 3        (8-pixel blocks, signed shift)
- *   yBlocks = (y - 0x100)     >> 4        (16-pixel blocks, signed shift)
- *   hBlocks = (height + 15)   >> 4        (16-pixel block height, ceil-div
- *                                          with cc1's signed-shift dance)
- *
- * Then dispatches to FreeAndCoalesceVRAMSlot which actually merges the
- * freed region with adjacent free blocks in the slot table.
- *
- * Equivalent C (kept here for documentation - shelved to ASM include):
- *   void FreeVRAMSlot(s16 *vramBase, u32 packedXY, u32 packedSize) {
- *       u16 blocks[6];
- *       s16 height = ((s16 *)&packedSize)[1];
- *       s32 hBlocks = (s32)height + 0xF;
- *       if (hBlocks < 0) hBlocks = (s32)height + 0x1E;
- *       blocks[0] = (u16)((((s16 *)&packedXY)[0] - *vramBase) >> 3);
- *       blocks[1] = (u16)((((s16 *)&packedXY)[1] - 0x100) >> 4);
- *       FreeAndCoalesceVRAMSlot((s32)vramBase,
- *                               (u32)blocks[0] | ((u32)blocks[1] << 16),
- *                               (u8)((u32)hBlocks >> 4));
- *   } */
-INCLUDE_ASM("asm/nonmatchings/vram", FreeVRAMSlot);
+/* Releases a VRAM slot back to the coalescing free-list: converts the slot's
+ * pixel TL corner + height to 8-/16-pixel block coords, packs them, dispatches
+ * to FreeAndCoalesceVRAMSlot. xBlocks pinned $v0 and its packed-low mask pinned
+ * $a3 so the andi reads $v0 / writes $a3 (target coloring; source-order alone
+ * can't pick it). */
+void FreeVRAMSlot(s16 *vramBase, u32 packedXY, u32 packedSize) {
+    u16 blocks[6];
+    s16 height = ((s16 *)&packedSize)[1];
+    s32 hBlocks = (s32)height + 0xF;
+    register s32 xb asm("$2");  /* $v0 */
+    register u32 lo asm("$7");  /* $a3 */
+    if (hBlocks < 0) {
+        hBlocks = (s32)height + 0x1E;
+    }
+    xb = (((s16 *)&packedXY)[0] - *vramBase) >> 3;
+    blocks[0] = (u16)xb;
+    blocks[1] = (u16)((((s16 *)&packedXY)[1] - 0x100) >> 4);
+    lo = (u16)xb;
+    FreeAndCoalesceVRAMSlot((s32)vramBase, lo | ((u32)blocks[1] << 16),
+                            (u8)((u32)hBlocks >> 4));
+}
 
 INCLUDE_ASM("asm/nonmatchings/vram", InitVRAMSlotTable);
 
