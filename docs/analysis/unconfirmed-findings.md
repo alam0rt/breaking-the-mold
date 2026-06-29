@@ -2667,3 +2667,34 @@ or a longer permuter run with `perm_reorder_decls`/`perm_ins_block` boosted.
 NOTE (env): during this session an external process repeatedly reverted
 uncommitted edits to `src/entity.c` back to HEAD. Commit promptly when the
 match lands.
+
+## Doc↔symbol_addrs address/name drift (re-review 2026-06-29, Ghidra-needed)
+
+The docs-vs-`symbol_addrs.txt` re-review found 12 mismatches where a doc cites
+`Name @ 0xADDR` but `0xADDR` now holds a *different* function and `Name` lives
+at a *different* address. Each needs per-doc context + the Ghidra/disassembly
+behavior to decide whether the **name** drifted (→ rename doc to the symbol at
+that address) or the **address** drifted (→ fix the doc address to where the
+named function actually lives). NOT auto-swept — the camera case
+(`UpdateCameraPosition`) proved blind sweeps mislabel when two similar
+functions exist.
+
+| Doc cites (name @ addr) | `0xADDR` actually holds | That name actually lives at | Likely |
+|---|---|---|---|
+| `CollisionCheckWrapper @0x8001b594` | `CheckEntityPointCollisionWithOffsets` | `0x8001b47c` | name drift (same domain) |
+| `EntityFollowPathWithWrapping @0x80055c70` | `InterpolateTimedPathPosition` | `0x8003cc60` | name drift |
+| `EntityType080_TimerMenu_Init @0x800809b8` | `EntityType083_InteractiveDecor_Init` | `0x80080ebc` | name drift (type# is addr-anchored) |
+| `InitCollectibleEntity @0x800418a4` | `InitCollectibleEntity_Alt` | `0x8003a724` | name drift (the _Alt variant) |
+| `InitLevelDataContext @0x8007a218` | `ClearContextOffsets68to7C` | `0x8007a1bc` | addr drift? (Δ0x5c) |
+| `InitMenuEntity @0x800313cc` | `InitMenuSpriteEntity` | `0x80076928` | name drift (doc notes "second/different") |
+| `InitializeAndLoadLevel @0x8007cd34` | `InitGameState` | `0x8007d1d0` | ambiguous |
+| `IsEntityOffScreen @0x8002453c` | `IsEntityOffScreen_EntityLoop` | `0x8001b92c` | name drift (loop variant) |
+| `LoadBLBHeader @0x80020848` | `BLB_ReadSectorsWrapper` | `0x800208b0` | addr drift? (Δ0x68) |
+| `MultiPartEntityMessageHandler @0x800389ac` | `FreeEntityNoTeardown_800389ac` | `0x80032800` | semantic mismatch |
+| `PlayMovieFromCD @0x80039128` | `CdPausePlayback` | `0x80039150` | addr drift? (Δ0x28) |
+| `UploadAudioToSPU @0x8007bfb8` | `InitSPUDefaults` | `0x8007c088` | addr drift? (Δ0xd0) |
+
+Resolution belongs in the per-doc `review-docs` loop (Ghidra now available on
+:8089): decompile `0xADDR`, compare its behavior to the doc's surrounding
+description, then fix the wrong half. (Already resolved in this pass:
+`UpdateCameraPosition`→`UpdateCameraPositionSmooth @0x800233c0` — Ghidra-verified.)
