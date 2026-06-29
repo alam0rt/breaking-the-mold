@@ -187,11 +187,13 @@ def audio_sample_bank_handler(
             break
         
         sample_id, sample_size, sample_data_offset = struct.unpack_from('<III', data, entry_offset)
-        
-        # Calculate absolute offset (relative to start of data after header + entries)
-        data_start = 4 + sample_count * 12
-        abs_offset = data_start + sample_data_offset
-        
+
+        # The entry offset is absolute from the start of the bank (it already
+        # includes the header + entry table), so use it directly. Do NOT add
+        # the header size again — that misaligns every read by the header length
+        # and corrupts the ADPCM block decode.
+        abs_offset = sample_data_offset
+
         if abs_offset + sample_size > len(data):
             continue
         
