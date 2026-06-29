@@ -16,6 +16,7 @@ This documentation covers the reverse engineering of **Skullmonkeys** (PAL SLES-
 - **[Compiler Quirks](compiler-quirks.md)** - Required compiler version, codegen quirks, and matching workarounds (read before decompiling!)
 - **[BLB File Format Overview](blb/README.md)** - Start here for understanding the game's data format
 - **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand
+- **[Code-Structure TODO](TODO.md)** - Cleanup/naming backlog (things we understand but haven't organized)
 - **[Systems Index](SYSTEMS_INDEX.md)** - Complete documentation index
 
 ## Documentation Structure
