@@ -261,7 +261,7 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x8001352C | WaitForVBlankIfNeeded | Conditional VSync wait |
 | 0x80013500 | FlushDebugFontAndEndFrame | Draw debug text, end frame |
 | 0x80013554 | SwapBuffersAndClearOT | Swap buffers, clear OT |
-| 0x80023DBC | SetCameraPositionDirect | Camera scroll based on player at +0x30 |
+| 0x800233C0 | UpdateCameraPositionSmooth | Camera scroll based on player at +0x30 |
 
 ## Collision System
 

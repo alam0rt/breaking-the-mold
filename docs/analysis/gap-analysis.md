@@ -161,7 +161,7 @@ The camera follows the player and scrolls layers, but:
 - Camera smoothing/lookahead
 - Multi-layer parallax logic
 
-**Key function**: `SetCameraPositionDirect` @ 0x80023dbc (mentioned but not documented)
+**Key function**: `UpdateCameraPositionSmooth` @ 0x800233c0 (mentioned but not documented)
 
 ### 6. FINN/RUNN Vehicle Levels
 **Status**: Asset 504 documented, gameplay not
@@ -227,7 +227,7 @@ Related: `systems/player-finn.md` exists but may be incomplete
    - Map save data structure
 
 5. **Camera System**
-   - Decompile `SetCameraPositionDirect`
+   - Decompile `UpdateCameraPositionSmooth`
    - Document camera bounds
    - Document layer scrolling
 

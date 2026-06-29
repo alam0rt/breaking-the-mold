@@ -8,7 +8,7 @@ tags: [systems, camera]
 
 **Status**: ✅ FULLY DOCUMENTED from decompiled source  
 **Source**: SLES_010.90.c lines 8418-8800  
-**Function**: `SetCameraPositionDirect` @ 0x800233c0
+**Function**: `UpdateCameraPositionSmooth` @ 0x800233c0
 
 ## Overview
 

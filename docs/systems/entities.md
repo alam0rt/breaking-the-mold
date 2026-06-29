@@ -840,7 +840,7 @@ void GameModeCallback(GameState* state) {
     // Entity processing (only if not paused)
     if (!state[0x190]) {
         EntityTickLoop(state);           // Update all entities
-        SetCameraPositionDirect(state);     // Camera scroll
+        UpdateCameraPositionSmooth(state);     // Camera scroll
     }
 }
 ```
@@ -912,7 +912,7 @@ void DeferredEntityRemoval(GameState* state) {
 Complex camera scroll logic called during entity processing:
 
 ```c
-void SetCameraPositionDirect(GameState* state) {
+void UpdateCameraPositionSmooth(GameState* state) {
     Entity* player = state[0x30];
     if (player == NULL || state[99] != 0) return;
     

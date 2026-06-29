@@ -275,9 +275,9 @@ happen through functions called by the main loop.
 | 0x28 | ptr | 4 | entity_pool | Raw entity definitions (Asset 501) | LoadEntitiesFromAsset501 |
 | 0x2C | ptr | 4 | player_alt | Alternate player reference | SpawnPlayerAndEntities |
 | 0x30 | ptr | 4 | player_entity_ptr | Main player entity pointer | SpawnPlayerAndEntities |
-| 0x38 | s16 | 2 | camera_x | Camera X position (pixels) | SetCameraPositionDirect |
+| 0x38 | s16 | 2 | camera_x | Camera X position (pixels) | UpdateCameraPositionSmooth |
 | 0x3A | s16 | 2 | (camera_x_high) | | |
-| 0x3C | s16 | 2 | camera_y | Camera Y position (pixels) | SetCameraPositionDirect |
+| 0x3C | s16 | 2 | camera_y | Camera Y position (pixels) | UpdateCameraPositionSmooth |
 | 0x3E | s16 | 2 | (camera_y_high) | | |
 | 0x50 | ptr | 4 | input_state_ptr | g_pPlayer1Input pointer | InitGameState |
 | 0x7C | ptr | 4 | callback_table_ptr | Entity type callback table (0x8009D5F8) | InitGameState |
@@ -342,7 +342,7 @@ Input is captured by `PadRead(1)` in the main loop and processed by `UpdateInput
 
 ### Camera State
 
-Camera position is stored in GameState and updated by `SetCameraPositionDirect` @ 0x80023dbc.
+Camera position is stored in GameState and updated by `UpdateCameraPositionSmooth` @ 0x800233c0.
 
 **Memory Locations:**
 - GameState+0x38: `camera_x` (s16) - X position in pixels
@@ -350,7 +350,7 @@ Camera position is stored in GameState and updated by `SetCameraPositionDirect` 
 
 **Camera Update Logic:**
 ```c
-void SetCameraPositionDirect(GameState* state) {
+void UpdateCameraPositionSmooth(GameState* state) {
     Entity* player = state->player_entity_ptr;  // +0x30
     
     // Calculate camera target based on player position
@@ -429,7 +429,7 @@ void EntityTickLoop(GameState* state) {
    - Writes to: GameState+0x130 (clears bg_color_change_flag)
    - Copies RGB values from GameState+0x131/132/133 to frame buffers
 
-5. **SetCameraPositionDirect** (0x80023dbc)
+5. **UpdateCameraPositionSmooth** (0x800233c0)
    - Writes to: GameState+0x38 (camera_x), GameState+0x3C (camera_y)
 
 ### Deterministic Replay Requirements
@@ -467,7 +467,7 @@ To replay a level deterministically, capture the following per frame:
 | 0x800259d4 | UpdateInputState | Process controller input | PadRead result | g_pPlayer1Input |
 | 0x80020e1c | EntityTickLoop | Update all entities | GS+0x1C (tick list) | Entity structures |
 | 0x80020e80 | RenderEntities | Render frame | GS+0x20 (render list) | GS+0x130 (bg flag) |
-| 0x80023dbc | SetCameraPositionDirect | Update camera scroll | Player entity, level bounds | GS+0x38, GS+0x3C |
+| 0x800233c0 | UpdateCameraPositionSmooth | Update camera scroll | Player entity, level bounds | GS+0x38, GS+0x3C |
 | 0x8007e654 | InitialModeHandler | Level loading/respawn logic | Various | GS mode fields |
 
 ## InitGameState (`InitGameState` @ 0x8007cd34)
