@@ -644,7 +644,7 @@ void EntityStateSetAttack(EnemyTimerStateEntity *e) {
 /* Sparkle-collectible "revealed" state: faces dir 2, installs position-offset
  * render + sparkle tick + token-arbitration event handler, swaps to the
  * sparkle sprite (spriteIds[2]) at anim frame 2. */
-void EntitySetSparkleCollectibleState(Entity *e) {
+void EntityStateSetSparkleCollectible(Entity *e) {
     PadSlot slot;
     s16 m1;
     void (*fn)();
