@@ -42,13 +42,13 @@ extern void GliderSetActiveState(Entity *e);
 extern void GliderWaitState(Entity *e);
 extern void KloggMoveToTargetPosition(Entity *e);
 extern void KloggSpawnProjectilesCallback(Entity *e);
-extern void KloggDeathEventHandler();
+extern s32 KloggDeathEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void MonkeyMageDeathCallback(u8 *e);
 void KloggDeathCallback(u8 *e);
 void GlennYntisSetPhaseFromHP();
 extern s32 EnemyHitMessageHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
-extern void GlennYntisSelectRandomAnimState();
+extern void GlennYntisSelectRandomAnimState(SpriteEntity *e);
 extern void HazardActivateWithSound(Entity *e);
 extern s32 GlennYntisAttackEventHandler(Entity *e, u32 event, u32 arg2, u32 arg3);
 extern void EntitySetRenderFlags(Entity *e, u32 flags);
@@ -648,7 +648,7 @@ void GlennYntisSetPhaseFromHP(ShrineyGuardEntity *e) {
     void (*fn)();
 
     e->idleTimeout = 5 - PLAYER_STATE_DATA->boss_hp;
-    GlennYntisSelectRandomAnimState((Entity *)e);
+    GlennYntisSelectRandomAnimState((SpriteEntity *)e);
     fn = HazardActivateWithSound;
     do {} while (0);
     m1 = -1;
@@ -663,7 +663,7 @@ void HazardSelectRandomBehavior(ShrineyGuardEntity *e) {
     s16 m1;
     void (*fn)();
     e->idleTimeout = 0;
-    GlennYntisSelectRandomAnimState((Entity *)e);
+    GlennYntisSelectRandomAnimState((SpriteEntity *)e);
     fn = HazardActivateWithSound;
     do {} while (0);
     m1 = -1;
