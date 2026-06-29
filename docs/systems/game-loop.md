@@ -94,7 +94,7 @@ Both SECONDARY and TERTIARY segments contain TOC containers with these asset typ
 | 600 | 0x258 | ctx[16-17] | Geometry+size | Tertiary |
 | 601 | 0x259 | ctx[18-19] | Audio+size | Both |
 | 602 | 0x25A | ctx[20] +0x50 | Palette/AudioMeta | Tertiary |
-| 700 | 0x2BC | ctx[21-22] | SPUAudio+size | Tertiary |
+| 700 | 0x2BC | ctx[21-22] | DemoReplay+size | Tertiary |
 
 ### Summary: What's Shared vs Stage-Specific
 

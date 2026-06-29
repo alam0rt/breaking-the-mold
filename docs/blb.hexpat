@@ -135,7 +135,7 @@
 // Special/Optional:
 //   101: VRAM Slot Config - Same 8 levels as secondary
 //   504: Vehicle Data     - ONLY in FINN/RUNN (path waypoints)
-//   700: Extra Audio      - 9 levels (BOIL, BRG1, CAVE, FOOD, GLID, MENU, SCIE, TMPL, WEED)
+//   700: Demo Replay      - attract-mode input recording, 9 levels (BOIL, BRG1, CAVE, FOOD, GLID, MENU, SCIE, TMPL, WEED). NOT audio.
 //
 // Boss/Special levels (GLEN, HEAD, KLOG, WIZZ) lack 502/503 - simplified rendering.
 // MENU lacks 500 (no collision needed for menu screen).
@@ -385,7 +385,7 @@ struct Palette256Raw {
 //   503 (0x1F7) ANIM_OFFSETS     - Animation frame offsets (ToolX sequence data)
 //   504 (0x1F8) VEHICLE_DATA     - Vehicle level waypoints (FINN/RUNN only)
 //   600 (0x258) SPRITE_CONTAINER - RLE sprites with embedded palettes
-//   700 (0x2BC) SPU_SAMPLES      - Additional SPU audio samples (ADPCM)
+//   700 (0x2BC) DEMO_REPLAY      - Attract-mode RLE controller-input replay (NOT audio)
 //
 // Note: Assets 100, 200, 201, 302, 401 may also appear in tertiary segments
 
@@ -1045,8 +1045,9 @@ struct TileAttributeMap<auto asset_size> {
 // =============================================================================
 // Audio System (VERIFIED 2026-01-07)
 // =============================================================================
-// Audio is loaded from Secondary Assets 601/602 and Tertiary Asset 700.
-// The game uses PSX SPU with ADPCM-encoded samples.
+// Audio is loaded from Assets 601 (sample bank) and 602 (volume/pan table).
+// The game uses PSX SPU with ADPCM-encoded samples. (Asset 700 is NOT audio --
+// it is demo input replay; see the Asset 700 section below.)
 //
 // Loading flow (from InitializeAndLoadLevel @ 0x8007d1d0):
 //   1. Load secondary segment containing Assets 601 + 602
@@ -1093,36 +1094,42 @@ struct AudioVolumeEntry {
 //   0x1333, 0x0010 - ~30% volume, slight pan offset
 
 // =============================================================================
-// Tertiary Asset 700 - Unknown Audio-Related Data
+// Tertiary Asset 700 - Demo / Attract-Mode Input Replay  (NOT audio)
 // =============================================================================
 // Only appears in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
 // Stored at LevelDataContext offset 0x54 (pointer) and 0x58 (size).
 //
-// VERIFIED:
-// - Uses standard Asset 601-style container header (count=1, entry with ID/size/offset)
-// - Data starts at offset 0x10 within the asset
-// - Sizes range from 208-496 bytes
+// RESOLVED 2026-01-19 (docs/systems/demo-attract-mode.md): this is the recorded
+// controller input replayed during attract mode, read by UpdateInputState
+// @0x800259d4 via GetDemoDataPtr @0x8007BAC8 (returns ctx[0x54] + 0x10). The
+// replay stream is run-length-encoded: each 4-byte entry is a PSX button bitmask
+// plus a frame duration. The "SPU-like" 0x80/0xC0 bytes that previously made this
+// look like audio are just button bitmasks (Left=0x80, ...).
 //
-// UNCONFIRMED (see docs/unconfirmed_findings.md for analysis):
-// - Data content structure is unknown
-// - May be sound event sequences, music selection, or unused data
-// - No code found that reads this data after LoadAssetContainer stores it
+// VERIFIED:
+// - Container header: count=1, then entry {id, size, offset}; data at offset 0x10
+// - Sizes range from 208-496 bytes (a short input sequence, not a sample bank)
 
 struct Asset700Header {
     u16 entry_count [[name("Entry Count"), comment("Always 1")]];
     u16 reserved [[name("Reserved"), comment("Always 0")]];
     u32 entry_id [[name("Entry ID"), comment("Varies per level")]];
-    u32 data_size [[name("Data Size"), comment("Size of data after header")]];
+    u32 data_size [[name("Data Size"), comment("Size of replay stream after header")]];
     u32 data_offset [[name("Data Offset"), comment("Always 0x10")]];
 } [[static, color("FF6666")]];
 
+// One run-length-encoded input event: hold `buttons` for `duration` frames.
+struct DemoReplayEntry {
+    u16 buttons [[name("Buttons"), comment("PSX controller bitmask (Select=1, Up=0x10, Cross=0x4000, ...)")]];
+    u16 duration [[name("Duration"), comment("Frames to hold this button state (RLE count)")]];
+} [[static, color("FFAA44")]];
+
 struct Asset700Data<auto asset_size> {
     Asset700Header header;
-    
-    // Raw data - structure unknown
-    // See docs/unconfirmed_findings.md for analysis attempts
-    if (asset_size > 16) {
-        u8 raw_data[asset_size - 16] [[name("Raw Data"), comment("Unknown structure - see unconfirmed_findings.md")]];
+
+    // RLE input stream: data_size/4 entries of {buttons, duration}.
+    if (header.data_size >= 4) {
+        DemoReplayEntry entries[header.data_size / 4] [[name("Replay Stream")]];
     }
 } [[color("FF4444")]];
 
@@ -1641,7 +1648,7 @@ fn get_asset_name(u32 id) {
     if (id == 600) return "geometry_or_sprites";
     if (id == 601) return "audio_samples";
     if (id == 602) return "palette_data";
-    if (id == 700) return "spu_audio";
+    if (id == 700) return "demo_replay";
     return "unknown";
 };
 
@@ -2155,43 +2162,43 @@ struct TertiaryStageWithAssets {
         Asset504VehicleData<toc[9].size> vehicle9 @ (_base + toc[9].offset) [[name("Vehicle Data (504)")]];
     }}
     
-    // Asset 700 - Additional Audio Data (under investigation)
+    // Asset 700 - Demo/attract-mode input replay (NOT audio; see Asset700Data)
     // Only in 9 of 26 levels: MENU, SCIE, TMPL, BOIL, FOOD, BRG1, GLID, CAVE, WEED
     if (toc_count >= 1) { if (toc[0].asset_type == 700) {
-        Asset700Data<toc[0].size> audio700_0 @ (_base + toc[0].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[0].size> demo_replay_0 @ (_base + toc[0].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 2) { if (toc[1].asset_type == 700) {
-        Asset700Data<toc[1].size> audio700_1 @ (_base + toc[1].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[1].size> demo_replay_1 @ (_base + toc[1].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 3) { if (toc[2].asset_type == 700) {
-        Asset700Data<toc[2].size> audio700_2 @ (_base + toc[2].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[2].size> demo_replay_2 @ (_base + toc[2].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 4) { if (toc[3].asset_type == 700) {
-        Asset700Data<toc[3].size> audio700_3 @ (_base + toc[3].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[3].size> demo_replay_3 @ (_base + toc[3].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 5) { if (toc[4].asset_type == 700) {
-        Asset700Data<toc[4].size> audio700_4 @ (_base + toc[4].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[4].size> demo_replay_4 @ (_base + toc[4].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 6) { if (toc[5].asset_type == 700) {
-        Asset700Data<toc[5].size> audio700_5 @ (_base + toc[5].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[5].size> demo_replay_5 @ (_base + toc[5].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 7) { if (toc[6].asset_type == 700) {
-        Asset700Data<toc[6].size> audio700_6 @ (_base + toc[6].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[6].size> demo_replay_6 @ (_base + toc[6].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 8) { if (toc[7].asset_type == 700) {
-        Asset700Data<toc[7].size> audio700_7 @ (_base + toc[7].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[7].size> demo_replay_7 @ (_base + toc[7].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 9) { if (toc[8].asset_type == 700) {
-        Asset700Data<toc[8].size> audio700_8 @ (_base + toc[8].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[8].size> demo_replay_8 @ (_base + toc[8].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 10) { if (toc[9].asset_type == 700) {
-        Asset700Data<toc[9].size> audio700_9 @ (_base + toc[9].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[9].size> demo_replay_9 @ (_base + toc[9].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 11) { if (toc[10].asset_type == 700) {
-        Asset700Data<toc[10].size> audio700_10 @ (_base + toc[10].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[10].size> demo_replay_10 @ (_base + toc[10].offset) [[name("Demo Replay (700)")]];
     }}
     if (toc_count >= 12) { if (toc[11].asset_type == 700) {
-        Asset700Data<toc[11].size> audio700_11 @ (_base + toc[11].offset) [[name("Audio Data (700)")]];
+        Asset700Data<toc[11].size> demo_replay_11 @ (_base + toc[11].offset) [[name("Demo Replay (700)")]];
     }}
 } [[name("Stage"), color("80FFCC")]];
 

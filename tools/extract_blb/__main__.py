@@ -85,7 +85,7 @@ ASSET_NAMES_FALLBACK = {
     600: "geometry_or_sprites",
     601: "audio_samples",
     602: "palette_data",
-    700: "spu_audio",
+    700: "demo_replay",
     # Header assets (1000+)
     **HEADER_ASSET_TYPES,
 }

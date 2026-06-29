@@ -107,6 +107,7 @@ def register_all_handlers():
     # Import each handler module - they auto-register via @register_handler
     from . import sprites
     from . import audio
+    from . import demo
     from . import layers
     from . import entities
     from . import tile_header
