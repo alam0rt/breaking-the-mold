@@ -63,7 +63,7 @@ remaining = bufferSize - ALIGN16(tertiarySize);
 
 ### Entry[1] Offset (0x08) - VERIFIED
 
-Offset to Asset 601 (collision/audio) within primary TOC.
+Offset to Asset 601 (audio) within primary TOC.
 
 Used to calculate: `ctx[0x1b] = primary_buffer + entry1_offset`
 

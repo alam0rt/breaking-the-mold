@@ -1134,7 +1134,7 @@ Fields beyond the 128-byte base are entity-type-specific:
 6. DESTRUCTION
    MarkEntityForDeferredRemoval @ 0x80020D74
    └── Sets GameState+0x34 = entity, +0x38 = mode
-   DeferredEntityRemoval @ 0x80020B1C
+   DeferredEntityRemoval @ 0x80020C74
    └── Removes from all lists, calls destructor via vtable
 
 6. STATE TRANSITIONS
@@ -1314,7 +1314,7 @@ void EntityTickLoop(GameState* state) {
 
 | Function | Address | Purpose |
 |----------|---------|---------|
-| `InitEntityStruct` | 0x8001a0c8 | Zero and init 0x44C byte structure |
+| `InitEntityStruct` | 0x8001a0c8 | Zero and init 128-byte (0x80) base structure |
 | `InitEntityWithSprite` | 0x8001c868 | Full entity+sprite initialization |
 | `InitEntitySprite` | 0x8001c720 | Core entity sprite init |
 | `EntityTickLoop` | 0x80020e1c | Main update loop |
@@ -1407,7 +1407,7 @@ Entities that move along predefined path data. Used for platforms, enemies, and 
 
 | Function | Address | Purpose |
 |----------|---------|--------|
-| `InitPathFollowEntity` | 0x80032e0c | GetEntitySpawnData x2, alloc 3 buffers (0x34, 0x34, 2) |
+| `InitPathFollowEntity` | 0x80032dd8 | GetEntitySpawnData x2, alloc 3 buffers (0x34, 0x34, 2) |
 | `DestroyPathFollowEntity` | 0x80032f3c | Free path buffers |
 | `RenderPathEntitySegments` | 0x80032fec | POLY_GT4 with depth bucket, distance coloring |
 | `InitPathFollowEntityAlt` | 0x800335d8 | Alternate path init |
@@ -1531,7 +1531,7 @@ All tick callbacks follow `void callback(Entity* entity, void* param2, short par
 | Pattern | Example Function | Description |
 |---------|-----------------|-------------|
 | **Basic Tick** | `EntityUpdateCallback` @ 0x8001cb88 | Animation update only |
-| **Tick + Collision** | `EntityUpdateWithCollisionWrapper` @ 0x80019d54 | Tick + collision check |
+| **Tick + Collision** | `EntityUpdateWithCollisionWrapper` @ 0x8004350c | Tick + collision check |
 | **Tick + Timer** | `TimedEntityTickCallback` @ 0x80043464 | Decrement +0x104, trigger on 0 |
 | **Tick + Path** | `EntityPathMovementUpdate` @ 0x80042ffc | Path interpolation |
 | **Tick + Parent Cleanup** | `EntityOffscreenParentCleanupTick` @ 0x80045750 | Clean up if parent offscreen |
@@ -1677,8 +1677,8 @@ Menu/visual effects use animated color lookup tables:
 - [Entity Types Reference](../reference/entity-types.md) - Full callback table (121 entries)
 - [Game Functions Reference](../reference/game-functions.md) - Function addresses
 - [Game Loop](game-loop.md) - Main loop and player creation
-- [Player Animation](player-animation.md) - Player sprite system details
+- [Player Animation](player/player-animation.md) - Player sprite system details
 - [Sprites](sprites.md) - Sprite data format
 - [Rendering Order](rendering-order.md) - Entity z_order
-- [BLB Asset Handling](../blb-asset-handling.md) - Asset 501 details
+- [BLB Asset Handling](../blb/asset-types.md) - Asset 501 details
 - [Level Loading](level-loading.md) - Entity loading flow

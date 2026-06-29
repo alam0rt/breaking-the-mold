@@ -172,10 +172,10 @@ tags: [joe, head]
 
 ## Related Documentation
 
-- [Boss Behaviors](boss-behaviors.md) - All boss documentation
-- [Boss System Analysis](boss-system-analysis.md) - Technical architecture
-- [Projectile System](../projectiles.md) - Projectile spawning
-- [Player Physics](../player/player-physics.md) - Bounce mechanics
+- [Boss Behaviors](systems/boss-ai/boss-behaviors.md) - All boss documentation
+- [Boss System Analysis](systems/boss-ai/boss-system-analysis.md) - Technical architecture
+- [Projectile System](systems/projectiles.md) - Projectile spawning
+- [Player Physics](systems/player/player-physics.md) - Bounce mechanics
 
 ---
 

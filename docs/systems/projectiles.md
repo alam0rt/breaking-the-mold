@@ -668,7 +668,7 @@ Projectile 7: angle=0xE00 (315°)  speed=23
 - [Player System](player/player-system.md) - Player attack states
 - [Items Reference](../reference/items.md) - Ammo pickups
 - [Combat System](combat-system.md) - Damage mechanics
-- [Physics Constants](physics-constants-verified.md) - Movement speeds
+- [Physics Constants](../reference/physics-constants.md) - Movement speeds
 - [Entity System](entities.md) - Entity lifecycle
 
 ---

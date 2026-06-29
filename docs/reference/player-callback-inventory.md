@@ -243,7 +243,7 @@ main player movement callback referenced throughout `collision-complete.md`.
 
 ## How to Use This Inventory
 
-**For decomp prioritization** (see [DECOMP_STRATEGY.md](../DECOMP_STRATEGY.md)):
+**For decomp prioritization** (see [decompilation-guide.md](../decompilation-guide.md)):
 1. Named `PlayerState_*` handlers are the highest-value targets — they are
    directly invoked by the dispatcher and have well-understood semantics.
 2. Cluster H (`0x80063308`–`0x80064b40`) contains the core movement/collision
@@ -271,4 +271,4 @@ grep -nE '^(void|undefined[0-9]*|int|s32|u32|char)\s+Player[a-zA-Z_0-9]+\s*\(' \
 - [Player Physics](../systems/player/player-physics.md) — verified constants
 - [Player Animation](../systems/player/player-animation.md) — sprite frames
 - [Collision System](../systems/collision-complete.md) — tile triggers invoked by Player callbacks
-- [DECOMP_STRATEGY.md](../DECOMP_STRATEGY.md) — decomp priority ordering
+- [decompilation-guide.md](../decompilation-guide.md) — decomp priority ordering

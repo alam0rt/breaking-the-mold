@@ -6,7 +6,7 @@ tags: [systems, enemies, types, 106, 108, 112, 114, 115, 117, variant]
 
 # Entity Types 106-117: Variant Groups B, C, D
 
-**Entity Types**: 106-108, 112-114, 115-117 (12 types in 3 groups)  
+**Entity Types**: 106-108, 112-114, 115-117 (9 types in 3 groups)  
 **Shared Callbacks**: 0x8007f0d0, 0x8007f140, 0x8007f1c0  
 **Category**: Systematic variant system  
 **Status**: ⚠️ Needs callback analysis

@@ -349,7 +349,7 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x800245BC | CheckTriggerZoneCollision | Check bbox trigger zones |
 | 0x80059BC8 | CheckWallCollision | 4-point vertical wall check |
 
-See [Normal Player Documentation](../systems/player-normal.md) for details.
+See [Normal Player Documentation](../systems/player/player-normal.md) for details.
 
 ## FINN Player (Swimming Levels)
 
@@ -364,7 +364,7 @@ See [Normal Player Documentation](../systems/player-normal.md) for details.
 | 0x8001FEA8 | EntityApplyMovementCallbacks | X/Y movement dispatch |
 | 0x800241F4 | GetTileAttributeAtPosition | Tile collision lookup |
 
-See [FINN Player Documentation](../systems/player-finn.md) for details.
+See [FINN Player Documentation](../systems/player/player-finn.md) for details.
 
 ## Game Mode
 

@@ -169,7 +169,7 @@ Allows multiple animation property changes to accumulate, then apply atomically 
 | 10 (0x400) | - | - | Use callback for loop frame |
 | 11 (0x800) | - | - | Use callback for target frame |
 
-### ApplyPendingSpriteState @ 0x8001D548
+### ApplyPendingSpriteState @ 0x8001D554
 
 ```c
 void ApplyPendingSpriteState(Entity* entity) {
@@ -415,7 +415,7 @@ All setters follow the pattern: set pending field, OR flag into +0xE0, mark stat
 | FUN_8001D1C0 | 0x8001D1C0 | 0x20 | Set +0xC8 sprite ID |
 | FUN_8001D1F0 | 0x8001D1F0 | 0x820 | Set +0xC8 callback (sprite lookup) |
 | FUN_8001D218 | 0x8001D218 | 0x100 | Set +0xF5 (animation active) |
-| EntitySetRenderFlags | 0x8001D290 | 0x80 | Set +0xF4 (render flags) |
+| EntitySetRenderFlags | 0x8001D240 | 0x80 | Set +0xF4 (render flags) |
 
 ## Key Function Reference
 
@@ -430,7 +430,7 @@ All setters follow the pattern: set pending field, OR flag into +0xE0, mark stat
 | 0x8001E790 | StartAnimationSequence | Start sequence playback |
 | 0x8001E7B8 | StepAnimationSequence | Execute one sequence step |
 | 0x8001E928 | EntityProcessCallbackQueue | Multi-priority callback dispatch |
-| 0x8001EA64 | EntitySetState | State machine transition |
+| 0x8001EAAC | EntitySetState | State machine transition |
 
 ## Technical Notes
 

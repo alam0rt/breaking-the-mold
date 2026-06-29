@@ -174,7 +174,7 @@ struct SoundEntry {
 1. Rename 3 audio helper functions
 2. Document sound table format
 3. Extract common sound IDs from PlaySoundEffect calls
-4. Create sound-system.md reference
+4. Create sound-system reference (merged into systems/audio.md)
 
 ---
 
@@ -347,7 +347,7 @@ grep -n "Allocate\|Malloc\|Pool\|Free" SLES_010.90.c
 2. **Batch 2: Audio System** (1 hour)
    - Rename 3 audio functions
    - Extract sound ID table from PlaySoundEffect calls
-   - Create sound-system.md reference
+   - Create sound-system reference (merged into systems/audio.md)
 
 3. **Batch 6: Input Processing** (45 min)
    - Find and rename input functions

@@ -476,4 +476,4 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 
 - [Entity System](../systems/entities.md) - Entity lifecycle and structure
 - [Game Functions](game-functions.md) - Function addresses and globals
-- [BLB Asset Handling](../blb-asset-handling.md) - Asset 501 format details
+- [BLB Asset Handling](../blb/asset-types.md) - Asset 501 format details

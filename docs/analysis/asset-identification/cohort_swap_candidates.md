@@ -238,7 +238,7 @@ For each named function that touches multiple asset IDs, we compute the pairwise
 | `0x44d4c8d8↔0x70d006d8` | `0x001a0267` | 9 | (none in vocab) |
 | `0x5860c640↔0x70d006d8` | `0x0260a2c3` | 10 | (none in vocab) |
 
-## `Callback_800570a4` (5 ids)
+## `ClayballState_DestroyWithDebris` (5 ids)
 
 | pair (IDs) | class | popcount | suffix-pair candidates |
 |---|---|---|---|
@@ -253,7 +253,7 @@ For each named function that touches multiple asset IDs, we compute the pairwise
 | `0x46386040↔0xd6bc2450` | `0x04242111` | 7 | `62↔PIECE`, `MIRROR↔CLOSING` |
 | `0x463e6040↔0xd6bc2450` | `0x04242091` | 7 | `61↔PIECE`, `77↔BONUS` |
 
-## `PlayerCallback_8005cce0` (5 ids)
+## `PlayerCallback_AnimFrameParticleHandler` (5 ids)
 
 | pair (IDs) | class | popcount | suffix-pair candidates |
 |---|---|---|---|
@@ -268,7 +268,7 @@ For each named function that touches multiple asset IDs, we compute the pairwise
 | `0x5838cc16↔0xd167c005` | `0x04e257c3` | 14 | (none in vocab) |
 | `0x91a9d01d↔0xd167c005` | `0x01840ce1` | 9 | `HEAD↔SMOKE` |
 
-## `PlayerCallback_8005d404` (5 ids)
+## `PlayerCallback_DeathDebrisSpawner` (5 ids)
 
 | pair (IDs) | class | popcount | suffix-pair candidates |
 |---|---|---|---|
@@ -283,7 +283,7 @@ For each named function that touches multiple asset IDs, we compute the pairwise
 | `0xb468d0c6↔0xbe68d0c6` | `0x00000005` | 2 | `0↔2`, `0↔D`, `0↔H`, `1↔3`, `1↔E` |
 | `0xb868d0c6↔0xbe68d0c6` | `0x00000003` | 2 | `0↔1`, `0↔E`, `0↔G`, `1↔2`, `1↔F` |
 
-## `EntityInitCallback_80070850` (5 ids)
+## `RunnEvent_CutsceneDebrisAndLevel` (5 ids)
 
 | pair (IDs) | class | popcount | suffix-pair candidates |
 |---|---|---|---|

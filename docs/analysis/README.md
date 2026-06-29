@@ -17,22 +17,14 @@ This directory contains comprehensive documentation for analyzing and decompilin
 | **QUICK_REFERENCE.md** | One-page cheat sheet | Need quick commands |
 | **ANALYSIS_WORKFLOW.md** | Complete step-by-step guide | First time or need details |
 | **ghidra_unknown_functions_report.md** | Full analysis report | Picking next target |
-| **SESSION_SUMMARY_2026_01_15.md** | What was created and why | Understanding the system |
 
-### Scripts
-
-| File | Purpose | Command |
-|------|---------|---------|
-| **export_unknown_functions.py** | Export to JSON | `python3 scripts/export_unknown_functions.py` |
-| **verify_ghidra_updates.py** | Verify changes applied | `python3 scripts/verify_ghidra_updates.py` |
-| **generate_ghidra_report.py** | Generate templates | `python3 scripts/generate_ghidra_report.py` |
-
-### Generated Data
-
-| File | Format | Contents |
-|------|--------|----------|
-| **unknown_functions.json** | JSON | All unknown functions with metadata |
-| **unrecognized_functions.json** | JSON | Functions needing analysis |
+> **Note**: The per-function decompilation workflow is driven by Makefile
+> targets, not standalone scripts. See `docs/decompilation-guide.md` and the
+> "Common Commands" section of the repo `CLAUDE.md`
+> (`make context` / `make decompile FUNC=` / `make diff FUNC=` /
+> `make permuter FUNC=`). The older `export_unknown_functions.py` /
+> `verify_ghidra_updates.py` / `generate_ghidra_report.py` helper scripts and
+> their `*.json` outputs are no longer in the tree.
 
 ---
 
@@ -58,25 +50,21 @@ make clean && make && make check
 
 ## 📊 Current Status
 
-**As of 2026-01-15:**
+Decompilation is now far past the early "unknown functions" phase this
+directory was written for. Ground truth (derive yourself; do not trust cached
+percentages):
 
-| Metric | Count | Percentage |
-|--------|-------|------------|
-| Total Functions | 1,600 | 100% |
-| Known Functions | 217 | 13.6% |
-| **Unknown Functions** | **~800** | **50%** |
-| PSY-Q Library | ~350 | 22% |
-| Entity Callbacks | 120 | 7.5% |
-| Player Callbacks | ~80 | 5% |
+```bash
+# Functions still implemented as raw asm (not yet byte-matched to C)
+grep -rc INCLUDE_ASM src/ | awk -F: '{s+=$2} END{print s}'   # ~731
 
-**Priority Breakdown:**
+# Named function-range symbols
+grep -cE '= 0x800[0-9A-Fa-f]{5};' symbol_addrs.txt           # ~2,270
+```
 
-| Priority | Count | Size Range | Example |
-|----------|-------|------------|---------|
-| Critical | 10 | >4KB | Menu system (8KB) |
-| High | 40 | 1-4KB | Tilemap renderer (2.5KB) |
-| Medium | 150 | 200B-1KB | Entity helpers |
-| Low | 600 | <200B | Small utilities |
+As of this writing **~731** functions remain as `INCLUDE_ASM` stubs; the
+remainder are already decompiled to matching C across `src/*.c`. The live gap
+tracker is [`../KNOWLEDGE_GAPS.md`](../KNOWLEDGE_GAPS.md).
 
 ---
 
@@ -101,7 +89,7 @@ make clean && make && make check
    
 5. UPDATE
    ↓
-   symbol_addrs.txt + splat.pal.yaml
+   symbol_addrs.txt + SLES_010.90.yaml
    
 6. VERIFY
    ↓
@@ -128,7 +116,6 @@ make clean && make && make check
 
 ### In btm project:
 - `docs/decompilation-guide.md` - General decompilation
-- `docs/ghidra-updates-*.md` - Historical changes
 - `docs/systems/` - System documentation
 - `symbol_addrs.txt` - Known symbols
 
@@ -183,9 +170,6 @@ grep -c "FUN_" symbol_addrs.txt
 
 # Count functions decompiled this week
 git log --since="1 week ago" --grep="Decompile" --oneline | wc -l
-
-# Generate progress report
-python3 scripts/generate_progress_report.py
 ```
 
 ---

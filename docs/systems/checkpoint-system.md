@@ -534,7 +534,7 @@ For a C-based reimplementation (matching original architecture):
 
 - [Entity System](entities.md) - Entity lifecycle and callbacks
 - [Game Loop](game-loop.md) - Main game mode callback integration
-- [Player System](player-system.md) - Player states and death handling
+- [Player System](player/player-system.md) - Player states and death handling
 - [Level Loading](level-loading.md) - Level reload during checkpoint teleport
 
 ---

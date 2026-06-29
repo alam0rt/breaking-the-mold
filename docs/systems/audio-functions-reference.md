@@ -278,7 +278,7 @@ graph TD
 ## Related Documentation
 
 - [Audio System](audio.md) - Asset format and SPU upload
-- [Sound System](sound-system.md) - High-level overview
+- [Audio System](audio.md) - High-level overview
 - [Game Loop](game-loop.md) - Audio initialization
 
 ---

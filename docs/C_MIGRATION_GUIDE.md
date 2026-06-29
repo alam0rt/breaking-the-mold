@@ -281,5 +281,5 @@ python3 scripts/decompile.py <function_name> --full
 python3 scripts/decompile.py --export-struct <StructName>
 
 # Compare builds
-sha1sum build/pal/game.elf disks/pal/SLES_010.90
+sha1sum build/SLES_010.90.bin bin/SLES_010.90
 ```

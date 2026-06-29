@@ -19,7 +19,7 @@ When the player remains idle at the main menu for approximately 30 seconds, the 
 | Address | Name | Purpose |
 |---------|------|--------|
 | 0x80076928 | `InitMenuEntity` | Menu entity initialization (uses sprite 0xb8700ca1) |
-| 0x800313cc | `InitMenuEntity` | **Second** menu entity init (different, uses sprite 0xb8700ca1) |
+| 0x800313cc | `InitMenuSpriteEntity` | **Second** menu entity init (different, uses sprite 0xb8700ca1) |
 | 0x80077940 | `MenuTickCallback` | Menu idle timer logic (VERIFIED) |
 | 0x80077aa0 | `DemoCountdownCallback` | 20-frame countdown before demo load (VERIFIED) |
 | 0x800a6043 | `g_DemoIndex` | Current demo index (gp+0x6ef) |
@@ -402,5 +402,5 @@ Total: 120 entries, 3072 frames (~51 seconds)
 
 - [BLB Header Format](../blb/header.md)
 - [Playback Sequence Data](../blb/header.md#playback-sequence-data-0xf34-0xfff)
-- [Input System](./input-system.md) (if documented)
+- [Input System](input-system-complete.md)
 - [Menu Entity](./menu-entity.md) (if documented)

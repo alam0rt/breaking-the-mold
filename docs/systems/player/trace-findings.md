@@ -503,16 +503,16 @@ animations.
 - `PlayerCallback_CollisionHandlerWithQueue (0x8005CEC8)` is **the
   bounce-hit dispatcher** — it gates the 2-frame Y-physics pause +
   applies the bounce impulse + queues `PlayerState_CooldownTick` as the
-  next tickCallback. High-value decomp target (still `INCLUDE_ASM`).
+  next tickCallback. Already decompiled in src/playst.c.
 - `PlayerState_CooldownTick (0x8005BBAC)` is **already decompiled** in
-  [src/playst.c](../../../src/playst.c#L57). The trace clarifies its
+  [src/playst.c](../../../src/playst.c#L67). The trace clarifies its
   semantics: it decrements `timer13C` then tail-calls `PlayerTickCallback`
   but does **not itself** check `timer13C == 0` — so the state-exit
   transition must happen inside `PlayerTickCallback` (still ASM, size
   `0x6BC`) or in the event handler. Worth annotating with this trace
   evidence as a comment.
 - `PlayerState_FrameCountTick (0x8005BB80)` is **already decompiled**
-  in [src/playst.c](../../../src/playst.c#L53). Same pattern: increments
+  in [src/playst.c](../../../src/playst.c#L52). Same pattern: increments
   `jumpParam` then tail-calls `PlayerTickCallback`. The per-frame
   counter pattern (315 frames in the trace) confirms it's a brief
   windup state — not a long-running idle.
@@ -556,7 +556,7 @@ ran on Level 4 / Stage 0 for ~60 s @ 50 Hz PAL.
 massive departure from platformer levels (Shriney trace had 30+ transitions
 over a 45 s fight). All FINN logic is encapsulated inside `FinnMainTickHandler`,
 which internally dispatches to `FinnHandleInput`, `FinnVehicleMovementUpdate`,
-`FinnUpdateRotationSprite`, etc. — see [src/finn.c](src/finn.c).
+`FinnUpdateRotationSprite`, etc. — see [src/finn.c](../../../src/finn.c).
 
 ## 2. Our `Entity` schema is too small for FINN — vehicle state lives at +0x80…+0x120
 
@@ -610,7 +610,7 @@ boat-velocity, in this level.**
 
 ## 4. Tank-control button mapping (decoded from `buttons_held` traces)
 
-PSX button bitmap (verified against [scripts/game_watcher.lua#L880-905](scripts/game_watcher.lua)):
+PSX button bitmap (verified against [scripts/game_watcher.lua#L880-905](../../../scripts/game_watcher.lua)):
 `0x8000=Left 0x4000=Down 0x2000=Right 0x1000=Up 0x0040=X 0x0020=Circle 0x0080=Square 0x0010=Triangle`
 
 Most-held combinations during FINN clear:

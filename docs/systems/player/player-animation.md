@@ -414,6 +414,6 @@ These are labeled `LAB_*` in Ghidra as they aren't recognized as function starts
 
 ## Related Documentation
 
-- [Sprites](sprites.md) - Sprite format and RLE decoding
-- [Entities](entities.md) - General entity system
-- [Game Loop](game-loop.md) - CreatePlayerEntity dispatch
+- [Sprites](../sprites.md) - Sprite format and RLE decoding
+- [Entities](../entities.md) - General entity system
+- [Game Loop](../game-loop.md) - CreatePlayerEntity dispatch

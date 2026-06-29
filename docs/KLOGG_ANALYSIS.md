@@ -194,7 +194,7 @@ Klogg is the **only boss with a minigame-style mechanic**!
 
 - [Boss System Analysis](systems/boss-ai/boss-system-analysis.md) - Boss architecture
 - [Entity Type 102](reference/entity-types.md) - Likely Klogg entity type
-- [Movies](reference/movies.md) - END1, END2 movie data
+- [Movies](systems/movie-cutscene-system.md) - END1, END2 movie data
 - [Boss Behaviors](systems/boss-ai/boss-behaviors.md) - All boss documentation
 
 ---

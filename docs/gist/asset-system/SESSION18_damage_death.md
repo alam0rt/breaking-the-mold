@@ -15,7 +15,7 @@ tags: [gist, asset, system, damage, death]
   g_pPlayerState[0x18], calls **DecrementPlayerLives**, LoadBGColorFromTileHeader, reseeks level.
 - Game-over check at line 21143: when lives counter == 0.
 
-## DecrementPlayerLives @ 0x80010149 -> CORRECTS the HUD counter assignment
+## DecrementPlayerLives @ 0x800262AC -> CORRECTS the HUD counter assignment
 ```
 *(char*)(state+0x17)=0; *(char*)(state+0x1d)=0;
 if (*(char*)(state+0x11) != 0) *(char*)(state+0x11) -= 1;   // <- LIVES = byte [0x11]

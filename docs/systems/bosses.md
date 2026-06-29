@@ -16,10 +16,10 @@ Skullmonkeys features 5 bosses across different levels:
 | Boss | Entity Type | Level | HP | Address |
 |------|-------------|-------|----|---------| 
 | Monkey Mage | 71 | WIZZ (21) | 5 | 0x80047fb8 |
-| Glenn Yntis | 100 | YETI (16) | 5 | 0x80049a54 |
-| Shriney Guard | 101 | SHRI (23) | 3 | 0x8004af64 |
-| Joe-Head-Joe | 102 | JOEJ (11) | 5 | 0x8004c0e0 |
-| Klogg | 103 | KLOK (25) | 5 | 0x8004d88c |
+| Glenn Yntis | 100 | GLEN (15) | 5 | 0x80049a54 |
+| Shriney Guard | 101 | MEGA (5) | 3 | 0x8004af64 |
+| Joe-Head-Joe | 102 | HEAD (9) | 5 | 0x8004c0e0 |
+| Klogg | 103 | KLOG (24) | 5 | 0x8004d88c |
 
 ---
 
@@ -102,7 +102,7 @@ Complex platform-based boss. Creates 6 rotating platforms that the player must r
 
 ---
 
-## Boss: Glenn Yntis (YETI Level 16)
+## Boss: Glenn Yntis (GLEN Level 15)
 
 **Entity Type**: 100  
 **HP**: 5  
@@ -127,7 +127,7 @@ Ground-based boss with multiple attack patterns. Phase difficulty increases as H
 
 ---
 
-## Boss: Shriney Guard (SHRI Level 23)
+## Boss: Shriney Guard (MEGA Level 5)
 
 **Entity Type**: 101  
 **HP**: 3  
@@ -160,7 +160,7 @@ Guardian boss with attack counters. Has idle, stun, attack, and death states. Us
 
 ---
 
-## Boss: Joe-Head-Joe (JOEJ Level 11)
+## Boss: Joe-Head-Joe (HEAD Level 9)
 
 **Entity Type**: 102  
 **HP**: 5  
@@ -210,7 +210,7 @@ Pattern selection varies by phase (5-HP):
 
 ---
 
-## Boss: Klogg (KLOK Level 25)
+## Boss: Klogg (KLOG Level 24)
 
 **Entity Type**: 103  
 **HP**: 5  

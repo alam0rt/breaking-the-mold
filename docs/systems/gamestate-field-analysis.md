@@ -121,7 +121,7 @@ insert layer render contexts into the shared entity lists at `+0x1C/+0x20`.
 
 ### LevelDataContext (0x84-0x103)
 128-byte embedded structure containing level asset pointers.
-See `docs/systems/level-data-context.md` for details.
+See `docs/reference/level-data-context.md` for details.
 
 ### Render/Frame State (0x104-0x11F)
 | Offset | Name | Type | Purpose |

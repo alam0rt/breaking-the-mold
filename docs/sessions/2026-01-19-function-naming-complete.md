@@ -131,7 +131,7 @@ State machine coordination:
 1. **docs/systems/entities.md** - Added subsystem overview, VRAM slot, multi-part, path-following sections
 2. **docs/systems/projectiles.md** - Complete function table (95% coverage)
 3. **docs/systems/menu-system-complete.md** - 47 functions documented
-4. **docs/systems/sound-system.md** - 41 sound entity functions added
+4. **docs/systems/audio.md** (was sound-system.md, since merged) - 41 sound entity functions added
 5. **docs/reference/game-functions.md** - Updated with completion status
 
 ## Statistics

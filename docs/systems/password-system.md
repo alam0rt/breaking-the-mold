@@ -272,8 +272,8 @@ From `g_pPlayerState` (0x8009DC20):
 | `InitPasswordEntry` (FUN_80075ff4) | 0x80075ff4 | Create 12 digit sprites + cursor |
 | `InitGameState` | 0x8007cd34 | Builds password level list |
 | `GetLevelFlagByIndex` | 0x8007aa28 | Checks if level is password-selectable |
-| `CheckCheatCodeInput` | 0x80082550 | Cheat validation (similar pattern) |
-| `SetupAndStartLevel` | 0x8007d854 | Starts level after validation |
+| `CheckCheatCodeInput` | 0x800820b4 | Cheat validation (similar pattern) |
+| `SetupAndStartLevel` | 0x8007d8a0 | Starts level after validation |
 
 ## Data Locations
 

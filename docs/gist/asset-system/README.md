@@ -58,9 +58,9 @@ id = SEED  XOR  rotl( calcHash(assetname), R )
 
 | Grade | Count | Meaning |
 |---|--:|---|
-| RECOVERED | 131 | unique plausible preimage in the naming grammar |
+| RECOVERED | 136 | unique plausible preimage in the naming grammar |
 | RECOVERED-EXT | 3 | + externally confirmed via ScummVM/Neverhood |
-| CANDIDATE | 11 | one weak alternative collides (listed) |
+| CANDIDATE | 12 | one weak alternative collides (listed) |
 
 Method: collision-multiplicity audit — generate the convention-valid name space, bucket by
 hash, accept only unique hits; self-cancelling token artifacts filtered. BOSS-21 stayed unique

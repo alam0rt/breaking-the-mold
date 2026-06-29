@@ -232,7 +232,7 @@ and BLB format are real engineering), but the simplicity of the runtime loop
 
 ## Related Documentation
 
-- [`../DECOMP_STRATEGY.md`](../DECOMP_STRATEGY.md) — dependency-ordered decomp plan
+- [`../decompilation-guide.md`](../decompilation-guide.md) — dependency-ordered decomp plan
 - [`../SYSTEMS_INDEX.md`](../SYSTEMS_INDEX.md) — per-system documentation index
 - [`../blb/README.md`](../blb/README.md) — BLB asset archive format
 - [`../reference/player-callback-inventory.md`](../reference/player-callback-inventory.md)

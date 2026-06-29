@@ -336,10 +336,10 @@ func show_secret_ending_unlocked() -> void:
 
 ## Related Documentation
 
-- [Items Reference](../../reference/items.md) - Swirly Q documentation
+- [Items Reference](../reference/items.md) - Swirly Q documentation
 - [Movie System](movie-cutscene-system.md) - END1/END2 movies
-- [Player System](../player/player-system.md) - Player state structure
-- [Cheat Codes](../../reference/cheat-codes.md) - Cheat 0x02
+- [Player System](player/player-system.md) - Player state structure
+- [Cheat Codes](../reference/cheat-codes.md) - Cheat 0x02
 
 ---
 

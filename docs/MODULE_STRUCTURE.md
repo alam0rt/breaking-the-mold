@@ -10,7 +10,7 @@ This document describes the code module organization for the Skullmonkeys (SLES-
 
 ## Overview
 
-The game code is split into logical modules following the pattern established by [soul-re](https://github.com/Jeehut/soul-re). Each module represents a subsystem of the game engine.
+The game code is split into logical modules following the pattern established by [soul-re](https://github.com/fmil95/soul-re). Each module represents a subsystem of the game engine.
 
 ## Module Boundaries
 

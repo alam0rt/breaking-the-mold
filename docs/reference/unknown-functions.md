@@ -208,4 +208,4 @@ All high-priority core system functions have been named:
 - [Game Functions Reference](game-functions.md)
 - [Entity System](../systems/entities.md)  
 - [Player State Machine](../systems/player/player-normal.md)
-- [BLB Data Format](../blb-data-format.md)
+- [BLB Data Format](../blb/README.md)

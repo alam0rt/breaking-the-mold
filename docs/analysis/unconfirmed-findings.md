@@ -12,7 +12,7 @@ that have not been fully verified through decompilation or runtime tracing.
 ## Risk Classification
 
 Each unconfirmed section is tagged with a decomp risk level. Use these when
-planning work — see [`../DECOMP_STRATEGY.md`](../DECOMP_STRATEGY.md) for how
+planning work — see [`../decompilation-guide.md`](../decompilation-guide.md) for how
 these gate each Tier.
 
 | Tag | Meaning | Policy |
@@ -244,7 +244,7 @@ Entity z_order values observed:
 The upper byte flags purpose remains UNVERIFIED. May affect transparency, visibility, or
 special rendering modes but does NOT directly set z_order.
 
-See `/docs/rendering-order.md` for full analysis.
+See `/docs/systems/rendering-order.md` for full analysis.
 
 ---
 
@@ -1623,7 +1623,7 @@ This section has been verified and fully documented. See:
 
 ## BLB Asset File Headers (OUTDATED)
 
-> **NOTE:** This section is outdated. See blb-data-format.md for current documentation.
+> **NOTE:** This section is outdated. See blb/README.md for current documentation.
 > The actual format uses standard TOC structures, not the format described below.
 
 ### Primary.bin (Level Data)
@@ -1958,7 +1958,7 @@ This suggests these fields may relate to shared asset characteristics or tileset
 ## Level Loading System Analysis
 
 > **NOTE:** Most of this information has been verified and moved to 
-> [blb-data-format.md](blb-data-format.md). See that document for:
+> [blb/README.md](../blb/README.md). See that document for:
 > - Complete LevelDataContext structure (128 bytes, all fields documented)
 > - Asset ID mapping table (LoadAssetContainer)
 > - Playback sequence modes and string markers
@@ -2289,7 +2289,7 @@ Offset  Size  Field         Description
 | `FUN_8007b7a8` | Returns entity count (`TileHeader + 0x1E`) |
 | `FUN_8007b7bc` | Returns entity data pointer (`LevelDataContext + 0x38`) |
 | `FUN_80024dc4` | Entity loader - copies 24-byte entities to linked list at param+0x28 |
-| `InitializeAndLoadLevel` @ 0x8007d854 | Calls entity loader during level init |
+| `InitializeAndLoadLevel` @ 0x8007d1d0 | Calls entity loader during level init |
 
 ### Entity Type → Sprite ID Mapping
 
@@ -2698,3 +2698,419 @@ Resolution belongs in the per-doc `review-docs` loop (Ghidra now available on
 :8089): decompile `0xADDR`, compare its behavior to the doc's surrounding
 description, then fix the wrong half. (Already resolved in this pass:
 `UpdateCameraPosition`→`UpdateCameraPositionSmooth @0x800233c0` — Ghidra-verified.)
+
+
+## Doc↔code name/address drift — bulk catalog (audit 2026-06-29)
+
+An automated audit of all docs against `symbol_addrs.txt` / `src` / `include`
+surfaced **94** further `Name @ 0xADDR` or behavior claims that need
+Ghidra/disassembly to resolve: the doc and the symbol table disagree, and names
+alone can't say which side drifted (same caveat as the 12-item table above). Each
+row is a per-doc review item — decompile the address, compare to the doc's prose,
+then fix the wrong half. Mechanically-safe fixes from the same audit were already
+applied; these are the judgment calls that remain. Grouped by file.
+
+### `docs/ANCIENT_NOTES.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| GetMovieFilename \| 0x8007ADC8 \| 0xF38+n (mode) \| 0xF94+n (index) \| Movie table \| \| GetMovieUnknown00 \| 0x80… | symbol_addrs.txt: 0x8007ADC8 = GetCurrentMovieFilename (doc calls it GetMovieFilename); 0x8007AE14 = GetMovieFrameField00 (doc calls it GetMovieUnknown00). The address… |
+
+### `docs/C_MIGRATION_GUIDE.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | \| `GetAssetCount` \| 0x8007b4d4 \| 20 \| Very simple \| | symbol_addrs.txt has `GetAssetCount = 0x8007ACDC; // size:0x14` (size 0x14 = 20, matching the doc's size column). The doc's address 0x8007b4d4 is not owned by any symb… |
+
+### `docs/PASSWORD_SYSTEM_ANALYSIS.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | \| `DecrementPlayerLives` \| 0x80081e84 \| Lives management \| | Address 0x80081E84 is owned by ClearAlternateEntitySpawnFlag in symbols.txt, and no symbol named DecrementPlayerLives exists. Cannot determine from names alone whether… |
+| stale-name | \| `ResetPlayerUnlocksByLevel` \| 0x80026162 \| Reset powerups by level \| | Neither the name ResetPlayerUnlocksByLevel nor the address 0x80026162 appears in symbols.txt. Unverifiable against the curated symbol set; flag for Ghidra confirmation. |
+
+### `docs/PHYSICS_QUICK_REFERENCE.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | // Verified from EntityFallingGravityWithCollision @ 0x8003dad8 | No symbol named EntityFallingGravityWithCollision exists in symbols.txt, and address 0x8003DAD8 is not owned by any symbol there. The 'Verified from <name> @ <addr>' c… |
+
+### `docs/README.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | \| 0x800AE3E0 \| blbHeaderBuffer \| BLB header loaded at game boot \| \| 0x8009DCC4 \| LevelDataContext \| Level load… | None of these four data-symbol names (blbHeaderBuffer, LevelDataContext, g_GameBLBFile, g_GameBLBSector) appear in symbol_addrs.txt, and none of the four addresses (0x… |
+
+### `docs/SOURCE_STRUCTURE_PLAN.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | │   └── camera.c                  # UpdateCameraPosition @ 0x80023DBC, scrolling | 0x80023DBC is owned by SetCameraPositionDirect in symbols.txt; no symbol named UpdateCameraPosition exists (nearest UpdateCameraPositionSmooth = 0x800233C0). Same name… |
+
+### `docs/analysis/asset-identification/family-identifications.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | **ALIAS cluster** (all 3468 B, byte-identical, +`0x326e0410`); `ProjectileState_HomingActiveVariant2` | family-identifications.md attributes the head-shooter-monkey projectile id 0x410808f9 to ProjectileState_HomingActiveVariant2 (also at line 152), but family-structure-… |
+
+### `docs/analysis/asset-identification/frame-event-breakpoint-plan.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| `0x182D840C` \| `0x8005DEFC` \| PlayerCallback_CheckpointSaveAndSpawnHUD (also `0x8006DE60` ScaleBoundsAndCollisio… | No symbol named 'ScaleBoundsAndCollision' exists in symbol_addrs.txt; the closest is PlayerCallback_ScaleBoundsAndCollision (= 0x800622D0). The bp address 0x8006DE60 c… |
+
+### `docs/analysis/asset-identification/sprite-id-table-8009b144.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | The access pattern is real. `InitAlternateEntity @0x80033dd4` (asm `0x80033dc0`): | InitAlternateEntity is at 0x80033D3C in live symbol_addrs.txt (= 0x80033D3C; // size:0x120), not 0x80033dd4 and not 0x80033dc0. Both cited addresses are unassigned (no… |
+
+### `docs/analysis/binary-layout-findings.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x80078200 \| 5,180 \| CreateBossPlayerEntity \| | Address 0x80078200 is owned by 'CreateResultsScreenEntity = 0x80078200; // size:0x143C' (0x143C = 5180 bytes, matching the size column). No symbol named CreateBossPlay… |
+
+### `docs/analysis/function-batches-to-analyze.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | \| 0x80020848 \| LoadBLBHeader \| ✅ Already named \| 30 \| Load BLB header \| | Ground truth (symbol_addrs.txt): LoadBLBHeader = 0x800208B0 (size 0xC4), while 0x80020848 is owned by a different named symbol BLB_ReadSectorsWrapper = 0x80020848 (siz… |
+| stale-address | \| 0x8007cd34 \| InitializeAndLoadLevel \| ✅ Already named \| 200 \| Main level loader \| | Ground truth: InitializeAndLoadLevel = 0x8007D1D0 (size 0x6D0), while 0x8007CD34 is owned by a different named symbol InitGameState = 0x8007CD34 (size 0x28C). The sibl… |
+| stale-address | \| 0x8007f270 \| LoadLevelSpriteAssets \| ✅ Already named \| 80 \| Load sprites/sequences \| | Ground truth: LoadLevelSpriteAssets = 0x80081BAC (size 0x60 = 96 bytes). 0x8007F270 is NOT owned by any symbol in symbol_addrs.txt (unassigned). Name is clearly descri… |
+| stale-address | \| 0x8007ca60 \| StartCDAudioForLevel \| ✅ Already named \| 15 \| Start CD music for level \| | Ground truth: StartCDAudioForLevel = 0x8007CA9C (size 0x84). 0x8007CA60 is unassigned and falls inside SetVoicePanning's range (SetVoicePanning = 0x8007CA28, size 0x74… |
+| stale-address | \| 0x8007c7e0 \| StopAllSPUVoices \| ✅ Already named \| 6 \| Stop all 24 voices \| | Ground truth: StopAllSPUVoices = 0x8007C7EC (size 0x2C), not 0x8007C7E0. 0x8007C7E0 is unassigned (between StopSPUVoice=0x8007C7B8 and StopAllSPUVoices=0x8007C7EC). Sm… |
+
+### `docs/analysis/unconfirmed-findings.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| decomp-status | ## Doc↔symbol_addrs address/name drift (re-review 2026-06-29, Ghidra-needed) | This bottom table (lines 2671-2700) is NOT stale: I verified all 12 rows against symbol_addrs.txt and each is internally accurate (e.g. CollisionCheckWrapper lives at … |
+
+### `docs/ghidra/struct-inventory.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| `0x800A595B` \| `g_SkipVSync` \| `u8` \| | symbol_addrs.txt assigns 0x800A595B to g_SwapInFlight ('byte flag, nonzero while a buffer swap is queued'), not g_SkipVSync. The doc records a Ghidra-session rename to… |
+
+### `docs/ghidra/struct-workflow.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | Player state structure initialized by initPlayerState @ 0x8001F3B4 | symbol_addrs.txt has initPlayerState = 0x800260D0 (size 0x8C). Address 0x8001F3B4 is unassigned in symbol_addrs.txt. The doc cites 0x8001F3B4 in two places (line 29 'd… |
+
+### `docs/gist/asset-system/SESSION14_audio_banks.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | ## g_SoundTable layout (UploadAudioToSPU @ 0x8007bfb8) | symbol_addrs.txt has `UploadAudioToSPU = 0x8007C088`, not 0x8007bfb8. Address 0x8007BFB8 is owned by a DIFFERENT symbol: `InitSPUDefaults = 0x8007BFB8`. The doc body a… |
+
+### `docs/gist/asset-system/SESSION24_enemy_ai.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | InitGroundPatrolEnemy 0x8002ea3c (Clay Keeper, Loud Mouth) · InitEnemyEntityWithAI 0x8004f8dc · | symbol_addrs.txt maps 0x8002EA3C to `InitPhartHeadCollectible` (a pickup-collectible init, surrounded by other Collectible* inits), NOT a ground-patrol enemy. The name… |
+
+### `docs/newly-discovered-functions-2026-01-19.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x8004c464 \| EntityDestructor_WithVoiceReset \| Resets voice ID to -1 before destroying \| | symbols.txt has JoeHeadJoeBossDestructor = 0x8004C464 (spelled JoeHeadJoeBoDetructor), not EntityDestructor_WithVoiceReset. Same address, different name. Many other ad… |
+
+### `docs/plans/main-and-libs-extraction.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x80082E90 \| 0x73690 \| 0x28 \| `DestroySpecificEntity` \| Medium \| | 0x80082E90 is owned by `DestroyStaticGameState = 0x80082E90; // size:0x28`. The name 'DestroySpecificEntity' does not exist anywhere in symbol_addrs.txt or src/. Per c… |
+| stale-name | \| 0x8008E6E0 \| `__main` \| LIBS \| C runtime init \| | 0x8008E6E0 is owned by `main_8008E6E0 = 0x8008E6E0; // size:0x70` (an auto-placeholder name); '__main' is not present in symbol_addrs.txt. The doc may be semantically … |
+| stale-name | - `GetLevelDisplayName` (0x8007A9E8, 32 bytes) - trivial | 0x8007A9E8 is UNASSIGNED in symbol_addrs.txt (no symbol owns that address). 'GetLevelDisplayName' is not present either; the closest real symbol is `GetCurrentLevelDis… |
+
+### `docs/reference/entity-event-ids.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | \| 3 \| Game-progression notification (sent to **GameState**'s event slot @ +0x08/+0x0C) \| `TriggerCollectible100CTi… | `InvokeGameStateCallback` appears nowhere in /tmp/docaudit/symbols.txt or live symbol_addrs.txt. Address 0x80034B2C is not owned by any symbol (unassigned; nearest sym… |
+
+### `docs/reference/entity-types.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | \| 2 \| Green Bullets \| 5,727 \| Collectible ammunition/bullets \| 0xe8628689 \| | Cross-doc identity conflict on BLB type 2. entity-types.md calls type 2 'Green Bullets' (sprite 0xe8628689); items.md (Clay section) calls type 2 'Clay (Clayball)' wit… |
+
+### `docs/reference/functions-complete.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | \| 0x80020974 \| **AddToZOrderList** \| Add entity to z-order list \| 100% \| | symbol_addrs.txt: AddToZOrderList is actually at 0x80020F68; address 0x80020974 is owned by DestroyEntity. game-functions.md correctly lists AddToZOrderList @ 0x80020F… |
+| stale-address | \| 0x80020a1c \| **AddToUpdateQueue** \| Add entity to update queue \| 100% \| | symbol_addrs.txt: AddToUpdateQueue is actually at 0x80021190; address 0x80020A1C is owned by RemoveFromUpdateQueue. game-functions.md correctly lists AddToUpdateQueue … |
+| stale-address | \| 0x80039128 \| PlayMovieFromCD \| Play external STR movie \| 100% \| | symbol_addrs.txt: PlayMovieFromCD is at 0x80039150; address 0x80039128 is owned by CdPausePlayback. Clean-room: 0x80039128 is owned by another named function, so canno… |
+| stale-name | \| 0x80019650 \| GetLayerProperty \| Get layer field \| 95% \| | symbol_addrs.txt: address 0x80019650 is owned by GetSpriteFrameDataByIndex; no symbol GetLayerProperty exists. The doc's name has been superseded (and the 'layer' desc… |
+| stale-address | \| 0x80019700 \| **ClearAllLayerRenderSlots** \| Initialize 20 layer slots \| 100% \| | symbol_addrs.txt: ClearAllLayerRenderSlots is at 0x80018D54; address 0x80019700 is owned by ClearAllLayerRenderSlots_CrtInit. Same base name, different address/variant… |
+
+### `docs/reference/game-functions.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x80052678 \| InitEntity_a89d0ad0 \| Unknown entity \| | symbol_addrs.txt: address 0x80052678 is owned by InitAuraEffectAtPlayer (size 0x2D4). There is no symbol InitEntity_a89d0ad0. The doc's generic InitEntity_<hash> place… |
+
+### `docs/reference/items.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | - Init Callback: `EntityType008_InitCallback` @ 0x80081504 (empty stub) | Address 0x80081504 is owned by EntityType008_KloggCatchableBall_Init (size 0x8, an empty stub) in symbol_addrs.txt; there is no symbol named EntityType008_InitCallback… |
+| stale-name | - Init Callback: `EntityType095_InitCallback` @ 0x800814A4 | Address 0x800814A4 is owned by EntityType095_SoundEmitterPanning_Init (size 0x60) in symbol_addrs.txt; there is no symbol named EntityType095_InitCallback. The doc's g… |
+
+### `docs/reference/physics-constants.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | \| **Jump Sound** \| `0x248E52` \| Played on jump \| Line 31589 \| | include/Game/asset_ids.h line 106 defines 0x00248e52 as FX_KLAY_RUN_FAST (a run/footstep SFX), not a jump sound. asset-hash-ids.md round 3 calls 0x00248e52 'jump-sound… |
+| false-claim | if (g_DefaultBGColorB & entity_input_flags) { | This pseudocode uses g_DefaultBGColorB (defined in game-functions.md as the 'Default BG blue component', 1 byte at 0x800A5772) as a bitmask ANDed with entity input fla… |
+
+### `docs/reference/unknown-functions.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x80081c0c \| `GetLevelSoundTableEntry` \| Sound lookup table accessor \| | Address 0x80081C0C is now owned by a differently-named, semantically-different function: live symbol_addrs.txt line 1825 `GetSlopeHeightAtSubpixel = 0x80081C0C` (size … |
+
+### `docs/sessions/2026-01-19-function-naming-complete.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | ### Sine/Cosine Lookup Table - **Address**: 0x8009c09c | No symbol exists at 0x8009C09C in symbol_addrs.txt (grep '= 0x8009C09C;' returns nothing), nor a CalculateSineValue symbol (grep '^CalculateSineValue =' returns nothin… |
+
+### `docs/systems/camera.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | \| `+0x12A` \| 1 \| `screen_offset` \| Screen offset parameter \| | include/Game/game_state.h labels offset 0x12A as 'glide_boss_flag' (/* 0x12A */ u8 glide_boss_flag; /* Glide/boss/FINN flag (zeroed in SpawnPlayerAndEntities) */), not… |
+
+### `docs/systems/checkpoint-system.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | ### ClearSaveSlotFlags @ 0x80081E84  **Address**: `0x80081E84` (line 42491 in decompiled source)   **Purpose**: Clear… | Address 0x80081E84 is owned by `ClearAlternateEntitySpawnFlags` (symbol_addrs.txt), implemented in src/entinit.c:942 as a loop that zeroes a `spawned` byte across an a… |
+| stale-address | \| `RemoveFromTickList` \| 0x80021190 \| Remove entity from tick list \| | symbol_addrs.txt has RemoveFromTickList = 0x80021D30. Address 0x80021190 is owned by a different symbol, `AddToUpdateQueue`. The doc's own prose also calls RemoveFromT… |
+
+### `docs/systems/collectibles/COLLECTIBLES_COMPLETE.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| `AdjustPlayerStats` \| 0x80026954 \| +0x1a, +0x1b \| 3, 48 \| | 0x80026954 is owned by 'AwardSwirlyQsAndHamsters' in symbol_addrs.txt; the name 'AdjustPlayerStats' does not exist anywhere in symbol_addrs.txt. The address is correct… |
+| stale-name | - **Callback**: `TriggerCollectible100DTickCallback` @ 0x8002f274 | 0x8002f274 is owned by 'CollectibleScaleResetTickCallback' in symbol_addrs.txt; the name 'TriggerCollectible100DTickCallback' does not exist in symbol_addrs.txt (its s… |
+| stale-name | \| **11** \| Extra Life (Klaymen's Head) \| `0xa9240484` \| +0x11 \| 99 \| `InitTransparentDecorEntity` \| | 'InitTransparentDecorEntity' does not exist as a symbol in symbol_addrs.txt (grep -i 'InitTransparentDecorEntity' returns nothing). Every other Init* function in this … |
+
+### `docs/systems/combat-system.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | From `ProjectileCollisionCallback` @ 0x80052adc: | symbols.txt names 0x80052ADC as ProjectileKeyframeEventHandler, not ProjectileCollisionCallback. The whole 'Projectile vs Enemy Collision' subsection (lines 603-620) a… |
+| stale-name | 5. Set recovery callback (`PlayerCallback_800650c4`) | symbols.txt names 0x800650C4 as PlayerCallback_FallingPhysicsMain ('PlayerCallback_FallingPhyicMain'). The doc repeatedly (lines 124, 422, 528) labels 0x800650c4 the d… |
+
+### `docs/systems/demo-attract-mode.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| other | **The demo replay data is stored in Asset 700 (0x2BC) in the tertiary segment (stage0).**  ### Asset 700 = Demo Repla… | The committed header include/Game/sound.h comment still states 'Asset 700 = SPU DMA audio data (LevelDataContext+0x54 / ctx[21])'. The demo doc claims (2026-01-19, wit… |
+
+### `docs/systems/enemies/RIGOROUS_ENTITY_ANALYSIS.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 5 \| 0x8007f7b0 \| EntityType005_FlyingEnemy_Init \| InitGenericSpriteEntity \| Flying enemy variant \| \| 6 \| 0x… | Addresses match symbols.txt (0x8007F7B0, 0x8007F830) but the names/purposes drifted: symbols.txt has EntityType005_MovingPlatformA_Init and EntityType006_MovingPlatfor… |
+| stale-name | **Pattern**: All are enemy clusters (Clay Keeper, Loud Mouth, Mental Monkey variants). All vulnerable to butt-bounce. | Doc claims Types 17-23 are 'all enemy clusters'. symbols.txt shows a mix at those exact addresses: EntityType017_EnemyCluter_Init (0x8007F930), EntityType018_EnemyClut… |
+| stale-name | \| 7 \| 0x80080408 \| EntityType007_ItemCollectible_Init \| InitRandomColorDecorEntity \| Colored decoration/collecti… | Init-function names InitRandomColorDecorEntity and InitTransparentDecorEntity do not exist anywhere in symbols.txt (only InitPlatformDecorEntity @ 0x8002DEC0 exists; n… |
+
+### `docs/systems/enemies/type-002-clayball.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 2: Clayball ... **Callback**: 0x80080328 ... **Sprite ID**: 0x09406d8a ... **Count**: 5,727 instances (… | Two newer ground-truth sources both identify internal Type 2 as Green Bullet, not Clayball: (1) symbols.txt has 'EntityType002_GreenBullet_Init = 0x80080328' (matches … |
+
+### `docs/systems/enemies/type-005-012-collectibles.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | ## Type 5 - Collectible A  **Callback**: 0x8007f7b0   **Pattern**: Stationary collectible   **Behavior**: Similar to … | Callback 0x8007F7B0 matches but symbols.txt names it EntityType005_MovingPlatformA_Init (not a collectible). Likewise Type 6 (0x8007F830 = EntityType006_MovingPlatform… |
+
+### `docs/systems/enemies/type-008-item-pickup.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 8: Item Pickup ... **Callback**: 0x80081504 ... **Sprite ID**: 0x0c34aa22 | symbols.txt has 'EntityType008_KloggCatchableBall_Init = 0x80081504' (matches doc callback). The inferred symbol name 'KloggCatchableBall' (a boss-fight object) disagr… |
+
+### `docs/systems/enemies/type-010-interactive-object.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Callback**: 0x8007f244   **Sprite ID**: Unknown (needs extraction)   **Category**: Interactive Object | Callback address 0x8007F244 matches but symbols.txt names it EntityType010_EggBeater_Init, which reads like an enemy/object named 'EggBeater', whereas the doc frames T… |
+
+### `docs/systems/enemies/type-025-enemy-a.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | # Entity Type 25: EnemyA (Ground Patrol) ... EnemyA is a standard ground-based enemy that patrols horizontally ... **… | Three ground-truth sources identify internal Type 25 as a COLLECTIBLE (Phart Head), not a ground-patrol enemy: (1) symbols.txt 'EntityType025_PhartHeadCollectible_Init… |
+
+### `docs/systems/enemies/type-026-029-030-enemies.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | ## Type 30 - Enemy E  **Callback**: 0x80080a98   **Sprite ID**: Unknown   **Behavior**: Sequential with Type 29 | Callback 0x80080A98 matches but symbols.txt names it EntityType030_CollectibleAlt_Init (a collectible), not an enemy. Similarly the doc's 'Type 29 - Enemy D' (0x800806… |
+
+### `docs/systems/enemies/type-028-platform-a.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 28: Platform A (Moving Platform) ... **Callback**: 0x80080638 ... Moving platforms that carry the playe… | symbols.txt has 'EntityType028_GreenHeart_Init = 0x80080638' (matches doc callback 0x80080638). docs/reference/official-enemy-names.md line 167 lists 'Green Hearts \| … |
+
+### `docs/systems/enemies/type-031-036-object-variants.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Callbacks**: 0x80080af8 (31-33), 0x80080b60 (34-36)   **Category**: Interactive Objects | Both callback addresses match symbols.txt: 0x80080AF8 = EntityType031_032_033_ScaledMovingPlatform_Init, 0x80080B60 = EntityType034_035_036_TriggerPlatform_Init. Curre… |
+
+### `docs/systems/enemies/type-037-041-mechanisms.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Callbacks**: 0x80080bc8 (37-38), 0x80080c8c (39), 0x80080cfc (40), 0x80080d6c (41) | Callback addresses all match symbols.txt, but the inferred identities conflict with current symbol names: 0x80080bc8 = EntityType037_038_DirectionalScaled_Init (doc: '… |
+
+### `docs/systems/enemies/type-042-portal.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 42: Portal (Level Exit) ... **Callback**: 0x80080ddc (shared with particle types) | symbols.txt has 'EntityType042_thru_060_SnoBlo_Init = 0x80080DDC' (matches doc callback). The current symbol names this family 'SnoBlo', not 'Portal'. The doc's 'share… |
+
+### `docs/systems/enemies/type-045-message.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 45: Message Box ... **Callback**: 0x80080f1c | symbols.txt has 'EntityType045_BounceClay_Init = 0x80080F1C' (matches doc callback 0x80080f1c). The inferred symbol name 'BounceClay' disagrees with this doc's 'Messag… |
+
+### `docs/systems/enemies/type-060-particle.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 60: Generic Particle ... **Callback**: 0x80080ddc | symbols.txt has 'EntityType042_thru_060_SnoBlo_Init = 0x80080DDC' (matches doc callback; the '042_thru_060' span includes type 60, consistent with the doc's shared-cal… |
+
+### `docs/systems/enemies/type-061-sparkle.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | # Entity Type 61: Sparkle Effect ... **Callback**: 0x80080718 ... **Sprite ID**: 0x6a351094 | symbols.txt has 'EntityType061_UnivereEnema_Init = 0x80080718' (matches doc callback). The inferred symbol name 'UnivereEnema' (Universe Enema, a player powerup) disag… |
+
+### `docs/systems/enemies/types-043-044-053-055-portal-particle-variants.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Shared Callback**: 0x80080ddc   **Category**: Visual Effects / Interactive Objects   **Status**: ⚠️ Variant analysi… | Callback 0x80080DDC matches and is shared, but symbols.txt names it EntityType042_thru_060_SnoBlo_Init ('SnoBlo'), spanning types 42-60. The doc frames the callback as… |
+
+### `docs/systems/enemies/types-086-088-variant-group-a.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | **Category**: Unknown (likely decorations or collectibles) | Callback 0x8007F050 matches but symbols.txt now names it EntityType086_087_088_InviibleHazard_Init ('InvisibleHazard'), i.e. a hazard, not a decoration/collectible. Th… |
+
+### `docs/systems/enemy-ai-overview.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | \| `InitGroundPatrolEnemy` \| 0x8002ea3c \| Initialize ground-based patrol enemies (Clay Keeper, Loud Mouth) \| | symbol_addrs.txt has no symbol named InitGroundPatrolEnemy at all. Address 0x8002EA3C is owned by `InitPhartHeadCollectible` (a collectible item init, size 0x200), not… |
+| false-claim | \| `EntityType025_GroundPatrolEnemy_Init` \| 0x800805c8 \| Type 25 factory callback \| | Address 0x800805C8 is owned by `EntityType025_PhartHeadCollectible_Init` (symbol_addrs.txt) and listed as `EntityType025_PhartHead_Init` / Collectible in docs/referenc… |
+| false-claim | \| `EntityType025_GroundPatrolEnemy_Init` \| 0x800805c8 - EnemyA (ground patrol) | In the 'Entity Callback Table Reference / Confirmed Enemy Types' section the doc lists 'Type 25 @ 0x800805c8 - EnemyA (ground patrol)'. Ground truth (symbol_addrs.txt:… |
+| false-claim | **Source**: Ghidra decompilation + Entity callback table analysis ... ✅ **InitGroundPatrolEnemy decompiled** | Analysis Status section claims 'InitGroundPatrolEnemy decompiled', but no such symbol exists. The address it cites (0x8002EA3C) is InitPhartHeadCollectible. The claime… |
+
+### `docs/systems/entities.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | MarkEntityForDeferredRemoval @ 0x80020D74 | symbols.txt has no symbol named MarkEntityForDeferredRemoval, and 0x80020D74 is unassigned (nearest DeferredEntityRemoval = 0x80020C74). Both the name and the address … |
+| stale-name | Event: EntityFollowPathWithWrapping @ 0x80055c70 | symbols.txt: EntityFollowPathWithWrapping = 0x8003CC60 (NOT 0x80055c70). 0x80055c70 is owned by InterpolateTimedPathPosition (symbol_addrs.txt: 'InterpolateTimedPathPo… |
+| stale-name | \| `UpdateEntityPathWithWrapping` \| 0x80055c70 \| Path with wraparound at endpoints \| | 0x80055c70 is owned by InterpolateTimedPathPosition (symbol_addrs.txt). The name UpdateEntityPathWithWrapping does not exist in symbols.txt. Same address as the Entity… |
+| stale-name | **Init Function**: `InitGroundPatrolEnemy` @ 0x8002ea3c | symbols.txt: 0x8002EA3C is owned by InitPhartHeadCollectible (symbol_addrs.txt: 'InitPhartHeadCollectible = 0x8002EA3C; // size:0x200'). The name InitGroundPatrolEnemy… |
+| stale-name | \| `EntityType027_PathEnemy_Init` \| 0x8007f354 \| Type 27 - Path enemy \| | symbols.txt: 0x8007F354 is owned by EntityType027_FlyingEnemyVariant_Init (symbol_addrs.txt: 'EntityType027_FlyingEnemyVariant_Init = 0x8007F354; // size:0x88'). Doc n… |
+| stale-name | \| `EntityType070_PathDecor_Init` \| 0x800807f8 \| Type 70 - Path decoration \| | symbols.txt: 0x800807F8 is owned by EntityType070_HamsterShield_Init (symbol_addrs.txt: 'EntityType070_HamsterShield_Init = 0x800807F8; // size:0x18'). Doc name Entity… |
+| stale-address | \| `InitPathFollowEntityAlt` \| 0x800335d8 \| Alternate path init \| | symbols.txt: InitPathFollowEntityAlt = 0x800335A4 (symbol_addrs.txt size:0x13C). The cited 0x800335d8 is UNASSIGNED (no owner). Name owned by 0x800335A4, cited address… |
+| stale-name | ### Entity Processing Loop @ 0x80020b34 | symbols.txt: 0x80020B34 is owned by EntityTickLoopWithCamera (NOT EntityTickLoop; EntityTickLoop = 0x80020E1C). src/blb.c defines both as distinct functions (line 130 … |
+
+### `docs/systems/entity-init-architecture.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | \| InitSuperWillieCollectible \| 0x8003E0FC \| Super Willie heads \| | symbol_addrs.txt has 'InitSuperWillieCollectible = 0x8002F73C' while address 0x8003E0FC is owned by a DIFFERENT named function ('InitSnoBloEnemy = 0x8003E0FC' in /tmp/… |
+
+### `docs/systems/game-loop.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| BOSS \| 0x2000 \| Boss fights \| `CreateBossPlayerEntity` @ 0x80078200 \| | symbols.txt: 0x80078200 is owned by CreateResultsScreenEntity (symbol_addrs.txt: 'CreateResultsScreenEntity = 0x80078200; // size:0x143C'). The name 'CreateBossPlayerE… |
+
+### `docs/systems/gamestate-field-analysis.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Source:** Boss AI callbacks (e.g., `BossKloggCallback_BeamAttack` @ 0x80067F98) | No symbol named BossKloggCallback_BeamAttack exists anywhere (grep of symbol_addrs.txt, src, include returned only this doc). Address 0x80067F98 lies between PlayerSta… |
+
+### `docs/systems/hud-system-complete.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-address | **Function**: InitTimerDisplayEntity @ 0x80026e3c (line 10351) | symbol_addrs.txt has InitTimerDisplayEntity = 0x80027CF4. Address 0x80026e3c is not a symbol start; it falls inside InitCountdownTimerEntity (0x80026DF8, size 0x13C, e… |
+
+### `docs/systems/menu-system-complete.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x80080948 \| `EntityType079_RandomizedMenu_Init` \| Type 79 init \| \| 0x800809b8 \| `EntityType080_TimerMenu_Ini… | symbols.txt assigns these addresses to entirely different, non-menu names: 0x80080948 = EntityType081_PathDecor2_Init, 0x800809b8 = EntityType083_InteractiveDecor_Init… |
+
+### `docs/systems/movie-cutscene-system.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| `GetMovieUnknown00` \| 0x8007ae14 \| Get unknown field at offset 0x00 \| | Address 0x8007AE14 is owned by `GetMovieFrameField00` (symbol_addrs.txt). The doc's name 'GetMovieUnknown00' does not exist as a symbol. Likely just a stale name for t… |
+
+### `docs/systems/password-system.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| `InitPasswordEntry` (FUN_80075ff4) \| 0x80075ff4 \| Create 12 digit sprites + cursor \| | Address 0x80075FF4 is owned by 'InitPasswordDisplayEntity = 0x80075FF4; // size:0x228' in symbol_addrs.txt and src/passwd.c (INCLUDE_ASM 'asm/nonmatchings/passwd', Ini… |
+| false-claim | From `g_pPlayerState` (0x8009DC20): | No symbol at 0x8009DC20 in symbol_addrs.txt (grep '= 0x8009DC20' returns nothing). The nearby tracked global is 'g_GameStateBase = 0x8009DC40; // type:GameState'. The … |
+
+### `docs/systems/player/player-finn.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| false-claim | \| 0x110 \| 1 \| moveFlag \| Set to 1 when forward button pressed \| \| 0x111 \| 1 \| turnFlag \| Set to 1 when turni… | include/Game/entity.h FinnPlayerEntity (size 0x114) defines offset 0x110 as 's32 soundHandle_or_inputFlags' (the last field), with NO field at 0x111. trace-findings.md… |
+
+### `docs/systems/player/player-normal.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Checkpoint Activation (Ma-Bird)** @ 0x8006A214 (`PlayerState_CheckpointActivated`) | Address 0x8006A214 is owned by 'PlayerState_LevelExitTeleporter = 0x8006A214' in symbol_addrs.txt, not 'PlayerState_CheckpointActivated'. The address matches; only the… |
+
+### `docs/systems/player/player-runn.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | **Tick Callback**: LAB_80073a88 (line 36788) | Address 0x80073A88 is owned by 'EntityTick_ScaledSpriteWithSound = 0x80073A88' in symbol_addrs.txt (and it is decompiled - not in asm_stubs.txt). The doc invents the n… |
+
+### `docs/systems/player/player-soar-glide.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | } else if (flags & 0x2000) {         // Boss mode         CreateBossPlayerEntity(...);     } else if (flags & 0x100) { | Describes flag 0x2000 as 'Boss mode' calling CreateBossPlayerEntity. No CreateBossPlayerEntity symbol exists; the only function for flag 0x2000 / address 0x80078200 is… |
+
+### `docs/systems/projectiles.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x8004f2a4 \| `CalculateSineValue` \| Fixed-point sine from 256-entry table at 0x8009c09c \| | symbols.txt names 0x8004F2A4 as ScaleByCosine (stored 'ScaleByCoine' — char-stripping artifact of the distilled list, real symbol is ScaleByCosine). Doc calls it Calcu… |
+| stale-name | \| 0x80052adc \| `ProjectileCollisionCallback` \| Collision detection \| | symbols.txt names 0x80052ADC as ProjectileKeyframeEventHandler. The doc (and combat-system.md line 607) call it ProjectileCollisionCallback. Same address, different in… |
+
+### `docs/systems/sprites.md`
+
+| Kind | Doc claim (quote) | Ground-truth / why flagged |
+|------|-------------------|----------------------------|
+| stale-name | \| 0x8009B508 \| 7 \| g_TempestPulsingMonkeySprites \| InitTempestPulsingMonkey @ 0x8003e0fc \| | symbol_addrs.txt maps 0x8003E0FC to InitSnoBloEnemy ('InitSnoBloEnemy = 0x8003E0FC'). The name 'InitTempestPulsingMonkey' does not appear anywhere in symbol_addrs.txt.… |
+| false-claim | ### Sprite Header (12 bytes)  ``` Offset  Size  Type    Description ------  ----  ----    ----------- 0x00    2     u… | Ground truth include/Game/sprite.h SpriteHeader is 24 bytes (Size: 0x18), with fields type/header_size/frames_end/padding/rle_size/sprite_id/frame_count/padding/format… |
+

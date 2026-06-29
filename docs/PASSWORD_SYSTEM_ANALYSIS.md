@@ -144,7 +144,7 @@ struct GameState {
 | `InitPasswordEntry` (FUN_80075ff4) | 0x80075ff4 | Create 12 digit sprites + cursor |
 | `GetLevelFlagByIndex` | 0x8007aa28 | Check if level is password-selectable |
 | `InitGameState` | 0x8007cd34 | Build password level list |
-| `SetupAndStartLevel` | 0x8007d854 | Load level after validation |
+| `SetupAndStartLevel` | 0x8007d8a0 | Load level after validation |
 | `ResetPlayerCollectibles` | Unknown | Reset player state on password load |
 
 ### Related Functions (For Reference)
@@ -247,7 +247,7 @@ int ValidatePassword(const uint16_t* input) {
 - [Password Screens](analysis/password-screens.md) - BLB container analysis
 - [Password Extraction Guide](analysis/password-extraction-guide.md) - How to extract table
 - [Game Loop](systems/game-loop.md) - Menu system integration
-- [Player System](systems/player-system.md) - Player state structure
+- [Player System](systems/player/player-system.md) - Player state structure
 
 ---
 

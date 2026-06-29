@@ -75,7 +75,7 @@ Ongoing research and unverified findings:
 
 | Document | Description |
 |----------|-------------|
-| [gap-analysis.md](analysis/gap-analysis.md) | Documentation gap analysis (historical) |
+| [KNOWLEDGE_GAPS.md](KNOWLEDGE_GAPS.md) | Knowledge gaps (canonical; absorbed the historical gap-analysis) |
 | [unconfirmed-findings.md](analysis/unconfirmed-findings.md) | Observations awaiting verification |
 | [struct-field-cleanup-2026-06-12.md](analysis/struct-field-cleanup-2026-06-12.md) | Ghidra-backed cleanup of placeholder struct field names |
 
@@ -97,11 +97,8 @@ Ongoing research and unverified findings:
 
 ## Tools
 
-- **`scripts/blb.hexpat`** - ImHex template (source of truth for format)
-- **`tools/blb_viewer/`** - Web-based BLB viewer
+- **`docs/blb.hexpat`** - ImHex template (source of truth for format)
 - **`tools/extract_blb/`** - Python BLB extraction tool
-- **`scripts/extract_sprites_600.py`** - Sprite extraction with palettes
-- **`scripts/extract_all_graphics.py`** - Full tile/layer extraction
 
 ## Related Projects
 

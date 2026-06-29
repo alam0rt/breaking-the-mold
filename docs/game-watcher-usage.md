@@ -300,7 +300,7 @@ All addresses verified against Ghidra decompilation (SLES-01090):
 |--------|---------|-------------|
 | `g_GameStateBase` | 0x8009DC40 | Main GameState structure |
 | `LevelDataContext` | 0x8009DCC4 | GameState+0x84, level context |
-| `g_pPlayerState` | 0x800A5754 | Player save/progression data |
+| `g_pPlayerState` | 0x800A597C | Player save/progression data (pointer to PlayerState struct) |
 | `BLBHeader` | 0x800AE3E0 | Loaded BLB header (4KB) |
 | `EntityCallbackTable` | 0x8009D5F8 | 121 entity type callbacks |
 | `InitializeAndLoadLevel` | 0x8007D1D0 | Main level loader |

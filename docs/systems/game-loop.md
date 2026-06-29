@@ -1192,7 +1192,7 @@ Used during level transitions.
 
 - [Level Loading](level-loading.md) - Asset loading flow
 - [Entities](entities.md) - Entity system details  
-- [Player Animation](player-animation.md) - Player sprite rendering, direction, powerups
+- [Player Animation](player/player-animation.md) - Player sprite rendering, direction, powerups
 - [Game Functions](../reference/game-functions.md) - Complete function list
 
 ## Pause System

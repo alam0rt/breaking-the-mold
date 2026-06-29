@@ -128,6 +128,5 @@ pip install ruamel.yaml
 
 ## Help
 
-- Full guide: `docs/DECOMPILATION_WORKFLOW.md`
-- Improvements doc: `docs/DECOMPILATION_IMPROVEMENTS.md`
+- Full guide: `docs/decompilation-guide.md`
 - Splat wiki: https://github.com/ethteck/splat/wiki

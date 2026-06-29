@@ -364,4 +364,4 @@ To extract actual physics constants:
 
 - [Player System](player-system.md) - State machine overview
 - [Player Normal](player-normal.md) - Normal platforming details
-- [Collision System](collision.md) - Tile collision attributes
+- [Collision System](../collision.md) - Tile collision attributes

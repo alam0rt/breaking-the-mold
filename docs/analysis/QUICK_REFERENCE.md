@@ -58,7 +58,6 @@ echo "[Name] = 0x[ADDR]; /* size:0x[SIZE] */" >> symbol_addrs.txt
 
 - **Full Workflow:** `docs/analysis/ANALYSIS_WORKFLOW.md`
 - **Function Report:** `docs/analysis/ghidra_unknown_functions_report.md`
-- **Session Summary:** `docs/analysis/SESSION_SUMMARY_2026_01_15.md`
 
 ---
 

@@ -294,6 +294,6 @@ Retro-themed bonus content
 
 ## Related Documentation
 
-- [Player System](player-system.md) - How player interacts with entities
+- [Player System](player/player-system.md) - How player interacts with entities
 - [Entity Types Reference](../reference/entity-types.md) - Full callback table
-- [BLB Data Format](../blb-data-format.md) - Entity definition structure
+- [BLB Data Format](../blb/README.md) - Entity definition structure

@@ -22,10 +22,10 @@ Skullmonkeys uses PSX .STR (movie stream) files for FMV cutscenes and intros. Mo
 
 ---
 
-## Movie Table (BLB Header 0xB64-0xCCB)
+## Movie Table (BLB Header 0xB60-0xCCB)
 
-**Location**: BLB Header offset 0xB64  
-**Size**: 13 entries × 0x1C (28) bytes = 360 bytes  
+**Location**: BLB Header offset 0xB60  
+**Size**: 13 entries × 0x1C (28) bytes = 364 bytes  
 **Global**: g_MovieCount = 13
 
 ### Movie Entry Structure (28 bytes)
@@ -115,7 +115,7 @@ Offset  Size  Type      Description
 
 | Function | Address | Purpose |
 |----------|---------|---------|
-| `GetMovieEntryByIndex` | 0x8007acf0 | Returns pointer to MovieEntry at blbHeader + 0xB64 + (index × 0x1C) |
+| `GetMovieEntryByIndex` | 0x8007acf0 | Returns pointer to MovieEntry at blbHeader + 0xB60 + (index × 0x1C) |
 | `GetCurrentMovieReserved` | 0x8007ad30 | Get reserved field for current movie |
 | `GetCurrentMovieFilename` | 0x8007adc8 | Returns ISO path string (e.g., "\\MVLOGO.STR;1") |
 | `GetMovieUnknown00` | 0x8007ae14 | Get unknown field at offset 0x00 |

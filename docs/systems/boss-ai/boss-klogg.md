@@ -304,7 +304,7 @@ func defeat() -> void:
 - [Klogg Analysis](../../KLOGG_ANALYSIS.md) - Discovery documentation
 - [Boss System](boss-system-analysis.md) - Boss architecture
 - [Boss Behaviors](boss-behaviors.md) - All boss summaries
-- [Movies](../../reference/movies.md) - END1, END2 movie data
+- [Movies](../movie-cutscene-system.md) - END1, END2 movie data
 
 ---
 

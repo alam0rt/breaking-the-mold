@@ -6,9 +6,7 @@ tags: [systems, enemies]
 
 # Enemy Types Documentation
 
-**Location**: `docs/systems/enemies/`  
-**Last Updated**: January 15, 2026  
-**Status**: 10 types documented (out of ~30 enemy types)
+**Location**: `docs/systems/enemies/`
 
 ---
 
@@ -16,9 +14,8 @@ tags: [systems, enemies]
 
 This directory contains detailed documentation for individual enemy entity types.
 
-**Total Enemy Types**: ~30 (out of 121 total entity types)  
-**Documented**: 10 types  
-**Coverage**: ~33% of enemies
+**Entity types total**: 121 (see [../../reference/entity-types.md](../../reference/entity-types.md))  
+**Type docs in this directory**: 27 files — 19 single-type (`type-NNN-*.md`) and 8 multi-type (`types-NNN-*.md`) covering grouped/variant entities. The table below lists a curated subset; browse the directory for the full set.
 
 ---
 

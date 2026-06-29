@@ -6,9 +6,7 @@ tags: [systems]
 
 # Skullmonkeys Documentation Index
 
-**Project**: Evil Engine - Skullmonkeys Reverse Engineering  
-**Version**: 2.1  
-**Last Updated**: June 12, 2026
+**Project**: Evil Engine - Skullmonkeys Reverse Engineering
 
 This index provides quick navigation to all documentation organized by category.
 
@@ -16,10 +14,9 @@ This index provides quick navigation to all documentation organized by category.
 
 ## Quick Links
 
-- **[Decomp Strategy](DECOMP_STRATEGY.md)** - Dependency-ordered priority queue for code decomp (NEW)
-- **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand (~85% complete)
+- **[Decompilation Guide](decompilation-guide.md)** - How to add new functions + dependency-ordered decomp priority
+- **[Knowledge Gaps](KNOWLEDGE_GAPS.md)** - What we still don't understand
 - **[BLB Format Overview](blb/README.md)** - Start here for file format
-- **[Decompilation Guide](decompilation-guide.md)** - How to add new functions
 - **[GameState Fields](systems/gamestate-field-analysis.md)** - GameState structure analysis
 - **[Player Callback Inventory](reference/player-callback-inventory.md)** - 128 player-related functions (NEW)
 
@@ -119,8 +116,10 @@ This index provides quick navigation to all documentation organized by category.
 | Document | Description | Status |
 |----------|-------------|--------|
 | [enemy-ai-overview.md](systems/enemy-ai-overview.md) | **Enemy AI patterns and behaviors** | ✅ Good (50%) |
-| [enemies/README.md](systems/enemies/README.md) | **Individual enemy type documentation** | ✅ Good (10 types) |
-| [bosses.md](systems/bosses.md) | **Complete boss reference (5 bosses, 76 functions)** | ✅ Complete |
+| [enemies/README.md](systems/enemies/README.md) | **Individual enemy type documentation** | ✅ Good (27 type docs) |
+| [bosses.md](systems/bosses.md) | **Complete boss reference (5 bosses, 80+ functions)** | ✅ Complete |
+| [boss-ai/boss-klogg.md](systems/boss-ai/boss-klogg.md) | Klogg (final boss) | ✅ Complete |
+| [boss-entity-pattern.md](systems/boss-entity-pattern.md) | Multi-sprite boss init pattern | ✅ Complete |
 | [boss-ai/boss-system-analysis.md](systems/boss-ai/boss-system-analysis.md) | Boss AI system architecture | ✅ Complete |
 | [boss-ai/boss-behaviors.md](systems/boss-ai/boss-behaviors.md) | **Boss behaviors and attack patterns** | ✅ Good (55%) |
 | [boss-ai/boss-shriney-guard.md](systems/boss-ai/boss-shriney-guard.md) | Shriney Guard (tutorial boss) | ✅ Complete |
@@ -131,10 +130,9 @@ This index provides quick navigation to all documentation organized by category.
 
 | Document | Description | Status |
 |----------|-------------|--------|
-| [audio.md](systems/audio.md) | SPU audio sample system | ✅ Complete |
+| [audio.md](systems/audio.md) | Audio/sound system overview (SPU SFX, CD-XA, settings) | ✅ Complete |
 | [audio-functions-reference.md](systems/audio-functions-reference.md) | 6 audio playback functions | ✅ Complete |
 | [sound-effects-reference.md](systems/sound-effects-reference.md) | Sound ID table | ⚠️ Partial |
-| [sound-system.md](systems/sound-system.md) | Sound system overview | ✅ Complete |
 
 ### Input & Menus
 
@@ -202,30 +200,6 @@ This index provides quick navigation to all documentation organized by category.
 | [function-batches-to-analyze.md](analysis/function-batches-to-analyze.md) | Remaining function batches | 📋 Planned |
 | [password-extraction-guide.md](analysis/password-extraction-guide.md) | Password table extraction method | 📋 Planned |
 
-### Historical Archive
-
-**Location**: [`analysis/archive/`](analysis/archive/)
-
-Archived research documents (superseded by current documentation):
-- Gap analyses (5 historical versions)
-- Password system findings (merged into systems/password-system.md)
-- Physics extraction report (merged into reference/physics-constants.md)
-- BLB unknown fields analysis (resolved)
-
----
-
-## Deprecated Documentation
-
-**Location**: [`deprecated/archive/`](deprecated/archive/)
-
-Old documentation superseded by current system docs. Kept for historical reference:
-- Entity system (old) → [systems/entities.md](systems/entities.md)
-- Runtime behavior (old) → [systems/level-loading.md](systems/level-loading.md)
-- Stage loading (old) → [systems/level-loading.md](systems/level-loading.md)
-- BLB format (old) → [blb/](blb/)
-
----
-
 ## Documentation by Topic
 
 ### Understanding the Game Data
@@ -265,44 +239,39 @@ Old documentation superseded by current system docs. Kept for historical referen
 - [Game Functions](reference/game-functions.md) - Important addresses
 - [Entity Types](reference/entity-types.md) - Callback table
 
-**C Code Reference**: [`docs/ghidra/SLES_010.90.c`](ghidra/SLES_010.90.c) (64,363 lines)
+**C Code Reference**: regenerate the Ghidra decompilation export with `make ghidra-export` (no C export is committed to the repo).
 
 ---
 
 ## Documentation Statistics
 
-### By Category
+`docs/` currently holds **223 markdown files** (~60,000 lines). Approximate
+distribution by area:
 
-| Category | Files | Avg Completion |
-|----------|-------|----------------|
-| **Architecture** | 1 | 100% |
-| **BLB Format** | 5 | 98% |
-| **Systems** | 28 | 90% |
-| **Reference** | 10 | 92% |
-| **Analysis** | 3 | 90% |
-| **Guides** | 3 | 100% |
+| Area | Files |
+|------|-------|
+| `systems/` (incl. enemies, player, boss-ai) | ~90 |
+| `analysis/` (incl. asset-identification) | ~37 |
+| `gist/asset-system/` | 32 |
+| `reference/` | 22 |
+| root-level (`docs/*.md`) | 24 |
+| `plans/` | 7 |
+| `blb/` | 6 |
+| `ghidra/` | 5 |
+| `architecture/` | 3 |
+| `archive/sessions/` | 3 |
 
-### By Status
+Per-doc status badges (✅ Complete / ⚠️ Partial / 🔬 Research / 📋 Planned)
+appear in the tables above. Treat them as the author's estimate at time of
+writing, not a measured figure.
 
-| Status | Count | Percentage |
-|--------|-------|------------|
-| ✅ **Complete** (≥95%) | 40 | 80% |
-| ⚠️ **Partial** (50-94%) | 8 | 16% |
-| 📋 **Planned** (<50%) | 2 | 4% |
+### Decompilation progress (ground truth)
 
-### Overall
+Derived from `symbol_addrs.txt` and the `INCLUDE_ASM` count in `src/`:
 
-**Total Documentation Files**: 68 active + 12 archived = 80 total  
-**Overall Completion**: **~92%**  
-**Total Lines**: ~35,000 lines of documentation
-
-### Recent Updates (January 2026)
-
-- **Architecture**: New `memory-layout.md` explaining PSY-Q section organization
-- **Reference**: New `source-structure.md` with compilation unit analysis
-- **Reference**: Updated `data-section-map.md` with Ghidra plate comment annotations
-- **Systems**: Fixed entity struct hierarchy (128-byte base, not 0x44C)
-- **Systems**: Corrected GameState cheat buffer (was mislabeled "Score Display")
+- ~2,270 function-range symbols are named in `symbol_addrs.txt`.
+- **731** functions remain as `INCLUDE_ASM` stubs (not yet byte-matched to C);
+  the rest are decompiled to matching C across the `src/*.c` files.
 
 ---
 
@@ -382,7 +351,7 @@ When adding new documentation:
 1. Add entry to appropriate category above
 2. Update statistics section
 3. Add to "Finding Information" if it's a key document
-4. Update [GAP_ANALYSIS_CURRENT.md](GAP_ANALYSIS_CURRENT.md) if it closes a gap
+4. Update [KNOWLEDGE_GAPS.md](KNOWLEDGE_GAPS.md) if it closes a gap
 
 ---
 
@@ -390,12 +359,6 @@ When adding new documentation:
 
 - **PCSX-Redux**: Emulator with debugging support
 - **Ghidra**: Decompilation tool used for analysis
-- **ImHex**: Template: `scripts/blb.hexpat` (BLB format)
+- **ImHex**: Template: `docs/blb.hexpat` (BLB format)
 - **Repository**: evil-engine (Godot 4.5 C99 core)
-
----
-
-**Last Updated**: January 19, 2026  
-**Maintained By**: Evil Engine Documentation Team  
-**Status**: ✅ **Documentation Consolidated** (Version 2.1)
 

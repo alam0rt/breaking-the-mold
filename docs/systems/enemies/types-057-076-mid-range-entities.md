@@ -6,7 +6,7 @@ tags: [systems, enemies, types, 057, 076, mid, range, entities]
 
 # Entity Types 57-76: Mid-Range Entities
 
-**Entity Types**: 57-59, 62-76 (17 types)  
+**Entity Types**: 57-59, 62-76 (16 active types)  
 **Callbacks**: Various unique (0x8007fdxx - 0x8007ffxx range)  
 **Category**: Mid-range entity types  
 **Status**: ⚠️ Pattern-based analysis

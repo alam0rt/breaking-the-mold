@@ -199,7 +199,7 @@ u8 g_MenuBackgroundColorTable[15] = {
 | 0x8009CC08 | 4 | g_MenuBackgroundSprites | Background sprites |
 | 0x8009CC30 | 48 | g_SPUVoicePitchBuffer | SPU voice pitch save buffer
 
-### Cheat System (0x8009DAE0 - 0x8009D5F8)
+### Cheat System (0x8009DAE0 - 0x8009DBF8)
 
 | Address | Size | Name | Purpose |
 |---------|------|------|---------|

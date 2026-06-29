@@ -703,7 +703,7 @@ if (entity[0x16] == 0x8000) {
 
 - [Player System](player/player-system.md) - Player entity and state
 - [Player Physics](player/player-physics.md) - Knockback physics
-- [Projectile System](projectile-system.md) - Weapon damage
+- [Projectile System](projectiles.md) - Weapon damage
 - [Items Reference](../reference/items.md) - Powerup mechanics
 - [Collision System](tile-collision-complete.md) - Death zones
 

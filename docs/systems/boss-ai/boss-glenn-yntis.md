@@ -200,7 +200,7 @@ func perform_attack() -> void:
 ## Related Documentation
 
 - [Boss Behaviors](boss-behaviors.md) - Boss system overview
-- [Joe-Head-Joe](boss-joe-head-joe.md) - Fully documented reference
+- [Joe-Head-Joe](../../JOE_HEAD_JOE_COMPLETE.md) - Fully documented reference
 - [Level Metadata](../../blb/level-metadata.md) - Boss flags
 
 ---

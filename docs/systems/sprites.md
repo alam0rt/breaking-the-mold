@@ -371,6 +371,6 @@ Each level's tertiary container has different sprites:
 ## Related Documentation
 
 - [Entities](entities.md) - Entity system using sprites
-- [Player Animation](player-animation.md) - Player sprite direction, flipping, powerups
+- [Player Animation](player/player-animation.md) - Player sprite direction, flipping, powerups
 - [Asset Types](../blb/asset-types.md) - Asset 600 details
 - [Rendering Order](rendering-order.md) - Sprite z-ordering

@@ -6,11 +6,14 @@ tags: [knowledge, gaps]
 
 # Knowledge Gaps & Missing Understanding
 
-**Last Updated**: June 12, 2026  
+**Last Updated**: June 29, 2026  
 **Purpose**: Track what we still don't understand about Skullmonkeys
 
-This document consolidates all known gaps in our understanding of the game's internals.
-Items here have been verified as "unknown" after checking existing documentation.
+This is the living, canonical gap tracker. It consolidates all known gaps in our
+understanding of the game's internals (the retired `analysis/gap-analysis.md` and
+`analysis/gaps-we-can-close.md` were merged in here on 2026-06-29). Items here have
+been verified as "unknown" against the live source tree, `symbol_addrs.txt`, and the
+INCLUDE_ASM stub list before being listed.
 
 ---
 
@@ -294,6 +297,92 @@ Layers are rendered in order from GameState lists:
 3. Parallax layers (0x10-0x13): Far background
 4. Standard layers (0x14-0x17): Foreground
 Entities interleave by z_order value (0-65535)
+
+---
+
+## Still-Open Gaps Merged from Historical Analysis (2026-06-29)
+
+Consolidated from the now-retired `analysis/gap-analysis.md` (Jan 13 2026) and
+`analysis/gaps-we-can-close.md` (Jan 15 2026). Those docs are historical: most of
+their "major gaps" (collision system, camera, password encoding, projectiles,
+save/load, input button mappings, animation framework) are now **resolved** in the
+live tree and decompiled — see "Recently Closed Gaps" below and the per-system docs.
+Only the items below were still genuinely open when this was merged, and only these
+were carried forward. Two symbol names from the old docs were **wrong** and are
+corrected here against `symbol_addrs.txt`.
+
+### 11. Byte-Matching Backlog (per-entity AI and tick callbacks)
+**Status**: 🔴 OPEN — the dominant present-day gap  
+**Ground truth (2026-06-29)**: ~731 functions are still `INCLUDE_ASM` stubs (named in
+`asm/nonmatchings/`, not yet matched in C). Many are per-entity tick/state callbacks
+(e.g. `AIEntityRandomBehaviorTick`, `CollectibleTickCallback`, `BossHPBarTickCallback`,
+`DebrisParticlePhysicsTick`). A symbol being **named** in `symbol_addrs.txt` or
+referenced in docs does **not** mean the function is decompiled/matched.
+
+- The old analysis framed this as "individual entity AI = 150+ functions, long-term."
+  That framing holds, but the actionable unit today is **matching the stub**, not just
+  naming it. Use `make decompile FUNC=<name>` / `make diff FUNC=<name>` / `make permuter`.
+- Behavior of large enemy/boss state machines (500-1000 line functions) is partially
+  understood at the system level (see `docs/systems/enemy-ai-overview.md`,
+  `docs/systems/bosses.md`) but the C bodies are not byte-matched.
+
+**Why it matters**: byte-matching the original binary is the project goal; the stub
+count is the real progress metric, not Ghidra naming coverage.
+
+### 12. Animation Callback Message 0
+**Location**: `docs/systems/animation-framework.md` ("Callback Messages")  
+**Status**: 🟡 OPEN (narrow)  
+Message types 1 (frame metadata), 2 (animation complete), and 3 (collision/destruction)
+are understood. **Message 0** is still listed as "needs investigation". To close: grep
+the matched/decompiled callers for `(*callback)(entity, 0, ...)` and inspect what
+triggers it.
+
+### 13. TileHeader field_20
+**Location**: `docs/analysis/unconfirmed-findings.md`, `docs/blb/vestigial-fields-complete.md`  
+**Status**: 🟢 OPEN (polish)  
+1-byte field, values 0-6 observed; 0 on boss levels, varies per stage on regular levels.
+Theory: visual-effect or music-variation index. The accessor is
+`GetTileHeaderWorldIndex @ 0x8007B490` (the old analysis called this
+`GetTileHeaderField08` / `GetTileHeaderWorldIndex` — the former name is wrong; field is
+at struct +0x20). To close: trace the accessor's callers (incl. `InitGameState`) and
+see what consumes the value.
+
+### 14. Slope Subtypes & Slope Physics Response
+**Location**: `docs/systems/collision-complete.md`, `docs/tile-collision-quick-ref.md`  
+**Status**: 🟡 OPEN (~10% of collision system)  
+The tile-attribute switch and the slope-height table (`g_SlopeHeightTable @ 0x8009D228`,
+read via `GetSlopeHeightAtSubpixel @ 0x80081C0C`) are documented. Remaining:
+- Per-value behavior of slope subtypes within the solid range (~0x03-0x3B) needs
+  case-by-case verification.
+- Physics **response** to slopes (angle handling, velocity projection along the slope).
+- **Entity-to-tile** collision as a path distinct from player tile collision.
+
+### Symbol-name corrections (do not reuse the old names)
+The retired analysis docs cited two symbols by wrong names. Authoritative
+(`symbol_addrs.txt`):
+- `0x80070414` = **`SpawnAngledProjectile`** (old doc said `SpawnProjectileEntity`).
+- `0x80081E84` = **`ClearAlternateEntitySpawnFlag`** (old doc said `ClearSaveSlotFlags`;
+  it is **not** a save-system function — the "no save functions named" claim was a
+  misread, and the password/save picture is otherwise resolved below).
+
+### 15. Source files with no dedicated system documentation (2026-06-29)
+
+These `src/*.c` translation units are decompiled (wholly or partly) but have no
+prose system doc explaining what they do; they surface only as one-line rows in
+`architecture/compilation-units.md` or incidental mentions. Worth a `systems/`
+or `reference/` doc each:
+
+| Source file(s) | Subsystem (inferred) | Notes |
+|----------------|----------------------|-------|
+| `vram.c` | VRAM / CLUT / heap slot allocator | `AllocateVRAMSlot`, `AllocateCLUTSlot`, `InitHeapConfig`, `AllocateFromHeap` — every sprite/tile upload depends on it |
+| `prim.c` | GPU primitive pool allocator | `AllocPrim8/20/24/…` ring/pool; `rendering-order.md` covers z-order, not pool lifetime |
+| `layer.c`, `spracc.c`, `sprset.c` | Runtime render-slot / sprite-object accessors | `sprites.md` documents the on-disk RLE format, not the runtime accessor/render-slot layer |
+| `results.c` | End-of-level results / score-tally screen | `hud-system-complete.md` covers in-game HUD only |
+| `gstate.c`, `gstctor.c`, `playdtor.c`, `edtor.c` | GameState + entity construct/destruct lifecycle | `gamestate-field-analysis.md` covers struct layout, not init/teardown or the destructor dispatch table |
+| `vibrate.c` | Controller vibration / rumble | not covered by `input-system-complete.md` |
+| `blbmem.c`, `blbacc.c` | Runtime BLB asset memory lifetime | `blb/` docs cover the on-disk format, not the in-RAM alloc/free path |
+| `effects.c` | Effect / particle entity dispatch | only a planning doc exists (`plans/effects-dispatch-family.md`); promote to a `systems/` doc |
+| `libc.c`, `memmove.c` | Bundled libc/PSY-Q-equivalent primitives | a short reference would stop these being mistaken for game logic |
 
 ---
 

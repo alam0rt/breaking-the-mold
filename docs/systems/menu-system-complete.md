@@ -62,7 +62,7 @@ The MENU level (Level 0) contains 6 stages representing different menu screens. 
 
 ## Stage 1: Main Menu ✅
 
-**Init Function**: FUN_80076ba0 @ 0x80077042 (lines 37042-37155)
+**Init Function**: FUN_80076ba0 @ 0x80076ba0 (lines 37042-37155)
 
 ### Visual Elements Created
 

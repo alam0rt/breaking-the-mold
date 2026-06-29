@@ -321,7 +321,7 @@ either a cut feature, regional difference (NTSC may vary), or embellished docume
 | 0x8006e1d8 | CreateYellowBirdEntity | Create yellow bird / glide trail entity |
 | 0x8005ad54 | SpawnSwirlPortalEntity | Spawn bonus room portal (uses swirl count) |
 | 0x8003cfd8 | InitSpecialPickupEntity | Init special pickup (entity type 118/24) |
-| 0x800418a4 | InitCollectibleEntity | Init collectible entity (sprite 0x88210498) |
+| 0x800418a4 | InitCollectibleEntity_Alt | Init collectible entity (sprite 0x88210498) |
 | 0x80081504 | EntityType008_InitCallback | Item pickup init (empty stub) |
 | 0x800814A4 | EntityType095_InitCallback | "1970" icon init handler |
 | 0x800820B4 | CheckCheatCodeInput | Cheat code entry point (22 handlers) |
