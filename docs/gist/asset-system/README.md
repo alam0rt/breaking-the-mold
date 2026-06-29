@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys (PSX) Asset-Hash Reverse Engineering"
+category: gist/asset-system
+tags: [gist, asset, system]
+---
+
 # Skullmonkeys (PSX) Asset-Hash Reverse Engineering
 
 Cracking the ToolX asset-ID naming scheme for Skullmonkeys (1998, The Neverhood Inc. / EA),

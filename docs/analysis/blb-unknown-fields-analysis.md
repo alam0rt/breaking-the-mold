@@ -1,3 +1,9 @@
+---
+title: "BLB Format Unknown Fields Analysis"
+category: analysis
+tags: [analysis, blb, unknown, fields]
+---
+
 # BLB Format Unknown Fields Analysis
 
 This document summarizes the investigation into unknown/undocumented BLB format fields.

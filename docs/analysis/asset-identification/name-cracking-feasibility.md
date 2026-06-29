@@ -1,3 +1,9 @@
+---
+title: "Name-cracking feasibility: why brute-force / SMT cannot recover sprite names"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, name, cracking, feasibility]
+---
+
 # Name-cracking feasibility: why brute-force / SMT cannot recover sprite names
 
 _2026-06-17. Companion to [`asset-hash-ids.md`](../../reference/asset-hash-ids.md) (the round-by-round

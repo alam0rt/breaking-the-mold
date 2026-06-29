@@ -1,3 +1,9 @@
+---
+title: "Session 13 — Data-table mechanisms: sound remap + entity-type remap"
+category: gist/asset-system
+tags: [gist, asset, system, remap, tables]
+---
+
 # Session 13 — Data-table mechanisms: sound remap + entity-type remap
 
 Found and decoded the two runtime indirection TABLES behind asset usage.

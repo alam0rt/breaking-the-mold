@@ -1,3 +1,9 @@
+---
+title: "Source Code Structure Plan"
+category: root
+tags: [source, structure, plan]
+---
+
 # Source Code Structure Plan
 
 **Status**: Proposed  

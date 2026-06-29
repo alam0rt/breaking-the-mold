@@ -1,3 +1,9 @@
+---
+title: "Cheat Codes"
+category: reference
+tags: [reference, cheat, codes]
+---
+
 Extra Halo	Pause the game and press R1, Circle, Circle, Down, Left, Circle, Right, Down
 Fast Klaymen	Pause the game, then press Left, Square, R2, Circle, R1, Down, Circle, R2.
 Fire Klaymen's Heads	Pause the game, then press Down, Square, Triangle, Down x2, Square x2, Right.

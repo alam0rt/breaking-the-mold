@@ -1,3 +1,9 @@
+---
+title: "Asset Types Reference"
+category: blb
+tags: [blb, asset, types]
+---
+
 # Asset Types Reference
 
 Complete reference for all asset types in the BLB file.

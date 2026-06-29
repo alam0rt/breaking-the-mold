@@ -1,3 +1,9 @@
+---
+title: "lint-clarity follow-up plan"
+category: plans
+tags: [plans, lint, clarity, followup]
+---
+
 # lint-clarity follow-up plan
 
 Date: 2026-06-19

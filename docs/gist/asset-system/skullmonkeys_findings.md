@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys ToolX Asset-Hash Analysis"
+category: gist/asset-system
+tags: [gist, asset, system, skullmonkeys, findings]
+---
+
 # Skullmonkeys ToolX Asset-Hash Analysis
 
 **Date:** 2026-06-17 · **Corpus:** 658 asset ids (`ids.csv`), 127 previously named

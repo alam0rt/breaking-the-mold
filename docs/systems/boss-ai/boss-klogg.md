@@ -1,3 +1,9 @@
+---
+title: "Boss: Klogg (KLOG Level) - FINAL BOSS"
+category: systems/boss-ai
+tags: [systems, boss, ai, klogg]
+---
+
 # Boss: Klogg (KLOG Level) - FINAL BOSS
 
 **Level**: KLOG (Level 24)  

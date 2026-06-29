@@ -1,3 +1,9 @@
+---
+title: "Entity Types 85, 104-105: Variant Group E"
+category: systems/enemies
+tags: [systems, enemies, types, 085, 104, 105, variant, group]
+---
+
 # Entity Types 85, 104-105: Variant Group E
 
 **Entity Types**: 85, 104, 105  

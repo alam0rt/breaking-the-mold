@@ -1,3 +1,9 @@
+---
+title: "Entity Type 3: Green Bullet Pickup"
+category: systems/enemies
+tags: [systems, enemies, type, 003, ammo]
+---
+
 # Entity Type 3: Green Bullet Pickup
 
 **Entity Type**: 3  

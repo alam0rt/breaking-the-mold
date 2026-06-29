@@ -1,3 +1,9 @@
+---
+title: "Session 20 — Level loading & stage-sequence architecture"
+category: gist/asset-system
+tags: [gist, asset, system, level, loading]
+---
+
 # Session 20 — Level loading & stage-sequence architecture
 
 Full trace of how a level loads primary/secondary/tertiary assets and maps between stages.

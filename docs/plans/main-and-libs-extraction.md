@@ -1,3 +1,9 @@
+---
+title: "Extraction Plan: main() and LIBS Functions"
+category: plans
+tags: [plans, main, libs, extraction]
+---
+
 # Extraction Plan: main() and LIBS Functions
 
 **Created:** January 24, 2026  

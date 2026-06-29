@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys (SLES-01090) Documentation"
+category: root
+tags: []
+---
+
 # Skullmonkeys (SLES-01090) Documentation
 
 This documentation covers the reverse engineering of **Skullmonkeys** (PAL SLES-01090) for the PlayStation 1, with a focus on the BLB archive format and game data structures.

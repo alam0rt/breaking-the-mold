@@ -1,3 +1,9 @@
+---
+title: "Decompilation System Improvements - Summary"
+category: root
+tags: [decompilation, improvements]
+---
+
 # Decompilation System Improvements - Summary
 
 ## Problems with Original Approach

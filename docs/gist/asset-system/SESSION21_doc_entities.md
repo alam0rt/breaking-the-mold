@@ -1,3 +1,9 @@
+---
+title: "Session 21 — game-loop.md + entity-identification.md harvest"
+category: gist/asset-system
+tags: [gist, asset, system, entities]
+---
+
 # Session 21 — game-loop.md + entity-identification.md harvest
 
 Mined two RE doc pages (treated as LEADS, not ground truth — conflicting claims dropped).

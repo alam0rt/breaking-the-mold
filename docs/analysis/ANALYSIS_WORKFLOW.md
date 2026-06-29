@@ -1,3 +1,9 @@
+---
+title: "Ghidra Unknown Function Analysis Workflow"
+category: analysis
+tags: [analysis, workflow]
+---
+
 # Ghidra Unknown Function Analysis Workflow
 
 **Created:** 2026-01-15  

@@ -1,3 +1,9 @@
+---
+title: "Plan: de-shelve the GameState event-dispatch family in effects.c"
+category: plans
+tags: [plans, effects, dispatch, family]
+---
+
 # Plan: de-shelve the GameState event-dispatch family in effects.c
 
 Status: proposed (2026-06-20)

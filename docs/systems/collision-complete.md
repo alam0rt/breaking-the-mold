@@ -1,3 +1,9 @@
+---
+title: "Complete Tile Collision Attribute Reference"
+category: systems
+tags: [systems, collision]
+---
+
 # Complete Tile Collision Attribute Reference
 
 **Status**: ✅ Fully documented from Ghidra analysis (2026-01-15)  

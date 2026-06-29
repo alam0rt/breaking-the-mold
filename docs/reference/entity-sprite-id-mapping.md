@@ -1,3 +1,9 @@
+---
+title: "Entity Type → Sprite ID Mapping"
+category: reference
+tags: [reference, entity, sprite, id, mapping]
+---
+
 # Entity Type → Sprite ID Mapping
 
 **Source**: Consolidated from entity-types.md, physics-constants.md, code analysis  

@@ -1,3 +1,9 @@
+---
+title: "Entity Type 28: Platform A (Moving Platform)"
+category: systems/enemies
+tags: [systems, enemies, type, 028, platform]
+---
+
 # Entity Type 28: Platform A (Moving Platform)
 
 **Entity Type**: 28  

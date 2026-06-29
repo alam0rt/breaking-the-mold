@@ -1,3 +1,9 @@
+---
+title: "Using Struct Definitions in Ghidra"
+category: ghidra
+tags: [ghidra, using, structs]
+---
+
 # Using Struct Definitions in Ghidra
 
 ## Overview

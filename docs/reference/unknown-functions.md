@@ -1,3 +1,9 @@
+---
+title: "Unknown Functions Analysis"
+category: reference
+tags: [reference, unknown, functions]
+---
+
 # Unknown Functions Analysis
 
 This document tracks unknown (`FUN_*`) functions discovered via Ghidra analysis and their relationships to documented functions.

@@ -1,3 +1,9 @@
+---
+title: "`0x8009b144` — analysed: NOT a clean 121-type roster (mixed sprite-ID data region)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, sprite, id, table, 8009, 144]
+---
+
 # `0x8009b144` — analysed: NOT a clean 121-type roster (mixed sprite-ID data region)
 
 **2026-06-19.** Investigated the claim that `0x8009b144` is "THE entity-type → sprite-ID lookup,

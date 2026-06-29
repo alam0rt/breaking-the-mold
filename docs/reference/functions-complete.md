@@ -1,3 +1,9 @@
+---
+title: "Complete Function Reference"
+category: reference
+tags: [reference, functions]
+---
+
 # Complete Function Reference
 
 **Last Updated**: January 16, 2026  

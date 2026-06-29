@@ -1,3 +1,9 @@
+---
+title: "Session 30 — Password system: there is NO codec (verified)"
+category: gist/asset-system
+tags: [gist, asset, system, password, codec]
+---
+
 # Session 30 — Password system: there is NO codec (verified)
 
 ## The question: list every password from the code. Answer: not possible — no codec exists.

@@ -1,3 +1,9 @@
+---
+title: "Session Summary: 2026-01-15"
+category: archive/sessions
+tags: [archive, sessions, summary, 2026]
+---
+
 # Session Summary: 2026-01-15
 
 ## Major Achievements

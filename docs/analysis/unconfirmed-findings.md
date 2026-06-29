@@ -1,3 +1,9 @@
+---
+title: "Unconfirmed Findings"
+category: analysis
+tags: [analysis, unconfirmed, findings]
+---
+
 # Unconfirmed Findings
 
 This document contains observations and guesses about the Skullmonkeys data structures

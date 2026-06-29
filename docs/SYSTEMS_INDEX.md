@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys Documentation Index"
+category: root
+tags: [systems]
+---
+
 # Skullmonkeys Documentation Index
 
 **Project**: Evil Engine - Skullmonkeys Reverse Engineering  

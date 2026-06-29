@@ -1,3 +1,9 @@
+---
+title: "Decompilation Strategy"
+category: root
+tags: [decomp, strategy]
+---
+
 # Decompilation Strategy
 
 Currently the only C file in `src/Game/` is `RENDER.c`. The documentation layer is

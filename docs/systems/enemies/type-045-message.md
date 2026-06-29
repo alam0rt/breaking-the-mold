@@ -1,3 +1,9 @@
+---
+title: "Entity Type 45: Message Box"
+category: systems/enemies
+tags: [systems, enemies, type, 045, message]
+---
+
 # Entity Type 45: Message Box
 
 **Entity Type**: 45  

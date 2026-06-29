@@ -1,3 +1,9 @@
+---
+title: "Movie and Cutscene System"
+category: systems
+tags: [systems, movie, cutscene, system]
+---
+
 # Movie and Cutscene System
 
 **Status**: ✅ FULLY DOCUMENTED from C Code  

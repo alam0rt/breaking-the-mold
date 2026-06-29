@@ -1,3 +1,9 @@
+---
+title: "Entity Type 61: Sparkle Effect"
+category: systems/enemies
+tags: [systems, enemies, type, 061, sparkle]
+---
+
 # Entity Type 61: Sparkle Effect
 
 **Entity Type**: 61  

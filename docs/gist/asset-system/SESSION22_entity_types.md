@@ -1,3 +1,9 @@
+---
+title: "Session 22 — entity-types.md: categorization (not naming)"
+category: gist/asset-system
+tags: [gist, asset, system, entity, types]
+---
+
 # Session 22 — entity-types.md: categorization (not naming)
 
 ## Direct answer: helps CATEGORIZE, does NOT give a naming convention

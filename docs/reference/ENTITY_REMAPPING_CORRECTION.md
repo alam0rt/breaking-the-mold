@@ -1,3 +1,9 @@
+---
+title: "Entity Type Remapping Correction"
+category: reference
+tags: [reference, entity, remapping, correction]
+---
+
 # Entity Type Remapping Correction
 
 **Date**: January 20, 2026  

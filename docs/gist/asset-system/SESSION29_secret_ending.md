@@ -1,3 +1,9 @@
+---
+title: "Session 29 — Secret ending system + sprite-ids-complete.md cross-check + subsystem inventory"
+category: gist/asset-system
+tags: [gist, asset, system, secret, ending]
+---
+
 # Session 29 — Secret ending system + sprite-ids-complete.md cross-check + subsystem inventory
 
 ## Secret ending (NEW subsystem)

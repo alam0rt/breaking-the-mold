@@ -1,3 +1,9 @@
+---
+title: "Session 19 — Pickup system + GROUND-TRUTH inventory map (cheat table)"
+category: gist/asset-system
+tags: [gist, asset, system, pickups, inventory]
+---
+
 # Session 19 — Pickup system + GROUND-TRUTH inventory map (cheat table)
 
 ## The cheat-code table = ground-truth item labels (CheckCheatCodeInput @ FUN_80081fd0)

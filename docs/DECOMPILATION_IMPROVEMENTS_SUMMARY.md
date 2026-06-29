@@ -1,3 +1,9 @@
+---
+title: "Decompilation Process Improvements Summary"
+category: root
+tags: [decompilation, improvements, summary]
+---
+
 # Decompilation Process Improvements Summary
 
 **Date**: January 15, 2026  

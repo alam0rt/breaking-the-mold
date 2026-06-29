@@ -1,3 +1,9 @@
+---
+title: "Player Callback Inventory"
+category: reference
+tags: [reference, player, callback, inventory]
+---
+
 # Player Callback Inventory
 
 Complete inventory of all player-related functions extracted from the Ghidra C

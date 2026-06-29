@@ -1,3 +1,9 @@
+---
+title: "Projectile & Weapon System"
+category: systems
+tags: [systems, projectiles]
+---
+
 # Projectile & Weapon System
 
 **Status**: ✅ 95% Complete (all functions named)  

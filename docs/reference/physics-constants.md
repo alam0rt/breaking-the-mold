@@ -1,3 +1,9 @@
+---
+title: "Physics Constants Reference"
+category: reference
+tags: [reference, physics, constants]
+---
+
 # Physics Constants Reference
 
 **Status**: ✅ VERIFIED from decompiled source  

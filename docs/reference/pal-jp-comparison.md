@@ -1,3 +1,9 @@
+---
+title: "PAL vs JP Binary Comparison"
+category: reference
+tags: [reference, pal, jp, comparison]
+---
+
 # PAL vs JP Binary Comparison
 
 Comparison between PAL (SLES-01090) and JP (SLPS-01501) versions of Skullmonkeys.

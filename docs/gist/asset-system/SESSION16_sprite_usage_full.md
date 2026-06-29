@@ -1,3 +1,9 @@
+---
+title: "Session 16 — The entity-type sprite table + exhaustive sprite-usage harvest"
+category: gist/asset-system
+tags: [gist, asset, system, sprite, usage, full]
+---
+
 # Session 16 — The entity-type sprite table + exhaustive sprite-usage harvest
 
 ## 0x8009b144 entity-type->sprite table: confirmed NOT in the .c dump

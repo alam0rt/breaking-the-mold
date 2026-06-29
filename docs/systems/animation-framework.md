@@ -1,3 +1,9 @@
+---
+title: "Animation Framework Architecture"
+category: systems
+tags: [systems, animation, framework]
+---
+
 # Animation Framework Architecture
 
 **Status**: ✅ Updated via Ghidra MCP trace (2026-06-12)

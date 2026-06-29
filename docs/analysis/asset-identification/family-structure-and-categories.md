@@ -1,3 +1,9 @@
+---
+title: "Asset-ID families: structure cracking & categorization (2026-06-16)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, family, structure, categories]
+---
+
 # Asset-ID families: structure cracking & categorization (2026-06-16)
 
 Follow-on to [`docs/reference/asset-hash-ids.md`](../../reference/asset-hash-ids.md). That doc

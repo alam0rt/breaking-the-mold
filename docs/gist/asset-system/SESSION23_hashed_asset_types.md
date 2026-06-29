@@ -1,3 +1,9 @@
+---
+title: "Session 23 — Which asset types use HASHED ids (beyond sprite/audio)?"
+category: gist/asset-system
+tags: [gist, asset, system, hashed, types]
+---
+
 # Session 23 — Which asset types use HASHED ids (beyond sprite/audio)?
 
 Question: are there hash-keyed assets that aren't sprites or audio (CLUT/palette/other graphic)?

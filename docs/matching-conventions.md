@@ -1,3 +1,9 @@
+---
+title: "Matching-hack conventions (how to write byte-matching C without obtuse code)"
+category: root
+tags: [matching, conventions]
+---
+
 # Matching-hack conventions (how to write byte-matching C without obtuse code)
 
 When idiomatic C doesn't byte-match, we reach for "armor" (padding locals,

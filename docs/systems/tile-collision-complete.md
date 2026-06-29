@@ -1,3 +1,9 @@
+---
+title: "Tile Collision — Superseded"
+category: systems
+tags: [systems, tile, collision]
+---
+
 # Tile Collision — Superseded
 
 > **This document was superseded on 2026-04-21 and the content merged into

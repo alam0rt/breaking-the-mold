@@ -1,3 +1,9 @@
+---
+title: "Ghidra Unknown Functions Analysis - Session Summary"
+category: archive/sessions
+tags: [archive, sessions, summary, 2026]
+---
+
 # Ghidra Unknown Functions Analysis - Session Summary
 
 **Date:** 2026-01-15  

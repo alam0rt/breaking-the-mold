@@ -1,3 +1,9 @@
+---
+title: "Binary Layout Analysis Methodology"
+category: analysis
+tags: [analysis, binary, layout, methodology]
+---
+
 # Binary Layout Analysis Methodology
 
 This document describes the process used to analyze the Skullmonkeys (SLES-01090) binary layout for creating accurate splat segment configurations.

@@ -1,3 +1,9 @@
+---
+title: "Ghidra Function Analysis Documentation"
+category: analysis
+tags: [analysis]
+---
+
 # Ghidra Function Analysis Documentation
 
 This directory contains comprehensive documentation for analyzing and decompiling unknown functions in the Skullmonkeys (SLES_010.90) PSX binary.

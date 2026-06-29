@@ -1,3 +1,9 @@
+---
+title: "Entity Type 24: Special Pickup"
+category: systems/enemies
+tags: [systems, enemies, type, 024, special, ammo]
+---
+
 # Entity Type 24: Special Pickup
 
 **Entity Type**: 24  

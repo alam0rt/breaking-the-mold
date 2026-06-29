@@ -1,3 +1,9 @@
+---
+title: "Boss System Analysis — Superseded"
+category: systems/bosses
+tags: [systems, bosses, boss, system, analysis]
+---
+
 # Boss System Analysis — Superseded
 
 > **This document (dated 2026-01-14, "60% complete") has been superseded.**

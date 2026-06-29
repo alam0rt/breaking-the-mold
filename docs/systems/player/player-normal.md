@@ -1,3 +1,9 @@
+---
+title: "Normal Player Entity (Platforming)"
+category: systems/player
+tags: [systems, player, normal]
+---
+
 # Normal Player Entity (Platforming)
 
 The standard platforming player used in most levels (Klaymen).

@@ -1,3 +1,9 @@
+---
+title: "Session 9 — Callback context, co-occurrence bindings, password screen, new IDs"
+category: gist/asset-system
+tags: [gist, asset, system, callbacks, password]
+---
+
 # Session 9 — Callback context, co-occurrence bindings, password screen, new IDs
 
 Continued shining light on BLB asset usage via the decomp callback bodies.

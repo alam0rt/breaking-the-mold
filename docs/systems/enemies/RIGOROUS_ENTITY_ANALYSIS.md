@@ -1,3 +1,9 @@
+---
+title: "Rigorous Entity Type Analysis - Code-Based Facts Only"
+category: systems/enemies
+tags: [systems, enemies, rigorous, entity, analysis]
+---
+
 # Rigorous Entity Type Analysis - Code-Based Facts Only
 
 **Date**: January 15, 2026  

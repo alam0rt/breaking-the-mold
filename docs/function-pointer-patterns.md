@@ -1,3 +1,9 @@
+---
+title: "Function Pointer Patterns in PSX Games"
+category: root
+tags: [function, pointer, patterns]
+---
+
 # Function Pointer Patterns in PSX Games
 
 ## Why Ghidra Misses These Functions

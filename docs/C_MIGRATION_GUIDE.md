@@ -1,3 +1,9 @@
+---
+title: "C Migration Guide for Skullmonkeys (SLES-01090)"
+category: root
+tags: [migration, guide]
+---
+
 # C Migration Guide for Skullmonkeys (SLES-01090)
 
 Based on the [splat General Workflow](https://github.com/ethteck/splat/wiki/General-Workflow) and project-specific configuration.

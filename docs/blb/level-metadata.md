@@ -1,3 +1,9 @@
+---
+title: "Level Metadata Entry Format"
+category: blb
+tags: [blb, level, metadata]
+---
+
 # Level Metadata Entry Format
 
 Each of the 26 levels has a metadata entry at header offset `index × 0x70`.

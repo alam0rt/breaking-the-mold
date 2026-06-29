@@ -1,3 +1,9 @@
+---
+title: "Documentation Gap Analysis"
+category: analysis
+tags: [analysis, gap]
+---
+
 # Documentation Gap Analysis
 
 **Analysis Date**: January 13, 2026  

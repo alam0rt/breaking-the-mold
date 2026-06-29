@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys Rendering Order Documentation"
+category: systems
+tags: [systems, rendering, order]
+---
+
 # Skullmonkeys Rendering Order Documentation
 
 **Status: VERIFIED via Ghidra analysis (2026-01-16)**

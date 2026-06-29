@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys Module Structure"
+category: root
+tags: [module, structure]
+---
+
 # Skullmonkeys Module Structure
 
 This document describes the code module organization for the Skullmonkeys (SLES-01090) decompilation project.

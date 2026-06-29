@@ -1,3 +1,9 @@
+---
+title: "Memory Layout Architecture"
+category: architecture
+tags: [architecture, memory, layout]
+---
+
 # Memory Layout Architecture
 
 **Project**: Skullmonkeys (SLES-01090) PAL  

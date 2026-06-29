@@ -1,3 +1,9 @@
+---
+title: "Entity Types Reference"
+category: reference
+tags: [reference, entity, types]
+---
+
 # Entity Types Reference
 
 Comprehensive reference for entity types in Skullmonkeys (PAL SLES-01090).

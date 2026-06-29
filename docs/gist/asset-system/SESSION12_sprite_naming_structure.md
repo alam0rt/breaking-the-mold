@@ -1,3 +1,9 @@
+---
+title: "Session 12 — Going hard on sprites: the naming-structure verdict"
+category: gist/asset-system
+tags: [gist, asset, system, sprite, naming, structure]
+---
+
 # Session 12 — Going hard on sprites: the naming-structure verdict
 
 Pushed the trigger-context + constrained-solve methods at the full sprite corpus. No new names,

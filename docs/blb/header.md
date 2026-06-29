@@ -1,3 +1,9 @@
+---
+title: "BLB Header Format"
+category: blb
+tags: [blb, header]
+---
+
 # BLB Header Format
 
 The BLB header occupies the first 0x1000 bytes (2 CD sectors) of GAME.BLB.

@@ -1,3 +1,9 @@
+---
+title: "Documentation Push Session Follow-ups (2026-01-20)"
+category: ghidra
+tags: [ghidra, follow, ups, 2026]
+---
+
 # Documentation Push Session Follow-ups (2026-01-20)
 
 This session documented 21 high-priority functions (entity-list helpers, platform-ride

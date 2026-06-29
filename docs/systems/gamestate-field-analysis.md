@@ -1,3 +1,9 @@
+---
+title: "GameState Structure Field Analysis"
+category: systems
+tags: [systems, gamestate, field, analysis]
+---
+
 # GameState Structure Field Analysis
 
 Address: `0x8009DC40` (g_GameState)  

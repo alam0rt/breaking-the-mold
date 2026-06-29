@@ -1,3 +1,9 @@
+---
+title: "Source Directory / Architecture Hypothesis"
+category: architecture
+tags: [architecture, source, directory, hypothesis]
+---
+
 # Source Directory / Architecture Hypothesis
 
 **Date:** 2026-06-12  

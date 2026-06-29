@@ -1,3 +1,9 @@
+---
+title: "Entity Type 10: Interactive Object"
+category: systems/enemies
+tags: [systems, enemies, type, 010, interactive, object]
+---
+
 # Entity Type 10: Interactive Object
 
 **Entity Type**: 10  

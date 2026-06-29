@@ -1,3 +1,9 @@
+---
+title: "Decompilation Quick Reference"
+category: root
+tags: [quick, reference]
+---
+
 # Decompilation Quick Reference
 
 ## One-Liner Commands

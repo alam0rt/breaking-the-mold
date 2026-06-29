@@ -1,3 +1,9 @@
+---
+title: "Enemy Types Documentation"
+category: systems/enemies
+tags: [systems, enemies]
+---
+
 # Enemy Types Documentation
 
 **Location**: `docs/systems/enemies/`  

@@ -1,3 +1,9 @@
+---
+title: "Entity Type 27: EnemyB (Flying Enemy)"
+category: systems/enemies
+tags: [systems, enemies, type, 027, enemy]
+---
+
 # Entity Type 27: EnemyB (Flying Enemy)
 
 **Entity Type**: 27  

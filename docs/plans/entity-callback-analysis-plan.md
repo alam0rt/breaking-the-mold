@@ -1,3 +1,9 @@
+---
+title: "Entity Callback Analysis Plan"
+category: plans
+tags: [plans, entity, callback, analysis, plan]
+---
+
 # Entity Callback Analysis Plan
 
 **Goal**: Systematically analyze and document all unknown entity callback functions, mapping them to official enemy names from the game manual with **visual sprite verification**.

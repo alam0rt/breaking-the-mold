@@ -1,3 +1,9 @@
+---
+title: "Audio System"
+category: systems
+tags: [systems, audio]
+---
+
 # Audio System
 
 **Status**: ✅ 90% Complete - Positional audio system discovered!  

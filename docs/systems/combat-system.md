@@ -1,3 +1,9 @@
+---
+title: "Combat & Damage System"
+category: systems
+tags: [systems, combat, system]
+---
+
 # Combat & Damage System
 
 **Source**: SLES_010.90.c decompilation + player-system.md  

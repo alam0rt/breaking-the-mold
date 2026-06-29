@@ -1,3 +1,9 @@
+---
+title: "Entity Type 2: Clayball"
+category: systems/enemies
+tags: [systems, enemies, type, 002, clayball]
+---
+
 # Entity Type 2: Clayball
 
 **Entity Type**: 2  

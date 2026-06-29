@@ -1,3 +1,9 @@
+---
+title: "Enemy AI System Overview"
+category: systems
+tags: [systems, enemy, ai, overview]
+---
+
 # Enemy AI System Overview
 
 **Status**: ✅ VERIFIED via Ghidra decompilation (2026-01-16)  

@@ -1,3 +1,9 @@
+---
+title: "Session 5 — ScummVM / Neverhood cross-reference (external ground truth)"
+category: gist/asset-system
+tags: [gist, asset, system, scummvm, xref]
+---
+
 # Session 5 — ScummVM / Neverhood cross-reference (external ground truth)
 
 ## Goal

@@ -1,3 +1,9 @@
+---
+title: "Player Sprite & Animation System"
+category: systems/player
+tags: [systems, player, animation]
+---
+
 # Player Sprite & Animation System
 
 This document describes how the player (Klaymen) sprite rendering, animation, direction, idle detection, scale effects, and powerups work.

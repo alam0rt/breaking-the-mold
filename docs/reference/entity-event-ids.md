@@ -1,3 +1,9 @@
+---
+title: "Entity Event IDs"
+category: reference
+tags: [reference, entity, event, ids]
+---
+
 # Entity Event IDs
 
 Event ids passed to entity event-FSM slots (`eventMarker`/`eventCallback` @ +0x08/+0x0C, and the

@@ -1,3 +1,9 @@
+---
+title: "Session 26 — ToolX: confirmed dev account (asset pipeline + naming model)"
+category: gist/asset-system
+tags: [gist, asset, system, toolx, account]
+---
+
 # Session 26 — ToolX: confirmed dev account (asset pipeline + naming model)
 
 First-person dev-team account of the asset pipeline (previously this quote was flagged

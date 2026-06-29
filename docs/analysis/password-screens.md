@@ -1,3 +1,9 @@
+---
+title: "Password Screens"
+category: analysis
+tags: [analysis, password, screens]
+---
+
 # Password Screens
 
 The game contains 16 hidden password screen containers not referenced in the main level table.

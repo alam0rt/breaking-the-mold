@@ -1,3 +1,9 @@
+---
+title: "Struct Field Cleanup Notes — 2026-06-12"
+category: analysis
+tags: [analysis, struct, field, cleanup, 2026]
+---
+
 # Struct Field Cleanup Notes — 2026-06-12
 
 Clean-room Ghidra MCP pass over placeholder/bad struct field names in `SLES_010.90`.

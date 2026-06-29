@@ -1,3 +1,9 @@
+---
+title: "Boss System Reference"
+category: systems
+tags: [systems, bosses]
+---
+
 # Boss System Reference
 
 **Last Updated**: January 20, 2026  
@@ -148,7 +154,7 @@ Guardian boss with attack counters. Has idle, stun, attack, and death states. Us
 | `ShrineyGuardIdleState` | 0x8004bc90 | Idle state setup |
 | `ShrineyGuardAttackAnimState` | 0x8004bd44 | Attack animation state |
 | `ShrineyGuardReadyAttackState` | 0x8004bdfc | Ready for attack state |
-| `ShrineyGuardStartLoopAttackState` | 0x8004bee0 | Start looping attack |
+| `ShrineyGuardStartLoopingAttackState` | 0x8004bee0 | Start looping attack |
 | `ShrineyGuardDeathState` | 0x8004bfc4 | Death state |
 | `ShrineyGuardDeathCallback` | 0x8004c0c0 | Death cleanup |
 

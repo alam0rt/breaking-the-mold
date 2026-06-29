@@ -1,3 +1,9 @@
+---
+title: "C Migration Plan: ASM → C Decompilation Roadmap"
+category: plans
+tags: [plans, migration, plan]
+---
+
 # C Migration Plan: ASM → C Decompilation Roadmap
 
 **Created:** January 31, 2026  

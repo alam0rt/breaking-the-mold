@@ -1,3 +1,9 @@
+---
+title: "Entity Types 26, 29, 30: Additional Enemies"
+category: systems/enemies
+tags: [systems, enemies, type, 026, 029, 030]
+---
+
 # Entity Types 26, 29, 30: Additional Enemies
 
 **Entity Types**: 26, 29, 30  

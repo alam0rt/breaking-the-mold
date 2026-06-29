@@ -1,3 +1,9 @@
+---
+title: "Session 27 — Debug leftovers, retained strings, and the XA music system"
+category: gist/asset-system
+tags: [gist, asset, system, debug, strings]
+---
+
 # Session 27 — Debug leftovers, retained strings, and the XA music system
 
 Swept the decomp for debug code / weirdness / readable strings. Findings:

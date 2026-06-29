@@ -1,3 +1,9 @@
+---
+title: "Ghidra Struct Workflow"
+category: ghidra
+tags: [ghidra, struct, workflow]
+---
+
 # Ghidra Struct Workflow
 
 ## Overview

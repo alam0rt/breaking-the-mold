@@ -1,3 +1,9 @@
+---
+title: "Entity Types 31-36: Interactive Object Variants"
+category: systems/enemies
+tags: [systems, enemies, type, 031, 036, object, variants]
+---
+
 # Entity Types 31-36: Interactive Object Variants
 
 **Entity Types**: 31, 32, 33, 34, 35, 36  

@@ -1,3 +1,9 @@
+---
+title: "Session 15 — Sprite animation architecture + sound playback flags"
+category: gist/asset-system
+tags: [gist, asset, system, sprite, anim, arch]
+---
+
 # Session 15 — Sprite animation architecture + sound playback flags
 
 ## Sound playback-flags layer (PlaySoundEffect, flag word DAT_8009cc6a from Asset 602)

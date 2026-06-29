@@ -1,3 +1,9 @@
+---
+title: "Animation Setter Functions Reference"
+category: systems
+tags: [systems, animation, setters, reference]
+---
+
 # Animation Setter Functions Reference
 
 **Source**: Ghidra SLES_010.90.c decompilation  

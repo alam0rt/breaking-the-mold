@@ -1,3 +1,9 @@
+---
+title: "Entity Types 17-23: Enemy Cluster"
+category: systems/enemies
+tags: [systems, enemies, type, 017, 022, enemy, cluster]
+---
+
 # Entity Types 17-23: Enemy Cluster
 
 **Entity Types**: 17, 18, 19, 20, 21, 22, 23  

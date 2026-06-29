@@ -1,3 +1,9 @@
+---
+title: "Entity Types 86-88: Variant Group A"
+category: systems/enemies
+tags: [systems, enemies, types, 086, 088, variant, group]
+---
+
 # Entity Types 86-88: Variant Group A
 
 **Entity Types**: 86, 87, 88  

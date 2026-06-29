@@ -1,3 +1,9 @@
+---
+title: "Tiles and Tilemaps"
+category: systems
+tags: [systems, tiles, tilemaps]
+---
+
 # Tiles and Tilemaps
 
 **Status: VERIFIED via Ghidra analysis (2026-01-16)**

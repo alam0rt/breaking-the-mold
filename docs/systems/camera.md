@@ -1,3 +1,9 @@
+---
+title: "Camera System"
+category: systems
+tags: [systems, camera]
+---
+
 # Camera System
 
 **Status**: ✅ FULLY DOCUMENTED from decompiled source  

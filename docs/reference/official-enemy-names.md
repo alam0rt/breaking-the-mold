@@ -1,3 +1,9 @@
+---
+title: "Official Names from Game Manual"
+category: reference
+tags: [reference, official, enemy, names]
+---
+
 # Official Names from Game Manual
 
 **Source**: Skullmonkeys Official Game Manual + GameFAQs Walkthrough  

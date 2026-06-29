@@ -1,3 +1,9 @@
+---
+title: "ROM Data Tables Reference"
+category: reference
+tags: [reference, rom, data, tables]
+---
+
 # ROM Data Tables Reference
 
 **Status**: 📋 Extraction Guide  

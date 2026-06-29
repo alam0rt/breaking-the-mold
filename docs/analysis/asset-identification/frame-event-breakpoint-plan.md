@@ -1,3 +1,9 @@
+---
+title: "Animation frame-event hashes — breakpoint plan (best remaining name-crack vector)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, frame, event, breakpoint, plan]
+---
+
 # Animation frame-event hashes — breakpoint plan (best remaining name-crack vector)
 
 **2026-06-19.** Builds on gist `docs/gist/asset-system/` Session 31 (`anim_frame_events.json`).

@@ -1,3 +1,9 @@
+---
+title: "Checkpoint System (Ma-Bird)"
+category: systems
+tags: [systems, checkpoint, system]
+---
+
 # Checkpoint System (Ma-Bird)
 
 The checkpoint system allows players to save progress and respawn at specific locations after death. In Skullmonkeys, checkpoints are represented by **Ma-Bird** entities that teleport players to a safe exit point when activated.

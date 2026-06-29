@@ -1,3 +1,9 @@
+---
+title: "Entity Types 43-44, 53-55: Portal/Particle Variants"
+category: systems/enemies
+tags: [systems, enemies, types, 043, 044, 053, 055, portal, particle, variants]
+---
+
 # Entity Types 43-44, 53-55: Portal/Particle Variants
 
 **Entity Types**: 43, 44, 53, 54, 55  

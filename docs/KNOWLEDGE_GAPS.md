@@ -1,3 +1,9 @@
+---
+title: "Knowledge Gaps & Missing Understanding"
+category: root
+tags: [knowledge, gaps]
+---
+
 # Knowledge Gaps & Missing Understanding
 
 **Last Updated**: June 12, 2026  

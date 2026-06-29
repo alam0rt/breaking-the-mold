@@ -1,3 +1,9 @@
+---
+title: "Session 28 — Level index map (level-data-context.md)"
+category: gist/asset-system
+tags: [gist, asset, system, level]
+---
+
 # Session 28 — Level index map (level-data-context.md)
 
 ## Index map (0-25)

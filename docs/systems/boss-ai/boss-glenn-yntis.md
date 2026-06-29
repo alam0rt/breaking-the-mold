@@ -1,3 +1,9 @@
+---
+title: "Boss: Glenn Yntis (GLEN Level)"
+category: systems/boss-ai
+tags: [systems, boss, ai, glenn, yntis]
+---
+
 # Boss: Glenn Yntis (GLEN Level)
 
 **Level**: GLEN (Level 15)  

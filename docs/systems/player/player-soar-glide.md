@@ -1,3 +1,9 @@
+---
+title: "SOAR and GLIDE Player Modes"
+category: systems/player
+tags: [systems, player, soar, glide]
+---
+
 # SOAR and GLIDE Player Modes
 
 **Status**: ✅ DOCUMENTED from C Code  

@@ -1,3 +1,9 @@
+---
+title: "Boss: Monkey Mage (WIZZ Level)"
+category: systems/boss-ai
+tags: [systems, boss, ai, monkey, mage]
+---
+
 # Boss: Monkey Mage (WIZZ Level)
 
 **Level**: WIZZ (Level 21)  

@@ -1,3 +1,9 @@
+---
+title: "Session 10 — Asset usage context as a naming oracle"
+category: gist/asset-system
+tags: [gist, asset, system, usage, context]
+---
+
 # Session 10 — Asset usage context as a naming oracle
 
 Mapped HOW assets are used (render layer, sound triggers) to both validate names and crack new ones.

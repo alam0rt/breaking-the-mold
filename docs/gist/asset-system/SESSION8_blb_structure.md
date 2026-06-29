@@ -1,3 +1,9 @@
+---
+title: "Session 8 — BLB structure study + entity-callback role harvest"
+category: gist/asset-system
+tags: [gist, asset, system, blb, structure]
+---
+
 # Session 8 — BLB structure study + entity-callback role harvest
 
 ## BLB asset model (from evil-engine docs/blb/) — reorganizes the whole corpus

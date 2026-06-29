@@ -1,3 +1,9 @@
+---
+title: "Data Section Memory Map"
+category: reference
+tags: [reference, data, section, map]
+---
+
 # Data Section Memory Map
 
 This document maps the .data and .sdata sections of the PAL binary (SLES-01090).

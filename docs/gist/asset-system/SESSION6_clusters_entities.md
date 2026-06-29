@@ -1,3 +1,9 @@
+---
+title: "Session 6 — Banked ledger + deepened sister/entity grouping"
+category: gist/asset-system
+tags: [gist, asset, system, clusters, entities]
+---
+
 # Session 6 — Banked ledger + deepened sister/entity grouping
 
 ## Banked

@@ -1,3 +1,9 @@
+---
+title: "Skullmonkeys Game Watcher v2.5 - Usage Guide"
+category: root
+tags: [game, watcher, usage]
+---
+
 # Skullmonkeys Game Watcher v2.5 - Usage Guide
 
 The enhanced game watcher provides comprehensive runtime debugging for the Skullmonkeys (SLES-01090) decompilation project. It captures frame-by-frame game state, BLB asset loading, entity behavior, and allows boot-time level selection.

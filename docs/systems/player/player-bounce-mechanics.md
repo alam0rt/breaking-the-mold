@@ -1,3 +1,9 @@
+---
+title: "Player Bounce Mechanics"
+category: systems/player
+tags: [systems, player, bounce, mechanics]
+---
+
 # Player Bounce Mechanics
 
 ## Overview

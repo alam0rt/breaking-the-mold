@@ -1,3 +1,9 @@
+---
+title: "Complete Entity Type Reference - All 121 Types"
+category: systems/enemies
+tags: [systems, enemies, all, entity, types, reference]
+---
+
 # Complete Entity Type Reference - All 121 Types
 
 **Date**: January 15, 2026  

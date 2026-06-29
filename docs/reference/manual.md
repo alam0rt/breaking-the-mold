@@ -1,3 +1,9 @@
+---
+title: "Manual"
+category: reference
+tags: [reference, manual]
+---
+
  The Clayman's Quest: Skullmonkeys Comprehensive Strategy Guide
 2 sources
 

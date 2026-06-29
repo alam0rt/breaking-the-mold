@@ -54,7 +54,7 @@ id_hex,function,file,line_no,context
 0x08624580,InitSingleFrameDecorEntity,export/SLES_010.90.c,28895,"InitEntitySprite((SpriteEntity *)entity,0x8624580,0x3de,spawn[4],spawn[5],'\0');"
 0x62000441,TriggerCollectible100CTickCallback,export/SLES_010.90.c,28983,"PlayEntityPositionSound((Entity *)pEntity,0x62000441);"
 0x8c30008c,InitScaleResetCollectible,export/SLES_010.90.c,29041,"InitEntitySprite((SpriteEntity *)entity,0x8c30008c,0x3de,spawn[4],spawn[5],'\0');"
-0x40864668,ScaleResetCollectibleTickCallback,export/SLES_010.90.c,29126,"PlayEntityPositionSound(entity,0x40864668);"
+0x40864668,CollectibleScaleResetTickCallback,export/SLES_010.90.c,29126,"PlayEntityPositionSound(entity,0x40864668);"
 0x88a28194,Init1970IconEntity,export/SLES_010.90.c,29189,"InitEntitySprite((SpriteEntity *)entity,0x88a28194,0x3de,spawn[4],spawn[5],'\x01');"
 0x408a6461,Collectible1970IconTickCallback,export/SLES_010.90.c,29261,uVar2 = 0x408a6461;
 0x428a6465,Collectible1970IconTickCallback,export/SLES_010.90.c,29263,uVar2 = 0x428a6465;
@@ -169,7 +169,7 @@ id_hex,function,file,line_no,context
 0x09382152,ShrineyGuardIdleState,export/SLES_010.90.c,56825,"SetEntitySpriteId(pEntity,0x9382152,1);"
 0x085860d4,ShrineyGuardAttackAnimState,export/SLES_010.90.c,56862,"SetEntitySpriteId(pEntity,0x85860d4,1);"
 0x08192250,ShrineyGuardReadyAttackState,export/SLES_010.90.c,56906,"SetEntitySpriteId(pEntity,0x8192250,1);"
-0x2c182010,ShrineyGuardStartLoopAttackState,export/SLES_010.90.c,56951,"SetEntitySpriteId(pEntity,0x2c182010,1);"
+0x2c182010,ShrineyGuardStartLoopingAttackState,export/SLES_010.90.c,56951,"SetEntitySpriteId(pEntity,0x2c182010,1);"
 0x0a1820d4,ShrineyGuardDeathState,export/SLES_010.90.c,57005,"SetEntitySpriteId((SpriteEntity *)entity,0xa1820d4,1);"
 0x06101db0,InitJoeHeadJoeBoss,export/SLES_010.90.c,57092,"InitEntitySprite(entity,0x6101db0,10000,0xa2,0xf4,'\0');"
 0x98004092,JoeHeadJoeUpdateWithCollisionCheck,export/SLES_010.90.c,57353,"InitParticleEntity(pParticle,0x98004092,dwSpawnPosXY,pEntity->facing,"
@@ -629,7 +629,7 @@ id_hex,function,file,line_no,context
 0x09382152,ShrineyGuardIdleState,disks/SLES_010.90.c,23306,"SetEntitySpriteId((int)param_1,0x9382152,1);"
 0x085860d4,ShrineyGuardAttackAnimState,disks/SLES_010.90.c,23321,"SetEntitySpriteId((int)param_1,0x85860d4,1);"
 0x08192250,ShrineyGuardReadyAttackState,disks/SLES_010.90.c,23343,"SetEntitySpriteId((int)param_1,0x8192250,1);"
-0x2c182010,ShrineyGuardStartLoopAttackState,disks/SLES_010.90.c,23364,"SetEntitySpriteId((int)param_1,0x2c182010,1);"
+0x2c182010,ShrineyGuardStartLoopingAttackState,disks/SLES_010.90.c,23364,"SetEntitySpriteId((int)param_1,0x2c182010,1);"
 0x0a1820d4,ShrineyGuardDeathState,disks/SLES_010.90.c,23391,"SetEntitySpriteId((int)param_1,0xa1820d4,1);"
 0x06101db0,InitJoeHeadJoeBoss,disks/SLES_010.90.c,23435,"InitEntitySprite(puVar4,0x6101db0,10000,0xa2,0xf4,0);"
 0x98004092,JoeHeadJoeUpdateWithCollisionCheck,disks/SLES_010.90.c,23613,"iVar6 = InitParticleEntity(puVar5,0x98004092,local_70,*(undefined1 *)(param_1 + 0x74),"

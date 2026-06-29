@@ -1,3 +1,9 @@
+---
+title: "Prototype debug prints (recoverable instrumentation)"
+category: analysis
+tags: [analysis, prototype, debug, prints]
+---
+
 # Prototype debug prints (recoverable instrumentation)
 
 Status: **in-flight / partial retail mapping confirmed (2026-06-21).** Source =

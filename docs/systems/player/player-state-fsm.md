@@ -1,3 +1,9 @@
+---
+title: "Player State FSM"
+category: systems/player
+tags: [systems, player, state, fsm]
+---
+
 # Player State FSM
 
 **Date:** 2026-06-12  

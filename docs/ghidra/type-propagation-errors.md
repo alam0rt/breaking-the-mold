@@ -1,3 +1,9 @@
+---
+title: "Ghidra Type Propagation Errors"
+category: ghidra
+tags: [ghidra, type, propagation, errors]
+---
+
 # Ghidra Type Propagation Errors
 
 ## Problem: `$$undef` Symbol Errors in Decompilation

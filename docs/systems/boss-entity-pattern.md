@@ -1,3 +1,9 @@
+---
+title: "Boss Entity Pattern"
+category: systems
+tags: [systems, boss, entity, pattern]
+---
+
 # Boss Entity Pattern
 
 This document describes the common architectural pattern used by all boss entities in Skullmonkeys (SLES-01090).

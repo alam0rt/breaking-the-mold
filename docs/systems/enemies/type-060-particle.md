@@ -1,3 +1,9 @@
+---
+title: "Entity Type 60: Generic Particle"
+category: systems/enemies
+tags: [systems, enemies, type, 060, particle]
+---
+
 # Entity Type 60: Generic Particle
 
 **Entity Type**: 60  

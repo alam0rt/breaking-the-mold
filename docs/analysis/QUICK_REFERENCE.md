@@ -1,3 +1,9 @@
+---
+title: "Unknown Function Analysis - Quick Reference"
+category: analysis
+tags: [analysis, quick, reference]
+---
+
 # Unknown Function Analysis - Quick Reference
 
 **Last Updated:** 2026-01-15

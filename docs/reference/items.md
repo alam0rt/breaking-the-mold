@@ -1,3 +1,9 @@
+---
+title: "Items Reference"
+category: reference
+tags: [reference, items]
+---
+
 # Items Reference
 
 This document provides technical details for all collectible items in Skullmonkeys (SLES-01090).

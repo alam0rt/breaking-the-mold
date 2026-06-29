@@ -1,3 +1,9 @@
+---
+title: "Entity Type 25: EnemyA (Ground Patrol)"
+category: systems/enemies
+tags: [systems, enemies, type, 025, enemy]
+---
+
 # Entity Type 25: EnemyA (Ground Patrol)
 
 **Entity Type**: 25  

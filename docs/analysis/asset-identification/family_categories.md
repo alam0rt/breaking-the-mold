@@ -1,3 +1,9 @@
+---
+title: "Asset-family categories (structure + code refs)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, family, categories]
+---
+
 # Asset-family categories (structure + code refs)
 68 families (size>=3). `sequence_style=YES` = members differ by one short sequential token (directional/frame numbering, like the FINN player family).
 

@@ -1,3 +1,9 @@
+---
+title: "Entity Identification Guide"
+category: systems
+tags: [systems, entity, identification]
+---
+
 # Entity Identification Guide
 
 This document maps Skullmonkeys entity types to their in-game names and behaviors.

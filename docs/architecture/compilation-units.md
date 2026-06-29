@@ -1,3 +1,9 @@
+---
+title: Recovered Compilation-Unit Structure (SLES-01090)
+category: architecture
+tags: [compilation-units, link-order, file-boundaries, ghidra, rodata, psyq, glover-reference, splat]
+---
+
 # Recovered Compilation-Unit Structure (SLES-01090)
 
 **Date:** 2026-06-14

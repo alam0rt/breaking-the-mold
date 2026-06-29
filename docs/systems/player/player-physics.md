@@ -1,3 +1,9 @@
+---
+title: "Player Physics System"
+category: systems/player
+tags: [systems, player, physics]
+---
+
 # Player Physics System
 
 This document describes the physics constants and movement system for implementing a basic player entity.

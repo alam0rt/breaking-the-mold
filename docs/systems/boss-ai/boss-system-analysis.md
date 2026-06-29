@@ -1,3 +1,9 @@
+---
+title: "Boss System - Multi-Agent Analysis"
+category: systems/boss-ai
+tags: [systems, boss, ai, system, analysis]
+---
+
 # Boss System - Multi-Agent Analysis
 
 **Date**: January 14, 2026  

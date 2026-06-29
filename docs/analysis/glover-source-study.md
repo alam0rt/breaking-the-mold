@@ -1,3 +1,9 @@
+---
+title: "Study notes: Glover PSX real source + Soul Reaver decomp"
+category: analysis
+tags: [analysis, glover, source, study]
+---
+
 # Study notes: Glover PSX real source + Soul Reaver decomp
 
 Source material reviewed (read-only, external to this repo):

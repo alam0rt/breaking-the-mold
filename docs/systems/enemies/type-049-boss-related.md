@@ -1,3 +1,9 @@
+---
+title: "Entity Type 49: Boss-Related Entity"
+category: systems/enemies
+tags: [systems, enemies, type, 049, boss, related]
+---
+
 # Entity Type 49: Boss-Related Entity
 
 **Entity Type**: 49  

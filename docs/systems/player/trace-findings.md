@@ -1,3 +1,9 @@
+---
+title: "Player Trace Analysis - January 14, 2026"
+category: systems/player
+tags: [systems, player, trace, findings]
+---
+
 # Player Trace Analysis - January 14, 2026
 
 ## Trace File

@@ -1,3 +1,9 @@
+---
+title: "Entity Type 42: Portal (Level Exit)"
+category: systems/enemies
+tags: [systems, enemies, type, 042, portal]
+---
+
 # Entity Type 42: Portal (Level Exit)
 
 **Entity Type**: 42  

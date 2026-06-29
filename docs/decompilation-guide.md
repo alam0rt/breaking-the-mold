@@ -1,3 +1,9 @@
+---
+title: "Decompilation Guide"
+category: root
+tags: [decompilation, guide]
+---
+
 # Decompilation Guide
 
 Quick reference for decompiling functions with proper type information.

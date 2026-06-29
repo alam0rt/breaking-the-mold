@@ -1,3 +1,9 @@
+---
+title: "Systematic Enemy AI Analysis"
+category: systems/enemies
+tags: [systems, enemies, systematic, analysis]
+---
+
 # Systematic Enemy AI Analysis
 
 **Date**: January 15, 2026  

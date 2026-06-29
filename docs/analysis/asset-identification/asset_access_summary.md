@@ -1,3 +1,9 @@
+---
+title: "Asset access catalog (how every known id is accessed)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, access, summary]
+---
+
 # Asset access catalog (how every known id is accessed)
 
 Scanned `export/SLES_010.90.c`. 658 known ids; **365 referenced in code**, 293 loaded via data tables (no direct code ref).

@@ -11,7 +11,7 @@ id_hex,type,status,n_refs,access_kinds,category,top_functions,levels
 0x08b9135c,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler,GLEN
 0x08ba0250,sprite,uncracked,2,other:2,Boss,GlennYntisDamageEventHandler,GLEN
 0x09382152,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardSetLoopingAttackState | ShrineyGuardIdleState,MEGA
-0x0a1820d4,sprite,uncracked,2,other:1;setspr:1,Boss,ShrineyGuardStartLoopAttackState | ShrineyGuardDeathState,MEGA
+0x0a1820d4,sprite,uncracked,2,other:1;setspr:1,Boss,ShrineyGuardStartLoopingAttackState | ShrineyGuardDeathState,MEGA
 0x0b0811bb,sprite,uncracked,2,setspr:2,Boss,JoeHeadJoeReturnToIdleState | JoeHeadJoeReturnToIdleStateAlt,HEAD
 0x0b081dbb,sprite,uncracked,3,setspr:2;other:1,Boss,JoeHeadJoeReturnToIdleState | JoeHeadJoeClearVoiceAlt,HEAD
 0x0b290ba2,sprite,uncracked,4,setspr:3;other:1,Boss,JoeHeadJoeCheckPlayerInAttackRange | JoeHeadJoeSetIdleState | JoeHeadJoeEnterActiveState,HEAD
@@ -34,7 +34,7 @@ id_hex,type,status,n_refs,access_kinds,category,top_functions,levels
 0x222cb0e2,audio,uncracked,3,other:3,Boss,ClayballIndicatorState_Wait | ShrineyGuardDeactivateWithSound,BOIL;CAVE;CLOU;CRYS;CSTL;EGGS;
 0x2b3889b2,sprite,uncracked,2,setspr:2,Boss,JoeHeadJoeReturnToIdleStateAlt | JoeHeadJoeDeathAnimState,HEAD
 0x2b79835d,sprite,uncracked,3,setspr:2;other:1,Boss,GlennYntisSelectRandomAnimState | GlennYntisIdleAnimState | GlennYntisAnimStateB,GLEN
-0x2c182010,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardReadyAttackState | ShrineyGuardStartLoopAttackState,MEGA
+0x2c182010,sprite,uncracked,2,setspr:2,Boss,ShrineyGuardReadyAttackState | ShrineyGuardStartLoopingAttackState,MEGA
 0x2d688254,sprite,uncracked,2,setspr:2,Boss,GlennYntisSelectRandomAnimState | GlennYntisIdleAnimState,GLEN
 0x323ac9be,sprite,uncracked,3,setspr:2;other:1,Boss,JoeHeadJoeBallStopSound | JoeHeadJoeState_EnterCollisionState,HEAD
 0x34014841,audio,uncracked,3,other:3,Boss,ProjectileTickWithCollision | JoeHeadJoeBallFallCallback,KLOG;RUNN
@@ -89,7 +89,7 @@ id_hex,type,status,n_refs,access_kinds,category,top_functions,levels
 0x10094096,sprite,uncracked,20,init:16;other:4,Collectible,InitMenuStage4 | Menu_PlayConfirmSoundIfEnabled | Menu_DecrementCounter,MENU
 0x20211e5f,sprite,uncracked,3,other:2;setspr:1,Collectible,InitCollectibleIdleState | InitCollectibleIdleStateB,FOOD;SNOW
 0x21a81d54,sprite,uncracked,7,setspr:5;other:2,Collectible,InitCollectibleTimer0x1e_SpriteC | InitCollectibleTimer0x1e | InitCollectibleTimer0x3c_SpriteA,FOOD;SNOW
-0x40864668,audio,uncracked,2,other:2,Collectible,InitScaleResetCollectible | ScaleResetCollectibleTickCallback,BRG1
+0x40864668,audio,uncracked,2,other:2,Collectible,InitScaleResetCollectible | CollectibleScaleResetTickCallback,BRG1
 0x408a6461,audio,uncracked,2,other:2,Collectible,Init1970IconEntity | Collectible1970IconTickCallback,BOIL;CLOU;TMPL
 0x424129a1,audio,uncracked,2,other:2,Collectible,CollectiblePickupState | CollectibleRiseState,WIZZ
 0x428a6465,audio,uncracked,2,other:2,Collectible,Init1970IconEntity | Collectible1970IconTickCallback,BOIL;CLOU;TMPL
@@ -110,7 +110,7 @@ id_hex,type,status,n_refs,access_kinds,category,top_functions,levels
 0x82421850,sprite,uncracked,2,other:2,Collectible,CollectiblePickupState | CollectibleRiseState,WIZZ
 0x88210498,sprite,uncracked,4,init:2;setspr:2,Collectible,EntityFloatingWithCollisionTick | InitCollectibleEntity_Alt,CSTL;MOSS
 0x88329285,sprite,uncracked,2,init:2,Collectible,FreeEntityNoTeardown_80041468 | InitCheckpointEntity,BRG1;GLID;SCIE;SNOW;TMPL;WEED
-0x88a28194,sprite,uncracked,9,other:7;init:2,Collectible,ScaleResetCollectibleTickCallback | CreateMenuEntities | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
+0x88a28194,sprite,uncracked,9,other:7;init:2,Collectible,CollectibleScaleResetTickCallback | CreateMenuEntities | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
 0x8c30008c,sprite,uncracked,8,other:7;init:1,Collectible,TriggerCollectible100CTickCallback | CollectiblePhartHeadTickCallback | CollectibleUniverseEnemaTickCallback,BRG1
 0x8c510186,sprite,uncracked,5,init:3;other:2,Collectible,UpdateHUDItemVisibility | InitEntity_8c510186 | CollectiblePhoenixHandTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;
 0x902c0002,sprite,uncracked,9,other:7;init:2,Collectible,CollectibleHamsterShieldTickCallback | CreateMenuEntities | CollectiblePhartHeadTickCallback,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;

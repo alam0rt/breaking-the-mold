@@ -1,3 +1,9 @@
+---
+title: "Complete Sound ID Reference"
+category: reference
+tags: [reference, sound, ids]
+---
+
 # Complete Sound ID Reference
 
 **Status**: ✅ Extracted from C Code  

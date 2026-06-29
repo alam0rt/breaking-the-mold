@@ -1,3 +1,9 @@
+---
+title: "Newly Discovered Functions (2026-01-19)"
+category: root
+tags: [newly, discovered, functions, 2026]
+---
+
 # Newly Discovered Functions (2026-01-19)
 
 ## Summary
@@ -25,14 +31,14 @@ Pattern: Called when entities are destroyed. Sets entity+0x18 to debugger symbol
 | 0x80031508 | EntityDestructor_FreeChildAt1c | Frees child at +0x1c before destroying |
 | 0x8003203c | EntityDestructor_WithVRAMSlotFree | Removes +0x118, frees VRAM slot |
 | 0x800336e0 | EntityDestructor_WithTextureAndMemory | Frees +0x3c, +0x40, texture resources |
-| 0x80049c78 | EntityDestructor_WithSPUStop | Stops SPU voice before destroying |
+| 0x80049c78 | EntityDestructor_WithSPUVoiceStopAndClear | Stops SPU voice before destroying |
 | 0x8004c464 | EntityDestructor_WithVoiceReset | Resets voice ID to -1 before destroying |
 | 0x80056bb8 | EntityDestructor_WithChildEntityCleanup | Cleans up child entity at +0x130 |
 | 0x80059640 | EntityDestructor_Simple11 | Simple destructor (FreeEntitySimple11) |
 | 0x8006df88 | EntityDestructor_FreeResourceAt24 | Frees resource at +0x24 |
 | 0x80070514 | EntityDestructor_Simple13 | Simple destructor (FreeEntitySimple13) |
 | 0x80073a10 | EntityDestructor_WithSPUStopAndFree | Stops SPU + destroy + heap free |
-| 0x80070fd8 | EntityDestructor_WithSPUStopAt10c | Stops SPU voice at +0x10c |
+| 0x80070fd8 | EntityDestructor_WithSPUVoiceStopAt10c | Stops SPU voice at +0x10c |
 
 ### Entity Tick Callbacks (EntityTick_*)
 Pattern: Called each frame to update entity state. Takes (entity, param2, param3).

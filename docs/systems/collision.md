@@ -1,3 +1,9 @@
+---
+title: "Tile Collision System"
+category: systems
+tags: [systems, collision]
+---
+
 # Tile Collision System
 
 > **This document has been consolidated.** The canonical reference for the tile

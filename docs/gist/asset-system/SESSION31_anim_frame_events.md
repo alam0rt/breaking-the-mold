@@ -1,3 +1,9 @@
+---
+title: "Session 31 — Animation frame-event hashes (a 3rd calcHash use + best crack vector)"
+category: gist/asset-system
+tags: [gist, asset, system, anim, frame, events]
+---
+
 # Session 31 — Animation frame-event hashes (a 3rd calcHash use + best crack vector)
 
 ## The mechanism (the one genuinely non-obvious system in the codebase)

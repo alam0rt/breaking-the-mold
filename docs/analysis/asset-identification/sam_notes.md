@@ -1,3 +1,9 @@
+---
+title: "Sam Notes"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, sam]
+---
+
 also we have found
 
 FX_MENU_DOOR_OPEN

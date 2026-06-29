@@ -1,3 +1,9 @@
+---
+title: "Session 7 — Per-level + radius-tiered grouping (deeper families)"
+category: gist/asset-system
+tags: [gist, asset, system, perlevel, entities]
+---
+
 # Session 7 — Per-level + radius-tiered grouping (deeper families)
 
 ## Per-level clustering (answer to "what about other levels?")

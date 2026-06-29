@@ -1,3 +1,9 @@
+---
+title: "Boss: Shriney Guard (MEGA level 5)"
+category: systems/boss-ai
+tags: [boss, shriney-guard, mega, fsm, attack-state, sprite-roster, entity-type-101, vtable, callback-table]
+---
+
 # Boss: Shriney Guard (MEGA level 5)
 
 **Entity type**: `ENTITY_TYPE_101_BOSS_SHRINEY_GUARD` (0x65)
@@ -71,7 +77,7 @@ under the `SPR_SHRINEY_GUARD_*` and `ANIM_SHRINEY_GUARD_*` group.
 | `SPR_SHRINEY_GUARD_IDLE` | `0x09382152` | Passive idle pose (`ShrineyGuardIdleState`) |
 | `SPR_SHRINEY_GUARD_WINDUP` | `0x4C106054` | Attack-windup (single attack path; player bounce-damage frame) |
 | `SPR_SHRINEY_GUARD_LOOP_LINK` | `0x40106054` | First frame of looping-attack chain (`ShrineyGuardSetLoopingAttackState`) |
-| `SPR_SHRINEY_GUARD_LOOP_START` | `0x2C182010` | Looping-attack stun-window pose (`ShrineyGuardStartLoopAttackState`) |
+| `SPR_SHRINEY_GUARD_LOOP_START` | `0x2C182010` | Looping-attack stun-window pose (`ShrineyGuardStartLoopingAttackState`) |
 | `SPR_SHRINEY_GUARD_READY` | `0x08192250` | Re-aim pose between slams (`ShrineyGuardReadyAttackState`) |
 | `SPR_SHRINEY_GUARD_SLAM` | `0x085860D4` | Slam animation – `MoveCallback` runs (`ShrineyGuardAttackAnimState`) |
 | `SPR_SHRINEY_GUARD_DEATH` | `0x0A1820D4` | Death pose (`ShrineyGuardDeathState`) |
@@ -122,7 +128,7 @@ Overlay on `SpriteEntity`. See `ShrineyGuardEntity` typedef in
 | `0x110` | `destLevel` | level number for `GS.direct_level_load` on victory (cached from `EntitySpawnData[+0xC]` in `Init`) |
 | `0x111` | `activeTimer` | `ShrineyGuardActiveEventHandler` countdown target |
 | `0x112` | `idleTimeout` | frames until next attack; init = `0xB4` (180), reset = `0x5A` (90) |
-| `0x113` | `stunTimer` | `StartLoopAttackState` arms 5; `StunTickCallback` decays it |
+| `0x113` | `stunTimer` | `StartLoopingAttackState` arms 5; `StunTickCallback` decays it |
 | `0x114` | `attackCounter` | number of consecutive slams (resets at 3) |
 | `0x115` | `stunActive` | 1 while `ReadyAttack` windup is playing |
 | `0x118` | `slamVelocity` | s32, 16.16 fixed; see physics below |
@@ -141,7 +147,7 @@ on the tagged marker.
 | `D_800A5BE8 / EC` | `BossRandomAttackChoice` | `InitShrineyGuardBoss` | enter combat |
 | `D_800A5BF0 / F4` | `ShrineyGuardAttackCounterState` | `IdleTickCallback` (idleTimeout=0) | decide loop-or-finish |
 | `D_800A5BF8 / FC` | `ShrineyGuardDeathState` | `BossEventHandler` (hp == 0) | terminal sequence |
-| `D_800A5C00 / 04` | `ShrineyGuardStartLoopAttackState` | `BossEventHandler` (hp > 0 after hit) | 5-frame stun |
+| `D_800A5C00 / 04` | `ShrineyGuardStartLoopingAttackState` | `BossEventHandler` (hp > 0 after hit) | 5-frame stun |
 | `D_800A5C08 / 0C` | `ShrineyGuardReadyAttackState` | `MoveCallback` (vel == 0) | re-aim |
 | `D_800A5C10 / 14` | `ShrineyGuardAttackAnimState` | `AttackCounterState` (count < 3) | next slam |
 | `D_800A5C18 / 1C` | `ShrineyGuardIdleState` | `AttackCounterState` (count == 3) | back to idle |
@@ -185,7 +191,7 @@ on the tagged marker.
    PLAYER DAMAGE → event 0x1002 → BossEventHandler
        └→ PS.boss_hp--
           if hp > 0 → EntitySetState(D_800A5C00,
-                                      ShrineyGuardStartLoopAttackState)
+                                      ShrineyGuardStartLoopingAttackState)
                        (5-frame stun, sprite 0x2C182010)
           if hp == 0 → EntitySetState(D_800A5BF8,
                                        ShrineyGuardDeathState)

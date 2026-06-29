@@ -1,3 +1,9 @@
+---
+title: "Session Summary: FUN_ Function Naming Complete"
+category: sessions
+tags: [sessions, 2026, function, naming]
+---
+
 # Session Summary: FUN_ Function Naming Complete
 
 **Date**: January 19, 2026  

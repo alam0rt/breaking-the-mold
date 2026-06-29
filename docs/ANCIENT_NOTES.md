@@ -1,3 +1,9 @@
+---
+title: "Ancient Notes"
+category: root
+tags: [ancient]
+---
+
 
 ## Compiler Investigation
 

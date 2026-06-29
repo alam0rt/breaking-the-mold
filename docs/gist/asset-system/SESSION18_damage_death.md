@@ -1,3 +1,9 @@
+---
+title: "Session 18 — Damage / death / respawn system"
+category: gist/asset-system
+tags: [gist, asset, system, damage, death]
+---
+
 # Session 18 — Damage / death / respawn system
 
 ## Death flow (mapped)

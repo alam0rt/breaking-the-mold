@@ -1,3 +1,9 @@
+---
+title: "Klogg Boss Analysis - Brick Breaker Finale!"
+category: root
+tags: [klogg, analysis]
+---
+
 # Klogg Boss Analysis - Brick Breaker Finale!
 
 **Date**: January 17, 2026  

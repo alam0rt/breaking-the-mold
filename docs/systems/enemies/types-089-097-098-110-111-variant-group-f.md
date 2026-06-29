@@ -1,3 +1,9 @@
+---
+title: "Entity Types 89, 97-98, 110-111: Variant Group F"
+category: systems/enemies
+tags: [systems, enemies, types, 089, 097, 098, 110, 111, variant, group]
+---
+
 # Entity Types 89, 97-98, 110-111: Variant Group F
 
 **Entity Types**: 89, 97, 98, 110, 111 (5 types)  

@@ -1,3 +1,9 @@
+---
+title: "Physics Quick Reference"
+category: root
+tags: [physics, quick, reference]
+---
+
 # Physics Quick Reference
 
 **For**: Game developers implementing Skullmonkeys mechanics  

@@ -1,3 +1,9 @@
+---
+title: "Compiler Quirks & Toolchain Findings"
+category: root
+tags: [compiler, quirks]
+---
+
 # Compiler Quirks & Toolchain Findings
 
 > This doc explains *why* cc1 needs each nudge (codegen mechanics). For *how to

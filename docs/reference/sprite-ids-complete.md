@@ -1,3 +1,9 @@
+---
+title: "Complete Sprite ID Reference"
+category: reference
+tags: [reference, sprite, ids]
+---
+
 # Complete Sprite ID Reference
 
 **Status**: ✅ Extracted from C Code  

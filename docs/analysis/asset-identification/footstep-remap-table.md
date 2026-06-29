@@ -1,3 +1,9 @@
+---
+title: "Footstep surface-variant remap table (`0x8009d0fc`) — fully cracked"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, footstep, remap, table]
+---
+
 # Footstep surface-variant remap table (`0x8009d0fc`) — fully cracked
 
 **2026-06-19.** Verified against the ROM (`bin/SLES_010.90`) and the calcHash asset-name scheme.

@@ -1,3 +1,9 @@
+---
+title: "FX-anchored sprite families (STEM + action)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, fx, sprite, families]
+---
+
 # FX-anchored sprite families (STEM + action)
 
 Each entity's sprite family solved from its FX action vocabulary. `stem` is the opaque sprite entity-hash; members are `stem + action` landing on real sprite IDs. Validate via the referencing functions.

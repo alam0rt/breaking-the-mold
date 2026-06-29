@@ -1,3 +1,9 @@
+---
+title: "Game Loop & Player Creation"
+category: systems
+tags: [systems, game, loop]
+---
+
 # Game Loop & Player Creation
 
 The main game loop, player entity dispatch system, and pause/cheat systems.

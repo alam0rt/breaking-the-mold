@@ -1,3 +1,9 @@
+---
+title: "Entity Types 37-41: Mechanisms and Objects"
+category: systems/enemies
+tags: [systems, enemies, type, 037, 041, mechanisms]
+---
+
 # Entity Types 37-41: Mechanisms and Objects
 
 **Entity Types**: 37, 38, 39, 40, 41  

@@ -1,3 +1,9 @@
+---
+title: "Cohort swap-candidate report"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, cohort, swap, candidates]
+---
+
 # Cohort swap-candidate report
 
 For each named function that touches multiple asset IDs, we compute the pairwise XOR-delta rotation class and look up which suffix-token pairs would produce that class. A small number of candidates with strong semantic match to the function's name is the gold signal.

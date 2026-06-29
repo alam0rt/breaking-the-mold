@@ -1,3 +1,9 @@
+---
+title: "Callback / State-Transition Install Map (v3)"
+category: analysis
+tags: [analysis, callback, install, map]
+---
+
 # Callback / State-Transition Install Map (v3)
 
 Extracted from SLES_010.90: every `sw` instruction whose Ghidra-propagated references include a function entry point, excluding sp-based spill stores. The store offset is read directly from the instruction, so marker/fn pairing is exact.
@@ -109,7 +115,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - InitPhartHeadCollectible @ 8002ea3c (sw @ 8002ebc8, base v0) -> EntityUpdateCallback
 - InitUniverseEnemaCollectible @ 8002edc4 (sw @ 8002ee48, base s1) -> CollectibleUniverseEnemaTickCallback
 - InitSingleFrameDecorEntity @ 8002ef90 (sw @ 8002f01c, base s0) -> TriggerCollectible100CTickCallback
-- InitScaleResetCollectible @ 8002f1c8 (sw @ 8002f254, base s0) -> ScaleResetCollectibleTickCallback
+- InitScaleResetCollectible @ 8002f1c8 (sw @ 8002f254, base s0) -> CollectibleScaleResetTickCallback
 - Init1970IconEntity @ 8002f400 (sw @ 8002f488, base s0) -> Collectible1970IconTickCallback
 - InitHamsterShieldCollectible @ 8002f5dc (sw @ 8002f664, base s0) -> CollectibleHamsterShieldTickCallback
 - InitSuperWillieCollectible @ 8002f73c (sw @ 8002f7c4, base s1) -> CollectibleSuperWillieTickCallback
@@ -140,7 +146,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - EntityStateSetIdle @ 8003c114 (sw @ 8003c15c, base a0) -> TimedSparkleCollectibleTick
 - EntityStateSetRandomBehavior @ 8003c1a8 (sw @ 8003c23c, base s0) -> TimedSparkleCollectibleTick
 - EntityStateSetAttack @ 8003c268 (sw @ 8003c2c0, base s0) -> TimedSparkleCollectibleTick
-- EntitySetSparkleCollectibleState @ 8003c33c (sw @ 8003c39c, base s0) -> CollectibleSparkleTickCallback
+- EntityStateSetSparkleCollectible @ 8003c33c (sw @ 8003c39c, base s0) -> CollectibleSparkleTickCallback
 - EntityStateSetSparkle @ 8003c464 (sw @ 8003c4c4, base s0) -> CollectibleSparkleTickCallback
 - InitPathFollowingEnemy @ 8003c5b8 (sw @ 8003c710, base s2) -> SoundEmitterTickCallback
 - SoundEmitterTickCallback @ 8003c950 (sw @ 8003cb84, base s0) -> SoundEmitterStunnedTickCallback
@@ -237,7 +243,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - ShrineyGuardIdleState @ 8004bc90 (sw @ 8004bcf0, base s0) -> EnemyUpdateWithCollisionAndDeath
 - ShrineyGuardAttackAnimState @ 8004bd44 (sw @ 8004bd9c, base s0) -> EnemyUpdateWithCollisionAndDeath
 - ShrineyGuardReadyAttackState @ 8004bdfc (sw @ 8004be70, base s0) -> EnemyUpdateWithCollisionAndDeath
-- ShrineyGuardStartLoopAttackState @ 8004bee0 (sw @ 8004bf54, base s0) -> ShrineyGuardStunTickCallback
+- ShrineyGuardStartLoopingAttackState @ 8004bee0 (sw @ 8004bf54, base s0) -> ShrineyGuardStunTickCallback
 - ShrineyGuardDeathState @ 8004bfc4 (sw @ 8004c050, base s0) -> EnemyUpdateWithCollisionAndDeath
 - InitJoeHeadJoeBoss @ 8004c0e0 (sw @ 8004c1a0, base s0) -> BossHPBarTickCallback
 - JoeHeadJoeSetIdleState @ 8004d138 (sw @ 8004d1f0, base s0) -> JoeHeadJoe_CheckAttackAndUpdate
@@ -469,7 +475,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - EntityStateSetIdle @ 8003c114 (sw @ 8003c180, base a0) -> EntityEventHandlerWithRandomWalk
 - EntityStateSetRandomBehavior @ 8003c1a8 (sw @ 8003c1f8, base s0) -> EntityEventHandlerWithRandomWalk
 - EntityStateSetAttack @ 8003c268 (sw @ 8003c2e4, base s0) -> EntityEventHandlerWithDelayedWalk
-- EntitySetSparkleCollectibleState @ 8003c33c (sw @ 8003c3c0, base s0) -> EntityEventHandler0x1001_1002_1008_V2
+- EntityStateSetSparkleCollectible @ 8003c33c (sw @ 8003c3c0, base s0) -> EntityEventHandler0x1001_1002_1008_V2
 - EntityStateSetSparkle @ 8003c464 (sw @ 8003c4e8, base s0) -> EntityEventHandler0x1001_1002_1008
 - EnemyStartMovingWithSound @ 8003cd8c (sw @ 8003ce30, base s1) -> EntitySimpleEventPassthrough
 - EntityInitSoundEmitterState @ 8003cea8 (sw @ 8003ced4, base a0) -> EntityEventHandlerWalk
@@ -544,7 +550,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - ShrineyGuardIdleState @ 8004bc90 (sw @ 8004bcc8, base s0) -> ShrineyGuardActiveEventHandler
 - ShrineyGuardAttackAnimState @ 8004bd44 (sw @ 8004bd78, base s0) -> ShrineyGuardAttackEventHandler
 - ShrineyGuardReadyAttackState @ 8004bdfc (sw @ 8004be48, base s0) -> ShrineyGuardActiveEventHandler
-- ShrineyGuardStartLoopAttackState @ 8004bee0 (sw @ 8004bf2c, base s0) -> ShrineyGuardActiveEventHandler
+- ShrineyGuardStartLoopingAttackState @ 8004bee0 (sw @ 8004bf2c, base s0) -> ShrineyGuardActiveEventHandler
 - ShrineyGuardDeathState @ 8004bfc4 (sw @ 8004c030, base s0) -> ShrineyGuardActiveEventHandler
 - JoeHeadJoeSetIdleState @ 8004d138 (sw @ 8004d214, base s0) -> JoeHeadJoeAttackEventHandler
 - JoeHeadJoeSetFacingAndAttack @ 8004d270 (sw @ 8004d2d8, base s0) -> JoeHeadJoeBounceEventHandler
@@ -694,7 +700,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - InitPathFollowingDecorEntity @ 8002c9d0 (sw @ 8002cac8, base s2) -> EntityTick_PathFollowUpdate
 - InitDecorEntityWithScreenOffset @ 8002d100 (sw @ 8002d350, base s0) -> EntityTick_EasedMovementInterpolation
 - InitDebrisParticleEntity @ 80034ec8 (sw @ 8003504c, base s3) -> DebrisParticlePhysicsTick
-- EntitySetSparkleCollectibleState @ 8003c33c (sw @ 8003c378, base s0) -> ApplyAnimationPositionOffsets
+- EntityStateSetSparkleCollectible @ 8003c33c (sw @ 8003c378, base s0) -> ApplyAnimationPositionOffsets
 - EntityStateSetSparkle @ 8003c464 (sw @ 8003c4a0, base s0) -> EntityGroundSnapWithAnimation
 - InitPathFollowingEnemy @ 8003c5b8 (sw @ 8003c798, base s2) -> EntityFollowPathWithWrapping
 - EnemyStartMovingWithSound @ 8003cd8c (sw @ 8003ce08, base s1) -> EntityFollowPathWithWrapping
@@ -1083,7 +1089,7 @@ Total: 1186 installs (1434 sp spill stores excluded).
 - ShrineyGuardSetLoopingAttackState @ 8004bbac (sw @ 8004bc74, base s0) -> ShrineyGuardSetAttackState
 - ShrineyGuardIdleState @ 8004bc90 (sw @ 8004bd28, base s0) -> BossRandomAttackChoice
 - ShrineyGuardReadyAttackState @ 8004bdfc (sw @ 8004bec4, base s0) -> BossRandomAttackChoice
-- ShrineyGuardStartLoopAttackState @ 8004bee0 (sw @ 8004bfa8, base s0) -> ShrineyGuardAttackCounterState
+- ShrineyGuardStartLoopingAttackState @ 8004bee0 (sw @ 8004bfa8, base s0) -> ShrineyGuardAttackCounterState
 - ShrineyGuardDeathState @ 8004bfc4 (sw @ 8004c0a4, base s0) -> ShrineyGuardDeathCallback
 - JoeHeadJoeSetFacingAndAttack @ 8004d270 (sw @ 8004d310, base s0) -> JoeHeadJoeSetIdleState
 - JoeHeadJoeEnterActiveState @ 8004d32c (sw @ 8004d3cc, base s0) -> JoeHeadJoeMoveAndCheckAttack

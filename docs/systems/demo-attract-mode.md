@@ -1,3 +1,9 @@
+---
+title: "Demo/Attract Mode System"
+category: systems
+tags: [systems, demo, attract, mode]
+---
+
 # Demo/Attract Mode System
 
 **Status: PARTIALLY VERIFIED via Ghidra analysis (2026-01-16)**

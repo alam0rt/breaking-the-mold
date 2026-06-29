@@ -1,3 +1,9 @@
+---
+title: "BLB Format Vestigial Fields - Complete Analysis"
+category: blb
+tags: [blb, vestigial, fields]
+---
+
 # BLB Format Vestigial Fields - Complete Analysis
 
 **Status**: ✅ FULLY ANALYZED  

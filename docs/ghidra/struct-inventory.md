@@ -1,3 +1,9 @@
+---
+title: "Ghidra Struct Inventory & Analysis"
+category: ghidra
+tags: [ghidra, struct, inventory]
+---
+
 # Ghidra Struct Inventory & Analysis
 
 This document catalogs all structs defined in the Ghidra project (`/Skullmonkeys/`, `/btm/`, `/game/` categories) with their field layouts, documentation status, and analysis notes.

@@ -1,3 +1,9 @@
+---
+title: "HUD System - Complete Documentation"
+category: systems
+tags: [systems, hud, system]
+---
+
 # HUD System - Complete Documentation
 
 **Status**: ✅ FULLY DOCUMENTED from C Code  

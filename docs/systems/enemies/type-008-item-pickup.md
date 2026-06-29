@@ -1,3 +1,9 @@
+---
+title: "Entity Type 8: Item Pickup"
+category: systems/enemies
+tags: [systems, enemies, type, 008, item, pickup]
+---
+
 # Entity Type 8: Item Pickup
 
 **Entity Type**: 8  

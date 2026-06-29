@@ -1,3 +1,9 @@
+---
+title: "BLB File Format"
+category: blb
+tags: [blb]
+---
+
 # BLB File Format
 
 The GAME.BLB file is the main asset archive for Skullmonkeys, containing all level data, graphics, sprites, and audio.

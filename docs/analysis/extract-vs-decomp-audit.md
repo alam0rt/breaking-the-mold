@@ -1,3 +1,9 @@
+---
+title: "Extract vs Decomp Audit (2026-06-14)"
+category: analysis
+tags: [analysis, extract, vs, decomp, audit]
+---
+
 # Extract vs Decomp Audit (2026-06-14)
 
 Comparison of `make extract` output (splat segments, asm, data) against decompiled source to identify patterns, undocumented systems, and decomp priorities.

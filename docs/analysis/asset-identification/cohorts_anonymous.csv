@@ -25,7 +25,7 @@ C0022,28808-28839,CollectibleUniverseEnemaTickCallback,1,0,,0xc88a346a,audio,,,0
 C0023,28892-28903,InitSingleFrameDecorEntity,1,0,,0x08624580,sprite|anim,BRG1;SOAR,,0
 C0024,28933-28986,TriggerCollectible100CTickCallback,1,0,,0x62000441,audio,,,0
 C0025,29038-29049,InitScaleResetCollectible,1,0,,0x8c30008c,sprite|anim,BRG1,,0
-C0026,29076-29129,ScaleResetCollectibleTickCallback,1,0,,0x40864668,audio,,,0
+C0026,29076-29129,CollectibleScaleResetTickCallback,1,0,,0x40864668,audio,,,0
 C0027,29184-29199,Init1970IconEntity,1,0,,0x88a28194,sprite|anim,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,,1
 C0028,29236-29268,Collectible1970IconTickCallback,2,1,0x00000201(1),0x408a6461;0x428a6465,audio,,,0
 C0029,29321-29336,InitHamsterShieldCollectible,1,0,,0x80e85ea0,sprite|anim,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FINN;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MENU;MOSS;PHRO;RUNN;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,,1
@@ -115,7 +115,7 @@ C0112,56778-56793,ShrineyGuardSetLoopingAttackState,1,0,,0x40106054,sprite|anim,
 C0113,56817-56829,ShrineyGuardIdleState,1,0,,0x09382152,sprite|anim,MEGA,,0
 C0114,56855-56869,ShrineyGuardAttackAnimState,1,0,,0x085860d4,sprite|anim,MEGA,,0
 C0115,56895-56912,ShrineyGuardReadyAttackState,1,0,,0x08192250,sprite|anim,MEGA,,0
-C0116,56940-56957,ShrineyGuardStartLoopAttackState,1,0,,0x2c182010,sprite|anim,MEGA,,0
+C0116,56940-56957,ShrineyGuardStartLoopingAttackState,1,0,,0x2c182010,sprite|anim,MEGA,,0
 C0117,56988-57012,ShrineyGuardDeathState,1,0,,0x0a1820d4,sprite|anim,MEGA,,0
 C0118,57073-57173,InitJoeHeadJoeBoss,1,0,,0x06101db0,sprite|anim,HEAD,,0
 C0119,57249-57402,JoeHeadJoeUpdateWithCollisionCheck,1,0,,0x98004092,sprite|anim,BOIL;BRG1;CAVE;CLOU;CRYS;CSTL;EGGS;EVIL;FOOD;GLEN;GLID;HEAD;KLOG;MEGA;MOSS;PHRO;SCIE;SEVN;SNOW;SOAR;TMPL;WEED;WIZZ,,8

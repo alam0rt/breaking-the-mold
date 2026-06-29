@@ -1,3 +1,9 @@
+---
+title: "Per-level entity census (BLB Asset 501)"
+category: analysis/asset-identification
+tags: [analysis, asset, identification, entity, census]
+---
+
 # Per-level entity census (BLB Asset 501)
 
 Entity types populating each level, mapped to role via `EntityType###_*_Init` symbols. Gives the role *context* for each level's assets (the 274 BLB-only assets can't be code-categorized, but their level's entity roster says what kinds of things live there).

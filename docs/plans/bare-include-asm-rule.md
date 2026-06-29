@@ -1,3 +1,9 @@
+---
+title: "Plan: `bare-include-asm` ast-grep rule — a guide for full C decompilation"
+category: plans
+tags: [plans, bare, include, asm, rule]
+---
+
 # Plan: `bare-include-asm` ast-grep rule — a guide for full C decompilation
 
 Status: proposed (2026-06-20)

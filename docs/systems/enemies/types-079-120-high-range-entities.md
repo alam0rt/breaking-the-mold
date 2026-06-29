@@ -1,3 +1,9 @@
+---
+title: "Entity Types 79-120: High-Range Entities"
+category: systems/enemies
+tags: [systems, enemies, types, 079, 120, high, range, entities]
+---
+
 # Entity Types 79-120: High-Range Entities
 
 **Entity Types**: 79-84, 90-96, 99-103, 109, 119-120 (23 types)  

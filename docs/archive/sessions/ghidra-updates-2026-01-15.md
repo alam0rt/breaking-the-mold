@@ -1,3 +1,9 @@
+---
+title: "Ghidra Function Updates - January 15, 2026"
+category: archive/sessions
+tags: [archive, sessions, ghidra, updates, 2026]
+---
+
 # Ghidra Function Updates - January 15, 2026
 
 **Summary**: Updated 25+ functions in Ghidra with verified names and comprehensive plate comments based on evil-engine documentation analysis.

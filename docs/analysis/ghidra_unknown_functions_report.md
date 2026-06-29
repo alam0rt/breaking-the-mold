@@ -1,3 +1,9 @@
+---
+title: "Ghidra Unknown Functions Report"
+category: analysis
+tags: [analysis, ghidra, unknown, functions, report]
+---
+
 # Ghidra Unknown Functions Report
 
 **Generated:** 2026-01-15 14:15:00  

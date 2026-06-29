@@ -1,3 +1,9 @@
+---
+title: "Sound Effects Reference Table"
+category: systems
+tags: [systems, sound, effects, reference]
+---
+
 # Sound Effects Reference Table
 
 **Source**: Systematic extraction from SLES_010.90.c  

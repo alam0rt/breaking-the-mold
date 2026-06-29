@@ -1,3 +1,9 @@
+---
+title: "Soul Reaver Decompilation Process Analysis"
+category: root
+tags: [soul, re, analysis]
+---
+
 # Soul Reaver Decompilation Process Analysis
 
 Based on examination of [fmil95/soul-re](https://github.com/fmil95/soul-re) repository.

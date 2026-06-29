@@ -558,7 +558,7 @@
 0x8003C114 |   148 | Game/OBJECT     | -               | EntityStateSetIdle
 0x8003C1A8 |   192 | Game/OBJECT     | -               | EntityStateSetRandomBehavior
 0x8003C268 |   212 | Game/OBJECT     | -               | EntityStateSetAttack
-0x8003C33C |   188 | Game/OBJECT     | collectible     | EntitySetSparkleCollectibleState
+0x8003C33C |   188 | Game/OBJECT     | collectible     | EntityStateSetSparkleCollectible
 0x8003C3F8 |    36 | Game/OBJECT     | -               | EntitySetSparkleDelay3
 0x8003C41C |    36 | Game/OBJECT     | -               | EntitySetSparkleDelay2
 0x8003C440 |    36 | Game/OBJECT     | -               | EntitySetSparkleDelay1
@@ -796,7 +796,7 @@
 0x80049828 |   260 | Game/OBJECT     | -               | InitBonusItemEntity
 0x8004992C |   296 | Game/OBJECT     | boss            | BossHPBarTickCallback
 0x80049A54 |   548 | Game/OBJECT     | boss            | InitGlennYntisBoss
-0x80049C78 |   132 | Game/OBJECT     | -               | EntityDestructor_WithSPUStop
+0x80049C78 |   132 | Game/OBJECT     | -               | EntityDestructor_WithSPUVoiceStopAndClear
 0x80049CFC |    88 | Game/OBJECT     | -               | Hazard_TickWithBehaviorTransition
 0x80049D54 |   384 | Game/OBJECT     | -               | GlennYntisEventHandler
 0x80049ED4 |   548 | Game/OBJECT     | -               | GlennYntisDamageEventHandler
@@ -831,7 +831,7 @@
 0x8004BC90 |   180 | Game/OBJECT     | -               | ShrineyGuardIdleState
 0x8004BD44 |   184 | Game/OBJECT     | -               | ShrineyGuardAttackAnimState
 0x8004BDFC |   228 | Game/OBJECT     | -               | ShrineyGuardReadyAttackState
-0x8004BEE0 |   228 | Game/OBJECT     | -               | ShrineyGuardStartLoopAttackState
+0x8004BEE0 |   228 | Game/OBJECT     | -               | ShrineyGuardStartLoopingAttackState
 0x8004BFC4 |   252 | Game/OBJECT     | -               | ShrineyGuardDeathState
 0x8004C0C0 |    32 | Game/OBJECT     | -               | ShrineyGuardDeathCallback
 0x8004C0E0 |   900 | Game/OBJECT     | boss            | InitJoeHeadJoeBoss
@@ -1316,7 +1316,7 @@
 0x80070804 |    76 | Game/PLAYER     | -               | EntityInitCallback_80070804
 0x80070850 |  1304 | Game/PLAYER     | -               | EntityInitCallback_80070850
 0x80070D68 |   624 | Game/PLAYER     | -               | CreateSoarPlayerEntity
-0x80070FD8 |   112 | Game/PLAYER     | -               | EntityDestructor_WithSPUStopAt10c
+0x80070FD8 |   112 | Game/PLAYER     | -               | EntityDestructor_WithSPUVoiceStopAt10c
 0x80071048 |   480 | Game/GAMELOOP   | -               | CalcEntityYFromTileCollision
 0x80071228 |   460 | Game/GAMELOOP   | -               | CheckEntityNearTileY
 0x800713F4 |   364 | Game/GAMELOOP   | -               | EntityInitCallback_800713f4

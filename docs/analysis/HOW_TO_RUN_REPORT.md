@@ -1,3 +1,9 @@
+---
+title: "How to Generate Actual Ghidra Report"
+category: analysis
+tags: [analysis, how, run, report]
+---
+
 # How to Generate Actual Ghidra Report
 
 ## Prerequisites

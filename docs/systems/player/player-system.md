@@ -1,3 +1,9 @@
+---
+title: "Player System Overview"
+category: systems/player
+tags: [systems, player, system]
+---
+
 # Player System Overview
 
 This document describes how the player (Klaymen) works in Skullmonkeys, including powerups, death handling, and key mechanics.

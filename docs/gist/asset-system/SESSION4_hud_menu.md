@@ -1,3 +1,9 @@
+---
+title: "Session 4 — HUD / menu asset category"
+category: gist/asset-system
+tags: [gist, asset, system, hud, menu]
+---
+
 # Session 4 — HUD / menu asset category
 
 ## Finding: the in-level HUD reuses the PICKUP namespace key (0x88200080, R27)

@@ -1,3 +1,9 @@
+---
+title: "Binary Layout Analysis Findings"
+category: analysis
+tags: [analysis, binary, layout, findings]
+---
+
 # Binary Layout Analysis Findings
 
 **Status: UNCONFIRMED** - These findings require manual verification in Ghidra before being considered authoritative.

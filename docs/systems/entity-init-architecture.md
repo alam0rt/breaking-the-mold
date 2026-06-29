@@ -1,3 +1,9 @@
+---
+title: "Entity Init Architecture Analysis"
+category: systems
+tags: [systems, entity, init, architecture]
+---
+
 # Entity Init Architecture Analysis
 
 **Date**: January 25, 2026  

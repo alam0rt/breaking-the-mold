@@ -1,3 +1,9 @@
+---
+title: "Audio System Functions Reference"
+category: systems
+tags: [systems, audio, functions, reference]
+---
+
 # Audio System Functions Reference
 
 **Source**: Ghidra SLES_010.90.c + function-batches-to-analyze.md  

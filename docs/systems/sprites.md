@@ -1,3 +1,9 @@
+---
+title: "Sprite System"
+category: systems
+tags: [systems, sprites]
+---
+
 # Sprite System
 
 Sprites in Skullmonkeys are RLE-compressed graphics with embedded palettes.

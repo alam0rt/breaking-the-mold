@@ -1,3 +1,9 @@
+---
+title: "Function Batches Ready for Analysis"
+category: analysis
+tags: [analysis, function, batches, analyze]
+---
+
 # Function Batches Ready for Analysis
 
 **Generated**: 2026-01-15  

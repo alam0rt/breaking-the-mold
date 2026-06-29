@@ -1,3 +1,9 @@
+---
+title: "32-bit Opaque IDs (asset hashes & magic tokens)"
+category: reference
+tags: [reference, asset, hash, ids]
+---
+
 # 32-bit Opaque IDs (asset hashes & magic tokens)
 
 Investigation 2026-06-15. Supersedes the "4-letter packed ASCII" description that appears in

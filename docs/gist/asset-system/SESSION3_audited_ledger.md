@@ -1,3 +1,9 @@
+---
+title: "Session 3 — Confidence audit of all recovered names"
+category: gist/asset-system
+tags: [gist, asset, system, audited, ledger]
+---
+
 # Session 3 — Confidence audit of all recovered names
 
 ## Premise (agreed constraints)

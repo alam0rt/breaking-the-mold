@@ -1,3 +1,9 @@
+---
+title: "Segment Reorganization Proposal"
+category: plans
+tags: [plans, segment, reorganization, proposal]
+---
+
 # Segment Reorganization Proposal
 
 **Created:** January 24, 2026  

@@ -1,3 +1,9 @@
+---
+title: "Password Extraction Guide"
+category: analysis
+tags: [analysis, password, extraction, guide]
+---
+
 # Password Extraction Guide
 
 This guide explains how to extract the complete password table from Skullmonkeys.

@@ -1,3 +1,9 @@
+---
+title: "Entity Types 106-117: Variant Groups B, C, D"
+category: systems/enemies
+tags: [systems, enemies, types, 106, 108, 112, 114, 115, 117, variant]
+---
+
 # Entity Types 106-117: Variant Groups B, C, D
 
 **Entity Types**: 106-108, 112-114, 115-117 (12 types in 3 groups)  

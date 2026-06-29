@@ -1,3 +1,9 @@
+---
+title: "Sound System - Complete Reference"
+category: systems
+tags: [systems, sound, system]
+---
+
 # Sound System - Complete Reference
 
 **Status**: ✅ 100% Complete  

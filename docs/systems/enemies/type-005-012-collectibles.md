@@ -1,3 +1,9 @@
+---
+title: "Entity Types 5, 6, 7, 9, 11, 12: Additional Collectibles"
+category: systems/enemies
+tags: [systems, enemies, type, 005, 012, collectibles]
+---
+
 # Entity Types 5, 6, 7, 9, 11, 12: Additional Collectibles
 
 **Entity Types**: 5, 6, 7, 9, 11, 12  

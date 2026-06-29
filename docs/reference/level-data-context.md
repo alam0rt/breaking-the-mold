@@ -1,3 +1,9 @@
+---
+title: "LevelDataContext Structure"
+category: reference
+tags: [reference, level, data, context]
+---
+
 # LevelDataContext Structure
 
 Central data structure for level loading, located at GameState+0x84.

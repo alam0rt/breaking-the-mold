@@ -1,3 +1,9 @@
+---
+title: "Complete Damage and Death System"
+category: systems
+tags: [systems, damage, system]
+---
+
 # Complete Damage and Death System
 
 **Status**: ✅ FULLY DOCUMENTED from C Code  

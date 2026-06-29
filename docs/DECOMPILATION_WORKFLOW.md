@@ -1,3 +1,9 @@
+---
+title: "Simplified Decompilation Workflow"
+category: root
+tags: [decompilation, workflow]
+---
+
 # Simplified Decompilation Workflow
 
 ## Quick Start

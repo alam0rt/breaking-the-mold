@@ -1,3 +1,9 @@
+---
+title: "Entity Types 57-76: Mid-Range Entities"
+category: systems/enemies
+tags: [systems, enemies, types, 057, 076, mid, range, entities]
+---
+
 # Entity Types 57-76: Mid-Range Entities
 
 **Entity Types**: 57-59, 62-76 (17 types)  

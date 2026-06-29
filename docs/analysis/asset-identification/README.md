@@ -1,3 +1,9 @@
+---
+title: "Sprite Asset Identification Contact Sheets"
+category: analysis/asset-identification
+tags: [analysis, asset, identification]
+---
+
 # Sprite Asset Identification Contact Sheets
 
 Generated from extracted sprite PNG/GIFs plus direct BLB thumbnail fallback. Unique sprite IDs: **412**.

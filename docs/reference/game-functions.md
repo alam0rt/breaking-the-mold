@@ -1,3 +1,9 @@
+---
+title: "Game Functions Reference"
+category: reference
+tags: [reference, game, functions]
+---
+
 # Game Functions Reference
 
 **Status**: ✅ All FUN_ functions named (January 19, 2026)  

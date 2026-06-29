@@ -1,3 +1,9 @@
+---
+title: "Input System - Complete Reference"
+category: systems
+tags: [systems, input, system]
+---
+
 # Input System - Complete Reference
 
 **Source**: Ghidra decompilation + game-loop.md analysis  

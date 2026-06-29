@@ -1,3 +1,9 @@
+---
+title: "Secret Ending System"
+category: systems
+tags: [systems, secret, ending, system]
+---
+
 # Secret Ending System
 
 **Status**: ✅ FULLY DOCUMENTED from C Code  

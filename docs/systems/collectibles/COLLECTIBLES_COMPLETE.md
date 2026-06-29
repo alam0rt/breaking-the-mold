@@ -1,3 +1,9 @@
+---
+title: "Complete Collectibles System Reference"
+category: systems/collectibles
+tags: [systems, collectibles]
+---
+
 # Complete Collectibles System Reference
 
 **Date**: January 20, 2026  

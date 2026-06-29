@@ -1,3 +1,9 @@
+---
+title: "Menu System - Complete Analysis"
+category: systems
+tags: [systems, menu, system]
+---
+
 # Menu System - Complete Analysis
 
 **Status**: ✅ FULLY DOCUMENTED from C Code + Ghidra Naming  

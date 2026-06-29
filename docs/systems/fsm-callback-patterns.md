@@ -1,3 +1,9 @@
+---
+title: "FSM / Callback Dispatch Patterns"
+category: systems
+tags: [systems, fsm, callback, patterns]
+---
+
 # FSM / Callback Dispatch Patterns
 
 **Date:** 2026-06-12  

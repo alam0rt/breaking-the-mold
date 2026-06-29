@@ -1,3 +1,9 @@
+---
+title: "RUNN Player Entity (Auto-Scroller/Runner Levels)"
+category: systems/player
+tags: [systems, player, runn]
+---
+
 # RUNN Player Entity (Auto-Scroller/Runner Levels)
 
 **Status**: ✅ FULLY DOCUMENTED from C Code  

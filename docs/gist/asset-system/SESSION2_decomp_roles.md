@@ -1,3 +1,9 @@
+---
+title: "Session 2 — Decomp cross-reference (role map) + key correction"
+category: gist/asset-system
+tags: [gist, asset, system, decomp, roles]
+---
+
 # Session 2 — Decomp cross-reference (role map) + key correction
 
 ## Correction that reframed the model

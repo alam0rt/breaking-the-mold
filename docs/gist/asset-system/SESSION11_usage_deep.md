@@ -1,3 +1,9 @@
+---
+title: "Session 11 — Full-corpus usage dig (sounds, grammar, player variants)"
+category: gist/asset-system
+tags: [gist, asset, system, usage, deep]
+---
+
 # Session 11 — Full-corpus usage dig (sounds, grammar, player variants)
 
 ## Full-corpus sound-trigger sweep — boundary mapped honestly

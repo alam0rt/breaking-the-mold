@@ -1,3 +1,9 @@
+---
+title: "Level Flags Reference"
+category: reference
+tags: [reference, level, flags]
+---
+
 # Level Flags Reference
 
 **Location**: TileHeader + 0x18 (16-bit word)  

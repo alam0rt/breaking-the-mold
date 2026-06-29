@@ -1,3 +1,9 @@
+---
+title: "Joe-Head-Joe Boss - Complete Documentation"
+category: root
+tags: [joe, head]
+---
+
 # Joe-Head-Joe Boss - Complete Documentation
 
 **Date**: January 15, 2026  

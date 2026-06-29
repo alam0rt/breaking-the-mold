@@ -1,3 +1,9 @@
+---
+title: Function name/purpose audit
+category: analysis
+tags: [name-audit, function-naming, clean-room, technical-debt, symbol-addrs, renaming, plate-comments]
+---
+
 # Function name/purpose audit
 
 Clean-room name review (CLAUDE.md: every name is an inferred guess and may be

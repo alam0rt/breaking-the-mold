@@ -1,3 +1,9 @@
+---
+title: "Forensic Analysis: Skullmonkeys Development Methods"
+category: analysis
+tags: [analysis, forensic, development, methods]
+---
+
 # Forensic Analysis: Skullmonkeys Development Methods
 
 Inferred purely from the decompiled C (`docs/ghidra/SLES_010.90.c`, ~64k lines) plus

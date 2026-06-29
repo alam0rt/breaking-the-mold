@@ -1,3 +1,9 @@
+---
+title: "Session 17 — Collision system + sounds + HUD counters"
+category: gist/asset-system
+tags: [gist, asset, system, collision]
+---
+
 # Session 17 — Collision system + sounds + HUD counters
 
 ## Collision-triggered sounds (mapped)

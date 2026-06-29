@@ -1,3 +1,9 @@
+---
+title: "Entity Type 48: Platform B (Alternate Platform)"
+category: systems/enemies
+tags: [systems, enemies, type, 048, platform]
+---
+
 # Entity Type 48: Platform B (Alternate Platform)
 
 **Entity Type**: 48  

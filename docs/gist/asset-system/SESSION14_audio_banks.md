@@ -1,3 +1,9 @@
+---
+title: "Session 14 — Audio loading architecture (Asset 601/602 -> SPU)"
+category: gist/asset-system
+tags: [gist, asset, system, audio, banks]
+---
+
 # Session 14 — Audio loading architecture (Asset 601/602 -> SPU)
 
 Traced the full runtime audio pipeline; explains the audio namespace structure.

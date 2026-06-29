@@ -1,3 +1,9 @@
+---
+title: "Boss AI Behaviors"
+category: systems/boss-ai
+tags: [systems, boss, ai, behaviors]
+---
+
 # Boss AI Behaviors
 
 **Status**: 🔬 In Progress (30% Complete)  

@@ -1,3 +1,9 @@
+---
+title: "Session 24 — Enemy AI system"
+category: gist/asset-system
+tags: [gist, asset, system, enemy, ai]
+---
+
 # Session 24 — Enemy AI system
 
 ## Yes, there's real (modest) enemy AI — factory + state-machine + per-frame tick

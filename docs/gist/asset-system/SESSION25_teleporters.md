@@ -1,3 +1,9 @@
+---
+title: "Session 25 — Level-exit teleporters & branching (stage 2a/2b/bonus)"
+category: gist/asset-system
+tags: [gist, asset, system, teleporters]
+---
+
 # Session 25 — Level-exit teleporters & branching (stage 2a/2b/bonus)
 
 Found the multi-destination teleporter logic — how an exit can lead to stage 2a, 2b, or bonus.

@@ -1,3 +1,9 @@
+---
+title: "Entity System"
+category: systems
+tags: [systems, entities]
+---
+
 # Entity System
 
 **Status**: ✅ Complete (all FUN_ functions named)  
@@ -595,7 +601,7 @@ Bosses use complex state machines with attack patterns, invulnerability windows,
 |--------|----------|-------|
 | 0xFFFF0000 | 0x800479d0 | Intro/Idle |
 | 0xFFFF0000 | BossRandomAttackChoice | Attack Selection |
-| 0xFFFF0000 | ShrineyGuardStartLoopAttackState | Loop Attack |
+| 0xFFFF0000 | ShrineyGuardStartLoopingAttackState | Loop Attack |
 | 0xFFFF0000 | ShrineyGuardDeathState | Death |
 
 **JoeHeadJoe Boss** (Brick-Breaker Style):

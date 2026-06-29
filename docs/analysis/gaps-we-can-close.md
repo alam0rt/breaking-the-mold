@@ -1,3 +1,9 @@
+---
+title: "Gaps We Can Close From Decompiled Code"
+category: analysis
+tags: [analysis, gaps, we, can, close]
+---
+
 # Gaps We Can Close From Decompiled Code
 
 **Analysis Date**: January 15, 2026  

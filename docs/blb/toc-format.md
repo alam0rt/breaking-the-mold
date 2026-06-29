@@ -1,3 +1,9 @@
+---
+title: "TOC Format"
+category: blb
+tags: [blb, toc, format]
+---
+
 # TOC Format
 
 All BLB data segments use consistent Table of Contents (TOC) formats.

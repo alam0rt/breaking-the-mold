@@ -1,3 +1,9 @@
+---
+title: "FINN Player Entity (Boat/Controllable Fish Levels)"
+category: systems/player
+tags: [systems, player, finn]
+---
+
 # FINN Player Entity (Boat/Controllable Fish Levels)
 
 The FINN player handles boat/controllable fish levels where the player uses tank controls

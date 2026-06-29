@@ -1,3 +1,9 @@
+---
+title: "Quick Reference: Tile Collision Attributes"
+category: root
+tags: [tile, collision, quick, ref]
+---
+
 # Quick Reference: Tile Collision Attributes
 
 **Source**: PlayerProcessTileCollision @ 0x8005a914  

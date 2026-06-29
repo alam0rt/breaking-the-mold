@@ -1,3 +1,9 @@
+---
+title: "Level Loading System"
+category: systems
+tags: [systems, level, loading]
+---
+
 # Level Loading System
 
 **Status: VERIFIED via Ghidra analysis (2026-01-16)**
