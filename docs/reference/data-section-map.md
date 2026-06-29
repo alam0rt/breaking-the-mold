@@ -36,7 +36,7 @@ These addresses have plate comments in Ghidra for reference:
 | 0x8009DAE0 | g_CheatPatternTable | 280 | Button sequences for cheats |
 | 0x8009DC40 | g_GameState | 416 | Main game state structure |
 | 0x800A5754 | g_pPlayerState | 4 | Pointer to 30-byte PlayerState |
-| 0x800A5960 | g_GameStatePtr | 4 | Pointer to active GameState |
+| 0x800A5960 | g_pGameState | 4 | Pointer to active GameState |
 | 0x800A59F0 | g_GameBLBSector | 4 | BLB starting sector (0x146) |
 | 0x800AE3E0 | BLBHeaderBuffer | 0x1000 | Loaded BLB header at runtime |
 
@@ -298,7 +298,7 @@ Small data section, accessed via GP-relative addressing.
 | 0x800A5948 | 4 | g_FrameReady | Frame complete flag |
 | 0x800A594C | 4 | g_SkipVSync | Skip VSync flag |
 | 0x800A5950 | 4 | g_GameFlags | Game flags (bit 0x80=debug menu) |
-| 0x800A5960 | 4 | g_GameStatePtr | Pointer to active GameState |
+| 0x800A5960 | 4 | g_pGameState | Pointer to active GameState |
 
 ### Input State (0x800A5754 - 0x800A5770)
 

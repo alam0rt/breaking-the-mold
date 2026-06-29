@@ -32,10 +32,10 @@ the player's current mode.
 
 | Address | Name | Role |
 |---------|------|------|
-| 0x80066CE0 | `PlayerStateCallback_0` | Respawn state |
-| 0x8006A310 | `PlayerStateCallback_1` | Special mode |
+| 0x80066CE0 | `PlayerStateInit_Idle` | Respawn state |
+| 0x8006A310 | `PlayerState_HideAndClearBounce` | Special mode |
 | 0x8006864C | `PlayerStateCallback_2` | Normal gameplay (main) |
-| 0x8006AE0C | `PlayerStateCallback_3` | Alt state |
+| 0x8006AE0C | `PlayerState_SetupBounceRight` | Alt state |
 
 ### PlayerState_* handlers (16)
 

@@ -36,7 +36,7 @@ The pending flags at +0xE0 tell `ApplyPendingSpriteState` which fields need upda
 
 ## Function Reference
 
-### 1. FUN_8001d024 - AllocateSpriteGPUPrimitive
+### 1. AllocateSpriteContext - AllocateSpriteGPUPrimitive
 
 **Address**: 0x8001d024 (line 5791)
 
@@ -86,7 +86,7 @@ void SetAnimationSpriteFlags(Entity* entity, u32 flags, u16 additional_flags) {
 
 ---
 
-### 3. FUN_8001d0c0 - SetAnimationFrameIndex
+### 3. SetAnimationFrameIndex - SetAnimationFrameIndex
 
 **Address**: 0x8001d0c0 (line 5830)
 
@@ -246,7 +246,7 @@ void SetAnimationSpriteCallback(Entity* entity, void* callback) {
 
 ---
 
-### 8. FUN_8001d218 - SetAnimationActive
+### 8. SetAnimationActive - SetAnimationActive
 
 **Address**: 0x8001d218 (line 5918)
 
@@ -394,14 +394,14 @@ graph TD
 
 | Address | Old Name | New Name | Flag |
 |---------|----------|----------|------|
-| 0x8001d024 | FUN_8001d024 | AllocateSpriteGPUPrimitive | N/A |
+| 0x8001d024 | AllocateSpriteContext | AllocateSpriteGPUPrimitive | N/A |
 | 0x8001d0b0 | FUN_8001d0b0 | SetAnimationSpriteFlags | 0x04 |
-| 0x8001d0c0 | FUN_8001d0c0 | SetAnimationFrameIndex | 0x08 |
+| 0x8001d0c0 | SetAnimationFrameIndex | SetAnimationFrameIndex | 0x08 |
 | 0x8001d0f0 | FUN_8001d0f0 | SetAnimationFrameCallback | 0x208 |
 | 0x8001d170 | FUN_8001d170 | SetAnimationLoopFrame | 0x410 |
 | 0x8001d1c0 | FUN_8001d1c0 | SetAnimationSpriteId | 0x20 |
 | 0x8001d1f0 | FUN_8001d1f0 | SetAnimationSpriteCallback | 0x820 |
-| 0x8001d218 | FUN_8001d218 | SetAnimationActive | 0x100 |
+| 0x8001d218 | SetAnimationActive | SetAnimationActive | 0x100 |
 
 ---
 

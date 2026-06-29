@@ -211,7 +211,7 @@ This allows underwater/cave areas with sloped floors and color effects.
 |---------|------|---------|
 | 0x800241f4 | GetTileAttributeAtPosition | Pixel → attr |
 | 0x8005a914 | PlayerProcessTileCollision | Switch handler |
-| 0x800226f8 | CheckEntityCollision | Entity collisions |
+| 0x800226f8 | DispatchEventToCollidingEntity | Entity collisions |
 | 0x800245bc | CheckTriggerZoneCollision | Filter solid/trigger |
 | 0x80024cf4 | InitTileAttributeState | Load Asset 500 |
 

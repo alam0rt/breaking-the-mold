@@ -7,7 +7,7 @@ tags: [systems, boss, ai, system, analysis]
 # Boss System - Multi-Agent Analysis
 
 **Date**: January 14, 2026  
-**Source**: SLES_010.90.c decompilation (InitBossEntity @ line 15295)  
+**Source**: SLES_010.90.c decompilation (InitMonkeyMageBoss @ line 15295)  
 **Analysis Method**: 4 parallel agents analyzing different aspects  
 **Status**: ✅ Boss system architecture documented
 
@@ -29,7 +29,7 @@ Based on level flags (0x2000 = BOSS flag):
 
 ### Boss Creation
 
-**Function**: `InitBossEntity` @ 0x80047fb8 (line 15295-15395)
+**Function**: `InitMonkeyMageBoss` @ 0x80047fb8 (line 15295-15395)
 
 **Player Creator**: `CreateBossPlayerEntity` @ 0x80078200 (called when level flag 0x2000 set)
 
@@ -37,10 +37,10 @@ Based on level flags (0x2000 = BOSS flag):
 
 ## Agent 2: Boss Entity Structure
 
-### InitBossEntity Analysis (Lines 15295-15395)
+### InitMonkeyMageBoss Analysis (Lines 15295-15395)
 
 ```c
-int InitBossEntity(Entity* bossMain, EntityDef* definition) {
+int InitMonkeyMageBoss(Entity* bossMain, EntityDef* definition) {
     // Step 1: Initialize main boss entity structure
     FUN_8003a5f8(bossMain, definition, &DAT_8009ba48);
     bossMain[0x18] = &DAT_80011308;  // Vtable/method table
@@ -52,7 +52,7 @@ int InitBossEntity(Entity* bossMain, EntityDef* definition) {
     // Step 3: Create main boss sprite entity (SPRITE 1)
     void* mainSprite = AllocateFromHeap(blbHeaderBufferBase, 0x104, 1, 0);
     mainSprite = FUN_80049828(mainSprite, 0x181c3854, 0);  // Main boss sprite
-    AddEntityToSortedRenderList(g_GameStatePtr, mainSprite);
+    AddEntityToSortedRenderList(g_pGameState, mainSprite);
     
     // Step 4: Configure boss state
     bossMain[0x10] = 0x442;   // Some flags
@@ -92,8 +92,8 @@ int InitBossEntity(Entity* bossMain, EntityDef* definition) {
         );
         
         bossMain[0x114 + i*4] = part;  // Store part pointer
-        AddEntityToSortedRenderList(g_GameStatePtr);
-        AddToUpdateQueue(g_GameStatePtr, part);
+        AddEntityToSortedRenderList(g_pGameState);
+        AddToUpdateQueue(g_pGameState, part);
     }
     
     // Step 7: Create auxiliary entity (SPRITE 8)
@@ -106,8 +106,8 @@ int InitBossEntity(Entity* bossMain, EntityDef* definition) {
     // ... more initialization ...
     
     bossMain[0x130] = aux;  // Store aux pointer
-    AddEntityToSortedRenderList(g_GameStatePtr);
-    AddToUpdateQueue(g_GameStatePtr, aux);
+    AddEntityToSortedRenderList(g_pGameState);
+    AddToUpdateQueue(g_pGameState, aux);
     
     // Step 8: Create final sprite (SPRITE 9)
     void* sprite = AllocateFromHeap(blbHeaderBufferBase, 0x104, 1, 0);
@@ -304,7 +304,7 @@ graph TD
     Start[Boss Level Loads]
     CheckFlag[Check Level Flag 0x2000]
     CreateBoss[CreateBossPlayerEntity]
-    InitBoss[InitBossEntity]
+    InitBoss[InitMonkeyMageBoss]
     SetHP[Set g_pPlayerState 1d=5]
     CreateMain[Create Main Sprite]
     CreateParts[Create 6 Parts]
@@ -511,7 +511,7 @@ Each of the 6 parts has its own:
 2. **Part collision** - May vary per part
 3. **Projectile collision** - Boss-spawned bullets
 
-**Damage Application**: Same as normal enemies (CheckEntityCollision)
+**Damage Application**: Same as normal enemies (DispatchEventToCollidingEntity)
 
 ### Player Damage to Boss
 
@@ -537,7 +537,7 @@ if (projectile_hits_boss_or_part()) {
 
 ### Player Entity Modifications
 
-From InitBossEntity:
+From InitMonkeyMageBoss:
 ```c
 // Store boss HP to entity (line 16022)
 boss[0x40] = g_pPlayerState[0x1D];  // Copy HP to boss entity

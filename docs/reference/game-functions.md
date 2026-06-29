@@ -93,7 +93,7 @@ Key functions for Skullmonkeys (PAL SLES-01090).
 | 0x8007B968 | FindSpriteInTOC | Search ctx+0x70 and ctx+0x40 TOCs |
 | 0x8007BBEC | FUN_8007bbec | Get sprite data pointer |
 | 0x8007BEBC | GetFrameMetadata | Get 36-byte frame entry |
-| 0x80010068 | DecodeRLESprite | RLE decoder with flip support |
+| 0x80010068 | DecodeRLESpriteCore | RLE decoder with flip support |
 | 0x8001CDAC | AllocSpriteRenderContext | Allocate SpriteRenderContext (0x3C bytes) |
 | 0x8001D080 | SetEntitySpriteId | Set sprite ID at entity+0xBC |
 
@@ -125,8 +125,8 @@ LookupSpriteById(sprite_id) @ 0x8007bb10
 | 0x8001C720 | InitEntitySprite | Core entity sprite init |
 | 0x8001C868 | InitEntityWithSprite | Full entity+sprite wrapper |
 | 0x8001CB88 | EntityUpdateCallback | Default entity tick callback |
-| 0x8001D0C0 | FUN_8001d0c0 | Set sprite frame index |
-| 0x8001D218 | FUN_8001d218 | Set sprite visibility |
+| 0x8001D0C0 | SetAnimationFrameIndex | Set sprite frame index |
+| 0x8001D218 | SetAnimationActive | Set sprite visibility |
 | 0x8001D290 | TickEntityAnimation | Animation frame tick handler |
 | 0x8001D554 | ApplyPendingSpriteState | Apply pending sprite changes |
 | 0x8001D748 | UpdateSpriteFrameData | Update frame dimensions |
@@ -155,7 +155,7 @@ GameState uses several linked lists for entity management:
 | 0x800213A8 | AddEntityToSortedRenderList | Register entity in sorted lists |
 | 0x80021D30 | RemoveFromTickList | Remove entity from +0x1C |
 | 0x80021DC0 | RemoveFromRenderList | Remove entity from +0x20 |
-| 0x80021E50 | RemoveFromUpdateQueue | Remove entity from +0x24 |
+| 0x80021E50 | RemoveEntityFromUpdateQueue | Remove entity from +0x24 |
 | 0x80021EDC | ChangeRenderZOrder | Update z-order in +0x20 list |
 | 0x80022074 | RemoveEntityFromAllLists | Remove from all lists + destructor |
 | 0x80022218 | ClearTickList | Free all entries in +0x1C |
@@ -180,7 +180,7 @@ GameState uses several linked lists for entity management:
 | 0x80077940 | MenuTickCallback | Menu per-frame update |
 | 0x80077AF0 | MenuInputHandler | Menu input processing |
 | 0x800778EC | SetMenuBackgroundColor | Set BG from color index |
-| 0x800754CC | AttachMenuCursor | Create cursor for button |
+| 0x800754CC | AttachCursorToButton | Create cursor for button |
 | 0x80075FF4 | InitPasswordDisplay | 12-digit password entity |
 | 0x8007C388 | PlaySoundEffect | Play sound effect with pan |
 | 0x80020F68 | AddToZOrderList | Z-order sorted list (+0x1C) |
@@ -192,7 +192,7 @@ GameState uses several linked lists for entity management:
 | 0x80027A00 | InitEntity_8c510186 | Menu cursor entity |
 | 0x80034BB8 | InitEntity_168254b5 | Particle entity |
 | 0x80052678 | InitEntity_a89d0ad0 | Unknown entity |
-| 0x80047FB8 | InitBossEntity | Boss setup |
+| 0x80047FB8 | InitMonkeyMageBoss | Boss setup |
 | 0x80059A70 | InitPlayerSpriteAvailability | Check available player sprites |
 | 0x800281A4 | CreateMenuEntities | Menu UI factory (creates ~30 entities) |
 
@@ -261,14 +261,14 @@ The sprite ID in the function name **IS** the sprite ID passed to InitEntitySpri
 | 0x8001352C | WaitForVBlankIfNeeded | Conditional VSync wait |
 | 0x80013500 | FlushDebugFontAndEndFrame | Draw debug text, end frame |
 | 0x80013554 | SwapBuffersAndClearOT | Swap buffers, clear OT |
-| 0x80023DBC | UpdateCameraPosition | Camera scroll based on player at +0x30 |
+| 0x80023DBC | SetCameraPositionDirect | Camera scroll based on player at +0x30 |
 
 ## Collision System
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x800226F8 | CheckEntityCollision | Iterate +0x24 list for collision detection |
-| 0x8001B3F0 | CheckBoundingBoxOverlap | Box overlap test (called by CheckEntityCollision) |
+| 0x800226F8 | DispatchEventToCollidingEntity | Iterate +0x24 list for collision detection |
+| 0x8001B3F0 | CheckBoundingBoxOverlap | Box overlap test (called by DispatchEventToCollidingEntity) |
 
 ## Graphics Initialization
 
@@ -397,7 +397,7 @@ See [FINN Player Documentation](../systems/player-finn.md) for details.
 | 0x800A5950 | g_GameFlags | Game flags (bit 0x80=debug menu) |
 | 0x800A594C | g_SkipVSync | Skip VSync flag |
 | 0x800A5948 | g_FrameReady | Frame complete flag |
-| 0x800A5960 | g_GameStatePtr | Pointer to active GameState |
+| 0x800A5960 | g_pGameState | Pointer to active GameState |
 | 0x800A5770 | g_DefaultBGColorR | Default BG red component |
 | 0x800A5771 | g_DefaultBGColorG | Default BG green component |
 | 0x800A5772 | g_DefaultBGColorB | Default BG blue component |

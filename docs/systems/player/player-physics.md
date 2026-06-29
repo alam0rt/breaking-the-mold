@@ -219,7 +219,7 @@ Player states are controlled via callbacks set at different entity offsets:
 
 | State | Entry Callback | Description |
 |-------|----------------|-------------|
-| Idle | `PlayerStateCallback_0` (0x80066ce0) | Standing still |
+| Idle | `PlayerStateInit_Idle` (0x80066ce0) | Standing still |
 | Walking | Movement in `PlayerCallback_800638d0` | Horizontal movement |
 | Jumping | `Callback_80067e28` | Airborne, going up |
 | Falling | `PlayerStateCallback_2` | Airborne, going down |
@@ -262,7 +262,7 @@ Ground check looks at Y+2 for solid tiles (attribute in range 0x01-0x3B):
 | 0x800638d0 | PlayerCallback_HandleMovementAndCollision | Movement + collision |
 | 0x8005a914 | PlayerProcessTileCollision | Tile trigger processing |
 | 0x80059bc8 | CheckWallCollision | 4-point wall check |
-| 0x80066ce0 | PlayerStateCallback_0 | Idle state entry |
+| 0x80066ce0 | PlayerStateInit_Idle | Idle state entry |
 | 0x80067e28 | PlayerState_Jump | Jump state entry |
 
 ## Animation System (Verified from Trace)

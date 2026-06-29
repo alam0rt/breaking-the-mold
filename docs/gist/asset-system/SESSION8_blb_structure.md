@@ -41,7 +41,7 @@ entity-type table (ground-truth role labels). Highlights now tied to a concrete 
 |---|---|---|
 | 0x181C3854 | BossMain (entity type 50) | WIZZ |
 | 0x8818A018 | BossPart (type 51) | multi |
-| 0x0244655D | InitBossEntity | WIZZ |
+| 0x0244655D | InitMonkeyMageBoss | WIZZ |
 | 0x1E1000B3 | EnemyA (type 25) | multi |
 | 0x09406D8A | Clayball (type 2) | multi |
 | 0x0C34AA22 | ItemPickup (type 8) | KLOG |

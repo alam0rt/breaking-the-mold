@@ -23,7 +23,7 @@ Confirmed `FUN_8001c4a4` -> `PlaySoundEffect` (decomp line 5365), so its 2nd arg
 **WIZARD_HIT/DIE particle sub-sprites identified** (0xA0CC18D0/1CD0). Names still need 10-12
 char words (longer than our vocab), but roles are now fixed.
 
-## 2. Boss component tree (InitBossEntity)
+## 2. Boss component tree (InitMonkeyMageBoss)
 The WIZZ Monkey Mage is assembled from: 0x181C3854 (BossMain/type50) + 0x8818A018
 (BossPart/type51) + 0x0244655D (sub-sprite), each attached via `EntitySetState` -> a
 sub-callback. This is the boss's entity hierarchy.

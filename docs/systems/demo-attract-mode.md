@@ -44,7 +44,7 @@ When the player remains idle at the main menu for approximately 30 seconds, the 
 ```c
 // Actual decompiled code from Ghidra
 void MenuTickCallback(undefined4 *param_1) {
-    byte stage = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    byte stage = GetCurrentStageIndex(g_pGameState + 0x84);
     if (stage > 4) stage = 1;
     
     // Check if any input is pressed (param_1[0x40] = input state ptr)
@@ -59,12 +59,12 @@ void MenuTickCallback(undefined4 *param_1) {
             if (timer > 0x708 && *(char *)(param_1 + 0x4e) != '\0') {
                 // Trigger demo mode
                 SeekToLevelInSequence(
-                    g_GameStatePtr + 0x84,
+                    g_pGameState + 0x84,
                     *(undefined1 *)(param_1[0x4d] + (uint)g_DemoIndex),
                     1, 0
                 );
-                *(undefined1 *)(g_GameStatePtr + 0x148) = 99;  // Menu mode
-                *(undefined1 *)(g_GameStatePtr + 0x152) = 1;   // Load trigger
+                *(undefined1 *)(g_pGameState + 0x148) = 99;  // Menu mode
+                *(undefined1 *)(g_pGameState + 0x152) = 1;   // Load trigger
                 
                 // Advance demo index, wrap if needed
                 g_DemoIndex = g_DemoIndex + 1;
@@ -104,7 +104,7 @@ void DemoCountdownCallback(int param_1) {
     
     if (timer == 0) {
         // Copy demo flag to GameState menu mode
-        *(undefined1 *)(g_GameStatePtr + 0x148) = g_DemoFlag;
+        *(undefined1 *)(g_pGameState + 0x148) = g_DemoFlag;
     }
     
     EntityUpdateCallback();

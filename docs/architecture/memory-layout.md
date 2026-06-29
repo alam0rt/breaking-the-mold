@@ -51,7 +51,7 @@ Understanding this layout is essential for:
 ├──────────────────────────────────────────────────────────────┤
 │ 0x800A5950: .sdata section (~2.9KB)                         │
 │ │   Small data (≤8 bytes, GP-relative access):              │
-│ │   ├── Global pointers (g_GameStatePtr, etc.)             │
+│ │   ├── Global pointers (g_pGameState, etc.)             │
 │ │   ├── Flags and counters                                  │
 │ │   └── State variables                                     │
 │ │                                                            │
@@ -109,7 +109,7 @@ The `-G8` compiler flag puts data items ≤8 bytes into .sdata for faster GP-rel
 ```c
 // These go to .sdata (≤8 bytes):
 int g_FrameCounter;           // 4 bytes → .sdata
-GameState* g_GameStatePtr;    // 4 bytes → .sdata
+GameState* g_pGameState;    // 4 bytes → .sdata
 u8 g_CurrentMode;             // 1 byte → .sdata
 
 // These go to .data (>8 bytes):

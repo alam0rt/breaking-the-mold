@@ -40,17 +40,17 @@ Entity* CreatePlayerEntity(void* buffer, void* inputController,
     entity[0x30] = FUN_8001a29c;           // Movement Y callback
     
     // Scale based on powerup state
-    u32 scale = (g_pPlayerState[0x18] != 0) ? 0x8000 : g_GameStatePtr[0x11c];
+    u32 scale = (g_pPlayerState[0x18] != 0) ? 0x8000 : g_pGameState[0x11c];
     entity[0x58] = scale;  // X scale
     entity[0x5C] = scale;  // Y scale
     
     // Copy RGB from GameState
-    entity[0x15d] = g_GameStatePtr[0x124];  // R
-    entity[0x15e] = g_GameStatePtr[0x125];  // G  
-    entity[0x15f] = g_GameStatePtr[0x126];  // B
+    entity[0x15d] = g_pGameState[0x124];  // R
+    entity[0x15e] = g_pGameState[0x125];  // G  
+    entity[0x15f] = g_pGameState[0x126];  // B
     
     // Set initial state based on respawn flag
-    if (g_GameStatePtr[0x161] == 0) {
+    if (g_pGameState[0x161] == 0) {
         // Fresh start
         if (facingLeft) {
             EntitySetState(entity, DAT_800a5d28, PTR_LAB_800a5d2c);  // Facing left
@@ -59,7 +59,7 @@ Entity* CreatePlayerEntity(void* buffer, void* inputController,
         }
     } else {
         // Respawning
-        SetGameMode(g_GameStatePtr[0x198]);
+        SetGameMode(g_pGameState[0x198]);
         EntitySetState(entity, DAT_800a5d20, PTR_LAB_800a5d24);  // Respawn state
     }
     
@@ -155,7 +155,7 @@ void PlayerTickCallback(Entity* player) {
     }
     
     // Process tile collision (if not paused)
-    if (g_GameStatePtr[0x14a] == 0) {
+    if (g_pGameState[0x14a] == 0) {
         PlayerProcessTileCollision(player);
         
         // Invincibility countdown
@@ -196,7 +196,7 @@ void PlayerTickCallback(Entity* player) {
     if (!player->disableScale) {
         if (!player->shrinkFlag) {
             // Growing back to normal
-            if (g_GameStatePtr[0x11c] == 0x10000 && player->scaleTarget < 0x10000) {
+            if (g_pGameState[0x11c] == 0x10000 && player->scaleTarget < 0x10000) {
                 player->scaleTarget += 0x1000;
             }
         } else {
@@ -211,7 +211,7 @@ void PlayerTickCallback(Entity* player) {
     UpdatePlayerRGB(player);
     
     // Particle spawning (every 8 frames)
-    if (player->particleFlag && (g_GameStatePtr[0x10c] & 7) == 0) {
+    if (player->particleFlag && (g_pGameState[0x10c] & 7) == 0) {
         SpawnParticle(player);
     }
 }
@@ -316,7 +316,7 @@ State table at 0x800a5d20:
 - Entered when: No input or velocity stops
 - Sprite: 0x1c395196 (if +0xCC == 0x388110), else 0x3838801a
 - Movement callback: PlayerCallback_8006120c (or 80061934 if shrunk)
-- Next state: PlayerStateCallback_0
+- Next state: PlayerStateInit_Idle
 - Observed: Frame 504, 572 (after pickup)
 
 **Walking Right** @ 0x8006736C (`PlayerState_WalkingRight`)
@@ -333,7 +333,7 @@ State table at 0x800a5d20:
 - Sprite: 0x18298210 (mirrored version)
 - Secondary callback: PlayerCallback_8005f540
 - Movement callback: PlayerCallback_800638d0 (or 80062ad4 if shrunk)
-- Next state: PlayerStateCallback_0
+- Next state: PlayerStateInit_Idle
 - Clears +0x156 field
 
 **Running** @ 0x8006762C (`PlayerState_Running`)
@@ -342,7 +342,7 @@ State table at 0x800a5d20:
 - Movement callback: PlayerCallback_800638d0 (same as walk)
 - Next state: Callback_800678d4 (DIFFERENT from walk - leads to falling)
 - Clears +0x156 field
-- Calls FUN_8001d0c0(entity, 1)
+- Calls SetAnimationFrameIndex(entity, 1)
 
 **Jump** @ 0x80067E28 (`PlayerState_Jump`)
 - Entered when: X button pressed on ground
@@ -371,13 +371,13 @@ State table at 0x800a5d20:
 - Secondary callback: PlayerCallback_8005d404
 - Movement callback: PlayerCallback_80061180 (position update only)
 - Clears +0x104/+0x108 callbacks (no movement processing)
-- Sets g_GameStatePtr[0x170] = 0
+- Sets g_pGameState[0x170] = 0
 - Sets +0x178 = 1 (entity flag)
 - Sets +0x158 = 0 (clear field)
 - Sets +0x168 = 1 (render flag)
 - Observed: Frame 814 (death after monkey collision)
 
-**Respawn** @ 0x80066CE0 (`PlayerStateCallback_0`)
+**Respawn** @ 0x80066CE0 (`PlayerStateInit_Idle`)
 - Entered when: Transitioning between movement states
 - Multiple sprites: 0x48204012 (turn animation), 0x00388110 (other)
 - Used as "next state" target by many other states
@@ -394,7 +394,7 @@ State table at 0x800a5d20:
 - Tick callback: PlayerCallback_8005bbac (SPECIAL - not normal tick!)
 - Movement callback: PlayerCallback_80064b40 (or 80064008 if shrunk)
 - Next state: EntityInitCallback_80069600
-- Sets g_GameStatePtr[0x60] = 1 (bounce_active_flag)
+- Sets g_pGameState[0x60] = 1 (bounce_active_flag)
 - Sets velocity: 0x30000 (if bit match), else 0x20000, OR'd with 0x8000
 - **WARNING**: This state may cause segfaults on rapid pickups due to SetEntitySpriteId spam
 - Observed: Frame 521 (Klayman head?), 1183 (clayball), 1243 (crash)

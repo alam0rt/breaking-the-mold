@@ -99,7 +99,7 @@ void SpawnProjectileEntity(Entity* player, uint angle, int speed) {
     );
     
     // Step 6: Add to render list
-    AddEntityToSortedRenderList(g_GameStatePtr, projectile);
+    AddEntityToSortedRenderList(g_pGameState, projectile);
 }
 ```
 

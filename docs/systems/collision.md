@@ -42,4 +42,4 @@ are trigger zones dispatched by `PlayerProcessTileCollision @ 0x8005a914`.
 | 0x80059bc8 | `CheckWallCollision` |
 | 0x800638d0 | Player movement callback (main) |
 | 0x80081c0c | `GetSlopeHeightAtSubpixel` |
-| 0x800226f8 | `CheckEntityCollision` |
+| 0x800226f8 | `DispatchEventToCollidingEntity` |

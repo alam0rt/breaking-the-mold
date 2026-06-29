@@ -21,13 +21,13 @@ All item data verified via Ghidra decompilation and runtime tracing.
 - Callback: `GenericSpriteEntityTickCallback` @ 0x80056518 (renamed from ClayballTickCallback)
 - Init: `GenericSpriteEntityInitCallback` @ 0x800561D4 (renamed from ClayballInitCallback)
 - Storage: `g_pPlayerState[0x12]` (u8, orb/clay count)
-- Collection Logic: Type mask = 2, special fast path via `CheckEntityCollision` @ 0x800226f8
+- Collection Logic: Type mask = 2, special fast path via `DispatchEventToCollidingEntity` @ 0x800226f8
 - Count: 5,727 total across all levels
 - Sprite ID: 0x09406d8a
 - Collision Flow:
   1. Clayball tick checks entity+0x110 flag
   2. Calls `CollisionCheckWrapper` @ 0x8001b47c with type_mask=2
-  3. `CheckEntityCollision` checks player at GameState+0x2c directly (optimization)
+  3. `DispatchEventToCollidingEntity` checks player at GameState+0x2c directly (optimization)
   4. On collision: Calls GameState callback with message 3 (COLLECTED)
   5. Clayball disappears, score increments
 
@@ -315,8 +315,8 @@ either a cut feature, regional difference (NTSC may vary), or embellished docume
 | 0x80056518 | GenericSpriteEntityTickCallback | Generic sprite entity tick (was ClayballTickCallback) |
 | 0x800561D4 | GenericSpriteEntityInitCallback | Generic sprite entity init (was ClayballInitCallback) |
 | 0x800560A8 | InitGenericSpriteEntity | Base init for 12+ entity types (was InitClayballEntity) |
-| 0x800226f8 | CheckEntityCollision | Main collision detection (type mask routing) |
-| 0x8001b47c | CollisionCheckWrapper | Wraps CheckEntityCollision with entity bbox |
+| 0x800226f8 | DispatchEventToCollidingEntity | Main collision detection (type mask routing) |
+| 0x8001b47c | CollisionCheckWrapper | Wraps DispatchEventToCollidingEntity with entity bbox |
 | 0x8006de98 | CreateHaloEntity | Create halo powerup visual effect |
 | 0x8006e1d8 | CreateYellowBirdEntity | Create yellow bird / glide trail entity |
 | 0x8005ad54 | SpawnSwirlPortalEntity | Spawn bonus room portal (uses swirl count) |

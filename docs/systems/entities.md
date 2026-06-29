@@ -222,7 +222,7 @@ Entity* InitGroundPatrolEnemy(Entity* entity, EntityDef* def) {
     child->worldY = entity->worldY - 16;
     child->tickCallback = EntityUpdateCallback;
     
-    AddEntityToSortedRenderList(g_GameStatePtr, child);
+    AddEntityToSortedRenderList(g_pGameState, child);
     return entity;
 }
 ```
@@ -274,7 +274,7 @@ Entity* InitPathFollowingEnemy(Entity* entity, EntityDef* def, u32* spriteTable,
     u16 pathId = *(entity->entityDef + 0xc);  // Variant field
     if (pathId != 0) {
         entity->eventCallback = EntityFollowPathWithWrapping;
-        GetEntitySpawnData(g_GameStatePtr, pathId, &entity->pathData, &entity->pathCount);
+        GetEntitySpawnData(g_pGameState, pathId, &entity->pathData, &entity->pathCount);
         // Initialize position along path...
     }
     return entity;
@@ -321,7 +321,7 @@ void InitBoss_Common(Entity* boss, EntityDef* def, u32* spriteTable) {
     InitEntitySprite(hpBar, HP_BAR_SPRITE, 10000, 0xa2, 0xf4, 0);
     hpBar->tickCallback = BossHPBarTickCallback;
     hpBar->hpValue = g_pPlayerState[0x1d];
-    AddEntityToSortedRenderList(g_GameStatePtr, hpBar);
+    AddEntityToSortedRenderList(g_pGameState, hpBar);
     
     // 5. Set event handler for damage
     boss->eventCallback = BossEventHandler;
@@ -406,7 +406,7 @@ void EntityDestructor_TypeN(Entity* entity, uint flags) {
 ```c
 void EntityDestructor_DestroyAllChildEntities(Entity* entity, uint flags) {
     entity->vtable = 0x800104cc;
-    RemoveFromUpdateQueue(entity);
+    RemoveEntityFromUpdateQueue(entity);
     RemoveFromZOrderList(entity);
     ClearEntityDefList(entity);
     FreeEntityLists(entity);
@@ -840,7 +840,7 @@ void GameModeCallback(GameState* state) {
     // Entity processing (only if not paused)
     if (!state[0x190]) {
         EntityTickLoop(state);           // Update all entities
-        UpdateCameraPosition(state);     // Camera scroll
+        SetCameraPositionDirect(state);     // Camera scroll
     }
 }
 ```
@@ -886,7 +886,7 @@ void DeferredEntityRemoval(GameState* state) {
             RemoveEntityFromAllLists(state[0x34]);
             state[0x34] = 0;
         } else {
-            RemoveFromUpdateQueue(state);
+            RemoveEntityFromUpdateQueue(state);
             if (state[0x38] != 1) {
                 RemoveFromRenderList(state);
             }
@@ -912,7 +912,7 @@ void DeferredEntityRemoval(GameState* state) {
 Complex camera scroll logic called during entity processing:
 
 ```c
-void UpdateCameraPosition(GameState* state) {
+void SetCameraPositionDirect(GameState* state) {
     Entity* player = state[0x30];
     if (player == NULL || state[99] != 0) return;
     
@@ -1362,7 +1362,7 @@ void EntityTickLoop(GameState* state) {
 | `CreatePlayerEntity` | 0x800596a4 | Default player creation |
 | `CreateCameraEntity` | 0x80044f7c | Camera entity creation |
 | `InitPlayerEntity` | 0x8001fcf0 | Player setup |
-| `InitBossEntity` | 0x80047fb8 | Boss setup |
+| `InitMonkeyMageBoss` | 0x80047fb8 | Boss setup |
 | `InitPlayerSpriteAvailability` | 0x80059a70 | Check 7 player sprites |
 
 ## VRAM Slot Entity System
@@ -1486,16 +1486,16 @@ Collision detection is handled via the entity update queue at `GameState+0x24`.
 
 | Function | Address | Purpose |
 |----------|---------|---------|
-| `CheckEntityCollision` | 0x800226f8 | Main collision check |
+| `DispatchEventToCollidingEntity` | 0x800226f8 | Main collision check |
 | `CollisionCheckWrapper` | 0x8001b47c | Collision check wrapper |
-| `CheckBBoxOverlap` | 0x8001b3f0 | Bounding box overlap test |
+| `CheckBoxOverlap` | 0x8001b3f0 | Bounding box overlap test |
 
 ### Collision Flow
 
 ```
 1. Entity tick calls CollisionCheckWrapper(entity, type_mask, message, data)
-2. CollisionCheckWrapper wraps CheckEntityCollision with entity's bbox
-3. CheckEntityCollision:
+2. CollisionCheckWrapper wraps DispatchEventToCollidingEntity with entity's bbox
+3. DispatchEventToCollidingEntity:
    - type_mask == 2: Fast path - check player at GameState+0x2c directly
    - Other: Iterate GameState+0x24 queue for matching entities
 4. If collision: Invoke target entity's state callback with message

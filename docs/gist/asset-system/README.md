@@ -93,7 +93,7 @@ rejected (Session 11) — discipline preserved.
 - **Usage context** (Sessions 9–11): sprite↔sound↔particle bindings (e.g. WIZARD_FALL plays
   SFX `0x424129A1`); render-layer z-order bands (10000=HUD, 2000=entities, 1000=bg props);
   the **password-entry screen** category (`CreateBossPlayerEntity` is a decompiler misname —
-  cursor/digit/back-button/symbol-grid sprites); the **boss component tree** (`InitBossEntity`
+  cursor/digit/back-button/symbol-grid sprites); the **boss component tree** (`InitMonkeyMageBoss`
   wires BossMain+BossPart+sub via state callbacks); **player-variant→stage map**
   (`player_variants.json`: normal / Finn-swim / Soar-fly / Glide / Runn-run forms).
 - **3 new asset IDs** found in the decomp but absent from `ids.csv` (`0x4A298690`,

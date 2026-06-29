@@ -105,7 +105,7 @@ Command format (u16):
   Bits 0-7 (0xFF):    Copy count (literal pixels to copy)
 ```
 
-### RLE Decoder (`DecodeRLESprite` @ 0x80010068)
+### RLE Decoder (`DecodeRLESpriteCore` @ 0x80010068)
 
 The decoder processes commands sequentially:
 
@@ -357,7 +357,7 @@ Each level's tertiary container has different sprites:
 | `InitSpriteContext` | 0x8007bc3c | Parse sprite header |
 | `LookupSpriteById` | 0x8007bb10 | Find sprite by 32-bit ID |
 | `FindSpriteInTOC` | 0x8007b968 | Search container TOC |
-| `DecodeRLESprite` | 0x80010068 | RLE decoder with flip |
+| `DecodeRLESpriteCore` | 0x80010068 | RLE decoder with flip |
 | `GetFrameMetadata` | 0x8007bebc | Get 36-byte frame entry |
 | `InitEntitySprite` | 0x8001c720 | Core entity sprite init |
 

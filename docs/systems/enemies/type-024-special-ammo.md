@@ -60,7 +60,7 @@ Based on game systems:
 
 ```c
 // When player touches pickup
-if (CheckEntityCollision(player, pickup)) {
+if (DispatchEventToCollidingEntity(player, pickup)) {
     // Determine pickup type from variant
     int pickup_type = pickup->subtype;
     

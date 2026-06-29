@@ -29,7 +29,7 @@ with full context (function, call type, z-order):
 - 0x393C80C2 PlayerSetupBounceAnimation
 - 0x08208902 PlayerState_CheckpointExit · 0x1B301085 PlayerState_Death
 - 0x18298210 WalkingLeft · 0x292E8480 WalkingRight/Running · 0x092B8480 Jump · 0x0B2084D0 Falling
-- 0x0244655D InitBossEntity · 0x6A351094 InitTimerDisplayEntity · 0x8AB92024 transition
+- 0x0244655D InitMonkeyMageBoss · 0x6A351094 InitTimerDisplayEntity · 0x8AB92024 transition
 - player variants: 0x21842018 normal, 0x3DA80D13 Finn, 0xCA1B20CB Soar, 0xEC95689B password
 
 ## Net

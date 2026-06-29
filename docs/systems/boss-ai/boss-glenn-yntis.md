@@ -31,7 +31,7 @@ Glenn Yntis is the mid-game boss, appearing halfway through Skullmonkeys.
 
 **Implications**:
 - May use different spawn system
-- May not use standard InitBossEntity
+- May not use standard InitMonkeyMageBoss
 - May have unique mechanics
 - Could be mini-boss or special encounter
 

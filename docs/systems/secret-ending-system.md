@@ -33,7 +33,7 @@ if ((byte)g_pPlayerState[0x1b] > 0x2f) {  // 0x2f = 47, so > 47 means >= 48
     // Spawn special entity (secret ending trigger)
     entity = AllocateFromHeap(blbHeaderBufferBase, 0x100, 1, 0);
     entity = InitEntitySprite(entity, 0xaa0da270, 1000, 0, 0, 0);
-    AddEntityToSortedRenderList(g_GameStatePtr, entity);
+    AddEntityToSortedRenderList(g_pGameState, entity);
 }
 ```
 

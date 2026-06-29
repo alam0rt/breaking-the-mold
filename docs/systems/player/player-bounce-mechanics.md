@@ -53,7 +53,7 @@ void FUN_8005a630(int player_entity, char collision_type)
         // Spawn particle effect entity
         entity = AllocateFromHeap(...);
         entity = FUN_80030d0c(entity, 0x2e2414, ...);
-        AddEntityToSortedRenderList(g_GameStatePtr, entity);
+        AddEntityToSortedRenderList(g_pGameState, entity);
     }
     
     // Check if player can bounce (not dead)
@@ -138,7 +138,7 @@ void FUN_8006af70(int player_entity)
 {
     *(u8 *)(player_entity + 0x4a) = 0x78;
     player_entity[0x43] = 0;
-    *(u8 *)(g_GameStatePtr + 0x60) = 1;
+    *(u8 *)(g_pGameState + 0x60) = 1;
     
     int bounced_entity = player_entity[0x4b];  // Entity that was bounced on
     player_entity[0x49] = 0x28000;
@@ -261,7 +261,7 @@ This function applies movement callbacks and adjusts the player's Y position bas
 | 0x8006AF70 | FUN_8006af70 | Bounce setup - animation, sound, triple-bounce |
 | 0x8006AD70 | Callback_8006ad70 | Bounce callback for 0xDD collision |
 | 0x8006ADBC | Callback_8006adbc | Bounce callback for 0xC9 collision |
-| 0x8006AE0C | PlayerStateCallback_3 | Bounce callback for 0xB5 collision |
+| 0x8006AE0C | PlayerState_SetupBounceRight | Bounce callback for 0xB5 collision |
 | 0x8006AE58 | Callback_8006ae58 | Bounce callback for 0xB6 collision |
 | 0x8006AE94 | Callback_8006ae94 | Bounce callback for 0xB7 collision |
 | 0x8006AEDC | PlayerState_QuickTurn | Quick turn on 0xCB collision |

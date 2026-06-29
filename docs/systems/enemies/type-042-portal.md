@@ -37,7 +37,7 @@ Portals are level exit points that trigger level completion when player enters.
 
 ```c
 // When player enters portal
-if (CheckEntityCollision(player, portal)) {
+if (DispatchEventToCollidingEntity(player, portal)) {
     // Check if level complete conditions met
     if (LevelCompleteConditionsMet()) {
         // Trigger level completion

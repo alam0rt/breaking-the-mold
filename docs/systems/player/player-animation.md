@@ -70,7 +70,7 @@ void CreatePlayerEntity(Entity* entity, void* input, short x, short y, char faci
     entity[8] = LAB_80061180;  // Additional update logic
     
     // Calculate scale from GameState+0x11c (or 0x8000 if shrink mode)
-    uint scale = g_pPlayerState[0x18] ? 0x8000 : *(g_GameStatePtr + 0x11c);
+    uint scale = g_pPlayerState[0x18] ? 0x8000 : *(g_pGameState + 0x11c);
     entity[0x16] = scale;  // Current scale
     entity[0x17] = scale;  // Target scale
     
@@ -78,12 +78,12 @@ void CreatePlayerEntity(Entity* entity, void* input, short x, short y, char faci
     InitPlayerSpriteAvailability(entity);
     
     // Copy RGB from GameState spawn color
-    entity[0x15D] = g_GameStatePtr[0x124];  // R
-    entity[0x15E] = g_GameStatePtr[0x125];  // G
-    entity[0x15F] = g_GameStatePtr[0x126];  // B
+    entity[0x15D] = g_pGameState[0x124];  // R
+    entity[0x15E] = g_pGameState[0x125];  // G
+    entity[0x15F] = g_pGameState[0x126];  // B
     
     // Select initial state based on respawn flag
-    if (g_GameStatePtr[0x161] != 0) {
+    if (g_pGameState[0x161] != 0) {
         // Respawning - use respawn state
         EntitySetState(entity, DAT_800a5d20, PTR_LAB_800a5d24);  // Idle facing right
     } else {
@@ -238,7 +238,7 @@ The state callback at 0x80066ce0 (idle facing right):
 if (entity[0x128] != 0) {  // damage_flash timer
     entity[0x128]--;
     // Cycle RGB based on frame counter for flash effect
-    int phase = g_GameStatePtr[0x10C] % 3;
+    int phase = g_pGameState[0x10C] % 3;
     // Apply different colors per phase
 }
 
@@ -374,11 +374,11 @@ void InitPlayerSpriteAvailability(Entity* entity) {
 Triggered when `entity[0x1AF] != 0` and `(frameCount & 7) == 0`:
 
 ```c
-if (entity[0x1AF] && (g_GameStatePtr[0x10C] & 7) == 0) {
+if (entity[0x1AF] && (g_pGameState[0x10C] & 7) == 0) {
     Entity* particle = AllocateFromHeap(..., size);
     CreatePlayerParticleEntity(particle);  // Initialize particle
-    AddToZOrderList(g_GameStatePtr, particle);
-    AddToXPositionList(g_GameStatePtr, particle);
+    AddToZOrderList(g_pGameState, particle);
+    AddToXPositionList(g_pGameState, particle);
 }
 ```
 
@@ -398,7 +398,7 @@ Spawns particle every 8 frames when flag is set.
 | 0x8001d4bc | AdvanceAnimationFrame | Next frame calculation |
 | 0x8001d748 | UpdateSpriteFrameData | Copy frame metadata to entity |
 | 0x8007bebc | GetFrameMetadata | Get frame render parameters |
-| 0x80010068 | DecodeRLESprite | Decode sprite with flip support |
+| 0x80010068 | DecodeRLESpriteCore | Decode sprite with flip support |
 | 0x800362a4 | CreatePlayerParticleEntity | Create player trailing particle |
 
 ## State Callback Addresses

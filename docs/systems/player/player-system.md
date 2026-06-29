@@ -81,12 +81,12 @@ The player uses 4 main state callbacks that dispatch behavior:
 
 | Index | Address | Name | Purpose |
 |-------|---------|------|---------|
-| 0 | 0x80066ce0 | `PlayerStateCallback_0` | Normal gameplay (walking, jumping) |
-| 1 | 0x8006a310 | `PlayerStateCallback_1` | Facing left idle |
+| 0 | 0x80066ce0 | `PlayerStateInit_Idle` | Normal gameplay (walking, jumping) |
+| 1 | 0x8006a310 | `PlayerState_HideAndClearBounce` | Facing left idle |
 | 2 | 0x8006864c | `PlayerStateCallback_2` | Hit/damage state |
-| 3 | 0x8006ae0c | `PlayerStateCallback_3` | Unknown state |
+| 3 | 0x8006ae0c | `PlayerState_SetupBounceRight` | Unknown state |
 
-### PlayerStateCallback_0 (Normal Gameplay)
+### PlayerStateInit_Idle (Normal Gameplay)
 
 Sets up movement handlers:
 - `PlayerCallback_8005bad0` - Primary update
@@ -115,7 +115,7 @@ Death is triggered by `Callback_80069ef4` when:
 ```c
 void Callback_80069ef4(Entity* player) {
     // Clear level control flags
-    g_GameStatePtr[0x170] = 0;
+    g_pGameState[0x170] = 0;
     player[0x5e] = 1;  // Mark as dead
     
     // Play death sound
@@ -131,7 +131,7 @@ void Callback_80069ef4(Entity* player) {
     player[0x17] = 0x10000;
     
     // Set GameState death pending flag
-    g_GameStatePtr[0x144] = 1;
+    g_pGameState[0x144] = 1;
     
     // Disable all callbacks
     player[0x41] = 0;  // No input handler
@@ -220,7 +220,7 @@ if (player->shrink_flag) {
 
 ## Collision System
 
-### Entity Collision (`CheckEntityCollision` @ 0x800226f8)
+### Entity Collision (`DispatchEventToCollidingEntity` @ 0x800226f8)
 
 Collision uses **type masks** for filtering:
 
@@ -232,7 +232,7 @@ Collision uses **type masks** for filtering:
 ### Collision Callbacks
 
 When collision detected:
-1. Check bounding box overlap (`CheckBBoxOverlap` @ 0x8001b3f0)
+1. Check bounding box overlap (`CheckBoxOverlap` @ 0x8001b3f0)
 2. Invoke target entity's state callback
 3. Pass message type (e.g., 0x1000 = COLLECTED)
 
@@ -240,7 +240,7 @@ When collision detected:
 
 When player touches clayball (type 2):
 1. Clayball tick calls `CollisionCheckWrapper` @ 0x8001b47c(clayball, 2, 0x1000, 1)
-2. `CheckEntityCollision` special case: check player at GameState+0x2c
+2. `DispatchEventToCollidingEntity` special case: check player at GameState+0x2c
 3. On hit: Clear collision flag, notify GameState (message 3)
 4. Clayball disappears, score increments
 
@@ -301,7 +301,7 @@ Player entity varies by level type:
 | 0x800596a4 | CreatePlayerEntity | Create normal player |
 | 0x8005b414 | PlayerTickCallback | Main per-frame update |
 | 0x8005a914 | PlayerProcessTileCollision | Tile attribute handling |
-| 0x800226f8 | CheckEntityCollision | Entity collision detection |
+| 0x800226f8 | DispatchEventToCollidingEntity | Entity collision detection |
 | 0x80069ef4 | (death state) | Enter death state |
 | 0x8006d910 | (debug death?) | Debug/cheat death handler |
 | 0x8007cfc0 | RespawnAfterDeath | Respawn after death |
@@ -310,5 +310,5 @@ Player entity varies by level type:
 | 0x80026164 | ResetPlayerCollectibles | Reset collectible tracking |
 | 0x8006de98 | (create halo) | Create halo powerup entity |
 | 0x8006e1d8 | (create trail) | Create trail powerup entity |
-| 0x80066ce0 | PlayerStateCallback_0 | Normal gameplay state |
+| 0x80066ce0 | PlayerStateInit_Idle | Normal gameplay state |
 | 0x8006864c | PlayerStateCallback_2 | Damage/hit state |

@@ -404,14 +404,14 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 │     - If set: Call CollisionCheckWrapper(clayball, 2, 0x1000, 1)       │
 │     - If entity+0x111 set: Call CollisionCheckWrapper(clayball, 2, 0x1007, val) │
 │                                                                         │
-│  2. CollisionCheckWrapper wraps CheckEntityCollision:                  │
+│  2. CollisionCheckWrapper wraps DispatchEventToCollidingEntity:                  │
 │     - Passes clayball bounding box (entity+0x48/0x4c)                   │
 │     - Type mask = 2 (identifies as clayball)                            │
 │     - Message = 0x1000 or 0x1007                                        │
 │                                                                         │
-│  3. CheckEntityCollision (0x800226f8) special case:                     │
+│  3. DispatchEventToCollidingEntity (0x800226f8) special case:                     │
 │     - If type_mask == 2: Check player at GameState+0x2c directly       │
-│     - Uses CheckBBoxOverlap @ 0x8001b3f0 for bounding box test         │
+│     - Uses CheckBoxOverlap @ 0x8001b3f0 for bounding box test         │
 │     - If overlap: Invoke player's state callback                        │
 │                                                                         │
 │  4. After collision check returns:                                      │
@@ -431,8 +431,8 @@ The clayball (type 2) collision system demonstrates how entity-to-player collisi
 | 0x80056518 | GenericSpriteEntityTickCallback | Generic sprite entity tick (was ClayballTickCallback) |
 | 0x800561d4 | GenericSpriteEntityInitCallback | Generic sprite entity init (was ClayballInitCallback) |
 | 0x8001b47c | CollisionCheckWrapper | Collision check wrapper |
-| 0x800226f8 | CheckEntityCollision | Main collision detection |
-| 0x8001b3f0 | CheckBBoxOverlap | Bounding box overlap test |
+| 0x800226f8 | DispatchEventToCollidingEntity | Main collision detection |
+| 0x8001b3f0 | CheckBoxOverlap | Bounding box overlap test |
 
 ### Collision Messages
 

@@ -49,8 +49,8 @@ entity+0x40*4 = spawn definition pointer
 entity+0x44*4 = facing from spawn data
 
 // GameState boss defeat flags
-g_GameStatePtr+0x19c = boss_defeated (1 when boss HP = 0)
-g_GameStatePtr+0x19d = boss_facing (for cutscene direction)
+g_pGameState+0x19c = boss_defeated (1 when boss HP = 0)
+g_pGameState+0x19d = boss_facing (for cutscene direction)
 ```
 
 ## HP System
@@ -89,7 +89,7 @@ puVar[0xc] = GetWorldPositionY;
 *(byte*)(puVar + 0x40) = g_pPlayerState[0x1d];
 
 // Add to render list
-AddEntityToSortedRenderList(g_GameStatePtr, puVar);
+AddEntityToSortedRenderList(g_pGameState, puVar);
 ```
 
 ### HP Bar Sprites
@@ -158,8 +158,8 @@ All death states follow this pattern:
 ```c
 void BossDeathState(entity) {
     // Set boss defeated flag
-    g_GameStatePtr[0x19c] = 1;
-    g_GameStatePtr[0x19d] = entity+0x44 (facing);
+    g_pGameState[0x19c] = 1;
+    g_pGameState[0x19d] = entity+0x44 (facing);
     
     // Clear vulnerable flag
     entity[0x115] = 0;

@@ -63,7 +63,7 @@ Sprite IDs are 32-bit hash values hardcoded in game code. Each entity type initi
 
 ## Boss Sprite IDs
 
-From boss initialization (InitBossEntity):
+From boss initialization (InitMonkeyMageBoss):
 
 | Sprite ID | Hex | Usage | Count |
 |-----------|-----|-------|-------|

@@ -127,7 +127,7 @@ int main(void) {
     ResetCallback();                    // PSX interrupt setup
     LoadGameAssetLocations();           // Find GAME.BLB on CD
     InitGraphicsSystem(blbHeaderBufferBase);  // Double-buffer GPU (320x256)
-    g_GameStatePtr = &g_GameStateBase;
+    g_pGameState = &g_GameStateBase;
     PadInit(0);                         // Controller init
     InitGeom();                         // GTE init
     SetDispMask(1);                     // Enable display
@@ -165,18 +165,18 @@ int main(void) {
         
         // Mode callback dispatch (level-specific logic)
         // Uses callback table at GameState[1]/GameState[2]
-        if (g_GameStatePtr[1] != 0) {
-            pcVar12 = *(code **)(g_GameStatePtr + 2);  // Get callback
-            (*pcVar12)((int)g_GameStatePtr + offset);  // Execute mode handler
+        if (g_pGameState[1] != 0) {
+            pcVar12 = *(code **)(g_pGameState + 2);  // Get callback
+            (*pcVar12)((int)g_pGameState + offset);  // Execute mode handler
         }
         
-        EntityTickLoop(g_GameStatePtr); // Update all entities
+        EntityTickLoop(g_pGameState); // Update all entities
         WaitForVBlankIfNeeded(blbHeaderBufferBase);  // Conditional VSync
-        RenderEntities(g_GameStatePtr); // Draw entities
+        RenderEntities(g_pGameState); // Draw entities
         DrawSync(0);                    // Wait for GPU
         
         // Layer render callback (render tile layers)
-        (**(code **)(*(int *)(g_GameStatePtr + 0xc) + 0x1c))(...)
+        (**(code **)(*(int *)(g_pGameState + 0xc) + 0x1c))(...)
         DrawSync(0);
         
         // Frame timing (wait 2 frames if flag set)
@@ -275,9 +275,9 @@ happen through functions called by the main loop.
 | 0x28 | ptr | 4 | entity_pool | Raw entity definitions (Asset 501) | LoadEntitiesFromAsset501 |
 | 0x2C | ptr | 4 | player_alt | Alternate player reference | SpawnPlayerAndEntities |
 | 0x30 | ptr | 4 | player_entity_ptr | Main player entity pointer | SpawnPlayerAndEntities |
-| 0x38 | s16 | 2 | camera_x | Camera X position (pixels) | UpdateCameraPosition |
+| 0x38 | s16 | 2 | camera_x | Camera X position (pixels) | SetCameraPositionDirect |
 | 0x3A | s16 | 2 | (camera_x_high) | | |
-| 0x3C | s16 | 2 | camera_y | Camera Y position (pixels) | UpdateCameraPosition |
+| 0x3C | s16 | 2 | camera_y | Camera Y position (pixels) | SetCameraPositionDirect |
 | 0x3E | s16 | 2 | (camera_y_high) | | |
 | 0x50 | ptr | 4 | input_state_ptr | g_pPlayer1Input pointer | InitGameState |
 | 0x7C | ptr | 4 | callback_table_ptr | Entity type callback table (0x8009D5F8) | InitGameState |
@@ -342,7 +342,7 @@ Input is captured by `PadRead(1)` in the main loop and processed by `UpdateInput
 
 ### Camera State
 
-Camera position is stored in GameState and updated by `UpdateCameraPosition` @ 0x80023dbc.
+Camera position is stored in GameState and updated by `SetCameraPositionDirect` @ 0x80023dbc.
 
 **Memory Locations:**
 - GameState+0x38: `camera_x` (s16) - X position in pixels
@@ -350,7 +350,7 @@ Camera position is stored in GameState and updated by `UpdateCameraPosition` @ 0
 
 **Camera Update Logic:**
 ```c
-void UpdateCameraPosition(GameState* state) {
+void SetCameraPositionDirect(GameState* state) {
     Entity* player = state->player_entity_ptr;  // +0x30
     
     // Calculate camera target based on player position
@@ -429,7 +429,7 @@ void EntityTickLoop(GameState* state) {
    - Writes to: GameState+0x130 (clears bg_color_change_flag)
    - Copies RGB values from GameState+0x131/132/133 to frame buffers
 
-5. **UpdateCameraPosition** (0x80023dbc)
+5. **SetCameraPositionDirect** (0x80023dbc)
    - Writes to: GameState+0x38 (camera_x), GameState+0x3C (camera_y)
 
 ### Deterministic Replay Requirements
@@ -467,7 +467,7 @@ To replay a level deterministically, capture the following per frame:
 | 0x800259d4 | UpdateInputState | Process controller input | PadRead result | g_pPlayer1Input |
 | 0x80020e1c | EntityTickLoop | Update all entities | GS+0x1C (tick list) | Entity structures |
 | 0x80020e80 | RenderEntities | Render frame | GS+0x20 (render list) | GS+0x130 (bg flag) |
-| 0x80023dbc | UpdateCameraPosition | Update camera scroll | Player entity, level bounds | GS+0x38, GS+0x3C |
+| 0x80023dbc | SetCameraPositionDirect | Update camera scroll | Player entity, level bounds | GS+0x38, GS+0x3C |
 | 0x8007e654 | InitialModeHandler | Level loading/respawn logic | Various | GS mode fields |
 
 ## InitGameState (`InitGameState` @ 0x8007cd34)
@@ -476,7 +476,7 @@ Called once at startup to initialize the game:
 
 ```c
 void InitGameState(GameState* state, void* inputState) {
-    LoadBLBHeader(g_GameStatePtr);
+    LoadBLBHeader(g_pGameState);
     InitializeAndLoadLevel(state, 99);  // 99 = MENU level
     
     // Set player state from level data
@@ -619,14 +619,14 @@ int CreatePlayerEntity(void* buffer, void* inputController,
     entity[0x40] = inputController;  // g_pPlayer1Input
     
     // Set scale based on GameState+0x11c (or 0x8000 if PlayerState[0x18] set)
-    u32 scale = (g_pPlayerState[0x18] != 0) ? 0x8000 : g_GameStatePtr[0x11c];
+    u32 scale = (g_pPlayerState[0x18] != 0) ? 0x8000 : g_pGameState[0x11c];
     entity[0x130] = scale;
     entity[0x134] = scale;
     
     // Copy RGB color from GameState+0x124/125/126 to entity+0x15d/15e/15f
-    entity[0x15d] = *(byte*)(g_GameStatePtr + 0x124);  // R
-    entity[0x15e] = *(byte*)(g_GameStatePtr + 0x125);  // G
-    entity[0x15f] = *(byte*)(g_GameStatePtr + 0x126);  // B
+    entity[0x15d] = *(byte*)(g_pGameState + 0x124);  // R
+    entity[0x15e] = *(byte*)(g_pGameState + 0x125);  // G
+    entity[0x15f] = *(byte*)(g_pGameState + 0x126);  // B
     
     // Set main update callback (player tick)
     entity[1] = PlayerTickCallback;  // @ 0x8005b414
@@ -640,7 +640,7 @@ int CreatePlayerEntity(void* buffer, void* inputController,
         void* haloBuffer = AllocateFromHeap(blbHeaderBufferBase, 0x68, 1, 0);
         int haloEntity = InitHaloEntity(haloBuffer);  // @ 0x800589e8
         entity[0x168] = haloEntity;  // Store halo reference
-        AddToXPositionList(g_GameStatePtr, haloEntity);
+        AddToXPositionList(g_pGameState, haloEntity);
     }
     
     return (int)entity;
@@ -693,7 +693,7 @@ Entity* InitMenuEntity(void* buffer, void* inputController,
     UpdateBackgroundColor(entity);  // @ 0x800778ec, reads DAT_800a6042 * 3 for RGB
     
     // Dispatch to stage-specific init based on current stage
-    byte stage = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    byte stage = GetCurrentStageIndex(g_pGameState + 0x84);
     if (stage > 4) stage = 1;  // Clamp to valid range
     
     switch (stage) {
@@ -771,7 +771,7 @@ void InitMenuStage1(Entity* menuEntity) {
         byte type = DAT_8009cb10[i * 6];
         
         InitEntitySprite(alloc, 0x10094096, 1000, x, y, 0);
-        AttachMenuCursor(entity);  // Attach cursor sprite
+        AttachCursorToButton(entity);  // Attach cursor sprite
         menuEntity[0x104 + menuEntity[0x4b]++] = entity;
     }
     
@@ -849,7 +849,7 @@ The menu tick callback handles input and updates:
 
 ```c
 void MenuTickCallback(Entity* menuEntity) {
-    byte stageIdx = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    byte stageIdx = GetCurrentStageIndex(g_pGameState + 0x84);
     if (stageIdx > 4) stageIdx = 1;
     
     // Get current input state
@@ -932,12 +932,12 @@ void SetMenuBackgroundColor(void) {
 
 The color table at DAT_8009cbac contains multiple RGB presets that can be cycled in the options menu.
 
-### Menu Cursor Entity (AttachMenuCursor @ 0x800754cc)
+### Menu Cursor Entity (AttachCursorToButton @ 0x800754cc)
 
 Creates and attaches a cursor sprite to a menu button:
 
 ```c
-void AttachMenuCursor(Entity* button) {
+void AttachCursorToButton(Entity* button) {
     Entity* cursor = AllocateFromHeap(0x100);
     
     // Position cursor relative to button (+0x6a, +0x0e)
@@ -1000,7 +1000,7 @@ void PlayerTickCallback(Entity* player) {
     
     // Scale transition handling (shrink/grow effects)
     u32 currentScale = player[0x130];
-    u32 targetScale = g_GameStatePtr[0x11c];
+    u32 targetScale = g_pGameState[0x11c];
     if (currentScale != targetScale) {
         // Interpolate scale toward target
         player[0x130] = LerpTowards(currentScale, targetScale, rate);

@@ -80,7 +80,7 @@ This document consolidates all function discoveries from systematic C code analy
 | 0x80021b48 | AddEntityToBothLists | Add to tick + render lists | 100% |
 | 0x80021d30 | RemoveFromTickList | Remove from tick list | 100% |
 | 0x80021dc0 | RemoveFromRenderList | Remove from render list | 100% |
-| 0x80021e50 | RemoveFromUpdateQueue | Remove from update queue | 100% |
+| 0x80021e50 | RemoveEntityFromUpdateQueue | Remove from update queue | 100% |
 | 0x80022218 | ClearTickList | Free entire tick list | 100% |
 | 0x80022338 | ClearEntityDefList | Free entity definition list | 100% |
 
@@ -191,7 +191,7 @@ This document consolidates all function discoveries from systematic C code analy
 **Activation Flow**:
 1. R1 button press → check `g_pPlayerState[0x16]` > 0
 2. `UniverseEnemaActivate` broadcasts message 0x1018, sets screen effect flag
-3. `UniverseEnemaKillAllEnemies` iterates collision list (`g_GameStatePtr+0x24`)
+3. `UniverseEnemaKillAllEnemies` iterates collision list (`g_pGameState+0x24`)
 4. Sends message 0x1002 (projectile hit) to all killable entities (flag 0x04)
 5. Decrements enema count, clears screen effect
 
@@ -413,7 +413,7 @@ void PlaySoundAtEntity(Entity* entity, uint sound_id) {
 // Apply shrink powerup
 void ApplyShrinkPowerup(Entity* entity) {
     // Set global scale
-    g_GameStatePtr[0x11c] = 0x8000;  // 0.5 scale
+    g_pGameState[0x11c] = 0x8000;  // 0.5 scale
     
     // Configure entity for scaling
     SetupEntityScaleCallbacks(entity);

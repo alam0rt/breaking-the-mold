@@ -636,8 +636,8 @@ The following functions have been renamed in Ghidra based on decompilation analy
 
 | Address | Old Name | New Name | Purpose |
 |---------|----------|----------|---------|
-| 0x80010068 | FUN_80010068 | DecodeRLESprite | RLE decompression with mirror support |
-| 0x8007bf7c | FUN_8007bf7c | DecodeRLESpriteChecked | Checks valid flag, then calls DecodeRLESprite |
+| 0x80010068 | FUN_80010068 | DecodeRLESpriteCore | RLE decompression with mirror support |
+| 0x8007bf7c | FUN_8007bf7c | DecodeRLESpriteChecked | Checks valid flag, then calls DecodeRLESpriteCore |
 | 0x8007bde8 | FUN_8007bde8 | RenderSprite | Sprite render orchestration |
 | 0x8007bebc | FUN_8007bebc | GetFrameMetadata | Frame accessor: `ctx[0] + frame_idx * 0x24` |
 | 0x8007bc3c | FUN_8007bc3c | InitSpriteContext | Initializes 20-byte SpriteContext |
@@ -1275,7 +1275,7 @@ struct SpriteContext {
 
 | Address | Name | Purpose |
 |---------|------|---------|
-| 0x80010068 | `DecodeRLESprite` | RLE decompression with mirror support |
+| 0x80010068 | `DecodeRLESpriteCore` | RLE decompression with mirror support |
 | 0x8007bf7c | `DecodeRLESpriteChecked` | Checks +0x13 valid flag before decode |
 | 0x8007bde8 | `RenderSprite` | Sprite render orchestration |
 | 0x8007bebc | `GetFrameMetadata` | Gets frame metadata: `ctx[0] + frame_idx * 0x24` |
@@ -2593,7 +2593,7 @@ Exhaustive search for entity dispatch table yielded these findings:
    | Player | FUN_80024f34 | Direct call to InitPlayerEntity |
    | Menu/UI | FUN_800281a4, FUN_80078200 | Hardcoded sprite IDs |
    | HUD items | FUN_8002b22c | Hardcoded sprite IDs |
-   | Boss | (via 0x80081020) | Direct call to InitBossEntity |
+   | Boss | (via 0x80081020) | Direct call to InitMonkeyMageBoss |
    | Child entities | Various update funcs | Parent spawns with hardcoded ID |
 
 5. **FUN_8007eed8 Checks Entity Types (but doesn't dispatch):**

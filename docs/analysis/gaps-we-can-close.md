@@ -67,14 +67,14 @@ These 8 setters follow the same pattern - set pending field, OR flag into +0xE0:
 
 | Address | Current Name | Proposed Name | Flag | Purpose |
 |---------|--------------|---------------|------|---------|
-| 0x8001D024 | FUN_8001d024 | AllocateSpriteContext | - | Allocate 20-byte context |
+| 0x8001D024 | AllocateSpriteContext | AllocateSpriteContext | - | Allocate 20-byte context |
 | 0x8001D0B0 | FUN_8001d0b0 | SetAnimationSpriteFlags | 0x04 | Basic sprite flag |
-| 0x8001D0C0 | FUN_8001d0c0 | SetAnimationFrameIndex | 0x08 | Set current frame |
+| 0x8001D0C0 | SetAnimationFrameIndex | SetAnimationFrameIndex | 0x08 | Set current frame |
 | 0x8001D0F0 | FUN_8001d0f0 | SetAnimationFrameCallback | 0x208 | Frame lookup callback |
 | 0x8001D170 | FUN_8001d170 | SetAnimationLoopFrame | 0x410 | Set loop target |
 | 0x8001D1C0 | FUN_8001d1c0 | SetAnimationSpriteId | 0x20 | Change sprite |
 | 0x8001D1F0 | FUN_8001d1f0 | SetAnimationSpriteCallback | 0x820 | Sprite lookup callback |
-| 0x8001D218 | FUN_8001d218 | SetAnimationActive | 0x100 | Enable/disable ticking |
+| 0x8001D218 | SetAnimationActive | SetAnimationActive | 0x100 | Enable/disable ticking |
 
 **Action**: Rename these 8 functions and add plate comments with flag values.
 
@@ -88,7 +88,7 @@ These 8 setters follow the same pattern - set pending field, OR flag into +0xE0:
 
 **Functions decompiled and renamed:**
 1. ✅ `PlayerProcessTileCollision` @ 0x8005a914 (150+ line switch statement analyzed)
-2. ✅ `CheckEntityCollision` @ 0x800226f8 (entity-to-entity collision)
+2. ✅ `DispatchEventToCollidingEntity` @ 0x800226f8 (entity-to-entity collision)
 3. ✅ `GetTileAttributeAtPosition` @ 0x800241f4 (tile lookup)
 4. ✅ `CheckTriggerZoneCollision` @ 0x800245bc (filter solid vs triggers)
 5. ✅ `InitTileAttributeState` @ 0x80024cf4 (Asset 500 loader)
@@ -447,7 +447,7 @@ From player-physics.md:
 - Collision system: 8+ functions documented
 - **Named/renamed: 20 functions total** (12 animation, 8 collision)
   * Animation: AllocateSpriteContext, SetAnimation* (7 setters), AdvanceAnimationFrame, StartAnimationSequence, StepAnimationSequence, ApplyAnimationPositionOffsets
-  * Collision: PlayerProcessTileCollision, CheckEntityCollision, GetTileAttributeAtPosition, CheckTriggerZoneCollision, InitTileAttributeState, SetSpawnZoneGroup1, SetSpawnZoneGroup2, HandleGenericTriggerZone
+  * Collision: PlayerProcessTileCollision, DispatchEventToCollidingEntity, GetTileAttributeAtPosition, CheckTriggerZoneCollision, InitTileAttributeState, SetSpawnZoneGroup1, SetSpawnZoneGroup2, HandleGenericTriggerZone
 
 ### Remaining Unknown Functions
 - **Total: 225 FUN_ functions (14%)** - Down from 242 (15%)
@@ -475,7 +475,7 @@ From player-physics.md:
 1. ✅ Rename 8 animation setter functions
 2. ✅ Add plate comments with flag values
 3. ✅ Decompile GetTileAttributeAtPosition
-4. ✅ Decompile CheckEntityCollision
+4. ✅ Decompile DispatchEventToCollidingEntity
 5. ✅ Decompile PlayerProcessTileCollision
 6. ✅ Map tile attributes from switch statement (30+ values)
 7. ✅ Rename 8 collision helper functions

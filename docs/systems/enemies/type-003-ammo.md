@@ -41,7 +41,7 @@ Green Bullet pickups that grant projectile ammunition.
 
 ```c
 // When player touches Green Bullet pickup
-if (CheckEntityCollision(player, pickup)) {
+if (DispatchEventToCollidingEntity(player, pickup)) {
     // Grant Green Bullets
     int current = g_pPlayerState[0x13];  // Green Bullet count
     g_pPlayerState[0x13] = min(current + 5, 20);  // +5, max 20

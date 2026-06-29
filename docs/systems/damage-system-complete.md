@@ -125,7 +125,7 @@ if ((g_pPlayerState[0x17] & 1) == 0) {  // Halo bit cleared
 ```c
 void PlayerState_Death(Entity* player) {
     // 1. Set global death flag
-    g_GameStatePtr[0x170] = 0;
+    g_pGameState[0x170] = 0;
     
     // 2. Set entity death flag
     player[0x5e] = 1;
@@ -297,10 +297,10 @@ if (ProjectileHitsEnemy(projectile, enemy)) {
 // Phase 1: UniverseEnemaActivate @ 0x8006c0d8
 void UniverseEnemaActivate(Entity* player) {
     // Broadcast message 0x1018 to all entities
-    SendMessageToPlayerVariant(g_GameStatePtr, 0x40, 0x1018, 0, player);
+    SendMessageToPlayerVariant(g_pGameState, 0x40, 0x1018, 0, player);
     
     // Set screen effect flag
-    *(g_GameStatePtr + 0x149) = 1;
+    *(g_pGameState + 0x149) = 1;
     
     // Clear input buffers
     player[0x179] = player[0x17a] = player[0x17b] = 0;
@@ -319,8 +319,8 @@ void UniverseEnemaActivate(Entity* player) {
 
 // Phase 2: UniverseEnemaKillAllEnemies @ 0x8006c278
 void UniverseEnemaKillAllEnemies(Entity* player) {
-    // Iterate collision list (g_GameStatePtr + 0x24)
-    for (ListNode* node = g_GameStatePtr->collision_list; node; node = node->next) {
+    // Iterate collision list (g_pGameState + 0x24)
+    for (ListNode* node = g_pGameState->collision_list; node; node = node->next) {
         Entity* entity = node->entity;
         
         // Check killable flag (entity_flags & 0x04)
@@ -337,7 +337,7 @@ void UniverseEnemaKillAllEnemies(Entity* player) {
     g_pPlayerState[0x16]--;
     
     // Clear screen effect flag
-    *(g_GameStatePtr + 0x149) = 0;
+    *(g_pGameState + 0x149) = 0;
 }
 ```
 

@@ -61,7 +61,7 @@ bool FUN_8001b3f0(int param_1, undefined4 param_2, undefined4 param_3)
 **Already named**:
 - 0x8001b594 = `CollisionCheckWrapper` (line 5032) - Documented wrapper
 
-**Called by**: CheckEntityCollision @ 0x800226f8
+**Called by**: DispatchEventToCollidingEntity @ 0x800226f8
 
 **Action**: Rename and document with entity bbox field references (+0x48, +0x4a, +0x4c, +0x4e)
 

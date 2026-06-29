@@ -76,13 +76,13 @@ The decompilation project has made excellent progress on:
 | Area | Status | Gap |
 |------|--------|-----|
 | Tile collision attributes | ⚠️ Partial | Only know it exists, not what flags mean |
-| Entity-to-entity collision | ⚠️ Partial | CheckEntityCollision exists but not documented |
+| Entity-to-entity collision | ⚠️ Partial | DispatchEventToCollidingEntity exists but not documented |
 | Trigger zones | ⚠️ Partial | CheckTriggerZoneCollision not documented |
 | Wall/floor detection | ⚠️ Partial | PlayerProcessTileCollision not documented |
 
 **Key Functions Not Documented:**
 - `GetTileAttributeAtPosition` @ 0x800241f4
-- `CheckEntityCollision` @ 0x800226f8
+- `DispatchEventToCollidingEntity` @ 0x800226f8
 - `CheckTriggerZoneCollision` @ 0x800245bc
 - `PlayerProcessTileCollision` @ 0x8005a914
 - `CheckWallCollision` @ 0x80059bc8
@@ -161,7 +161,7 @@ The camera follows the player and scrolls layers, but:
 - Camera smoothing/lookahead
 - Multi-layer parallax logic
 
-**Key function**: `UpdateCameraPosition` @ 0x80023dbc (mentioned but not documented)
+**Key function**: `SetCameraPositionDirect` @ 0x80023dbc (mentioned but not documented)
 
 ### 6. FINN/RUNN Vehicle Levels
 **Status**: Asset 504 documented, gameplay not
@@ -227,7 +227,7 @@ Related: `systems/player-finn.md` exists but may be incomplete
    - Map save data structure
 
 5. **Camera System**
-   - Decompile `UpdateCameraPosition`
+   - Decompile `SetCameraPositionDirect`
    - Document camera bounds
    - Document layer scrolling
 

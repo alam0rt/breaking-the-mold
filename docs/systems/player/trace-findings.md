@@ -41,7 +41,7 @@ tags: [systems, player, trace, findings]
 **Death** (0x8006A0B8)
 - Sprite: 0x1b301085
 - Disables movement callbacks (sets to 0)
-- Sets g_GameStatePtr[0x170] = 0
+- Sets g_pGameState[0x170] = 0
 - Frame: 814 (after monkey collision)
 
 **Respawn/Transition** (0x80066CE0)
@@ -52,7 +52,7 @@ tags: [systems, player, trace, findings]
 **Pickup Item** (0x80068B48)
 - Sprite: 0x1c3aa013
 - Uses special tick: PlayerCallback_8005bbac
-- Sets g_GameStatePtr[0x60] = 1 (bounce_active_flag)
+- Sets g_pGameState[0x60] = 1 (bounce_active_flag)
 - Frames: 521, 1183, 1243 (crashed)
 
 ## Velocity Data

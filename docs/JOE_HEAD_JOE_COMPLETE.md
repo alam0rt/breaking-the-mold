@@ -164,7 +164,7 @@ tags: [joe, head]
 ### HP Storage
 
 **Global Variable**: `g_pPlayerState[0x1D]`
-- Initialized to 5 in InitBossEntity (line 15299)
+- Initialized to 5 in InitMonkeyMageBoss (line 15299)
 - Decremented on each successful head bounce
 - Checked for defeat (== 0)
 
@@ -188,7 +188,7 @@ tags: [joe, head]
 | Blue Ball Mechanic | ✅ VERIFIED | Player confirmation (bounce platform) |
 | Damage Method | ✅ VERIFIED | Player confirmation (head bounce) |
 | Phase Count | ✅ VERIFIED | Player observation (3 phases) |
-| Multi-entity Structure | ✅ CODE-VERIFIED | InitBossEntity @ line 15295 |
+| Multi-entity Structure | ✅ CODE-VERIFIED | InitMonkeyMageBoss @ line 15295 |
 | HP Storage | ✅ CODE-VERIFIED | g_pPlayerState[0x1D] @ line 15299 |
 
 ---

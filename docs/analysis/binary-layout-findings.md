@@ -31,7 +31,7 @@ Based on symbol analysis, here are the natural segment boundaries:
 
 | ROM Offset | VRAM Address | Type | Proposed Name | Description |
 |------------|--------------|------|---------------|-------------|
-| 0x800 | 0x80010000 | asm | core/early | Early init (memset_entrypoint, DecodeRLESprite) |
+| 0x800 | 0x80010000 | asm | core/early | Early init (memset_entrypoint, DecodeRLESpriteCore) |
 | 0x39F0 | 0x800131F0 | asm | GAME | Main game code block 1 (292 functions) |
 | 0x18808 | 0x80028008 | asm | GAME | Main game code block 2 - entities (349 functions) |
 | 0x31A08 | 0x80041208 | asm | GAME | Main game code block 3 - core systems (983 functions) |
@@ -163,7 +163,7 @@ Key boundaries identified at type transitions:
 
 | Address | ROM | Transition | After | Before |
 |---------|-----|------------|-------|--------|
-| 0x80010324 | 0xB24 | func→data | DecodeRLESprite | DAT_80010324 |
+| 0x80010324 | 0xB24 | func→data | DecodeRLESpriteCore | DAT_80010324 |
 | 0x800131F0 | 0x39F0 | data→func | (unnamed) | GetFrameReadyFlag |
 | 0x800907D0 | 0x80FD0 | func→data | SpuSetCommonCDVolume | g_CrtConstructorTable |
 

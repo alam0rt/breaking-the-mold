@@ -29,7 +29,7 @@ Skullmonkeys features **5 boss encounters** across 26 levels. Each boss uses a m
 
 ### Multi-Entity Boss Structure
 
-**All bosses use 9 entities** (confirmed from InitBossEntity @ 0x80047fb8):
+**All bosses use 9 entities** (confirmed from InitMonkeyMageBoss @ 0x80047fb8):
 
 ```
 Boss Entity Hierarchy:
@@ -54,7 +54,7 @@ Boss Entity Hierarchy:
 **Storage**: `g_pPlayerState[0x1D]`
 
 **Boss HP Values**:
-- Default: `5 HP` (set in InitBossEntity)
+- Default: `5 HP` (set in InitMonkeyMageBoss)
 - Decrements on damage
 - When HP reaches 0 → boss defeated
 - **Joe-Head-Joe**: Requires 5+ hits (bouncing on head)

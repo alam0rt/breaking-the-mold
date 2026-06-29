@@ -189,7 +189,7 @@ dd if=SLES_010.90 bs=1 skip=$((0x8b038)) count=256 | hexdump -C
 
 ### Usage
 
-**From InitBossEntity** (line 15339-15340):
+**From InitMonkeyMageBoss** (line 15339-15340):
 
 ```c
 for (int i = 0; i < 6; i++) {

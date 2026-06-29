@@ -51,7 +51,7 @@ g_pPlayerState[0x12] = orb_count;  // 0-99 (100 → 1up, reset to 0)
 
 ```c
 // When player touches clayball
-if (CheckEntityCollision(player, clayball)) {
+if (DispatchEventToCollidingEntity(player, clayball)) {
     // Play collection sound
     PlaySoundEffect(0x7003474c, pan, 0);  // Collection sound
     

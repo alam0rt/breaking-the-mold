@@ -438,7 +438,7 @@ After taking damage:
 **Collision Handler**:
 ```c
 // Check if enemy touches player
-if (CheckEntityCollision(enemy, player)) {
+if (DispatchEventToCollidingEntity(enemy, player)) {
     if (player->state == STATE_JUMP && player->velocity_y > 0) {
         // Player bouncing on enemy
         enemy->hp--;

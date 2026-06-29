@@ -113,7 +113,7 @@ void InitMenuStage1(int menuEntity) {
     // 5 background layer sprites
     sprite = AllocateFromHeap(blbHeaderBufferBase, 0x100, 1, 0);
     sprite = InitEntitySprite(sprite, 0x68c01218, 2000, 0xa0, 0xa8, 0);
-    AddEntityToSortedRenderList(g_GameStatePtr, sprite);
+    AddEntityToSortedRenderList(g_pGameState, sprite);
     // ... repeat for other 4 background sprites ...
     
     // Klaymen animation
@@ -121,7 +121,7 @@ void InitMenuStage1(int menuEntity) {
     InitEntityWithSprite(entity, &DAT_8009cbdc, 2000, 0xa0, 0xa8);
     entity[0x18] = &DAT_800120ac;
     EntitySetState(entity, null_FFFF0000h_800a6050, PTR_LAB_800a6054);
-    AddEntityToSortedRenderList(g_GameStatePtr, entity);
+    AddEntityToSortedRenderList(g_pGameState, entity);
     
     // 4 menu buttons
     for (i = 0; i < 4; i++) {
@@ -137,7 +137,7 @@ void InitMenuStage1(int menuEntity) {
         button[0x109] = 0;
         button[0x108] = type;
         menuEntity[0x104 + menuEntity[0x4b]++] = button;
-        AddEntityToSortedRenderList(g_GameStatePtr, button);
+        AddEntityToSortedRenderList(g_pGameState, button);
     }
     
     // Optional: Check for bonus sprite 0x40b18011
@@ -148,7 +148,7 @@ void InitMenuStage1(int menuEntity) {
         entity[8] = 0xffff0000;
         entity[0xc] = &LAB_8007683c;
         entity[0x100] = 0;
-        AddEntityToSortedRenderList(g_GameStatePtr, entity);
+        AddEntityToSortedRenderList(g_pGameState, entity);
     }
 }
 ```
@@ -191,7 +191,7 @@ void InitMenuStage2(int menuEntity) {
     // This creates 12 digit slots and cursor sprite
     
     menuEntity[0x104 + menuEntity[0x4b]++] = entity;
-    AddEntityToSortedRenderList(g_GameStatePtr, entity);
+    AddEntityToSortedRenderList(g_pGameState, entity);
     
     // Back button
     button = AllocateFromHeap(blbHeaderBufferBase, 0x10c, 1, 0);
@@ -203,7 +203,7 @@ void InitMenuStage2(int menuEntity) {
     button[0x108] = 1;  // Button type
     
     menuEntity[0x104 + menuEntity[0x4b]++] = button;
-    AddEntityToSortedRenderList(g_GameStatePtr, button);
+    AddEntityToSortedRenderList(g_pGameState, button);
     
     menuEntity[0x12d] = 1;  // Default to back button
 }
@@ -229,8 +229,8 @@ void InitMenuStage2(int menuEntity) {
 **Color Preview Configuration**:
 - TPage calculation for proper texture mapping
 - Z position: 0x4b0 = 1200
-- Animation disabled: FUN_8001d218(entity, 0)
-- Frame set: FUN_8001d0c0(entity, color_index)
+- Animation disabled: SetAnimationActive(entity, 0)
+- Frame set: SetAnimationFrameIndex(entity, color_index)
 
 **Back Button**:
 - **Sprite ID**: 0x10094096
@@ -282,12 +282,12 @@ void InitMenuStage3(int menuEntity) {
     // Configure preview
     ConfigureTPage(preview);  // GPU texture page setup
     preview[z] = 0x4b0;  // Z-order 1200
-    AddEntityToSortedRenderList(g_GameStatePtr, preview);
-    FUN_8001d218(preview, 0);  // Disable animation
-    FUN_8001d0c0(preview, *color_index);  // Set frame to color
+    AddEntityToSortedRenderList(g_pGameState, preview);
+    SetAnimationActive(preview, 0);  // Disable animation
+    SetAnimationFrameIndex(preview, *color_index);  // Set frame to color
     
     menuEntity[0x104 + menuEntity[0x4b]++] = picker;
-    AddEntityToSortedRenderList(g_GameStatePtr, picker);
+    AddEntityToSortedRenderList(g_pGameState, picker);
     
     // Back button
     back = AllocateFromHeap(blbHeaderBufferBase, 0x10c, 1, 0);
@@ -299,7 +299,7 @@ void InitMenuStage3(int menuEntity) {
     back[0x108] = 1;  // Type
     
     menuEntity[0x104 + menuEntity[0x4b]++] = back;
-    AddEntityToSortedRenderList(g_GameStatePtr, back);
+    AddEntityToSortedRenderList(g_pGameState, back);
     
     menuEntity[0x12d] = 1;  // Default to back
 }
@@ -380,10 +380,10 @@ void InitMenuStage4(int menuEntity) {
         InitEntitySprite(preview, 0xe289c059, 2000, position.x, position.y, 0);
         selector[0x114] = preview;  // Store preview entity
         preview[z] = 0x4b0;  // Z-order 1200
-        AddEntityToSortedRenderList(g_GameStatePtr, preview);
+        AddEntityToSortedRenderList(g_pGameState, preview);
         
         menuEntity[0x104 + menuEntity[0x4b]++] = selector;
-        AddEntityToSortedRenderList(g_GameStatePtr, selector);
+        AddEntityToSortedRenderList(g_pGameState, selector);
     }
     
     // Back button
@@ -396,7 +396,7 @@ void InitMenuStage4(int menuEntity) {
     back[0x108] = 1;  // Type
     
     menuEntity[0x104 + menuEntity[0x4b]++] = back;
-    AddEntityToSortedRenderList(g_GameStatePtr, back);
+    AddEntityToSortedRenderList(g_pGameState, back);
     
     menuEntity[0x12d] = 3;  // Default to back (4th item, 0-indexed)
 }
@@ -543,7 +543,7 @@ void MenuInputHandler(int menuEntity) {
 
 ```c
 void InitMenuStageByIndex(Entity* menuEntity) {
-    byte stageIndex = GetCurrentStageIndex(g_GameStatePtr + 0x84);
+    byte stageIndex = GetCurrentStageIndex(g_pGameState + 0x84);
     
     if (stageIndex > 4) {
         stageIndex = 1;  // Default to main menu

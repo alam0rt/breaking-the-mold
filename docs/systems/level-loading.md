@@ -20,7 +20,7 @@ The game uses a state machine to load levels with three phases: header, level, a
 // From Ghidra decompilation
 void LoadBLBHeader(int state) {
     // Initialize state structure
-    g_GameStatePtr = state;
+    g_pGameState = state;
     
     // Get header buffer from blbHeaderBufferBase+0xa650
     int headerBuffer = *(int *)(blbHeaderBufferBase + 0xa650);

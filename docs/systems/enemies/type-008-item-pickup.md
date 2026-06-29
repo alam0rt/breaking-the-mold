@@ -57,7 +57,7 @@ Based on player state structure, possible items include:
 
 ```c
 // When player touches item
-if (CheckEntityCollision(player, item)) {
+if (DispatchEventToCollidingEntity(player, item)) {
     // Determine item sub-type
     int item_type = item->subtype;  // From Asset 501 data
     

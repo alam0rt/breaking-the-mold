@@ -126,9 +126,9 @@ if (*(short *)(new_item + 0x10) <= *(short *)(existing_item + 0x10)) {
 ### Main Loop Render Order (main @ 0x800828b0)
 
 ```
-1. EntityTickLoop(g_GameStatePtr)         // Update entities via +0x1C list
+1. EntityTickLoop(g_pGameState)         // Update entities via +0x1C list
 2. WaitForVBlankIfNeeded()                // Conditional VSync (skipped if g_SkipVSync)
-3. RenderEntities(g_GameStatePtr)         // Draw entities via +0x20 list
+3. RenderEntities(g_pGameState)         // Draw entities via +0x20 list
 4. DrawSync(0)                            // Wait for GPU
 5. [Layer Render Callback]                // Draw tile layers (via GameState+0x0C)
 6. DrawSync(0)                            // Wait again
@@ -142,8 +142,8 @@ The layer render callback is invoked via an indirect call chain:
 // GameState+0x0C contains a render context pointer
 // At renderCtx+0x1C is the actual render function pointer
 // At renderCtx+0x18 is a short offset added to GameState
-(**(code **)(*(int *)(g_GameStatePtr + 0xc) + 0x1c))
-          ((int)g_GameStatePtr + (int)*(short *)(*(int *)(g_GameStatePtr + 0xc) + 0x18));
+(**(code **)(*(int *)(g_pGameState + 0xc) + 0x1c))
+          ((int)g_pGameState + (int)*(short *)(*(int *)(g_pGameState + 0xc) + 0x18));
 ```
 
 This callback is set up during `InitLayersAndTileState` and iterates the layer render lists to draw all tile layers.

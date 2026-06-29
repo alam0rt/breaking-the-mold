@@ -164,7 +164,7 @@ From player-system.md (lines 105-131):
 
 ```c
 void Callback_80069ef4(Entity* player) {
-    g_GameStatePtr[0x170] = 0;      // Clear level control
+    g_pGameState[0x170] = 0;      // Clear level control
     player[0x5E] = 1;                // Mark dead
     
     // Death sound
@@ -178,7 +178,7 @@ void Callback_80069ef4(Entity* player) {
     player[0x15] = 0x30000;  // Y scale
     
     // Set death pending flag
-    g_GameStatePtr[0x144] = 1;
+    g_pGameState[0x144] = 1;
     
     // Disable all movement
     player[0x41] = 0;

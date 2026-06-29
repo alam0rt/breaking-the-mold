@@ -247,27 +247,27 @@ default:
 **Code**:
 ```c
 case 0x51:
-    SetSpawnOffsetGroup1(g_GameStatePtr, 1);  // Enable group 1
+    SetSpawnOffsetGroup1(g_pGameState, 1);  // Enable group 1
     player[0x1a6] = 1;
     break;
 case 0x52:
-    SetSpawnOffsetGroup2(g_GameStatePtr, 1);  // Enable group 2
+    SetSpawnOffsetGroup2(g_pGameState, 1);  // Enable group 2
     player[0x1a8] = 1;
     break;
 case 0x65:
-    SetSpawnOffsetGroup1(g_GameStatePtr, 0);  // Disable group 1
+    SetSpawnOffsetGroup1(g_pGameState, 0);  // Disable group 1
     player[0x1a6] = 0;
     break;
 case 0x66:
-    SetSpawnOffsetGroup2(g_GameStatePtr, 0);  // Disable group 2
+    SetSpawnOffsetGroup2(g_pGameState, 0);  // Disable group 2
     player[0x1a8] = 0;
     break;
 case 0x79:
-    SetSpawnOffsetGroup1(g_GameStatePtr, 2);  // Mode 2 for group 1
+    SetSpawnOffsetGroup1(g_pGameState, 2);  // Mode 2 for group 1
     player[0x1a6] = 2;
     break;
 case 0x7a:
-    SetSpawnOffsetGroup2(g_GameStatePtr, 2);  // Mode 2 for group 2
+    SetSpawnOffsetGroup2(g_pGameState, 2);  // Mode 2 for group 2
     player[0x1a8] = 2;
 ```
 
@@ -286,7 +286,7 @@ case 0x7a:
 **Code**:
 ```c
 case 0:
-    g_GameStatePtr[0x148] = local_2c[0];  // Store additional data
+    g_pGameState[0x148] = local_2c[0];  // Store additional data
 ```
 
 **Note**: This is separate from empty tiles. Triggered by `CheckTriggerZoneCollision` returning attribute 0 with additional data.
@@ -297,7 +297,7 @@ For any attribute >= 0x3C not explicitly handled:
 ```c
 default:
     if (player[0x1ae] == 0) {  // Check some player flag
-        HandleGenericTriggerZone(g_GameStatePtr, local_30 & 0xff, 
+        HandleGenericTriggerZone(g_pGameState, local_30 & 0xff, 
                      player + 0x15d, player + 0x15e, player + 0x15f);
     }
 ```
@@ -437,7 +437,7 @@ char CheckTriggerZoneCollision(GameState* ctx, s16 x, s16 y,
 
 ## Entity Collision Masks
 
-From `CheckEntityCollision` @ 0x800226f8:
+From `DispatchEventToCollidingEntity` @ 0x800226f8:
 
 **Collision Mask** stored at `entity[0x12]` (u16):
 - Checked via bitwise AND with param_4
@@ -566,7 +566,7 @@ const TILE_SPAWN_ZONE: int = 0x65
 |---------|------|---------|
 | 0x800241f4 | GetTileAttributeAtPosition | Pixel → tile attr lookup |
 | 0x8005a914 | PlayerProcessTileCollision | Handle all trigger events |
-| 0x800226f8 | CheckEntityCollision | Entity-to-entity collision |
+| 0x800226f8 | DispatchEventToCollidingEntity | Entity-to-entity collision |
 | 0x8001b3f0 | CheckBoxOverlap | Bounding box overlap test |
 | 0x800245bc | CheckTriggerZoneCollision | Filter solid vs triggers |
 | 0x80024cf4 | InitTileAttributeState | Load Asset 500 data |

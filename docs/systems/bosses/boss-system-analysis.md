@@ -19,6 +19,6 @@ tags: [systems, bosses, boss, system, analysis]
 > - Per-boss: [boss-klogg](../boss-ai/boss-klogg.md), [boss-monkey-mage](../boss-ai/boss-monkey-mage.md), [boss-glenn-yntis](../boss-ai/boss-glenn-yntis.md), [boss-shriney-guard](../boss-ai/boss-shriney-guard.md), [../../JOE_HEAD_JOE_COMPLETE.md](../../JOE_HEAD_JOE_COMPLETE.md)
 >
 > Reason for deprecation:
-> - Treated `InitBossEntity @ 0x80047fb8` as a generic boss initializer — it is specifically `InitMonkeyMageBoss` (only 1 of 5 bosses uses the 6-part-platform pattern).
+> - Treated `InitMonkeyMageBoss @ 0x80047fb8` as a generic boss initializer — it is specifically `InitMonkeyMageBoss` (only 1 of 5 bosses uses the 6-part-platform pattern).
 > - Attributed ball-throwing system to "Klogg" (incorrect — that's Joe-Head-Joe).
 > - Pre-dates the 76-function Ghidra naming pass completed 2026-01-20.

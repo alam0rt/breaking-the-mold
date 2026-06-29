@@ -43,7 +43,7 @@ Klaymen has **distinct init functions per gameplay mode**, each with its own pla
 
 ## Entity behavior wiring
 Init functions connect a sprite to behavior via `EntitySetState(entity, _, PTR_Callback_*)`.
-InitBossEntity wires 0x0244655D → Callback_800479d0 (+ a second state) — the boss's 2-state
+InitMonkeyMageBoss wires 0x0244655D → Callback_800479d0 (+ a second state) — the boss's 2-state
 behavior tree. Most player-variant inits wire state via local pointers (computed, not literal).
 
 ## Net
