@@ -12,18 +12,23 @@ The script uses a handler registry pattern - handlers can be registered for spec
 asset types to provide conversion (e.g., sprites to PNG). If no handler is registered,
 the default handler saves raw bytes as .bin files.
 
-Output structure:
+Output structure (folders named by what each BLB segment actually holds;
+see segment_to_relpath() for the raw-key -> path mapping):
     extracted/
     ├── header/
     │   ├── movies/
     │   └── sectors/
-    ├── MENU/
-    │   ├── primary/
+    ├── EGGS/                  # world (level code)
+    │   ├── shared/            # primary: world-shared geometry + audio
     │   │   └── 600.bin
-    │   ├── secondary/
-    │   │   └── 100.bin
-    │   └── stage0/
-    │       └── 501.bin
+    │   ├── stage0/
+    │   │   ├── tileset/       # secondary[0]: tile/palette graphics bank
+    │   │   │   └── 100.bin
+    │   │   └── map/           # tertiary[0]: tilemap + collision + entities
+    │   │       └── 501.bin
+    │   └── stage1/
+    │       ├── tileset/       # secondary1
+    │       └── map/           # stage1
     └── extraction_report.json
 """
 
@@ -358,6 +363,61 @@ HEADER_TABLES = [
 ]
 
 # ============================================================================
+# Segment -> output-path mapping
+# ============================================================================
+#
+# The raw segment keys come from the ImHex pattern (blb.hexpat) and are
+# positional guesses: "primary", "secondary"/"secondary1".."secondary5",
+# "stage0".."stage5". What they actually are (verified against the level
+# metadata struct + LoadAssetContainer @0x8007b074):
+#
+#   primary      -> world-shared assets, loaded once  (600 geometry, 601/602 audio)
+#   secondary[N] -> stage N's tile/palette GRAPHICS bank (300 pixels, 400 CLUTs, ...)
+#   stage[N]     -> stage N's MAP: tilemap, collision, entity placement (200/201/500/501)
+#
+# secondary[N] and stage[N] pair 1:1 per stage (both are u16[6] per-stage arrays
+# in the level entry). So we lay the output out by world -> stage -> {tileset,map},
+# with primary hoisted to a single "shared" folder:
+#
+#   EGGS/shared/...            (primary)
+#   EGGS/stage0/tileset/...    (secondary  == stage 0 graphics)
+#   EGGS/stage0/map/...        (stage0     == stage 0 map)
+#   EGGS/stage1/tileset/...    (secondary1)
+#   EGGS/stage1/map/...        (stage1)
+#
+# Header-level pseudo-segments (sectors/credits/...) and any unrecognised key
+# pass through unchanged.
+
+def segment_to_relpath(segment_name: str) -> str:
+    """
+    Map a raw BLB segment key to its descriptive output sub-path.
+
+    Returns a POSIX-style relative path (may contain '/') under the world
+    directory. Unknown keys are returned unchanged so new/header segments
+    still extract somewhere sensible.
+    """
+    name = segment_name.strip()
+
+    # World-shared segment.
+    if name == "primary":
+        return "shared"
+
+    # Per-stage tile/palette graphics bank. "secondary" == stage 0; the
+    # numeric suffix on "secondaryN" is the stage index.
+    if name == "secondary":
+        return "stage0/tileset"
+    if name.startswith("secondary") and name[len("secondary"):].isdigit():
+        return f"stage{name[len('secondary'):]}/tileset"
+
+    # Per-stage map (tilemap + collision + entities). Already "stageN".
+    if name.startswith("stage") and name[len("stage"):].isdigit():
+        return f"{name}/map"
+
+    # Header pseudo-segments and anything unrecognised: leave as-is.
+    return name
+
+
+# ============================================================================
 # Asset Discovery
 # ============================================================================
 
@@ -574,10 +634,13 @@ def extract_segment_metadata(data: dict, output_dir: Path) -> int:
                     "field_1e": sh.get('field_1e', 0),
                 }
             
-            # Write metadata JSON
-            level_dir = output_dir / level_code
-            level_dir.mkdir(parents=True, exist_ok=True)
-            metadata_path = level_dir / f"{segment_name}.json"
+            # Write metadata JSON alongside the segment's extracted assets.
+            # Mapped path may be nested (e.g. "stage0/tileset"); name the file
+            # after its leaf (tileset.json / map.json / shared.json).
+            rel = segment_to_relpath(segment_name)
+            seg_dir = output_dir / level_code / rel
+            seg_dir.mkdir(parents=True, exist_ok=True)
+            metadata_path = seg_dir / f"{Path(rel).name}.json"
             metadata_path.write_text(json.dumps(metadata, indent=2))
             count += 1
     
@@ -792,8 +855,8 @@ def extract_assets(
         # Read asset data
         data = blb_data[asset.absolute_offset:asset.absolute_offset + asset.size]
         
-        # Determine output directory
-        asset_output_dir = output_dir / asset.level / asset.segment
+        # Determine output directory (descriptive world/stage/{tileset,map} layout)
+        asset_output_dir = output_dir / asset.level / segment_to_relpath(asset.segment)
         
         # Get handler and extract
         handler, handler_name = get_handler(asset.asset_type)

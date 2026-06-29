@@ -45,8 +45,22 @@ Each level consists of three data segments:
 | Segment | Scope | Asset Types | Contents |
 |---------|-------|-------------|----------|
 | **Primary** | Per-level (shared) | 600, 601, 602 | Level geometry, audio samples |
-| **Secondary** | Per-level base + per-stage variants | 100-401 | Tiles, tile metadata, palettes |
-| **Tertiary** | Per-stage | 100-700 | Stage data, entities, sprites, audio |
+| **Secondary** | Per-stage (slots `secondary`, `secondary1..5`) | 100-401 | Tiles, tile metadata, palettes |
+| **Tertiary** | Per-stage (slots `stage0..5`) | 100-700 | Stage data, entities, sprites, audio |
+
+> **Note on naming:** "primary/secondary/tertiary" are *positional* labels (1st/2nd/3rd
+> block in the level entry); the engine itself only distinguishes them by load path and a
+> `containerType` byte (`0x01`=secondary, `0x00`=tertiary in `LoadAssetContainer @0x8007b074`).
+> The level-metadata struct stores secondary **and** tertiary as parallel per-stage `u16[6]`
+> arrays, so `secondary[N]` and `stage[N]` pair 1:1: secondary[N] is stage N's tile/palette
+> **graphics bank** (the artwork), tertiary[N] is stage N's **map** (tilemap + collision +
+> entity placement). `tools/extract_blb` reflects this in its output folders:
+>
+> | BLB segment | Extracted folder | Meaning |
+> |-------------|------------------|---------|
+> | `primary` | `<WORLD>/shared/` | world-shared geometry + audio |
+> | `secondary`, `secondaryN` | `<WORLD>/stageN/tileset/` | per-stage tile/palette graphics |
+> | `stageN` (tertiary) | `<WORLD>/stageN/map/` | per-stage tilemap, collision, entities |
 
 ### Segment Asset Patterns (Verified 2026-01-20)
 
