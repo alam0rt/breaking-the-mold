@@ -81,15 +81,28 @@
 // SEGMENT STRUCTURE PATTERNS (VERIFIED 2026-01-20 via extracted data)
 // =============================================================================
 //
-// PRIMARY SEGMENT - Shared Level Assets (loaded once per level)
+// Naming note: "primary/secondary/tertiary" are POSITIONAL labels (1st/2nd/3rd
+// block in the level entry), not roles. What they actually are:
+//   primary      = world-SHARED assets, loaded once per world  ("shared")
+//   secondary[N] = stage N's tile/palette GRAPHICS bank        ("tileset")
+//   tertiary[N]  = stage N's MAP: tilemap + collision + entities ("map")
+// secondary[N] and tertiary[N] are parallel per-stage u16[6] arrays in LevelEntry,
+// so they pair 1:1 (see "Stage/Secondary Pairing" below). The engine only tells
+// secondary from tertiary by a containerType byte in LoadAssetContainer @0x8007b074.
+// tools/extract_blb mirrors this as <WORLD>/shared, <WORLD>/stageN/tileset,
+// <WORLD>/stageN/map.
+//
+// PRIMARY SEGMENT - World-shared assets (loaded once per world)
 // -----------------------------------------------------------------------------
 // Always exactly [600, 601, 602]:
-//   600: Geometry/Sprites - Level-wide sprites shared across all stages (500KB-1MB)
-//   601: Audio Samples   - SPU ADPCM sound bank for the level (80KB-300KB)  
+//   600: Geometry/Sprites - World-wide sprites shared across all stages (500KB-1MB)
+//   601: Audio Samples   - SPU ADPCM sound bank for the level (80KB-300KB)
 //   602: Audio Settings  - 4 bytes per sample (volume/pan), size = 601_sample_count × 4
 //
-// SECONDARY SEGMENT - Tile Graphics (shared across stages)
+// SECONDARY SEGMENT - Per-stage tile/palette graphics bank ("tileset")
 // -----------------------------------------------------------------------------
+// One per stage (slots secondary, secondary1..5); pairs 1:1 with the stage's
+// tertiary "map". Holds the artwork a stage's tilemap indexes into.
 // Always has: [100, 300, 400, 401, 301, 302]
 //   100: Tile Header      - BG color, spawn position, tile counts (36 bytes)
 //   300: Tile Pixels      - 8bpp indexed tile graphics
@@ -102,8 +115,9 @@
 //   101: VRAM Slot Config - 8 levels only (BOIL, CLOU, FINN, FOOD, GLID, HEAD, MEGA, WEED)
 //   601/602: Audio        - Most levels duplicate audio here; boss levels (GLEN, HEAD, KLOG, WIZZ) omit
 //
-// TERTIARY (STAGE) SEGMENT - Per-Stage Data
+// TERTIARY SEGMENT - Per-stage MAP ("map"): tilemap + collision + entities
 // -----------------------------------------------------------------------------
+// One per stage (slots stage0..5); pairs 1:1 with the stage's secondary "tileset".
 // Always has: [100, 200, 201, 401, 500, 501, 302]
 //   100: Tile Header      - Per-stage variant
 //   200: Tilemap Container - Layer tile indices (sub-TOC)
@@ -1840,7 +1854,7 @@ struct PrimarySegmentFull {
     
     // Note: Asset 601 in Primary segment is Audio Sample Bank (SPU ADPCM data)
     // Not parsed here - raw audio data without structured header
-} [[name("Primary Segment"), color("40CCFF")]];
+} [[name("Shared (world assets)"), color("40CCFF")]];
 
 // -----------------------------------------------------------------------------
 // Secondary Segment - Full Parse with Tiles
@@ -1941,25 +1955,12 @@ struct SecondarySegmentFull {
     if (toc_count > 5 && toc[5].asset_type == 300) {
         u8 tile_pixels5[toc[5].size] @ (_base + toc[5].offset) [[name("Tile Pixels")]];
     }
-} [[name("Secondary Segment"), color("FF80CC")]];
+} [[name("Tileset (stage tile/palette graphics)"), color("FF80CC")]];
 
-// -----------------------------------------------------------------------------
-// Tertiary Segment - Full Parse with Sprites/Layers
-// -----------------------------------------------------------------------------
-struct TertiarySegmentFull {
-    // Remember base for offset calculations - export for extraction tools
-    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
-    
-    // TOC
-    u32 toc_count [[name("Asset Count")]];
-    SegmentTOCEntry toc[toc_count] [[name("Asset TOC")]];
-    
-    // The tertiary segment typically contains:
-    // - Asset 200 (0x0C8): Tilemap container
-    // - Asset 201 (0x0C9): Layer entries
-    // - Asset 600 (0x258): Sprite container (different from primary)
-    // - Asset 500-503: Audio data
-} [[name("Tertiary Segment"), color("80FFCC")]];
+// Note: the actual per-stage "map" segment is parsed by TertiaryStageWithAssets
+// (below). A former placeholder struct (TertiarySegmentFull) was removed: it was
+// never instantiated and its comment misdescribed assets 500-503 as audio (they
+// are tile attributes/entities/VRAM rects/anim offsets).
 
 // =============================================================================
 // DYNAMIC LEVEL EXPLORER
@@ -2194,25 +2195,12 @@ struct TertiaryStageWithAssets {
     }}
 } [[name("Stage"), color("80FFCC")]];
 
-// Simple tertiary stage - just TOC (for fallback)
-struct TertiaryStage {
-    // Remember base for offset calculations - export for extraction tools
-    type::Hex<u128> _base = $ [[export, name("segment_offset")]];
-    
-    u32 toc_count [[name("Asset Count")]];
-    SegmentTOCEntry toc[toc_count] [[name("Asset TOC")]];
-} [[name("Stage"), color("80FFCC")]];
+// Note: two unused fallback structs (TertiaryStage, SecondarySubBlock) were
+// removed here - neither was ever instantiated; LevelData uses
+// TertiaryStageWithAssets and SecondarySegmentFull instead.
 
 // -----------------------------------------------------------------------------
-// Secondary Sub-block - for per-stage tile data
-// -----------------------------------------------------------------------------
-struct SecondarySubBlock {
-    u32 toc_count [[name("Asset Count")]];
-    SegmentTOCEntry toc[toc_count] [[name("Assets")]];
-} [[name("Secondary Sub"), color("FFCC80")]];
-
-// -----------------------------------------------------------------------------
-// Complete Level Data - Primary + Secondary + all Tertiary stages
+// Complete Level Data - Shared (primary) + per-stage Tileset + Map
 // -----------------------------------------------------------------------------
 struct LevelData<auto level_idx> {
     // Set dynamic display name from level data using helper function
@@ -2237,29 +2225,30 @@ struct LevelData<auto level_idx> {
     u16 _sec5_sector = get_level_sec_sector_off(level_idx, 5);
     u16 _sec5_count = get_level_sec_sector_cnt(level_idx, 5);
     
-    // Primary Segment
+    // Primary Segment - world-shared assets, loaded once
     if (_pri_count > 0) {
-        PrimarySegmentFull primary @ (_pri_sector * SECTOR_SIZE) [[name("Primary")]];
+        PrimarySegmentFull primary @ (_pri_sector * SECTOR_SIZE) [[name("Shared (world assets)")]];
     }
-    
-    // Secondary Segments (one per stage - contains shared tile/palette data)
+
+    // Secondary Segments - per-stage tile/palette graphics bank ("tileset").
+    // One per stage, pairs 1:1 with the same stage's tertiary "map" below.
     if (_sec0_count > 0 && _sec0_sector > 0) {
-        SecondarySegmentFull secondary @ (_sec0_sector * SECTOR_SIZE) [[name("Secondary (Stage 0)")]];
+        SecondarySegmentFull secondary @ (_sec0_sector * SECTOR_SIZE) [[name("Stage 0 — Tileset")]];
     }
     if (_sec1_count > 0 && _sec1_sector > 0) {
-        SecondarySegmentFull secondary1 @ (_sec1_sector * SECTOR_SIZE) [[name("Secondary (Stage 1)")]];
+        SecondarySegmentFull secondary1 @ (_sec1_sector * SECTOR_SIZE) [[name("Stage 1 — Tileset")]];
     }
     if (_sec2_count > 0 && _sec2_sector > 0) {
-        SecondarySegmentFull secondary2 @ (_sec2_sector * SECTOR_SIZE) [[name("Secondary (Stage 2)")]];
+        SecondarySegmentFull secondary2 @ (_sec2_sector * SECTOR_SIZE) [[name("Stage 2 — Tileset")]];
     }
     if (_sec3_count > 0 && _sec3_sector > 0) {
-        SecondarySegmentFull secondary3 @ (_sec3_sector * SECTOR_SIZE) [[name("Secondary (Stage 3)")]];
+        SecondarySegmentFull secondary3 @ (_sec3_sector * SECTOR_SIZE) [[name("Stage 3 — Tileset")]];
     }
     if (_sec4_count > 0 && _sec4_sector > 0) {
-        SecondarySegmentFull secondary4 @ (_sec4_sector * SECTOR_SIZE) [[name("Secondary (Stage 4)")]];
+        SecondarySegmentFull secondary4 @ (_sec4_sector * SECTOR_SIZE) [[name("Stage 4 — Tileset")]];
     }
     if (_sec5_count > 0 && _sec5_sector > 0) {
-        SecondarySegmentFull secondary5 @ (_sec5_sector * SECTOR_SIZE) [[name("Secondary (Stage 5)")]];
+        SecondarySegmentFull secondary5 @ (_sec5_sector * SECTOR_SIZE) [[name("Stage 5 — Tileset")]];
     }
     
     // Tertiary Stages (up to 6) - with full asset parsing
@@ -2270,23 +2259,25 @@ struct LevelData<auto level_idx> {
     u16 _tert4 = get_level_tert_sector_off(level_idx, 4);
     u16 _tert5 = get_level_tert_sector_off(level_idx, 5);
     
+    // Tertiary stages - per-stage MAP ("map"): tilemap + collision + entities.
+    // Pairs 1:1 with the same stage's "tileset" above.
     if (_stage_count >= 1 && _tert0 > 0) {
-        TertiaryStageWithAssets stage0 @ (_tert0 * SECTOR_SIZE) [[name("Stage 0")]];
+        TertiaryStageWithAssets stage0 @ (_tert0 * SECTOR_SIZE) [[name("Stage 0 — Map")]];
     }
     if (_stage_count >= 2 && _tert1 > 0) {
-        TertiaryStageWithAssets stage1 @ (_tert1 * SECTOR_SIZE) [[name("Stage 1")]];
+        TertiaryStageWithAssets stage1 @ (_tert1 * SECTOR_SIZE) [[name("Stage 1 — Map")]];
     }
     if (_stage_count >= 3 && _tert2 > 0) {
-        TertiaryStageWithAssets stage2 @ (_tert2 * SECTOR_SIZE) [[name("Stage 2")]];
+        TertiaryStageWithAssets stage2 @ (_tert2 * SECTOR_SIZE) [[name("Stage 2 — Map")]];
     }
     if (_stage_count >= 4 && _tert3 > 0) {
-        TertiaryStageWithAssets stage3 @ (_tert3 * SECTOR_SIZE) [[name("Stage 3")]];
+        TertiaryStageWithAssets stage3 @ (_tert3 * SECTOR_SIZE) [[name("Stage 3 — Map")]];
     }
     if (_stage_count >= 5 && _tert4 > 0) {
-        TertiaryStageWithAssets stage4 @ (_tert4 * SECTOR_SIZE) [[name("Stage 4")]];
+        TertiaryStageWithAssets stage4 @ (_tert4 * SECTOR_SIZE) [[name("Stage 4 — Map")]];
     }
     if (_stage_count >= 6 && _tert5 > 0) {
-        TertiaryStageWithAssets stage5 @ (_tert5 * SECTOR_SIZE) [[name("Stage 5")]];
+        TertiaryStageWithAssets stage5 @ (_tert5 * SECTOR_SIZE) [[name("Stage 5 — Map")]];
     }
 } [[color("40CCFF")]];
 
