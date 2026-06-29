@@ -348,4 +348,4 @@ grep UploadAudioToSPU /tmp/skullmonkeys_trace.jsonl | jq '{level:.data.level_id,
 - `docs/blb-data-format.md` - BLB file structure
 - `docs/entity-system.md` - Entity architecture
 - `docs/runtime-behavior.md` - Game loop and callbacks
-- `scripts/blb.hexpat` - ImHex BLB template (source of truth)
+- `docs/blb.hexpat` - ImHex BLB template (source of truth)

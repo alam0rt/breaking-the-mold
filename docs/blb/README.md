@@ -215,7 +215,7 @@ All fields documented and categorized:
 
 ### Parse BLB header as JSON:
 ```bash
-imhex --pl format --pattern scripts/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb.json
+imhex --pl format --pattern docs/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb.json
 ```
 
 ### Query level data:

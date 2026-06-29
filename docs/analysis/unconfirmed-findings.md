@@ -448,11 +448,11 @@ Asset 504 appears **only in vehicle/driving levels**:
 
 ### ImHex Template Support
 
-Asset 504 is now parseable via the ImHex template (`scripts/blb.hexpat`).
+Asset 504 is now parseable via the ImHex template (`docs/blb.hexpat`).
 
 ```bash
 # Regenerate cached JSON (takes ~2 minutes)
-imhex --pl format --pattern scripts/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb_parsed.json
+imhex --pl format --pattern docs/blb.hexpat --input disks/blb/GAME.BLB > /tmp/blb_parsed.json
 
 # Count collectibles in FINN (type_flags1 == 0x8000)
 jq '[.. | objects | select(.vehicle9?) | .vehicle9.entries[] | select(.zone.type_flags1 == 32768)] | length' /tmp/blb_parsed.json
@@ -1590,7 +1590,7 @@ buffers, accessed via the base pointer stored in the context.
 
 This section has been verified and fully documented. See:
 - `docs/blb-data-format.md` → "Audio System (VERIFIED 2026-01-07)" section
-- `scripts/blb.hexpat` → AudioSampleEntry and AudioVolumeEntry structs
+- `docs/blb.hexpat` → AudioSampleEntry and AudioVolumeEntry structs
 
 ### Summary of Verified Findings
 
@@ -2541,7 +2541,7 @@ is **hardcoded in game code**, not stored in BLB data.
    - `LookupSpriteById` @ 0x8007bb10
    - `FindSpriteInTOC` @ 0x8007b968
 
-**Template updated:** `scripts/blb.hexpat` now includes:
+**Template updated:** `docs/blb.hexpat` now includes:
 - Entity structure (24 bytes) for Asset 501
 - Sprite ID lookup chain documentation
 - Known sprite ID mappings

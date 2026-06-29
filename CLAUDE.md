@@ -76,7 +76,7 @@ Switching compilers (e.g. 2.5.7-psx) may improve some functions but break others
 
 - RAM base `0x80010000`; ROM offset = VRAM − `0x80010000` + `0x800`. Use `ram2off`/`off2ram` (in shell) or `./scripts/addr2offset.sh`.
 - `sdata` starts at `0x800A5954` (matches splat `gp_value`). `-G8` keeps ≤8-byte symbols GP-relative.
-- BLB asset format: **`scripts/blb.hexpat` (ImHex) is the source of truth.** Document confirmed findings in `docs/blb/`; unconfirmed observations go in `docs/analysis/unconfirmed-findings.md` until verified. Confirmed findings should also be applied to Ghidra via the MCP tools when available.
+- BLB asset format: **`docs/blb.hexpat` (ImHex) is the source of truth.** Document confirmed findings in `docs/blb/`; unconfirmed observations go in `docs/analysis/unconfirmed-findings.md` until verified. Confirmed findings should also be applied to Ghidra via the MCP tools when available.
 
 ## Runtime Verification (PCSX-Redux)
 
