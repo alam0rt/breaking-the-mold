@@ -21,7 +21,7 @@ extern u8 ENTITY_SPU_STOP_AT10C_VTABLE[] asm("D_80011D34");
  * the playst module) — NOT confirmed as the PlayerDestroy callback. Per
  * docs/symbol_addrs, PlayerDestroy's destructor is
  * `EntityDestructor_WithSPUVoiceStop` @ 0x80059B58, a different function. */
-void EntityDestructor_WithSPUStopAt10c(EntityWithSpuVoiceAt10c *entity, u32 flags) {
+void EntityDestructor_WithSPUVoiceStopAt10c(EntityWithSpuVoiceAt10c *entity, u32 flags) {
     entity->sprite.base.collisionVtable = ENTITY_SPU_STOP_AT10C_VTABLE;
     StopSPUVoice(entity->spuVoice);
     DestroyEntityAndFreeMemory(&entity->sprite, 0);

@@ -468,7 +468,7 @@ typedef struct BossWithSpuVoiceEntity {
  * call's delay slot. Likewise the -1 store at +0x118 is folded into the
  * second vtable lui's delay slot. Writing the function as a flat sequence
  * (no temps) produces this. */
-void EntityDestructor_WithSPUStop(BossWithSpuVoiceEntity *e, u32 flags) {
+void EntityDestructor_WithSPUVoiceStopAndClear(BossWithSpuVoiceEntity *e, u32 flags) {
     e->sprite.base.collisionVtable = BOSS_SPU_STOP_PRE_VTABLE;
     StopSPUVoice(e->voiceHandle);
     e->voiceHandle = -1;
