@@ -112,3 +112,14 @@ memories/
 
 # Ghidra C export (make export) - large generated artifacts
 export/
+
+# -----------------------------------------------------------------------------
+# Clean-room: NEVER commit extracted game data / graphics or proprietary tooling
+# (history purged 2026-06-29; see backup tag pre-cleanroom-rewrite)
+# -----------------------------------------------------------------------------
+docs/blb.json
+*.png
+docs/reference/bbs/
+tools/gcc-2.7.2-sn32/*.EXE
+docs/ghidra/SLES_010.90.c
+tools/name-game/assets/
