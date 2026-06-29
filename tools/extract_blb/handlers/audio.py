@@ -24,6 +24,18 @@ import wave
 from pathlib import Path
 
 from . import register_handler, default_handler
+from ..asset_names import known_stem
+
+
+def _wav_basename(asset_id: int, prefix: str) -> str:
+    """
+    Build the WAV stem for a sample id, preferring its known name.
+
+    Returns the reverse-engineered name (e.g. "FX_KLAY_LAND") when the id is
+    in the asset-name catalogue, else falls back to "<prefix>_<id:08x>" so
+    uncracked samples still extract with a stable, hash-based filename.
+    """
+    return known_stem(asset_id, "audio", f"{prefix}_{asset_id:08x}")
 
 
 # PSX ADPCM filter coefficients
@@ -207,8 +219,8 @@ def audio_sample_bank_handler(
             if len(pcm_data) == 0:
                 continue
             
-            # Save as WAV
-            wav_path = audio_dir / f"sample_{sample_id:08x}.wav"
+            # Save as WAV, preferring the known asset name over the raw hash
+            wav_path = audio_dir / f"{_wav_basename(sample_id, 'sample')}.wav"
             if save_wav(pcm_data, sample_rate, wav_path):
                 output_files.append(wav_path)
                 samples_extracted += 1
@@ -285,8 +297,8 @@ def spu_samples_handler(
             if len(pcm_data) == 0:
                 continue
             
-            # Save as WAV
-            wav_path = audio_dir / f"spu_{entry_id:08x}.wav"
+            # Save as WAV, preferring the known asset name over the raw hash
+            wav_path = audio_dir / f"{_wav_basename(entry_id, 'spu')}.wav"
             if save_wav(pcm_data, sample_rate, wav_path):
                 output_files.append(wav_path)
                 samples_extracted += 1

@@ -41,10 +41,23 @@ from pathlib import Path
 from typing import Optional
 
 from . import register_handler, default_handler
+from ..asset_names import known_stem
 
 # Frame delay in milliseconds for GIF animations
 # PSX PAL runs at 50Hz, NTSC at 60Hz. Most game animations run at ~10fps
 DEFAULT_FRAME_DELAY_MS = 100  # 10 fps
+
+
+def _sprite_stem(sprite_id: int) -> str:
+    """
+    Filename stem for a sprite, preferring its known name.
+
+    Returns the reverse-engineered name (e.g. "PAUSED", "YES", "NO") when the
+    id is in the asset-name catalogue, else falls back to "sprite_<id:04d>" so
+    uncracked sprites keep their stable, hash-based filename. The "_animYY"/
+    "_fZZ" suffixes are appended by callers on top of this stem.
+    """
+    return known_stem(sprite_id, "sprite", f"sprite_{sprite_id:04d}")
 
 
 def parse_sprite_header(data: bytes, offset: int) -> dict:
@@ -396,6 +409,9 @@ def sprite_container_handler(
             'sprite_id': sprite_id,
             'animations': [],
         }
+
+        # Filename stem: known name (e.g. "PAUSED"/"YES"/"NO") or sprite_<id>.
+        stem = _sprite_stem(sprite_id)
         
         # Parse animations and extract ALL frames
         for anim_idx in range(min(header['animation_count'], 32)):  # Limit animations
@@ -481,7 +497,7 @@ def sprite_container_handler(
             if len(frames) == 1:
                 # Single frame - always save as PNG
                 pixels, width, height, _, _ = frames[0]
-                png_path = sprites_dir / f"sprite_{sprite_id:04d}_anim{anim_idx:02d}.png"
+                png_path = sprites_dir / f"{stem}_anim{anim_idx:02d}.png"
                 if save_png(pixels, width, height, png_path):
                     output_files.append(png_path)
                     pngs_created += 1
@@ -494,17 +510,17 @@ def sprite_container_handler(
                 # Each frame is selected by index at runtime, not animated
                 # Save as individual PNGs for each frame index
                 for frame_idx, (pixels, width, height, _, _) in enumerate(frames):
-                    png_path = sprites_dir / f"sprite_{sprite_id:04d}_anim{anim_idx:02d}_f{frame_idx:02d}.png"
+                    png_path = sprites_dir / f"{stem}_anim{anim_idx:02d}_f{frame_idx:02d}.png"
                     if save_png(pixels, width, height, png_path):
                         output_files.append(png_path)
                         pngs_created += 1
-                anim_info['file'] = f"sprite_{sprite_id:04d}_anim{anim_idx:02d}_f*.png"
+                anim_info['file'] = f"{stem}_anim{anim_idx:02d}_f*.png"
                 anim_info['format'] = 'indexed_pngs'
                 anim_info['type'] = 'sprite_sheet'
                 anim_info['indices'] = list(range(len(frames)))
             else:
                 # Multiple frames with timing - save as animated GIF
-                gif_path = sprites_dir / f"sprite_{sprite_id:04d}_anim{anim_idx:02d}.gif"
+                gif_path = sprites_dir / f"{stem}_anim{anim_idx:02d}.gif"
                 if save_gif(frames, gif_path, frame_delay_ms=frame_delay_ms, loop=True):
                     output_files.append(gif_path)
                     gifs_created += 1
