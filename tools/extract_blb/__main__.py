@@ -366,50 +366,60 @@ HEADER_TABLES = [
 # Segment -> output-path mapping
 # ============================================================================
 #
-# The raw segment keys come from the ImHex pattern (blb.hexpat) and are
-# positional guesses: "primary", "secondary"/"secondary1".."secondary5",
-# "stage0".."stage5". What they actually are (verified against the level
-# metadata struct + LoadAssetContainer @0x8007b074):
+# Segment keys are the ImHex pattern's member names (blb.hexpat). The current
+# template emits descriptive keys that already match what each segment is
+# (verified against the level metadata struct + LoadAssetContainer @0x8007b074):
 #
-#   primary      -> world-shared assets, loaded once  (600 geometry, 601/602 audio)
-#   secondary[N] -> stage N's tile/palette GRAPHICS bank (300 pixels, 400 CLUTs, ...)
-#   stage[N]     -> stage N's MAP: tilemap, collision, entity placement (200/201/500/501)
+#   shared          -> world-shared assets, loaded once (600 geometry, 601/602 audio)
+#   stageN_tileset  -> stage N's tile/palette GRAPHICS bank (300 pixels, 400 CLUTs, ...)
+#   stageN_map      -> stage N's MAP: tilemap, collision, entities (200/201/500/501)
 #
-# secondary[N] and stage[N] pair 1:1 per stage (both are u16[6] per-stage arrays
-# in the level entry). So we lay the output out by world -> stage -> {tileset,map},
-# with primary hoisted to a single "shared" folder:
+# tileset[N] and map[N] pair 1:1 per stage (both are u16[6] per-stage arrays in
+# the level entry). Output is laid out world -> stage -> {tileset, map}:
 #
-#   EGGS/shared/...            (primary)
-#   EGGS/stage0/tileset/...    (secondary  == stage 0 graphics)
-#   EGGS/stage0/map/...        (stage0     == stage 0 map)
-#   EGGS/stage1/tileset/...    (secondary1)
-#   EGGS/stage1/map/...        (stage1)
+#   EGGS/shared/...            (shared)
+#   EGGS/stage0/tileset/...    (stage0_tileset)
+#   EGGS/stage0/map/...        (stage0_map)
+#   EGGS/stage1/tileset/...    (stage1_tileset)
+#   EGGS/stage1/map/...        (stage1_map)
 #
-# Header-level pseudo-segments (sectors/credits/...) and any unrecognised key
-# pass through unchanged.
+# Legacy positional keys (primary / secondary[N] / stageN) from older JSON
+# exports are still accepted so previously-generated JSON keeps extracting.
+# Header pseudo-segments (sectors/credits/...) and any unrecognised key pass
+# through unchanged.
 
 def segment_to_relpath(segment_name: str) -> str:
     """
-    Map a raw BLB segment key to its descriptive output sub-path.
+    Map a BLB segment key to its descriptive output sub-path.
 
     Returns a POSIX-style relative path (may contain '/') under the world
-    directory. Unknown keys are returned unchanged so new/header segments
-    still extract somewhere sensible.
+    directory. Accepts both the current descriptive keys and the legacy
+    positional keys; unknown keys are returned unchanged so new/header
+    segments still extract somewhere sensible.
     """
     name = segment_name.strip()
 
-    # World-shared segment.
+    # --- Current descriptive keys (blb.hexpat member names) ---
+    if name == "shared":
+        return "shared"
+    if name.startswith("stage") and name.endswith("_tileset"):
+        n = name[len("stage"):-len("_tileset")]
+        if n.isdigit():
+            return f"stage{n}/tileset"
+    if name.startswith("stage") and name.endswith("_map"):
+        n = name[len("stage"):-len("_map")]
+        if n.isdigit():
+            return f"stage{n}/map"
+
+    # --- Legacy positional keys (older JSON exports) ---
     if name == "primary":
         return "shared"
-
-    # Per-stage tile/palette graphics bank. "secondary" == stage 0; the
-    # numeric suffix on "secondaryN" is the stage index.
+    # "secondary" == stage 0; "secondaryN" suffix is the stage index.
     if name == "secondary":
         return "stage0/tileset"
     if name.startswith("secondary") and name[len("secondary"):].isdigit():
         return f"stage{name[len('secondary'):]}/tileset"
-
-    # Per-stage map (tilemap + collision + entities). Already "stageN".
+    # Bare "stageN" (no _map/_tileset suffix) was the old tertiary/map key.
     if name.startswith("stage") and name[len("stage"):].isdigit():
         return f"{name}/map"
 

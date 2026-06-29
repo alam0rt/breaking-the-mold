@@ -2225,30 +2225,32 @@ struct LevelData<auto level_idx> {
     u16 _sec5_sector = get_level_sec_sector_off(level_idx, 5);
     u16 _sec5_count = get_level_sec_sector_cnt(level_idx, 5);
     
-    // Primary Segment - world-shared assets, loaded once
+    // Primary Segment - world-shared assets, loaded once.
+    // Member name "shared" is the JSON key consumed by tools/extract_blb.
     if (_pri_count > 0) {
-        PrimarySegmentFull primary @ (_pri_sector * SECTOR_SIZE) [[name("Shared (world assets)")]];
+        PrimarySegmentFull shared @ (_pri_sector * SECTOR_SIZE) [[name("Shared (world assets)")]];
     }
 
     // Secondary Segments - per-stage tile/palette graphics bank ("tileset").
     // One per stage, pairs 1:1 with the same stage's tertiary "map" below.
+    // Member names "stageN_tileset" are the JSON keys.
     if (_sec0_count > 0 && _sec0_sector > 0) {
-        SecondarySegmentFull secondary @ (_sec0_sector * SECTOR_SIZE) [[name("Stage 0 — Tileset")]];
+        SecondarySegmentFull stage0_tileset @ (_sec0_sector * SECTOR_SIZE) [[name("Stage 0 — Tileset")]];
     }
     if (_sec1_count > 0 && _sec1_sector > 0) {
-        SecondarySegmentFull secondary1 @ (_sec1_sector * SECTOR_SIZE) [[name("Stage 1 — Tileset")]];
+        SecondarySegmentFull stage1_tileset @ (_sec1_sector * SECTOR_SIZE) [[name("Stage 1 — Tileset")]];
     }
     if (_sec2_count > 0 && _sec2_sector > 0) {
-        SecondarySegmentFull secondary2 @ (_sec2_sector * SECTOR_SIZE) [[name("Stage 2 — Tileset")]];
+        SecondarySegmentFull stage2_tileset @ (_sec2_sector * SECTOR_SIZE) [[name("Stage 2 — Tileset")]];
     }
     if (_sec3_count > 0 && _sec3_sector > 0) {
-        SecondarySegmentFull secondary3 @ (_sec3_sector * SECTOR_SIZE) [[name("Stage 3 — Tileset")]];
+        SecondarySegmentFull stage3_tileset @ (_sec3_sector * SECTOR_SIZE) [[name("Stage 3 — Tileset")]];
     }
     if (_sec4_count > 0 && _sec4_sector > 0) {
-        SecondarySegmentFull secondary4 @ (_sec4_sector * SECTOR_SIZE) [[name("Stage 4 — Tileset")]];
+        SecondarySegmentFull stage4_tileset @ (_sec4_sector * SECTOR_SIZE) [[name("Stage 4 — Tileset")]];
     }
     if (_sec5_count > 0 && _sec5_sector > 0) {
-        SecondarySegmentFull secondary5 @ (_sec5_sector * SECTOR_SIZE) [[name("Stage 5 — Tileset")]];
+        SecondarySegmentFull stage5_tileset @ (_sec5_sector * SECTOR_SIZE) [[name("Stage 5 — Tileset")]];
     }
     
     // Tertiary Stages (up to 6) - with full asset parsing
@@ -2261,23 +2263,24 @@ struct LevelData<auto level_idx> {
     
     // Tertiary stages - per-stage MAP ("map"): tilemap + collision + entities.
     // Pairs 1:1 with the same stage's "tileset" above.
+    // Member names "stageN_map" are the JSON keys consumed by tools/extract_blb.
     if (_stage_count >= 1 && _tert0 > 0) {
-        TertiaryStageWithAssets stage0 @ (_tert0 * SECTOR_SIZE) [[name("Stage 0 — Map")]];
+        TertiaryStageWithAssets stage0_map @ (_tert0 * SECTOR_SIZE) [[name("Stage 0 — Map")]];
     }
     if (_stage_count >= 2 && _tert1 > 0) {
-        TertiaryStageWithAssets stage1 @ (_tert1 * SECTOR_SIZE) [[name("Stage 1 — Map")]];
+        TertiaryStageWithAssets stage1_map @ (_tert1 * SECTOR_SIZE) [[name("Stage 1 — Map")]];
     }
     if (_stage_count >= 3 && _tert2 > 0) {
-        TertiaryStageWithAssets stage2 @ (_tert2 * SECTOR_SIZE) [[name("Stage 2 — Map")]];
+        TertiaryStageWithAssets stage2_map @ (_tert2 * SECTOR_SIZE) [[name("Stage 2 — Map")]];
     }
     if (_stage_count >= 4 && _tert3 > 0) {
-        TertiaryStageWithAssets stage3 @ (_tert3 * SECTOR_SIZE) [[name("Stage 3 — Map")]];
+        TertiaryStageWithAssets stage3_map @ (_tert3 * SECTOR_SIZE) [[name("Stage 3 — Map")]];
     }
     if (_stage_count >= 5 && _tert4 > 0) {
-        TertiaryStageWithAssets stage4 @ (_tert4 * SECTOR_SIZE) [[name("Stage 4 — Map")]];
+        TertiaryStageWithAssets stage4_map @ (_tert4 * SECTOR_SIZE) [[name("Stage 4 — Map")]];
     }
     if (_stage_count >= 6 && _tert5 > 0) {
-        TertiaryStageWithAssets stage5 @ (_tert5 * SECTOR_SIZE) [[name("Stage 5 — Map")]];
+        TertiaryStageWithAssets stage5_map @ (_tert5 * SECTOR_SIZE) [[name("Stage 5 — Map")]];
     }
 } [[color("40CCFF")]];
 
