@@ -179,6 +179,20 @@ TimedPathEntity *InitYellowBirdCollectible(TimedPathEntity *e, DecorSpawnData *d
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CollectibleYellowBirdTickCallback);
 
+/* InitClayballWithRandomColor @ 0x8002DBDC — type-007 clayball pickup: the
+ * orange-ball sprite (CONFIRMED hash 0xB8700CA1) with a random colour tint.
+ *   InitEntitySprite(e, 0xB8700CA1, 0x3DE, data->x, data->y, 1);
+ *   collisionVtable D_80010870 -> InitPathFollowingDecorEntity -> D_800107F0;
+ *   +0x10 = 0x458; tickMarker = CollectibleClaySingleTickCallback;
+ *   spr = e->spriteContext; spr->tpage = GetTPage(spr->abr,1, vramX&~0x3F, vramY&~0xFF);
+ *   SetAnimationFrameIndex(e, rand()&7);
+ *   for each of R/G/B: clamp((s16)(rand()%48 + base - 0x18), 0, 255).
+ * SHELVED: hand-matched to the exact instruction count (epilogue aligned); the
+ * residual is pure register-coloring + minor scheduling in the 3x rand-tint tail
+ * — spriteContext colored v1 (target) vs s0, clamp accumulator a2 vs a0. Blind
+ * permuter plateaus (base 1305 -> best 1035, no 0); needs targeted PERM macros on
+ * the tint block's coloring. Close C parked in
+ * tools/decomp-permuter/nonmatchings/InitClayballWithRandomColor. */
 INCLUDE_ASM("asm/nonmatchings/pickups", InitClayballWithRandomColor);
 
 /* Single-hit clay-ball pickup tick. Runs the standard offscreen-cull
