@@ -70,25 +70,36 @@ Offset  Size  Type    Description
 
 ### Frame Metadata (36 bytes each)
 
+**Layout VERIFIED against `UpdateSpriteFrameData` @ 0x8001D748**, which copies each
+field into the live entity (destination shown):
+
 ```
-Offset  Size  Type    Description
-------  ----  ----    -----------
-0x00    2     u16     Callback ID (triggers PlayEntityPositionSound)
-0x02    2     u16     Reserved
-0x04    2     u16     Flip flags (non-zero = horizontal mirror)
-0x06    2     s16     Render X offset
-0x08    2     s16     Render Y offset
-0x0A    2     u16     Render width
-0x0C    2     u16     Render height
-0x0E    2     u16     Frame delay (animation timing)
-0x10    2     u16     Reserved
-0x12    2     s16     Hitbox X offset
-0x14    2     s16     Hitbox Y offset
-0x16    2     u16     Hitbox width
-0x18    2     u16     Hitbox height
-0x1A    6     bytes   Padding
-0x20    4     u32     RLE data offset
+Offset  Size  Type    Field           Copied to entity / role
+------  ----  ----    -----------     -----------------------
+0x00    4     u32     callback_id     per-frame SFX/particle/event hook
+0x04    2     u16     frame_delay     -> +0xEC frameRateDivisor  (TIMING, ticks)
+0x06    2     s16     origin_x        -> +0x38 render origin X
+0x08    2     s16     origin_y        -> +0x3A render origin Y
+0x0A    2     u16     width           -> +0x3C
+0x0C    2     u16     height          -> +0x3E
+0x0E    2     s16     frame_delta_x   -> +0xE6, folded into +0xB4 vx  (MOTION)
+0x10    2     s16     frame_delta_y   -> +0xE8, folded into +0xB8 vy  (MOTION)
+0x12    2     s16     hitbox_x        -> +0x40
+0x14    2     s16     hitbox_y        -> +0x42
+0x16    2     u16     hitbox_width    -> +0x44
+0x18    2     u16     hitbox_height   -> +0x46
+0x1A    2     u16     reserved
+0x1C    4     u32     flags
+0x20    4     u32     rle_offset
 ```
+
+**Correction (2026-06-30):** earlier revisions of this table mislabelled **0x04**
+as "flip flags" and **0x0E** as "frame delay (timing)". That is wrong. Timing is
+**0x04** (`frame_delay`, typically 1–2 ticks). **0x0E/0x10** are signed per-frame
+**motion deltas** — the engine folds them into the entity's velocity (`+0xB4`/`+0xB8`),
+which is how a walk/run animation actually propels the entity forward (e.g. the
+running Skullmonkey's `frame_delta_x` runs `-4…-9` px/frame, while its idle is `0`).
+Horizontal mirroring comes from the entity facing flag (`+0x74`), not a frame field.
 
 ## RLE Pixel Data Format
 

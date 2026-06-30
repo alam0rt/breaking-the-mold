@@ -20,11 +20,14 @@ Animation Flags (VERIFIED via Ghidra FUN_8001d748):
 - Bit 0 (0x0001): has_frame_callback - triggers FUN_8001c4a4 for SFX/particles
 - Note: Loop behavior is controlled by game code, not these flags
 
-Frame Metadata Fields (VERIFIED via Ghidra):
-- flip_flags (0x04): 0=normal, non-zero=horizontal mirror for RLE decode
-- frame_delay (0x0E): Per-frame timing value (copied to entity+0xE6)
-  - 0 = static frame (indexed sprite sheet - e.g., digit fonts, variant icons)
-  - Non-zero = animated frame with timing
+Frame Metadata Fields (layout VERIFIED via UpdateSpriteFrameData @ 0x8001D748):
+- frame_delay (0x04): per-frame timing in ticks (-> entity +0xEC frameRateDivisor)
+  - typically 1-2 ticks; small values, NOT 100ms
+- frame_delta_x/y (0x0E/0x10): signed per-frame *motion deltas*, folded into the
+  entity's +0xB4/+0xB8 velocity (this is how a walk/run cycle propels the entity).
+  These are NOT timing or padding.
+- The old layout calling 0x04 "flip_flags" and 0x0E "frame_delay" was wrong; flip
+  is driven by the entity facing flag, not a per-frame field.
 
 Sprite Sheet Detection:
 When frame_delay=0 for ALL frames, the sprite is an indexed sprite sheet where
@@ -37,6 +40,7 @@ These are saved as individual PNGs: sprite_XXXX_animYY_fZZ.png
 
 import json
 import struct
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -84,43 +88,53 @@ def parse_animation_entry(data: bytes, offset: int) -> dict:
 
 def parse_frame_metadata(data: bytes, offset: int) -> dict:
     """
-    Parse 36-byte frame metadata.
-    
-    VERIFIED via Ghidra: DecodeRLESprite (0x80010068), FUN_8001d748, GetFrameMetadata (0x8007bebc)
-    
-    Offset  Size  Type   Field
-    0x00    2     u16    callback_id (0=none, triggers FUN_8001c4a4 for SFX/particles)
-    0x02    2     u16    reserved (always 0)
-    0x04    2     u16    flip_flags (0=normal, non-zero=horizontal mirror)
-    0x06    2     s16    render_x (signed offset from anchor)
-    0x08    2     s16    render_y (signed offset from anchor)
-    0x0A    2     u16    render_width
-    0x0C    2     u16    render_height
-    0x0E    2     u16    frame_delay (per-frame timing, copied to entity+0xE6)
-    0x10    2     u16    reserved (always 0)
-    0x12    2     s16    hitbox_x (signed)
-    0x14    2     s16    hitbox_y (signed)
-    0x16    2     u16    hitbox_width
-    0x18    2     u16    hitbox_height
-    0x1A    6     -      padding
-    0x20    4     u32    rle_offset
+    Parse a 36-byte SpriteFrameEntry.
+
+    Layout VERIFIED against UpdateSpriteFrameData @ 0x8001D748 (which copies each
+    field into the live entity) and include/Game/sprite.h:
+
+    Offset Size Type  Field          Copied to entity / role
+    0x00   4    u32   callback_id    per-frame SFX/particle/event hook
+    0x04   2    u16   frame_delay    -> +0xEC frameRateDivisor  (TIMING, ticks)
+    0x06   2    s16   origin_x       -> +0x38 render origin X
+    0x08   2    s16   origin_y       -> +0x3A render origin Y
+    0x0A   2    u16   width          -> +0x3C
+    0x0C   2    u16   height         -> +0x3E
+    0x0E   2    s16   frame_delta_x  -> +0xE6, folded into +0xB4 vx  (MOTION)
+    0x10   2    s16   frame_delta_y  -> +0xE8, folded into +0xB8 vy  (MOTION)
+    0x12   2    s16   hitbox_x       -> +0x40
+    0x14   2    s16   hitbox_y       -> +0x42
+    0x16   2    u16   hitbox_width   -> +0x44
+    0x18   2    u16   hitbox_height  -> +0x46
+    0x1A   2    u16   reserved
+    0x1C   4    u32   flags
+    0x20   4    u32   rle_offset
+
+    IMPORTANT: 0x0E/0x10 are the per-frame signed *motion deltas* (the anchor
+    advance that propels a walking/running entity by feeding +0xB4/+0xB8 velocity),
+    NOT timing. Real timing is the 0x04 frame_delay. A previous revision mislabelled
+    0x04 as "flip_flags" and 0x0E as "frame_delay" — both wrong. Horizontal
+    mirroring is driven by the entity facing flag (+0x74), not a frame field.
     """
-    fields = struct.unpack_from('<HHHhhHHHHhhHH6xI', data, offset)
+    f = struct.unpack_from('<IHhhHHhhhhHHHII', data, offset)
+    origin_x, origin_y = f[2], f[3]
     return {
-        'callback_id': fields[0],      # Triggers FUN_8001c4a4 for sound/particle effects
-        'reserved_02': fields[1],
-        'flip_flags': fields[2],       # 0=normal, non-zero=horizontal mirror in RLE decode
-        'render_x': fields[3],         # signed s16
-        'render_y': fields[4],         # signed s16
-        'render_width': fields[5],
-        'render_height': fields[6],
-        'frame_delay': fields[7],      # Per-frame timing value (0=static/sprite sheet)
-        'reserved_10': fields[8],
-        'hitbox_x': fields[9],         # signed s16
-        'hitbox_y': fields[10],        # signed s16
-        'hitbox_width': fields[11],
-        'hitbox_height': fields[12],
-        'rle_offset': fields[13],
+        'callback_id': f[0],
+        'frame_delay': f[1],       # 0x04 — ticks the frame is held (timing)
+        'origin_x': origin_x,      # 0x06
+        'origin_y': origin_y,      # 0x08
+        'render_x': origin_x,      # alias kept for existing callers
+        'render_y': origin_y,
+        'render_width': f[4],      # 0x0A
+        'render_height': f[5],     # 0x0C
+        'frame_delta_x': f[6],     # 0x0E — signed per-frame X motion -> vx
+        'frame_delta_y': f[7],     # 0x10 — signed per-frame Y motion -> vy
+        'hitbox_x': f[8],          # 0x12
+        'hitbox_y': f[9],          # 0x14
+        'hitbox_width': f[10],     # 0x16
+        'hitbox_height': f[11],    # 0x18
+        'flags': f[13],            # 0x1C
+        'rle_offset': f[14],       # 0x20
     }
 
 
@@ -343,8 +357,9 @@ def save_gif(
     except ImportError:
         return False
     except Exception as e:
-        # Debug: uncomment to see errors
-        # print(f"GIF save error: {e}")
+        # Don't swallow silently -- callers fall back to PNG frames, but we want
+        # to know which sprites hit this (and why) instead of losing them quietly.
+        sys.stderr.write(f"GIF save failed for {path.name}: {e}\n")
         return False
 
 
@@ -481,7 +496,10 @@ def sprite_container_handler(
             # Convert to milliseconds: assume PAL 50Hz = 20ms per tick
             if has_timing:
                 avg_delay = sum(d for d in frame_delays if d > 0) / max(1, sum(1 for d in frame_delays if d > 0))
-                frame_delay_ms = max(20, int(avg_delay * 20))  # 20ms per tick at 50Hz
+                # Callback sprites (has_callback) store non-timing data in the
+                # per-frame field, so avg_delay can be garbage (e.g. ~65529).
+                # Clamp to a sane GIF range so export doesn't blow up.
+                frame_delay_ms = min(1000, max(20, int(avg_delay * 20)))
             else:
                 frame_delay_ms = DEFAULT_FRAME_DELAY_MS
             
@@ -527,6 +545,19 @@ def sprite_container_handler(
                     anim_info['file'] = gif_path.name
                     anim_info['format'] = 'gif'
                     anim_info['type'] = 'animation'
+                else:
+                    # GIF export failed (common for callback sprites with bogus
+                    # offsets/timing). Fall back to per-frame PNGs so the sprite
+                    # is never silently dropped -- this is how moving enemies
+                    # (running Skullmonkeys etc.) were going missing.
+                    for frame_idx, (pixels, width, height, _, _) in enumerate(frames):
+                        png_path = sprites_dir / f"{stem}_anim{anim_idx:02d}_f{frame_idx:02d}.png"
+                        if save_png(pixels, width, height, png_path):
+                            output_files.append(png_path)
+                            pngs_created += 1
+                    anim_info['file'] = f"{stem}_anim{anim_idx:02d}_f*.png"
+                    anim_info['format'] = 'indexed_pngs'
+                    anim_info['type'] = 'animation_gif_failed'
             
             sprite_info['animations'].append(anim_info)
         
