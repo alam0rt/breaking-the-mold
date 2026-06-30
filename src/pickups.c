@@ -53,7 +53,52 @@ typedef struct DecorRandomTimerEntity {
 u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8");
 EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC");
 
-INCLUDE_ASM("asm/nonmatchings/pickups", InitGreenBulletsCollectible);
+extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
+extern u8 GREENBULLET_VTABLE[] asm("D_80010850");
+void DecorEntity_CollectWithSwirlyEffect(InteractiveDecorEntity *e);
+
+/* Sprite render context (Entity+0x34) view: the fields used to build the GPU
+ * tpage from the sprite's reserved VRAM rect. Matches RenderSprite (spracc.c). */
+typedef struct DecorSpriteCtx {
+    /* 0x00 */ u8  pad00[0x10];
+    /* 0x10 */ s16 vramX;
+    /* 0x12 */ s16 vramY;
+    /* 0x14 */ u8  pad14[0x24 - 0x14];
+    /* 0x24 */ u16 tpage;
+    /* 0x26 */ u8  pad26[0x32 - 0x26];
+    /* 0x32 */ u8  abr;
+} DecorSpriteCtx;
+
+/* Type-002 green-bullets pickup: sprite hash 0xE8628689, path-following decor
+ * shell, collected via DecorEntity_CollectWithSwirlyEffect; builds the GPU
+ * tpage from the reserved VRAM rect. (Same shape as the clayball init minus the
+ * random colour tint.) */
+TimedPathEntity *InitGreenBulletsCollectible(TimedPathEntity *e, DecorSpawnData *data) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+    DecorSpriteCtx *spr;
+    s32 vx;
+    s32 vy;
+
+    InitEntitySprite((Entity *)e, 0xE8628689, 0x3DE, data->x, data->y, 1);
+    e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
+    InitPathFollowingDecorEntity(e, data, 0);
+    e->sprite.base.collisionVtable = GREENBULLET_VTABLE;
+    do {} while (0);
+    fn = (void (*)())DecorEntity_CollectWithSwirlyEffect;
+    do {} while (0);
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    spr = (DecorSpriteCtx *)e->sprite.base.spriteContext;
+    vx = spr->vramX;
+    vy = spr->vramY;
+    spr->tpage = GetTPage(spr->abr, 1, vx & ~0x3F, vy & ~0xFF);
+    return e;
+}
 
 extern u8 CheckEntityBoxCollision(Entity *e, u16 mask);
 extern void AddPlayerOrbs(PlayerState *ps, s8 count);
