@@ -8,7 +8,14 @@
    "0x611c5804",
    "0x64bb1cbe"
   ],
-  "via": "arr-via:InitCollectibleVariant"
+  "via": "arr-via:InitSpecialPickupEntity"
+ },
+ "2": {
+  "hashes": [
+   "0xb8700ca1",
+   "0xe8628689"
+  ],
+  "via": "C:EntityType002_GreenBullets_Init"
  },
  "4": {
   "hashes": [
@@ -19,6 +26,12 @@
    "0xe398d28d"
   ],
   "via": "arr:g_SpriteList_Type004_Type114"
+ },
+ "7": {
+  "hashes": [
+   "0xb8700ca1"
+  ],
+  "via": "C:EntityType007_Clayball_Init"
  },
  "9": {
   "hashes": [
@@ -33,9 +46,17 @@
   ],
   "via": "arr:g_SpriteList_Type010_InteractiveObject"
  },
+ "22": {
+  "hashes": [
+   "0xb8700ca1"
+  ],
+  "via": "C:EntityType022_EnemyCluster_Init"
+ },
  "23": {
   "hashes": [
-   "0x9158a0f6"
+   "0x8c510186",
+   "0x9158a0f6",
+   "0xa9240484"
   ],
   "via": "C:EntityType023_PhoenixHand_Init"
  },
@@ -52,7 +73,9 @@
  },
  "25": {
   "hashes": [
-   "0x08624580"
+   "0x08624580",
+   "0x8c510186",
+   "0xa9240484"
   ],
   "via": "C:EntityType025_PhartHeadCollectible_Init"
  },
@@ -77,11 +100,23 @@
   ],
   "via": "C:EntityType028_GreenHeart_Init"
  },
+ "29": {
+  "hashes": [
+   "0x6a351094"
+  ],
+  "via": "C:EntityType029_ScaleReset_Init"
+ },
  "30": {
   "hashes": [
    "0x88210498"
   ],
   "via": "C:EntityType030_CollectibleAlt_Init"
+ },
+ "37": {
+  "hashes": [
+   "0x9b2204a0"
+  ],
+  "via": "C:EntityType037_038_DirectionalScaled_Init"
  },
  "40": {
   "hashes": [
@@ -112,6 +147,18 @@
   ],
   "via": "arr-via:InitSoundEmittingEnemy"
  },
+ "45": {
+  "hashes": [
+   "0x28ce0610"
+  ],
+  "via": "C:EntityType045_BounceClay_Init"
+ },
+ "46": {
+  "hashes": [
+   "0x9b2204a0"
+  ],
+  "via": "C:EntityType046_Object_Init"
+ },
  "47": {
   "hashes": [
    "0x212a9c2d",
@@ -122,6 +169,7 @@
  "61": {
   "hashes": [
    "0x040a2110",
+   "0x6a351094",
    "0x88a28194",
    "0xa00a0c30"
   ],
@@ -151,13 +199,17 @@
  "65": {
   "hashes": [
    "0x022e3442",
+   "0x0244655d",
    "0x02ed1470",
+   "0x181c3854",
+   "0x28ce0610",
    "0x424d1840",
    "0x60de1050",
    "0x81421850",
-   "0x82421850"
+   "0x82421850",
+   "0x8818a018"
   ],
-  "via": "arr-via:InitMonkeyMageBoss"
+  "via": "C:EntityType065_Password_Init"
  },
  "69": {
   "hashes": [
@@ -175,33 +227,58 @@
  "71": {
   "hashes": [
    "0x022e3442",
+   "0x0244655d",
    "0x02ed1470",
    "0x0c78005c",
+   "0x181c3854",
    "0x2b79835d",
    "0x2d688254",
    "0x407801d0",
    "0x407801dc",
    "0x424d1840",
+   "0x48d81135",
    "0x60de1050",
    "0x69588258",
    "0x8068815c",
    "0x81421850",
    "0x82421850",
+   "0x8818a018",
    "0xc8f90114"
   ],
-  "via": "arr-via:InitMonkeyMageBoss"
+  "via": "C:EntityType071_Boss_MonkeyMage_Init"
  },
  "72": {
   "hashes": [
+   "0xb8700ca1",
    "0xc87ca082"
   ],
   "via": "C:EntityType072_SuperWillie_Init"
  },
  "75": {
   "hashes": [
+   "0xb8700ca1",
    "0xc87ca082"
   ],
   "via": "C:EntityType075_YellowBird_Init"
+ },
+ "79": {
+  "hashes": [
+   "0x12308128"
+  ],
+  "via": "C:EntityType079_EnemySpawner_Init"
+ },
+ "82": {
+  "hashes": [
+   "0x12308128"
+  ],
+  "via": "C:EntityType082_PathHazard_Init"
+ },
+ "83": {
+  "hashes": [
+   "0x80729081",
+   "0x88329285"
+  ],
+  "via": "C:EntityType083_InteractiveDecor_Init"
  },
  "88": {
   "hashes": [
@@ -214,13 +291,27 @@
   ],
   "via": "arr:g_SpriteList_Type088_ForegroundDecor"
  },
+ "93": {
+  "hashes": [
+   "0xe8628689"
+  ],
+  "via": "C:EntityType093_BonusClayball_Init"
+ },
+ "96": {
+  "hashes": [
+   "0x222d9098",
+   "0x8429153c"
+  ],
+  "via": "C:EntityType096_PathPlatformEnemy_Init"
+ },
  "99": {
   "hashes": [
+   "0x52186e1c",
    "0x6c289c1c",
    "0x6d209c95",
    "0xed209c94"
   ],
-  "via": "arr-via:InitLevelStateCollectible"
+  "via": "C:EntityType099_LevelStateCollectible_Init"
  },
  "100": {
   "hashes": [
@@ -236,15 +327,18 @@
    "0x40106054",
    "0x407801d0",
    "0x407801dc",
+   "0x48d81135",
    "0x4c106054",
    "0x69588258",
    "0x8068815c",
+   "0xa8482860",
    "0xc8f90114"
   ],
-  "via": "arr-via:InitShrineyGuardBoss"
+  "via": "C:EntityType100_Boss_GlennYntis_Init"
  },
  "101": {
   "hashes": [
+   "0x06101db0",
    "0x08192250",
    "0x085860d4",
    "0x09382152",
@@ -259,13 +353,15 @@
    "0x2c182010",
    "0x40106054",
    "0x4c106054",
-   "0x8a3809f2"
+   "0x8a3809f2",
+   "0xa8482860"
   ],
-  "via": "arr-via:InitShrineyGuardBoss"
+  "via": "C:EntityType101_Boss_ShrineyGuard_Init"
  },
  "102": {
   "hashes": [
    "0x024d704e",
+   "0x06101db0",
    "0x08de7215",
    "0x0b0811bb",
    "0x0b081dbb",
@@ -276,9 +372,10 @@
    "0x2b3889b2",
    "0x883d14b4",
    "0x8a3809f2",
-   "0xca282402"
+   "0xca282402",
+   "0xcaadc032"
   ],
-  "via": "arr-via:InitKloggBoss"
+  "via": "C:EntityType102_Boss_JoeHeadJoe_Init"
  },
  "103": {
   "hashes": [
@@ -286,9 +383,10 @@
    "0x08de7215",
    "0x10057441",
    "0x883d14b4",
-   "0xca282402"
+   "0xca282402",
+   "0xcaadc032"
   ],
-  "via": "arr-via:InitKloggBoss"
+  "via": "C:EntityType103_Boss_Klogg_Init"
  },
  "106": {
   "hashes": [
@@ -297,6 +395,12 @@
    "0x611c5804"
   ],
   "via": "arr-via:InitCollectibleVariant"
+ },
+ "109": {
+  "hashes": [
+   "0x52186e1c"
+  ],
+  "via": "C:EntityType109_TimedCollectible_Init"
  },
  "111": {
   "hashes": [
@@ -340,8 +444,17 @@
  },
  "119": {
   "hashes": [
-   "0x88210498"
+   "0x80729081",
+   "0x88210498",
+   "0x88329285"
   ],
   "via": "C:EntityType119_Checkpoint_Init"
+ },
+ "120": {
+  "hashes": [
+   "0x222d9098",
+   "0x8429153c"
+  ],
+  "via": "C:EntityType120_ChildSprite_Init"
  }
 }

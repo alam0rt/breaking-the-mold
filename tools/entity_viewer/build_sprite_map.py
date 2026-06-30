@@ -67,6 +67,29 @@ for path in glob.glob(str(REPO / 'src/*.c')):
         for ic in INNER.finditer(line):
             fn_calls[cur].add(ic.group(1))
 
+# 2b) same, but from the disassembly — covers inner inits still INCLUDE_ASM
+# (shelved / not yet decompiled), so coverage no longer waits on a byte-match.
+# We read the hash straight out of the lui immediate `(0xHASH >> 16)` and any
+# `%hi(D_8009xxxx)` sprite-array pointer, only in functions that actually call a
+# sprite-init. Every hash is still validated against the BLB set H below.
+HASH_HI = re.compile(r'\(0x([0-9A-Fa-f]{6,8}) >> 16\)')
+ARR_HI = re.compile(r'%hi\((D_8009[0-9A-Fa-f]{3})\)')
+SPRITE_JAL = re.compile(r'\bjal\s+(InitEntitySprite|InitEntityWithSprite|'
+                        r'SetEntitySpriteId|SetAnimationSpriteId|CreateMultiFrameRenderContext)\b')
+for path in glob.glob(str(REPO / 'asm/nonmatchings/**/*.s'), recursive=True):
+    txt = pathlib.Path(path).read_text()
+    if not SPRITE_JAL.search(txt):
+        continue
+    fn = pathlib.Path(path).stem
+    for m in HASH_HI.finditer(txt):
+        v = int(m.group(1), 16)
+        if v in H:
+            fn_hashes[fn].add(v)
+    for m in ARR_HI.finditer(txt):
+        fn_arrays[fn].add(m.group(1))
+    for m in re.finditer(r'\bjal\s+(Init[A-Za-z0-9_]+)', txt):
+        fn_calls[fn].add(m.group(1))
+
 # 3) resolve array symbols -> hash list from ROM
 def resolve_array(sym):
     m = re.match(r'D_8009([0-9A-Fa-f]{3})', sym)
