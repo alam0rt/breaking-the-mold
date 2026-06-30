@@ -37,6 +37,18 @@ for f in glob.glob(str(REPO / 'extracted/*/*/map/600_*.bin')) + glob.glob(str(RE
         H.add(sid)
 print(f"universal BLB sprite hashes: {len(H)}")
 
+# SPR_* named sprite-id constants (include/Game/asset_ids.h). Many entity inits
+# pass the sprite by name (e.g. InitGenericSpriteEntity(e, sp, SPR_PLATFORM_BALL_C))
+# rather than a raw 0x.. literal, so the C-scan must resolve these.
+SPR_DEFS = {}
+_ah = REPO / 'include/Game/asset_ids.h'
+if _ah.exists():
+    for line in _ah.read_text().splitlines():
+        m = re.match(r'#define\s+(SPR_\w+)\s+(0x[0-9A-Fa-f]+)', line)
+        if m:
+            SPR_DEFS[m.group(1)] = int(m.group(2), 16)
+SPR_TOK = re.compile(r'\bSPR_[A-Z0-9_]+\b')
+
 # 2) associate every sprite-set call with its enclosing top-level C function
 SPRITE_CALL = re.compile(r'\b(SetEntitySpriteId|InitEntitySprite|SetAnimationSpriteId|InitEntityWithSprite)\s*\(([^;]*)\)')
 FUNC_DEF = re.compile(r'^[A-Za-z_][\w \*]*\b(\w+)\s*\([^;]*\)\s*\{?\s*$')
@@ -66,6 +78,10 @@ for path in glob.glob(str(REPO / 'src/*.c')):
                 fn_arrays[cur].add(a)
         for ic in INNER.finditer(line):
             fn_calls[cur].add(ic.group(1))
+        for tok in SPR_TOK.findall(line):       # named sprite-id constants
+            v = SPR_DEFS.get(tok)
+            if v is not None and v in H:
+                fn_hashes[cur].add(v)
 
 # 2b) same, but from the disassembly — covers inner inits still INCLUDE_ASM
 # (shelved / not yet decompiled), so coverage no longer waits on a byte-match.

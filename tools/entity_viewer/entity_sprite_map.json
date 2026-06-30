@@ -8,7 +8,14 @@
    "0x611c5804",
    "0x64bb1cbe"
   ],
-  "via": "arr-via:InitSpecialPickupEntity"
+  "via": "arr-via:InitCollectibleVariant"
+ },
+ "1": {
+  "hashes": [
+   "0x88783718",
+   "0x98f8221e"
+  ],
+  "via": "C:EntityType001_BossEntity_Init"
  },
  "2": {
   "hashes": [
@@ -27,11 +34,32 @@
   ],
   "via": "arr:g_SpriteList_Type004_Type114"
  },
+ "5": {
+  "hashes": [
+   "0x8818a018",
+   "0x88783718"
+  ],
+  "via": "C:EntityType005_MovingPlatformA_Init"
+ },
+ "6": {
+  "hashes": [
+   "0x8818a018",
+   "0x9299c307"
+  ],
+  "via": "C:EntityType006_MovingPlatformB_Init"
+ },
  "7": {
   "hashes": [
+   "0xa9240484",
    "0xb8700ca1"
   ],
   "via": "C:EntityType007_Clayball_Init"
+ },
+ "8": {
+  "hashes": [
+   "0x168254b5"
+  ],
+  "via": "C:EntityType008_KloggCatchableBall_Init"
  },
  "9": {
   "hashes": [
@@ -45,6 +73,37 @@
    "0x0428801e"
   ],
   "via": "arr:g_SpriteList_Type010_InteractiveObject"
+ },
+ "11": {
+  "hashes": [
+   "0xa9240484"
+  ],
+  "via": "C:EntityType011_ExtraLife_Init"
+ },
+ "12": {
+  "hashes": [
+   "0x9299c307"
+  ],
+  "via": "C:EntityType012_MovingPlatformC_Init"
+ },
+ "19": {
+  "hashes": [
+   "0x93043811"
+  ],
+  "via": "C:EntityType019_ClockPlatformA_Init"
+ },
+ "20": {
+  "hashes": [
+   "0xd2801814"
+  ],
+  "via": "C:EntityType020_ClockPlatformB_Init"
+ },
+ "21": {
+  "hashes": [
+   "0x12800031",
+   "0x98f8221e"
+  ],
+  "via": "C:EntityType021_ClockPlatformC_Init"
  },
  "22": {
   "hashes": [
@@ -96,13 +155,15 @@
  },
  "28": {
   "hashes": [
-   "0x08624580"
+   "0x08624580",
+   "0x8c30008c"
   ],
   "via": "C:EntityType028_GreenHeart_Init"
  },
  "29": {
   "hashes": [
-   "0x6a351094"
+   "0x6a351094",
+   "0x8c30008c"
   ],
   "via": "C:EntityType029_ScaleReset_Init"
  },
@@ -166,6 +227,44 @@
   ],
   "via": "arr-via:InitSoundEmittingEnemy"
  },
+ "49": {
+  "hashes": [
+   "0x88783718",
+   "0x98f8221e"
+  ],
+  "via": "C:EntityType049_BossRelated_Init"
+ },
+ "50": {
+  "hashes": [
+   "0x8818a018",
+   "0x88783718"
+  ],
+  "via": "C:EntityType050_BossMain_Init"
+ },
+ "51": {
+  "hashes": [
+   "0x8818a018"
+  ],
+  "via": "C:EntityType051_BossPart_Init"
+ },
+ "57": {
+  "hashes": [
+   "0x98f8221e"
+  ],
+  "via": "C:EntityType057_WaypointClayballA_Init"
+ },
+ "58": {
+  "hashes": [
+   "0x88783718"
+  ],
+  "via": "C:EntityType058_WaypointClayballB_Init"
+ },
+ "59": {
+  "hashes": [
+   "0x8818a018"
+  ],
+  "via": "C:EntityType059_WaypointClayballC_Init"
+ },
  "61": {
   "hashes": [
    "0x040a2110",
@@ -177,10 +276,11 @@
  },
  "62": {
   "hashes": [
+   "0x88a16190",
    "0xb12c0854",
    "0xb92c4850"
   ],
-  "via": "arr:g_SpriteList_Type062_Platform"
+  "via": "C:EntityType062_ClayballVariantA_Init"
  },
  "63": {
   "hashes": [
@@ -191,10 +291,11 @@
  },
  "64": {
   "hashes": [
+   "0x80b92212",
    "0x84004480",
    "0x9b2204a0"
   ],
-  "via": "arr:g_SpriteList_Type064_Trigger"
+  "via": "C:EntityType064_Particle_Init"
  },
  "65": {
   "hashes": [
@@ -211,6 +312,24 @@
   ],
   "via": "C:EntityType065_Password_Init"
  },
+ "66": {
+  "hashes": [
+   "0xb69c8356"
+  ],
+  "via": "C:EntityType066_ClayballVariantC_Init"
+ },
+ "67": {
+  "hashes": [
+   "0xb7cce25e"
+  ],
+  "via": "C:EntityType067_ClayballVariantD_Init"
+ },
+ "68": {
+  "hashes": [
+   "0xbebce258"
+  ],
+  "via": "C:EntityType068_ClayballVariantE_Init"
+ },
  "69": {
   "hashes": [
    "0x80e85ea0",
@@ -220,7 +339,8 @@
  },
  "70": {
   "hashes": [
-   "0x80e85ea0"
+   "0x80e85ea0",
+   "0x902c0002"
   ],
   "via": "C:EntityType070_HamsterShield_Init"
  },
@@ -249,6 +369,7 @@
  },
  "72": {
   "hashes": [
+   "0x902c0002",
    "0xb8700ca1",
    "0xc87ca082"
   ],
@@ -291,8 +412,27 @@
   ],
   "via": "arr:g_SpriteList_Type088_ForegroundDecor"
  },
+ "90": {
+  "hashes": [
+   "0xd89c319a"
+  ],
+  "via": "C:EntityType090_SwitchClayballA_Init"
+ },
+ "91": {
+  "hashes": [
+   "0xc89e9158"
+  ],
+  "via": "C:EntityType091_SwitchClayballB_Init"
+ },
+ "92": {
+  "hashes": [
+   "0xc48c7158"
+  ],
+  "via": "C:EntityType092_SwitchClayballC_Init"
+ },
  "93": {
   "hashes": [
+   "0x10882010",
    "0xe8628689"
   ],
   "via": "C:EntityType093_BonusClayball_Init"
@@ -453,7 +593,8 @@
  "120": {
   "hashes": [
    "0x222d9098",
-   "0x8429153c"
+   "0x8429153c",
+   "0x98f8221e"
   ],
   "via": "C:EntityType120_ChildSprite_Init"
  }
