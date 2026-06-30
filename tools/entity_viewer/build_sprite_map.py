@@ -53,7 +53,7 @@ SPR_TOK = re.compile(r'\bSPR_[A-Z0-9_]+\b')
 SPRITE_CALL = re.compile(r'\b(SetEntitySpriteId|InitEntitySprite|SetAnimationSpriteId|InitEntityWithSprite)\s*\(([^;]*)\)')
 FUNC_DEF = re.compile(r'^[A-Za-z_][\w \*]*\b(\w+)\s*\([^;]*\)\s*\{?\s*$')
 HASH = re.compile(r'0x[0-9A-Fa-f]{6,8}')
-ARRSYM = re.compile(r'\b(D_8009[0-9A-Fa-f]{3}|g_[A-Za-z0-9_]*[Ss]prite[A-Za-z0-9_]*|[A-Za-z_]\w*Sprites)\b')
+ARRSYM = re.compile(r'\b(D_8009[0-9A-Fa-f]{4}|g_[A-Za-z0-9_]*[Ss]prite[A-Za-z0-9_]*|[A-Za-z_]\w*Sprites)\b')
 
 fn_hashes = collections.defaultdict(set)   # function -> {hash}
 fn_arrays = collections.defaultdict(set)   # function -> {array symbol}
@@ -89,7 +89,7 @@ for path in glob.glob(str(REPO / 'src/*.c')):
 # `%hi(D_8009xxxx)` sprite-array pointer, only in functions that actually call a
 # sprite-init. Every hash is still validated against the BLB set H below.
 HASH_HI = re.compile(r'\(0x([0-9A-Fa-f]{6,8}) >> 16\)')
-ARR_HI = re.compile(r'%hi\((D_8009[0-9A-Fa-f]{3})\)')
+ARR_HI = re.compile(r'%hi\((D_8009[0-9A-Fa-f]{4})\)')
 SPRITE_JAL = re.compile(r'\bjal\s+(InitEntitySprite|InitEntityWithSprite|'
                         r'SetEntitySpriteId|SetAnimationSpriteId|CreateMultiFrameRenderContext)\b')
 for path in glob.glob(str(REPO / 'asm/nonmatchings/**/*.s'), recursive=True):
@@ -108,10 +108,10 @@ for path in glob.glob(str(REPO / 'asm/nonmatchings/**/*.s'), recursive=True):
 
 # 3) resolve array symbols -> hash list from ROM
 def resolve_array(sym):
-    m = re.match(r'D_8009([0-9A-Fa-f]{3})', sym)
+    m = re.match(r'D_(8009[0-9A-Fa-f]{4})', sym)   # full 0x8009xxxx address
     if not m:
         return []
-    addr = 0x80090000 | int(m.group(1), 16)
+    addr = int(m.group(1), 16)
     out = []
     for i in range(16):
         v = rom_u32(addr + i * 4)

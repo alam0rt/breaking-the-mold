@@ -8,7 +8,7 @@
    "0x611c5804",
    "0x64bb1cbe"
   ],
-  "via": "arr-via:InitCollectibleVariant"
+  "via": "C:EntityType000_003_004_PickupVariant_Init"
  },
  "1": {
   "hashes": [
@@ -63,7 +63,11 @@
  },
  "9": {
   "hashes": [
-   "0x9158a0f6"
+   "0x09406d8a",
+   "0x880161a7",
+   "0x91106183",
+   "0x9158a0f6",
+   "0x980861a3"
   ],
   "via": "C:EntityType009_Collectible_Init"
  },
@@ -76,6 +80,10 @@
  },
  "11": {
   "hashes": [
+   "0x09406d8a",
+   "0x880161a7",
+   "0x91106183",
+   "0x980861a3",
    "0xa9240484"
   ],
   "via": "C:EntityType011_ExtraLife_Init"
@@ -128,7 +136,7 @@
    "0x6d209c95",
    "0xed209c94"
   ],
-  "via": "arr-via:InitLevelStateCollectible"
+  "via": "C:EntityType024_118_SpecialAmmo_Init"
  },
  "25": {
   "hashes": [
@@ -188,29 +196,49 @@
    "0x61a91c9c",
    "0x62aa1c9c"
   ],
-  "via": "arr-via:InitWalkingCollectibleEnemy"
+  "via": "C:EntityType040_Mechanism_Init"
  },
  "41": {
   "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x21a81d54",
+   "0x53209c1c",
    "0x60a91c9c",
    "0x60aa1c9c",
    "0x60b93cbd",
    "0x60b9bcbd",
    "0x61a91c9c",
-   "0x62aa1c9c"
+   "0x62aa1c9c",
+   "0xa0299a4d"
   ],
-  "via": "arr-via:InitWalkingCollectibleEnemy"
+  "via": "C:EntityType041_ClayKeeperEnemy_Init"
  },
  "42": {
   "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
    "0x212a9c2d",
-   "0x35289fae"
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
   ],
-  "via": "arr-via:InitSoundEmittingEnemy"
+  "via": "C:EntityType042_thru_060_SnoBlo_Init"
  },
  "45": {
   "hashes": [
-   "0x28ce0610"
+   "0x00ce0610",
+   "0x09ce0610",
+   "0x0ace0610",
+   "0x0cce0610",
+   "0x18ce0610",
+   "0x28ce0610",
+   "0x657c322c",
+   "0xe7443a6f",
+   "0xf175320e"
   ],
   "via": "C:EntityType045_BounceClay_Init"
  },
@@ -225,7 +253,7 @@
    "0x212a9c2d",
    "0x35289fae"
   ],
-  "via": "arr-via:InitSoundEmittingEnemy"
+  "via": "C:EntityType047_048_SoundPlatform_Init"
  },
  "49": {
   "hashes": [
@@ -299,16 +327,26 @@
  },
  "65": {
   "hashes": [
+   "0x00ce0610",
    "0x022e3442",
    "0x0244655d",
+   "0x024d704e",
    "0x02ed1470",
+   "0x08de7215",
+   "0x09ce0610",
+   "0x0ace0610",
+   "0x0cce0610",
+   "0x10057441",
    "0x181c3854",
+   "0x18ce0610",
    "0x28ce0610",
    "0x424d1840",
    "0x60de1050",
    "0x81421850",
    "0x82421850",
-   "0x8818a018"
+   "0x8818a018",
+   "0x883d14b4",
+   "0xca282402"
   ],
   "via": "C:EntityType065_Password_Init"
  },
@@ -348,8 +386,11 @@
   "hashes": [
    "0x022e3442",
    "0x0244655d",
+   "0x024d704e",
    "0x02ed1470",
+   "0x08de7215",
    "0x0c78005c",
+   "0x10057441",
    "0x181c3854",
    "0x2b79835d",
    "0x2d688254",
@@ -363,7 +404,9 @@
    "0x81421850",
    "0x82421850",
    "0x8818a018",
-   "0xc8f90114"
+   "0x883d14b4",
+   "0xc8f90114",
+   "0xca282402"
   ],
   "via": "C:EntityType071_Boss_MonkeyMage_Init"
  },
@@ -377,6 +420,8 @@
  },
  "75": {
   "hashes": [
+   "0x093080c8",
+   "0xa9228088",
    "0xb8700ca1",
    "0xc87ca082"
   ],
@@ -388,18 +433,54 @@
   ],
   "via": "C:EntityType079_EnemySpawner_Init"
  },
+ "80": {
+  "hashes": [
+   "0x657c322c",
+   "0xe7443a6f",
+   "0xf175320e"
+  ],
+  "via": "C:EntityType080_TimerMenu_Init"
+ },
+ "81": {
+  "hashes": [
+   "0x093080c8",
+   "0xa9228088",
+   "0xbb781481",
+   "0xfa700ce7"
+  ],
+  "via": "C:EntityType081_PathDecor2_Init"
+ },
  "82": {
   "hashes": [
-   "0x12308128"
+   "0x0bbb70ac",
+   "0x12308128",
+   "0x80e85ea0",
+   "0x9389b8c4",
+   "0x9b0ab1c6",
+   "0xa9387d8c",
+   "0xc9387d8c"
   ],
   "via": "C:EntityType082_PathHazard_Init"
  },
  "83": {
   "hashes": [
    "0x80729081",
-   "0x88329285"
+   "0x88329285",
+   "0xbb781481",
+   "0xfa700ce7"
   ],
   "via": "C:EntityType083_InteractiveDecor_Init"
+ },
+ "85": {
+  "hashes": [
+   "0x0bbb70ac",
+   "0x80e85ea0",
+   "0x9389b8c4",
+   "0x9b0ab1c6",
+   "0xa9387d8c",
+   "0xc9387d8c"
+  ],
+  "via": "C:EntityType085_104_105_TriggerZone_Init"
  },
  "88": {
   "hashes": [
@@ -502,12 +583,16 @@
   "hashes": [
    "0x024d704e",
    "0x06101db0",
+   "0x08bc8013",
    "0x08de7215",
    "0x0b0811bb",
    "0x0b081dbb",
    "0x0b290ba2",
    "0x0e3889be",
    "0x10057441",
+   "0x18248010",
+   "0x193ca112",
+   "0x1a2c8516",
    "0x1a3109b2",
    "0x2b3889b2",
    "0x883d14b4",
@@ -520,8 +605,12 @@
  "103": {
   "hashes": [
    "0x024d704e",
+   "0x08bc8013",
    "0x08de7215",
    "0x10057441",
+   "0x18248010",
+   "0x193ca112",
+   "0x1a2c8516",
    "0x883d14b4",
    "0xca282402",
    "0xcaadc032"
@@ -534,7 +623,7 @@
    "0x60181a0c",
    "0x611c5804"
   ],
-  "via": "arr-via:InitCollectibleVariant"
+  "via": "C:EntityType106_107_108_FallingPlatform_Init"
  },
  "109": {
   "hashes": [
