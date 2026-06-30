@@ -261,6 +261,17 @@ void CollectibleClaySingleTickCallback(InteractiveDecorEntity *e) {
     }
 }
 
+/* InitPlatformDecorEntity @ 0x8002DEC0 (0x4CC) — type-009 moving-platform decor.
+ * Sprite list D_8009B214 (type-009): {0x91106183, 0x980861A3, 0x880161A7, 0x09406D8A}.
+ * Shape: InitEntityWithSprite(e, D_8009B214, 0x3DE, data->x, data->y); path decor
+ * shell (vtable D_80010870 -> D_800107D0); positions via subpixel div from the
+ * +0x100 spawn ref; tick = CheckpointSwampTickCallback; then runs the move-callback
+ * FSM (jalr through the +0x24/+0x28/+0x2C/+0x30 transform slots), a slope-height
+ * check (GetSlopeHeightAtSubpixel), and EntitySetState to a platform-ride state
+ * (D_800A59A8/.. or D_800A59B0/..).
+ * SHELVED (not attempted): too large/complex for the loop — signed-div trap guards
+ * (need per-TU --expand-div), the known-hard FSM-slot jalr dispatch family, and
+ * slope physics. Sprite list recorded above for viewer coverage. */
 INCLUDE_ASM("asm/nonmatchings/pickups", InitPlatformDecorEntity);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CheckpointSwampTickCallback);
