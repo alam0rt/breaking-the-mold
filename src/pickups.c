@@ -463,6 +463,25 @@ void CollectiblePhoenixHandTickCallback(PowerupCollectibleEntity *e) {
     }
 }
 
+/* InitPhartHeadCollectible @ 0x8002EA3C — type-025 phart-head bonus pickup.
+ * CONFIRMED hashes: parent sprite 0x8C510186, child HUD-label sprite 0xA9240484.
+ * Shape (verified, structurally-correct C compiles):
+ *   InitEntitySprite(e, 0x8C510186, 0x3DE, data->x, data->y, 0);
+ *   vtable D_80010870 -> InitPathFollowingDecorEntity -> D_80010770;
+ *   tickMarker = CollectiblePhartHeadTickCallback;
+ *   spr=e->spriteContext; spr->{r,g,b}={0x20,0x60,0x30};
+ *   spr->tpage = GetTPage(spr->abr, 3, vramX&~0x3F, vramY&~0xFF);
+ *   child = AllocateFromHeap(blbHeap, 0x120, 1, 0);
+ *   InitEntitySprite(child, 0xA9240484, 0x3DE, e->[+0x100]->x/y, 0);
+ *   vtable D_80010870 -> InitPathFollowingDecorEntity; e->[+0x120]=child;
+ *   child->worldX=e->worldX-8; child->worldY=e->worldY-0x10; child->vis=0;
+ *   child->tickMarker = EntityUpdateCallback;
+ *   cspr=child->spriteContext; cspr->[0x37]=0; cspr->{r,g,b}={0x20,0x60,0x30};
+ *   cspr->[0x08]=0x3E0; AddEntityToSortedRenderList(g_pGameState, child).
+ * SHELVED: register-allocation mismatch — TARGET colours entity->$s1/data->$s0
+ * (mine swaps them) and hoists all three RGB constants into saved regs $s7/$s6/$s4
+ * (mine hoists two, running one saved-reg short -> frame 0x48 vs 0x50, cascading
+ * across the whole body). Needs targeted reg-coloring / a permuter pass. */
 INCLUDE_ASM("asm/nonmatchings/pickups", InitPhartHeadCollectible);
 
 INCLUDE_ASM("asm/nonmatchings/pickups", CollectiblePhartHeadTickCallback);
