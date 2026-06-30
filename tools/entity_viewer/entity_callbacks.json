@@ -1,0 +1,849 @@
+{
+ "0": {
+  "type": 0,
+  "init_addr": "0x8007efd0",
+  "init_fn": "EntityCallback_Type00",
+  "alias": "",
+  "category": "?"
+ },
+ "1": {
+  "type": 1,
+  "init_addr": "0x8007f730",
+  "init_fn": "EntityCallback_Type01",
+  "alias": "",
+  "category": "?"
+ },
+ "2": {
+  "type": 2,
+  "init_addr": "0x80080328",
+  "init_fn": "EntityType002_GreenBullets_Init",
+  "alias": "",
+  "category": "Collectible"
+ },
+ "3": {
+  "type": 3,
+  "init_addr": "0x8007efd0",
+  "init_fn": "EntityCallback_Type03",
+  "alias": "",
+  "category": "?"
+ },
+ "4": {
+  "type": 4,
+  "init_addr": "0x8007efd0",
+  "init_fn": "EntityCallback_Type04",
+  "alias": "",
+  "category": "?"
+ },
+ "5": {
+  "type": 5,
+  "init_addr": "0x8007f7b0",
+  "init_fn": "EntityType005_MovingPlatformA_Init",
+  "alias": "",
+  "category": "Platform"
+ },
+ "6": {
+  "type": 6,
+  "init_addr": "0x8007f830",
+  "init_fn": "EntityType006_MovingPlatformB_Init",
+  "alias": "",
+  "category": "Platform"
+ },
+ "7": {
+  "type": 7,
+  "init_addr": "0x80080408",
+  "init_fn": "EntityType007_Clayball_Init",
+  "alias": "",
+  "category": "Collectible"
+ },
+ "8": {
+  "type": 8,
+  "init_addr": "0x80081504",
+  "init_fn": "EntityType008_KloggCatchableBall_Init",
+  "alias": "",
+  "category": "Boss Projectile"
+ },
+ "9": {
+  "type": 9,
+  "init_addr": "0x800804e8",
+  "init_fn": "EntityCallback_Type09",
+  "alias": "",
+  "category": "?"
+ },
+ "10": {
+  "type": 10,
+  "init_addr": "0x8007f244",
+  "init_fn": "EntityType010_EggBeater_Init",
+  "alias": "",
+  "category": "Enemy"
+ },
+ "11": {
+  "type": 11,
+  "init_addr": "0x80080478",
+  "init_fn": "EntityType011_ExtraLife_Init",
+  "alias": "",
+  "category": "Collectible"
+ },
+ "12": {
+  "type": 12,
+  "init_addr": "0x8007f8b0",
+  "init_fn": "EntityType012_MovingPlatformC_Init",
+  "alias": "",
+  "category": "Platform"
+ },
+ "13": {
+  "type": 13,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "-"
+ },
+ "14": {
+  "type": 14,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "-"
+ },
+ "15": {
+  "type": 15,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "-"
+ },
+ "16": {
+  "type": 16,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "-"
+ },
+ "17": {
+  "type": 17,
+  "init_addr": "0x8007f930",
+  "init_fn": "EntityCallback_Type17",
+  "alias": "",
+  "category": "?"
+ },
+ "18": {
+  "type": 18,
+  "init_addr": "0x8007f9b0",
+  "init_fn": "EntityCallback_Type18",
+  "alias": "",
+  "category": "?"
+ },
+ "19": {
+  "type": 19,
+  "init_addr": "0x8007fa30",
+  "init_fn": "EntityType019_ClockPlatformA_Init",
+  "alias": "",
+  "category": "Platform"
+ },
+ "20": {
+  "type": 20,
+  "init_addr": "0x8007faac",
+  "init_fn": "EntityType020_ClockPlatformB_Init",
+  "alias": "",
+  "category": "Platform"
+ },
+ "21": {
+  "type": 21,
+  "init_addr": "0x8007fb28",
+  "init_fn": "EntityType021_ClockPlatformC_Init",
+  "alias": "",
+  "category": "Platform"
+ },
+ "22": {
+  "type": 22,
+  "init_addr": "0x80080398",
+  "init_fn": "EntityCallback_Type22",
+  "alias": "",
+  "category": "?"
+ },
+ "23": {
+  "type": 23,
+  "init_addr": "0x80080558",
+  "init_fn": "EntityType023_PhoenixHand_Init",
+  "alias": "",
+  "category": "Collectible"
+ },
+ "24": {
+  "type": 24,
+  "init_addr": "0x8007f460",
+  "init_fn": "EntityCallback_Type24",
+  "alias": "SpecialAmmo",
+  "category": "Collectible"
+ },
+ "25": {
+  "type": 25,
+  "init_addr": "0x800805c8",
+  "init_fn": "EntityType025_PhartHead_Init",
+  "alias": "",
+  "category": "Collectible"
+ },
+ "26": {
+  "type": 26,
+  "init_addr": "0x8007f2cc",
+  "init_fn": "EntityCallback_Type26",
+  "alias": "",
+  "category": "?"
+ },
+ "27": {
+  "type": 27,
+  "init_addr": "0x8007f354",
+  "init_fn": "EntityCallback_Type27",
+  "alias": "EnemyB",
+  "category": "Enemy"
+ },
+ "28": {
+  "type": 28,
+  "init_addr": "0x80080638",
+  "init_fn": "EntityCallback_Type28",
+  "alias": "PlatformA",
+  "category": "?"
+ },
+ "29": {
+  "type": 29,
+  "init_addr": "0x800806a8",
+  "init_fn": "EntityCallback_Type29",
+  "alias": "",
+  "category": "?"
+ },
+ "30": {
+  "type": 30,
+  "init_addr": "0x80080a98",
+  "init_fn": "EntityCallback_Type30",
+  "alias": "",
+  "category": "?"
+ },
+ "31": {
+  "type": 31,
+  "init_addr": "0x80080af8",
+  "init_fn": "EntityCallback_Type31",
+  "alias": "",
+  "category": "?"
+ },
+ "32": {
+  "type": 32,
+  "init_addr": "0x80080af8",
+  "init_fn": "EntityCallback_Type32",
+  "alias": "",
+  "category": "?"
+ },
+ "33": {
+  "type": 33,
+  "init_addr": "0x80080af8",
+  "init_fn": "EntityCallback_Type33",
+  "alias": "",
+  "category": "?"
+ },
+ "34": {
+  "type": 34,
+  "init_addr": "0x80080b60",
+  "init_fn": "EntityCallback_Type34",
+  "alias": "",
+  "category": "?"
+ },
+ "35": {
+  "type": 35,
+  "init_addr": "0x80080b60",
+  "init_fn": "EntityCallback_Type35",
+  "alias": "",
+  "category": "?"
+ },
+ "36": {
+  "type": 36,
+  "init_addr": "0x80080b60",
+  "init_fn": "EntityCallback_Type36",
+  "alias": "",
+  "category": "?"
+ },
+ "37": {
+  "type": 37,
+  "init_addr": "0x80080bc8",
+  "init_fn": "EntityCallback_Type37",
+  "alias": "",
+  "category": "?"
+ },
+ "38": {
+  "type": 38,
+  "init_addr": "0x80080bc8",
+  "init_fn": "EntityCallback_Type38",
+  "alias": "",
+  "category": "?"
+ },
+ "39": {
+  "type": 39,
+  "init_addr": "0x80080c8c",
+  "init_fn": "EntityCallback_Type39",
+  "alias": "",
+  "category": "?"
+ },
+ "40": {
+  "type": 40,
+  "init_addr": "0x80080cfc",
+  "init_fn": "EntityCallback_Type40",
+  "alias": "",
+  "category": "?"
+ },
+ "41": {
+  "type": 41,
+  "init_addr": "0x80080d6c",
+  "init_fn": "EntityCallback_Type41",
+  "alias": "",
+  "category": "?"
+ },
+ "42": {
+  "type": 42,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type42",
+  "alias": "Portal",
+  "category": "?"
+ },
+ "43": {
+  "type": 43,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type43",
+  "alias": "",
+  "category": "?"
+ },
+ "44": {
+  "type": 44,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type44",
+  "alias": "",
+  "category": "?"
+ },
+ "45": {
+  "type": 45,
+  "init_addr": "0x80080f1c",
+  "init_fn": "EntityCallback_Type45",
+  "alias": "Message",
+  "category": "?"
+ },
+ "46": {
+  "type": 46,
+  "init_addr": "0x80080c2c",
+  "init_fn": "EntityCallback_Type46",
+  "alias": "",
+  "category": "?"
+ },
+ "47": {
+  "type": 47,
+  "init_addr": "0x80080e4c",
+  "init_fn": "EntityCallback_Type47",
+  "alias": "",
+  "category": "?"
+ },
+ "48": {
+  "type": 48,
+  "init_addr": "0x80080e4c",
+  "init_fn": "EntityCallback_Type48",
+  "alias": "PlatformB",
+  "category": "?"
+ },
+ "49": {
+  "type": 49,
+  "init_addr": "0x8007fba4",
+  "init_fn": "EntityCallback_Type49",
+  "alias": "",
+  "category": "?"
+ },
+ "50": {
+  "type": 50,
+  "init_addr": "0x8007fc20",
+  "init_fn": "EntityCallback_Type50",
+  "alias": "Boss",
+  "category": "?"
+ },
+ "51": {
+  "type": 51,
+  "init_addr": "0x8007fc9c",
+  "init_fn": "EntityCallback_Type51",
+  "alias": "BossPart",
+  "category": "?"
+ },
+ "52": {
+  "type": 52,
+  "init_addr": "0x80080c8c",
+  "init_fn": "EntityCallback_Type52",
+  "alias": "",
+  "category": "?"
+ },
+ "53": {
+  "type": 53,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type53",
+  "alias": "",
+  "category": "?"
+ },
+ "54": {
+  "type": 54,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type54",
+  "alias": "",
+  "category": "?"
+ },
+ "55": {
+  "type": 55,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type55",
+  "alias": "",
+  "category": "?"
+ },
+ "56": {
+  "type": 56,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "?"
+ },
+ "57": {
+  "type": 57,
+  "init_addr": "0x8007fd18",
+  "init_fn": "EntityCallback_Type57",
+  "alias": "",
+  "category": "?"
+ },
+ "58": {
+  "type": 58,
+  "init_addr": "0x8007fd94",
+  "init_fn": "EntityCallback_Type58",
+  "alias": "",
+  "category": "?"
+ },
+ "59": {
+  "type": 59,
+  "init_addr": "0x8007fe10",
+  "init_fn": "EntityCallback_Type59",
+  "alias": "",
+  "category": "?"
+ },
+ "60": {
+  "type": 60,
+  "init_addr": "0x80080ddc",
+  "init_fn": "EntityCallback_Type60",
+  "alias": "Particle",
+  "category": "?"
+ },
+ "61": {
+  "type": 61,
+  "init_addr": "0x80080718",
+  "init_fn": "EntityCallback_Type61",
+  "alias": "Sparkle",
+  "category": "?"
+ },
+ "62": {
+  "type": 62,
+  "init_addr": "0x8007fe8c",
+  "init_fn": "EntityCallback_Type62",
+  "alias": "",
+  "category": "?"
+ },
+ "63": {
+  "type": 63,
+  "init_addr": "0x8007fefc",
+  "init_fn": "EntityCallback_Type63",
+  "alias": "",
+  "category": "?"
+ },
+ "64": {
+  "type": 64,
+  "init_addr": "0x8007ff6c",
+  "init_fn": "EntityCallback_Type64",
+  "alias": "",
+  "category": "?"
+ },
+ "65": {
+  "type": 65,
+  "init_addr": "0x80080f8c",
+  "init_fn": "EntityCallback_Type65",
+  "alias": "",
+  "category": "?"
+ },
+ "66": {
+  "type": 66,
+  "init_addr": "0x8007ffdc",
+  "init_fn": "EntityCallback_Type66",
+  "alias": "",
+  "category": "?"
+ },
+ "67": {
+  "type": 67,
+  "init_addr": "0x80080050",
+  "init_fn": "EntityCallback_Type67",
+  "alias": "",
+  "category": "?"
+ },
+ "68": {
+  "type": 68,
+  "init_addr": "0x800800c4",
+  "init_fn": "EntityCallback_Type68",
+  "alias": "",
+  "category": "?"
+ },
+ "69": {
+  "type": 69,
+  "init_addr": "0x80080788",
+  "init_fn": "EntityCallback_Type69",
+  "alias": "",
+  "category": "?"
+ },
+ "70": {
+  "type": 70,
+  "init_addr": "0x800807f8",
+  "init_fn": "EntityCallback_Type70",
+  "alias": "",
+  "category": "?"
+ },
+ "71": {
+  "type": 71,
+  "init_addr": "0x80080fec",
+  "init_fn": "EntityCallback_Type71",
+  "alias": "",
+  "category": "?"
+ },
+ "72": {
+  "type": 72,
+  "init_addr": "0x80080868",
+  "init_fn": "EntityCallback_Type72",
+  "alias": "",
+  "category": "?"
+ },
+ "73": {
+  "type": 73,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "?"
+ },
+ "74": {
+  "type": 74,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "?"
+ },
+ "75": {
+  "type": 75,
+  "init_addr": "0x800808d8",
+  "init_fn": "EntityCallback_Type75",
+  "alias": "",
+  "category": "?"
+ },
+ "76": {
+  "type": 76,
+  "init_addr": "0x8007f3dc",
+  "init_fn": "EntityCallback_Type76",
+  "alias": "",
+  "category": "?"
+ },
+ "77": {
+  "type": 77,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "?"
+ },
+ "78": {
+  "type": 78,
+  "init_addr": "0x00000000",
+  "init_fn": "",
+  "alias": "unused",
+  "category": "?"
+ },
+ "79": {
+  "type": 79,
+  "init_addr": "0x8008121c",
+  "init_fn": "EntityCallback_Type79",
+  "alias": "",
+  "category": "?"
+ },
+ "80": {
+  "type": 80,
+  "init_addr": "0x80080ebc",
+  "init_fn": "EntityCallback_Type80",
+  "alias": "",
+  "category": "?"
+ },
+ "81": {
+  "type": 81,
+  "init_addr": "0x80080948",
+  "init_fn": "EntityCallback_Type81",
+  "alias": "",
+  "category": "?"
+ },
+ "82": {
+  "type": 82,
+  "init_addr": "0x8008127c",
+  "init_fn": "EntityCallback_Type82",
+  "alias": "",
+  "category": "?"
+ },
+ "83": {
+  "type": 83,
+  "init_addr": "0x800809b8",
+  "init_fn": "EntityCallback_Type83",
+  "alias": "",
+  "category": "?"
+ },
+ "84": {
+  "type": 84,
+  "init_addr": "0x8007f5b0",
+  "init_fn": "EntityCallback_Type84",
+  "alias": "",
+  "category": "?"
+ },
+ "85": {
+  "type": 85,
+  "init_addr": "0x800812ec",
+  "init_fn": "EntityCallback_Type85",
+  "alias": "",
+  "category": "?"
+ },
+ "86": {
+  "type": 86,
+  "init_addr": "0x8007f050",
+  "init_fn": "EntityCallback_Type86",
+  "alias": "",
+  "category": "?"
+ },
+ "87": {
+  "type": 87,
+  "init_addr": "0x8007f050",
+  "init_fn": "EntityCallback_Type87",
+  "alias": "",
+  "category": "?"
+ },
+ "88": {
+  "type": 88,
+  "init_addr": "0x8007f050",
+  "init_fn": "EntityCallback_Type88",
+  "alias": "",
+  "category": "?"
+ },
+ "89": {
+  "type": 89,
+  "init_addr": "0x8008134c",
+  "init_fn": "EntityCallback_Type89",
+  "alias": "",
+  "category": "?"
+ },
+ "90": {
+  "type": 90,
+  "init_addr": "0x80080138",
+  "init_fn": "EntityCallback_Type90",
+  "alias": "",
+  "category": "?"
+ },
+ "91": {
+  "type": 91,
+  "init_addr": "0x800801b4",
+  "init_fn": "EntityCallback_Type91",
+  "alias": "",
+  "category": "?"
+ },
+ "92": {
+  "type": 92,
+  "init_addr": "0x80080230",
+  "init_fn": "EntityCallback_Type92",
+  "alias": "",
+  "category": "?"
+ },
+ "93": {
+  "type": 93,
+  "init_addr": "0x800802ac",
+  "init_fn": "EntityCallback_Type93",
+  "alias": "",
+  "category": "?"
+ },
+ "94": {
+  "type": 94,
+  "init_addr": "0x80081428",
+  "init_fn": "EntityCallback_Type94",
+  "alias": "",
+  "category": "?"
+ },
+ "95": {
+  "type": 95,
+  "init_addr": "0x800814a4",
+  "init_fn": "EntityCallback_Type95",
+  "alias": "",
+  "category": "?"
+ },
+ "96": {
+  "type": 96,
+  "init_addr": "0x8007f638",
+  "init_fn": "EntityCallback_Type96",
+  "alias": "",
+  "category": "?"
+ },
+ "97": {
+  "type": 97,
+  "init_addr": "0x8008134c",
+  "init_fn": "EntityCallback_Type97",
+  "alias": "",
+  "category": "?"
+ },
+ "98": {
+  "type": 98,
+  "init_addr": "0x8008134c",
+  "init_fn": "EntityCallback_Type98",
+  "alias": "",
+  "category": "?"
+ },
+ "99": {
+  "type": 99,
+  "init_addr": "0x8007f4d0",
+  "init_fn": "EntityCallback_Type99",
+  "alias": "",
+  "category": "?"
+ },
+ "100": {
+  "type": 100,
+  "init_addr": "0x8008105c",
+  "init_fn": "EntityCallback_Type100",
+  "alias": "",
+  "category": "?"
+ },
+ "101": {
+  "type": 101,
+  "init_addr": "0x800810cc",
+  "init_fn": "EntityCallback_Type101",
+  "alias": "",
+  "category": "?"
+ },
+ "102": {
+  "type": 102,
+  "init_addr": "0x8008113c",
+  "init_fn": "EntityCallback_Type102",
+  "alias": "",
+  "category": "?"
+ },
+ "103": {
+  "type": 103,
+  "init_addr": "0x800811ac",
+  "init_fn": "EntityCallback_Type103",
+  "alias": "",
+  "category": "?"
+ },
+ "104": {
+  "type": 104,
+  "init_addr": "0x800812ec",
+  "init_fn": "EntityCallback_Type104",
+  "alias": "",
+  "category": "?"
+ },
+ "105": {
+  "type": 105,
+  "init_addr": "0x800812ec",
+  "init_fn": "EntityCallback_Type105",
+  "alias": "",
+  "category": "?"
+ },
+ "106": {
+  "type": 106,
+  "init_addr": "0x8007f0d0",
+  "init_fn": "EntityCallback_Type106",
+  "alias": "",
+  "category": "?"
+ },
+ "107": {
+  "type": 107,
+  "init_addr": "0x8007f0d0",
+  "init_fn": "EntityCallback_Type107",
+  "alias": "",
+  "category": "?"
+ },
+ "108": {
+  "type": 108,
+  "init_addr": "0x8007f0d0",
+  "init_fn": "EntityCallback_Type108",
+  "alias": "",
+  "category": "?"
+ },
+ "109": {
+  "type": 109,
+  "init_addr": "0x8007f540",
+  "init_fn": "EntityCallback_Type109",
+  "alias": "",
+  "category": "?"
+ },
+ "110": {
+  "type": 110,
+  "init_addr": "0x8008134c",
+  "init_fn": "EntityCallback_Type110",
+  "alias": "",
+  "category": "?"
+ },
+ "111": {
+  "type": 111,
+  "init_addr": "0x8008134c",
+  "init_fn": "EntityCallback_Type111",
+  "alias": "",
+  "category": "?"
+ },
+ "112": {
+  "type": 112,
+  "init_addr": "0x8007f140",
+  "init_fn": "EntityCallback_Type112",
+  "alias": "",
+  "category": "?"
+ },
+ "113": {
+  "type": 113,
+  "init_addr": "0x8007f140",
+  "init_fn": "EntityCallback_Type113",
+  "alias": "",
+  "category": "?"
+ },
+ "114": {
+  "type": 114,
+  "init_addr": "0x8007f140",
+  "init_fn": "EntityCallback_Type114",
+  "alias": "",
+  "category": "?"
+ },
+ "115": {
+  "type": 115,
+  "init_addr": "0x8007f1c0",
+  "init_fn": "EntityCallback_Type115",
+  "alias": "",
+  "category": "?"
+ },
+ "116": {
+  "type": 116,
+  "init_addr": "0x8007f1c0",
+  "init_fn": "EntityCallback_Type116",
+  "alias": "",
+  "category": "?"
+ },
+ "117": {
+  "type": 117,
+  "init_addr": "0x8007f1c0",
+  "init_fn": "EntityCallback_Type117",
+  "alias": "",
+  "category": "?"
+ },
+ "118": {
+  "type": 118,
+  "init_addr": "0x8007f460",
+  "init_fn": "EntityCallback_Type118",
+  "alias": "",
+  "category": "?"
+ },
+ "119": {
+  "type": 119,
+  "init_addr": "0x80080a28",
+  "init_fn": "EntityCallback_Type119",
+  "alias": "",
+  "category": "?"
+ },
+ "120": {
+  "type": 120,
+  "init_addr": "0x8007f6c0",
+  "init_fn": "EntityCallback_Type120",
+  "alias": "",
+  "category": "?"
+ }
+}

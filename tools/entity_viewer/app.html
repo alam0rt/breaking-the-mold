@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Skullmonkeys Entity Viewer</title>
+<style>
+  :root{
+    --bg:#15171c; --panel:#1d2027; --panel2:#23272f; --line:#30343d;
+    --fg:#dfe3ea; --dim:#8a909c; --accent:#6cc6ff; --accent2:#ffb454;
+    --hit:#ff6b6b; --good:#7bd88f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:13px/1.45 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif;
+       background:var(--bg);color:var(--fg);height:100vh;overflow:hidden}
+  #app{display:grid;grid-template-columns:230px 1fr 360px;height:100vh}
+  .col{height:100vh;overflow:auto;border-right:1px solid var(--line)}
+  h1{font-size:13px;margin:0;padding:10px 12px;letter-spacing:.04em;
+     border-bottom:1px solid var(--line);color:var(--accent);position:sticky;top:0;background:var(--bg)}
+  .muted{color:var(--dim)}
+  /* sidebar */
+  .world{padding:7px 12px;cursor:pointer;border-bottom:1px solid #23262d}
+  .world:hover{background:var(--panel2)}
+  .world b{color:var(--fg)} .world .code{color:var(--accent2);font-weight:600;margin-right:6px}
+  .stages{display:flex;flex-wrap:wrap;gap:4px;padding:6px 12px 10px}
+  .stage{padding:2px 9px;border:1px solid var(--line);border-radius:11px;cursor:pointer;color:var(--dim)}
+  .stage:hover{border-color:var(--accent)} .stage.on{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+  /* main */
+  .tabs{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+  .tab{padding:5px 14px;border-radius:6px;cursor:pointer;color:var(--dim)}
+  .tab.on{background:var(--panel2);color:var(--fg)}
+  .pad{padding:10px 12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:4px 8px;border-bottom:1px solid #23262d;white-space:nowrap}
+  th{color:var(--dim);font-weight:600;position:sticky;top:38px;background:var(--bg)}
+  tr.ent{cursor:pointer} tr.ent:hover{background:var(--panel2)} tr.ent.on{background:#2b3340}
+  .pill{display:inline-block;padding:0 7px;border-radius:9px;background:#2a2e37;color:var(--dim);font-size:11px}
+  /* sprite grid */
+  .grid{display:flex;flex-wrap:wrap;gap:10px;padding:12px}
+  .card{width:104px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+        padding:6px;cursor:pointer;text-align:center}
+  .card:hover{border-color:var(--accent)} .card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .thumb{height:64px;display:flex;align-items:center;justify-content:center;background:
+         repeating-conic-gradient(#1a1c22 0% 25%, #20232b 0% 50%) 0/16px 16px;border-radius:5px;overflow:hidden}
+  .thumb img{image-rendering:pixelated;max-height:62px;max-width:96px}
+  .card .id{font-size:10px;color:var(--dim);margin-top:4px;overflow:hidden;text-overflow:ellipsis}
+  .card .nm{font-size:11px;color:var(--accent2);font-weight:600;min-height:14px}
+  /* detail */
+  #detail{padding:0 0 40px}
+  .stage-canvas{display:flex;align-items:center;justify-content:center;height:240px;margin:8px 12px;
+     background:repeating-conic-gradient(#1a1c22 0% 25%, #20232b 0% 50%) 0/22px 22px;border:1px solid var(--line);border-radius:8px}
+  canvas{image-rendering:pixelated}
+  .row{display:flex;align-items:center;gap:8px;padding:4px 12px;flex-wrap:wrap}
+  .btn{padding:3px 11px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);
+       border-radius:6px;cursor:pointer}
+  .btn:hover{border-color:var(--accent)} .btn.on{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+  .btn.state{border-color:#3a3f49}
+  .btn.death{color:var(--hit);border-color:#5a2a2a} .btn.death.on{background:var(--hit);color:#180a0a;border-color:var(--hit)}
+  .anim-list{display:flex;flex-wrap:wrap;gap:5px;padding:4px 12px}
+  .achip{padding:2px 9px;border:1px solid var(--line);border-radius:6px;cursor:pointer;color:var(--dim);font-size:12px}
+  .achip:hover{border-color:var(--accent)} .achip.on{background:var(--accent);color:#0a0a0a;border-color:var(--accent)}
+  .achip .tag{color:var(--accent2);font-weight:600}
+  input,select,textarea{background:#15171c;color:var(--fg);border:1px solid var(--line);border-radius:5px;padding:3px 6px;font:inherit}
+  input[type=range]{padding:0}
+  textarea{width:calc(100% - 24px);margin:0 12px;resize:vertical}
+  .kv{display:grid;grid-template-columns:96px 1fr;gap:2px 8px;padding:6px 12px;font-size:12px}
+  .kv .k{color:var(--dim)}
+  .sec{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);padding:12px 12px 2px;border-top:1px solid var(--line);margin-top:8px}
+  a{color:var(--accent)}
+  .empty{padding:30px 14px;color:var(--dim);text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="col" id="sidebar"><h1>WORLDS</h1><div id="worlds"></div></div>
+  <div class="col" id="main">
+    <div class="tabs">
+      <div class="tab on" data-tab="entities">Entities</div>
+      <div class="tab" data-tab="sprites">Sprites</div>
+      <span class="muted" id="stageLabel" style="margin-left:auto;align-self:center"></span>
+    </div>
+    <div id="tab-entities"></div>
+    <div id="tab-sprites" style="display:none"></div>
+  </div>
+  <div class="col" id="detailCol"><h1>DETAIL</h1><div id="detail"><div class="empty">Select a sprite or entity.</div></div></div>
+</div>
+
+<script>
+const S = {                 // app state
+  worlds: [], world:null, stage:null, data:null,
+  tab:'entities', selEntity:null, selSprite:null, selSrc:'map', selAnim:0,
+  anno:{sprites:{},entities:{},links:{},version:1},
+  player:{frames:[], i:0, timer:null, playing:true},
+};
+const $ = s => document.querySelector(s);
+const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
+const hex = n => '0x'+(n>>>0).toString(16).padStart(8,'0');
+
+// ---- boot ----------------------------------------------------------------
+async function boot(){
+  S.anno = await (await fetch('/api/annotations')).json();
+  S.worlds = await (await fetch('/api/worlds')).json();
+  renderWorlds();
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setTab(t.dataset.tab));
+}
+function setTab(t){
+  S.tab=t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));
+  $('#tab-entities').style.display = t==='entities'?'':'none';
+  $('#tab-sprites').style.display  = t==='sprites'?'':'none';
+}
+
+// ---- sidebar -------------------------------------------------------------
+function renderWorlds(){
+  const box=$('#worlds'); box.innerHTML='';
+  for(const w of S.worlds){
+    const d=el('div','world');
+    d.innerHTML=`<div><span class="code">${w.code}</span><b>${w.name}</b></div>`;
+    const stages=el('div','stages');
+    for(const st of w.stages){
+      const s=el('div','stage',`s${st.stage} · ${st.entity_count}`);
+      s.title=`${st.entity_count} entities`+(st.has_sprites?'':' · no stage sprites');
+      s.onclick=ev=>{ev.stopPropagation(); selectStage(w.code,st.stage,s);};
+      stages.appendChild(s);
+    }
+    d.appendChild(stages);
+    box.appendChild(d);
+  }
+}
+
+async function selectStage(world,stage,node){
+  document.querySelectorAll('.stage').forEach(x=>x.classList.remove('on'));
+  if(node) node.classList.add('on');
+  S.world=world; S.stage=stage; S.selEntity=null; S.selSprite=null;
+  $('#stageLabel').textContent='loading…';
+  S.data = await (await fetch(`/api/stage?world=${world}&stage=${stage}`)).json();
+  $('#stageLabel').textContent=`${S.data.name} — stage ${stage}`;
+  S.spriteNames={}; for(const sp of allSprites()) S.spriteNames[sp.id_hex]=sp.name||'';
+  renderEntities(); renderSprites();
+  $('#detail').innerHTML='<div class="empty">Select a sprite or entity.</div>';
+}
+
+// ---- entities tab --------------------------------------------------------
+function renderEntities(){
+  const box=$('#tab-entities'); box.innerHTML='';
+  const ents=S.data.entities||[];
+  if(!ents.length){box.innerHTML='<div class="empty">No entity placements (asset 501) in this stage.</div>';return;}
+  const t=el('table');
+  t.innerHTML='<thead><tr><th>#</th><th>type</th><th>name</th><th>pos (px)</th><th>tile</th><th>variant</th><th>layer</th><th>size</th></tr></thead>';
+  const tb=el('tbody');
+  ents.forEach(e=>{
+    const tr=el('tr','ent');
+    tr.innerHTML=`<td class="muted">${e.index}</td><td><span class="pill">${e.entity_type}</span></td>`+
+      `<td>${e.entity_name}</td><td>${e.center.x},${e.center.y}</td>`+
+      `<td class="muted">${e.tile_x},${e.tile_y}</td><td>${e.variant}</td>`+
+      `<td>${e.layer}</td><td class="muted">${e.width}×${e.height}</td>`;
+    tr.onclick=()=>selectEntity(e,tr);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb); box.appendChild(t);
+}
+
+// ---- sprites tab ---------------------------------------------------------
+function allSprites(){   // flatten {map:[],shared:[]} -> [{src, ...sprite}]
+  const out=[];
+  for(const src of ['map','shared'])
+    for(const sp of (S.data.sprites[src]||[])) out.push({src, ...sp});
+  return out;
+}
+function renderSprites(){
+  const box=$('#tab-sprites'); box.innerHTML='';
+  const sprites=allSprites();
+  if(!sprites.length){box.innerHTML='<div class="empty">No sprite container (asset 600) for this stage.</div>';return;}
+  const g=el('div','grid');
+  sprites.forEach(sp=>{
+    const c=el('div','card'); c.dataset.id=sp.id; c.dataset.src=sp.src;
+    const th=el('div','thumb');
+    const a0=(sp.animations.find(a=>a.frames.length)||{frames:[]});
+    if(a0.frames.length){
+      const img=el('img'); img.src=frameURL(sp.src,sp.id,a0.anim,0); th.appendChild(img);
+    }
+    const nm=el('div','nm', spriteName(sp.id)||'');
+    const id=el('div','id', sp.id_hex);
+    const cnt=el('div','muted'); cnt.style.fontSize='10px';
+    cnt.textContent=`${sp.animation_count} anim · ${sp.src}`;
+    c.append(th,nm,id,cnt);
+    c.onclick=()=>selectSprite(sp,c);
+    g.appendChild(c);
+  });
+  box.appendChild(g);
+}
+
+// ---- selection -----------------------------------------------------------
+function selectEntity(e,tr){
+  document.querySelectorAll('tr.ent').forEach(x=>x.classList.remove('on'));
+  if(tr) tr.classList.add('on');
+  S.selEntity=e; S.selSprite=null; S.selAnim=null;
+  renderEntityDetail(e);
+}
+function selectSprite(sp,card){
+  document.querySelectorAll('.card').forEach(x=>x.classList.remove('on'));
+  if(card) card.classList.add('on');
+  S.selSprite=sp; S.selSrc=sp.src; S.selEntity=null;
+  S.selAnim = (sp.animations.find(a=>a.frames.length)||{anim:0}).anim;
+  renderSpriteDetail();
+}
+function spriteById(id,src){ return allSprites().find(s=>s.id===id && (src?s.src===src:true)); }
+
+// ---- detail: entity ------------------------------------------------------
+function renderEntityDetail(e){
+  const d=$('#detail'); d.innerHTML='';
+  d.appendChild(headerBlock(`${e.entity_name}  ·  type ${e.entity_type}`, `placement #${e.index}`));
+  d.appendChild(kv({
+    'position':`${e.center.x}, ${e.center.y} px  (tile ${e.tile_x},${e.tile_y})`,
+    'bbox':`${e.bbox.x1},${e.bbox.y1} → ${e.bbox.x2},${e.bbox.y2}`,
+    'size':`${e.width} × ${e.height}`,
+    'variant':e.variant, 'layer':e.layer,
+  }));
+
+  // entity-type callback table (g_EntityTypeCallbackTable @ 0x8009d5f8)
+  d.appendChild(sec(`Callback table — type ${e.entity_type}`));
+  if(e.cb){
+    d.appendChild(kv({
+      'init fn':e.cb.init_fn+(e.cb.alias?` (${e.cb.alias})`:''),
+      'init addr':e.cb.init_addr,
+      'category':e.cb.category||'?',
+    }));
+    const n=el('div','row'); n.innerHTML='<span class="muted" style="font-size:11px">init addr is ground truth; the name is a clean-room guess. This fn installs the type’s tick / event / state callbacks + sprite.</span>';
+    d.appendChild(n);
+  } else d.appendChild(el('div','row','— no callback-table entry —'));
+
+  // resolve sprite: manual link > first present mapped candidate
+  const key=`${S.world}/${S.stage}/${e.index}`;
+  const link=(S.anno.links||{})[key];
+  let sp=link?spriteById(link.sprite,link.src):null;
+  if(!sp && e.mapped){ const m=e.mapped.find(c=>c.present); if(m) sp=spriteById(parseInt(m.hash),m.src); }
+
+  d.appendChild(sec('Sprite (mapped)'));
+  if(e.mapped && e.mapped.length){
+    const mrow=el('div','row');
+    e.mapped.forEach(c=>{
+      const b=el('span','pill'); b.textContent=c.hash+(c.present?' ✓':' (absent)');
+      b.style.color=c.present?'var(--good)':'var(--dim)'; mrow.appendChild(b);
+    });
+    d.appendChild(mrow);
+  } else d.appendChild(el('div','row',' ')).lastChild.innerHTML='<span class="muted">no mapped sprite for this type yet (map ~25% complete) — link one manually:</span>';
+
+  const pick=el('select'); pick.innerHTML='<option value="">— manual link —</option>';
+  for(const s of allSprites()){
+    const o=el('option',null,`${s.src}:${s.id_hex}${spriteName(s.id)?' ('+spriteName(s.id)+')':''}`);
+    o.value=`${s.src}|${s.id}`; if(link&&link.src===s.src&&link.sprite===s.id)o.selected=true; pick.appendChild(o);
+  }
+  pick.onchange=()=>{ if(!pick.value)delete S.anno.links[key]; else{const[src,id]=pick.value.split('|');S.anno.links[key]={src,sprite:+id};} saveAnno(); renderEntityDetail(e); };
+  const prow=el('div','row'); prow.append(pick); d.appendChild(prow);
+
+  // the resolved sprite's full animation set (= "all animations/callbacks for this entity")
+  if(sp){ S.selSprite=sp; S.selSrc=sp.src;
+    if(S.selAnim==null) S.selAnim=(sp.animations.find(a=>a.frames.length)||{anim:0}).anim;
+    renderSpriteBody(d, sp, true);
+  }
+
+  d.appendChild(sec('Notes'));
+  const note=el('textarea'); note.rows=3; note.value=(S.anno.entities[key]||{}).note||'';
+  note.placeholder='behaviour / naming notes for this placement…';
+  note.oninput=()=>{ S.anno.entities[key]={...(S.anno.entities[key]||{}),note:note.value}; saveAnnoDebounced(); };
+  d.appendChild(note);
+}
+
+// ---- detail: sprite ------------------------------------------------------
+function renderSpriteDetail(){
+  const d=$('#detail'); d.innerHTML='';
+  renderSpriteBody(d, S.selSprite, false);
+}
+function renderSpriteBody(d, sp, linked){
+  d.appendChild(headerBlock(spriteName(sp.id)||sp.id_hex, `${sp.id_hex} · ${sp.src} · ${sp.animation_count} animations`));
+  // editable name
+  const nrow=el('div','row');
+  const nm=el('input'); nm.value=spriteName(sp.id)||''; nm.placeholder='sprite name (shared by hash)';
+  nm.style.flex='1';
+  nm.oninput=()=>{ setSpriteAnno(sp.id,{name:nm.value}); saveAnnoDebounced(); };
+  nrow.append(nm); d.appendChild(nrow);
+
+  // quick "state" triggers — jump to the anim tagged idle/walk/hit/death
+  const states=['idle','walk','attack','hit','death'];
+  const srow=el('div','row'); srow.append(el('span','muted','trigger:'));
+  states.forEach(stn=>{
+    const target=sp.animations.find(a=>animTag(sp.id,a.anim)===stn && a.frames.length);
+    const b=el('div','btn state'+(stn==='death'||stn==='hit'?' death':''), stn);
+    if(!target){ b.style.opacity=.4; b.title='no animation tagged "'+stn+'"'; }
+    b.onclick=()=>{ if(target){ S.selAnim=target.anim; renderSpriteDetail2(d,sp,linked);} };
+    srow.appendChild(b);
+  });
+  d.appendChild(srow);
+  renderSpriteDetail2(d, sp, linked);
+}
+function renderSpriteDetail2(d, sp, linked){
+  // remove previous player block if re-rendering in place
+  d.querySelectorAll('[data-player]').forEach(n=>n.remove());
+  const wrap=el('div'); wrap.dataset.player='1'; d.appendChild(wrap);
+
+  // animation chips
+  wrap.appendChild(sec('Animations'));
+  const list=el('div','anim-list');
+  sp.animations.forEach(a=>{
+    if(!a.frames.length) return;
+    const tag=animTag(sp.id,a.anim);
+    const chip=el('div','achip'+(a.anim===S.selAnim?' on':''));
+    chip.innerHTML=`a${a.anim} <span class="muted">${a.frames.length}f</span>`+
+      (a.has_callback?' <span class="muted">cb</span>':'')+(tag?` <span class="tag">${tag}</span>`:'');
+    chip.onclick=()=>{ S.selAnim=a.anim; renderSpriteDetail2(d,sp,linked); };
+    list.appendChild(chip);
+  });
+  wrap.appendChild(list);
+
+  const anim=sp.animations.find(a=>a.anim===S.selAnim)||sp.animations.find(a=>a.frames.length);
+  if(!anim||!anim.frames.length){ wrap.appendChild(el('div','empty','no decodable frames')); return; }
+
+  // canvas player
+  const stageDiv=el('div','stage-canvas'); const cv=el('canvas'); stageDiv.appendChild(cv); wrap.appendChild(stageDiv);
+  const ctrl=el('div','row');
+  const playBtn=el('div','btn','⏸');
+  const prev=el('div','btn','〈'); const next=el('div','btn','〉');
+  const slider=el('input'); slider.type='range'; slider.min=0; slider.max=anim.frames.length-1; slider.value=0; slider.style.flex='1';
+  const fps=el('span','muted');
+  ctrl.append(playBtn,prev,next,slider,fps); wrap.appendChild(ctrl);
+
+  // tag controls
+  const trow=el('div','row');
+  trow.append(el('span','muted','tag anim:'));
+  const sel=el('select');
+  ['','idle','walk','run','attack','hit','death','spawn','jump','special'].forEach(o=>{
+    const op=el('option',null,o||'— untag —'); op.value=o;
+    if(animTag(sp.id,anim.anim)===o)op.selected=true; sel.appendChild(op);
+  });
+  sel.onchange=()=>{ setAnimTag(sp.id,anim.anim,sel.value); saveAnno(); renderSpriteDetail2(d,sp,linked); };
+  trow.append(sel); wrap.appendChild(trow);
+
+  // frame metadata
+  const meta=el('div'); wrap.appendChild(meta);
+
+  // ---- player engine
+  stopPlayer();
+  const frames=anim.frames;
+  const minx=Math.min(...frames.map(f=>f.render_x));
+  const miny=Math.min(...frames.map(f=>f.render_y));
+  const maxx=Math.max(...frames.map(f=>f.render_x+f.w));
+  const maxy=Math.max(...frames.map(f=>f.render_y+f.h));
+  const W=Math.max(1,maxx-minx), H=Math.max(1,maxy-miny);
+  const scale=Math.max(1,Math.min(6,Math.floor(200/Math.max(W,H))||1));
+  cv.width=W*scale; cv.height=H*scale;
+  const ctx=cv.getContext('2d'); ctx.imageSmoothingEnabled=false;
+  const imgs=frames.map(f=>{const im=new Image(); im.src=frameURL(sp.src,sp.id,anim.anim,f.frame); return im;});
+
+  function drawFrame(i){
+    const f=frames[i];
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const im=imgs[i];
+    const dx=(f.render_x-minx)*scale, dy=(f.render_y-miny)*scale;
+    if(im.complete) ctx.drawImage(im,dx,dy,f.w*scale,f.h*scale);
+    else im.onload=()=>{ if(S.player.i===i) ctx.drawImage(im,dx,dy,f.w*scale,f.h*scale); };
+    slider.value=i;
+    const ms=frameMs(f.delay);
+    fps.textContent=`frame ${i+1}/${frames.length} · ${ms}ms`;
+    meta.className='kv';
+    const mv=(f.dx||f.dy)?`dx ${f.dx}, dy ${f.dy} px/frame → velocity`:'0 (stationary)';
+    meta.innerHTML=
+      `<div class="k">render</div><div>${f.w}×${f.h} @ origin ${f.render_x},${f.render_y}</div>`+
+      `<div class="k">delay (0x04)</div><div>${f.delay} ticks (${ms} ms)</div>`+
+      `<div class="k">motion Δ</div><div>${mv}</div>`+
+      `<div class="k">callback_id</div><div>${f.callback_id?('0x'+f.callback_id.toString(16)+' — frame SFX/particle hook'):'0'}</div>`+
+      `<div class="k">hitbox</div><div>${f.hitbox.w}×${f.hitbox.h} @ ${f.hitbox.x},${f.hitbox.y}</div>`;
+  }
+  S.player={frames, i:0, timer:null, playing:true, imgs};
+  function step(){
+    drawFrame(S.player.i);
+    if(!S.player.playing) return;
+    S.player.timer=setTimeout(()=>{ S.player.i=(S.player.i+1)%frames.length; step(); }, frameMs(frames[S.player.i].delay));
+  }
+  playBtn.onclick=()=>{ S.player.playing=!S.player.playing; playBtn.textContent=S.player.playing?'⏸':'▶';
+    if(S.player.playing) step(); else clearTimeout(S.player.timer); };
+  prev.onclick=()=>{ S.player.playing=false;playBtn.textContent='▶';clearTimeout(S.player.timer);
+    S.player.i=(S.player.i-1+frames.length)%frames.length; drawFrame(S.player.i); };
+  next.onclick=()=>{ S.player.playing=false;playBtn.textContent='▶';clearTimeout(S.player.timer);
+    S.player.i=(S.player.i+1)%frames.length; drawFrame(S.player.i); };
+  slider.oninput=()=>{ S.player.playing=false;playBtn.textContent='▶';clearTimeout(S.player.timer);
+    S.player.i=+slider.value; drawFrame(S.player.i); };
+  step();
+}
+
+// ---- helpers -------------------------------------------------------------
+function frameURL(src,id,anim,frame){
+  return `/api/frame.png?world=${S.world}&stage=${S.stage}&src=${src}&sprite=${id}&anim=${anim}&frame=${frame}`;
+}
+function headerBlock(title,sub){
+  const h=el('div'); h.style.padding='12px 12px 0';
+  h.innerHTML=`<div style="font-size:15px;font-weight:600">${title}</div><div class="muted" style="font-size:11px">${sub}</div>`;
+  return h;
+}
+function sec(t){ return el('div','sec',t); }
+function kv(obj){ const d=el('div','kv'); for(const k in obj){ d.append(el('div','k',k), el('div',null,String(obj[k]))); } return d; }
+function spriteName(id){ return (S.anno.sprites[hex(id)]||{}).name || (S.spriteNames||{})[hex(id)] || ''; }
+function frameMs(d){ return Math.max(20,(d>0?d:5)*20); }   // 0x04 ticks -> ms (PAL 20ms/tick), 0=>100ms
+function setSpriteAnno(id,patch){ const k=hex(id); S.anno.sprites[k]={...(S.anno.sprites[k]||{}),...patch}; }
+function animTag(id,anim){ const s=S.anno.sprites[hex(id)]||{}; return (s.anims||{})[anim]||''; }
+function setAnimTag(id,anim,tag){ const k=hex(id); const s=S.anno.sprites[k]||{}; s.anims=s.anims||{};
+  if(tag) s.anims[anim]=tag; else delete s.anims[anim]; S.anno.sprites[k]=s; }
+function stopPlayer(){ if(S.player&&S.player.timer) clearTimeout(S.player.timer); }
+
+let _saveT=null;
+function saveAnno(){ fetch('/api/annotations',{method:'POST',body:JSON.stringify(S.anno)}); }
+function saveAnnoDebounced(){ clearTimeout(_saveT); _saveT=setTimeout(saveAnno,500); }
+
+boot();
+</script>
+</body>
+</html>
