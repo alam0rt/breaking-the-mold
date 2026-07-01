@@ -11,6 +11,9 @@ extern u8 *ZeroEntityField(u8 *field);
 extern void InitEntityAnimationState(SpriteEntity *entity);
 extern void CalculateEntityScreenBounds(Entity *entity);
 
+typedef s16 (*XformCB)();
+typedef struct { s32 arg; XformCB fn; } XformSlot;
+
 typedef struct SpriteContextCallbackTable {
     /* 0x00 */ u8 pad00[0x10];
     /* 0x10 */ s16 callbackTargetOffset;
@@ -271,6 +274,19 @@ INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenRightSimple);
 
 INCLUDE_ASM("asm/nonmatchings/entity", IsPositionOffscreenRight);
 
+/* Y-axis full off-screen test: same X-and-Y render-bounds calc as
+ * CalculateEntityRenderBounds (inlined, only the Y1 edge is used), routed
+ * through the moveCallbackY FSM slot like TransformYCoord (inlined too),
+ * minus camera_y scaled by scaleParallaxY (like PlayEntityPositionSound's
+ * camX), compared against a BLB-heap-header field + 0x10 px margin.
+ * Data-flow verified via m2c; closest draft kept in
+ * nonmatchings/IsEntityOffScreenY/ (gitignored local scratch, --no-prune
+ * import). Residual is a family of small diffs (phi-shape for the X-bounds
+ * calc, FSM-slot register-pin interference with the unrelated earlier
+ * bounds/camera code inflating live ranges) that individually mirror
+ * techniques that worked elsewhere in this file (Quirk 6l, FSM_REG) but
+ * don't compose cleanly here - best hand attempt hit ~50 residual
+ * instructions out of 123. Permuter attempt pending. */
 INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffScreenY);
 
 /* Reads g_pGameState->camera_scroll_speed (+0x11C). If 1.0 wipes the
@@ -280,9 +296,6 @@ INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffScreenY);
  * by the scale so subsequent transforms round-trip. This is how the
  * zoom-camera boss levels keep entities positionally consistent. */
 INCLUDE_ASM("asm/nonmatchings/entity", SetupEntityScaleCallbacks);
-
-typedef s16 (*XformCB)();
-typedef struct { s32 arg; XformCB fn; } XformSlot;
 
 /* Compute SPU stereo pan from the entity's screen X (relative to camera)
  * and fire a one-shot PlaySoundEffect. Heavily used by pickups/enemies

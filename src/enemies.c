@@ -471,7 +471,38 @@ void TimedSparkleCollectibleTick(TimedCollectibleEntity *e) {
     CollectibleSparkleTickCallback((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", AIEntityRandomBehaviorTick);
+void EntityStateSetIdle(Entity *e);
+void EntityStateSetRandomBehavior(Entity *e);
+void EntityStateSetAttack(EnemyTimerStateEntity *e);
+
+/* Per-tick AI driver for the "random behavior" ground enemy (the standard
+ * Skullmonkey). Counts down walkDelay (+0x112); when it expires, re-rolls the
+ * next state: if the attack-enabled flag (+0x118) is set, 50% chance to attack;
+ * otherwise a coin flip between idle and a fresh random behavior. Independently
+ * counts down stateTimer (+0x104) to flush the queued-state slot, then runs the
+ * shared sparkle/render tick. */
+void AIEntityRandomBehaviorTick(Entity *arg) {
+    EnemyTimerStateEntity *e = (EnemyTimerStateEntity *)arg;
+    if (e->walkDelay != 0) {
+        e->walkDelay -= 1;
+        if (e->walkDelay == 0) {
+            if (((u8 *)e)[0x118] != 0 && (rand() & 1)) {
+                EntityStateSetAttack(e);
+            } else if (rand() & 1) {
+                EntityStateSetIdle((Entity *)e);
+            } else {
+                EntityStateSetRandomBehavior((Entity *)e);
+            }
+        }
+    }
+    if (e->stateTimer != 0) {
+        e->stateTimer -= 1;
+        if (e->stateTimer == 0) {
+            EntityProcessCallbackQueue((Entity *)e);
+        }
+    }
+    CollectibleSparkleTickCallback((Entity *)e);
+}
 
 /* Same 0x1001/0x1002/0x1008 switch skeleton as EntityEventHandlerIdle, plus an
  * EVT_TICK countdown on +0x110 (queue at 0, SetAnimationSpriteId(-1) at 1).
