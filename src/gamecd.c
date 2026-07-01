@@ -82,5 +82,11 @@ INCLUDE_ASM("asm/nonmatchings/gamecd", ProcessCDStreamState);
 
 INCLUDE_ASM("asm/nonmatchings/gamecd", CdSeekWithRetry);
 
-INCLUDE_ASM("asm/nonmatchings/gamecd", CdPausePlayback);
+extern s32 CdControlB(s32 cmd, u8 *param, u8 *result);
+
+/* Blocking CdlPause (command 9) — pauses CD playback and waits for
+ * completion. Unreferenced in the shipped binary (dead code). */
+void CdPausePlayback(void) {
+    CdControlB(9, 0, 0);
+}
 
