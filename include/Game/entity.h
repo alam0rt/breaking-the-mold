@@ -269,10 +269,10 @@ typedef enum {
  * @ 0x8001C720 (152 xrefs), which clears 0x44C bytes total - the extra
  * space past 0x100 is workspace claimed by the extended types.
  *
- * Layout mirrors Ghidra /Skullmonkeys/SpriteEntity exactly. The animation
- * fields start at 0x88; 0x80-0x87 is unobserved (zeroed at init, no reader
- * identified yet). Gaps are reproduced as explicit _pad arrays so
- * sizeof(SpriteEntity) == 0x100.
+ * Layout mirrors Ghidra /Skullmonkeys/SpriteEntity. The sprite-render
+ * context that begins at Entity+0x78 continues into 0x80-0x87 (its RLE-data
+ * pointer and max width/height); the animation fields start at 0x88. Gaps
+ * are reproduced as explicit _pad arrays so sizeof(SpriteEntity) == 0x100.
  *
  * Frame flow (UpdateEntityRender @ 0x8001D988, SetEntitySpriteId @ 0x8001D080):
  *   pending* fields are latched by SetEntitySpriteId and committed into the
@@ -283,7 +283,12 @@ typedef enum {
 typedef struct {
     /* 0x00 */ Entity   base;               /* Entity header (FSM, physics, bounds) */
 
-    /* 0x80 */ u8       _pad80[8];          /* Unobserved (zeroed by InitEntitySprite) */
+    /* 0x80 */ u8       _pad80[8];          /* Embedded sprite-context tail: pRleData
+                                            * (0x80), spriteMaxWidth (0x84),
+                                            * spriteMaxHeight (0x86) per Ghidra
+                                            * SpriteEntity. Kept as a byte array
+                                            * because effects.c writes 0x84 as a
+                                            * single byte (byte-precise access). */
 
     /* Frame metadata (0x88-0x93) */
     /* 0x88 */ u16      frameCount;         /* Total frame count in current sprite */
@@ -690,7 +695,7 @@ typedef struct {
     /* 0x00-0x1F: Base callbacks (same as EntityCallbackTableBase) */
     /* 0x00 */ u32 unused_00;
     /* 0x04 */ u32 unused_04;
-    /* 0x08 */ EntityCallbackSlot destroy;      /* PlayerDestroy @ 0x80059b58 */
+    /* 0x08 */ EntityCallbackSlot destroy;      /* EntityDestructor_WithSPUVoiceStop @ 0x80059b58 (the player-destroy callback; src/player.c) */
     /* 0x10 */ EntityCallbackSlot tick;         /* UpdateEntityRender */
     /* 0x18 */ EntityCallbackSlot texture;      /* UploadEntityTextureIfDirty */
     
