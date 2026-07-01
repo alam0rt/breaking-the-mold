@@ -96,7 +96,7 @@ void PlayerState_FallWithRotation(Entity *e) {
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
 
 void PlayerState_QueuedCallbackTimer(PlayerEntity *e) {
-    u16 *ctr = (u16 *)&e->_pad164[2];
+    u16 *ctr = (u16 *)&e->respawnTimer;
     if (*ctr != 0) {
         *ctr -= 1;
         if (*ctr == 0) {

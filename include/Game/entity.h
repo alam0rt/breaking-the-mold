@@ -371,26 +371,26 @@ typedef struct {
  * SpawnPlayerAndEntities @ 0x8007DF38, but allocSize is set to 0x3E8 -
  * the tail is scratch space.
  *
- * Field offsets/names mirror Ghidra /Skullmonkeys/PlayerEntity. Unnamed
- * gaps are explicit _pad arrays. velocityX/Y_fixed are the 16.16
- * fixed-point physics velocities, distinct from the s16 velocity fields
- * in the Entity base (Ghidra names them velocityX/velocityY).
+ * Field offsets/names mirror Ghidra /Skullmonkeys/PlayerEntity; only the
+ * truly-unidentified bytes remain as explicit _pad arrays. velocityX/Y_fixed
+ * are the 16.16 fixed-point physics velocities, distinct from the s16 velocity
+ * fields in the Entity base (Ghidra names them velocityX/velocityY).
  * ----------------------------------------------------------------------------- */
 typedef struct {
     /* 0x000 */ SpriteEntity sprite;            /* Entity + animation state machine */
 
-    /* Input system (0x100-0x10B) */
+    /* Input system (0x100-0x10F) */
     /* 0x100 */ InputState *pInput;             /* Controller input pointer */
     /* 0x104 */ s32      inputStateMarker;      /* Input FSM marker */
     /* 0x108 */ void    *inputStateCallback;    /* Input handler callback */
-    /* 0x10C */ u8       _pad10C[4];
+    /* 0x10C */ s32      carryMotionX;          /* Carried platform X motion (Ghidra nCarryMotionX) */
 
     /* Physics (0x110-0x11F) */
-    /* 0x110 */ s32      velocityY_fixed;       /* Y velocity (16.16 fixed) */
-    /* 0x114 */ s32      velocityX_fixed;       /* X velocity (16.16 fixed) */
+    /* 0x110 */ s32      velocityY_fixed;       /* Y velocity (16.16 fixed; Ghidra velocityY) */
+    /* 0x114 */ s32      velocityX_fixed;       /* X velocity (16.16 fixed; Ghidra velocityX) */
     /* 0x118 */ s32      cushionVelY;           /* Landing cushion velocity */
     /* 0x11C */ u8       landingTimer;          /* Landing recovery timer */
-    /* 0x11D */ u8       _pad11D;
+    /* 0x11D */ u8       pendingJumpBuffer;     /* Buffered jump input (Ghidra bPendingJumpBuffer) */
     /* 0x11E */ u8       bounceLockTimer;       /* Bounce/quick-turn lockout timer */
     /* 0x11F */ u8       jumpHoldCounter;       /* Jump button hold duration */
 
@@ -398,7 +398,10 @@ typedef struct {
     /* 0x120 */ s32      altSpeed;              /* Alternate movement speed */
     /* 0x124 */ s32      maxVelocity;           /* Maximum velocity cap */
     /* 0x128 */ u8       invincibilityTimer;    /* Invincibility countdown (damage flash) */
-    /* 0x129 */ u8       _pad129[11];
+    /* 0x129 */ u8       _pad129[3];
+    /* 0x12C */ Entity  *interactEntity;        /* Entity currently interacted with (Ghidra pInteractEntity) */
+    /* 0x130 */ s16      platformOffsetX;       /* Ridden-platform X offset (Ghidra nPlatformOffsetX) */
+    /* 0x132 */ s16      platformOffsetY;       /* Ridden-platform Y offset (Ghidra nPlatformOffsetY) */
 
     /* State flags (0x134-0x143) */
     /* 0x134 */ u8       specialMoveQueued;     /* Queued special/teleport movement input */
@@ -409,21 +412,29 @@ typedef struct {
     /* 0x13D */ u8       _pad13D[3];
     /* 0x140 */ Entity  *swirlPortalEntity;     /* Child portal/trail entity cleared when player releases it */
 
-    /* Powerup system (0x144-0x14F) */
+    /* Powerup / checkpoint (0x144-0x155) */
     /* 0x144 */ s16      powerupTimer;          /* Powerup duration countdown */
-    /* 0x146 */ u8       _pad146[6];
+    /* 0x146 */ s16      savedCheckpointX;      /* Checkpoint respawn X (Ghidra nSavedCheckpointX) */
+    /* 0x148 */ s16      savedCheckpointY;      /* Checkpoint respawn Y (Ghidra nSavedCheckpointY) */
+    /* 0x14A */ u8       savedCheckpointFacing; /* Checkpoint respawn facing (Ghidra bSavedCheckpointFacing) */
+    /* 0x14B */ u8       _pad14B;
     /* 0x14C */ void    *hudEntity;             /* HUD entity pointer (0x7530 alloc) */
-    /* 0x150 */ u8       _pad150[6];
+    /* 0x150 */ u8       savedRGB[3];           /* Saved RGB tint (Ghidra pSavedRGB) */
+    /* 0x153 */ u8       savedGameMode;         /* Saved game mode (Ghidra bSavedGameMode) */
+    /* 0x154 */ u8       savedShrinkMode;       /* Saved shrink mode (Ghidra bSavedShrinkMode) */
+    /* 0x155 */ u8       _pad155;
 
-    /* Jump/movement (0x156-0x163) */
+    /* Jump/movement (0x156-0x167) */
     /* 0x156 */ s16      jumpParam;             /* Jump force parameter */
-    /* 0x158 */ u8       _pad158;
+    /* 0x158 */ u8       deathFlag;             /* Death sequence active (Ghidra bDeathFlag) */
     /* 0x159 */ u8       pendingStateChange;    /* Queued state transition flag */
     /* 0x15A */ u8       currentRGB[3];         /* Current entity RGB tint */
     /* 0x15D */ u8       baseRGB[3];            /* Base/default RGB tint */
     /* 0x160 */ s16      pushX;                 /* External push force X */
     /* 0x162 */ s16      pushY;                 /* External push force Y */
-    /* 0x164 */ u8       _pad164[4];
+    /* 0x164 */ u8       airJumpMode;           /* Air/double-jump mode (Ghidra bAirJumpMode) */
+    /* 0x165 */ u8       _pad165;
+    /* 0x166 */ s16      respawnTimer;          /* Queued-callback / respawn countdown (Ghidra nRespawnTimer; see PlayerState_QueuedCallbackTimer) */
 
     /* Linked entities (0x168-0x173) */
     /* 0x168 */ void    *haloEntity;            /* Halo visual effect entity */
@@ -434,20 +445,33 @@ typedef struct {
     /* Audio / rendering (0x174-0x17D) */
     /* 0x174 */ s32      soundHandle;           /* Active SPU sound handle */
     /* 0x178 */ u8       disableScale;          /* Disable scale effects */
-    /* 0x179 */ u8       _pad179[4];
+    /* 0x179 */ u8       enemaTrailFlag;        /* Enema-powerup trail active (Ghidra bEnemaTrailFlag) */
+    /* 0x17A */ u8       deathMenuFlag;         /* Death menu pending (Ghidra bDeathMenuFlag) */
+    /* 0x17B */ u8       _pad17B[2];
     /* 0x17D */ u8       rgbCooldown;           /* RGB effect cooldown timer */
-    /* 0x17E */ u8       _pad17E[40];
+    /* 0x17E */ u8       _pad17E[2];
 
-    /* Scroll/camera (0x1A6-0x1A9) */
+    /* Sprite roster / attachment (0x180-0x1A5) */
+    /* 0x180 */ u32      availableSpriteIds[7]; /* Selectable sprite-id set (Ghidra pAvailableSpriteIds) */
+    /* 0x19C */ u8       availableSpriteCount;  /* Number of valid sprite ids (Ghidra bAvailableSpriteCount) */
+    /* 0x19D */ u8       currentSpriteIndex;    /* Index into availableSpriteIds (Ghidra bCurrentSpriteIndex) */
+    /* 0x19E */ u8       _pad19E[2];
+    /* 0x1A0 */ Entity  *attachedEntity;        /* Attached rider/carry entity (Ghidra pAttachedEntity) */
+    /* 0x1A4 */ u8       attachedYOff;          /* Attached-entity Y offset (Ghidra bAttachedYOff) */
+    /* 0x1A5 */ u8       _pad1A5;
+
+    /* Scroll/camera (0x1A6-0x1AD) */
     /* 0x1A6 */ s16      scrollFlagX;           /* Camera scroll influence X */
     /* 0x1A8 */ s16      scrollFlagY;           /* Camera scroll influence Y */
-    /* 0x1AA */ u8       _pad1AA[4];
+    /* 0x1AA */ s16      savedScrollFlagX;      /* Saved scroll influence X (Ghidra nSavedScrollFlagX) */
+    /* 0x1AC */ s16      savedScrollFlagY;      /* Saved scroll influence Y (Ghidra nSavedScrollFlagY) */
 
     /* Damage/effects (0x1AE-0x1B3) */
     /* 0x1AE */ u8       damageFlag;            /* Taking damage flag */
     /* 0x1AF */ u8       particleFlag;          /* Particle effect active */
     /* 0x1B0 */ u8       shrinkFlag;            /* Shrink powerup active */
-    /* 0x1B1 */ u8       _pad1B1[2];
+    /* 0x1B1 */ u8       portalCheatFlag;       /* Portal/warp cheat flag (Ghidra bPortalCheatFlag) */
+    /* 0x1B2 */ u8       levelExitFlag;         /* Level-exit pending (Ghidra bLevelExitFlag) */
     /* 0x1B3 */ u8       gameMode;              /* Current game mode identifier */
 } PlayerEntity;  /* Size: 0x1B4 (436 bytes) */
 
@@ -500,8 +524,8 @@ typedef struct {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ InputState *pInput;       /* Controller input pointer */
     /* 0x104 */ s32         nFlightSpeed; /* Current flight speed (0 at init) */
-    /* 0x108 */ u8          _pad108[4];
-    /* 0x10C */ s32         handle10C;    /* SPU handle (init -1) */
+    /* 0x108 */ s32         flightStateFlags; /* Flight state bitfield (Ghidra nFlightStateFlags) */
+    /* 0x10C */ s32         handle10C;    /* SPU voice handle, init -1 (Ghidra nSpuVoice) */
     /* 0x110 */ u8          _pad110[2];
     /* 0x112 */ u8          stateTimer;   /* State transition timer */
     /* 0x113 */ u8          _pad113[5];
@@ -529,14 +553,14 @@ typedef struct {
  * ----------------------------------------------------------------------------- */
 typedef struct {
     /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8       _pad100[4];
+    /* 0x100 */ void    *spawnData;          /* Spawn descriptor pointer (Ghidra pSpawnData) */
     /* 0x104 */ s32      eventStateMarker;   /* Event state FSM marker */
     /* 0x108 */ void    *eventStateCallback; /* Event state handler */
     /* 0x10C */ u8       _pad10C[4];
     /* 0x110 */ s16      pathOriginX;        /* Path origin X (base offset) */
     /* 0x112 */ s16      pathOriginY;        /* Path origin Y (base offset) */
     /* 0x114 */ void    *pWaypoints;         /* Waypoint array (s16 pairs: X, Y) */
-    /* 0x118 */ u8       _pad118[4];
+    /* 0x118 */ s32      soundHandle;        /* Active SPU voice handle (Ghidra nSoundHandle) */
     /* 0x11C */ s16      waypointCount;      /* Number of waypoints in path */
     /* 0x11E */ u16      pathTimer;          /* Current path interpolation time */
 } PathEnemyEntity;  /* Size: 0x120 (288 bytes) */

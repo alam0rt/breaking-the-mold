@@ -223,7 +223,7 @@ void FinnSubentityDestroyCallback_Vtable0x800117e4(SpriteEntity *entity, s32 fla
 }
 
 void func_8006EC04(PlayerEntity *e) {
-    e->_pad1B1[0] = 1;
+    e->portalCheatFlag = 1;
 }
 
 void func_8006EC10(PlayerEntity *e) {
