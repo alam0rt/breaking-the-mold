@@ -205,6 +205,29 @@ INCLUDE_ASM("asm/nonmatchings/effects", RandomizedEntityBehaviorTick);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitVRAMSlotEntity);
 
+/* Destroy callback for a VRAM-slot entity: pins the render vtable at +0x0C,
+ * releases the reserved VRAM rect back to the coalescing free-list (only if a
+ * slot was actually allocated, byte at +0x10), then frees the entity when
+ * (flags & 1). The slot rect is passed to FreeVRAMSlot as two packed u32s:
+ * (x@0x16 | y@0x18<<16) and (0x1A | height@0x1C<<16).
+ *
+ * SHELVED: body is m2c-confirmed correct (right calls/fields), but two cc1
+ * codegen diffs remain: (1) TARGET reserves an 8-byte frame hole (frame 0x28,
+ * saves at sp+0x18/0x1C/0x20) that the natural C frame (0x20) lacks — not a
+ * stack round-trip (no sh to stack), so no source form observed induces it;
+ * (2) TARGET schedules the two packed-arg low halves (0x16->v0, 0x1A->v1) both
+ * before the g_pBlbHeapBase load and keeps 0x1A alive in v1, while cc1 loads the
+ * heap first and recomputes 0x1A into v0. Frame-hole is beyond the permuter
+ * (it can't change frame size). Equivalent C:
+ *   typedef struct { u8 pad00[0xC]; void *renderVtable; u8 vramAllocOk;
+ *       u8 pad11[5]; u16 vramX, vramY, slotSizeLo, slotHeight; } VRAMSlotEnt;
+ *   void DestroyVRAMSlotEntity(VRAMSlotEnt *e, s32 flags) {
+ *       e->renderVtable = &VFX_ENTITY_VTABLE_10B68;   // D_80010B68
+ *       if (e->vramAllocOk != 0)
+ *           FreeVRAMSlot(g_pBlbHeapBase, e->vramX | (e->vramY << 16),
+ *                        e->slotSizeLo | (e->slotHeight << 16));
+ *       if (flags & 1) FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+ *   } */
 INCLUDE_ASM("asm/nonmatchings/effects", DestroyVRAMSlotEntity);
 
 INCLUDE_ASM("asm/nonmatchings/effects", RenderVRAMSlotOverlay);
