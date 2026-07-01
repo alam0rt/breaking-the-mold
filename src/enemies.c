@@ -118,6 +118,7 @@ extern s32 EntityEventHandlerAnimationSwitch(Entity *e, u32 event, u32 arg2, u32
 extern void EntityFallingGravityWithCollision(Entity *e);
 extern void ApplyAnimationPositionOffsets(Entity *e);
 extern void CollectibleSparkleTickCallback(Entity *e);
+extern Entity *InitParticleEntity(u8 *mem, u32 spriteId, u32 packedXY, u8 facing, s32 scaleRender, s32 arg5, s32 arg6);
 extern void TripleLaserMonkeyDeathTick(Entity *e);
 extern s32 EntityEventHandler0x1001_1002_1008(Entity *e, u16 event, u32 arg2, u32 arg3);
 extern s32 EntityEventHandler0x1001_1002_1008_V2(Entity *e, u16 event, u32 arg2, u32 arg3);
@@ -330,6 +331,10 @@ typedef struct SpriteRenderContext {
     /* 0x24 */ s16 tpageBits;        /* Cached GetTPage result */
     /* 0x26 */ u8  pad26[0xC];
     /* 0x32 */ u8  colorMode;        /* Color depth code passed to GetTPage */
+    /* 0x33 */ u8  pad33;
+    /* 0x34 */ u8  colorR;           /* Per-channel color multiplier (0x80 = neutral) */
+    /* 0x35 */ u8  colorG;
+    /* 0x36 */ u8  colorB;
 } SpriteRenderContext;
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
@@ -459,6 +464,50 @@ INCLUDE_ASM("asm/nonmatchings/enemies", SpawnCollectibleParticles);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CreateCollectibleWithFlags);
 
+/* Overlay view of the twinkling-collectible entity (SpriteEntity base +
+ * sparkle-pulse scratch). */
+typedef struct SparkleCollectibleEntity {
+    u8  pad00[0x34];
+    /* 0x34 */ SpriteRenderContext *ctx;
+    u8  pad38[0x50 - 0x38];
+    /* 0x50 */ s32 scaleRender;
+    u8  pad54[0x68 - 0x54];
+    /* 0x68 */ s16 worldX;
+    /* 0x6A */ s16 worldY;
+    u8  pad6C[0x74 - 0x6C];
+    /* 0x74 */ u8  facing;
+    u8  pad75[0x10C - 0x75];
+    /* 0x10C */ u8  unk10C;
+    u8  pad10D[0x119 - 0x10D];
+    /* 0x119 */ u8  enable;
+    /* 0x11A */ u8  brightness;
+    /* 0x11B */ u8  phase;
+    /* 0x11C */ u8  phaseTimer;
+    /* 0x11D */ u8  spawnTimer;
+} SparkleCollectibleEntity;
+
+/* Per-tick "twinkle" driver for sparkle collectibles: runs the base collectible
+ * tick, then (while enabled) pulses the sprite brightness through a 4-phase
+ * cycle (phase 0 brighten +0xC, 1 hold 0xBF + spawn particle, 2 dim -0xC,
+ * 3 rest) and, during the bright hold-phase, periodically spawns a short-lived
+ * sparkle particle jittered by rand()&0x1F around the entity's position. The
+ * two rand() results are packed as (X | Y<<16) into one InitParticleEntity arg;
+ * the spawned particle's TPage is computed via GetTPage(colorMode, 1,
+ * vramX & ~0x3F, vramY & ~0xFF) using the same s32-locals idiom as
+ * InitCollectibleEntity_Alt.
+ *
+ * SHELVED — instruction-exact (141==141) and behaviourally complete, but three
+ * cc1 scheduling/coloring residuals remain that neither do-while fences, the
+ * abr $a1 register-pin, nor the permuter (-j6, best score ~660) have cracked:
+ *   1. the coords reload+pack (coords[0] | coords[1]<<16) is scheduled early
+ *      into $t0 rather than late in the InitParticleEntity delay slot;
+ *   2. the `li a1,1` (GetTPage abr arg) lands at a different point;
+ *   3. a phaseTimer (+0x11C) store ordering in the transition chain,
+ * plus the entity pointer colors to a different saved reg (frame 0x38 vs 0x40).
+ * Structurally-correct draft parked in the (gitignored) permuter dir
+ * nonmatchings/CollectibleSparkleTickCallback — a strong base for a longer /
+ * multi-core permuter run. The SparkleCollectibleEntity + SpriteRenderContext
+ * color-field views above are verified against the disassembly. */
 INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleSparkleTickCallback);
 
 void TimedSparkleCollectibleTick(TimedCollectibleEntity *e) {
