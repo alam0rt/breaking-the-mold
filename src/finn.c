@@ -370,7 +370,46 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnHandleInput);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnUpdateRotationSprite);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnStateInit_SetSpriteByAngle);
+extern void FinnMainTickHandler();
+extern u32 FINN_ROTATION_SPRITE_TABLE[] asm("D_8009CA7C");
+
+typedef struct FinnAngleEntity {
+    /* 0x000 */ SpriteEntity sprite;
+    /* 0x100 */ u8  pad100[0xC];
+    /* 0x10C */ s16 rotationAngle;
+    /* 0x10E */ u8  spriteBucket;
+} FinnAngleEntity;
+
+/* Initializer that faces the FINN craft by its heading: installs the main tick
+ * + damage/death event handlers, converts the 0x400-unit rotation angle (+0x10C)
+ * into a 16-way sprite bucket ((angle+0x80)>>8 & 0xF, cached at +0x10E), stashes
+ * the sign-extended low byte of the angle in targetY (+0x72), and loads the
+ * bucket's sprite from the 16-entry rotation table. */
+void FinnStateInit_SetSpriteByAngle(FinnAngleEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    s16 angle;
+    u8 bucket;
+
+    do {} while (0);
+    fn = (void (*)())FinnMainTickHandler;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    fn = (void (*)())FinnEvent_DamageToDeathExplosion;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+    angle = e->rotationAngle;
+    bucket = ((s32)(angle + 0x80) >> 8) & 0xF;
+    e->spriteBucket = bucket;
+    e->sprite.base.targetY = (s8)angle;
+    SetEntitySpriteId((Entity *)e, FINN_ROTATION_SPRITE_TABLE[bucket], 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnDeathExplosion);
 
