@@ -30,6 +30,26 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessEnemyHit);
 
 INCLUDE_ASM("asm/nonmatchings/playst", CheckPlayerHitByEnemy);
 
+/* Bulk-installs four caller-supplied (marker, callback) FSM slots onto an
+ * entity -- tick (+0x00), event (+0x08), +0x104, and render (+0x1C) -- each
+ * marshalled through a shared local scratch, then swaps the sprite. Used to
+ * wire up a player-helper entity's callbacks in one shot.
+ *
+ * SHELVED (single-instruction scheduling diff): frame (0x28), the sp+4 scratch
+ * hole (padded slot struct -> scratch at sp+0x14), and all four callback-pair
+ * struct copies match byte-for-byte. The only diff: TARGET loads the last
+ * (stack) arg `spriteId` into $a1 at instruction 2 -- reusing $a1 right after
+ * spilling its original value -- and holds it across the whole body, while cc1
+ * loads it just before the SetEntitySpriteId call. A `u32 sid = spriteId;`
+ * hoist local did not move it (prologue reg-alloc choice, not source-reachable),
+ * and the permuter (-j4, 150s) floored at 70. Equivalent C (parked in
+ * nonmatchings/PlayerSetupCallbacksAndSprite):
+ *   typedef struct { s32 marker; void *fn; } SetupSlot;      // 4 by-value pairs
+ *   typedef struct { s32 pad; SetupSlot s; } PaddedSetupSlot; // sp+4 hole
+ *   PaddedSetupSlot u;
+ *   u.s = tick;  *(SetupSlot*)&e->tickMarker  = u.s;   // then event@0x8,
+ *   ...          *(SetupSlot*)((u8*)e+0x104)  = u.s;   // slot104, render@0x1C
+ *   SetEntitySpriteId(e, spriteId, 1); */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerSetupCallbacksAndSprite);
 
 INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerColoredParticle);
