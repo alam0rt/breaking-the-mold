@@ -88,16 +88,15 @@ s32 PlatformEvent_QueueOnAnimReady(Entity *entity, u32 event) {
 }
 
 /*
- * func_80071778 @ 0x80071778 (unidentified - FINN/vehicle X integrator)
+ * FinnAdvanceXByVelocity @ 0x80071778
  *
  * Advances the entity's worldX via its 16.16 fixed-point sub-pixel
  * accumulator: packs worldX:fracX into a 32-bit position, adds the
  * velocity word stored at entity+0x104 (FinnPlayerEntity.velocityX
  * shape), and splits the result back into worldX (upper 16) and fracX
- * (lower 16). Likely should be renamed FinnAdvanceXByVelocity or
- * similar.
+ * (lower 16).
  */
-void func_80071778(FinnPlayerEntity *entity) {
+void FinnAdvanceXByVelocity(FinnPlayerEntity *entity) {
     s32 pos = ((s32)entity->sprite.base.worldX << 16) +
               (u16)entity->sprite.base.velocityX +
               (s32)entity->wakeEntity_or_velocityX;
@@ -129,18 +128,17 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformEntityTickMoving);
 INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformSpeedRampTick);
 
 /*
- * RunnRender_PhysicsAndTileCollision @ 0x80071AD4
+ * RunnPhysicsAndTileCollisionTick @ 0x80071AD4
  *
  * RUNN auto-scroller per-frame physics + tile probe pass. Integrates
  * worldX:fracX (0x68:0x6C) with velocityX (+0x104), worldY:fracY
  * (0x6A:0x6E) with velocityY (+0x108, ramped by 0x5000/tick and capped
  * at 0x80000), then probes ground/wall via EntityApplyMovementCallbacks
  * at multiple Y offsets. Branches to hazard, landing, or fall handlers
- * based on the returned material codes. Despite "Render" in the name,
- * this is the physics half - rendering is elsewhere; likely should be
- * renamed RunnPhysicsAndTileCollisionTick.
+ * based on the returned material codes. This is the physics half of the
+ * RUNN tick; rendering happens elsewhere.
  */
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnRender_PhysicsAndTileCollision);
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnPhysicsAndTileCollisionTick);
 
 /*
  * RunnState_DieAndAdvanceLevel @ 0x80071D10
@@ -148,23 +146,23 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnRender_PhysicsAndTileCollision);
  * Tiny tail-call helper: hands the entity off to EntitySetState with
  * the death-and-advance state pair at gp-rel D_800A5FCC/D_800A5FD0,
  * then jumps to RunnState_SelectNextByInput. Reached by fall-through
- * from RunnRender_PhysicsAndTileCollision when a probe returns material
+ * from RunnPhysicsAndTileCollisionTick when a probe returns material
  * 0x5B.
  */
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnState_DieAndAdvanceLevel);
 
 /*
- * func_80071D28 @ 0x80071D28 (unidentified - RUNN landing-dispatch tail)
+ * RunnPhysicsLandingDispatch @ 0x80071D28 (RUNN landing-dispatch tail)
  *
  * Continuation of the RUNN physics path: if the latest probe returned
  * material 0xB5 it routes into the hazard-damage transition; otherwise
  * it walks downward through CheckEntityNearTileY + more
  * EntityApplyMovementCallbacks probes to decide between
  * RunnLand_GroundContactAndWallCheck and the fall path. Tightly coupled
- * to its caller via saved registers ($s0..$s5). Likely should be named
- * something like RunnPhysicsLandingDispatch.
+ * to its caller (RunnPhysicsAndTileCollisionTick) via saved registers
+ * ($s0..$s5).
  */
-INCLUDE_ASM("asm/nonmatchings/vehicle", func_80071D28);
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnPhysicsLandingDispatch);
 
 /*
  * RunnLand_GroundContactAndWallCheck @ 0x80071E2C
