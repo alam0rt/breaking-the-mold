@@ -647,6 +647,34 @@ From `InitSpriteObject` / `SubmitPrimitiveBufferToGPU` (RENDER_5C3C tail):
   the arms keep distinct result registers and match the original's
   `j`-over-else shape.
 
+## Quirk: goto-label blocks cse constant folding; branch-side assignments fill delay slots (2026-07-02, FindFreeVRAMSlotEntry)
+
+Three levers that cracked a "permuter job" goto-loop without permuting:
+
+- **A goto label is a cse barrier.** `counter = 0; loop: idx = counter & 0xFF;`
+  keeps a *real* `andi v1,a1,0xff` in the output even though `a1` is provably
+  zero on first entry — cse cannot propagate constants across the label (the
+  join has a non-constant back-edge value). The same statement placed *before*
+  the label constant-folds to `move v1,zero`. If the target shows an
+  arithmetic op on a register that was just loaded with a constant, the op is
+  probably the first statement after a loop label.
+- **cc1's delay-slot filler duplicates the loop-top instruction.** With the
+  andi as the loop's first instruction, the back-edge `bnez` gets the andi
+  copied into its delay slot and is retargeted past it (dbr fill-from-target).
+  No explicit source duplication needed — but it only fires if the copied
+  insn's result is dead on the fall-through path.
+- **Put an exit-path-only assignment on the branch side of an if/else.**
+  `if (found) { ret = idx; } else { ...loop... }` puts `move v0,v1` in the
+  `beq` delay slot (fill-from-target of the found block) *and* kills `$v1` on
+  the fall-through, enabling the bnez fill above. Writing `ret = idx;` before
+  the `if` instead makes cc1 sink the move into the exit block (one insn
+  longer, kills both delay fills).
+- **Named `entry` temp for `base + idx*stride` gives base-first
+  `addu v0,a0,v0`.** Inlining the sum into the dereference yields the swapped
+  `addu v0,v0,a0` (mult-first canonical order). Same idiom as
+  GetMaxVRAMSlotSize / FindVRAMSlotBySize — likely the original author's
+  style throughout vram.c.
+
 ## Tooling gotchas (decomp-permuter)
 
 - Older `decomp-permuter` revisions needed `pycparser==2.21`; after the
