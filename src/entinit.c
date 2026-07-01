@@ -310,28 +310,27 @@ void EntityType021_ClockPlatformC_Init(EntityList *list, EntitySpawnData *spawnD
     AddToUpdateQueue(list, entity);
 }
 
-/* --- Clayball-on-path family (alloc 0x128). Despite the 'Boss*' labels these
- *     are clayball-form enemies driven along a path, NOT the bosses themselves
- *     (each just selects a different sprite hash). Names likely should be
- *     ClayballOnPath_{A,B,C}. --- */
+/* --- Clayball-on-path family (alloc 0x128). These are clayball-form enemies
+ *     driven along a path (each just selects a different sprite hash), NOT the
+ *     bosses themselves -- earlier 'Boss*' labels were misleading. --- */
 /* Type 049: clayball-on-path sprite A (hash SPR_PLATFORM_BALL_A). */
-void EntityType049_BossRelated_Init(EntityList *list, EntitySpawnData *spawnData) {
+void EntityType049_ClayballOnPathA_Init(EntityList *list, EntitySpawnData *spawnData) {
     Entity *entity = AllocateFromHeap(g_pBlbHeapBase, 0x128, 1, 0);
     entity = InitClayballOnPath(entity, spawnData, SPR_PLATFORM_BALL_A, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 050: clayball-on-path sprite B (hash SPR_PLATFORM_BALL_B). 'BossMain' is misleading. */
-void EntityType050_BossMain_Init(EntityList *list, EntitySpawnData *spawnData) {
+/* Type 050: clayball-on-path sprite B (hash SPR_PLATFORM_BALL_B). */
+void EntityType050_ClayballOnPathB_Init(EntityList *list, EntitySpawnData *spawnData) {
     Entity *entity = AllocateFromHeap(g_pBlbHeapBase, 0x128, 1, 0);
     entity = InitClayballOnPath(entity, spawnData, SPR_PLATFORM_BALL_B, 0);
     AddEntityToSortedRenderList(list, entity);
     AddToUpdateQueue(list, entity);
 }
 
-/* Type 051: clayball-on-path sprite C (hash SPR_PLATFORM_BALL_C). 'BossPart' is misleading. */
-void EntityType051_BossPart_Init(EntityList *list, EntitySpawnData *spawnData) {
+/* Type 051: clayball-on-path sprite C (hash SPR_PLATFORM_BALL_C). */
+void EntityType051_ClayballOnPathC_Init(EntityList *list, EntitySpawnData *spawnData) {
     Entity *entity = AllocateFromHeap(g_pBlbHeapBase, 0x128, 1, 0);
     entity = InitClayballOnPath(entity, spawnData, SPR_PLATFORM_BALL_C, 0);
     AddEntityToSortedRenderList(list, entity);

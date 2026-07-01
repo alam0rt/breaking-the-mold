@@ -228,17 +228,16 @@ void func_80059638(void) {
 }
 
 /* Lightweight destructor variant used by the simpler 0x1C-byte clayball
- * helper entity: swaps in vtable D_80011708 and conditionally frees via
- * the no-teardown path. The naming "Simple11" reflects the D_8001170*8
- * vtable it installs; likely should be EntityDestroy_SmallClayballHelper. */
-void EntityDestructor_Simple11(Entity *entity, s32 flags) {
+ * helper entity: swaps in the small-clayball-helper vtable (D_80011708)
+ * and conditionally frees via the no-teardown path. */
+void EntityDestroy_SmallClayballHelper(Entity *entity, s32 flags) {
     entity->collisionVtable = SMALL_CLAYBALL_HELPER_VTABLE;
     if (flags & 1) {
         FreeEntityNoTeardown_80059674(entity, 0x1C);
     }
 }
 
-/* Bare heap release used by EntityDestructor_Simple11 — frees `entity`
+/* Bare heap release used by EntityDestroy_SmallClayballHelper — frees `entity`
  * from g_pBlbHeapBase without running any per-field teardown. The `size`
  * parameter is accepted but ignored (caller passes 0x1C). */
 void FreeEntityNoTeardown_80059674(Entity *entity, s32 size) {

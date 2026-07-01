@@ -17,13 +17,12 @@ void DestroyStaticGameState(void) {
 }
 
 /*
- * CRT_ConstructGameState @ 0x80082EB8.
+ * ConstructStaticGameState @ 0x80082EB8.
  * One-shot constructor for the global GameState entity at g_GameStateBase.
  * Delegates to InitEntityWithTableAndSprite, which wires up the standard
  * entity vtable/sprite-id fields (full GameState init happens later in
- * InitGameState @ 0x8007CD34). The `CRT_` prefix is a guess at a C-runtime
- * style early init hook — likely should be ConstructStaticGameState.
+ * InitGameState @ 0x8007CD34). Mirrors DestroyStaticGameState above.
  */
-void CRT_ConstructGameState(void) {
+void ConstructStaticGameState(void) {
     InitEntityWithTableAndSprite(&g_GameStateBase);
 }
