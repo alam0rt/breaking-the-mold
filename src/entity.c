@@ -123,8 +123,28 @@ INCLUDE_ASM("asm/nonmatchings/entity", CalculateEntityScreenBounds);
 
 /* Render-AABB variant. Uses renderOffset/renderWidth/renderHeight and only
  * the facing/flipY flags - no moveCallback dispatch, no scale; the renderer
- * doesn't need to know about platform riding to draw. */
-INCLUDE_ASM("asm/nonmatchings/entity", CalculateEntityRenderBounds);
+ * doesn't need to know about platform riding to draw. Output is
+ * {x1,y1,x2,y2} (4 s16's), mirroring facing==1/flipY==1 about worldX/worldY
+ * instead of adding the offset. */
+void CalculateEntityRenderBounds(Entity *entity, void *bounds) {
+    s16 *out = bounds;
+
+    if (entity->facing != 0) {
+        out[0] = entity->worldX - entity->renderOffsetX - entity->renderWidth + 1;
+        out[2] = entity->worldX - entity->renderOffsetX;
+    } else {
+        out[0] = entity->worldX + entity->renderOffsetX;
+        out[2] = entity->renderWidth + (entity->worldX + entity->renderOffsetX) - 1;
+    }
+
+    if (entity->flipY != 0) {
+        out[1] = entity->worldY - entity->renderOffsetY - entity->renderHeight + 1;
+        out[3] = entity->worldY - entity->renderOffsetY;
+    } else {
+        out[1] = entity->worldY + entity->renderOffsetY;
+        out[3] = entity->renderHeight + (entity->worldY + entity->renderOffsetY) - 1;
+    }
+}
 
 /* Set sprite horizontal flip. dir==2 toggles current value. Marks the
  * entity textureDirty because flipping is done at upload time by
