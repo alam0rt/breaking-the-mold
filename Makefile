@@ -138,6 +138,15 @@ DEPFLAGS = -MMD -MP -MF $(@:.o=.d) -MT $@
 # -mcpu=3000: MIPS R3000 (PSX CPU)
 CFLAGS := -O2 -G8 -fno-builtin -mno-abicalls -mcpu=3000
 
+# DEBUG=1 adds DWARF line info (-g) for source-level stepping in GDB against the
+# side-loaded ELF (see `make emu-exe`). VERIFIED byte-match-safe: the PSX cc1's
+# DWARF survives maspsx+as but does NOT change .text, and `objcopy -O binary`
+# strips all debug sections, so build/$(PROJECT).bin is byte-identical and
+# `make check` still passes. Only the .elf grows (gains .debug_* sections).
+ifdef DEBUG
+CFLAGS += -g
+endif
+
 # Assembler flags
 ASFLAGS := -march=r3000 -mtune=r3000 -no-pad-sections -G8 -Iinclude
 
@@ -214,7 +223,9 @@ help:
 	@echo "  lint-clarity     - Report ast-grep C clarity cleanup candidates"
 	@echo ""
 	@echo "Emulator/Debugging:"
-	@echo "  emu              - Launch PCSX-Redux with GDB server"
+	@echo "  emu              - Launch PCSX-Redux with GDB server (boots the disc)"
+	@echo "  emu-exe          - Launch PCSX-Redux running OUR compiled ELF (assets from ISO)"
+	@echo "                     (make DEBUG=1 emu-exe for source-level stepping)"
 	@echo "  watch            - Run game with behavior tracing (Lua)"
 	@echo "  snapshot         - Capture RAM snapshot (web API)"
 	@echo "  mcp-server       - Start MCP server for Copilot"
@@ -571,7 +582,12 @@ GDB_PORT := 3333
 
 # PCSX-Redux GPU wrapper. Override with `make emu GPU=intel` if needed.
 # Auto-detect: NVIDIA if /dev/nvidia0 exists, else Intel.
-# Valid values: nvidia, intel, default, none (none = run pcsx-redux directly, on NixOS)
+# Valid values: nvidia, intel, default, none (none = run pcsx-redux directly).
+# NOTE: the nixGL Nvidia wrapper forces SDL_VIDEODRIVER=x11 (XWayland + GLX via
+# the nvidia driver). The "MESA-LOADER ... wrong ELF class ELFCLASS32" line it
+# prints is a harmless GBM probe failure -- GLX still comes from nvidia, so the
+# window opens. GPU=none fails on a nix-store pcsx-redux because no GL driver is
+# on the loader path.
 GPU ?= $(shell test -e /dev/nvidia0 && echo nvidia || echo intel)
 # NVIDIA driver is unfree; nixGL needs NIXPKGS_ALLOW_UNFREE=1 to build it.
 # Optimus/PRIME laptops also need __NV_PRIME_RENDER_OFFLOAD=1 and SDL_VIDEODRIVER=x11
@@ -588,8 +604,23 @@ PCSX := $(NIXGL_WRAPPER) pcsx-redux
 # Launch PCSX-Redux emulator with GDB server (runs in foreground)
 # NOTE: Web server must be enabled manually in GUI:
 #   Configuration > Emulation > Enable Web Server
+.PHONY: emu emu-exe
 emu:
 	$(PCSX) -interpreter -debugger -gdb -iso $(ISO) -run -fastboot
+
+# Side-load OUR compiled binary instead of the disc's executable, while the
+# original ISO supplies BLB assets (the game loads them by name via CdSearchFile
+# -- see src/gamecd.c). PCSX-Redux's -exe accepts an ELF and loads it at the
+# address in its header (.text @ 0x80010000, same place the BIOS would put the
+# disc exe), so the disc's own executable is never run. This decouples code
+# iteration from the ISO: rebuild the ELF, relaunch -- no ISO repack needed.
+#
+#   make emu-exe              # symbol-level debugging (named breakpoints/bt)
+#   make DEBUG=1 emu-exe      # rebuild with -g first for source-level stepping
+#
+# Then connect GDB:  gdb -x tools/skullmonkeys.gdb
+emu-exe: $(ELF)
+	$(PCSX) -interpreter -debugger -gdb -iso $(ISO) -exe $(ELF) -run -fastboot
 
 # Run MCP server for Copilot integration
 # PCSX-Redux must have web server enabled on port 8080
@@ -653,6 +684,29 @@ snapshot:
 	@echo "Capturing RAM snapshot..."
 	python3 scripts/ram_snapshot.py -v -o /tmp/skullmonkeys_snapshot.json
 	@echo "Saved to /tmp/skullmonkeys_snapshot.json"
+
+# Raw RAM dump via the GDB stub (PCSX-Redux must be running with -gdb).
+# Bulk `dump binary memory` is the only reliable read over the stub (small reads
+# flake; inferior calls / register writes wedge it). Defaults to the
+# GameState-covering region (fast, ~1 min) which still holds g_pGameState, the
+# GameState, the BLB header buffer, and the entity heap. For everything use the
+# full range: make memdump MEMSTART=0x80000000 MEMEND=0x80200000 (slower).
+# Usage:
+#   make memdump                         # -> dumps/snap_<timestamp>.bin
+#   make memdump MEMDUMP=dumps/foo.bin   # explicit path
+.PHONY: memdump
+MEMDUMP  ?= dumps/snap_$(shell date +%Y%m%d_%H%M%S).bin
+MEMSTART ?= 0x80090000
+MEMEND   ?= 0x801b0000
+memdump:
+	@mkdir -p dumps
+	@echo "Dumping RAM $(MEMSTART)..$(MEMEND) from :$(GDB_PORT) ..."
+	gdb -nx -batch -ex 'set pagination off' -ex 'set confirm off' \
+	    -ex 'target remote localhost:$(GDB_PORT)' \
+	    -ex 'dump binary memory $(MEMDUMP) $(MEMSTART) $(MEMEND)'
+	@test -s "$(MEMDUMP)" && echo "wrote $(MEMDUMP) ($$(stat -c%s $(MEMDUMP)) bytes)" \
+	    || { echo "dump failed -- is PCSX-Redux running with -gdb on :$(GDB_PORT)?"; exit 1; }
+	@echo "analyze: tools/memreport.py $(MEMDUMP) --base $(MEMSTART) --summary"
 
 # Run a Lua script in PCSX-Redux.
 # Usage: make lua SCRIPT=scripts/hello.lua
@@ -901,4 +955,26 @@ endif
 # List all available levels
 layers-list:
 	python3 scripts/extract_layers.py --list
+
+# -----------------------------------------------------------------------------
+# BLB asset extraction (graphics/audio/sprites -> extracted/)
+# -----------------------------------------------------------------------------
+# Two stages: (1) imhex parses GAME.BLB against docs/blb.hexpat into a big JSON
+# structure; (2) tools.extract_blb walks that JSON to dump PNGs/GIFs/etc.
+# Both outputs are clean-room game data -- NEVER committed (see .gitignore).
+# Sprites are keyed by hash: extracted/<LEVEL>/**/sprite_<decimal-hash>_*.png
+# (tools/memreport.py links live entities to these).
+#   make blb-json      # (re)generate the parsed JSON
+#   make extract-blb   # parse if needed, then extract all assets
+.PHONY: blb-json extract-blb
+BLB      ?= disks/blb/GAME.BLB
+BLB_JSON ?= /tmp/blb_parsed.json
+
+$(BLB_JSON): $(BLB) docs/blb.hexpat
+	imhex --pl format --pattern docs/blb.hexpat --input $(BLB) > $(BLB_JSON)
+
+blb-json: $(BLB_JSON)
+
+extract-blb: $(BLB_JSON)
+	python3 -m tools.extract_blb -b $(BLB) -j $(BLB_JSON) -o extracted/
 

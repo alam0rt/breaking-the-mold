@@ -1,0 +1,39 @@
+{
+  "_doc": "Knowledge registry for the entity-recon workflow (tools/memreport.py --labels, /entity-recon skill). Built incrementally from live observation: pause the game, dump RAM, run memreport, then identify entities by what's on screen and record the mapping here. Sprite IDs are opaque build-time hashes (names unrecoverable by brute force -- see memory 'asset-hash-ids-not-ascii'), so this hand-built hash->meaning table is the only way to name them.",
+
+  "sprite_hashes": {
+    "0x9b0ab1c6": "Teleporter (warp-to-level pad; two placed in SCIE intro area)",
+    "0x80729081": "Teleport info-box sign -- sprite renders text 'TELEPORT / Jump into these to go to a new level'",
+    "0x48204012": "Klaymen idle (basic/default idle, NOT a random fidget animation)",
+    "0x88329285": "Teleport info-box frame/panel -- the box graphic behind the TELEPORT text (text itself is 0x80729081); rendered by a co-located g_EntityVtable_SpriteBase entity",
+    "0x61981a0c": "Skullmonkey enemy -- standing/idle sprite (IMAGE-CONFIRMED: brown furry monkey, extracted/SCIE/*/map/sprites/sprite_1637358092). tick AIEntityRandomBehaviorTick.",
+    "0x1c3aa013": "Klaymen JUMPING (IMAGE-CONFIRMED: sprite_473604115; crouched/airborne pose). NOT cooldown -- this was seen on the player while state=PlayerState_CooldownTick, which is therefore a misnamed jump state. Distinct from idle 0x48204012.",
+    "0x400c991d": "Skullmonkey enemy -- RUNNING sprite (2 seen running in SCIE, on-screen confirmed). NOT extracted in SCIE so no image. Its tick resolves to 'CollectibleSparkleTickCallback' which is a MISNOMER (see misnamed_functions).",
+    "0xb8700ca1": "Small orange ball graphic (IMAGE-CONFIRMED: sprite_3094351009). ROLE varies by context: the Clayball pickup in gameplay (tick CollectibleClaySingleTickCallback; seen as 2- and 3-ball clusters in SCIE), and reused on the title menu (the player/controller slot holds it). Sprite hash = stable graphic identity; entity role is contextual.",
+    "0x10094096": "Pure-black bar -- mask / layered object on the MAIN TITLE MENU (4 instances, left column). IMAGE-CONFIRMED black strip (sprite_269041814). Not a gameplay sprite or menu text; a masking/compositing element."
+  },
+
+  "vtables": {
+    "g_EntityVtable_ResourceType1": "parallax_layer",
+    "g_EntityVtable_ResourceType2": "parallax_layer",
+    "D_800110A8": "teleporter",
+    "D_800111A8": "floating_collision",
+    "D_8001050C": "non_sprite_node",
+    "D_80010DC4": "generic_sprite_entity"
+  },
+
+  "notes": {
+    "TeleporterTickCallback": "Per-frame tick callback for the Teleporter entity. The entity itself is just a 'Teleporter' -- the '...TickCallback' suffix is the engine's per-frame update hook naming, not part of the object name.",
+    "PlayerState_IdleRandom": "Observed to be Klaymen's basic/default idle, not a random idle animation -- name may be slightly misleading; needs more evidence before a rename.",
+    "parallax_layer": "Entities on the g_EntityVtable_ResourceType1/2 vtables are background parallax scroll layers, NOT sprite objects. Their +0xCC word (e.g. 0x166, 0xe1000006) is layer data, not a sprite hash -- memreport suppresses sprite_id for these.",
+    "EntityUpdateCallback@0x8019f754": "IDENTIFIED: the TELEPORT sign's frame/panel sprite (0x88329285), co-located with the text entity (0x8019f5e4). Generic sprite-base entity layering the box behind the text.",
+    "D_800110A8": "Teleporter entity vtable (established: entities at 0x8019f454/0x8019f244, both confirmed teleporters, dispatch through it). Rename candidate: g_EntityVtable_Teleporter.",
+    "D_800111A8": "Floating-collision entity vtable; in SCIE it backs the TELEPORT info-box sign (tick EntityFloatingWithCollisionTick). Generic 'floating w/ collision' type, not uniquely the info box.",
+    "D_8001050C": "Non-sprite node: its +0xCC holds 0x80020288 (= &StubReturnZero), not a sprite hash; position/tick look uninitialized. Purpose still unknown -- possibly a dead/free slot or a special controller. Do not treat +0xCC as a sprite.",
+    "D_80010DC4": "Generic gameplay sprite-entity vtable -- shared by multiple entity types (observed in SCIE backing BOTH a TimedSparkleCollectible and an AIEntityRandomBehavior Skullmonkey enemy), so NOT type-specific. Classified 'generic_sprite_entity' (non-suppressing).",
+    "0xe398d28d": "Collectible via TimedSparkleCollectibleTick at SCIE ~(7944,431); on-screen identity NOT yet confirmed (was off-screen). Needs a future pass.",
+    "main_title_menu": "MENU level (idx 0) is the main title menu. Its EntityUpdateCallback entities at ~(160,168) ([8]-[15] in the 195652 snapshot) are decorative composite clay-art layers of the title artwork; low individual-ID value. [0]-[7] include black-bar masks (0x10094096) and small orange dots (0x39900619). Sprite IDs all resolve to images via memreport now.",
+    "sprite_id_is_graphic_not_role": "KEY PRINCIPLE: a sprite hash identifies a GRAPHIC (stable across the game), not an entity role. The same hash can back different roles in different contexts (e.g. 0xb8700ca1 orange ball = Clayball pickup AND title-menu element). Label the graphic in sprite_hashes; capture role nuance in notes."
+
+  }
+}

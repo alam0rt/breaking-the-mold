@@ -71,6 +71,9 @@ bin/*.tar.gz
 disks/*
 !disks/README.md
 extracted/*
+# parsed BLB structure from `make blb-json` (imhex) -- clean-room game data
+blb_parsed.json
+*.blb.json
 
 # -----------------------------------------------------------------------------
 # IDE / Editor
@@ -123,3 +126,6 @@ docs/reference/bbs/
 tools/gcc-2.7.2-sn32/*.EXE
 docs/ghidra/SLES_010.90.c
 tools/name-game/assets/
+
+# Local RAM dumps + memreport output (not for commit)
+dumps/

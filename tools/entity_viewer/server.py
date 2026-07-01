@@ -21,6 +21,7 @@ What it serves:
     GET  /api/frame.png?...     one decoded sprite frame, on demand (RGBA PNG)
     GET  /api/annotations       the alignment notes (names, anim tags, links)
     POST /api/annotations       overwrite the alignment notes
+    POST /api/symbols/export    write symbol renames to symbol_addrs_new.txt
 
 Annotations (sprite names, animation state tags like idle/walk/hit/death,
 entity<->sprite links, free-text notes) persist to annotations.json next to
@@ -137,6 +138,49 @@ def load_entity_callbacks() -> dict:
 
 
 ENTITY_CALLBACKS = load_entity_callbacks()
+
+
+def load_symbols() -> dict:
+    """ROM address (int) -> symbol name, from symbol_addrs.txt. The callback
+    table's init_fn labels are clean-room placeholders (EntityCallback_TypeNN);
+    the *real* editable symbol at each init_addr lives here (ground truth)."""
+    out = {}
+    p = REPO / "symbol_addrs.txt"
+    if p.exists():
+        for line in p.read_text().splitlines():
+            m = re.match(r"(\w+)\s*=\s*(0x[0-9A-Fa-f]+)", line)
+            if m:
+                out.setdefault(int(m.group(2), 16), m.group(1))
+    return out
+
+
+SYMBOLS = load_symbols()
+SYMBOLS_NEW = REPO / "symbol_addrs_new.txt"   # merge target (see CLAUDE.md)
+
+
+def export_symbols(edits: dict) -> dict:
+    """Write user symbol renames to symbol_addrs_new.txt in `NAME = 0xADDR;`
+    format for manual merge into symbol_addrs.txt. `edits` maps an address
+    string ("0x8007f050") to the new name. Only rows that differ from the
+    current symbol are written."""
+    rows = {}
+    for addr_s, name in edits.items():
+        try:
+            addr = int(addr_s, 16)
+        except (TypeError, ValueError):
+            continue
+        name = (name or "").strip()
+        if not re.match(r"^[A-Za-z_]\w*$", name):
+            continue
+        if SYMBOLS.get(addr) == name:
+            continue
+        rows[addr] = name
+    lines = ["// Entity-viewer symbol renames — merge into symbol_addrs.txt",
+             f"// {len(rows)} symbol(s)"]
+    for addr in sorted(rows):
+        lines.append(f"{rows[addr]} = 0x{addr:08X};")
+    SYMBOLS_NEW.write_text("\n".join(lines) + "\n")
+    return {"ok": True, "count": len(rows), "path": str(SYMBOLS_NEW.relative_to(REPO))}
 
 
 def load_remap() -> dict:
@@ -425,6 +469,10 @@ class Handler(BaseHTTPRequestHandler):
                 obj = json.loads(self.rfile.read(n) or b"{}")
                 save_annotations(obj)
                 return self._send(200, {"ok": True})
+            if path == "/api/symbols/export":
+                n = int(self.headers.get("Content-Length", 0))
+                obj = json.loads(self.rfile.read(n) or b"{}")
+                return self._send(200, export_symbols(obj))
             return self._send(404, {"error": "not found"})
         except Exception as e:
             return self._send(500, {"error": str(e)})
@@ -455,7 +503,13 @@ class Handler(BaseHTTPRequestHandler):
                 hx = _hx(h)
                 cands.append({"hash": hx, "present": hx in present, "src": present.get(hx)})
             e["mapped"] = cands
-            e["cb"] = ENTITY_CALLBACKS.get(it)
+            cb = ENTITY_CALLBACKS.get(it)
+            if cb:
+                cb = dict(cb)
+                # the editable, address-backed symbol (falls back to the label)
+                cb["symbol"] = SYMBOLS.get(int(cb.get("init_addr", "0x0"), 16),
+                                           cb.get("init_fn"))
+            e["cb"] = cb
         return self._send(200, {
             "world": world, "stage": stage,
             "name": self.library.worlds.get(world, {}).get("name", world),
