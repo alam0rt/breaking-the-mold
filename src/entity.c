@@ -260,17 +260,15 @@ u8 CheckEntityBoxCollision(Entity *entity, u16 collisionMask) {
  *     *Simple               : skip moveCallback (entity uses identity transform)
  *     IsPosition*           : raw coords, no entity (spawn-eligibility)
  *     ~16 px margin so just-off entities don't flicker visibility. --- */
+/* IsEntityOffScreen: unit spans 0x8001B92C..0x8001BEC0 — absorbs former split symbols IsEntityOffscreenLeft, IsEntityOffscreenLeftSimple (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffScreen);
 
-INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenLeft);
 
-INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenLeftSimple);
 
+/* IsPositionOffscreenLeft: unit spans 0x8001BEC0..0x8001C09C — absorbs former split symbols IsEntityOffscreenRight, IsEntityOffscreenRightSimple (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/entity", IsPositionOffscreenLeft);
 
-INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenRight);
 
-INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffscreenRightSimple);
 
 INCLUDE_ASM("asm/nonmatchings/entity", IsPositionOffscreenRight);
 

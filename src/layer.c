@@ -19,23 +19,9 @@ extern void builtin_delete(void *ptr);
  * — there is NO trailing nop. cc1 emits `jr ra; nop` for a leaf, making the
  * function 0x40 and shifting everything after (breaks the INIT_TABLES vtable
  * pointer at 0x800103b8). Keep as asm. */
+/* ClearAllLayerRenderSlots: unit spans 0x80018D54..0x80018DDC — absorbs former split symbols DestroyLayerRendererObject (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots);
 
-/* Standard 0x80011228-style destructor for the layer-renderer object:
- * walks every render slot tearing it down, then (if flags & 1) frees
- * the object via the C++ delete entry point.
- *
- * SHELVED: 405-byte diff because cc1 emits `move v0, a0` BEFORE the
- * prologue (the C++ destructor's implicit `return this`), and cc1's
- * C frontend won't reproduce that pre-prologue write even when the
- * function signature returns the pointer. Equivalent C:
- *   LayerRenderSlot *DestroyLayerRendererObject(LayerRenderSlot *obj, s32 flags) {
- *       FreeAllLayerRenderSlots(obj);
- *       if (flags & 1) builtin_delete(obj);
- *       return obj;
- *   }
- */
-INCLUDE_ASM("asm/nonmatchings/layer", DestroyLayerRendererObject);
 
 INCLUDE_ASM("asm/nonmatchings/layer", LoadSpriteFramesToVRAM);
 
@@ -132,4 +118,5 @@ Entity *ZeroEntityField(Entity *e) {
 INCLUDE_ASM("asm/nonmatchings/layer", FindLayerSlotByEntityPointer);
 
 INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableEntryByValue);
+
 

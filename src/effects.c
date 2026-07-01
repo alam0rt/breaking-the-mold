@@ -594,9 +594,9 @@ INCLUDE_ASM("asm/nonmatchings/effects", CheckChildEntityOffscreenDespawn);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitGridSpriteContext);
 
+/* EntityDespawnIfFlagSet: unit spans 0x800361F8..0x800362A4 — absorbs former split symbols NotifyGameStateZero (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/effects", EntityDespawnIfFlagSet);
 
-INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateZero);
 
 INCLUDE_ASM("asm/nonmatchings/effects", CreatePlayerParticleEntity);
 
@@ -715,11 +715,10 @@ void RippleEffectRenderCallback(RippleExpandEntity *e) {
     *((u8 *)child + 0x3A7) = 1;
 }
 
+/* ExpiredEntityDespawnEvent: unit spans 0x80037418..0x800374C4 — absorbs former split symbols NotifyGameStateOne, NullStubFunction (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/effects", ExpiredEntityDespawnEvent);
 
-INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateOne);
 
-INCLUDE_ASM("asm/nonmatchings/effects", NullStubFunction);
 
 Entity *InitMenuItemEntity(Entity *e) {
     InitBasicEntityWithVtable(e, 0xBB8);
@@ -774,9 +773,9 @@ void BeamEffectRenderCallback(BeamEffectEntity *e) {
     *(s16 *)((u8 *)e->child + 0x90) = *(u16 *)((u8 *)e + 0x28);
 }
 
+/* BeamEffectDespawnEvent: unit spans 0x80037A34..0x80037AE0 — absorbs former split symbols NotifyGameStateOneAlt (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/effects", BeamEffectDespawnEvent);
 
-INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateOneAlt);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitScalableTimerEntity);
 
@@ -812,9 +811,9 @@ void DestroyOscillatingScaleEntity(Entity *e, s32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", FadeAndExpireEntityTick);
 
+/* FadeExpireEntityDespawnEvent: unit spans 0x80037F60..0x8003800C — absorbs former split symbols NotifyGameStateOneAlt2 (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/effects", FadeExpireEntityDespawnEvent);
 
-INCLUDE_ASM("asm/nonmatchings/effects", NotifyGameStateOneAlt2);
 
 s32 HandleCollisionEvent0x1018(BeamEffectEntity *e, u16 event) {
     if (event == EVT_WORLD_FREEZE) {

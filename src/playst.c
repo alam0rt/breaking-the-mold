@@ -65,9 +65,9 @@ void ApplyRandomRGBEffect(PlayerEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerTickCallback);
 
+/* PlayerState_IdleRandom: unit spans 0x8005BAD0..0x8005BB80 — absorbs former split symbols PlayerState_SimpleTick (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_IdleRandom);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SimpleTick);
 
 void PlayerState_FrameCountTick(PlayerEntity *e) {
     e->jumpParam += 1;
@@ -130,13 +130,13 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_UpdateAttachedEntity);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEvent_ZoneTriggerHandler);
 
+/* PlayerEvent_ZoneTriggerHandlerAlt: unit spans 0x8005BF5C..0x8005C0A0 — absorbs former split symbols PlayerState_SetAndProcessQueue (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEvent_ZoneTriggerHandlerAlt);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetAndProcessQueue);
 
+/* PlayerEvent_ZoneTriggerHandlerV2: unit spans 0x8005C0A0..0x8005C1C4 — absorbs former split symbols PlayerCallback_SetStateAndProcessQueue (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEvent_ZoneTriggerHandlerV2);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateAndProcessQueue);
 
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEntityEventHandler);
@@ -175,48 +175,39 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_BounceEventHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathDebrisSpawner);
 
+/* PlayerCallback_ThrowEventHandler: unit spans 0x8005DAA4..0x8005DDE0 — absorbs former split symbols PlayerCallback_ThrowSetStateAndSpawn (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ThrowEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ThrowSetStateAndSpawn);
 
 
+/* PlayerCallback_CheckpointEventHandler: unit spans 0x8005DDE0..0x8005E170 — absorbs former split symbols PlayerCallback_CheckpointSaveAndSpawnHUD (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CheckpointEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CheckpointSaveAndSpawnHUD);
 
 
+/* PlayerCallback_ProjectileEventHandler: unit spans 0x8005E170..0x8005E450 — absorbs former split symbols PlayerCallback_ProjectileSetStateAndSpawn (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ProjectileEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ProjectileSetStateAndSpawn);
 
 
+/* PlayerCallback_BaseEventHandler: unit spans 0x8005E450..0x8005E574 — absorbs former split symbols PlayerCallback_SetStateWithQueueProcess (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_BaseEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateWithQueueProcess);
 
 
+/* PlayerCallback_DeathAnimEventHandler: unit spans 0x8005E574..0x8005F29C — absorbs former split symbols PlayerCallback_DeathAnimSetStateHandler, PlayerCallback_DeathSpawnMenuEntities, func_8005EAAC, PlayerCallback_DeathSpawnMenuEntity, func_8005ECEC, PlayerCallback_AllocAndInitScrollLayer, func_8005EF68, PlayerCallback_InitScrollLayerAndAdd, func_8005F0DC, PlayerCallback_SpawnTrailParticle (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathAnimEventHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathAnimSetStateHandler);
 
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathSpawnMenuEntities);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005EAAC);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DeathSpawnMenuEntity);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005ECEC);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_AllocAndInitScrollLayer);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005EF68);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_InitScrollLayerAndAdd);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_8005F0DC);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SpawnTrailParticle);
 
 INCLUDE_ASM("asm/nonmatchings/playst", SpawnPlayerTrailParticle);
 
@@ -270,15 +261,14 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithFall);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpWallCollisionInput);
 
+/* PlayerCallback_JumpInputAndCounters: unit spans 0x800602E0..0x800605D8 — absorbs former split symbols PlayerCallback_JumpDirectionAndCounters (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpInputAndCounters);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpDirectionAndCounters);
 
+/* PlayerCallback_JumpTickHandler: unit spans 0x800605D8..0x80060890 — absorbs former split symbols PlayerCallback_SetStateAndUpdateCounters, PlayerCallback_JumpCounterUpdate (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpTickHandler);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStateAndUpdateCounters);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpCounterUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_FallInputHandler);
 
@@ -287,27 +277,24 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CrouchClimbInputHandler);
 
 
 
+/* PlayerCallback_CrouchClimbTickHandler: unit spans 0x80060C9C..0x80060E24 — absorbs former split symbols PlayerCallback_SetStatePassthrough (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CrouchClimbTickHandler);
 
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStatePassthrough);
 
 
+/* PlayerCallback_DebugCameraInput: unit spans 0x80060E24..0x80061180 — absorbs former split symbols PlayerCallback_DebugCameraVertical, PlayerCallback_DebugCameraUpdate (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DebugCameraInput);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DebugCameraVertical);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DebugCameraUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/playst", ApplyEntityPositionUpdate);
 
+/* PlayerCallback_HorizontalWallCollision: unit spans 0x8006120C..0x8006187C — absorbs former split symbols PlayerCallback_ProcessBounceWrapper3, func_80061774, PlayerCallback_SetStatePassthrough2 (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_HorizontalWallCollision);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ProcessBounceWrapper3);
 
-INCLUDE_ASM("asm/nonmatchings/playst", func_80061774);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetStatePassthrough2);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_VerticalCollisionCheck);
 
@@ -320,4 +307,8 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerRidingPlatformUpdate);
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ScaleBoundsWrapper);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_ScaleBoundsAndCollision);
+
+
+
+
 

@@ -81,13 +81,11 @@ EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90");
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
+/* func_8006E084: unit spans 0x8006E084..0x8006E130 — absorbs former split symbols FINNRenderCallback_UpdateScreenPosition, func_8006E0CC, FINNRenderCallback_UpdateScaledPosition (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/finn", func_8006E084);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FINNRenderCallback_UpdateScreenPosition);
 
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006E0CC);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FINNRenderCallback_UpdateScaledPosition);
 
 /* If entity flag +0x2C is set, dispatch g_pGameState's event FSM callback
  * (marker +0x8/0xA, fn +0xC) with eventId 3, forwarding entity+0x24 as the arg
@@ -333,9 +331,9 @@ s32 func_8006EFA4(Entity *e) {
     return !((a - b) < 0xF);
 }
 
+/* FinnMainTickHandler: unit spans 0x8006EFC8..0x8006F0A8 — absorbs former split symbols FinnTick_NormalMovementAndInput (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/finn", FinnMainTickHandler);
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_NormalMovementAndInput);
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnTick_LevelExitCountdown);
 
