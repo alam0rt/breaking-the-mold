@@ -2280,6 +2280,29 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterTransitionTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterPortalEventHandler);
 
+/* Teleporter "exit/settle" state: if a linked entity (+0x108) exists, hides its
+ * sprite context (active byte +0xA = 0); restores the entity's render scale
+ * (0x50/0x54) from the saved value at +0x104; installs the plain update tick +
+ * the portal event handler on the tick/event slots; swaps to the exit sprite
+ * (0x1A2AB594) and clears the render flags.
+ *
+ * SHELVED (single-instruction scheduling diff): the body is fully correct and
+ * every instruction matches EXCEPT the `beqz $v0` (linkedEntity null-check) delay
+ * slot — cc1 fills it with the `move a0,s0` call-arg setup, while TARGET leaves it
+ * `nop` and emits `move a0,s0` later (after the two fn-pointer loads). That single
+ * placement shifts everything after by 4 bytes. Two named fn-ptr locals assigned
+ * up front reproduce TARGET's hoist of both callback addresses (a2 + t1); a
+ * do{}while(0) after the if-block did NOT stop the delay-slot fill, and the
+ * permuter (-j4, 150s) floored at 230 — it can't empty a cc1-filled branch delay
+ * slot. Equivalent C (parked in nonmatchings/TeleporterExitState):
+ *   typedef struct { SpriteEntity sprite; u8 pad100[4]; s32 savedScale;
+ *       Entity *linkedEntity; } TeleporterExitEntity;   // +0x104 / +0x108
+ *   sub = e->linkedEntity;
+ *   if (sub != NULL) ((u8 *)sub->spriteContext)[0xA] = 0;
+ *   fnTick = EntityUpdateCallback; fnEvent = TeleporterPortalEventHandler;
+ *   e->sprite.base.scaleRender = e->sprite.base.scaleRender2 = e->savedScale;
+ *   <install {0,-1,fnTick} @tickMarker, {0,-1,fnEvent} @eventMarker>
+ *   SetEntitySpriteId(e, 0x1A2AB594, 1); EntitySetRenderFlags(e, 0); */
 INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterExitState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitIndexedSpriteEntity);
