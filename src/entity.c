@@ -315,7 +315,17 @@ INCLUDE_ASM("asm/nonmatchings/entity", InitEntitySprite);
 INCLUDE_ASM("asm/nonmatchings/entity", InitEntityWithSprite);
 
 /* Resets the animation FSM (current/loop/target frame, divisor, direction,
- * sequence step). Called by every sprite-entity constructor. */
+ * sequence step). Called by every sprite-entity constructor. Data-flow,
+ * field ordering (matches SpriteEntity exactly), and frame size (0x30,
+ * PaddedSlotPair-sized scratch for the queued/active/exit CallbackSlot
+ * clears) all match by hand. Residual is a pure instruction-scheduling
+ * swap: the a1/a2 (allocSize/align) constant loads for the AllocateFromHeap
+ * call land on the wrong side of the lui/lw g_pBlbHeapBase pair no matter
+ * where a do{}while(0) fence goes or whether the args are named temps or
+ * inline. decomp-permuter (nonmatchings/InitEntityAnimationState/, gitignored
+ * local scratch — rebuild via `python3 tools/decomp-permuter/import.py
+ * src/entity.c asm/nonmatchings/entity/InitEntityAnimationState.s`) plateaus
+ * at score 120 (down from 240) on the same swap after ~3k random iterations. */
 INCLUDE_ASM("asm/nonmatchings/entity", InitEntityAnimationState);
 
 /* SpriteEntity destructor. Adds main-RAM pixel decode buffer + sprite
