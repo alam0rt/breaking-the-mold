@@ -1313,27 +1313,62 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerSpawnWalkingEnemy);
  * (0x35289FAE) and standard animation triad, and queues B as the next
  * state so the next pulse swaps to the sister function.
  *
- * SHELVED (15-byte diff): structurally matches with body:
- *     void *def = *(void **)((u8 *)e + 0x100);
- *     ((u8 *)e)[0x110] = (*(u16 *)((u8 *)def + 0x12) == 0x2F) ? 8 : 3;
- *     do {} while (0);
- *     SetEntitySpriteId(e, 0x35289FAE, 1);
- *     SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
- *     SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
- *     SetAnimationFrameIndex(e, 0);
- *     fn = AnimatedEntityToggleSpriteB;
- *     do {} while (0);
- *     m1 = -1;
- *     slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
- *     *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
- * but cc1 picks $a0 for the (3|8) conditional result while TARGET picks
- * $v0; the values are stored to +0x110 in the next instruction so the
- * register choice is binary-different but semantically equivalent. No
- * known C idiom forces cc1 to prefer $v0 over $a0 for a short-lived
- * compare result immediately stored to memory. */
-INCLUDE_ASM("asm/nonmatchings/enemies", AnimatedEntityToggleSpriteA);
+ * Pulling the entityType field into a u16 temp before the compare colors the
+ * (8|3) result into $v0 to match TARGET (cc1 picks $a0 with an inline field
+ * read); the do{}while(0) after the store keeps it ahead of the call setup.
+ * (Same recipe cracked the sister AnimatedEntityToggleSpriteB via permuter.) */
+void AnimatedEntityToggleSpriteA(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    void *def;
+    u16 entityType;
+    def = *(void **)((u8 *)e + 0x100);
+    entityType = *(u16 *)((u8 *)def + 0x12);
+    ((u8 *)e)[0x110] = (entityType == 0x2F) ? 8 : 3;
+    do {} while (0);
+    SetEntitySpriteId(e, 0x35289FAE, 1);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
+    SetAnimationFrameIndex(e, 0);
+    fn = AnimatedEntityToggleSpriteB;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
-INCLUDE_ASM("asm/nonmatchings/enemies", AnimatedEntityToggleSpriteB);
+/* Animated-decor toggle state B: the sister of AnimatedEntityToggleSpriteA.
+ * Same (8 if entityType==0x2F else 3) speed byte at +0x110, loads the
+ * variant-B sprite (0x212A9C2D) + standard animation triad, and queues A as
+ * the next state so the following pulse swaps back. The entityType field is
+ * pulled into a u16 temp before the compare so cc1 colors the (8|3) result
+ * into $v0 (matching TARGET) instead of $a0; the do{}while(0) after the store
+ * keeps the +0x110 write ahead of the SetEntitySpriteId argument setup. */
+void AnimatedEntityToggleSpriteB(Entity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+    void *def;
+    u16 entityType;
+    def = *(void **)((u8 *)e + 0x100);
+    entityType = *(u16 *)((u8 *)def + 0x12);
+    ((u8 *)e)[0x110] = (entityType == 0x2F) ? 8 : 3;
+    do {} while (0);
+    SetEntitySpriteId(e, 0x212A9C2D, 1);
+    SetAnimationLoopFrame(e, ANIM_LOOP_DEFAULT);
+    SetAnimationSpriteCallback(e, ANIM_FINISHED_CB);
+    SetAnimationFrameIndex(e, 0);
+    fn = AnimatedEntityToggleSpriteA;
+    do {} while (0);
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+}
 
 /* Enemy state init for the "looping animation" mode (e.g. a fan, spinning
  * thing, or animated decor): sets the +0x110 byte flag, switches sprite
