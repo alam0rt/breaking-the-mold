@@ -208,7 +208,11 @@ function spriteById(id,src){ return allSprites().find(s=>s.id===id && (src?s.src
 // ---- detail: entity ------------------------------------------------------
 function renderEntityDetail(e){
   const d=$('#detail'); d.innerHTML='';
-  d.appendChild(headerBlock(`${e.entity_name}  ·  type ${e.entity_type}`, `placement #${e.index}`));
+  const remapped = (e.internal_type!=null && e.internal_type!==e.entity_type);
+  const typeLabel = remapped
+    ? `BLB type ${e.entity_type} → internal ${e.internal_type}`
+    : `type ${e.entity_type}`;
+  d.appendChild(headerBlock(`${e.entity_name}  ·  ${typeLabel}`, `placement #${e.index}`));
   d.appendChild(kv({
     'position':`${e.center.x}, ${e.center.y} px  (tile ${e.tile_x},${e.tile_y})`,
     'bbox':`${e.bbox.x1},${e.bbox.y1} → ${e.bbox.x2},${e.bbox.y2}`,
@@ -217,7 +221,11 @@ function renderEntityDetail(e){
   }));
 
   // entity-type callback table (g_EntityTypeCallbackTable @ 0x8009d5f8)
-  d.appendChild(sec(`Callback table — type ${e.entity_type}`));
+  d.appendChild(sec(`Callback table — internal type ${e.internal_type!=null?e.internal_type:e.entity_type}`));
+  if(remapped){
+    const rn=el('div','row'); rn.innerHTML=`<span class="muted" style="font-size:11px">RemapEntityTypesForLevel @0x8008150C maps BLB type <b>${e.entity_type}</b> on layer ${e.layer} to internal type <b>${e.internal_type}</b>; callbacks below are indexed by the internal type.</span>`;
+    d.appendChild(rn);
+  }
   if(e.cb){
     d.appendChild(kv({
       'init fn':e.cb.init_fn+(e.cb.alias?` (${e.cb.alias})`:''),

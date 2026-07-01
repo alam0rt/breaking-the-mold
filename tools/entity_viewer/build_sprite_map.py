@@ -49,6 +49,18 @@ if _ah.exists():
             SPR_DEFS[m.group(1)] = int(m.group(2), 16)
 SPR_TOK = re.compile(r'\bSPR_[A-Z0-9_]+\b')
 
+# `extern <type> NAME[...] asm("D_8009xxxx")` aliases: many wrappers pass a named
+# *config* array (e.g. SCALED_PLATFORM_CONFIG_MOVING) that begins with the entity's
+# sprite hashes. Map the C name -> underlying D_8009 symbol so the array resolves.
+ALIAS = {}   # C identifier -> "D_8009xxxx"
+_ALIAS_RE = re.compile(r'\bextern\s+[\w ]+\b(\w+)\s*(?:\[\s*\])?\s*asm\(\s*"(D_8009[0-9A-Fa-f]{4})"\s*\)')
+for path in glob.glob(str(REPO / 'src/*.c')):
+    for line in pathlib.Path(path).read_text().splitlines():
+        m = _ALIAS_RE.search(line)
+        if m:
+            ALIAS[m.group(1)] = m.group(2)
+ALIAS_TOK = re.compile(r'\b(' + '|'.join(re.escape(k) for k in ALIAS) + r')\b') if ALIAS else None
+
 # 2) associate every sprite-set call with its enclosing top-level C function
 SPRITE_CALL = re.compile(r'\b(SetEntitySpriteId|InitEntitySprite|SetAnimationSpriteId|InitEntityWithSprite)\s*\(([^;]*)\)')
 FUNC_DEF = re.compile(r'^[A-Za-z_][\w \*]*\b(\w+)\s*\([^;]*\)\s*\{?\s*$')
@@ -82,6 +94,11 @@ for path in glob.glob(str(REPO / 'src/*.c')):
             v = SPR_DEFS.get(tok)
             if v is not None and v in H:
                 fn_hashes[cur].add(v)
+        # named config-array aliases passed to inner inits (whole-line; skip the
+        # `extern ... asm(...)` declaration lines themselves)
+        if ALIAS_TOK is not None and 'asm(' not in line:
+            for tok in ALIAS_TOK.findall(line):
+                fn_arrays[cur].add(ALIAS[tok])
 
 # 2b) same, but from the disassembly — covers inner inits still INCLUDE_ASM
 # (shelved / not yet decompiled), so coverage no longer waits on a byte-match.
@@ -94,7 +111,11 @@ SPRITE_JAL = re.compile(r'\bjal\s+(InitEntitySprite|InitEntityWithSprite|'
                         r'SetEntitySpriteId|SetAnimationSpriteId|CreateMultiFrameRenderContext)\b')
 for path in glob.glob(str(REPO / 'asm/nonmatchings/**/*.s'), recursive=True):
     txt = pathlib.Path(path).read_text()
-    if not SPRITE_JAL.search(txt):
+    # Scan any file that either calls a sprite-init directly (SPRITE_JAL) OR
+    # loads a sprite-array pointer (%hi(D_8009xxxx)). The array may be handed to
+    # a non-obvious wrapper (e.g. CreateCollectibleFromSpawn), so gating solely
+    # on SPRITE_JAL misses those; every hash is still H-validated below.
+    if not (SPRITE_JAL.search(txt) or ARR_HI.search(txt) or HASH_HI.search(txt)):
         continue
     fn = pathlib.Path(path).stem
     for m in HASH_HI.finditer(txt):
@@ -112,14 +133,17 @@ def resolve_array(sym):
     if not m:
         return []
     addr = int(m.group(1), 16)
+    # A sprite-list array MUST start at a real hash — otherwise this D_8009xxxx
+    # is some other data blob and we drop it (avoids stray H coincidences now
+    # that the SPRITE_JAL gate is gone).
+    if rom_u32(addr) not in H:
+        return []
     out = []
     for i in range(16):
         v = rom_u32(addr + i * 4)
-        if not v:
-            break
         if v in H:
             out.append(v)
-        elif out:
+        else:
             break
     return out
 
@@ -137,20 +161,36 @@ def hashes_for(fn, depth=0, seen=None):
             out.update(hashes_for(inner, depth + 1, seen))
     return out
 
-TYPE_INIT = re.compile(r'EntityType(\d+)_[A-Za-z0-9_]*Init')
-type_hashes = collections.defaultdict(set)   # type -> {hash}
-type_src    = {}                             # type -> provenance note
+type_hashes = collections.defaultdict(set)   # internal type -> {hash}
+type_src    = {}                             # internal type -> provenance note
 
-# (a) direct hashes resolved from the C wrapper/inner chain
-for fn in list(fn_hashes) + list(fn_arrays) + list(fn_calls):
-    m = TYPE_INIT.match(fn)
-    if not m:
+# (a) callback-table-rooted resolution — GROUND TRUTH.
+# The entity-type callback table (entity_callbacks.json) maps each *internal*
+# type to its init function's ROM address; symbol_addrs.txt resolves that address
+# to the real function symbol. We root the sprite-hash search at that real
+# function, so sprites land on the correct internal type even when the function
+# name embeds a different (guessed) number or serves several internal types
+# (e.g. EntityType039_052_FloatingEnemy_Init @0x80080c8c -> internal 39 AND 52).
+# This replaces the old parse-the-number-out-of-the-name heuristic, which
+# mislabelled every remapped / multi-type init.
+addr2name = {}
+for line in (REPO / 'symbol_addrs.txt').read_text().splitlines():
+    m = re.match(r'(\w+)\s*=\s*(0x[0-9A-Fa-f]+)', line)
+    if m:
+        addr2name.setdefault(int(m.group(2), 16), m.group(1))
+
+CALLBACKS = json.loads((REPO / 'tools/entity_viewer/entity_callbacks.json').read_text())
+for tk, cb in CALLBACKS.items():
+    if not cb or not cb.get('init_addr'):
         continue
-    t = int(m.group(1))
+    t = int(tk)
+    fn = addr2name.get(int(cb['init_addr'], 16))
+    if not fn:
+        continue
     hs = hashes_for(fn)
     if hs:
         type_hashes[t] |= hs
-        type_src[t] = f"C:{fn}"
+        type_src[t] = f"cb:{fn}"
 
 # (b) documented g_SpriteList_* arrays read straight from the ROM
 DOC = (REPO / 'docs/systems/sprites.md').read_text().splitlines()
@@ -173,13 +213,26 @@ for line in DOC:
     if fnm:
         init_to_arr[fnm.group(1)] = set(hs)
 
-# (c) join: type wrapper -> inner Init* -> documented array
-for fn in list(fn_calls):
-    m = TYPE_INIT.match(fn)
-    if not m:
-        continue
-    t = int(m.group(1))
+# (c) join: callback root fn -> inner Init* -> documented array.
+# Rooted at the callback table's real init function (same ground-truth mapping
+# as (a)) so the documented-array sprites land on the correct internal type.
+def reachable(fn, seen=None):
+    seen = seen or set()
+    if fn in seen:
+        return seen
+    seen.add(fn)
     for inner in fn_calls.get(fn, set()):
+        reachable(inner, seen)
+    return seen
+
+for tk, cb in CALLBACKS.items():
+    if not cb or not cb.get('init_addr'):
+        continue
+    t = int(tk)
+    root = addr2name.get(int(cb['init_addr'], 16))
+    if not root:
+        continue
+    for inner in reachable(root):
         if inner in init_to_arr:
             type_hashes[t] |= init_to_arr[inner]
             type_src.setdefault(t, f"arr-via:{inner}")

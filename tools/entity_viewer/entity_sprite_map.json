@@ -1,65 +1,120 @@
 {
  "0": {
   "hashes": [
+   "0x3a186940",
+   "0x3a186980",
+   "0x400c991d",
    "0x400c9a1d",
+   "0x40189a1d",
    "0x60181a0c",
    "0x60b8bc9c",
    "0x60b98cbd",
    "0x611c5804",
-   "0x64bb1cbe"
+   "0x61981a0c",
+   "0x64bb1cbe",
+   "0x75189608",
+   "0x980c6211",
+   "0xb84968b0",
+   "0xba094800",
+   "0xe398d28d",
+   "0xf8494814"
   ],
-  "via": "C:EntityType000_003_004_PickupVariant_Init"
+  "via": "cb:EntityType000_003_004_PickupVariant_Init"
  },
  "1": {
   "hashes": [
    "0x88783718",
    "0x98f8221e"
   ],
-  "via": "C:EntityType001_BossEntity_Init"
+  "via": "cb:EntityType001_BossEntity_Init"
  },
  "2": {
   "hashes": [
    "0xb8700ca1",
    "0xe8628689"
   ],
-  "via": "C:EntityType002_GreenBullets_Init"
+  "via": "cb:EntityType002_GreenBullets_Init"
+ },
+ "3": {
+  "hashes": [
+   "0x3a186940",
+   "0x3a186980",
+   "0x400c991d",
+   "0x400c9a1d",
+   "0x40189a1d",
+   "0x60181a0c",
+   "0x60b8bc9c",
+   "0x60b98cbd",
+   "0x611c5804",
+   "0x61981a0c",
+   "0x64bb1cbe",
+   "0x75189608",
+   "0x980c6211",
+   "0xb84968b0",
+   "0xba094800",
+   "0xe398d28d",
+   "0xf8494814"
+  ],
+  "via": "cb:EntityType000_003_004_PickupVariant_Init"
  },
  "4": {
   "hashes": [
+   "0x3a186940",
+   "0x3a186980",
    "0x400c991d",
+   "0x400c9a1d",
    "0x40189a1d",
+   "0x60181a0c",
+   "0x60b8bc9c",
+   "0x60b98cbd",
+   "0x611c5804",
    "0x61981a0c",
+   "0x64bb1cbe",
    "0x75189608",
-   "0xe398d28d"
+   "0x980c6211",
+   "0xb84968b0",
+   "0xba094800",
+   "0xe398d28d",
+   "0xf8494814"
   ],
-  "via": "arr:g_SpriteList_Type004_Type114"
+  "via": "cb:EntityType000_003_004_PickupVariant_Init"
  },
  "5": {
   "hashes": [
    "0x8818a018",
    "0x88783718"
   ],
-  "via": "C:EntityType005_MovingPlatformA_Init"
+  "via": "cb:EntityType005_MovingPlatformA_Init"
  },
  "6": {
   "hashes": [
    "0x8818a018",
    "0x9299c307"
   ],
-  "via": "C:EntityType006_MovingPlatformB_Init"
+  "via": "cb:EntityType006_MovingPlatformB_Init"
  },
  "7": {
   "hashes": [
    "0xa9240484",
    "0xb8700ca1"
   ],
-  "via": "C:EntityType007_Clayball_Init"
+  "via": "cb:EntityType007_Clayball_Init"
  },
  "8": {
   "hashes": [
-   "0x168254b5"
+   "0x000ac607",
+   "0x00e2f188",
+   "0x168254b5",
+   "0x80e85ea0",
+   "0x88a28194",
+   "0x902c0002",
+   "0x9158a0f6",
+   "0xa9240484",
+   "0xb8700ca1",
+   "0xe8628689",
+   "0xfa700ce7"
   ],
-  "via": "C:EntityType008_KloggCatchableBall_Init"
+  "via": "cb:EntityType008_KloggCatchableBall_Init"
  },
  "9": {
   "hashes": [
@@ -69,14 +124,16 @@
    "0x9158a0f6",
    "0x980861a3"
   ],
-  "via": "C:EntityType009_Collectible_Init"
+  "via": "cb:EntityType009_Collectible_Init"
  },
  "10": {
   "hashes": [
+   "0x004c9138",
    "0x0408c01e",
-   "0x0428801e"
+   "0x0428801e",
+   "0x40489938"
   ],
-  "via": "arr:g_SpriteList_Type010_InteractiveObject"
+  "via": "cb:EntityType010_EggBeater_Init"
  },
  "11": {
   "hashes": [
@@ -86,38 +143,38 @@
    "0x980861a3",
    "0xa9240484"
   ],
-  "via": "C:EntityType011_ExtraLife_Init"
+  "via": "cb:EntityType011_ExtraLife_Init"
  },
  "12": {
   "hashes": [
    "0x9299c307"
   ],
-  "via": "C:EntityType012_MovingPlatformC_Init"
+  "via": "cb:EntityType012_MovingPlatformC_Init"
  },
  "19": {
   "hashes": [
    "0x93043811"
   ],
-  "via": "C:EntityType019_ClockPlatformA_Init"
+  "via": "cb:EntityType019_ClockPlatformA_Init"
  },
  "20": {
   "hashes": [
    "0xd2801814"
   ],
-  "via": "C:EntityType020_ClockPlatformB_Init"
+  "via": "cb:EntityType020_ClockPlatformB_Init"
  },
  "21": {
   "hashes": [
    "0x12800031",
    "0x98f8221e"
   ],
-  "via": "C:EntityType021_ClockPlatformC_Init"
+  "via": "cb:EntityType021_ClockPlatformC_Init"
  },
  "22": {
   "hashes": [
    "0xb8700ca1"
   ],
-  "via": "C:EntityType022_EnemyCluster_Init"
+  "via": "cb:EntityType022_EnemyCluster_Init"
  },
  "23": {
   "hashes": [
@@ -125,7 +182,7 @@
    "0x9158a0f6",
    "0xa9240484"
   ],
-  "via": "C:EntityType023_PhoenixHand_Init"
+  "via": "cb:EntityType023_PhoenixHand_Init"
  },
  "24": {
   "hashes": [
@@ -136,7 +193,7 @@
    "0x6d209c95",
    "0xed209c94"
   ],
-  "via": "C:EntityType024_118_SpecialAmmo_Init"
+  "via": "cb:EntityType024_118_SpecialAmmo_Init"
  },
  "25": {
   "hashes": [
@@ -144,59 +201,128 @@
    "0x8c510186",
    "0xa9240484"
   ],
-  "via": "C:EntityType025_PhartHeadCollectible_Init"
+  "via": "cb:EntityType025_PhartHeadCollectible_Init"
  },
  "26": {
   "hashes": [
+   "0x004a981c",
    "0x004c9138",
-   "0x40489938"
+   "0x024e981c",
+   "0x40489938",
+   "0x425a399c"
   ],
-  "via": "arr:g_SpriteList_Type026_Enemy"
+  "via": "cb:EntityType026_FlyingEnemy_Init"
  },
  "27": {
   "hashes": [
    "0x004a981c",
    "0x024e981c",
+   "0x040a2110",
    "0x425a399c"
   ],
-  "via": "arr:g_SpriteList_Type027_PathEnemy"
+  "via": "cb:EntityType027_FlyingEnemyVariant_Init"
  },
  "28": {
   "hashes": [
    "0x08624580",
    "0x8c30008c"
   ],
-  "via": "C:EntityType028_GreenHeart_Init"
+  "via": "cb:EntityType028_GreenHeart_Init"
  },
  "29": {
   "hashes": [
    "0x6a351094",
    "0x8c30008c"
   ],
-  "via": "C:EntityType029_ScaleReset_Init"
+  "via": "cb:EntityType029_ScaleReset_Init"
  },
  "30": {
   "hashes": [
-   "0x88210498"
+   "0x84004480",
+   "0x88210498",
+   "0xfb260440"
   ],
-  "via": "C:EntityType030_CollectibleAlt_Init"
+  "via": "cb:EntityType030_CollectibleAlt_Init"
+ },
+ "31": {
+  "hashes": [
+   "0x84004480",
+   "0x9b2204a0",
+   "0xfb260440"
+  ],
+  "via": "cb:EntityType031_032_033_ScaledMovingPlatform_Init"
+ },
+ "32": {
+  "hashes": [
+   "0x84004480",
+   "0x9b2204a0",
+   "0xfb260440"
+  ],
+  "via": "cb:EntityType031_032_033_ScaledMovingPlatform_Init"
+ },
+ "33": {
+  "hashes": [
+   "0x84004480",
+   "0x9b2204a0",
+   "0xfb260440"
+  ],
+  "via": "cb:EntityType031_032_033_ScaledMovingPlatform_Init"
+ },
+ "34": {
+  "hashes": [
+   "0x84004480",
+   "0x9b2204a0"
+  ],
+  "via": "cb:EntityType034_035_036_TriggerPlatform_Init"
+ },
+ "35": {
+  "hashes": [
+   "0x84004480",
+   "0x9b2204a0"
+  ],
+  "via": "cb:EntityType034_035_036_TriggerPlatform_Init"
+ },
+ "36": {
+  "hashes": [
+   "0x84004480",
+   "0x9b2204a0"
+  ],
+  "via": "cb:EntityType034_035_036_TriggerPlatform_Init"
  },
  "37": {
   "hashes": [
    "0x9b2204a0"
   ],
-  "via": "C:EntityType037_038_DirectionalScaled_Init"
+  "via": "cb:EntityType037_038_DirectionalScaled_Init"
+ },
+ "38": {
+  "hashes": [
+   "0x9b2204a0"
+  ],
+  "via": "cb:EntityType037_038_DirectionalScaled_Init"
+ },
+ "39": {
+  "hashes": [
+   "0x458b0320",
+   "0xb4011101",
+   "0xe4834384",
+   "0xe4cb8330",
+   "0xe6830101"
+  ],
+  "via": "cb:EntityType039_052_FloatingEnemy_Init"
  },
  "40": {
   "hashes": [
+   "0x458b0320",
    "0x60a91c9c",
    "0x60aa1c9c",
    "0x60b93cbd",
    "0x60b9bcbd",
    "0x61a91c9c",
-   "0x62aa1c9c"
+   "0x62aa1c9c",
+   "0xe4cb8330"
   ],
-  "via": "C:EntityType040_Mechanism_Init"
+  "via": "cb:EntityType040_Mechanism_Init"
  },
  "41": {
   "hashes": [
@@ -213,7 +339,7 @@
    "0x62aa1c9c",
    "0xa0299a4d"
   ],
-  "via": "C:EntityType041_ClayKeeperEnemy_Init"
+  "via": "cb:EntityType041_ClayKeeperEnemy_Init"
  },
  "42": {
   "hashes": [
@@ -226,7 +352,33 @@
    "0x53209c1c",
    "0xa0299a4d"
   ],
-  "via": "C:EntityType042_thru_060_SnoBlo_Init"
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
+ },
+ "43": {
+  "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x212a9c2d",
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
+  ],
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
+ },
+ "44": {
+  "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x212a9c2d",
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
+  ],
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
  },
  "45": {
   "hashes": [
@@ -240,58 +392,130 @@
    "0xe7443a6f",
    "0xf175320e"
   ],
-  "via": "C:EntityType045_BounceClay_Init"
+  "via": "cb:EntityType045_BounceClay_Init"
  },
  "46": {
   "hashes": [
-   "0x9b2204a0"
+   "0x9b2204a0",
+   "0xb4011101",
+   "0xe4834384",
+   "0xe6830101"
   ],
-  "via": "C:EntityType046_Object_Init"
+  "via": "cb:EntityType046_Object_Init"
  },
  "47": {
   "hashes": [
    "0x212a9c2d",
    "0x35289fae"
   ],
-  "via": "C:EntityType047_048_SoundPlatform_Init"
+  "via": "cb:EntityType047_048_SoundPlatform_Init"
+ },
+ "48": {
+  "hashes": [
+   "0x212a9c2d",
+   "0x35289fae"
+  ],
+  "via": "cb:EntityType047_048_SoundPlatform_Init"
  },
  "49": {
   "hashes": [
    "0x88783718",
    "0x98f8221e"
   ],
-  "via": "C:EntityType049_BossRelated_Init"
+  "via": "cb:EntityType049_BossRelated_Init"
  },
  "50": {
   "hashes": [
    "0x8818a018",
    "0x88783718"
   ],
-  "via": "C:EntityType050_BossMain_Init"
+  "via": "cb:EntityType050_BossMain_Init"
  },
  "51": {
   "hashes": [
    "0x8818a018"
   ],
-  "via": "C:EntityType051_BossPart_Init"
+  "via": "cb:EntityType051_BossPart_Init"
+ },
+ "52": {
+  "hashes": [
+   "0x458b0320",
+   "0xb4011101",
+   "0xe4834384",
+   "0xe4cb8330",
+   "0xe6830101"
+  ],
+  "via": "cb:EntityType039_052_FloatingEnemy_Init"
+ },
+ "53": {
+  "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x212a9c2d",
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
+  ],
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
+ },
+ "54": {
+  "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x212a9c2d",
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
+  ],
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
+ },
+ "55": {
+  "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x212a9c2d",
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
+  ],
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
  },
  "57": {
   "hashes": [
    "0x98f8221e"
   ],
-  "via": "C:EntityType057_WaypointClayballA_Init"
+  "via": "cb:EntityType057_WaypointClayballA_Init"
  },
  "58": {
   "hashes": [
    "0x88783718"
   ],
-  "via": "C:EntityType058_WaypointClayballB_Init"
+  "via": "cb:EntityType058_WaypointClayballB_Init"
  },
  "59": {
   "hashes": [
    "0x8818a018"
   ],
-  "via": "C:EntityType059_WaypointClayballC_Init"
+  "via": "cb:EntityType059_WaypointClayballC_Init"
+ },
+ "60": {
+  "hashes": [
+   "0x006b9a6f",
+   "0x20211e5f",
+   "0x21229c5c",
+   "0x212a9c2d",
+   "0x21a81d54",
+   "0x35289fae",
+   "0x53209c1c",
+   "0xa0299a4d"
+  ],
+  "via": "cb:EntityType042_thru_060_SnoBlo_Init"
  },
  "61": {
   "hashes": [
@@ -300,7 +524,7 @@
    "0x88a28194",
    "0xa00a0c30"
   ],
-  "via": "C:EntityType061_UniverseEnema_Init"
+  "via": "cb:EntityType061_UniverseEnema_Init"
  },
  "62": {
   "hashes": [
@@ -308,7 +532,7 @@
    "0xb12c0854",
    "0xb92c4850"
   ],
-  "via": "C:EntityType062_ClayballVariantA_Init"
+  "via": "cb:EntityType062_ClayballVariantA_Init"
  },
  "63": {
   "hashes": [
@@ -323,7 +547,7 @@
    "0x84004480",
    "0x9b2204a0"
   ],
-  "via": "C:EntityType064_Particle_Init"
+  "via": "cb:EntityType064_Particle_Init"
  },
  "65": {
   "hashes": [
@@ -348,39 +572,39 @@
    "0x883d14b4",
    "0xca282402"
   ],
-  "via": "C:EntityType065_Password_Init"
+  "via": "cb:EntityType065_Password_Init"
  },
  "66": {
   "hashes": [
    "0xb69c8356"
   ],
-  "via": "C:EntityType066_ClayballVariantC_Init"
+  "via": "cb:EntityType066_ClayballVariantC_Init"
  },
  "67": {
   "hashes": [
    "0xb7cce25e"
   ],
-  "via": "C:EntityType067_ClayballVariantD_Init"
+  "via": "cb:EntityType067_ClayballVariantD_Init"
  },
  "68": {
   "hashes": [
    "0xbebce258"
   ],
-  "via": "C:EntityType068_ClayballVariantE_Init"
+  "via": "cb:EntityType068_ClayballVariantE_Init"
  },
  "69": {
   "hashes": [
    "0x80e85ea0",
    "0x88a28194"
   ],
-  "via": "C:EntityType069_1970Icon_Init"
+  "via": "cb:EntityType069_1970Icon_Init"
  },
  "70": {
   "hashes": [
    "0x80e85ea0",
    "0x902c0002"
   ],
-  "via": "C:EntityType070_HamsterShield_Init"
+  "via": "cb:EntityType070_HamsterShield_Init"
  },
  "71": {
   "hashes": [
@@ -408,7 +632,7 @@
    "0xc8f90114",
    "0xca282402"
   ],
-  "via": "C:EntityType071_Boss_MonkeyMage_Init"
+  "via": "cb:EntityType071_Boss_MonkeyMage_Init"
  },
  "72": {
   "hashes": [
@@ -416,7 +640,7 @@
    "0xb8700ca1",
    "0xc87ca082"
   ],
-  "via": "C:EntityType072_SuperWillie_Init"
+  "via": "cb:EntityType072_SuperWillie_Init"
  },
  "75": {
   "hashes": [
@@ -425,13 +649,19 @@
    "0xb8700ca1",
    "0xc87ca082"
   ],
-  "via": "C:EntityType075_YellowBird_Init"
+  "via": "cb:EntityType075_YellowBird_Init"
+ },
+ "76": {
+  "hashes": [
+   "0x040a2110"
+  ],
+  "via": "cb:EntityType076_PathEnemy_Init"
  },
  "79": {
   "hashes": [
    "0x12308128"
   ],
-  "via": "C:EntityType079_EnemySpawner_Init"
+  "via": "cb:EntityType079_EnemySpawner_Init"
  },
  "80": {
   "hashes": [
@@ -439,7 +669,7 @@
    "0xe7443a6f",
    "0xf175320e"
   ],
-  "via": "C:EntityType080_TimerMenu_Init"
+  "via": "cb:EntityType080_TimerMenu_Init"
  },
  "81": {
   "hashes": [
@@ -448,7 +678,7 @@
    "0xbb781481",
    "0xfa700ce7"
   ],
-  "via": "C:EntityType081_PathDecor2_Init"
+  "via": "cb:EntityType081_PathDecor2_Init"
  },
  "82": {
   "hashes": [
@@ -460,7 +690,7 @@
    "0xa9387d8c",
    "0xc9387d8c"
   ],
-  "via": "C:EntityType082_PathHazard_Init"
+  "via": "cb:EntityType082_PathHazard_Init"
  },
  "83": {
   "hashes": [
@@ -469,7 +699,15 @@
    "0xbb781481",
    "0xfa700ce7"
   ],
-  "via": "C:EntityType083_InteractiveDecor_Init"
+  "via": "cb:EntityType083_InteractiveDecor_Init"
+ },
+ "84": {
+  "hashes": [
+   "0xa00a0c30",
+   "0xb12c0854",
+   "0xb92c4850"
+  ],
+  "via": "cb:EntityType084_PathEnemyAlt_Init"
  },
  "85": {
   "hashes": [
@@ -480,7 +718,29 @@
    "0xa9387d8c",
    "0xc9387d8c"
   ],
-  "via": "C:EntityType085_104_105_TriggerZone_Init"
+  "via": "cb:EntityType085_104_105_TriggerZone_Init"
+ },
+ "86": {
+  "hashes": [
+   "0x3a186940",
+   "0x3a186980",
+   "0x980c6211",
+   "0xb84968b0",
+   "0xba094800",
+   "0xf8494814"
+  ],
+  "via": "cb:EntityType086_087_088_InvisibleHazard_Init"
+ },
+ "87": {
+  "hashes": [
+   "0x3a186940",
+   "0x3a186980",
+   "0x980c6211",
+   "0xb84968b0",
+   "0xba094800",
+   "0xf8494814"
+  ],
+  "via": "cb:EntityType086_087_088_InvisibleHazard_Init"
  },
  "88": {
   "hashes": [
@@ -491,39 +751,41 @@
    "0xba094800",
    "0xf8494814"
   ],
-  "via": "arr:g_SpriteList_Type088_ForegroundDecor"
+  "via": "cb:EntityType086_087_088_InvisibleHazard_Init"
  },
  "90": {
   "hashes": [
    "0xd89c319a"
   ],
-  "via": "C:EntityType090_SwitchClayballA_Init"
+  "via": "cb:EntityType090_SwitchClayballA_Init"
  },
  "91": {
   "hashes": [
    "0xc89e9158"
   ],
-  "via": "C:EntityType091_SwitchClayballB_Init"
+  "via": "cb:EntityType091_SwitchClayballB_Init"
  },
  "92": {
   "hashes": [
    "0xc48c7158"
   ],
-  "via": "C:EntityType092_SwitchClayballC_Init"
+  "via": "cb:EntityType092_SwitchClayballC_Init"
  },
  "93": {
   "hashes": [
    "0x10882010",
    "0xe8628689"
   ],
-  "via": "C:EntityType093_BonusClayball_Init"
+  "via": "cb:EntityType093_BonusClayball_Init"
  },
  "96": {
   "hashes": [
    "0x222d9098",
-   "0x8429153c"
+   "0x8429153c",
+   "0xb12c0854",
+   "0xb92c4850"
   ],
-  "via": "C:EntityType096_PathPlatformEnemy_Init"
+  "via": "cb:EntityType096_PathPlatformEnemy_Init"
  },
  "99": {
   "hashes": [
@@ -532,7 +794,7 @@
    "0x6d209c95",
    "0xed209c94"
   ],
-  "via": "C:EntityType099_LevelStateCollectible_Init"
+  "via": "cb:EntityType099_LevelStateCollectible_Init"
  },
  "100": {
   "hashes": [
@@ -555,7 +817,7 @@
    "0xa8482860",
    "0xc8f90114"
   ],
-  "via": "C:EntityType100_Boss_GlennYntis_Init"
+  "via": "cb:EntityType100_Boss_GlennYntis_Init"
  },
  "101": {
   "hashes": [
@@ -577,7 +839,7 @@
    "0x8a3809f2",
    "0xa8482860"
   ],
-  "via": "C:EntityType101_Boss_ShrineyGuard_Init"
+  "via": "cb:EntityType101_Boss_ShrineyGuard_Init"
  },
  "102": {
   "hashes": [
@@ -600,7 +862,7 @@
    "0xca282402",
    "0xcaadc032"
   ],
-  "via": "C:EntityType102_Boss_JoeHeadJoe_Init"
+  "via": "cb:EntityType102_Boss_JoeHeadJoe_Init"
  },
  "103": {
   "hashes": [
@@ -615,21 +877,75 @@
    "0xca282402",
    "0xcaadc032"
   ],
-  "via": "C:EntityType103_Boss_Klogg_Init"
+  "via": "cb:EntityType103_Boss_Klogg_Init"
+ },
+ "104": {
+  "hashes": [
+   "0x0bbb70ac",
+   "0x80e85ea0",
+   "0x9389b8c4",
+   "0x9b0ab1c6",
+   "0xa9387d8c",
+   "0xc9387d8c"
+  ],
+  "via": "cb:EntityType085_104_105_TriggerZone_Init"
+ },
+ "105": {
+  "hashes": [
+   "0x0bbb70ac",
+   "0x80e85ea0",
+   "0x9389b8c4",
+   "0x9b0ab1c6",
+   "0xa9387d8c",
+   "0xc9387d8c"
+  ],
+  "via": "cb:EntityType085_104_105_TriggerZone_Init"
  },
  "106": {
   "hashes": [
+   "0x400c991d",
    "0x400c9a1d",
+   "0x40189a1d",
    "0x60181a0c",
-   "0x611c5804"
+   "0x611c5804",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
   ],
-  "via": "C:EntityType106_107_108_FallingPlatform_Init"
+  "via": "cb:EntityType106_107_108_FallingPlatform_Init"
+ },
+ "107": {
+  "hashes": [
+   "0x400c991d",
+   "0x400c9a1d",
+   "0x40189a1d",
+   "0x60181a0c",
+   "0x611c5804",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType106_107_108_FallingPlatform_Init"
+ },
+ "108": {
+  "hashes": [
+   "0x400c991d",
+   "0x400c9a1d",
+   "0x40189a1d",
+   "0x60181a0c",
+   "0x611c5804",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType106_107_108_FallingPlatform_Init"
  },
  "109": {
   "hashes": [
-   "0x52186e1c"
+   "0x52186e1c",
+   "0xa00a0c30"
   ],
-  "via": "C:EntityType109_TimedCollectible_Init"
+  "via": "cb:EntityType109_TimedCollectible_Init"
  },
  "111": {
   "hashes": [
@@ -642,34 +958,89 @@
   ],
   "via": "arr:g_SpriteList_Type111_Background"
  },
- "113": {
-  "hashes": [
-   "0x000ac607",
-   "0x00e2f188",
-   "0x902c0002",
-   "0x9158a0f6"
-  ],
-  "via": "arr:g_SpriteList_Type113_Hazard"
- },
- "114": {
+ "112": {
   "hashes": [
    "0x400c991d",
-   "0x40189a1d",
-   "0x61981a0c",
-   "0x75189608",
-   "0xe398d28d"
-  ],
-  "via": "arr:g_SpriteList_Type004_Type114"
- },
- "117": {
-  "hashes": [
    "0x40189a1d",
    "0x404c5919",
    "0x61981a0c",
    "0x75189608",
    "0xe398d28d"
   ],
-  "via": "arr:g_SpriteList_Type117_DecorationB"
+  "via": "cb:EntityType112_113_114_AnimatedDecor_Init"
+ },
+ "113": {
+  "hashes": [
+   "0x000ac607",
+   "0x00e2f188",
+   "0x400c991d",
+   "0x40189a1d",
+   "0x404c5919",
+   "0x61981a0c",
+   "0x75189608",
+   "0x902c0002",
+   "0x9158a0f6",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType112_113_114_AnimatedDecor_Init"
+ },
+ "114": {
+  "hashes": [
+   "0x400c991d",
+   "0x40189a1d",
+   "0x404c5919",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType112_113_114_AnimatedDecor_Init"
+ },
+ "115": {
+  "hashes": [
+   "0x0408c01e",
+   "0x0428801e",
+   "0x40189a1d",
+   "0x404c5919",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType115_116_117_ParallaxDecor_Init"
+ },
+ "116": {
+  "hashes": [
+   "0x0408c01e",
+   "0x0428801e",
+   "0x40189a1d",
+   "0x404c5919",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType115_116_117_ParallaxDecor_Init"
+ },
+ "117": {
+  "hashes": [
+   "0x0408c01e",
+   "0x0428801e",
+   "0x40189a1d",
+   "0x404c5919",
+   "0x61981a0c",
+   "0x75189608",
+   "0xe398d28d"
+  ],
+  "via": "cb:EntityType115_116_117_ParallaxDecor_Init"
+ },
+ "118": {
+  "hashes": [
+   "0x60b8bc9c",
+   "0x60b98cbd",
+   "0x64bb1cbe",
+   "0x6c289c1c",
+   "0x6d209c95",
+   "0xed209c94"
+  ],
+  "via": "cb:EntityType024_118_SpecialAmmo_Init"
  },
  "119": {
   "hashes": [
@@ -677,7 +1048,7 @@
    "0x88210498",
    "0x88329285"
   ],
-  "via": "C:EntityType119_Checkpoint_Init"
+  "via": "cb:EntityType119_Checkpoint_Init"
  },
  "120": {
   "hashes": [
@@ -685,6 +1056,6 @@
    "0x8429153c",
    "0x98f8221e"
   ],
-  "via": "C:EntityType120_ChildSprite_Init"
+  "via": "cb:EntityType120_ChildSprite_Init"
  }
 }
