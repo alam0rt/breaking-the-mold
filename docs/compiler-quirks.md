@@ -919,6 +919,44 @@ A single `do {} while (0);` right after the preamble (any callees, vtable
 stores, sprite-table writes) is sufficient. The fn pointer colors to `$v1`
 and `-1` colors to `$v0` without further nudging.
 
+### 6l: Named phi-temp vs per-branch store to the real destination
+
+**Discovered 2026-07-01 matching `CalculateEntityRenderBounds` (entity.c).**
+
+When an `if`/`else` computes a value that's used exactly once right after the
+branch (a classic "phi" shape), GCC's cross-jump tail-merging can fold the
+two branches' final store into one shared instruction (a `j` from one arm
+into the other arm's tail). Two C shapes produce this same *instruction
+count and structure*, but colored differently:
+
+```c
+// Named temp: forces the value through a separate pseudo-register before
+// the store, which anchors it to whichever hard reg that pseudo got colored.
+s16 x2;
+if (cond) { out[0] = ...; x2 = a - b; }
+else      { out[0] = ...; x2 = c + d; }
+out[2] = x2;
+
+// Direct per-branch store: no separate pseudo, the expression's result
+// register IS the store operand in both arms, so cross-jump merging colors
+// it fresh (typically reusing $v0, the register the *previous* statement in
+// the same arm just finished with).
+if (cond) { out[0] = ...; out[2] = a - b; }
+else      { out[0] = ...; out[2] = c + d; }
+```
+
+Byte-identical output/store count either way, but the register loaded for
+each operand of the folded expression can swap ($v0/$v1) between the two
+forms. If a diff shows only register-swapped loads immediately before a
+shared post-if store, try dropping the named temp and writing the real
+destination directly in each branch (or vice versa).
+
+**Applies to:** CalculateEntityRenderBounds — `x2`/`y2` named temps produced
+a `$v0`/`$v1` swap on the second load pair in each arm; writing `out[2]`/
+`out[3]` directly in each branch matched byte-for-byte. Likely applies to the
+sibling functions with the same facing/flipY-mirrored-bounds shape
+(`IsEntityOffscreenLeft`/`Right`, `CalculateEntityScreenBounds`).
+
 #### Pattern: single-slot tail installer
 
 A function whose body is just *one* slot store followed by a tail call
