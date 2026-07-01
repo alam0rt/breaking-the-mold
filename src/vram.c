@@ -86,31 +86,40 @@ INCLUDE_ASM("asm/nonmatchings/vram", AllocateVRAMSlotAligned);
 
 /* Scans the VRAM slot table (stride-6 entries, status byte at +0xA08F) for the
  * first index in [0, 0x58) whose status is 0xFE (free). Returns that index, or
- * 0 if none are free (the return reg v0 doubles as the found index and the
- * loop-exit condition).
+ * 0 if none are free (ret doubles as the found index and the loop-exit
+ * condition).
  *
- * SHELVED: structurally-perfect goto-loop draft below reaches the exact 20
- * instructions and the right addressing idiom (inline lui+displacement for the
- * 0xA08F offset) and dual-use return, but two residual diffs remain — cc1 does
- * not hoist the 0xFE sentinel out of the (unrecognized) goto loop the way the
- * target does (li a2,254 pre-loop), and the counter/index coloring is a2/a1
- * instead of a1/v1. Recognized-loop forms (for/do-while) fix the hoist+coloring
- * but then LICM-hoist the 0xA08F offset into a register (li a3,0xa08f) and split
- * the shared return — net worse. Pure LICM+coloring residual → permuter job.
- * Closest draft:
- *   s32 FindFreeVRAMSlotEntry(s32 base) {
- *       s32 counter = 0, idx = 0, ret;
- *   loop:
- *       ret = idx;
- *       if (*(u8 *)(base + idx * 6 + 0xA08F) != 0xFE) {
- *           counter += 1;
- *           ret = (u32)(counter & 0xFF) < 0x58U;
- *           idx = counter & 0xFF;
- *           if (ret != 0) goto loop;
- *       }
- *       return ret;
- *   } */
-INCLUDE_ASM("asm/nonmatchings/vram", FindFreeVRAMSlotEntry);
+ * Shape is load-bearing: `idx = counter & 0xFF` must be the first statement
+ * AFTER the goto label (the label blocks cse from constant-folding the andi
+ * off the known-zero counter; the bnez delay-slot andi is then cc1's
+ * fill-from-target with branch retargeting). `ret = idx` must live on the
+ * found branch of an if/else (not before the if) so it lands in the beq
+ * delay slot and $v1 dies before the bnez. The named `entry` temp yields the
+ * base-first `addu v0,a0,v0` operand order (same idiom as
+ * GetMaxVRAMSlotSize / FindVRAMSlotBySize). */
+s32 FindFreeVRAMSlotEntry(s32 base) {
+    s32 counter;
+    s32 sentinel;
+    s32 idx;
+    s32 ret;
+    s32 entry;
+
+    counter = 0;
+    sentinel = 0xFE;
+loop:
+    idx = counter & 0xFF;
+    entry = base + idx * 6;
+    if (*(u8 *)(entry + 0xA08F) == sentinel) {
+        ret = idx;
+    } else {
+        counter++;
+        ret = (u32)(counter & 0xFF) < 0x58U;
+        if (ret != 0) {
+            goto loop;
+        }
+    }
+    return ret;
+}
 
 /* Walks the VRAM slot linked-list (head at base+0xA29C, indices are
  * byte values, next-pointer is the byte at +0xA08F of each entry,
