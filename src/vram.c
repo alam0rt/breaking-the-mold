@@ -84,6 +84,32 @@ INCLUDE_ASM("asm/nonmatchings/vram", FindVRAMSlotBySize);
 
 INCLUDE_ASM("asm/nonmatchings/vram", AllocateVRAMSlotAligned);
 
+/* Scans the VRAM slot table (stride-6 entries, status byte at +0xA08F) for the
+ * first index in [0, 0x58) whose status is 0xFE (free). Returns that index, or
+ * 0 if none are free (the return reg v0 doubles as the found index and the
+ * loop-exit condition).
+ *
+ * SHELVED: structurally-perfect goto-loop draft below reaches the exact 20
+ * instructions and the right addressing idiom (inline lui+displacement for the
+ * 0xA08F offset) and dual-use return, but two residual diffs remain — cc1 does
+ * not hoist the 0xFE sentinel out of the (unrecognized) goto loop the way the
+ * target does (li a2,254 pre-loop), and the counter/index coloring is a2/a1
+ * instead of a1/v1. Recognized-loop forms (for/do-while) fix the hoist+coloring
+ * but then LICM-hoist the 0xA08F offset into a register (li a3,0xa08f) and split
+ * the shared return — net worse. Pure LICM+coloring residual → permuter job.
+ * Closest draft:
+ *   s32 FindFreeVRAMSlotEntry(s32 base) {
+ *       s32 counter = 0, idx = 0, ret;
+ *   loop:
+ *       ret = idx;
+ *       if (*(u8 *)(base + idx * 6 + 0xA08F) != 0xFE) {
+ *           counter += 1;
+ *           ret = (u32)(counter & 0xFF) < 0x58U;
+ *           idx = counter & 0xFF;
+ *           if (ret != 0) goto loop;
+ *       }
+ *       return ret;
+ *   } */
 INCLUDE_ASM("asm/nonmatchings/vram", FindFreeVRAMSlotEntry);
 
 /* Walks the VRAM slot linked-list (head at base+0xA29C, indices are
