@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "Game/entity.h"
 #include "Game/game_state.h"
+#include "Game/fsm_dispatch.h"
 #include "globals.h"
 
 extern void InitEntityStruct(Entity *entity, s16 allocSize);
@@ -280,10 +281,57 @@ INCLUDE_ASM("asm/nonmatchings/entity", IsEntityOffScreenY);
  * zoom-camera boss levels keep entities positionally consistent. */
 INCLUDE_ASM("asm/nonmatchings/entity", SetupEntityScaleCallbacks);
 
+typedef s16 (*XformCB)();
+typedef struct { s32 arg; XformCB fn; } XformSlot;
+
 /* Compute SPU stereo pan from the entity's screen X (relative to camera)
  * and fire a one-shot PlaySoundEffect. Heavily used by pickups/enemies
- * for "this object made a noise where it is". */
-INCLUDE_ASM("asm/nonmatchings/entity", PlayEntityPositionSound);
+ * for "this object made a noise where it is". Pan = worldX routed through
+ * the moveCallbackX FSM slot (same dispatch shape as TransformXCoord,
+ * inlined here rather than called) minus the camera X scaled by
+ * scaleParallaxX (true background-layer parallax, see
+ * UpdateParallaxLayerPosition). */
+void PlayEntityPositionSound(Entity *entity, u32 soundId) {
+    s16 camX;
+    s16 m;
+    u16 val;
+    FSM_REG(XformCB, fn, "$6"); /* $a2 home */
+    FSM_REG(XformCB, ft, "$9"); /* $t1 then-fn (relays) */
+    s32 arg;
+    s32 adj;
+    s32 lo;
+    s16 s;
+    s16 panX;
+
+    if (entity->scaleParallaxX == 0x10000) {
+        camX = g_pGameState->camera_x;
+    } else {
+        camX = (s16)(((s32)g_pGameState->camera_x * entity->scaleParallaxX) >> 16);
+    }
+    m = ((s16 *)&entity->moveMarkerX)[1];
+    val = entity->worldX;
+    if (m != 0) {
+        s = m;
+        if (s > 0) {
+            XformSlot *base = *(XformSlot **)((u8 *)entity + *(s16 *)&entity->moveCallbackX);
+            arg = base[s - 1].arg;
+            ft = base[s - 1].fn;
+            FSM_RELAY(fn, ft);
+        } else {
+            fn = (XformCB)entity->moveCallbackX;
+        }
+        lo = ((s16 *)&entity->moveMarkerX)[0];
+        if (s > 0) {
+            adj = (s16)arg + lo;
+        } else {
+            adj = lo;
+        }
+        panX = (s16)fn((u8 *)entity + adj, (s16)val);
+    } else {
+        panX = val;
+    }
+    PlaySoundEffect(soundId, panX - camX, 0);
+}
 
 /* Same pan calc but updates SetVoicePanning on an already-keyed SPU voice
  * (voice handle in $a1; <0 skips). Used by moving emitters that need
