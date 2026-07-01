@@ -635,15 +635,24 @@ void EntityStateSetIdle(Entity *e) {
     SetEntitySpriteId(e, spriteIds[3], 1);
 }
 
-/* EntityStateSetRandomBehavior @ 0x8003C1A8 — same EntityStateSetWalk/Idle
- * 3-slot install idiom (event/render-clear/tick), but the event handler is
- * chosen by rand()&1 (EntityEventHandlerWithRandomWalk vs EntityEventHandlerWalk),
- * sprite from e->+0x114->+0x10. SHELVED: the rand-conditional fn choice fights
- * cc1's branch codegen. Target emits the diamond — if-branch lui RandomWalk + j
- * over the else, m1=-1 in the beqz delay slot (m1 $v0, fn $v1). Both if/else and
- * the ternary hoist the first fn above the branch (44 instrs vs 48, no j); a
- * forced goto adds the j but spills m1 to $s1. Instruction count differs, so the
- * permuter can't bridge it. */
+/* Same EntityStateSetWalk/Idle 3-slot install idiom (event/render-clear/tick),
+ * but the event handler is chosen by rand()&1 (EntityEventHandlerWithRandomWalk
+ * vs EntityEventHandlerWalk); tick is TimedSparkleCollectibleTick; sprite from
+ * spriteIds[4].
+ *
+ * SHELVED — cc1 hoist divergence (2-instr shortfall). Target emits the naive
+ * un-hoisted diamond: beqz .else (li v0,-1 = m1 in the delay slot), if-branch
+ * loads RandomWalk then `j` over the else, else-branch loads Walk. With plain
+ * if/else, ternary OR goto, this cc1 instead hoists the else-value (fn=Walk)
+ * into the scheduling gap right after `jal rand`, then conditionally overwrites
+ * with RandomWalk — no `j`, 2 instrs shorter, and the freed register cascades
+ * v0/v1 -> v1/a0 coloring across every following struct-copy. The matched
+ * siblings (EntityStateSetWalk/Idle) only avoid this because their fn is
+ * unconditional. Permuter (-j4, 240s) plateaus at score 140: its best move is
+ * shoving a spurious markerLo store into the else arm to force the diamond, but
+ * that is neither correct source nor a byte-match, and the permuter cannot add
+ * the missing `j`+`nop`. Draft + permuter outputs kept in
+ * nonmatchings/EntityStateSetRandomBehavior. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityStateSetRandomBehavior);
 
 /* Enter the ATTACK state: arms the 3-frame state delay, installs the
