@@ -3,6 +3,7 @@
 #include "functions.h"
 #include "Game/callback_slot.h"
 #include "Game/fsm_dispatch.h"
+#include "Game/boss_entities.h"
 #include "globals.h"
 
 extern void *g_pBlbHeapBase;
@@ -61,84 +62,6 @@ extern Entity *CreateFadeOverlayEntity(Entity *e);
 extern void AddToZOrderList(GameState *gs, Entity *entity);
 extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
 
-typedef struct BossTimedSpriteEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x104 - 0x100];
-    /* 0x104 */ u16 shortTimer;
-} BossTimedSpriteEntity;
-
-typedef struct BossVoiceEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x118 - 0x100];
-    /* 0x118 */ s32 voiceHandle;
-} BossVoiceEntity;
-
-typedef struct BossVoice144Entity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x144 - 0x100];
-    /* 0x144 */ s32 voiceHandle;
-} BossVoice144Entity;
-
-typedef struct HazardTimerEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x114 - 0x100];
-    /* 0x114 */ u16 behaviorTimer;
-} HazardTimerEntity;
-
-typedef struct ShrineyGuardEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x10C - 0x100];
-    /* 0x10C */ u8 readyFlag;
-    /* 0x10D */ u8 pad10D[0x111 - 0x10D];
-    /* 0x111 */ u8 activeTimer;
-    /* 0x112 */ u8 idleTimeout;
-    /* 0x113 */ u8 stunTimer;
-    /* 0x114 */ u8 attackCounter;
-    /* 0x115 */ u8 stunActive;
-} ShrineyGuardEntity;
-
-typedef struct KloggTriggerEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x110 - 0x100];
-    /* 0x110 */ u8 triggerTimer;
-    /* 0x111 */ u8 triggerActive;
-    /* 0x112 */ u8 pad112[0x134 - 0x112];
-    /* 0x134 */ u8 *triggerTarget;
-} KloggTriggerEntity;
-
-typedef struct GliderEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100;
-    /* 0x101 */ u8 readyFlag;
-    /* 0x102 */ u8 pad102[0x10D - 0x102];
-    /* 0x10D */ u8 directionFlag;
-} GliderEntity;
-
-typedef struct JoeHeadJoeEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x112 - 0x100];
-    /* 0x112 */ u16 attackTimer;
-    /* 0x114 */ u8 pad114[0x118 - 0x114];
-    /* 0x118 */ s32 voiceHandle;
-} JoeHeadJoeEntity;
-
-typedef struct KloggBossEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x104 - 0x100];
-    /* 0x104 */ u16 shortTimer;
-    /* 0x106 */ u8 pad106[0x110 - 0x106];
-    /* 0x110 */ s32 voiceHandle;
-    /* 0x114 */ u8 pad114[2];
-    /* 0x116 */ u16 voicePanTimer;
-} KloggBossEntity;
-
-/* Minimal view of the sprite-render context attached to an Entity via
- * Entity.spriteContext (+0x34). Only the active/visible byte is needed
- * by the death callbacks here. */
-typedef struct SpriteRenderContextRef {
-    /* 0x00 */ u8 pad00[0xA];
-    /* 0x0A */ u8 activeFlag;
-} SpriteRenderContextRef;
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32   GLIDER_WAKE_STATE_MARKER asm("D_800A5B68");
 EntityCallback GLIDER_WAKE_STATE_CALLBACK asm("D_800A5B6C");
@@ -346,20 +269,6 @@ s32 KloggEventHandlerWithTrigger(KloggTriggerEntity *e, u32 event, u32 arg2, u32
     return result;
 }
 
-/* Layout for an entity that walks through a fixed sequence of (x,y)
- * waypoints. Each entry in the path table is 4 bytes: an s16 x and an
- * s16 y stored consecutively. nextWaypointIndex is bumped on every
- * tick until it reaches waypointCount; from that point on the entity
- * falls through to its queued state instead. */
-typedef struct FollowPathEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x139 - 0x100];
-    /* 0x139 */ u8 nextWaypointIndex;
-    /* 0x13A */ u8 waypointCount;
-    /* 0x13B */ u8 pad13B;
-    /* 0x13C */ s16 *path;
-} FollowPathEntity;
-
 /* Single-step waypoint follower. While there are still entries left,
  * copies the current path[idx].x/.y into the entity's worldX/worldY
  * (+0x68/+0x6A) and bumps the counter. Once the counter hits the total
@@ -454,14 +363,6 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitBonusItemEntity);
 INCLUDE_ASM("asm/nonmatchings/bosses", BossHPBarTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitGlennYntisBoss);
-
-/* Entity layout for the boss-class destructor below — has an SPU voice
- * handle at +0x118 (vs +0x10C used elsewhere). */
-typedef struct BossWithSpuVoiceEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x118 - 0x100];
-    /* 0x118 */ s32 voiceHandle;
-} BossWithSpuVoiceEntity;
 
 /* Destructor referenced from boss vtables. Three-phase teardown:
  *   1. Swap collisionVtable to BOSS_SPU_STOP_PRE_VTABLE (D_800112C8) so the
