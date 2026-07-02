@@ -36,6 +36,7 @@
 #define FX_AMBIENT_DRIP_4                  0xb0107444u
 #define FX_AMBIENT_DRIP_5                  0xb1907444u
 #define FX_AMBIENT_DRIP_6                  0xb2907444u
+#define FX_AMBIENT_DRAIN                   0xd0b04444u  /* CANDIDATE (gist ledger; alternatives exist) */
 #define FX_AMBIENT_FOUNTAIN                0x90d85954u
 #define FX_AMBIENT_LIGHTNING               0x9cc87050u
 #define FX_AMBIENT_RIVER                   0x9291d400u
@@ -69,9 +70,15 @@
 #define FX_BOSS_WIZARD_BEAM                0x48017101u
 #define FX_BOSS_WIZARD_HIT                 0x40815801u
 #define FX_BOSS_WIZARD_IDLE                0xc0099011u
+#define FX_BOSS_YNT_ATTACK                 0x7623c165u  /* GLEN-only; suffix spelling uncertain */
+#define FX_BOSS_YNT_ATTACK_2               0x7622c165u
+#define FX_BOSS_YNT_HIT                    0x5101c047u
+#define FX_BOSS_YNT_IDLE_01                0x7a318245u
+#define FX_BOSS_YNT_IDLE_02                0x62318245u
 #define FX_BOSS_WIZARD_TAUNT_1             0x0e041001u
 #define FX_BOSS_WIZARD_TAUNT_2             0x08041001u
 #define FX_BOSS_WIZARD_TAUNT_3             0x04041001u
+#define FX_BUTTON_PAUSE                    0x65281e40u
 #define FX_BUTTON_POWERUP                  0x760106c1u
 #define FX_EXPLODE_NORMAL                  0x29808408u
 #define FX_GUM_PIERCE_DN                   0xc00200c9u
@@ -115,7 +122,7 @@
 #define FX_MENU_SKULL_SCREAM               0x421d1000u
 #define FX_MENU_WILLIE_EXIT                0x42590440u
 #define FX_OBJECT_CHECKPOINT               0x2b2ca36bu
-#define FX_OBJECT_ELEVATOR                 0x06e0a824u
+#define FX_OBJECT_ELEVATOR                 0x06e0a824u  /* CANDIDATE (demoted 2026-07-02): code use is player-swim/HUD, no elevator context */
 #define FX_OBJECT_GLIDEY_BIRD              0x563ba142u
 #define FX_OBJECT_HAMSTER                  0x22a4aa42u
 #define FX_OBJECT_PHOENIX_FLY              0x1b610064u
@@ -131,6 +138,7 @@
 #define FX_PICKUP_ONE_UP                   0x428254e2u
 #define FX_PICKUP_PHOENIX                  0x44c26454u
 #define FX_PICKUP_SHIELD                   0xe0880448u
+#define FX_PICKUP_SHRINK                   0x62000441u  /* cross-corroborated with SPR_PREFIX_SHRINK (same 2 levels) */
 #define FX_PICKUP_SUPER_WILLIE             0xe48744c4u
 #define FX_PICKUP_UNIVERSE_ENEMA           0xc88a346au
 #define FX_PUFF_FALL_3                     0x40e0824cu
@@ -151,6 +159,7 @@
 #define FX_SKULL_SPRING_01                 0x302010c4u
 #define FX_SKULL_SPRING_02                 0x302016c4u
 #define FX_SKULL_UP                        0x30004240u
+#define FX_YNT_FLY_01                      0xc2820c70u  /* CANDIDATE: single grammar hit; EGGS/GLID/WEED fits flying Ynts; no _02 sibling */
 #define KLAYMEN_IDLEHEAD_SOUND             0x9d406340u
 
 /* Role-named audio (ids verified, exact asset names still uncracked).
@@ -166,9 +175,12 @@
 #define SPR_PREFIX_HAMSTER                 0xa9228088u  /* <PREFIX>HAMSTER */
 #define SPR_PREFIX_ONE_UP                  0xa9240484u  /* <PREFIX>ONE_UP */
 #define SPR_PREFIX_UNIVERSE_ENEMA_1        0x6a351094u  /* <PREFIX>UNIVERSE_ENEMA_1 */
+#define SPR_PREFIX_UNIVERSE_ENEMA_2        0x6c351094u  /* <PREFIX>UNIVERSE_ENEMA_2 */
+#define SPR_PREFIX_SHRINK                  0x08624580u  /* <PREFIX>SHRINK — BRG1/SOAR only, pairs with FX_PICKUP_SHRINK */
 #define SPR_PREFIX_WILLIE                  0x902c0002u  /* <PREFIX>WILLIE */
+#define SPR_PREFIX_STATUSNUMBERS           0x00e2f188u  /* <PREFIX>STATUSNUMBERS — HUD counter digits */
 #define SPR_CONTINUE                       0x69c04050u  /* CONTINUE */
-#define FX_PLAYER_SWIM_PRE                 0x46346040u  /* FX_PLAYER_SWIM_PRE */
+#define FX_PLAYER_SWIM_PRE                 0x46346040u  /* CANDIDATE (demoted 2026-07-02): FX-style name on a sprite-container id; only use is clayball debris spawn — likely collision */
 #define SPR_KLAYMEN_IDLEBLINK_ANIM         0x5900c41eu  /* Klaymen_idleblink_anim */
 #define SPR_NO                             0x29c0e211u  /* NO */
 #define SPR_PAUSED                         0x0ad0f813u  /* PAUSED */
@@ -214,15 +226,20 @@
  * the FSM in src/bosses.c (Shriney Guard is fully documented; the other
  * bosses' sprite slots are recorded as RE labels). */
 
-/* SHRINEY GUARD (MEGA level 5) — see src/bosses.c "SHRINEY GUARD" section.   */
-#define SPR_SHRINEY_GUARD_BASE             0xa8482860u  /* InitEntitySprite hash (0xA2 x 0xF0) */
-#define SPR_SHRINEY_GUARD_IDLE             0x09382152u  /* passive idle pose                  */
-#define SPR_SHRINEY_GUARD_WINDUP           0x4c106054u  /* attack-windup (bounce target)      */
-#define SPR_SHRINEY_GUARD_LOOP_LINK        0x40106054u  /* first frame of looping-attack chain*/
-#define SPR_SHRINEY_GUARD_LOOP_START       0x2c182010u  /* looping-attack stun-window pose    */
-#define SPR_SHRINEY_GUARD_READY            0x08192250u  /* re-aim pose between slams          */
-#define SPR_SHRINEY_GUARD_SLAM             0x085860d4u  /* slam animation (MoveCallback runs) */
-#define SPR_SHRINEY_GUARD_DEATH            0x0a1820d4u  /* death pose                         */
+/* SHRINEY GUARD (MEGA level 5) — see src/bosses.c "SHRINEY GUARD" section.
+ * Decoded BOSS-namespace names (hash-exact, gist Session audit): the ToolX
+ * entity word is MEGA (the level code). Define names below stay as the
+ * FSM-role labels used by src/bosses.c; the decoded literal name is in the
+ * comment. Where role and decoded action word disagree (e.g. IDLE pose
+ * decodes as MEGA_SPIT), treat the decode as name, the label as behavior. */
+#define SPR_SHRINEY_GUARD_BASE             0xa8482860u  /* InitEntitySprite hash (0xA2 x 0xF0); no BOSS-ns decode yet */
+#define SPR_SHRINEY_GUARD_IDLE             0x09382152u  /* passive idle pose        = MEGA_SPIT   */
+#define SPR_SHRINEY_GUARD_WINDUP           0x4c106054u  /* attack-windup            = MEGA_IDLE_1 */
+#define SPR_SHRINEY_GUARD_LOOP_LINK        0x40106054u  /* looping-attack 1st frame = MEGA_IDLE_2 */
+#define SPR_SHRINEY_GUARD_LOOP_START       0x2c182010u  /* stun-window pose         = MEGA_HIT    */
+#define SPR_SHRINEY_GUARD_READY            0x08192250u  /* re-aim between slams     = MEGA_TURN   */
+#define SPR_SHRINEY_GUARD_SLAM             0x085860d4u  /* slam animation           = MEGA_ROLL   */
+#define SPR_SHRINEY_GUARD_DEATH            0x0a1820d4u  /* death pose               = MEGA_DIE    */
 /* Shared engine-wide animation hashes (NOT Shriney-specific: passed to
  * SetAnimationLoopFrame / SetAnimationSpriteCallback by many enemy and boss
  * states alike — see src/enemies.c as well as the Shriney FSM). Shriney's
@@ -237,6 +254,27 @@
 #define SPR_GLENN_YNTIS_ANIM_A             0x2d688254u  /* GlennYntisIdleAnimState (boss frame A)*/
 #define SPR_GLENN_YNTIS_ANIM_B             0x2b79835du  /* GlennYntisAnimStateB (boss frame B)   */
 #define SPR_GLENN_YNTIS_ANIM_C             0x69588258u  /* GlennYntisAnimStateC (boss frame C)   */
+/* Glenn Yntis decoded BOSS-namespace roster (entity word YNT). Different ids
+ * from the ANIM_A/B/C slots above; hash-exact incl. frame suffixes. */
+#define SPR_YNT_IDLE_1                     0x8068815cu  /* YNT_IDLE_1 */
+#define SPR_YNT_HIT_1                      0x407801d0u  /* YNT_HIT_1  */
+#define SPR_YNT_HIT_2                      0x407801dcu  /* YNT_HIT_2  */
+#define SPR_YNT_DIE                        0x0c78005cu  /* YNT_DIE    */
+
+/* MONKEY MAGE (WIZZ level 4 boss) — decoded BOSS-namespace roster, entity word
+ * WIZARD; frame suffixes hash-exact (_01/_02 spelling uncertain, hash certain). */
+#define SPR_WIZARD_IDLE_01                 0x02ed1470u  /* WIZARD_IDLE_01   */
+#define SPR_WIZARD_ATTACK_01               0x022e3442u  /* WIZARD_ATTACK_01 */
+#define SPR_WIZARD_HIT_01                  0x60de1050u  /* WIZARD_HIT_01    */
+#define SPR_WIZARD_FALL_01                 0x81421850u  /* WIZARD_FALL_01   */
+#define SPR_WIZARD_FALL_02                 0x82421850u  /* WIZARD_FALL_02   */
+#define SPR_WIZARD_DIE_01                  0x424d1840u  /* WIZARD_DIE_01    */
+
+/* KLOGG (KLOG final boss) — decoded BOSS-namespace roster, entity word KLOGG. */
+#define SPR_KLOGG_IDLE_1                   0x193ca112u  /* KLOGG_IDLE_1 */
+#define SPR_KLOGG_HIT                      0x08bc8013u  /* KLOGG_HIT    */
+#define SPR_KLOGG_SHOOT                    0x1a2c8516u  /* KLOGG_SHOOT  */
+#define SPR_KLOGG_DIE                      0x18248010u  /* KLOGG_DIE    */
 
 /* ---- Footstep surface variants referenced by the remap table @0x8009d0fc ----
  * modes 5/6 (ELECTRIC/SQUISH) are referenced by the table but absent from the

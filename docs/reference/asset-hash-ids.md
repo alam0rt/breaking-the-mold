@@ -808,3 +808,67 @@ Full write-up: [`docs/analysis/asset-identification/name-cracking-feasibility.md
   **text**, **cross-game** (Neverhood) hashes, or an external **(name→id)** pair beat the lossiness.
 - **Useful byproduct:** `name_len ≡ popcount(id) (mod 2)`, `len ≥ popcount` — pins each name's
   length parity.
+
+## Round 22 (2026-07-02): three-store reconciliation — gist ledger merged, CSV is authoritative again
+
+The initiative had drifted into three diverging stores: `cracked_names.csv` (64 named),
+`include/Game/asset_ids.h` (191 defines), and the untracked gist audit
+(`docs/gist/asset-system/audited_ledger.json`, 151 graded ids). This round re-validated
+**every** name against the hash math (`docs/gist/asset-system/decoder.py`) and merged:
+
+- **Every merged name is hash-exact** in its namespace (`id = SEED ^ rotl(calcHash(name), 27)`,
+  RAW/TEXT/PICKUP/BOSS). Role labels (`SPR_SHRINEY_GUARD_*`, `SPR_MENU_*`, `SPR_PLATFORM_*`,
+  `ANIM_*`…) were **not** written into the CSV `name` column — they are not cracked names.
+- **Ledger boss names corrected**: 10 of the gist's 21 BOSS-namespace decodes failed as
+  written (shorthand dropped frame digits). All resolve exactly with suffixes:
+  `WIZARD_{IDLE,ATTACK,HIT,DIE,FALL}_01` (+`FALL_02`), `KLOGG_IDLE_1`, `YNT_HIT_1/2`,
+  `YNT_IDLE_1`, and the Shriney pair `MEGA_IDLE_1`=`0x4c106054` / `MEGA_IDLE_2`=`0x40106054`.
+- **`0x40400270` adjudicated**: CSV said `FX_FINN_DIE_4` (brute guess), footstep remap-table
+  row coherence says `FX_KLAY_FOOTSTEP_LEFT_WOOD` — the table wins; FINN_DIE_4 recorded as
+  the collision false-positive (see `footstep-remap-table.md`).
+- **CSV now: 161 verified + 5 candidate + 2 scummvm anchors = 168 named of 658** (was 64);
+  490 uncracked (350 sprites, 96 audio, 16 type500/700, 3 anim, rest misc).
+- `asset_ids.h` gained the decoded boss rosters (`SPR_WIZARD_*`, `SPR_KLOGG_*`, `SPR_YNT_*`),
+  `SPR_PREFIX_STATUSNUMBERS`, `FX_BUTTON_PAUSE`, `FX_AMBIENT_DRAIN` (candidate), and per-define
+  comments mapping Shriney FSM role labels to their decoded `MEGA_*` literal names. The six
+  matching raw literals in `src/bosses.c` now use the constants (`tools/check_asset_ids.py`
+  clean; `bosses.o` byte-identical before/after).
+
+**Where names live** (asset ids are u32 immediates, *not* addresses — they cannot go in
+`symbol_addrs.txt`): canonical machine-readable store = `cracked_names.csv`; canonical
+code-facing store = `include/Game/asset_ids.h` (linted by `make`'s `check_asset_ids.py`).
+
+## Round 23 (2026-07-02): code-usage trace + suffix-gap prediction — 9 new names, 2 demotions
+
+Full write-up: [`name-usage-trace.md`](../analysis/asset-identification/name-usage-trace.md).
+Every cracked name was traced to its call sites (72/177 have direct code refs). Highlights:
+`FX_KLAY_DIE_EXPLODE` fires in the death/debris handlers, `SPR_KLOGG_SHOOT` in
+`KloggSpawnProjectilesCallback`, `FX_BUTTON_PAUSE`/`_UNPAUSE` in the matching pause functions,
+each `FX_PICKUP_*` in its `Collectible*TickCallback`. Where names and function names clash, the
+BOSS-namespace ids (hash-exact + single-level) indict the **function** names — a batch of
+Ghidra renames is proposed in the write-up (Monkey Mage FSM mislabeled as Klogg/Collectible,
+Glenn Yntis FSM mislabeled as Hazard/Collectible). Two **asset** names demoted to candidate as
+likely collisions (`FX_PLAYER_SWIM_PRE` — sprite-container id used as clayball debris;
+`FX_OBJECT_ELEVATOR` — player-swim/HUD usage). Suffix-gap prediction over the 658-id universe
+(per-guess FP ≈ 1.5e-7) added the `FX_BOSS_YNT_*` audio family (5), the cross-corroborated
+SHRINK pickup sprite+sound pair, `<PICKUP_PREFIX>UNIVERSE_ENEMA_2`, and candidate
+`FX_YNT_FLY_01`. Bonus in-src corroboration: `HazardActivateWithSound` (really Glenn Yntis)
+pairs sprite `YNT_IDLE_1` with sound `FX_BOSS_YNT_IDLE_01` in one function. All touched objects
+(`bosses.o`, `pickups.o`) verified byte-identical. **Tally: 177/658 named**
+(167 verified + 8 candidate + 2 ScummVM).
+
+## Round 23 (2026-07-02): code-usage trace + suffix-gap prediction — 9 new names, 2 demotions
+
+Full write-up: [`name-usage-trace.md`](../analysis/asset-identification/name-usage-trace.md).
+Every cracked name was traced to its call sites (72/177 have direct code refs). Highlights:
+`FX_KLAY_DIE_EXPLODE` fires in the death/debris handlers, `SPR_KLOGG_SHOOT` in
+`KloggSpawnProjectilesCallback`, `FX_BUTTON_PAUSE`/`_UNPAUSE` in the matching pause functions,
+each `FX_PICKUP_*` in its `Collectible*TickCallback`. Where names and function names clash, the
+BOSS-namespace ids (hash-exact + single-level) indict the **function** names — a batch of
+Ghidra renames is proposed in the write-up (Monkey Mage FSM mislabeled as Klogg/Collectible,
+Glenn Yntis FSM mislabeled as Hazard/Collectible). Two **asset** names demoted to candidate as
+likely collisions (`FX_PLAYER_SWIM_PRE` — sprite-container id used as clayball debris;
+`FX_OBJECT_ELEVATOR` — player-swim/HUD usage). Suffix-gap prediction over the 658-id universe
+(per-guess FP ≈ 1.5e-7) added the `FX_BOSS_YNT_*` audio family (5), the cross-corroborated
+SHRINK pickup sprite+sound pair, `<PICKUP_PREFIX>UNIVERSE_ENEMA_2`, and candidate
+`FX_YNT_FLY_01`. **Tally: 177/658 named** (167 verified + 8 candidate + 2 ScummVM).

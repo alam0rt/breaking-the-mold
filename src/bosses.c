@@ -424,7 +424,7 @@ void HazardActivateWithSound(Entity *e) {
     s16 m1;
     void (*fn)();
 
-    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, 0x7A318245);
+    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, FX_BOSS_YNT_IDLE_01);
     *(u16 *)((u8 *)e + 0x114) = 0x12C;
     do {} while (0);
     fn = (void (*)())GlennYntisEventHandler;
@@ -438,7 +438,7 @@ void HazardActivateWithSound(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x8068815C, 1);
+    SetEntitySpriteId(e, SPR_YNT_IDLE_1, 1);
     EntitySetCallback(e, HAZARD_STOP_SOUND_STATE_MARKER,
                       HAZARD_STOP_SOUND_STATE_CALLBACK);
 }
@@ -485,7 +485,7 @@ void HazardIdleWithSound(Entity *e) {
     s16 m1;
     void (*fn)();
 
-    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, 0x62318245);
+    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, FX_BOSS_YNT_IDLE_02);
     do {} while (0);
     fn = (void (*)())GlennYntisAttackEventHandler;
     m1 = -1;
@@ -498,7 +498,7 @@ void HazardIdleWithSound(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x407801D0, 1);
+    SetEntitySpriteId(e, SPR_YNT_HIT_1, 1);
     ((u8 *)e)[0x111] = 0;
     ((u8 *)e)[0x112] = 0;
     do {} while (0);
@@ -540,7 +540,7 @@ void CollectibleActiveState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->tickMarker = slot.s;
-    SetEntitySpriteId(e, 0x407801DC, 1);
+    SetEntitySpriteId(e, SPR_YNT_HIT_2, 1);
     ((u8 *)e)[0x111] = 0;
     ((u8 *)e)[0x112] = 0;
     do {} while (0);
@@ -1479,7 +1479,7 @@ void KloggSetMoveState(Entity *e) {
     slot.s.markerHi = m1;
     slot.s.fn = fn;
     *(CallbackSlot *)&e->eventMarker = slot.s;
-    SetEntitySpriteId(e, 0x193CA112, 1);
+    SetEntitySpriteId(e, SPR_KLOGG_IDLE_1, 1);
     fn = KloggSpawnProjectilesCallback;
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
@@ -1508,7 +1508,7 @@ void EnemyIdleTimerState(Entity *e) {
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
     *(CallbackSlot *)&e->eventMarker = slot.s[0];
-    SetEntitySpriteId(e, 0x193CA112, 1);
+    SetEntitySpriteId(e, SPR_KLOGG_IDLE_1, 1);
     fn = KloggSetMoveState;
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
@@ -1536,7 +1536,7 @@ void EnemySpriteState(Entity *e) {
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
     *(CallbackSlot *)&e->eventMarker = slot.s[0];
-    SetEntitySpriteId(e, 0x08BC8013, 1);
+    SetEntitySpriteId(e, SPR_KLOGG_HIT, 1);
     fn = KloggSetMoveState;
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;

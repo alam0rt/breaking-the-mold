@@ -473,7 +473,7 @@ TimedPathEntity *InitSingleFrameDecorEntity(TimedPathEntity *e, DecorSpawnData *
     s16 m1;
     void (*fn)();
 
-    InitEntitySprite((Entity *)e, 0x08624580, 0x3DE, data->x, data->y, 0);
+    InitEntitySprite((Entity *)e, SPR_PREFIX_SHRINK, 0x3DE, data->x, data->y, 0);
     e->sprite.base.collisionVtable = DECOR_ENTITY_DESTRUCTOR_VTABLE;
     InitPathFollowingDecorEntity(e, data, 0);
     e->sprite.base.collisionVtable = SINGLE_FRAME_DECOR_VTABLE;

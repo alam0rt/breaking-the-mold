@@ -407,7 +407,11 @@ typedef struct {
     /* 0x134 */ u8       specialMoveQueued;     /* Queued special/teleport movement input */
     /* 0x135 */ u8       specialMoveMode;       /* Special movement branch selector */
     /* 0x136 */ s16      apexVelocity;          /* Jump apex velocity threshold */
-    /* 0x138 */ u8       _pad138[4];
+    /* 0x138 */ u8       _pad138;
+    /* 0x139 */ u8       fidgetTimerShort;      /* Short-idle fidget countdown; rerolled to 0x30..0xAF
+                                                 * by PlayerState_IdleRandom @ 0x8005BAD0 */
+    /* 0x13A */ u16      fidgetTimerLong;       /* Long-idle fidget countdown; rerolled to 0x200/0x300
+                                                 * by PlayerState_IdleRandom @ 0x8005BAD0 */
     /* 0x13C */ u8       timer13C;              /* Multi-purpose timer */
     /* 0x13D */ u8       _pad13D[3];
     /* 0x140 */ Entity  *swirlPortalEntity;     /* Child portal/trail entity cleared when player releases it */
@@ -434,7 +438,7 @@ typedef struct {
     /* 0x162 */ s16      pushY;                 /* External push force Y */
     /* 0x164 */ u8       airJumpMode;           /* Air/double-jump mode (Ghidra bAirJumpMode) */
     /* 0x165 */ u8       _pad165;
-    /* 0x166 */ s16      respawnTimer;          /* Queued-callback / respawn countdown (Ghidra nRespawnTimer; see PlayerState_QueuedCallbackTimer) */
+    /* 0x166 */ u16      respawnTimer;          /* Queued-callback / respawn countdown (Ghidra nRespawnTimer; see PlayerState_QueuedCallbackTimer) */
 
     /* Linked entities (0x168-0x173) */
     /* 0x168 */ void    *haloEntity;            /* Halo visual effect entity */
