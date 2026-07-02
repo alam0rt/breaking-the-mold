@@ -288,7 +288,30 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_DebugCameraInput);
 
 
 
-INCLUDE_ASM("asm/nonmatchings/playst", ApplyEntityPositionUpdate);
+/* Integrates the per-frame motion vectors (frameMotionX/Y, 16.16 fixed) into
+ * the entity's position, treating worldX/Y as the integer part and
+ * velocityX/Y as the fractional part of a 32-bit fixed-point position.
+ * facing/flipY select whether each axis' motion is subtracted or added. */
+void ApplyEntityPositionUpdate(SpriteEntity *e) {
+    s32 x, y;
+
+    x = (e->base.worldX << 16) + (u16)e->base.velocityX;
+    y = (e->base.worldY << 16) + (u16)e->base.velocityY;
+    if (e->base.facing != 0) {
+        x -= e->frameMotionX;
+    } else {
+        x += e->frameMotionX;
+    }
+    if (e->base.flipY != 0) {
+        y -= e->frameMotionY;
+    } else {
+        y += e->frameMotionY;
+    }
+    e->base.worldX = x >> 16;
+    e->base.worldY = y >> 16;
+    e->base.velocityX = x;
+    e->base.velocityY = y;
+}
 
 /* PlayerCallback_HorizontalWallCollision: unit spans 0x8006120C..0x8006187C — absorbs former split symbols PlayerCallback_ProcessBounceWrapper3, func_80061774, PlayerCallback_SetStatePassthrough2 (Ghidra labels with no external references; merged 2026-07-02). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_HorizontalWallCollision);
