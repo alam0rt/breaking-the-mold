@@ -1,11 +1,7 @@
 #include "common.h"
 #include "functions.h"
 #include "globals.h"
-
-typedef struct BLBEntityHeader {
-    u8 pad[0x18];
-    void *vtable;
-} BLBEntityHeader;
+#include "Game/blbmem_records.h"
 
 extern u8 BLB_ENTITY_DESTROYED_VTABLE[] asm("D_80012758");
 
