@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "globals.h"
 #include "Game/callback_slot.h"
+#include "Game/spracc_records.h"
 
 extern s32 PlayerEntityEventHandler(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
@@ -833,7 +834,22 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_IdleLookAround);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_PlayRandomIdleAnimation);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_UpdateTPageAndHideHalo);
+extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
+
+void PlayerState_UpdateTPageAndHideHalo(PlayerEntity *e) {
+    RenderSprite *ctx = (RenderSprite *)e->sprite.base.spriteContext;
+    Entity *halo;
+    s32 cx, cy;
+    cx = ctx->vramX;
+    cy = ctx->vramY;
+    ctx->tpage = GetTPage(ctx->colorMode, 0, cx & -0x40, cy & -0x100);
+    halo = e->attachedEntity;
+    if (halo != NULL) {
+        *(s16 *)((u8 *)halo + 0x100) = 1;
+        EntitySetRenderFlags(halo, 1);
+        e->attachedEntity = NULL;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_WalkingRight);
 
@@ -853,7 +869,10 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialMove2);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Jump);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_StopSoundAndClear);
+void PlayerState_StopSoundAndClear(PlayerEntity *e) {
+    StopSPUVoice(e->soundHandle);
+    e->soundHandle = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Walking);
 
@@ -877,9 +896,14 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_LandingFromRide);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_BounceFromEnemy);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_ClearBounceFlag);
+void PlayerState_ClearBounceFlag(PlayerEntity *e) {
+    g_pGameState->bounce_active_flag = 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_ClearBounceAndAirFlag);
+void PlayerState_ClearBounceAndAirFlag(PlayerEntity *e) {
+    g_pGameState->bounce_active_flag = 0;
+    e->specialMoveMode = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_JumpFromPlatform);
 
@@ -895,11 +919,21 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportWalking);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportFalling);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_ClearInAirFlag);
+void PlayerState_ClearInAirFlag(PlayerEntity *e) {
+    e->specialMoveMode = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerSetupDeathState);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_LevelExitComplete);
+extern void SetAnimationTargetFrameIndex(Entity *e, s32 frame);
+extern void EntitySetRenderFlags(Entity *e, u32 flags);
+
+void PlayerState_LevelExitComplete(PlayerEntity *e) {
+    SetAnimationTargetFrameIndex((Entity *)e, e->sprite.currentFrame);
+    EntitySetRenderFlags((Entity *)e, 0);
+    g_pGameState->level_clear_pending = 1;
+    e->pendingStateChange = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_DeathStart);
 
@@ -923,25 +957,95 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportLanding);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportEntry);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerBounceCallback_Primary);
+extern void PlayerSetupBounceAnimation(PlayerEntity *e);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_BounceLaunch);
+void PlayerBounceCallback_Primary(PlayerEntity *e) {
+    e->landingTimer = 8;
+    e->bounceLockTimer = 8;
+    e->altSpeed = 0;
+    e->velocityY_fixed = -0x24000;
+    e->jumpHoldCounter = 8;
+    PlayerSetupBounceAnimation(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetupBounceDown);
+void PlayerState_BounceLaunch(PlayerEntity *e) {
+    e->landingTimer = 8;
+    e->bounceLockTimer = 8;
+    e->sprite.base.facing = 1;
+    e->altSpeed = 0x28000;
+    e->velocityY_fixed = -0x24000;
+    e->jumpHoldCounter = 8;
+    PlayerSetupBounceAnimation(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetupBounceRight);
+void PlayerState_SetupBounceDown(PlayerEntity *e) {
+    e->landingTimer = 4;
+    e->bounceLockTimer = 4;
+    e->sprite.base.facing = 1;
+    e->altSpeed = 0x28000;
+    e->velocityY_fixed = -0x24000;
+    e->jumpHoldCounter = 0xA;
+    PlayerSetupBounceAnimation(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetupBounceUp);
+void PlayerState_SetupBounceRight(PlayerEntity *e) {
+    e->sprite.base.facing = 1;
+    e->landingTimer = 0;
+    e->bounceLockTimer = 0;
+    e->altSpeed = 0x28000;
+    e->velocityY_fixed = 0x24000;
+    e->jumpHoldCounter = 8;
+    PlayerSetupBounceAnimation(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetupBounceUpWithVelocity);
+void PlayerState_SetupBounceUp(PlayerEntity *e) {
+    e->velocityY_fixed = 0x24000;
+    e->landingTimer = 0;
+    e->bounceLockTimer = 0;
+    e->altSpeed = 0;
+    e->jumpHoldCounter = 8;
+    PlayerSetupBounceAnimation(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_QuickTurn);
+void PlayerState_SetupBounceUpWithVelocity(PlayerEntity *e) {
+    s32 alt = -0x28000;
+    e->velocityY_fixed = 0x24000;
+    e->landingTimer = 0;
+    e->bounceLockTimer = 0;
+    e->sprite.base.facing = 0;
+    e->altSpeed = alt;
+    e->jumpHoldCounter = 8;
+    PlayerSetupBounceAnimation(e);
+}
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SetupBounceDownFast);
+void PlayerState_QuickTurn(PlayerEntity *e) {
+    e->landingTimer = 4;
+    e->bounceLockTimer = 4;
+    e->sprite.base.facing = 0;
+    e->altSpeed = -0x28000;
+    e->velocityY_fixed = -0x24000;
+    e->jumpHoldCounter = 0xA;
+    PlayerSetupBounceAnimation(e);
+}
+
+void PlayerState_SetupBounceDownFast(PlayerEntity *e) {
+    e->landingTimer = 8;
+    e->bounceLockTimer = 8;
+    e->sprite.base.facing = 0;
+    e->altSpeed = -0x28000;
+    e->velocityY_fixed = -0x24000;
+    e->jumpHoldCounter = 8;
+    PlayerSetupBounceAnimation(e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerSetupBounceAnimation);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToLevelExit);
+u32 PlayerLevelExitMarker asm("D_800A5F2C");
+EntityCallback PlayerLevelExitFn asm("D_800A5F30");
+
+void PlayerState_TransitionToLevelExit(PlayerEntity *e) {
+    EntitySetState((Entity *)e, PlayerLevelExitMarker, PlayerLevelExitFn);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ClimbIdle);
 
@@ -949,7 +1053,9 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_DamageKnockback);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_DamageKnockback);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerDestroyVoiceCallback);
+void PlayerDestroyVoiceCallback(PlayerEntity *e) {
+    StopSPUVoice(e->soundHandle);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_CrouchOrClimbTransition);
 
@@ -959,13 +1065,26 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_HeavyDamageLaunch);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_DamageRecoilFall);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_RemoveAttachedEntity);
+void PlayerState_RemoveAttachedEntity(PlayerEntity *e) {
+    Entity *portal;
+    g_pGameState->camera_follow_direction = 0;
+    portal = e->swirlPortalEntity;
+    if (portal != NULL) {
+        RemoveEntityFromAllLists(g_pGameState, portal);
+        e->swirlPortalEntity = NULL;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ThrowProjectile);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_CheckpointRestore);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_CheckpointRestoreComplete);
+void PlayerState_CheckpointRestoreComplete(PlayerEntity *e) {
+    g_pGameState->checkpoint_restore_pending = 0;
+    if (e->invincibilityTimer == 0) {
+        e->invincibilityTimer = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", UniverseEnemaActivate);
 
@@ -977,7 +1096,12 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ProjectileThrowAnim);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_PostThrowRecovery);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_ClearCheckpointAndSetInvincible);
+void PlayerState_ClearCheckpointAndSetInvincible(PlayerEntity *e) {
+    g_pGameState->checkpoint_restore_pending = 0;
+    if (e->invincibilityTimer == 0) {
+        e->invincibilityTimer = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEnterNormalState);
 
@@ -995,7 +1119,13 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_GrowFromShrink);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ShrinkAndFall);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_RestoreNormalHitbox);
+void PlayerCallback_RestoreNormalHitbox(PlayerEntity *e) {
+    SetEntityStateFlagWithValue(e->glideEntity, 0);
+    e->groundedFlag = 0;
+    g_pGameState->bounce_active_flag = 0;
+    g_pGameState->player_hitbox_width = 0x28;
+    g_pGameState->player_hitbox_y_offset = -0x30;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_StartSwimming);
 

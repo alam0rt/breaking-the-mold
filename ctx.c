@@ -1,0 +1,18 @@
+typedef signed char s8;
+typedef signed short s16;
+typedef signed int s32;
+typedef signed long long s64;
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef unsigned long long u64;
+typedef float f32;
+typedef double f64;
+typedef s32 bool;
+typedef s16 fixed16;
+typedef s32 fixed32;
+typedef unsigned char u_char;
+typedef unsigned short u_short;
+typedef unsigned int u_int;
+typedef unsigned long u_long;
+__asm__(".include \"include/labels.inc\"\n");
