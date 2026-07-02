@@ -216,13 +216,13 @@ typedef struct SparkleCollectibleEntity {
     u8  pad6C[0x74 - 0x6C];
     /* 0x74 */ u8  facing;
     u8  pad75[0x10C - 0x75];
-    /* 0x10C */ u8  unk10C;
+    /* 0x10C */ u8  pulseOn;      /* set 1 at peak (phase 1->2), cleared 2->3 */
     u8  pad10D[0x119 - 0x10D];
     /* 0x119 */ u8  enable;
     /* 0x11A */ u8  brightness;
-    /* 0x11B */ u8  phase;
-    /* 0x11C */ u8  phaseTimer;
-    /* 0x11D */ u8  spawnTimer;
+    /* 0x11B */ u8  phase;        /* 4-state sparkle pulse FSM (0..3) */
+    /* 0x11C */ u8  phaseTimer;   /* frames remaining in current phase */
+    /* 0x11D */ u8  spawnTimer;   /* frames until next sparkle-particle spawn */
 } SparkleCollectibleEntity;
 
 #endif /* ENEMY_ENTITIES_H */
