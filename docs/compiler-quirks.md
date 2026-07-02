@@ -675,6 +675,22 @@ Three levers that cracked a "permuter job" goto-loop without permuting:
   GetMaxVRAMSlotSize / FindVRAMSlotBySize — likely the original author's
   style throughout vram.c.
 
+## Quirk: pin minimally — extra register pins derail call-setup scheduling (2026-07-02, GameState-notify quartet)
+
+Matching the four `*DespawnEvent` notifiers (effects.c) showed the FSM-slot
+recipe over-pins. With `fn`/`ft`/`slotArg`/survivor all pinned (the
+func_80034B10 recipe), the call-setup order came out
+`[li a2,1; addu a0; jalr; delay li a1,3]` and NO source shape could restore
+the target's `[addu a0; li a1,3; jalr; delay li a2,1]` — the pinned hard
+regs add anti-dependence edges that make sched1 hoist the constant loads.
+Unpinning everything fixed the schedule immediately (natural coloring even
+put `slotArg` in $t0 and the survivor in $a2 by itself); only `fn`/$t2 and
+`ft`/$t1 needed pins. Rule: start unpinned, add one pin at a time for the
+registers that actually differ; each pin can cost more than it buys.
+(`FSM_RELAY`'s volatile barrier is still needed to stage the survivor copy
+through $v0, and the `slotArgWide` int copy to keep the (s16) shift
+out-of-place — those are coalesce barriers, not pins.)
+
 ## Tooling gotchas (decomp-permuter)
 
 - Older `decomp-permuter` revisions needed `pycparser==2.21`; after the

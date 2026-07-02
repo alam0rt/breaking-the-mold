@@ -45,6 +45,26 @@ entity tick/render lists at `+0x1C/+0x20`, not separate list heads here.
 `main @ 0x800828B0` calls through `postRenderCallbackContext+0x1C` after
 `RenderEntities` and `DrawSync(0)`.
 
+**UPDATED 2026-07-02 — the game-progression notify path is now matched C.**
+Five effects.c senders dispatch this slot with `EVT_GAME_NOTIFY` (3) and
+`srcEntity = e` (callback signature `(gsBase+lo, eventId, arg, srcEntity)`):
+
+| Sender (matched) | Guard flag | arg |
+|------------------|-----------|-----|
+| `EntityDespawnIfFlagSet` @ 0x800361F8 | entity+0x7C | 0 |
+| `ExpiredEntityDespawnEvent` @ 0x80037418 | `CountdownTimerEntity.expiredFlag` (+0x29) | 1 |
+| `BeamEffectDespawnEvent` @ 0x80037A34 | `BeamEffectEntity.expiredFlag` (+0x1E, set by `BeamEffectTickWithRotation`) | 1 |
+| `FadeExpireEntityDespawnEvent` @ 0x80037F60 | entity+0x24 (set by `FadeAndExpireEntityTick`) | 1 |
+| `func_80034B10` @ 0x80034B10 | entity+0x34 | entity+0x20 (variable) |
+
+Pattern: a visual effect (countdown, beam, fade, overlay) raises its
+"done" flag in its own tick, and a per-frame despawn/tick callback then
+notifies whatever game-progression FSM is installed in the GameState
+event slot — i.e. level scripting waits on effect completion through
+this single funnel. (These senders were unmatchable before the
+2026-07-02 phantom-symbol merge: their tails had been split off as the
+bogus `NotifyGameState*`/`NullStubFunction` "functions".)
+
 **Disproved:** The January layer-list-head names were based on stale Ghidra
 datatypes. `AddLayerToRenderList_Medium @ 0x80021778` and related layer setup
 insert layer render contexts into the shared entity lists at `+0x1C/+0x20`.
