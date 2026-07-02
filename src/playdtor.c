@@ -1,12 +1,7 @@
 #include "common.h"
 #include "functions.h"
 #include "globals.h"
-
-typedef struct EntityWithSpuVoiceAt10c {
-    SpriteEntity sprite;
-    u8 pad100[0x10C - 0x100];
-    u32 spuVoice;
-} EntityWithSpuVoiceAt10c;
+#include "Game/playdtor_entities.h"
 
 extern u8 ENTITY_SPU_STOP_AT10C_VTABLE[] asm("D_80011D34");
 
