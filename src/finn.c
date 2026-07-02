@@ -139,7 +139,7 @@ void FinnRenderCallback_ProjectToScreen(FinnScreenPosEntity *e) {
 typedef void (*GsEventCB)();
 typedef struct { s32 arg; GsEventCB fn; } GsEventSlot;
 
-void func_8006E130(Entity *e) {
+void FinnDispatchGsEventOnFlag(Entity *e) {
     GameState *gs;
     s32 arg;
     u8 *gsb;
@@ -235,16 +235,16 @@ void FinnSubentityDestroyCallback_Vtable0x80011784(SpriteEntity *entity, s32 fla
     }
 }
 
-void func_8006EB14(FinnPointerEntity *e) {
+void SetFinnPointerSmallFlag(FinnPointerEntity *e) {
     e->smallFlag = 1;
 }
 
-void func_8006EB20(FinnPointerEntity *e) {
+void ArmFinnPointerTargetTimer(FinnPointerEntity *e) {
     u8 *p = e->target;
     p[0x1E0] = 0x20;
 }
 
-u8 *func_8006EB30(FinnPointerEntity *e) {
+u8 *GetFinnPointerTarget(FinnPointerEntity *e) {
     return e->target;
 }
 
@@ -264,36 +264,36 @@ void FinnSubentityDestroyCallback_Vtable0x800117e4(SpriteEntity *entity, s32 fla
     }
 }
 
-void func_8006EC04(PlayerEntity *e) {
+void SetPlayerPortalCheatFlag(PlayerEntity *e) {
     e->portalCheatFlag = 1;
 }
 
-void func_8006EC10(PlayerEntity *e) {
+void SetPlayerShrinkFlag(PlayerEntity *e) {
     e->shrinkFlag = 1;
 }
 
-void func_8006EC1C(PlayerEntity *e) {
+void SetPlayerParticleFlag(PlayerEntity *e) {
     e->particleFlag = 1;
 }
 
-s32 func_8006EC28(s32 a, u8 b) {
+s32 IsNonzeroAndBelow60(s32 a, u8 b) {
     return b ? b < 0x3C : 0;
 }
 
-typedef struct { s32 a; s32 b; } func_8006EC40_Pair;
-void func_8006EC40(FinnPairEntity *e, func_8006EC40_Pair p) {
-    *(func_8006EC40_Pair *)&e->pairA = p;
+typedef struct { s32 a; s32 b; } FinnPairValue;
+void SetFinnPairValue(FinnPairEntity *e, FinnPairValue p) {
+    *(FinnPairValue *)&e->pairA = p;
 }
 
 INCLUDE_ASM("asm/nonmatchings/finn", FINNCallback_DispatchToEntityHandler);
 
-void func_8006ECE4(PlayerEntity *e, u8 *o1, u8 *o2, u8 *o3) {
+void GetPlayerCurrentRGB(PlayerEntity *e, u8 *o1, u8 *o2, u8 *o3) {
     *o1 = e->currentRGB[0];
     *o2 = e->currentRGB[1];
     *o3 = e->currentRGB[2];
 }
 
-void func_8006ED08(PlayerEntity *e, u8 r, u8 g, u8 b) {
+void SetPlayerCurrentRGB(PlayerEntity *e, u8 r, u8 g, u8 b) {
     u8 *ptr = e->sprite.base.spriteContext;
     u8 t1, t2;
     e->currentRGB[0] = r;
@@ -308,18 +308,18 @@ void func_8006ED08(PlayerEntity *e, u8 r, u8 g, u8 b) {
     ptr[0x36] = b;
 }
 
-u32 func_8006ED30(FinnStateValueEntity *e) {
+u32 GetFinnStateValue(FinnStateValueEntity *e) {
     return e->stateValue;
 }
 
-void func_8006ED3C(FinnStateValueEntity *e, u32 val) {
+void SetFinnStateValue(FinnStateValueEntity *e, u32 val) {
     e->stateValue = val;
 }
 
-void func_8006ED44(void) {
+void FinnNoopCallback_8006ED44(void) {
 }
 
-void func_8006ED4C(void) {
+void FinnNoopCallback_8006ED4C(void) {
 }
 
 void FinnSubentityDestroyCallback_Simple(Entity *entity, u32 flag) {
@@ -351,25 +351,25 @@ void FinnEntityDestroyWithSoundCleanup(FinnVoiceEntity *e, s32 mode) {
     }
 }
 
-s32 func_8006EF48(Entity *e) {
+s32 FinnSubtileTest_SumLt16(Entity *e) {
     u8 a = *(u8 *)&e->worldX & 0xF;
     u8 b = *(u8 *)&e->worldY & 0xF;
     return (a + b) < 0x10;
 }
 
-s32 func_8006EF64(Entity *e) {
+s32 FinnSubtileTest_SumGe15(Entity *e) {
     u8 a = *(u8 *)&e->worldX & 0xF;
     u8 b = *(u8 *)&e->worldY & 0xF;
     return !((a + b) < 0xF);
 }
 
-s32 func_8006EF84(Entity *e) {
+s32 FinnSubtileTest_DiffLt16(Entity *e) {
     s32 a = (s32)(*(u8 *)&e->worldX & 0xF) + 0xF;
     s32 b = *(u8 *)&e->worldY & 0xF;
     return (a - b) < 0x10;
 }
 
-s32 func_8006EFA4(Entity *e) {
+s32 FinnSubtileTest_DiffGe15(Entity *e) {
     s32 a = (s32)(*(u8 *)&e->worldX & 0xF) + 0xF;
     s32 b = *(u8 *)&e->worldY & 0xF;
     return !((a - b) < 0xF);
@@ -490,18 +490,18 @@ INCLUDE_ASM("asm/nonmatchings/finn", FinnCheckTriggerZones);
 
 INCLUDE_ASM("asm/nonmatchings/finn", SpawnAngledProjectile);
 
-u32 func_800704F0(FinnStateValueEntity *e) {
+u32 GetFinnStateValue_800704F0(FinnStateValueEntity *e) {
     return e->stateValue;
 }
 
-void func_800704FC(FinnStateValueEntity *e, u32 val) {
+void SetFinnStateValue_800704FC(FinnStateValueEntity *e, u32 val) {
     e->stateValue = val;
 }
 
-void func_80070504(void) {
+void FinnNoopCallback_80070504(void) {
 }
 
-void func_8007050C(void) {
+void FinnNoopCallback_8007050C(void) {
 }
 
 void EntityDestructor_Simple13(Entity *entity, u32 flag) {
