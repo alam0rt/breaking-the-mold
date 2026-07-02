@@ -1,11 +1,13 @@
 #include "common.h"
 #include "functions.h"
 #include "globals.h"
-#include "Game/blbmem_records.h"
+#include "Game/entity.h"
 
 extern u8 BLB_ENTITY_DESTROYED_VTABLE[] asm("D_80012758");
 
-void FreeBLBMemory(BLBEntityHeader *ptr, s32 size);
+/* The 0x1C-byte BLB entity is the standard MenuEntityBase header (vtable @
+ * +0x18); BLBEntityDestroyCallback_2758 only touches that vtable slot. */
+void FreeBLBMemory(MenuEntityBase *ptr, s32 size);
 
 /*
  * BLBEntityDestroyCallback_2758 @ 0x80082EF0.
@@ -14,7 +16,7 @@ void FreeBLBMemory(BLBEntityHeader *ptr, s32 size);
  * subsequent dispatches stay no-ops, then — only when caller passes
  * flags bit 0 — frees the 0x1C-byte entity back to the BLB heap.
  */
-void BLBEntityDestroyCallback_2758(BLBEntityHeader *entity, u32 flags) {
+void BLBEntityDestroyCallback_2758(MenuEntityBase *entity, u32 flags) {
     entity->vtable = BLB_ENTITY_DESTROYED_VTABLE;
     if (flags & 1) {
         FreeBLBMemory(entity, 0x1C);
@@ -27,6 +29,6 @@ void BLBEntityDestroyCallback_2758(BLBEntityHeader *entity, u32 flags) {
  * The `size` parameter is unused — FreeFromHeap is invoked with 0/0 for
  * the trailing args. Name likely should be FreeFromBlbHeap.
  */
-void FreeBLBMemory(BLBEntityHeader *ptr, s32 size) {
+void FreeBLBMemory(MenuEntityBase *ptr, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, ptr, 0, 0);
 }

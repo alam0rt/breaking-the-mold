@@ -42,40 +42,40 @@ BlbEntityWithSpriteSubobject *InitEntityWithTable(BlbEntityWithSpriteSubobject *
  * BLB_ReadSectorsWrapper as the I/O callback) and SetSpriteTables. */
 INCLUDE_ASM("asm/nonmatchings/blb", LoadBLBHeader);
 
-/* Entity destructor. Swaps the vtable to SimpleDestruct for cleanup, drops
- * from update / Z-order / def lists, deletes the helper buffer at +0x3C and
- * the embedded sub-object at +0x84, swaps the vtable to LevelDestroy, then
- * (if flags&1) frees the entity itself back to the BLB heap. */
+/* GameState teardown. Swaps the polymorphic vtable slot (+0x18) to
+ * SimpleDestruct for cleanup, drops from update / Z-order / def lists, deletes
+ * the previous spawn-list buffer at +0x3C and the embedded LevelDataContext at
+ * +0x84, swaps the vtable to LevelDestroy, then (if flags&1) frees the scene
+ * object itself back to the BLB heap. */
 void DestroyEntity(u8 *entity, s32 flags) {
-    BlbEntity *e = (BlbEntity *)entity;
-    e->vtable = g_EntityVtable_SimpleDestruct;
+    GameState *gs = (GameState *)entity;
+    gs->postRenderCallbackContext = g_EntityVtable_SimpleDestruct;
     RemoveFromUpdateQueue(entity);
     RemoveFromZOrderList(entity);
     ClearEntityDefList(entity);
     FreeEntityLists(entity);
-    if (e->helperBuffer != NULL) {
-        builtin_delete(e->helperBuffer);
+    if (gs->previous_spawn_list != NULL) {
+        builtin_delete(gs->previous_spawn_list);
     }
-    ConditionalDelete(entity + 0x84, 2);
-    e->vtable = g_EntityVtable_LevelDestroy;
+    ConditionalDelete((u8 *)&gs->level_context, 2);
+    gs->postRenderCallbackContext = g_EntityVtable_LevelDestroy;
     if (flags & 1) {
         FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
     }
 }
 
-/* Frees this entity's per-instance tick-queue (ptr at +0x108, count at
- * +0x104) back to the BLB heap and zeroes the queue-busy latch at
- * heap+0xA08A. Likely should be FreeEntityTickQueue: same simple name as
- * the engine-wide RemoveEntityFromUpdateQueue @ 0x80021E50. */
+/* Frees the scene's tile-render lookup table (ptr at +0x108, count at +0x104)
+ * back to the BLB heap and zeroes the queue-busy latch at heap+0xA08A. Likely
+ * should be FreeTileRenderState. */
 void RemoveFromUpdateQueue(u8 *entity) {
     u8 *heap = (u8 *)g_pBlbHeapBase;
-    BlbEntity *e = (BlbEntity *)entity;
+    GameState *gs = (GameState *)entity;
 
     ((BlbHeapHeader *)heap)->queueBusyLatch = 0;
-    if (e->tickQueue != NULL) {
-        FreeFromHeap(heap, e->tickQueue, 0, 0);
-        e->tickQueue = NULL;
-        e->tickQueueCount = 0;
+    if (gs->tile_render_state_ptr != NULL) {
+        FreeFromHeap(heap, gs->tile_render_state_ptr, 0, 0);
+        gs->tile_render_state_ptr = NULL;
+        gs->tile_render_state_count = 0;
     }
 }
 
@@ -100,16 +100,16 @@ INCLUDE_ASM("asm/nonmatchings/blb", DeferredEntityRemoval);
  * DeferredEntityRemoval performs. Used at level teardown / scene switches. */
 INCLUDE_ASM("asm/nonmatchings/blb", EntityRemoval);
 
-/* Plain (no-camera) variant of the per-frame tick driver. Iterates an
- * EntityListHead's linked list, fetches the tick fn at vtable+0x14 and the
+/* Plain (no-camera) variant of the per-frame tick driver. Iterates the
+ * GameState tick list at +0x1C, fetches the tick fn at vtable+0x14 and the
  * arg-offset at vtable+0x10, and invokes tick_fn(entity + offset). */
-void EntityTickLoop(EntityListHead *list) {
+void EntityTickLoop(GameState *gameState) {
     EntityListNode *node;
 
-    node = list->head;
+    node = gameState->tick_list_head;
     while (node) {
         u8 *entity = (u8 *)node->entity;
-        BlbEntityVtable *vtable = (BlbEntityVtable *)((BlbEntity *)entity)->vtable;
+        BlbEntityVtable *vtable = (BlbEntityVtable *)((Entity *)entity)->collisionVtable;
         s16 offset = vtable->argOffset;
         vtable->tickFn((void *)(entity + offset));
         node = node->next;
