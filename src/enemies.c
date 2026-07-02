@@ -56,12 +56,27 @@
     *(CallbackSlot *)&(dest_field) = (scratch) \
 )
 
+extern u8 IsEntityOffScreen(Entity *e);
+extern u8 IsEntityOffScreen_EntityLoop(GameState *gs, Entity *e);
+
+typedef void (*GsCullNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
+typedef struct { s32 arg; GsCullNotifyCB fn; } GsCullNotifySlot;
+
+/* Parent entity with up to three linked-entity slots that the offscreen
+ * cull family (below) can disable and detach. */
+typedef struct OffscreenCullEntity {
+    /* 0x000 */ u8 pad0[0x100];
+    /* 0x100 */ Entity *cullChild;
+    /* 0x104 */ Entity *cullSpawnRef;
+    /* 0x108 */ Entity *cullSpawnData;
+} OffscreenCullEntity;
+
 extern void *g_pBlbHeapBase;
-extern void CheckAndDisableSpawnDataOffscreen(Entity *entity);
+extern void CheckAndDisableSpawnDataOffscreen(OffscreenCullEntity *entity);
 extern void CollisionCheckWrapper(Entity *e, s32 a, s32 b, s32 c);
-extern void CheckAndDisableChildEntityOffscreen(Entity *e);
-extern void CheckAndDisableSpawnRefOffscreen(Entity *e);
-extern void EntityOffScreenChildCleanup(Entity *e);
+extern void CheckAndDisableChildEntityOffscreen(OffscreenCullEntity *e);
+extern void CheckAndDisableSpawnRefOffscreen(OffscreenCullEntity *e);
+extern void EntityOffScreenChildCleanup(OffscreenCullEntity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
 extern void CollectibleTickCallback(Entity *e);
 extern void CollectibleTickFinnMode(Entity *e);
@@ -1901,7 +1916,64 @@ void EntityUpdateWithCollisionOffscreen(Entity *e) {
     CheckAndDisableChildEntityOffscreen(e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableChildEntityOffscreen);
+/* Offscreen cull: if this entity AND its linked child (+0x100) are both
+ * offscreen, clear the child's active bit (+0x16 bit 0), detach it, and
+ * notify the GameState event FSM with EVT_GAME_NOTIFY (3, arg 0, srcEntity=e).
+ * First of a five-member family differing only in which linked slot is
+ * culled (+0x100/+0x104/+0x108) and an optional trailing tick. */
+void CheckAndDisableChildEntityOffscreen(OffscreenCullEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsCullNotifyCB, fn, "$8");   /* $t0 home (jalr target) */
+    FSM_REG(GsCullNotifyCB, ft, "$19");  /* $s3 then-fn (relays into $t0) */
+    FSM_REG(s32, slotArg, "$18");        /* $s2 slot arg */
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(OffscreenCullEntity *, self, "$17");
+    FSM_REG(s32, off, "$16");
+    Entity *c;
+
+    self = e;
+    off = 0;
+    if (self->cullChild != NULL) {
+        if (IsEntityOffScreen((Entity *)self) != 0) {
+            off = IsEntityOffScreen_EntityLoop(g_pGameState, self->cullChild) != 0;
+        }
+    }
+    if (off != 0) {
+        c = self->cullChild;
+        *((u8 *)c + 0x16) &= 0xFE;
+        gs = g_pGameState;
+        self->cullChild = NULL;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m != 0) {
+            t = m;
+            FSM_RELAY(s, t); /* stages the survivor through $v0 */
+            if (m > 0) {
+                GsCullNotifySlot *base =
+                    *(GsCullNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+                slotArg = base[m - 1].arg;
+                ft = base[m - 1].fn;
+                FSM_RELAY(fn, ft);
+            } else {
+                fn = (GsCullNotifyCB)gs->event_callback;
+            }
+            slotArgWide = slotArg;
+            lo = ((s16 *)&gs->event_marker)[0];
+            if (s > 0) {
+                adj = (s16)slotArgWide + lo;
+            } else {
+                adj = lo;
+            }
+            FSM_KEEP_LIVE(s);
+            fn((void *)((u8 *)gs + adj), 3, 0, self);
+        }
+    }
+}
+
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitScaledPlatformEntity);
 
@@ -1925,7 +1997,60 @@ void EntityUpdateWithCollisionSpawnCheck(Entity *e) {
     CheckAndDisableSpawnDataOffscreen(e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnDataOffscreen);
+/* Sibling of CheckAndDisableChildEntityOffscreen for the +0x108 slot. */
+void CheckAndDisableSpawnDataOffscreen(OffscreenCullEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsCullNotifyCB, fn, "$8");   /* $t0 home (jalr target) */
+    FSM_REG(GsCullNotifyCB, ft, "$19");  /* $s3 then-fn (relays into $t0) */
+    FSM_REG(s32, slotArg, "$18");        /* $s2 slot arg */
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(OffscreenCullEntity *, self, "$17");
+    FSM_REG(s32, off, "$16");
+    Entity *c;
+
+    self = e;
+    off = 0;
+    if (self->cullSpawnData != NULL) {
+        if (IsEntityOffScreen((Entity *)self) != 0) {
+            off = IsEntityOffScreen_EntityLoop(g_pGameState, self->cullSpawnData) != 0;
+        }
+    }
+    if (off != 0) {
+        c = self->cullSpawnData;
+        *((u8 *)c + 0x16) &= 0xFE;
+        gs = g_pGameState;
+        self->cullSpawnData = NULL;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m != 0) {
+            t = m;
+            FSM_RELAY(s, t); /* stages the survivor through $v0 */
+            if (m > 0) {
+                GsCullNotifySlot *base =
+                    *(GsCullNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+                slotArg = base[m - 1].arg;
+                ft = base[m - 1].fn;
+                FSM_RELAY(fn, ft);
+            } else {
+                fn = (GsCullNotifyCB)gs->event_callback;
+            }
+            slotArgWide = slotArg;
+            lo = ((s16 *)&gs->event_marker)[0];
+            if (s > 0) {
+                adj = (s16)slotArgWide + lo;
+            } else {
+                adj = lo;
+            }
+            FSM_KEEP_LIVE(s);
+            fn((void *)((u8 *)gs + adj), 3, 0, self);
+        }
+    }
+}
+
 
 s32 EntitySimpleEventPassthrough_V2(Entity *entity, u32 event) {
     if ((event & 0xFFFF) == EVT_TICK) {
@@ -2004,7 +2129,60 @@ void PlatformCollisionTickCallback(Entity *e) {
     CheckAndDisableSpawnRefOffscreen(e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CheckAndDisableSpawnRefOffscreen);
+/* Sibling of CheckAndDisableChildEntityOffscreen for the +0x104 slot. */
+void CheckAndDisableSpawnRefOffscreen(OffscreenCullEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsCullNotifyCB, fn, "$8");   /* $t0 home (jalr target) */
+    FSM_REG(GsCullNotifyCB, ft, "$19");  /* $s3 then-fn (relays into $t0) */
+    FSM_REG(s32, slotArg, "$18");        /* $s2 slot arg */
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(OffscreenCullEntity *, self, "$17");
+    FSM_REG(s32, off, "$16");
+    Entity *c;
+
+    self = e;
+    off = 0;
+    if (self->cullSpawnRef != NULL) {
+        if (IsEntityOffScreen((Entity *)self) != 0) {
+            off = IsEntityOffScreen_EntityLoop(g_pGameState, self->cullSpawnRef) != 0;
+        }
+    }
+    if (off != 0) {
+        c = self->cullSpawnRef;
+        *((u8 *)c + 0x16) &= 0xFE;
+        gs = g_pGameState;
+        self->cullSpawnRef = NULL;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m != 0) {
+            t = m;
+            FSM_RELAY(s, t); /* stages the survivor through $v0 */
+            if (m > 0) {
+                GsCullNotifySlot *base =
+                    *(GsCullNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+                slotArg = base[m - 1].arg;
+                ft = base[m - 1].fn;
+                FSM_RELAY(fn, ft);
+            } else {
+                fn = (GsCullNotifyCB)gs->event_callback;
+            }
+            slotArgWide = slotArg;
+            lo = ((s16 *)&gs->event_marker)[0];
+            if (s > 0) {
+                adj = (s16)slotArgWide + lo;
+            } else {
+                adj = lo;
+            }
+            FSM_KEEP_LIVE(s);
+            fn((void *)((u8 *)gs + adj), 3, 0, self);
+        }
+    }
+}
+
 
 INCLUDE_ASM("asm/nonmatchings/enemies", PlatformEventHandlerSpawnEffect);
 
@@ -2028,7 +2206,61 @@ INCLUDE_ASM("asm/nonmatchings/enemies", PlatformShowAndActivate);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitBouncableClayEntity);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffScreenChildCleanup);
+/* Byte-identical duplicate of CheckAndDisableChildEntityOffscreen (the
+ * original binary compiled the same code twice). */
+void EntityOffScreenChildCleanup(OffscreenCullEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsCullNotifyCB, fn, "$8");   /* $t0 home (jalr target) */
+    FSM_REG(GsCullNotifyCB, ft, "$19");  /* $s3 then-fn (relays into $t0) */
+    FSM_REG(s32, slotArg, "$18");        /* $s2 slot arg */
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(OffscreenCullEntity *, self, "$17");
+    FSM_REG(s32, off, "$16");
+    Entity *c;
+
+    self = e;
+    off = 0;
+    if (self->cullChild != NULL) {
+        if (IsEntityOffScreen((Entity *)self) != 0) {
+            off = IsEntityOffScreen_EntityLoop(g_pGameState, self->cullChild) != 0;
+        }
+    }
+    if (off != 0) {
+        c = self->cullChild;
+        *((u8 *)c + 0x16) &= 0xFE;
+        gs = g_pGameState;
+        self->cullChild = NULL;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m != 0) {
+            t = m;
+            FSM_RELAY(s, t); /* stages the survivor through $v0 */
+            if (m > 0) {
+                GsCullNotifySlot *base =
+                    *(GsCullNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+                slotArg = base[m - 1].arg;
+                ft = base[m - 1].fn;
+                FSM_RELAY(fn, ft);
+            } else {
+                fn = (GsCullNotifyCB)gs->event_callback;
+            }
+            slotArgWide = slotArg;
+            lo = ((s16 *)&gs->event_marker)[0];
+            if (s > 0) {
+                adj = (s16)slotArgWide + lo;
+            } else {
+                adj = lo;
+            }
+            FSM_KEEP_LIVE(s);
+            fn((void *)((u8 *)gs + adj), 3, 0, self);
+        }
+    }
+}
+
 
 void EntityTick_CollisionWithCleanup(Entity *e) {
     EntityUpdateCallback(e);
@@ -2307,7 +2539,62 @@ INCLUDE_ASM("asm/nonmatchings/enemies", TeleporterExitState);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitIndexedSpriteEntity);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityOffscreenParentCleanupTick);
+/* CheckAndDisableChildEntityOffscreen + unconditional EntityUpdateCallback
+ * tick afterwards (per-frame parent cleanup wrapper). */
+void EntityOffscreenParentCleanupTick(OffscreenCullEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsCullNotifyCB, fn, "$8");   /* $t0 home (jalr target) */
+    FSM_REG(GsCullNotifyCB, ft, "$19");  /* $s3 then-fn (relays into $t0) */
+    FSM_REG(s32, slotArg, "$18");        /* $s2 slot arg */
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(OffscreenCullEntity *, self, "$16");
+    FSM_REG(s32, off, "$17");
+    Entity *c;
+
+    self = e;
+    off = 0;
+    if (self->cullChild != NULL) {
+        if (IsEntityOffScreen((Entity *)self) != 0) {
+            off = IsEntityOffScreen_EntityLoop(g_pGameState, self->cullChild) != 0;
+        }
+    }
+    if (off != 0) {
+        c = self->cullChild;
+        *((u8 *)c + 0x16) &= 0xFE;
+        gs = g_pGameState;
+        self->cullChild = NULL;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m != 0) {
+            t = m;
+            FSM_RELAY(s, t); /* stages the survivor through $v0 */
+            if (m > 0) {
+                GsCullNotifySlot *base =
+                    *(GsCullNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+                slotArg = base[m - 1].arg;
+                ft = base[m - 1].fn;
+                FSM_RELAY(fn, ft);
+            } else {
+                fn = (GsCullNotifyCB)gs->event_callback;
+            }
+            slotArgWide = slotArg;
+            lo = ((s16 *)&gs->event_marker)[0];
+            if (s > 0) {
+                adj = (s16)slotArgWide + lo;
+            } else {
+                adj = lo;
+            }
+            FSM_KEEP_LIVE(s);
+            fn((void *)((u8 *)gs + adj), 3, 0, self);
+        }
+    }
+    EntityUpdateCallback((Entity *)self);
+}
+
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCameraTrackingEntity);
 
