@@ -28,7 +28,7 @@ extern void memcpy(u8 *dst, u8 *src, s32 len);
  * Initialize a PrimObject - the per-sprite slot in the GPU primitive
  * buffer that SubmitPrimitiveBufferToGPU walks each frame. Wires up
  * the base + override vtables (D_8001039C then D_80010344 - the double
- * store is needed to byte-match), zeroes scratch coords, enables the
+ * store is needed to byte-match), zeroes width/height, enables the
  * slot, and stamps the caller's id.
  */
 PrimObject *InitSpriteObject(PrimObject *p, s16 id) {
@@ -38,8 +38,8 @@ PrimObject *InitSpriteObject(PrimObject *p, s16 id) {
     p->id = id;
     p->x = 0;
     p->y = 0;
-    p->unk4 = 0;
-    p->unk6 = 0;
+    p->width = 0;
+    p->height = 0;
     p->vtable = PRIM_OBJECT_VTABLE;
     p->primList = NULL;
     p->tpageMode = 0;
@@ -102,12 +102,12 @@ void SetRenderSpriteSemiTrans2(RenderSprite *spr, u8 value) {
     spr->semiTransFlag2 = value;
 }
 
-/* Setter: sprite draw rectangle width/height in pixels - normally
- * pushed in from the current frame's metadata (+0xA / +0xC in the
- * 0x24-byte per-frame entry). */
-void SetRenderSpriteSize(RenderSprite *spr, s16 w, s16 h) {
-    spr->width = w;
-    spr->height = h;
+/* Setter: rotation pivot (+0x2A/+0x2C) - the center the sprite rotates
+ * about on the POLY_FT4 slow path. Only consulted when rotationAngle
+ * (+0x28) is nonzero; ignored on the axis-aligned SPRT fast path. */
+void SetRenderSpriteRotationPivot(RenderSprite *spr, s16 pivotX, s16 pivotY) {
+    spr->pivotX = pivotX;
+    spr->pivotY = pivotY;
 }
 
 /* Getter: u16 at +0x28 - the RotMatrixZ rotation angle applied when the

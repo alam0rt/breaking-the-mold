@@ -12,8 +12,8 @@ BasicPrimObject *InitBasicEntityWithVtable(BasicPrimObject *p, u16 val) {
     p->id = val;
     p->x = 0;
     p->y = 0;
-    p->unk4 = 0;
-    p->unk6 = 0;
+    p->width = 0;
+    p->height = 0;
     p->enabled = 1;
     return p;
 }

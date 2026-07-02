@@ -6,8 +6,8 @@
 typedef struct BasicPrimObject {
     /* 0x00 */ s16 x;
     /* 0x02 */ s16 y;
-    /* 0x04 */ s16 unk4;
-    /* 0x06 */ s16 unk6;
+    /* 0x04 */ s16 width;
+    /* 0x06 */ s16 height;
     /* 0x08 */ u16 id;
     /* 0x0A */ u8 enabled;
     /* 0x0B */ u8 pad0B;
