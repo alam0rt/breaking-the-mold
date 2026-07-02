@@ -3,6 +3,7 @@
 #include "globals.h"
 #include "Game/callback_slot.h"
 #include "Game/spracc_records.h"
+#include "Game/fsm_dispatch.h"
 
 extern s32 PlayerEntityEventHandler(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
@@ -10,6 +11,7 @@ extern s32 PlayerEntityCollisionHandler(PlayerEntity *e, u32 event, u32 arg2, u3
 extern void RemoveEntityFromAllLists(GameState *gs, Entity *entity);
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 extern void SetEntityStateFlagWithValue(void *e, u8 val);
+extern s32 PlayerEvent_ZoneTriggerHandler();
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
@@ -824,7 +826,29 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_FallingPhysicsMain);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_KnockbackPhysics);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SwimmingRisingPhysics);
+u32 PlayerSwimExitMarker asm("D_800A5D30");
+EntityCallback PlayerSwimExitFn asm("D_800A5D34");
+
+void PlayerCallback_SwimmingRisingPhysics(PlayerEntity *e) {
+    s32 pos;
+    s32 v;
+    u8 tile;
+    pos = (e->sprite.base.worldY << 16) + *(u16 *)&e->sprite.base.velocityY;
+    tile = EntityApplyMovementCallbacks((Entity *)e, e->sprite.base.worldX,
+                                        e->sprite.base.worldY);
+    if (tile == 0x53) {
+        v = e->velocityY_fixed - 0x5000;
+        e->velocityY_fixed = v;
+        if (v < -0x80000) {
+            e->velocityY_fixed = -0x80000;
+        }
+    } else {
+        EntitySetState((Entity *)e, PlayerSwimExitMarker, PlayerSwimExitFn);
+    }
+    pos += e->velocityY_fixed;
+    e->sprite.base.worldY = pos >> 16;
+    *(s16 *)&e->sprite.base.velocityY = pos;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Idle);
 
@@ -941,6 +965,23 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Death);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_LevelExitTeleporter);
 
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
+u32 PlayerHiddenIdleMarker asm("D_800A5F14");
+EntityCallback PlayerHiddenIdleFn asm("D_800A5F18");
+
+/* PlayerState_HideAndClearBounce @ 0x8006A310 -- hides the player sprite and
+ * parks the FSM: sets bounce_active_flag, installs EntityUpdateCallback as
+ * tick and PlayerEvent_ZoneTriggerHandler as event slot, zeroes the input
+ * (+0x104) and render (+0x1C) slots, freezes the anim frame, hides render +
+ * sprite (spriteContext->enabled=0), then EntitySetCallback(HiddenIdle pair).
+ *
+ * SHELVED (4-instr prologue rotation): body matches except cc1 places the
+ * `sw ra,0x34(sp)` prologue save BEFORE the g_pGameState load + li 1 block,
+ * target places it after. Both fn-address temps (a0/a3), the 0x38 frame
+ * (PadSlot + dead PadSlot hole), scratch reuse, and the tail (marker temp +
+ * fence, sb in jal delay) are exact. Not source-reachable (same class as
+ * PlayerSetupCallbacksAndSprite); permuter 5min floored at 60. Draft kept in
+ * nonmatchings/PlayerState_HideAndClearBounce/base.c. */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_HideAndClearBounce);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_CheckpointExit);
@@ -1139,7 +1180,17 @@ INCLUDE_ASM("asm/nonmatchings/playst", InitHUDAnimatedEntity);
 
 INCLUDE_ASM("asm/nonmatchings/playst", CreateHaloEntity);
 
-INCLUDE_ASM("asm/nonmatchings/playst", EntityDestructor_FreeResourceAt24);
+extern u8 PLAYER_DESTRUCTOR_VTABLE_17A4[] asm("D_800117A4");
+extern u8 PLAYST_PLAYER_CALLBACK_TABLE[] asm("g_PlayerCallbackTable");
+
+void EntityDestructor_FreeResourceAt24(Entity *e, s32 flags) {
+    e->collisionVtable = PLAYER_DESTRUCTOR_VTABLE_17A4;
+    FreeFromHeap(g_pBlbHeapBase, *(u8 **)&e->moveMarkerX, 0, 0);
+    e->collisionVtable = PLAYST_PLAYER_CALLBACK_TABLE + 0x20;
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
+    }
+}
 
 
 
