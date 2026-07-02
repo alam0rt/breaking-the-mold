@@ -4,6 +4,7 @@
 #include "globals.h"
 #include "Game/callback_slot.h"
 #include "Game/fsm_dispatch.h"
+#include "Game/pickups_entities.h"
 
 extern void *g_pBlbHeapBase;
 extern u8 DECOR_ENTITY_DESTRUCTOR_VTABLE[] asm("D_80010870");
@@ -26,28 +27,7 @@ extern void EntityCollisionHandler_SpecialTrigger(Entity *e);
 extern void EntityCollision_FlagAndDispatch(Entity *e);
 extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
 
-typedef struct DecorSpawnData {
-    /* 0x00 */ u8 pad00[8];
-    /* 0x08 */ s16 x;
-    /* 0x0A */ s16 y;
-} DecorSpawnData;
-
 extern void InitPathFollowingDecorEntity(TimedPathEntity *e, DecorSpawnData *data, u8 flag);
-
-typedef struct InteractiveDecorEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x11D - 0x100];
-    /* 0x11D */ u8 triggerState;
-} InteractiveDecorEntity;
-
-/* Animated decor whose tick fires on a random timer (e.g. blinking eyes,
- * flickering background effects). +0x120 is the down-counter byte armed
- * by DecorSetRandomTimer / DecorStartWithRandomTimer. */
-typedef struct DecorRandomTimerEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x120 - 0x100];
-    /* 0x120 */ u8 randomTimer;
-} DecorRandomTimerEntity;
 
 /* gp_rel tentative defs (sdata blob owns the strong defs). */
 u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8");
@@ -56,18 +36,6 @@ EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC");
 extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
 extern u8 GREENBULLET_VTABLE[] asm("D_80010850");
 void DecorEntity_CollectWithSwirlyEffect(InteractiveDecorEntity *e);
-
-/* Sprite render context (Entity+0x34) view: the fields used to build the GPU
- * tpage from the sprite's reserved VRAM rect. Matches RenderSprite (spracc.c). */
-typedef struct DecorSpriteCtx {
-    /* 0x00 */ u8  pad00[0x10];
-    /* 0x10 */ s16 vramX;
-    /* 0x12 */ s16 vramY;
-    /* 0x14 */ u8  pad14[0x24 - 0x14];
-    /* 0x24 */ u16 tpage;
-    /* 0x26 */ u8  pad26[0x32 - 0x26];
-    /* 0x32 */ u8  abr;
-} DecorSpriteCtx;
 
 /* Type-002 green-bullets pickup: sprite hash 0xE8628689, path-following decor
  * shell, collected via DecorEntity_CollectWithSwirlyEffect; builds the GPU
@@ -111,17 +79,6 @@ extern void InitDecorEntityWithScreenOffset(Entity *e, s32 dx, s32 dy, s32 flag)
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
 extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
 
-/* Powerup-collectible (extra life, phoenix hand, super willie...) shape:
- * extends InteractiveDecorEntity with a sub-entity pointer at +0x100 that
- * gets a +0x12 (collisionMask) field stamped with 7 just before the
- * award call. The stamp goes into the award's delay slot. */
-typedef struct PowerupCollectibleEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ Entity *labelEntity;
-    /* 0x104 */ u8 pad104[0x11D - 0x104];
-    /* 0x11D */ u8 triggerState;
-} PowerupCollectibleEntity;
-
 /* Twin of CollectibleClaySingleTickCallback for the swirly-orb pickup
  * variant. Same offscreen-cull + box-collision dispatch shape, but
  * grants a swirly instead of an orb, spawns the VFX at (0x98, 0x16),
@@ -141,14 +98,6 @@ INCLUDE_ASM("asm/nonmatchings/pickups", InitDecorEntityWithHUDIcon);
 extern u8 DECOR_HUD_ICON_INTERMEDIATE_VTABLE[] asm("D_80010830");
 extern void RemoveFromRenderList(GameState *gs, void *slot);
 extern void DestroyEntityAndFreeMemory(SpriteEntity *e, s32 flags);
-
-/* Decor entity that owns a detached render-list slot at +0x120 (the
- * HUD-icon child allocated by InitDecorEntityWithHUDIcon). */
-typedef struct DecorChildSlotEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x120 - 0x100];
-    /* 0x120 */ void *childSlot;
-} DecorChildSlotEntity;
 
 /* Destructor for decor entities that own a detached render-list slot at
  * +0x120 (typically allocated by InitDecorEntityWithHUDIcon). Always
