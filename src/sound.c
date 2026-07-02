@@ -1,4 +1,5 @@
 #include "common.h"
+#include "Game/sound_records.h"
 
 extern void SpuSetKey(s32 onoff, s32 voiceBits);
 extern void StopCDAudio(void);
@@ -29,14 +30,6 @@ u8  ACTIVE_SPU_VOICE_MASK asm("D_800A6088");
 INCLUDE_ASM("asm/nonmatchings/sound", InitSPUDefaults);
 
 INCLUDE_ASM("asm/nonmatchings/sound", UploadAudioToSPU);
-
-/* SPU upload-block log entry (12 bytes/entry). Tracks one upload's byte
- * size so PopSPUUploadBlock can rewind SPU_UPLOAD_USED_BYTES on free.
- * Only `sz` is read in this file; the trailing 10 bytes are opaque. */
-typedef struct {
-    /* 0x00 */ u16 sz;
-    /* 0x02 */ u8  _pad02[10];
-} SpuUploadBlock;
 
 extern SpuUploadBlock SPU_UPLOAD_BLOCK_TABLE[] asm("D_8009CFB0");
 
@@ -105,14 +98,6 @@ INCLUDE_ASM("asm/nonmatchings/sound", CalculateStereoVolume);
 extern void CalculateStereoVolume(s16 *out, s32 vol, s32 pan);
 extern void SpuSetVoiceVolume(s32 voice, s16 volL, s16 volR);
 extern u8 VOICE_SOUND_INDEX_TABLE[] asm("D_8009CC18");
-
-/* Sound-definition table entry (12 bytes/entry). First field is the base
- * mixer volume passed to CalculateStereoVolume; the other 10 bytes hold
- * envelope / pitch / category data not touched here. */
-typedef struct {
-    /* 0x00 */ s16 volume;
-    /* 0x02 */ u8  _pad02[10];
-} SoundDefinition;
 
 extern SoundDefinition SOUND_DEFINITION_TABLE[] asm("D_8009CC68");
 
