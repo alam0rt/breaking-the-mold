@@ -3,11 +3,7 @@
 extern s32 GetLevelFlags();
 #include "Game/game_state.h"
 #include "globals.h"
-
-typedef struct CheckpointEntityNode {
-    /* 0x00 */ struct CheckpointEntityNode *next;
-    /* 0x04 */ s32 entity_id;
-} CheckpointEntityNode;
+#include "Game/lvlload_records.h"
 
 /* Top-level level-load driver. Clears the prior level's entity lists, then
  * drives the BLB playback FSM (AdvancePlaybackSequence / SeekToLevelInSequence)
