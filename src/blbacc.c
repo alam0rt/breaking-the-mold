@@ -19,7 +19,7 @@ u8 GetLevelAssetIndex(LevelDataContext *ctx, u8 index) {
     return ((BlbHeader *)ctx->blb_header)->levels[index].level_index;
 }
 
-u8 *func_8007A9E8(LevelDataContext *ctx, u8 index) {
+u8 *GetLevelIdByIndex(LevelDataContext *ctx, u8 index) {
     return (u8 *)((BlbHeader *)ctx->blb_header)->levels[index].level_id;
 }
 
@@ -53,7 +53,7 @@ char *GetCurrentLevelDisplayName(LevelDataContext *ctx) {
     }
 }
 
-char *func_8007AADC(LevelDataContext *ctx) {
+char *GetCurrentSequenceLevelName(LevelDataContext *ctx) {
     BlbHeader *header = (BlbHeader *)ctx->blb_header;
     u8 idx = ctx->current_sequence_index;
     u8 kind = header->sequence_modes[idx];
@@ -110,7 +110,7 @@ u8 *GetMovieEntryByIndex(LevelDataContext *ctx, u8 index) {
     return (u8 *)((BlbHeader *)ctx->blb_header)->movies[index].movie_id;
 }
 
-u8 *func_8007AD10(LevelDataContext *ctx, u8 index) {
+u8 *GetMovieShortNameByIndex(LevelDataContext *ctx, u8 index) {
     return (u8 *)((BlbHeader *)ctx->blb_header)->movies[index].short_name;
 }
 
@@ -174,7 +174,7 @@ u16 GetMovieSectorCount(LevelDataContext *ctx) {
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentModeReservedData);
 
-u8 func_8007AFA4(LevelDataContext *ctx) {
+u8 GetCurrentLevelExtraFlag(LevelDataContext *ctx) {
     BlbHeader *header = (BlbHeader *)ctx->blb_header;
     u8 idx = ctx->current_sequence_index;
     u8 flag = header->sequence_modes[idx];
@@ -260,12 +260,12 @@ u32 GetTotalTileCount(LevelDataContext *ctx) {
     return th->tile_count_a + th->tile_count_b + th->tile_count_c;
 }
 
-u32 func_8007B55C(LevelDataContext *ctx) {
+u32 GetBaseTileCount(LevelDataContext *ctx) {
     LevelShapeHeader *th = (LevelShapeHeader *)ctx->tile_header;
     return th->tile_count_a + th->tile_count_b;
 }
 
-u16 func_8007B574(LevelDataContext *ctx) {
+u16 GetTileCountC(LevelDataContext *ctx) {
     return ((LevelShapeHeader *)ctx->tile_header)->tile_count_c;
 }
 
@@ -304,7 +304,7 @@ u8 *GetLayerEntry(LevelDataContext *ctx, u16 index) {
     return (u8 *)(ctx->layer_entries + index * 92);
 }
 
-u8 *func_8007B724(LevelDataContext *ctx, u16 idx) {
+u8 *GetLayerEntryField2C(LevelDataContext *ctx, u16 idx) {
     return (u8 *)(ctx->layer_entries + idx * 92 + 0x2C);
 }
 
@@ -344,7 +344,7 @@ u32 GetLevelDataContextField3C(LevelDataContext *ctx) {
     return ctx->vram_rects;
 }
 
-u16 func_8007B7E8(LevelDataContext *ctx) {
+u16 GetAnimTilemapLayerCount(LevelDataContext *ctx) {
     u16 *p = (u16 *)ctx->anim_offsets;
     if (p != NULL) {
         return *p;
@@ -384,7 +384,7 @@ u8 *GetVehicleDataPtr(LevelDataContext *ctx) {
     return (u8 *)ctx->vehicle_data;
 }
 
-u16 func_8007B930(LevelDataContext *ctx) {
+u16 GetTotalSpriteCount(LevelDataContext *ctx) {
     s32 v1 = 0;
     if (ctx->container_600) v1 = *(u16 *)ctx->container_600;
     if (ctx->sprites) v1 += *(s32 *)ctx->sprites;
