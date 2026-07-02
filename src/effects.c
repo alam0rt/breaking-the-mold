@@ -594,8 +594,58 @@ INCLUDE_ASM("asm/nonmatchings/effects", CheckChildEntityOffscreenDespawn);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitGridSpriteContext);
 
-/* EntityDespawnIfFlagSet: unit spans 0x800361F8..0x800362A4 — absorbs former split symbols NotifyGameStateZero (Ghidra labels with no external references; merged 2026-07-02). */
-INCLUDE_ASM("asm/nonmatchings/effects", EntityDespawnIfFlagSet);
+typedef void (*GsNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
+typedef struct { s32 arg; GsNotifyCB fn; } GsNotifySlot;
+
+/* If the entity's flag at +0x7C is set, dispatch g_pGameState's event FSM
+ * slot (marker +0x8/0xA, fn +0xC) with EVT_GAME_NOTIFY (3), arg 1, and the
+ * entity as srcEntity. First of four byte-identical game-progression
+ * notifiers differing in the guard-flag offset and arg (this one passes 0) (see
+ * ExpiredEntityDespawnEvent / BeamEffectDespawnEvent /
+ * FadeExpireEntityDespawnEvent). Same FSM forwarder recipe as
+ * func_80034B10; the constant 3/1 args free $a1/$a2, so the marker
+ * survivor pins to $a2 instead of $t3. Formerly split as
+ * "NotifyGameStateZero" (phantom symbol, merged 2026-07-02). */
+void EntityDespawnIfFlagSet(Entity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    s32 slotArg;
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+
+    if (*((u8 *)e + 0x7C) == 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    if (m == 0) {
+        return;
+    }
+    t = m;
+    FSM_RELAY(s, t);
+    if (m > 0) {
+        GsNotifySlot *base =
+            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+        slotArg = base[m - 1].arg;
+        ft = base[m - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsNotifyCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (s > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, 0, e);
+}
 
 
 INCLUDE_ASM("asm/nonmatchings/effects", CreatePlayerParticleEntity);
@@ -715,8 +765,51 @@ void RippleEffectRenderCallback(RippleExpandEntity *e) {
     *((u8 *)child + 0x3A7) = 1;
 }
 
-/* ExpiredEntityDespawnEvent: unit spans 0x80037418..0x800374C4 — absorbs former split symbols NotifyGameStateOne, NullStubFunction (Ghidra labels with no external references; merged 2026-07-02). */
-INCLUDE_ASM("asm/nonmatchings/effects", ExpiredEntityDespawnEvent);
+/* Countdown-timer variant of the game-progression notifier quartet: fires
+ * EVT_GAME_NOTIFY (3, arg 1, srcEntity=e) at g_pGameState's event FSM slot
+ * once the timer tick has set expiredFlag (+0x29). Same recipe as
+ * EntityDespawnIfFlagSet. Formerly split as "NotifyGameStateOne" +
+ * "NullStubFunction" (phantom symbols, merged 2026-07-02). */
+void ExpiredEntityDespawnEvent(CountdownTimerEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    s32 slotArg;
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+
+    if (e->expiredFlag == 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    if (m == 0) {
+        return;
+    }
+    t = m;
+    FSM_RELAY(s, t);
+    if (m > 0) {
+        GsNotifySlot *base =
+            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+        slotArg = base[m - 1].arg;
+        ft = base[m - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsNotifyCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (s > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, 1, e);
+}
 
 
 
@@ -773,8 +866,50 @@ void BeamEffectRenderCallback(BeamEffectEntity *e) {
     *(s16 *)((u8 *)e->child + 0x90) = *(u16 *)((u8 *)e + 0x28);
 }
 
-/* BeamEffectDespawnEvent: unit spans 0x80037A34..0x80037AE0 — absorbs former split symbols NotifyGameStateOneAlt (Ghidra labels with no external references; merged 2026-07-02). */
-INCLUDE_ASM("asm/nonmatchings/effects", BeamEffectDespawnEvent);
+/* Beam-effect variant of the notifier quartet: guard is
+ * BeamEffectEntity.expiredFlag (+0x1E, set by BeamEffectTickWithRotation
+ * when the beam timer runs out). Formerly split as "NotifyGameStateOneAlt"
+ * (phantom symbol, merged 2026-07-02). */
+void BeamEffectDespawnEvent(BeamEffectEntity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    s32 slotArg;
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+
+    if (e->expiredFlag == 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    if (m == 0) {
+        return;
+    }
+    t = m;
+    FSM_RELAY(s, t);
+    if (m > 0) {
+        GsNotifySlot *base =
+            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+        slotArg = base[m - 1].arg;
+        ft = base[m - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsNotifyCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (s > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, 1, e);
+}
 
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitScalableTimerEntity);
@@ -811,8 +946,49 @@ void DestroyOscillatingScaleEntity(Entity *e, s32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", FadeAndExpireEntityTick);
 
-/* FadeExpireEntityDespawnEvent: unit spans 0x80037F60..0x8003800C — absorbs former split symbols NotifyGameStateOneAlt2 (Ghidra labels with no external references; merged 2026-07-02). */
-INCLUDE_ASM("asm/nonmatchings/effects", FadeExpireEntityDespawnEvent);
+/* Fade-and-expire variant of the notifier quartet: guard byte at +0x24
+ * (set by FadeAndExpireEntityTick when the fade completes). Formerly split
+ * as "NotifyGameStateOneAlt2" (phantom symbol, merged 2026-07-02). */
+void FadeExpireEntityDespawnEvent(Entity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    s32 slotArg;
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+
+    if (*((u8 *)e + 0x24) == 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    if (m == 0) {
+        return;
+    }
+    t = m;
+    FSM_RELAY(s, t);
+    if (m > 0) {
+        GsNotifySlot *base =
+            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+        slotArg = base[m - 1].arg;
+        ft = base[m - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsNotifyCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (s > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, 1, e);
+}
 
 
 s32 HandleCollisionEvent0x1018(BeamEffectEntity *e, u16 event) {
