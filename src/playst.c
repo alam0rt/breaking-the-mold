@@ -201,6 +201,42 @@ s32 PlayerProcessEnemyHit(PlayerEntity *e, Entity *enemy) {
     return 1;
 }
 
+/* Player/enemy overlap test that, on a hit, drives the player into the same
+ * four damage outcomes as PlayerProcessEnemyHit. The enemy's screen AABB is
+ * shrunk on its top edge by (hitboxExpand>>16) - 0xD (doubled while the
+ * player is mid grow/shrink, scalePowerupX == 0x8000), then the player's
+ * worldX must lie inside the enemy's horizontal span and the player's screen
+ * bottom must reach below that adjusted top edge. Ignored while the player is
+ * invincible (+0x128). Verified-equivalent C (compiles to a 2-register swap
+ * of the saved-register assignment only):
+ *
+ *   void CheckPlayerHitByEnemy(PlayerEntity *e, Entity *enemy, s32 hitboxExpand) {
+ *       s16 enemyBounds[4], playerBounds[4], playerX;
+ *       s32 adj, marker; EntityCallback fn;
+ *       GetEntityScreenBounds(enemy, enemyBounds);
+ *       GetEntityScreenBounds((Entity *)e, playerBounds);
+ *       adj = hitboxExpand >> 16;
+ *       if (*(s32 *)((u8 *)e + 0x58) == 0x8000) adj = (hitboxExpand * 2) >> 16;
+ *       adj -= 0xD;
+ *       if ((enemyBounds[1] - adj) < playerBounds[3]) {
+ *           playerX = e->sprite.base.worldX;
+ *           if (playerX >= enemyBounds[0] && enemyBounds[2] >= playerX &&
+ *               e->invincibilityTimer == 0) {
+ *               if (PLAYER_STATE_DATA->powerup_flags & 1) {
+ *                   if (playerX < enemy->worldX) { marker = PlayerQuickTurnMarker; fn = PlayerQuickTurnFn; }
+ *                   else { marker = PlayerBounceDownMarker; fn = PlayerBounceDownFn; }
+ *               } else if (*(u16 *)&e->powerupTimer != 0) { marker = PlayerRespawnMarker; fn = PlayerRespawnFn; }
+ *               else { marker = PlayerDeathMarker; fn = PlayerDeathFn; }
+ *               EntitySetState((Entity *)e, marker, fn);
+ *           }
+ *       }
+ *   }
+ *
+ * Residual: the target assigns player->s1, enemy->s2, hitboxExpand->s0; gcc
+ * gives this source player->s0, hitboxExpand->s1 (a saved-register priority
+ * tie resolved the other way). Pinning player to $17 corrects the assignment
+ * but reorders the prologue arg-moves; pinning hitboxExpand grows the frame.
+ * All other instructions match. */
 INCLUDE_ASM("asm/nonmatchings/playst", CheckPlayerHitByEnemy);
 
 /* Bulk-installs four caller-supplied (marker, callback) FSM slots onto an
