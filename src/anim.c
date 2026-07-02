@@ -524,278 +524,232 @@ void EntityDestructor_FreeWithChildRef(SpriteEntity *entity, s32 flags) {
     }
 }
 
-typedef struct EntityAccessorView {
-    u8 pad00[0x18];
-    s32 collisionVtable; /* 0x18 */
-    s32 field_1C;       /* 0x1C */
-    s32 field_20;       /* 0x20 */
-    s32 field_24;       /* 0x24 */
-    u8 pad28[0x2C - 0x28];
-    s32 field_2C;       /* 0x2C */
-    s16 field_30;       /* 0x30 */
-    s16 field_32;       /* 0x32 */
-    s32 field_34;       /* 0x34 */
-    u8 pad38[0x3A - 0x38];
-    u8 field_3A;        /* 0x3A */
-    u8 field_3B;        /* 0x3B */
-    u8 pad3C[0x50 - 0x3C];
-    s32 field_50;       /* 0x50 */
-    s32 field_54;       /* 0x54 */
-    s32 field_58;       /* 0x58 */
-    s32 field_5C;       /* 0x5C */
-    u8 pad60[0x68 - 0x60];
-    s16 field_68;       /* 0x68 */
-    s16 field_6A;       /* 0x6A */
-    u8 pad6C[0x70 - 0x6C];
-    u16 field_70;       /* 0x70 */
-    u16 field_72;       /* 0x72 */
-    u8 field_74;        /* 0x74 */
-    u8 field_75;        /* 0x75 */
-    u8 pad76[0x98 - 0x76];
-    s32 field_98;       /* 0x98 */
-    s32 field_9C;       /* 0x9C */
-    u8 padA0[0xB0 - 0xA0];
-    s32 field_B0;       /* 0xB0 */
-    u8 padB4[0xCC - 0xB4];
-    s32 field_CC;       /* 0xCC */
-    u8 padD0[0xD8 - 0xD0];
-    s16 field_D8;       /* 0xD8 */
-    s16 field_DA;       /* 0xDA */
-    u16 field_DC;       /* 0xDC */
-    s16 field_DE;       /* 0xDE */
-    u8 padE0[0xF0 - 0xE0];
-    u8 field_F0;        /* 0xF0 */
-    u8 field_F1;        /* 0xF1 */
-    u8 padF2[0xF6 - 0xF2];
-    u8 field_F6;        /* 0xF6 */
-} EntityAccessorView;
-
 /* First of three identical accessor sets covering the entity FSM/render
  * slot fields (+0x1C..+0x3B). Each tiny function exists as a standalone
  * symbol because callers hold its address (slot-installer functions wire
  * them into vtables / FSM tables so they can be invoked through a
  * uniform fn-pointer signature). Returns the renderCallback fn ptr at
  * +0x20. */
-s32 GetEntityRenderCallbackPtr(EntityAccessorView *e) {
-    return e->field_20;
+s32 GetEntityRenderCallbackPtr(SpriteEntity *e) {
+    return (s32)e->base.renderCallback;
 }
 
 /* Setter trampoline: u8 -> entity+0x3B. */
-void SetEntityStateByte3B(EntityAccessorView *e, u8 value) {
-    e->field_3B = value;
+void SetEntityStateByte3B(SpriteEntity *e, u8 value) {
+    ((u8 *)&e->base.renderOffsetY)[1] = value;
 }
 
 /* Setter trampoline: u8 -> entity+0x3A. */
-void SetEntityStateByte3A(EntityAccessorView *e, u8 value) {
-    e->field_3A = value;
+void SetEntityStateByte3A(SpriteEntity *e, u8 value) {
+    ((u8 *)&e->base.renderOffsetY)[0] = value;
 }
 
 /* Setter trampoline: s16 -> entity+0x32 (moveMarkerY low half). */
-void SetEntityMoveMarkerYOffset(EntityAccessorView *e, s16 value) {
-    e->field_32 = value;
+void SetEntityMoveMarkerYOffset(SpriteEntity *e, s16 value) {
+    ((s16 *)&e->base.moveCallbackY)[1] = value;
 }
 
 /* Setter trampoline: s16 -> entity+0x30 (moveCallbackY low half). */
-void SetEntityMoveCallbackYOffset(EntityAccessorView *e, s16 value) {
-    e->field_30 = value;
+void SetEntityMoveCallbackYOffset(SpriteEntity *e, s16 value) {
+    ((s16 *)&e->base.moveCallbackY)[0] = value;
 }
 
 /* Setter trampoline: s32 -> entity+0x24 (moveMarkerX). */
-void SetEntityMoveMarkerX(EntityAccessorView *e, s32 value) {
-    e->field_24 = value;
+void SetEntityMoveMarkerX(SpriteEntity *e, s32 value) {
+    e->base.moveMarkerX = value;
 }
 
 /* Setter trampoline: s32 -> entity+0x20 (renderCallback fn ptr). */
-void SetEntityRenderCallbackPtr(EntityAccessorView *e, s32 value) {
-    e->field_20 = value;
+void SetEntityRenderCallbackPtr(SpriteEntity *e, s32 value) {
+    e->base.renderCallback = (EntityCallback)value;
 }
 
 /* Getter trampoline: returns entity+0x1C (renderMarker). */
-s32 GetEntityRenderMarker(EntityAccessorView *e) {
-    return e->field_1C;
+s32 GetEntityRenderMarker(SpriteEntity *e) {
+    return e->base.renderMarker;
 }
 
 /* Second of three identical accessor sets (see GetEntityRenderCallbackPtr). Setter
  * trampoline: u8 -> entity+0x3B. */
-void SetEntityStateByte3B_80020124(EntityAccessorView *e, u8 value) {
-    e->field_3B = value;
+void SetEntityStateByte3B_80020124(SpriteEntity *e, u8 value) {
+    ((u8 *)&e->base.renderOffsetY)[1] = value;
 }
 
 /* Setter trampoline: u8 -> entity+0x3A. */
-void SetEntityStateByte3A_8002012c(EntityAccessorView *e, u8 value) {
-    e->field_3A = value;
+void SetEntityStateByte3A_8002012c(SpriteEntity *e, u8 value) {
+    ((u8 *)&e->base.renderOffsetY)[0] = value;
 }
 
 /* Setter trampoline: s16 -> entity+0x32. */
-void SetEntityMoveMarkerYOffset_80020134(EntityAccessorView *e, s16 value) {
-    e->field_32 = value;
+void SetEntityMoveMarkerYOffset_80020134(SpriteEntity *e, s16 value) {
+    ((s16 *)&e->base.moveCallbackY)[1] = value;
 }
 
 /* Setter trampoline: s16 -> entity+0x30. */
-void SetEntityMoveCallbackYOffset_8002013c(EntityAccessorView *e, s16 value) {
-    e->field_30 = value;
+void SetEntityMoveCallbackYOffset_8002013c(SpriteEntity *e, s16 value) {
+    ((s16 *)&e->base.moveCallbackY)[0] = value;
 }
 
 /* Setter trampoline: s32 -> entity+0x24. */
-void SetEntityMoveMarkerX_80020144(EntityAccessorView *e, s32 value) {
-    e->field_24 = value;
+void SetEntityMoveMarkerX_80020144(SpriteEntity *e, s32 value) {
+    e->base.moveMarkerX = value;
 }
 
 /* Setter trampoline: s32 -> entity+0x20. */
-void SetEntityRenderCallbackPtr_8002014c(EntityAccessorView *e, s32 value) {
-    e->field_20 = value;
+void SetEntityRenderCallbackPtr_8002014c(SpriteEntity *e, s32 value) {
+    e->base.renderCallback = (EntityCallback)value;
 }
 
 /* Getter trampoline: returns entity+0x1C. */
-s32 GetEntityRenderMarker_80020154(EntityAccessorView *e) {
-    return e->field_1C;
+s32 GetEntityRenderMarker_80020154(SpriteEntity *e) {
+    return e->base.renderMarker;
 }
 
 /* Third of three identical accessor sets (see GetEntityRenderCallbackPtr). Setter
  * trampoline: u8 -> entity+0x3B. */
-void SetEntityStateByte3B_80020160(EntityAccessorView *e, u8 value) {
-    e->field_3B = value;
+void SetEntityStateByte3B_80020160(SpriteEntity *e, u8 value) {
+    ((u8 *)&e->base.renderOffsetY)[1] = value;
 }
 
 /* Setter trampoline: u8 -> entity+0x3A. */
-void SetEntityStateByte3A_80020168(EntityAccessorView *e, u8 value) {
-    e->field_3A = value;
+void SetEntityStateByte3A_80020168(SpriteEntity *e, u8 value) {
+    ((u8 *)&e->base.renderOffsetY)[0] = value;
 }
 
 /* Setter trampoline: s16 -> entity+0x32. */
-void SetEntityMoveMarkerYOffset_80020170(EntityAccessorView *e, s16 value) {
-    e->field_32 = value;
+void SetEntityMoveMarkerYOffset_80020170(SpriteEntity *e, s16 value) {
+    ((s16 *)&e->base.moveCallbackY)[1] = value;
 }
 
 /* Setter trampoline: s16 -> entity+0x30. */
-void SetEntityMoveCallbackYOffset_80020178(EntityAccessorView *e, s16 value) {
-    e->field_30 = value;
+void SetEntityMoveCallbackYOffset_80020178(SpriteEntity *e, s16 value) {
+    ((s16 *)&e->base.moveCallbackY)[0] = value;
 }
 
 /* Setter trampoline: s32 -> entity+0x24. */
-void SetEntityMoveMarkerX_80020180(EntityAccessorView *e, s32 value) {
-    e->field_24 = value;
+void SetEntityMoveMarkerX_80020180(SpriteEntity *e, s32 value) {
+    e->base.moveMarkerX = value;
 }
 
 /* Setter trampoline: s32 -> entity+0x20. */
-void SetEntityRenderCallbackPtr_80020188(EntityAccessorView *e, s32 value) {
-    e->field_20 = value;
+void SetEntityRenderCallbackPtr_80020188(SpriteEntity *e, s32 value) {
+    e->base.renderCallback = (EntityCallback)value;
 }
 
 /* Getter trampoline: returns entity+0x1C. */
-s32 GetEntityRenderMarker_80020190(EntityAccessorView *e) {
-    return e->field_1C;
+s32 GetEntityRenderMarker_80020190(SpriteEntity *e) {
+    return e->base.renderMarker;
 }
 
 /* Getter: returns the entity's decoded pixel buffer pointer (+0xB0
  * pPixelBuffer). Used by render code to access the RLE-decoded bitmap. */
-s32 GetEntityPixelBuffer(EntityAccessorView *e) {
-    return e->field_B0;
+s32 GetEntityPixelBuffer(SpriteEntity *e) {
+    return (s32)e->pPixelBuffer;
 }
 
 /* Setter: u8 -> entity+0xF6 (visibility byte, 0 = visible).
  * The render-time "hide this entity this frame" toggle. */
-void SetEntityHidden(EntityAccessorView *e, u8 value) {
-    e->field_F6 = value;
+void SetEntityHidden(SpriteEntity *e, u8 value) {
+    e->visibility = value;
 }
 
 /* Installs an 8-byte [marker, fn] pair into the queued-state slot at
  * SpriteEntity+0x98 (queuedStateMarker/queuedStateCallback). Promoted
  * into the active slot by EntityProcessCallbackQueue on the next tick. */
-void QueueEntityStateCallback(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)&e->field_98 = val;
+void QueueEntityStateCallback(SpriteEntity *e, S32Pair val) {
+    *(S32Pair *)&e->queuedStateMarker = val;
 }
 
 /* Getter: returns currentFrame at +0xDA (the active animation frame
  * index). The "what frame am I on" query for gameplay logic. */
-s16 GetEntityCurrentFrame(EntityAccessorView *e) {
-    return e->field_DA;
+s16 GetEntityCurrentFrame(SpriteEntity *e) {
+    return e->currentFrame;
 }
 
 /* Getter: returns currentSpriteId at +0xCC (the active sprite-bank hash). */
-s32 GetEntityCurrentSpriteId(EntityAccessorView *e) {
-    return e->field_CC;
+s32 GetEntityCurrentSpriteId(SpriteEntity *e) {
+    return (s32)e->currentSpriteId;
 }
 
 /* Getter: returns targetX at +0x70. */
-u16 GetEntityTargetX(EntityAccessorView *e) {
-    return e->field_70;
+u16 GetEntityTargetX(SpriteEntity *e) {
+    return e->base.targetX;
 }
 
 /* Getter: returns targetY at +0x72. */
-u16 GetEntityTargetY(EntityAccessorView *e) {
-    return e->field_72;
+u16 GetEntityTargetY(SpriteEntity *e) {
+    return e->base.targetY;
 }
 
 /* Setter: u16 -> entity+0x72 (targetY). */
-void SetEntityTargetY(EntityAccessorView *e, u16 value) {
-    e->field_72 = value;
+void SetEntityTargetY(SpriteEntity *e, u16 value) {
+    e->base.targetY = value;
 }
 
 /* Getter: returns scalePowerupY at +0x5C (16.16 fixed-point shrink/grow
  * Y scale). */
-s32 GetEntityScalePowerupY(EntityAccessorView *e) {
-    return e->field_5C;
+s32 GetEntityScalePowerupY(SpriteEntity *e) {
+    return e->base.scalePowerupY;
 }
 
 /* Getter: returns scalePowerupX at +0x58 (16.16 fixed-point shrink/grow
  * X scale). */
-s32 GetEntityScalePowerupX(EntityAccessorView *e) {
-    return e->field_58;
+s32 GetEntityScalePowerupX(SpriteEntity *e) {
+    return e->base.scalePowerupX;
 }
 
 /* Setter: s32 -> entity+0x5C (scalePowerupY). */
-void SetEntityScalePowerupY(EntityAccessorView *e, s32 value) {
-    e->field_5C = value;
+void SetEntityScalePowerupY(SpriteEntity *e, s32 value) {
+    e->base.scalePowerupY = value;
 }
 
 /* Setter: s32 -> entity+0x58 (scalePowerupX). */
-void SetEntityScalePowerupX(EntityAccessorView *e, s32 value) {
-    e->field_58 = value;
+void SetEntityScalePowerupX(SpriteEntity *e, s32 value) {
+    e->base.scalePowerupX = value;
 }
 
 /* Setter: writes the same scalar to both scalePowerupX (+0x58) and
  * scalePowerupY (+0x5C) -- uniform powerup scale. */
-void SetEntityScalePowerupUniform(EntityAccessorView *e, s32 value) {
-    e->field_58 = value;
-    e->field_5C = value;
+void SetEntityScalePowerupUniform(SpriteEntity *e, s32 value) {
+    e->base.scalePowerupX = value;
+    e->base.scalePowerupY = value;
 }
 
 /* Getter: returns scaleRender2 at +0x54 (secondary render scale). */
-s32 GetEntityScaleRender2(EntityAccessorView *e) {
-    return e->field_54;
+s32 GetEntityScaleRender2(SpriteEntity *e) {
+    return e->base.scaleRender2;
 }
 
 /* Getter: returns scaleRender at +0x50 (primary render scale). */
-s32 GetEntityScaleRender(EntityAccessorView *e) {
-    return e->field_50;
+s32 GetEntityScaleRender(SpriteEntity *e) {
+    return e->base.scaleRender;
 }
 
 /* Setter: s32 -> entity+0x54 (scaleRender2). */
-void SetEntityScaleRender2(EntityAccessorView *e, s32 value) {
-    e->field_54 = value;
+void SetEntityScaleRender2(SpriteEntity *e, s32 value) {
+    e->base.scaleRender2 = value;
 }
 
 /* Setter: s32 -> entity+0x50 (scaleRender). */
-void SetEntityScaleRender(EntityAccessorView *e, s32 value) {
-    e->field_50 = value;
+void SetEntityScaleRender(SpriteEntity *e, s32 value) {
+    e->base.scaleRender = value;
 }
 
 /* Setter: writes the same scalar to both scaleRender (+0x50) and
  * scaleRender2 (+0x54) -- uniform render scale. */
-void SetEntityScaleRenderUniform(EntityAccessorView *e, s32 value) {
-    e->field_50 = value;
-    e->field_54 = value;
+void SetEntityScaleRenderUniform(SpriteEntity *e, s32 value) {
+    e->base.scaleRender = value;
+    e->base.scaleRender2 = value;
 }
 
 /* Getter: returns flipY at +0x75. */
-u8 GetEntityFlipY(EntityAccessorView *e) {
-    return e->field_75;
+u8 GetEntityFlipY(SpriteEntity *e) {
+    return e->base.flipY;
 }
 
 /* Getter: returns facing at +0x74 (0 = right, 1 = left). */
-u8 GetEntityFacing(EntityAccessorView *e) {
-    return e->field_74;
+u8 GetEntityFacing(SpriteEntity *e) {
+    return e->base.facing;
 }
 
 /* No-op callback that returns 0. Installed in unused FSM slots (event
@@ -808,19 +762,19 @@ s32 StubReturnZero(void) {
 
 /* Atomic position setter: writes worldX (+0x68) and worldY (+0x6A) in
  * one call. */
-void SetEntityWorldPosition(EntityAccessorView *e, s16 x, s16 y) {
-    e->field_68 = x;
-    e->field_6A = y;
+void SetEntityWorldPosition(SpriteEntity *e, s16 x, s16 y) {
+    e->base.worldX = x;
+    e->base.worldY = y;
 }
 
 /* Setter: s16 -> entity+0x6A (worldY). */
-void SetEntityWorldY(EntityAccessorView *e, s16 value) {
-    e->field_6A = value;
+void SetEntityWorldY(SpriteEntity *e, s16 value) {
+    e->base.worldY = value;
 }
 
 /* Setter: s16 -> entity+0x68 (worldX). */
-void SetEntityWorldX(EntityAccessorView *e, s16 value) {
-    e->field_68 = value;
+void SetEntityWorldX(SpriteEntity *e, s16 value) {
+    e->base.worldX = value;
 }
 
 typedef struct Vec4s16 {
@@ -835,21 +789,21 @@ typedef struct Vec4s16 {
  * y/h divided by scalePowerupY (+0x5C). The (val << 16) / scale pattern
  * is the inverse of a 16.16 multiply. Used to project a sprite
  * rectangle into a shrunken/grown bounding box. */
-void ScaleRectByEntityPowerup(EntityAccessorView *e, Vec4s16 *v) {
-    v->x = (v->x << 16) / e->field_58;
-    v->w = (v->w << 16) / e->field_58;
-    v->y = (v->y << 16) / e->field_5C;
-    v->h = (v->h << 16) / e->field_5C;
+void ScaleRectByEntityPowerup(SpriteEntity *e, Vec4s16 *v) {
+    v->x = (v->x << 16) / e->base.scalePowerupX;
+    v->w = (v->w << 16) / e->base.scalePowerupX;
+    v->y = (v->y << 16) / e->base.scalePowerupY;
+    v->h = (v->h << 16) / e->base.scalePowerupY;
 }
 
 /* Inverse-scale a single Y coordinate by scalePowerupY (+0x5C). */
-s32 InverseScaleYByEntityPowerup(EntityAccessorView *e, s32 value) {
-    return (value << 16) / e->field_5C;
+s32 InverseScaleYByEntityPowerup(SpriteEntity *e, s32 value) {
+    return (value << 16) / e->base.scalePowerupY;
 }
 
 /* Inverse-scale a single X coordinate by scalePowerupX (+0x58). */
-s32 InverseScaleXByEntityPowerup(EntityAccessorView *e, s32 value) {
-    return (value << 16) / e->field_58;
+s32 InverseScaleXByEntityPowerup(SpriteEntity *e, s32 value) {
+    return (value << 16) / e->base.scalePowerupX;
 }
 
 /* Copies 8 bytes from src+0x38 into dst -- the render-bounds block
@@ -941,26 +895,26 @@ s16 GetEntityXPosition(Entity *e) {
 }
 
 /* Getter: returns worldY at +0x6A (raw, no callback dispatch). */
-s16 GetEntityWorldYRaw(EntityAccessorView *e) {
-    return e->field_6A;
+s16 GetEntityWorldYRaw(SpriteEntity *e) {
+    return e->base.worldY;
 }
 
 /* Getter: returns worldX at +0x68 (raw, no callback dispatch). */
-s16 GetEntityWorldXRaw(EntityAccessorView *e) {
-    return e->field_68;
+s16 GetEntityWorldXRaw(SpriteEntity *e) {
+    return e->base.worldX;
 }
 
 /* Getter: returns spriteContext at +0x34 (entity's BasicEntity render
  * context, i.e. the +0x10-byte sprite buffer used by the renderer). */
-s32 GetEntitySpriteContext(EntityAccessorView *e) {
-    return e->field_34;
+s32 GetEntitySpriteContext(SpriteEntity *e) {
+    return (s32)e->base.spriteContext;
 }
 
 /* Installs an 8-byte [marker, fn] pair into the moveCallbackY FSM slot
  * at entity+0x2C/+0x30. Subsequent GetEntityYPosition / TransformYCoord
  * calls will route through this callback. */
-void SetEntityMoveCallbackY(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)&e->field_2C = val;
+void SetEntityMoveCallbackY(SpriteEntity *e, S32Pair val) {
+    *(S32Pair *)&e->base.moveMarkerY = val;
 }
 
 /* Y-coordinate transformer. Dispatches an arbitrary Y value through the
@@ -1007,8 +961,8 @@ s16 TransformYCoord(Entity *e, s16 val) {
 
 /* Installs an 8-byte [marker, fn] pair into the moveCallbackX FSM slot
  * at entity+0x24/+0x28. Counterpart to SetEntityMoveCallbackY for the X axis. */
-void SetEntityMoveCallbackX(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)&e->field_24 = val;
+void SetEntityMoveCallbackX(SpriteEntity *e, S32Pair val) {
+    *(S32Pair *)&e->base.moveMarkerX = val;
 }
 
 /* X-coordinate transformer; mirror of TransformYCoord over the
@@ -1046,8 +1000,8 @@ s16 TransformXCoord(Entity *e, s16 val) {
 /* Installs an 8-byte [marker, fn] pair into the renderCallback FSM slot
  * at entity+0x1C/+0x20. The function called by
  * InvokeEntityRenderCallback / the render-list walker each frame. */
-void SetEntityRenderCallbackSlot(EntityAccessorView *e, S32Pair val) {
-    *(S32Pair *)&e->field_1C = val;
+void SetEntityRenderCallbackSlot(SpriteEntity *e, S32Pair val) {
+    *(S32Pair *)&e->base.renderMarker = val;
 }
 
 /* Dispatches the entity's render callback through the FSM slot at
@@ -1099,8 +1053,8 @@ void InvokeEntityRenderCallback(Entity *e, RenderCB a1_, s32 a2, RenderCB a3_) {
 
 /* Getter: returns the low 16 bits of moveMarkerY at +0x2C as u16
  * (the FSM marker's offset half). */
-u16 GetEntityMoveMarkerYOffset(EntityAccessorView *e) {
-    return e->field_2C;
+u16 GetEntityMoveMarkerYOffset(SpriteEntity *e) {
+    return e->base.moveMarkerY;
 }
 
 /* Empty function (jr ra / nop). Acts as a no-op tick/event slot;
@@ -1114,14 +1068,14 @@ void NopStub_800207d4(void) {
 void NopStub_800207dc(void) {
 }
 
-void FreeEntityNoTeardown_80020818(EntityAccessorView *entity, s32 size);
+void FreeEntityNoTeardown_80020818(Entity *entity, s32 size);
 
 /* Minimal entity destructor: swap the vtable at +0x18 to Destroyed and,
  * if flag bit 0 is set, free the body via FreeEntityNoTeardown_80020818.
  * Used by entities that hold no owned resources beyond their own struct
  * (HUD helpers, particle slots, etc.). */
-void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
-    entity->collisionVtable = (s32)g_EntityVtable_Destroyed;
+void EntityDestructor_Simple(Entity *entity, s32 flags) {
+    entity->collisionVtable = (void *)g_EntityVtable_Destroyed;
     if (flags & 1) {
         FreeEntityNoTeardown_80020818(entity, 0x1C);
     }
@@ -1131,6 +1085,6 @@ void EntityDestructor_Simple(EntityAccessorView *entity, s32 flags) {
  * `size` arg is ignored -- naming reflects that it doesn't run any
  * destructor chain, just releases the bytes. Tail end of
  * EntityDestructor_Simple and friends. */
-void FreeEntityNoTeardown_80020818(EntityAccessorView *entity, s32 size) {
+void FreeEntityNoTeardown_80020818(Entity *entity, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, (u8 *)entity, 0, 0);
 }
