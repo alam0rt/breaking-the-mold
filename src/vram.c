@@ -1,10 +1,5 @@
 #include "common.h"
-
-typedef struct {
-    u8 _pad0000[0xA640];
-    void *heapStart;
-    u32 heapSize;
-} HeapConfigOwner;
+#include "Game/vram_records.h"
 
 INCLUDE_ASM("asm/nonmatchings/vram", AllocateVRAMSlot);
 
