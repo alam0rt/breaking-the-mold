@@ -1,10 +1,6 @@
 #include "common.h"
 #include "Game/entity.h"
-
-typedef struct {
-    Entity *entity;
-    u8 _pad04[20];
-} LayerRenderSlot;
+#include "Game/layer_records.h"
 
 extern void FreeAllLayerRenderSlots(LayerRenderSlot *base);
 extern void builtin_delete(void *ptr);
