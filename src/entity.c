@@ -3,6 +3,7 @@
 #include "Game/entity.h"
 #include "Game/game_state.h"
 #include "Game/fsm_dispatch.h"
+#include "Game/entity_records.h"
 #include "globals.h"
 
 extern void InitEntityStruct(Entity *entity, s16 allocSize);
@@ -13,21 +14,6 @@ extern void CalculateEntityScreenBounds(Entity *entity);
 
 typedef s16 (*XformCB)();
 typedef struct { s32 arg; XformCB fn; } XformSlot;
-
-typedef struct SpriteContextCallbackTable {
-    /* 0x00 */ u8 pad00[0x10];
-    /* 0x10 */ s16 callbackTargetOffset;
-    /* 0x12 */ u8 pad12[2];
-    /* 0x14 */ void (*releaseVRAMSlot)(u8 *target, s32 mode);
-} SpriteContextCallbackTable;
-
-typedef struct SpriteRenderContext {
-    /* 0x00 */ u8 pad00[4];
-    /* 0x04 */ s16 width;
-    /* 0x06 */ s16 height;
-    /* 0x08 */ u8 pad08[4];
-    /* 0x0C */ SpriteContextCallbackTable *callbacks;
-} SpriteRenderContext;
 
 /* Entity constructor. Zeroes the 0x80 base header, installs the Destroyed +
  * PartialDestroy vtables, primes the four 16.16 scale fields at 0x50..0x64
