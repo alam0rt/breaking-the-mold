@@ -1756,7 +1756,7 @@ void EntityDestroyCallback_Vt80010E04(Entity *entity, u32 flag) {
     }
 }
 
-void func_800411CC(SpriteEntity *entity, s32 flags) {
+void EntityDestroyCallback_Vt80010DE4_800411cc(SpriteEntity *entity, s32 flags) {
     entity->base.collisionVtable = &COLLECTIBLE_ENTITY_VTABLE;
     DestroyEntityAndFreeMemory(entity, 0);
     if (flags & 1) {
@@ -2952,7 +2952,7 @@ void SetEntityAnimationState(BackgroundSparkleEntity *sparkle) {
     SetAnimationFrameIndex((Entity *)sparkle, 0);
 }
 
-void func_8004727C(BackgroundSparkleEntity *e) {
+void StartBackgroundSparkleFade(BackgroundSparkleEntity *e) {
     e->revealTimer = 0x14;
 }
 
