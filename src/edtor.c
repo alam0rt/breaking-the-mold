@@ -1,14 +1,6 @@
 #include "common.h"
 #include "functions.h"
-
-typedef struct EditorEntity {
-    /* 0x00 */ u8 pad00[0x1C];
-    /* 0x1C */ struct {
-        u8 pad00[0x0A];
-        u8 enabled;
-    } *primObject;
-    /* 0x20 */ u8 childDisabledFlag;
-} EditorEntity;
+#include "Game/editor_entities.h"
 
 extern u8 *g_pBlbHeapBase;
 extern void FreeEntityNoTeardown_8002c7d8(Entity *e, u32 size);
