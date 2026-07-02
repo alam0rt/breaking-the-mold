@@ -28,6 +28,11 @@ extern void FreeResourceType4(Entity *e, s32 mode);
 extern void FreeWithCallback(Entity *e, s32 mode);
 extern void FreeTextureResource(Entity *e, s32 mode);
 extern void UpdateEntityRender(Entity *e);
+extern void UploadEntityTextureIfDirty(Entity *e);
+extern u8 IsEntityOffScreenY(Entity *e);
+
+typedef void (*GsNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
+typedef struct { s32 arg; GsNotifyCB fn; } GsNotifySlot;
 
 typedef struct DecorEventEntity {
     /* 0x000 */ SpriteEntity sprite;
@@ -439,7 +444,53 @@ INCLUDE_ASM("asm/nonmatchings/effects", CalculateChildEntityRenderPos);
 
 INCLUDE_ASM("asm/nonmatchings/effects", IsEntityOutsideSpawnBounds);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityTick_UploadTextureWithCallback);
+/* Per-frame tick: refresh the entity's VRAM texture if dirty, then if the
+ * ready flag at +0x109 is set, notify the GameState event FSM
+ * (EVT_GAME_NOTIFY, arg 0, srcEntity=e). S-reg dispatch family: the
+ * pre-call pushes the slot pair into callee-saved $s0/$s1 (fn $t0,
+ * self $s2). */
+void EntityTick_UploadTextureWithCallback(Entity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$8");   /* fn home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$17");   /* then-fn (relays into fn) */
+    FSM_REG(s32, slotArg, "$16");
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(Entity *, self, "$18");
+
+    self = e;
+    UploadEntityTextureIfDirty(self);
+    if (*((u8 *)self + 0x109) != 0) {
+        gs = g_pGameState;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m == 0) {
+            return;
+        }
+        t = m;
+        FSM_RELAY(s, t);
+        if (m > 0) {
+            GsNotifySlot *base =
+                *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+            slotArg = base[m - 1].arg;
+            ft = base[m - 1].fn;
+            FSM_RELAY(fn, ft);
+        } else {
+            fn = (GsNotifyCB)gs->event_callback;
+        }
+        slotArgWide = slotArg;
+        lo = ((s16 *)&gs->event_marker)[0];
+        if (s > 0) {
+            adj = (s16)slotArgWide + lo;
+        } else {
+            adj = lo;
+        }
+        fn((void *)((u8 *)gs + adj), 3, 0, self);
+    }
+}
 
 extern void *COLORED_OVERLAY_EVENT_VTABLE asm("D_80010AA8");
 
@@ -570,7 +621,51 @@ INCLUDE_ASM("asm/nonmatchings/effects", EntityTick_FrictionAndParallaxScale);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitDebrisParticleEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", DebrisParticleTickCallback);
+/* Debris particle tick: standard entity update, then once the particle
+ * exits the screen vertically, notify the GameState event FSM
+ * (EVT_GAME_NOTIFY, arg 0, srcEntity=e) so the emitter can recycle it. */
+void DebrisParticleTickCallback(Entity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$8");   /* fn home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$17");   /* then-fn (relays into fn) */
+    FSM_REG(s32, slotArg, "$16");
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    FSM_REG(Entity *, self, "$18");
+
+    self = e;
+    EntityUpdateCallback(self);
+    if (IsEntityOffScreenY(self) != 0) {
+        gs = g_pGameState;
+        m = ((s16 *)&gs->event_marker)[1];
+        if (m == 0) {
+            return;
+        }
+        t = m;
+        FSM_RELAY(s, t);
+        if (m > 0) {
+            GsNotifySlot *base =
+                *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+            slotArg = base[m - 1].arg;
+            ft = base[m - 1].fn;
+            FSM_RELAY(fn, ft);
+        } else {
+            fn = (GsNotifyCB)gs->event_callback;
+        }
+        slotArgWide = slotArg;
+        lo = ((s16 *)&gs->event_marker)[0];
+        if (s > 0) {
+            adj = (s16)slotArgWide + lo;
+        } else {
+            adj = lo;
+        }
+        fn((void *)((u8 *)gs + adj), 3, 0, self);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", DebrisParticlePhysicsTick);
 
@@ -593,9 +688,6 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitGridLineEntity);
 INCLUDE_ASM("asm/nonmatchings/effects", CheckChildEntityOffscreenDespawn);
 
 INCLUDE_ASM("asm/nonmatchings/effects", InitGridSpriteContext);
-
-typedef void (*GsNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
-typedef struct { s32 arg; GsNotifyCB fn; } GsNotifySlot;
 
 /* If the entity's flag at +0x7C is set, dispatch g_pGameState's event FSM
  * slot (marker +0x8/0xA, fn +0xC) with EVT_GAME_NOTIFY (3), arg 1, and the
@@ -650,7 +742,56 @@ void EntityDespawnIfFlagSet(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/effects", CreatePlayerParticleEntity);
 
-INCLUDE_ASM("asm/nonmatchings/effects", EntityTimerDespawnCallback);
+/* Down-counts the u8 timer at +0x80 each tick; when it reaches zero, fires
+ * the GameState event FSM with EVT_GAME_NOTIFY (3, arg 0, srcEntity=e).
+ * Same a3-family template as EntityDespawnIfFlagSet. */
+void EntityTimerDespawnCallback(Entity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    s32 slotArg;
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+    u8 timer;
+
+    timer = *((u8 *)e + 0x80);
+    if (timer == 0) {
+        return;
+    }
+    timer--;
+    *((u8 *)e + 0x80) = timer;
+    if (timer != 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    if (m == 0) {
+        return;
+    }
+    t = m;
+    FSM_RELAY(s, t);
+    if (m > 0) {
+        GsNotifySlot *base =
+            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+        slotArg = base[m - 1].arg;
+        ft = base[m - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsNotifyCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (s > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, 0, e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/effects", UpdateAndUploadSpriteToVRAM);
 

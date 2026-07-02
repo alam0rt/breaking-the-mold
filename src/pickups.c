@@ -188,7 +188,52 @@ INCLUDE_ASM("asm/nonmatchings/pickups", EntityRenderWithScaledPosition);
  * one C function cc1 reads the flag straight from $a0 and drops the move (2
  * instrs short) — the dead-value preservation can't be coaxed without shifting
  * the rest of the allocation. */
-INCLUDE_ASM("asm/nonmatchings/pickups", func_8002D978);
+typedef void (*GsNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
+typedef struct { s32 arg; GsNotifyCB fn; } GsNotifySlot;
+
+/* If the flag at +0x124 is set, notify the GameState event FSM
+ * (EVT_GAME_NOTIFY, arg 0, srcEntity=e). a3-family dispatch template
+ * (see effects.c EntityDespawnIfFlagSet). */
+void func_8002D978(Entity *e) {
+    GameState *gs;
+    s16 m;
+    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
+    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
+    s32 slotArg;
+    s32 adj;
+    s32 lo;
+    int slotArgWide;
+    s16 t;
+    s16 s;
+
+    if (*((u8 *)e + 0x124) == 0) {
+        return;
+    }
+    gs = g_pGameState;
+    m = ((s16 *)&gs->event_marker)[1];
+    if (m == 0) {
+        return;
+    }
+    t = m;
+    FSM_RELAY(s, t);
+    if (m > 0) {
+        GsNotifySlot *base =
+            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
+        slotArg = base[m - 1].arg;
+        ft = base[m - 1].fn;
+        FSM_RELAY(fn, ft);
+    } else {
+        fn = (GsNotifyCB)gs->event_callback;
+    }
+    slotArgWide = slotArg;
+    lo = ((s16 *)&gs->event_marker)[0];
+    if (s > 0) {
+        adj = (s16)slotArgWide + lo;
+    } else {
+        adj = lo;
+    }
+    fn((void *)((u8 *)gs + adj), 3, 0, e);
+}
 
 void CollectibleYellowBirdTickCallback(InteractiveDecorEntity *e);
 
