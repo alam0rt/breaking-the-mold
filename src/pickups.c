@@ -180,7 +180,7 @@ INCLUDE_ASM("asm/nonmatchings/pickups", EntityRenderWithScaledPosition);
 
 /* func_8002D978 @ 0x8002D978 (0xAC) — if entity flag +0x124 is set, dispatch
  * g_pGameState's event FSM callback (marker +0x8/0xA, fn +0xC) with eventId 3,
- * arg 0. Same FSM forwarder as func_80034B10 but with NO forwarded entity arg.
+ * arg 0. Same FSM forwarder as DispatchGsEventOnFlag34 but with NO forwarded entity arg.
  * Merged its mis-split dispatch body (bogus TriggerFadeOut symbol, an internal
  * $a3-flowing continuation). SHELVED: the body never reads $a3(e), yet the
  * target keeps a dead `move a3,a0; lbu 0x124(a3)` (relic of the head having

@@ -534,7 +534,7 @@ s32 OverlayEntityCallback(OverlayCallbackEntity *e, u32 ev) {
 typedef void (*GsEventCB)();
 typedef struct { s32 arg; GsEventCB fn; } GsEventSlot;
 
-void func_80034B10(Entity *e) {
+void DispatchGsEventOnFlag34(Entity *e) {
     GameState *gs;
     s32 arg;
     u8 *gsb;
@@ -626,7 +626,7 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitGridSpriteContext);
  * notifiers differing in the guard-flag offset and arg (this one passes 0) (see
  * ExpiredEntityDespawnEvent / BeamEffectDespawnEvent /
  * FadeExpireEntityDespawnEvent). Same FSM forwarder recipe as
- * func_80034B10; the constant 3/1 args free $a1/$a2, so the marker
+ * DispatchGsEventOnFlag34; the constant 3/1 args free $a1/$a2, so the marker
  * survivor pins to $a2 instead of $t3. Formerly split as
  * "NotifyGameStateZero" (phantom symbol, merged 2026-07-02). */
 void EntityDespawnIfFlagSet(Entity *e) {
@@ -977,11 +977,11 @@ void EntityDestroyCallback_Vt80010BA8_80038510(Entity *entity, s32 flags) {
     }
 }
 
-void func_80038574(EffectWord90Entity *e, u16 val) {
+void SetEffectWord90(EffectWord90Entity *e, u16 val) {
     e->value90 = val;
 }
 
-void func_8003857C(RippleExpandEntity *e, u8 val) {
+void SetRippleExpandPhase(RippleExpandEntity *e, u8 val) {
     e->phase = val;
 }
 
@@ -1041,41 +1041,41 @@ void EntityDestroyResourceType4(Entity *entity, s32 flags) {
     }
 }
 
-void func_80038840(ColoredOverlayEntity *e, u8 b40, u8 b41, u8 b42) {
+void SetColoredOverlayRGB(ColoredOverlayEntity *e, u8 b40, u8 b41, u8 b42) {
     e->r = b40;
     e->g = b41;
     e->b = b42;
 }
 
-void func_80038850(EffectByte58Entity *e, u8 val) {
+void SetEffectByte58Value58(EffectByte58Entity *e, u8 val) {
     e->value58 = val;
 }
 
-void func_80038858(Entity *e, u16 val) {
+void SetEntityHitboxHeight(Entity *e, u16 val) {
     e->hitboxHeight = val;
 }
 
-void func_80038860(Entity *e, u16 val) {
+void SetEntityHitboxWidth(Entity *e, u16 val) {
     e->hitboxWidth = val;
 }
 
-void func_80038868(EffectByte58Entity *e, u8 val) {
+void SetEffectByte58Value5D(EffectByte58Entity *e, u8 val) {
     e->value5D = val;
 }
 
-void func_80038870(Entity *e, u16 val) {
+void SetEntityHitboxHeight_80038870(Entity *e, u16 val) {
     e->hitboxHeight = val;
 }
 
-void func_80038878(Entity *e, u16 val) {
+void SetEntityHitboxWidth_80038878(Entity *e, u16 val) {
     e->hitboxWidth = val;
 }
 
-void func_80038880(LargeEffectStateEntity *e, u8 val) {
+void SetLargeEffectValue1E7(LargeEffectStateEntity *e, u8 val) {
     e->value1E7 = val;
 }
 
-void func_80038888(LargeEffectStateEntity *e) {
+void ArmLargeEffectValue1E0(LargeEffectStateEntity *e) {
     e->value1E0 = 0x20;
 }
 
@@ -1087,7 +1087,7 @@ void EntityDestroyCallback_Vt80010B28(Entity *entity, s32 flags) {
     }
 }
 
-u32 func_800388F8(Entity *e) {
+u32 GetEntityRenderMarker_800388F8(Entity *e) {
     return e->renderMarker;
 }
 

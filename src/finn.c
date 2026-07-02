@@ -133,7 +133,7 @@ void FinnRenderCallback_ProjectToScreen(FinnScreenPosEntity *e) {
 
 /* If entity flag +0x2C is set, dispatch g_pGameState's event FSM callback
  * (marker +0x8/0xA, fn +0xC) with eventId 3, forwarding entity+0x24 as the arg
- * and the entity as srcEntity. Same FSM-slot forwarder as func_80034B10 (the
+ * and the entity as srcEntity. Same FSM-slot forwarder as DispatchGsEventOnFlag34 (the
  * dispatch body was mis-split as a bogus FINNCallback_DispatchToStateHandler
  * symbol; merged here). fn/then-fn pinned to $t2/$t1. */
 typedef void (*GsEventCB)();
