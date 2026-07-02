@@ -69,12 +69,11 @@ u16 GetRenderSpriteClut(RenderSprite *spr) {
     return spr->clut;
 }
 
-/* Getter: paired bytes at +0x30/+0x31. These are written together with
- * tpage in SetRenderSpriteTPageAndTexBytes, so most likely the texture sub-rect U/V (or
- * extra draw-mode bits) stored beside the GPU tpage handle. */
+/* Getter: paired bytes at +0x30/+0x31 - the SPRT u0/v0 texture-page
+ * coordinates written together with tpage in SetRenderSpriteTPageAndTexBytes. */
 void GetRenderSpriteTexPageBytes(RenderSprite *spr, u8 *out30, u8 *out31) {
-    *out30 = spr->unk30;
-    *out31 = spr->unk31;
+    *out30 = spr->texU;
+    *out31 = spr->texV;
 }
 
 /* Getter: PSX GPU tpage handle (page index + color mode + ABR blend bits). */
@@ -82,25 +81,25 @@ u16 GetRenderSpriteTPage(RenderSprite *spr) {
     return spr->tpage;
 }
 
-/* Getter: u8 at +0x37 - one of the paired bytes immediately after the
- * RGB tint triple; role TBD (probably a per-sprite blend/draw parameter). */
-u8 GetRenderSpriteByte37(RenderSprite *spr) {
-    return spr->unk37;
+/* Getter: u8 at +0x37 - semi-transparency enable flag (drives SetSemiTrans
+ * in RenderSpriteOrScaledQuad). */
+u8 GetRenderSpriteSemiTrans(RenderSprite *spr) {
+    return spr->semiTransFlag;
 }
 
-/* Getter: u8 at +0x38 - second half of the +0x37/+0x38 paired bytes. */
-u8 GetRenderSpriteByte38(RenderSprite *spr) {
-    return spr->unk38;
+/* Getter: u8 at +0x38 - alternate semi-transparency request, OR'd with +0x37. */
+u8 GetRenderSpriteSemiTrans2(RenderSprite *spr) {
+    return spr->semiTransFlag2;
 }
 
-/* Setter for u8 at +0x37 (see GetRenderSpriteByte37). */
-void SetRenderSpriteByte37(RenderSprite *spr, u8 value) {
-    spr->unk37 = value;
+/* Setter for u8 at +0x37 (see GetRenderSpriteSemiTrans). */
+void SetRenderSpriteSemiTrans(RenderSprite *spr, u8 value) {
+    spr->semiTransFlag = value;
 }
 
-/* Setter for u8 at +0x38 (see GetRenderSpriteByte38). */
-void SetRenderSpriteByte38(RenderSprite *spr, u8 value) {
-    spr->unk38 = value;
+/* Setter for u8 at +0x38 (see GetRenderSpriteSemiTrans2). */
+void SetRenderSpriteSemiTrans2(RenderSprite *spr, u8 value) {
+    spr->semiTransFlag2 = value;
 }
 
 /* Setter: sprite draw rectangle width/height in pixels - normally
@@ -111,49 +110,48 @@ void SetRenderSpriteSize(RenderSprite *spr, s16 w, s16 h) {
     spr->height = h;
 }
 
-/* Getter: u16 at +0x28 - small render-context word adjacent to tpage/clut. */
-u16 GetRenderSpriteWord28(RenderSprite *spr) {
-    return spr->unk28;
+/* Getter: u16 at +0x28 - the RotMatrixZ rotation angle applied when the
+ * sprite is drawn as a rotated POLY_FT4 (0 = unrotated fast path). */
+u16 GetRenderSpriteRotation(RenderSprite *spr) {
+    return spr->rotationAngle;
 }
 
-/* Setter for the u16 at +0x28 (see GetRenderSpriteWord28). */
-void SetRenderSpriteWord28(RenderSprite *spr, u16 value) {
-    spr->unk28 = value;
+/* Setter for the u16 at +0x28 (see GetRenderSpriteRotation). */
+void SetRenderSpriteRotation(RenderSprite *spr, u16 value) {
+    spr->rotationAngle = value;
 }
 
-/* Getter: s32 at +0x20 - second of the paired 32-bit slots +0x1C/+0x20
- * (often used as a current/target or min/max pair, see SetRenderSpriteSlotPair). */
-s32 GetRenderSpriteSlot20(RenderSprite *spr) {
-    return spr->unk20;
+/* Getter: s32 at +0x20 - the 16.16 render scale Y (1.0 = 0x10000). */
+s32 GetRenderSpriteScaleY(RenderSprite *spr) {
+    return spr->scaleY;
 }
 
-/* Getter: s32 at +0x1C - first of the +0x1C/+0x20 paired 32-bit slots. */
-s32 GetRenderSpriteSlot1C(RenderSprite *spr) {
-    return spr->unk1C;
+/* Getter: s32 at +0x1C - the 16.16 render scale X (1.0 = 0x10000). */
+s32 GetRenderSpriteScaleX(RenderSprite *spr) {
+    return spr->scaleX;
 }
 
 /* Setter for the s32 at +0x20. */
-void SetRenderSpriteSlot20(RenderSprite *spr, s32 value) {
-    spr->unk20 = value;
+void SetRenderSpriteScaleY(RenderSprite *spr, s32 value) {
+    spr->scaleY = value;
 }
 
 /* Setter for the s32 at +0x1C. */
-void SetRenderSpriteSlot1C(RenderSprite *spr, s32 value) {
-    spr->unk1C = value;
+void SetRenderSpriteScaleX(RenderSprite *spr, s32 value) {
+    spr->scaleX = value;
 }
 
-/* Seed both paired s32 slots at +0x1C and +0x20 to the same value -
- * the classic "current = target = X" reset for an interpolation /
- * accumulator pair. */
-void SetRenderSpriteSlotPair(RenderSprite *spr, s32 value) {
-    spr->unk1C = value;
-    spr->unk20 = value;
+/* Seed both 16.16 scale slots at +0x1C/+0x20 to the same value - the
+ * uniform-scale reset (scaleX = scaleY = X). */
+void SetRenderSpriteScaleUniform(RenderSprite *spr, s32 value) {
+    spr->scaleX = value;
+    spr->scaleY = value;
 }
 
-/* Setter for the u8 at +0x33 - the lone byte sitting just before the
- * RGB tint triple; specific role TBD. */
-void SetRenderSpriteByte33(RenderSprite *spr, u8 value) {
-    spr->unk33 = value;
+/* Setter for the u8 at +0x33 - the color-modulation toggle: nonzero blends
+ * the RGB tint into the textured quad (SetShadeTex), zero draws raw texture. */
+void SetRenderSpriteColorModulate(RenderSprite *spr, u8 value) {
+    spr->colorModulate = value;
 }
 
 /* Getter: sprite tint RGB at +0x34..+0x36 (the per-vertex color the GPU
@@ -177,23 +175,23 @@ void SetRenderSpriteClut(RenderSprite *spr, u16 value) {
 }
 
 /* Re-arm the sprite's GPU draw state after a frame/texture change:
- * mark it dirty (re-upload pending), refresh the paired bytes at
- * +0x30/+0x31, and overwrite tpage while preserving the ABR
+ * mark it dirty (re-upload pending), refresh the SPRT u0/v0 texture
+ * coords at +0x30/+0x31, and overwrite tpage while preserving the ABR
  * (semi-transparency mode) bits 0x60 from the previous tpage. */
 void SetRenderSpriteTPageAndTexBytes(RenderSprite *spr, u16 tpage, u8 val30, u8 val31) {
     spr->dirty = 1;
-    spr->unk30 = val30;
-    spr->unk31 = val31;
+    spr->texU = val30;
+    spr->texV = val31;
     spr->tpage = (tpage & 0xFF9F) | (spr->tpage & 0x60);
 }
 
 /* Build the GPU tpage handle from this sprite's assigned VRAM rect:
  * snaps (vramX, vramY) to its 64x256 PSX texture-page origin, with
- * the color mode taken from spr->unk32 (4/8/16-bit) and the
+ * the color mode taken from spr->colorMode (4/8/16-bit) and the
  * caller-supplied blend mode (abr). */
 void SetSpriteTPageFromVRAMCoords(RenderSprite *spr, u8 abr) {
     s32 x = spr->vramX;
     s32 y = spr->vramY;
 
-    spr->tpage = GetTPage(spr->unk32, abr, x & ~0x3F, y & ~0xFF);
+    spr->tpage = GetTPage(spr->colorMode, abr, x & ~0x3F, y & ~0xFF);
 }

@@ -7,9 +7,11 @@
  * Tiny accessor functions for the sprite render object
  * (0x80018BD8 - 0x80018D4B, tail of Game/RENDER_5C3C).
  *
- * Field layout is only what these accessors touch; the full struct is
- * not yet known, so a local view is used (same approach as
- * src/assets/blb_memory.c).
+ * Field semantics verified against the GPU primitive builder
+ * RenderSpriteOrScaledQuad @ 0x80015764 (see export/SLES_010.90.c): it
+ * reads +0x1C/+0x20 as the 16.16 render scale, +0x28 as the rotation
+ * angle, +0x30/+0x31 as the SPRT u0/v0 texture coords, +0x33 as the
+ * color-modulation toggle, and +0x37/+0x38 as semi-transparency flags.
  */
 
 typedef struct RenderSprite {
@@ -17,26 +19,26 @@ typedef struct RenderSprite {
     s16 vramX;      /* 0x10 */
     s16 vramY;      /* 0x12 */
     u8 pad14[0x1C - 0x14];
-    s32 unk1C;      /* 0x1C */
-    s32 unk20;      /* 0x20 */
+    s32 scaleX;     /* 0x1C 16.16 render scale X (1.0 = 0x10000) */
+    s32 scaleY;     /* 0x20 16.16 render scale Y (1.0 = 0x10000) */
     u16 tpage;      /* 0x24 */
     u16 clut;       /* 0x26 */
-    u16 unk28;      /* 0x28 */
-    s16 width;      /* 0x2A */
-    s16 height;     /* 0x2C */
+    u16 rotationAngle; /* 0x28 RotMatrixZ angle (0 = unrotated fast path) */
+    s16 width;      /* 0x2A sprite width (also rotation pivot X) */
+    s16 height;     /* 0x2C sprite height (also rotation pivot Y) */
     u8 dirty;       /* 0x2E */
     u8 pad2F;       /* 0x2F */
-    u8 unk30;       /* 0x30 */
-    u8 unk31;       /* 0x31 */
-    u8 unk32;       /* 0x32 */
-    u8 unk33;       /* 0x33 */
+    u8 texU;        /* 0x30 SPRT u0 texture X within page */
+    u8 texV;        /* 0x31 SPRT v0 texture Y within page */
+    u8 colorMode;   /* 0x32 GetTPage color mode (4/8/16-bit) */
+    u8 colorModulate; /* 0x33 nonzero = modulate texture with RGB tint (SetShadeTex) */
     u8 r;           /* 0x34 */
     u8 g;           /* 0x35 */
     u8 b;           /* 0x36 */
-    u8 unk37;       /* 0x37 */
-    u8 unk38;       /* 0x38 */
+    u8 semiTransFlag;  /* 0x37 nonzero = draw semi-transparent (SetSemiTrans) */
+    u8 semiTransFlag2; /* 0x38 alternate semi-transparency request (OR'd with 0x37) */
     u8 pad39[0x54 - 0x39];
-    u8 unk54;       /* 0x54 */
+    u8 unk54;       /* 0x54 likely per-sprite visibility / sort-bucket flag */
 } RenderSprite;
 
 /*
