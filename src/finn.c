@@ -81,8 +81,52 @@ EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90");
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
-/* func_8006E084: unit spans 0x8006E084..0x8006E130 — absorbs former split symbols FINNRenderCallback_UpdateScreenPosition, func_8006E0CC, FINNRenderCallback_UpdateScaledPosition (Ghidra labels with no external references; merged 2026-07-02). */
-INCLUDE_ASM("asm/nonmatchings/finn", func_8006E084);
+typedef struct FinnRenderPrim {
+    /* 0x000 */ s16 screenX;
+    /* 0x002 */ s16 screenY;
+    /* 0x004 */ u8 pad4[0x1E3];
+    /* 0x1E7 */ u8 phase;
+} FinnRenderPrim;
+
+typedef struct FinnScreenPosEntity {
+    /* 0x00 */ u8 pad0[0x20];
+    /* 0x20 */ u16 worldX;
+    /* 0x22 */ u16 worldY;
+    /* 0x24 */ FinnRenderPrim *prim;
+    /* 0x28 */ s32 scale; /* 16.16; 0x10000 = 1.0 */
+} FinnScreenPosEntity;
+
+/* FINN render callback: projects the entity's world position into its render
+ * prim's screen coords (-camera). scale == 1.0 takes the direct path; any
+ * other scale multiplies the (signed) world coords by the 16.16 scale first.
+ * Then bumps the prim's phase byte (+0x1E7) so the renderer sees fresh input
+ * (same handshake as RippleEffectRenderCallback's +0x3A7).
+ * (Formerly split into FINNRenderCallback_UpdateScreenPosition /
+ * func_8006E0CC / FINNRenderCallback_UpdateScaledPosition — phantom symbols,
+ * merged 2026-07-02.) */
+void FinnRenderCallback_ProjectToScreen(FinnScreenPosEntity *e) {
+    FSM_REG(s32, cx, "$4"); /* $a0 — evicts e into $a2 (entry copy) */
+    FSM_REG(s32, cy, "$4");
+    FSM_REG(GameState *, gs, "$5"); /* $a1; e then colors $a2 */
+    s32 scale;
+    s32 sx, sy; /* unpinned: color $v1 in the scaled path */
+
+    scale = e->scale;
+    if (scale == 0x10000) {
+        gs = g_pGameState;
+        cx = gs->camera_x;
+        e->prim->screenX = e->worldX - cx;
+        cy = gs->camera_y;
+        e->prim->screenY = e->worldY - cy;
+    } else {
+        gs = g_pGameState;
+        sx = gs->camera_x;
+        e->prim->screenX = (((s16)e->worldX * scale) >> 16) - sx;
+        sy = gs->camera_y;
+        e->prim->screenY = (((s16)e->worldY * e->scale) >> 16) - sy;
+    }
+    e->prim->phase = 1;
+}
 
 
 
