@@ -52,12 +52,11 @@ void SetAnimationFrameCallback(AnimEntity *entity, u32 value) {
     }
 }
 
-/* NB: name MISLEADING -- writes to pendingLoopFrame (+0xC4, flag
- * ANIM_CHG_LOOP_FRAME 0x010), NOT pendingTargetFrame. Likely should be
- * SetAnimationLoopFrameIndex. Queues the frame the animation loops back
- * to. If a sprite change is also queued (bit 0x004), the value is mirrored
- * into pendingFrame so the new sprite starts at this loop point. */
-void SetEntityTargetFrame(AnimEntity *entity, u32 value) {
+/* Writes pendingLoopFrame (+0xC4, flag ANIM_CHG_LOOP_FRAME 0x010). Queues
+ * the frame the animation loops back to. If a sprite change is also queued
+ * (bit 0x004), the value is mirrored into pendingFrame so the new sprite
+ * starts at this loop point. Literal-index variant of SetAnimationLoopFrame. */
+void SetAnimationLoopFrameIndex(AnimEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 orFlags = flags | 0x10;
     u16 newFlags = orFlags & 0xFBFF;
@@ -82,7 +81,7 @@ void SetEntityTargetFrame(AnimEntity *entity, u32 value) {
 /* Pending-loop-frame setter, callback variant: writes pendingLoopFrame
  * (+0xC4) and sets bits 0x410 (LOOP_FRAME | callback-lookup), so
  * ApplyPendingSpriteState resolves the value via callback. Mirrors the
- * sprite-change-primes-pendingFrame branch from SetEntityTargetFrame. */
+ * sprite-change-primes-pendingFrame branch from SetAnimationLoopFrameIndex. */
 void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
 

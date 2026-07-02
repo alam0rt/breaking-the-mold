@@ -293,7 +293,7 @@ Color lookup table allocation (follows VRAM pattern):
 | `SetEntitySpriteId` | 0x8001D080 | 48 | Sprite ID setter |
 | `SetAnimationFrameIndex` | 0x8001D0C0 | 48 | Frame index |
 | `SetAnimationFrameCallback` | 0x8001D0F0 | 40 | Frame callback |
-| `SetEntityTargetFrame` | 0x8001D118 | 88 | Target frame |
+| `SetAnimationLoopFrameIndex` | 0x8001D118 | 88 | Loop frame (index) |
 | `SetAnimationLoopFrame` | 0x8001D170 | 80 | Loop start frame |
 | `SetAnimationSpriteId` | 0x8001D1C0 | 48 | Animation sprite |
 | `SetAnimationSpriteCallback` | 0x8001D1F0 | 40 | Sprite callback |

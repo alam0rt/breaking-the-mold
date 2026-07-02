@@ -79,7 +79,7 @@ extern void SoundEmitterTickCallback(Entity *e);
 extern void AnimatedEntityToggleSpriteA(Entity *e);
 extern void AnimatedEntityToggleSpriteB(Entity *e);
 extern void SetAnimationSpriteId(Entity *e, s32 id);
-extern void SetEntityTargetFrame(Entity *e, s32 frame);
+extern void SetAnimationLoopFrameIndex(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
 extern void EntitySetRenderFlags(Entity *e, u32 flags);
 extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
@@ -906,7 +906,7 @@ void InitEnemyFallingState(Entity *e) {
         spriteId = 0x61A91C9C;
     }
     SetEntitySpriteId(callArg, spriteId, 1);
-    SetEntityTargetFrame(e, 0x17);
+    SetAnimationLoopFrameIndex(e, 0x17);
     SetAnimationSpriteId(e, 0x18);
     SetAnimationFrameIndex(e, 0);
 }
