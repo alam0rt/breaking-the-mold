@@ -45,7 +45,7 @@ TimedPathEntity *InitGreenBulletsCollectible(TimedPathEntity *e, DecorSpawnData 
     TripadSlot u;
     s16 m1;
     void (*fn)();
-    DecorSpriteCtx *spr;
+    RenderSprite *spr;
     s32 vx;
     s32 vy;
 
@@ -61,10 +61,10 @@ TimedPathEntity *InitGreenBulletsCollectible(TimedPathEntity *e, DecorSpawnData 
     u.s.markerHi = m1;
     u.s.fn = fn;
     *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
-    spr = (DecorSpriteCtx *)e->sprite.base.spriteContext;
+    spr = (RenderSprite *)e->sprite.base.spriteContext;
     vx = spr->vramX;
     vy = spr->vramY;
-    spr->tpage = GetTPage(spr->abr, 1, vx & ~0x3F, vy & ~0xFF);
+    spr->tpage = GetTPage(spr->colorMode, 1, vx & ~0x3F, vy & ~0xFF);
     return e;
 }
 

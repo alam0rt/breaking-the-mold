@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/spracc_records.h"    /* RenderSprite (Entity+0x34 sprite context) */
 
 /* =============================================================================
  * PICKUP / DECOR ENTITY LAYOUTS
@@ -33,18 +34,6 @@ typedef struct DecorRandomTimerEntity {
     /* 0x100 */ u8 pad100[0x120 - 0x100];
     /* 0x120 */ u8 randomTimer;
 } DecorRandomTimerEntity;
-
-/* Sprite render context (Entity+0x34) view: the fields used to build the GPU
- * tpage from the sprite's reserved VRAM rect. Matches RenderSprite (spracc.c). */
-typedef struct DecorSpriteCtx {
-    /* 0x00 */ u8  pad00[0x10];
-    /* 0x10 */ s16 vramX;
-    /* 0x12 */ s16 vramY;
-    /* 0x14 */ u8  pad14[0x24 - 0x14];
-    /* 0x24 */ u16 tpage;
-    /* 0x26 */ u8  pad26[0x32 - 0x26];
-    /* 0x32 */ u8  abr;
-} DecorSpriteCtx;
 
 /* Powerup-collectible (extra life, phoenix hand, super willie...) shape:
  * extends InteractiveDecorEntity with a sub-entity pointer at +0x100 that
