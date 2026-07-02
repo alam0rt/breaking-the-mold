@@ -27,6 +27,43 @@ INCLUDE_ASM("asm/nonmatchings/player", CreatePlayerEntity);
  * InitSpriteContextWrapper and records the available ones into the
  * entity's sprite-pointer table at +0x180, with the available count
  * tracked at +0x19C. Caches which player sprites this level provides.
+ *
+ * A candidate is "available" when its freshly-built SpriteContext has both
+ * a nonzero width (+0xC) and nonzero height (+0xE). currentSpriteIndex
+ * (+0x19D) is seeded to 0xFF; availableSpriteCount (+0x19C) starts at 0.
+ * The candidate sprite-id table is u32 D_8009C3A8[7]; the id (not the
+ * context) is what gets stored into availableSpriteIds[].
+ *
+ * SHELVED: the algorithm below is verified, but the target reads the
+ * dims word (ctx+0xC) with an UNALIGNED load (lwl/lwr) and copies it to a
+ * scratch stack slot TWICE -- once to test width (low s16), once to test
+ * height (high s16). cc1 2.7.2 only emits that unaligned double-copy when
+ * the 4-byte dims access comes through a pointer whose alignment it cannot
+ * prove; a plain `ctx.width`/`ctx.height` field read (or an aligned
+ * `*(s32*)&ctx.width`) yields aligned `lh` and collapses the double copy.
+ * Reproducing the exact lwl/lwr provenance is a compiler-idiom detail, not
+ * cleanly source-reachable, so this stays INCLUDE_ASM.
+ *
+ *   extern SpriteContext *InitSpriteContextWrapper(SpriteContext *ctx,
+ *                                                  u32 spriteId);
+ *   extern u32 D_8009C3A8[7];
+ *   void InitPlayerSpriteAvailability(PlayerEntity *e) {
+ *       SpriteContext ctx;
+ *       s16 i;
+ *       e->currentSpriteIndex = 0xFF;
+ *       e->availableSpriteCount = 0;
+ *       for (i = 0; i < 7; i++) {
+ *           s32 available = 0;
+ *           InitSpriteContextWrapper(&ctx, D_8009C3A8[i]);
+ *           if (ctx.width != 0) {
+ *               available = ctx.height != 0;
+ *           }
+ *           if (available) {
+ *               e->availableSpriteIds[e->availableSpriteCount] = D_8009C3A8[i];
+ *               e->availableSpriteCount++;
+ *           }
+ *       }
+ *   }
  */
 INCLUDE_ASM("asm/nonmatchings/player", InitPlayerSpriteAvailability);
 
@@ -50,6 +87,38 @@ void EntityDestructor_WithSPUVoiceStop(PlayerEntity *entity, s32 flags) {
  * direction (a1=0 right/+2, non-zero left/-2) at four body heights
  * (head/chest/waist/knee, y-0xF/-0x10/-0x20/-0x30) and filters them
  * through CheckTileCollisionOverride. Used for side-wall blocking.
+ *
+ * SHELVED: the algorithm below is verified and compiles to within THREE
+ * instructions of the target - the only diff is instruction scheduling of
+ * the per-call `worldX` reload. The target hoists `lhu a1,0x68(s0)`
+ * (worldX) ABOVE the previous call's result store (`sb v0,tiles[i-1]`),
+ * splitting it from the `worldY` (a2) load; cc1 2.7.2 here keeps both
+ * dim loads together after the store. The two accesses are independent
+ * (entity vs stack), so this is a scheduler coin-flip not controllable
+ * from source order (verified: hoisting the arg computation into explicit
+ * worldX-first temps does not change the schedule). Stays INCLUDE_ASM.
+ *
+ *   s32 CheckWallCollision(Entity *entity, s32 dir) {
+ *       u8 tiles[4];
+ *       s16 dx = 2;
+ *       if ((dir & 0xFF) != 0) { dx = -2; }
+ *       tiles[0] = EntityApplyMovementCallbacks(entity, entity->worldX + dx,
+ *                                               entity->worldY - 0xF);
+ *       tiles[1] = EntityApplyMovementCallbacks(entity, entity->worldX + dx,
+ *                                               entity->worldY - 0x10);
+ *       tiles[2] = EntityApplyMovementCallbacks(entity, entity->worldX + dx,
+ *                                               entity->worldY - 0x20);
+ *       tiles[3] = EntityApplyMovementCallbacks(entity, entity->worldX + dx,
+ *                                               entity->worldY - 0x30);
+ *       CheckTileCollisionOverride((PlayerEntity *)entity, &tiles[0]);
+ *       CheckTileCollisionOverride((PlayerEntity *)entity, &tiles[1]);
+ *       CheckTileCollisionOverride((PlayerEntity *)entity, &tiles[2]);
+ *       CheckTileCollisionOverride((PlayerEntity *)entity, &tiles[3]);
+ *       return tiles[0] != PLAYER_TILE_PASSABLE &&
+ *              tiles[1] != PLAYER_TILE_PASSABLE &&
+ *              tiles[2] != PLAYER_TILE_PASSABLE &&
+ *              tiles[3] != PLAYER_TILE_PASSABLE;
+ *   }
  */
 INCLUDE_ASM("asm/nonmatchings/player", CheckWallCollision);
 
