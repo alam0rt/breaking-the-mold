@@ -1,51 +1,12 @@
 #include "common.h"
 #include "functions.h"
+#include "Game/blb_records.h"
 
 extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_SimpleDestruct[];
 extern u8 g_EntityVtable_LevelDestroy[];
 
 extern u8 CdBLB_ReadSectors(u16 arg0, u16 arg1);
-
-typedef struct BlbEntityWithSpriteSubobject {
-    /* 0x00 */ Entity base;
-    /* 0x80 */ u8 pad80[4];
-    /* 0x84 */ u8 spriteSubobject;
-} BlbEntityWithSpriteSubobject;
-
-/* BLB-allocated entity layout (only fields this file touches are named).
- * NOTE: distinct from the engine's Entity at include/Game/entity.h despite
- * the partial overlap -- +0x3C in particular is a per-instance helper buffer
- * pointer here, where Entity stores renderWidth (s16). The destructor at
- * DestroyEntity, the tick-queue free in RemoveFromUpdateQueue, and the
- * Z-order child array touched by RemoveFromZOrderList confirm the layout. */
-typedef struct {
-    /* 0x000 */ u8    _pad000[0x18];
-    /* 0x018 */ void *vtable;            /* same slot as Entity.collisionVtable */
-    /* 0x01C */ u8    _pad01C[0x3C - 0x1C];
-    /* 0x03C */ void *helperBuffer;      /* arbitrary per-instance buffer freed via builtin_delete */
-    /* 0x040 */ u8    _pad040[0x104 - 0x40];
-    /* 0x104 */ s16   tickQueueCount;
-    /* 0x106 */ u8    _pad106[2];
-    /* 0x108 */ void *tickQueue;
-} BlbEntity;
-
-/* BLB heap header. The queue-busy latch at +0xA08A is the single field
- * read/written here; the rest of the heap holds the bump allocator state
- * and entity instances. */
-typedef struct {
-    /* 0x0000 */ u8  _pad0000[0xA08A];
-    /* 0xA08A */ s16 queueBusyLatch;
-} BlbHeapHeader;
-
-/* BLB entity vtable subset. Only the two fields used by EntityTickLoop are
- * named; the full table has more slots but they aren't read in this file. */
-typedef struct {
-    /* 0x00 */ u8   _pad00[0x10];
-    /* 0x10 */ s16  argOffset;            /* added to entity ptr before calling tickFn */
-    /* 0x12 */ u8   _pad12[2];
-    /* 0x14 */ void (*tickFn)(void *);
-} BlbEntityVtable;
 
 /* u32->u16 trampoline around CdBLB_ReadSectors. Installed by LoadBLBHeader
  * as the streaming-read callback in InitLevelDataContext so the asset
@@ -138,12 +99,6 @@ INCLUDE_ASM("asm/nonmatchings/blb", DeferredEntityRemoval);
  * secondary destruct vtable on each followed by the same teardown that
  * DeferredEntityRemoval performs. Used at level teardown / scene switches. */
 INCLUDE_ASM("asm/nonmatchings/blb", EntityRemoval);
-
-/* EntityListNode comes from Game/entity.h (via functions.h). */
-typedef struct EntityListHead {
-    u8 pad[0x1C];
-    EntityListNode *head;        /* 0x1C */
-} EntityListHead;
 
 /* Plain (no-camera) variant of the per-frame tick driver. Iterates an
  * EntityListHead's linked list, fetches the tick fn at vtable+0x14 and the
