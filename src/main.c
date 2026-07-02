@@ -15,27 +15,27 @@ INCLUDE_ASM("asm/nonmatchings/main", CheckCheatCodeInput);
 
 /* GameState accessor: read background-color RGB triple from +0x199..0x19B
  * (bg_color_r/g/b). Wrapper used by code holding GameState as an opaque u8*. */
-void func_800826C0(GameState *obj, u8 *outA, u8 *outB, u8 *outC) {
+void GetGameStateBgColor(GameState *obj, u8 *outA, u8 *outB, u8 *outC) {
     *outA = obj->bg_color_r;
     *outB = obj->bg_color_g;
     *outC = obj->bg_color_b;
 }
 
 /* GameState accessor: write background-color RGB triple to +0x199..0x19B
- * (bg_color_r/g/b). Sibling setter to func_800826C0. */
-void func_800826E4(GameState *obj, u8 a, u8 b, u8 c) {
+ * (bg_color_r/g/b). Sibling setter to GetGameStateBgColor. */
+void SetGameStateBgColor(GameState *obj, u8 a, u8 b, u8 c) {
     obj->bg_color_r = a;
     obj->bg_color_g = b;
     obj->bg_color_b = c;
 }
 
 /* GameState accessor: read byte at +0x198 (_reserved_198, normally 0). */
-u8 func_800826F4(GameState *obj) {
+u8 GetGameStateReserved198(GameState *obj) {
     return obj->_reserved_198;
 }
 
 /* GameState accessor: write byte at +0x198 (_reserved_198, normally 0). */
-void func_80082700(GameState *obj, u8 val) {
+void SetGameStateReserved198(GameState *obj, u8 val) {
     obj->_reserved_198 = val;
 }
 
@@ -51,13 +51,13 @@ s32 FindSaveSlotForCurrentLevel(GameState *obj) {
 
 /* GameState accessor: write boss defeat record (+0x19C boss_defeated,
  * +0x19D boss_facing). Used by the boss defeat callback @ 0x8004906c. */
-void func_80082730(GameState *obj, u8 a, u8 b) {
+void SetGameStateBossDefeatRecord(GameState *obj, u8 a, u8 b) {
     obj->boss_defeated = a;
     obj->boss_facing = b;
 }
 
 /* GameState accessor: read boss_defeated flag at +0x19C. */
-u8 func_8008273C(GameState *obj) {
+u8 GetGameStateBossDefeated(GameState *obj) {
     return obj->boss_defeated;
 }
 
@@ -74,37 +74,37 @@ u8 GetLevelShowHUDFlag(GameState *gameState) {
 }
 
 /* GameState accessor: read checkpoint_active flag at +0x14A. */
-u8 func_80082790(GameState *obj) {
+u8 GetGameStateCheckpointActive(GameState *obj) {
     return obj->checkpoint_active;
 }
 
 /* GameState accessor: write demo_return_flag at +0x152 (returns to menu
  * when the attract-mode demo finishes). */
-void func_8008279C(GameState *obj, u8 val) {
+void SetGameStateDemoReturnFlag(GameState *obj, u8 val) {
     obj->demo_return_flag = val;
 }
 
 /* GameState accessor: write level_active flag at +0x170 (whether the current
  * level slot has a valid asset index). */
-void func_800827A4(GameState *obj, u8 val) {
+void SetGameStateLevelActive(GameState *obj, u8 val) {
     obj->level_active = val;
 }
 
 /* GameState accessor: read spawn_freeze_flag at +0x161 (suppresses entity
  * spawning while a checkpoint restore is in progress). */
-u8 func_800827AC(GameState *obj) {
+u8 GetGameStateSpawnFreezeFlag(GameState *obj) {
     return obj->spawn_freeze_flag;
 }
 
 /* GameState accessor: write spawn_freeze_flag at +0x161. */
-void func_800827B8(GameState *obj, u8 val) {
+void SetGameStateSpawnFreezeFlag(GameState *obj, u8 val) {
     obj->spawn_freeze_flag = val;
 }
 
 /* GameState accessor: install alternate-entity-system spawn list -- stores the
  * 64-byte-stride entity array pointer at +0x164 (alternate_entity_data) and the
  * entry count at +0x168 (alternate_entity_count). Used by vehicle/boss modes. */
-void func_800827C0(GameState *obj, s32 val32, s16 val16) {
+void SetGameStateAlternateEntityList(GameState *obj, s32 val32, s16 val16) {
     obj->alternate_entity_data = (void *)val32;
     obj->alternate_entity_count = val16;
 }
@@ -112,47 +112,47 @@ void func_800827C0(GameState *obj, s32 val32, s16 val16) {
 /* GameState accessor: read hud_entity_ptr at +0x14C (entity created by
  * CreateMenuEntities for HUD rendering). Return type is s32 in the
  * decomp but semantically this is a pointer. */
-s32 func_800827CC(GameState *obj) {
+s32 GetGameStateHudEntityPtr(GameState *obj) {
     return (s32)obj->hud_entity_ptr;
 }
 
 /* GameState accessor: read checkpoint_powerup_state at +0x14B (powerup byte
  * snapshotted at checkpoint, restored to PlayerState+0x18 on respawn). */
-u8 func_800827D8(GameState *obj) {
+u8 GetGameStateCheckpointPowerupState(GameState *obj) {
     return obj->checkpoint_powerup_state;
 }
 
 /* GameState accessor: write checkpoint_powerup_state at +0x14B. */
-void func_800827E4(GameState *obj, u8 val) {
+void SetGameStateCheckpointPowerupState(GameState *obj, u8 val) {
     obj->checkpoint_powerup_state = val;
 }
 
 /* GameState accessor: write level_clear_pending flag at +0x144 (triggers
  * ClearEntitiesAndFadeToBlack at end-of-frame). */
-void func_800827EC(GameState *obj, u8 val) {
+void SetGameStateLevelClearPending(GameState *obj, u8 val) {
     obj->level_clear_pending = val;
 }
 
 /* GameState accessor: read checkpoint_restore_pending flag at +0x149. */
-u8 func_800827F4(GameState *obj) {
+u8 GetGameStateCheckpointRestorePending(GameState *obj) {
     return obj->checkpoint_restore_pending;
 }
 
 /* GameState accessor: write checkpoint_restore_pending flag at +0x149
  * (cleared after the respawn has been performed). */
-void func_80082800(GameState *obj, u8 val) {
+void SetGameStateCheckpointRestorePending(GameState *obj, u8 val) {
     obj->checkpoint_restore_pending = val;
 }
 
 /* GameState accessor: write direct_level_load flag at +0x148 (bypasses normal
  * level sequencing, used by debug menu and cheats). */
-void func_80082808(GameState *obj, u8 val) {
+void SetGameStateDirectLevelLoad(GameState *obj, u8 val) {
     obj->direct_level_load = val;
 }
 
 /* GameState accessor: write advance_level_flag at +0x146 (causes the next
  * frame to advance the level sequence via AdvanceLevelSequence). */
-void func_80082810(GameState *obj, u8 val) {
+void SetGameStateAdvanceLevelFlag(GameState *obj, u8 val) {
     obj->advance_level_flag = val;
 }
 
@@ -164,12 +164,12 @@ u8 GetLevelAutoScrollFlag(GameState *gameState) {
 
 /* Empty stub. Likely a debug or build-variant hook compiled to a no-op in
  * the retail build (e.g. dev-only profiling/logging callback). */
-void func_8008283C(void) {
+void MainNoopCallback_8008283C(void) {
 }
 
-/* Empty stub. Sibling of func_8008283C; another dev/profiling slot left
+/* Empty stub. Sibling of MainNoopCallback_8008283C; another dev/profiling slot left
  * as a no-op for retail. */
-void func_80082844(void) {
+void MainNoopCallback_80082844(void) {
 }
 
 /* Destroy/cleanup callback for a "special" entity kind whose post-render
