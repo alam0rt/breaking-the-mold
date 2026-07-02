@@ -78,7 +78,7 @@ extern void EntityStateSetWalk(Entity *e);
 extern void SoundEmitterTickCallback(Entity *e);
 extern void AnimatedEntityToggleSpriteA(Entity *e);
 extern void AnimatedEntityToggleSpriteB(Entity *e);
-extern void SetAnimationSpriteId(Entity *e, s32 id);
+extern void SetAnimationTargetFrameIndex(Entity *e, s32 id);
 extern void SetAnimationLoopFrameIndex(Entity *e, s32 frame);
 extern void SetAnimationFrameCallback(Entity *e, u32 packed);
 extern void EntitySetRenderFlags(Entity *e, u32 flags);
@@ -359,7 +359,7 @@ void AIEntityRandomBehaviorTick(Entity *arg) {
 }
 
 /* Same 0x1001/0x1002/0x1008 switch skeleton as EntityEventHandlerIdle, plus an
- * EVT_TICK countdown on +0x110 (queue at 0, SetAnimationSpriteId(-1) at 1).
+ * EVT_TICK countdown on +0x110 (queue at 0, SetAnimationTargetFrameIndex(-1) at 1).
  * SHELVED: register-coloring split only — TARGET births `result` in the dead
  * $a2 arg reg during the switch and copies to $s0 only across the post-tick
  * calls; cc1 here keeps `result` in $s0 throughout. Same instruction count,
@@ -428,7 +428,7 @@ s32 EntityEventHandlerWithRandomWalk(Entity *e, u16 event, u32 unused, u32 attac
 }
 
 /* Idle-skeleton switch + EVT_TICK delay countdown (rand/SetWalk at 0,
- * SetAnimationSpriteId(-1) at 1). SHELVED: same result register-coloring split
+ * SetAnimationTargetFrameIndex(-1) at 1). SHELVED: same result register-coloring split
  * as EntityEventHandler0x1001_1002_1008 — TARGET births `result` in the dead
  * $a0 arg reg during the switch and copies to $s1 across the post-tick calls;
  * cc1 keeps it in $s1 throughout. Permuter territory. */
@@ -907,7 +907,7 @@ void InitEnemyFallingState(Entity *e) {
     }
     SetEntitySpriteId(callArg, spriteId, 1);
     SetAnimationLoopFrameIndex(e, 0x17);
-    SetAnimationSpriteId(e, 0x18);
+    SetAnimationTargetFrameIndex(e, 0x18);
     SetAnimationFrameIndex(e, 0);
 }
 
@@ -1644,7 +1644,7 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
     /* @hack: SLOT_STORE routes the scratch-build + struct-value-store through the macro so the marker/fn write order matches the original codegen; see memories/repo/decomp-patterns.md. */
     SLOT_STORE(slot.s, e->tickMarker, m1, fn);
     SetEntitySpriteId(e, 0x88210498, 1);
-    SetAnimationSpriteId(e, 0);
+    SetAnimationTargetFrameIndex(e, 0);
     EntitySetRenderFlags(e, 0);
     {
         register s32 abr asm("$5");
@@ -2175,7 +2175,7 @@ void BounceClay_HiddenState(Entity *e) {
     do { slot.s[0].markerLo = 0; slot.s[0].markerHi = m1; slot.s[0].fn = fn; } while (0);
     *(CallbackSlot *)&e->tickMarker = slot.s[0];
     SetEntitySpriteId(e, 0xE7443A6F, 1);
-    SetAnimationSpriteId(e, 0);
+    SetAnimationTargetFrameIndex(e, 0);
     EntitySetRenderFlags(e, 0);
     *((u8 *)e->spriteContext + 0xA) = 0;
 }
@@ -2714,7 +2714,7 @@ s32 BackgroundSparkleContactEventHandler(BackgroundSparkleEntity *sparkle, u32 e
         if (sparkle->contactFlag != 0) {
             BackgroundSparkleChildContext *child = sparkle->sprite.base.spriteContext;
             child->activeFlag = 0;
-            SetAnimationSpriteId((Entity *)sparkle, sparkle->sprite.currentFrame);
+            SetAnimationTargetFrameIndex((Entity *)sparkle, sparkle->sprite.currentFrame);
             EntitySetRenderFlags((Entity *)sparkle, 0);
         }
     }
@@ -2723,7 +2723,7 @@ s32 BackgroundSparkleContactEventHandler(BackgroundSparkleEntity *sparkle, u32 e
 
 void InitBackgroundSparkleRevealState(BackgroundSparkleEntity *e) {
     e->contactFlag = 1;
-    SetAnimationSpriteId((Entity *)e, -1);
+    SetAnimationTargetFrameIndex((Entity *)e, -1);
     SetAnimationFrameCallback((Entity *)e, ANIM_FINISHED_CB);
 }
 

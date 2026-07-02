@@ -295,7 +295,7 @@ Color lookup table allocation (follows VRAM pattern):
 | `SetAnimationFrameCallback` | 0x8001D0F0 | 40 | Frame callback |
 | `SetAnimationLoopFrameIndex` | 0x8001D118 | 88 | Loop frame (index) |
 | `SetAnimationLoopFrame` | 0x8001D170 | 80 | Loop start frame |
-| `SetAnimationSpriteId` | 0x8001D1C0 | 48 | Animation sprite |
+| `SetAnimationTargetFrameIndex` | 0x8001D1C0 | 48 | Target frame (index) |
 | `SetAnimationSpriteCallback` | 0x8001D1F0 | 40 | Sprite callback |
 | `SetAnimationActive` | 0x8001D218 | 40 | Active flag |
 | `SetAnimationSpriteFlags` | 0x8001D0B0 | 16 | Sprite flags |

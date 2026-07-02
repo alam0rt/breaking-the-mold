@@ -184,7 +184,7 @@ void SetAnimationLoopFrame(Entity* entity, u32 loop_frame) {
 
 ---
 
-### 6. FUN_8001d1c0 - SetAnimationSpriteId
+### 6. FUN_8001d1c0 - SetAnimationTargetFrameIndex
 
 **Address**: 0x8001d1c0 (line 5884)
 

@@ -34,7 +34,7 @@ This document consolidates all function discoveries from systematic C code analy
 | 0x8001d0c0 | SetAnimationFrameIndex | Set current frame | 100% |
 | 0x8001d0f0 | SetAnimationFrameCallback | Set frame callback | 100% |
 | 0x8001d170 | SetAnimationLoopFrame | Set loop target | 100% |
-| 0x8001d1c0 | SetAnimationSpriteId | Change sprite | 100% |
+| 0x8001d1c0 | SetAnimationTargetFrameIndex | Set target frame (index) | 100% |
 | 0x8001d1f0 | SetAnimationSpriteCallback | Set sprite lookup callback | 100% |
 | 0x8001d218 | SetAnimationActive | Enable/disable animation | 100% |
 | 0x8001d240 | EntitySetRenderFlags | Set render flags | 100% |

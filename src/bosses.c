@@ -57,7 +57,7 @@ extern void EntitySetRenderFlags(Entity *e, u32 flags);
 extern void EntityDestroyWithEffects(Entity *e);
 extern void CollectibleTickCallback(Entity *e);
 extern void UpdateEntitySoundPanning(Entity *e, u32 sound);
-extern void SetAnimationSpriteId(Entity *e, s32 id);
+extern void SetAnimationTargetFrameIndex(Entity *e, s32 id);
 extern Entity *CreateFadeOverlayEntity(Entity *e);
 extern void AddToZOrderList(GameState *gs, Entity *entity);
 extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
@@ -888,7 +888,7 @@ INCLUDE_ASM("asm/nonmatchings/bosses", BossEventHandler);
  * StartLoopAttackState / DeathState. Forwards events to BossEventHandler
  * (so damage/spawn/level-end still works) but also services event 0x0002
  * which is the per-tick "anim heartbeat" — used to count down activeTimer
- * (+0x111) and call SetAnimationSpriteId(-1) to drop the current animation
+ * (+0x111) and call SetAnimationTargetFrameIndex(-1) to drop the current animation
  * once it reaches zero (effectively a finite-time sprite). When the timer
  * is already 0, advances the queued-state slot. */
 s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u32 arg3) {
@@ -899,7 +899,7 @@ s32 ShrineyGuardActiveEventHandler(ShrineyGuardEntity *e, u32 event, u32 arg2, u
         if (e->activeTimer != 0) {
             e->activeTimer -= 1;
             if (e->activeTimer == 0) {
-                SetAnimationSpriteId((Entity *)e, -1);
+                SetAnimationTargetFrameIndex((Entity *)e, -1);
             }
         } else {
             EntityProcessCallbackQueue((Entity *)e);

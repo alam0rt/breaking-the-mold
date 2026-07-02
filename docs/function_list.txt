@@ -144,7 +144,7 @@
 0x8001D0F0 |    40 | Game/ENTITY     | animation       | SetAnimationFrameCallback
 0x8001D118 |    88 | Game/ENTITY     | -               | SetAnimationLoopFrameIndex
 0x8001D170 |    80 | Game/ENTITY     | animation       | SetAnimationLoopFrame
-0x8001D1C0 |    48 | Game/ENTITY     | animation       | SetAnimationSpriteId
+0x8001D1C0 |    48 | Game/ENTITY     | animation       | SetAnimationTargetFrameIndex
 0x8001D1F0 |    40 | Game/ENTITY     | animation       | SetAnimationSpriteCallback
 0x8001D218 |    40 | Game/ENTITY     | animation       | SetAnimationActive
 0x8001D240 |    40 | Game/ENTITY     | render          | EntitySetRenderFlags

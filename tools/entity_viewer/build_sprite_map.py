@@ -62,7 +62,7 @@ for path in glob.glob(str(REPO / 'src/*.c')):
 ALIAS_TOK = re.compile(r'\b(' + '|'.join(re.escape(k) for k in ALIAS) + r')\b') if ALIAS else None
 
 # 2) associate every sprite-set call with its enclosing top-level C function
-SPRITE_CALL = re.compile(r'\b(SetEntitySpriteId|InitEntitySprite|SetAnimationSpriteId|InitEntityWithSprite)\s*\(([^;]*)\)')
+SPRITE_CALL = re.compile(r'\b(SetEntitySpriteId|InitEntitySprite|SetAnimationTargetFrameIndex|InitEntityWithSprite)\s*\(([^;]*)\)')
 FUNC_DEF = re.compile(r'^[A-Za-z_][\w \*]*\b(\w+)\s*\([^;]*\)\s*\{?\s*$')
 HASH = re.compile(r'0x[0-9A-Fa-f]{6,8}')
 ARRSYM = re.compile(r'\b(D_8009[0-9A-Fa-f]{4}|g_[A-Za-z0-9_]*[Ss]prite[A-Za-z0-9_]*|[A-Za-z_]\w*Sprites)\b')
@@ -108,7 +108,7 @@ for path in glob.glob(str(REPO / 'src/*.c')):
 HASH_HI = re.compile(r'\(0x([0-9A-Fa-f]{6,8}) >> 16\)')
 ARR_HI = re.compile(r'%hi\((D_8009[0-9A-Fa-f]{4})\)')
 SPRITE_JAL = re.compile(r'\bjal\s+(InitEntitySprite|InitEntityWithSprite|'
-                        r'SetEntitySpriteId|SetAnimationSpriteId|CreateMultiFrameRenderContext)\b')
+                        r'SetEntitySpriteId|SetAnimationTargetFrameIndex|CreateMultiFrameRenderContext)\b')
 for path in glob.glob(str(REPO / 'asm/nonmatchings/**/*.s'), recursive=True):
     txt = pathlib.Path(path).read_text()
     # Scan any file that either calls a sprite-init directly (SPRITE_JAL) OR

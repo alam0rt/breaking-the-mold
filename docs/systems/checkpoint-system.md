@@ -262,7 +262,7 @@ void PlayerState_LevelExitTeleporter(Entity* player) {
     player[0x08] = 0;  // Clear movement callback
     
     // Setup sprite/animation for cutscene
-    SetAnimationSpriteId(player, player[0xDA]);  // Lock current frame
+    SetAnimationTargetFrameIndex(player, player[0xDA]);  // Lock current frame
     EntitySetRenderFlags(player, 0);
     
     player[0x0D][10] = 0;  // Clear linked entity flag

@@ -103,12 +103,11 @@ void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
     }
 }
 
-/* NB: name MISLEADING -- writes to pendingTargetFrame (+0xC8, flag
- * ANIM_CHG_TARGET_FRAME 0x020), NOT a sprite ID. The real sprite-id setter
- * is SetEntitySpriteId @ 0x8001D080 (which uses +0xBC and flag 0x004).
- * This queues the end/stop frame for the current animation; likely should
- * be SetAnimationTargetFrameIndex. */
-void SetAnimationSpriteId(AnimEntity *entity, u32 spriteId) {
+/* Writes pendingTargetFrame (+0xC8, flag ANIM_CHG_TARGET_FRAME 0x020). Queues
+ * the end/stop (target) frame for the current animation as a literal index
+ * (-1 = last frame). Literal-index variant of SetAnimationSpriteCallback; NOT a
+ * sprite-id setter (that is SetEntitySpriteId @0x8001D080, +0xBC/flag 0x004). */
+void SetAnimationTargetFrameIndex(AnimEntity *entity, u32 spriteId) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags;
 
@@ -120,7 +119,7 @@ void SetAnimationSpriteId(AnimEntity *entity, u32 spriteId) {
     }
 }
 
-/* NB: name MISLEADING -- same pendingTargetFrame slot as SetAnimationSpriteId,
+/* NB: name MISLEADING -- same pendingTargetFrame slot as SetAnimationTargetFrameIndex,
  * but with ANIM_CHG_TARGET_BY_VALUE (0x800) set so the stored value is
  * treated as a lookup key resolved via callback rather than a literal
  * frame index. Likely should be SetAnimationTargetFrameByValue. */
