@@ -664,7 +664,64 @@ s32 PlayerCallback_CollisionTrailEntityUpdate(PlayerEntity *e, u16 event, u32 ar
     return ret2;
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", TryActivatePowerup);
+u32 PlayerPowerupPhoenixMarker asm("D_800A5DD8");
+EntityCallback PlayerPowerupPhoenixFn asm("D_800A5DDC");
+u32 PlayerPowerupWillieMarker asm("D_800A5DE0");
+EntityCallback PlayerPowerupWillieFn asm("D_800A5DE4");
+u32 PlayerPowerupThirdMarker asm("D_800A5DE8");
+EntityCallback PlayerPowerupThirdFn asm("D_800A5DEC");
+u32 PlayerPowerupFourthMarker asm("D_800A5DF0");
+EntityCallback PlayerPowerupFourthFn asm("D_800A5DF4");
+
+/*
+ * Reads the freshly-pressed pad buttons and, for whichever powerup button is
+ * down (checked in bit order 4/1/8/2), activates the matching powerup if the
+ * player owns it (per-powerup count in PLAYER_STATE_DATA): sets the player
+ * FSM state and returns 1. If the button is pressed but the powerup is owned
+ * with a zero count (or is held-item-blocked), plays the "denied" cue and
+ * returns 0.
+ */
+s32 TryActivatePowerup(PlayerEntity *e) {
+    u16 buttons = e->pInput->buttons_pressed;
+    s32 avail = 0;
+
+    if (buttons & 4) {
+        if (((u8 *)PLAYER_STATE_DATA)[0x14] != 0) {
+            EntitySetState((Entity *)e, PlayerPowerupPhoenixMarker,
+                           PlayerPowerupPhoenixFn);
+            return 1;
+        }
+        avail = 1;
+    } else if (buttons & 1) {
+        if (e->interactEntity == NULL) {
+            if (((u8 *)PLAYER_STATE_DATA)[0x15] != 0) {
+                EntitySetState((Entity *)e, PlayerPowerupWillieMarker,
+                               PlayerPowerupWillieFn);
+                return 1;
+            }
+        }
+        avail = 1;
+    } else if (buttons & 8) {
+        if (((u8 *)PLAYER_STATE_DATA)[0x16] != 0) {
+            EntitySetState((Entity *)e, PlayerPowerupThirdMarker,
+                           PlayerPowerupThirdFn);
+            return 1;
+        }
+        avail = 1;
+    } else if (buttons & 2) {
+        if (((u8 *)PLAYER_STATE_DATA)[0x1C] != 0) {
+            EntitySetState((Entity *)e, PlayerPowerupFourthMarker,
+                           PlayerPowerupFourthFn);
+            return 1;
+        }
+        avail = 1;
+    }
+
+    if ((u8)avail != 0) {
+        PlayEntityPositionSound((Entity *)e, 0x64221E61);
+    }
+    return 0;
+}
 
 /* Plays the directional-walk SFX (asset 0x64221E61) if any of the four
  * cardinal D-pad bits are pressed in the player's current input snapshot
