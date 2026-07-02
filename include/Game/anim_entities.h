@@ -1,0 +1,63 @@
+#ifndef ANIM_ENTITIES_H
+#define ANIM_ENTITIES_H
+
+#include "common.h"
+#include "Game/entity.h"
+
+/* =============================================================================
+ * ANIMATION-SYSTEM OVERLAY LAYOUTS
+ *
+ * Clean-room RE note: all struct/field names are inferred working labels.
+ * These overlay the entity / sprite-context blocks touched by the animation
+ * tick and frame-advance code; padding runs cover offsets not yet traced.
+ * Used exclusively by src/anim.c.
+ *
+ * NOTE: SpriteRenderContext here is an anim-local view and differs from the
+ * same-named view in enemy_entities.h; keep each header included by only its
+ * own translation unit.
+ * ============================================================================= */
+
+typedef struct SpriteContextCallbackTable {
+    /* 0x00 */ u8 pad00[0x10];
+    /* 0x10 */ s16 callbackTargetOffset;
+    /* 0x12 */ u8 pad12[2];
+    /* 0x14 */ void (*releaseVRAMSlot)(u8 *target, s32 mode);
+} SpriteContextCallbackTable;
+
+typedef struct SpriteRenderContext {
+    /* 0x00 */ u8 pad00[0x0C];
+    /* 0x0C */ SpriteContextCallbackTable *callbacks;
+} SpriteRenderContext;
+
+typedef struct LayerResourceEntity {
+    /* 0x00 */ u8 pad00[0x18];
+    /* 0x18 */ s32 collisionVtable;
+    /* 0x1C */ u8 *resource;
+    /* 0x20 */ u8 *renderContext;
+} LayerResourceEntity;
+
+typedef struct AnimEntity {
+    u8 pad00[0xC0];
+    /* 0xC0 */ u32 pendingFrame;
+    /* 0xC4 */ u32 pendingLoopFrame;
+    /* 0xC8 */ u32 pendingSpriteSource;
+    u8 padCC[0xE0 - 0xCC];
+    /* 0xE0 */ u16 animChangeFlags;
+    u8 padE2[0xF3 - 0xE2];
+    /* 0xF3 */ u8 pendingDirection;
+    /* 0xF4 */ u8 pendingLoopFlag;
+    /* 0xF5 */ u8 pendingAnimActive;
+} AnimEntity;
+
+typedef struct AdvAnimState {
+    u8 pad_D8[0xD8];
+    s16 field_D8;
+    s16 field_DA;
+    u16 field_DC;
+    s16 field_DE;
+    u8 pad_E0[0xF0 - 0xE0];
+    u8 field_F0;
+    u8 field_F1;
+} AdvAnimState;
+
+#endif /* ANIM_ENTITIES_H */

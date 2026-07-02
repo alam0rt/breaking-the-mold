@@ -1,6 +1,7 @@
 #include "common.h"
 #include "functions.h"
 #include "Game/fsm_dispatch.h"
+#include "Game/anim_entities.h"
 
 extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_Destroyed[];
@@ -18,38 +19,6 @@ extern void FreeResourceType2(u8 *ptr, s32 type);
 extern void FreeResourceType3(u8 *ptr, s32 type);
 
 typedef struct { s32 a; s32 b; } S32Pair;
-
-typedef struct SpriteContextCallbackTable {
-    /* 0x00 */ u8 pad00[0x10];
-    /* 0x10 */ s16 callbackTargetOffset;
-    /* 0x12 */ u8 pad12[2];
-    /* 0x14 */ void (*releaseVRAMSlot)(u8 *target, s32 mode);
-} SpriteContextCallbackTable;
-
-typedef struct SpriteRenderContext {
-    /* 0x00 */ u8 pad00[0x0C];
-    /* 0x0C */ SpriteContextCallbackTable *callbacks;
-} SpriteRenderContext;
-
-typedef struct LayerResourceEntity {
-    /* 0x00 */ u8 pad00[0x18];
-    /* 0x18 */ s32 collisionVtable;
-    /* 0x1C */ u8 *resource;
-    /* 0x20 */ u8 *renderContext;
-} LayerResourceEntity;
-
-typedef struct AnimEntity {
-    u8 pad00[0xC0];
-    /* 0xC0 */ u32 pendingFrame;
-    /* 0xC4 */ u32 pendingLoopFrame;
-    /* 0xC8 */ u32 pendingSpriteSource;
-    u8 padCC[0xE0 - 0xCC];
-    /* 0xE0 */ u16 animChangeFlags;
-    u8 padE2[0xF3 - 0xE2];
-    /* 0xF3 */ u8 pendingDirection;
-    /* 0xF4 */ u8 pendingLoopFlag;
-    /* 0xF5 */ u8 pendingAnimActive;
-} AnimEntity;
 
 /* Pending-frame setter: queues `value` as the next animation frame index
  * and raises ANIM_CHG_FRAME (0x008) on animChangeFlags. The latched value
@@ -216,17 +185,6 @@ void SetAnimationDirection(AnimEntity *entity, u8 value) {
  * stage of every sprite-entity's per-tick update, before
  * ApplyPendingSpriteState / UpdateSpriteFrameData. */
 INCLUDE_ASM("asm/nonmatchings/anim", TickEntityAnimation);
-
-typedef struct AdvAnimState {
-    u8 pad_D8[0xD8];
-    s16 field_D8;
-    s16 field_DA;
-    u16 field_DC;
-    s16 field_DE;
-    u8 pad_E0[0xF0 - 0xE0];
-    u8 field_F0;
-    u8 field_F1;
-} AdvAnimState;
 
 /* Steps currentFrame (+0xDA) toward targetFrame (+0xDE) respecting
  * animDirection (+0xF0) and the animLoopFlag (+0xF1): when the target
