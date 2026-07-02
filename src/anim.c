@@ -192,27 +192,27 @@ INCLUDE_ASM("asm/nonmatchings/anim", TickEntityAnimation);
  * otherwise stops. Wraps at the total frameCount boundary. The actual
  * frame-index integrator driving every sprite animation. */
 void AdvanceAnimationFrame(AdvAnimState *e) {
-    s16 current = e->field_DA;
-    s16 target = e->field_DE;
+    s16 current = e->currentFrame;
+    s16 target = e->targetFrame;
 
     if (current == target) {
-        if (e->field_F1 != 0) {
-            e->field_DA = e->field_DC;
+        if (e->animLoopFlag != 0) {
+            e->currentFrame = e->loopFrame;
         }
         return;
     }
 
-    if (e->field_F0 == 0) {
+    if (e->animDirection == 0) {
         s16 newVal = current + 1;
-        e->field_DA = newVal;
-        if (newVal >= e->field_D8) {
-            e->field_DA = 0;
+        e->currentFrame = newVal;
+        if (newVal >= e->frameCount) {
+            e->currentFrame = 0;
         }
     } else {
         s16 newVal = current - 1;
-        e->field_DA = newVal;
+        e->currentFrame = newVal;
         if (newVal < 0) {
-            e->field_DA = e->field_D8 - 1;
+            e->currentFrame = e->frameCount - 1;
         }
     }
 }

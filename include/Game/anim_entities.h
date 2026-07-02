@@ -50,14 +50,14 @@ typedef struct AnimEntity {
 } AnimEntity;
 
 typedef struct AdvAnimState {
-    u8 pad_D8[0xD8];
-    s16 field_D8;
-    s16 field_DA;
-    u16 field_DC;
-    s16 field_DE;
-    u8 pad_E0[0xF0 - 0xE0];
-    u8 field_F0;
-    u8 field_F1;
+    u8 pad00[0xD8];
+    /* 0xD8 */ s16 frameCount;    /* Total frames in current sprite (wrap boundary) */
+    /* 0xDA */ s16 currentFrame;
+    /* 0xDC */ u16 loopFrame;
+    /* 0xDE */ s16 targetFrame;
+    u8 padE0[0xF0 - 0xE0];
+    /* 0xF0 */ u8 animDirection;  /* 0 = forward, else reverse */
+    /* 0xF1 */ u8 animLoopFlag;
 } AdvAnimState;
 
 #endif /* ANIM_ENTITIES_H */
