@@ -431,13 +431,11 @@ void PlayerState_QueuedCallbackTimer(PlayerEntity *e) {
     PlayerTickCallback(&e->sprite.base);
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_UpdateAttachedEntity);
 /* Per-tick sync of the player's attached rider entity: copies the player's
  * world X/Y (Y biased by attachedYOff) onto the attached entity, mirrors the
  * player's current RGB tint into the attached entity's sprite context
  * (+0x34..+0x36), and sets the context's glow flag (+0x38) from the player's
  * powerup timer. */
-/*
 void PlayerState_UpdateAttachedEntity(PlayerEntity *e) {
     Entity *attached;
     u8 *ctx;
@@ -462,7 +460,7 @@ void PlayerState_UpdateAttachedEntity(PlayerEntity *e) {
         ((u8 *)e->attachedEntity->spriteContext)[0x38] = 0;
     }
 }
-*/
+
 
 /* Player event dispatcher for zone-trigger events (0x100C..0x1017), routed via
  * a 12-entry jump table (jtbl_80011AE4). Enters/exits the shrink zone, warps
