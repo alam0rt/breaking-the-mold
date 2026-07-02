@@ -191,7 +191,7 @@ void EndingEntityDestroyCallback_1E74(SpriteEntity *entity, s32 flags) {
     }
 }
 
-u32 func_80079D74(EndingEntityWithState *e) {
+u32 GetEndingEntityStateValue_80079d74(EndingEntityWithState *e) {
     return e->stateValue;
 }
 
@@ -215,7 +215,7 @@ INCLUDE_ASM("asm/nonmatchings/ending", func_80079D80);
  */
 INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback);
 
-void func_80079DEC(void) {
+void EndingNoopCallback_80079dec(void) {
 }
 
 void EndingEntityDestroyCallback_2034(SpriteEntity *entity, s32 flags) {
@@ -250,20 +250,20 @@ void EndingEntityDestroyCallback_2034_V4(SpriteEntity *entity, s32 flags) {
     }
 }
 
-u32 func_80079F84(EndingEntityWithState *e) {
+u32 GetEndingEntityStateValue_80079f84(EndingEntityWithState *e) {
     return e->stateValue;
 }
 
-void func_80079F90(void) {
+void EndingNoopCallback_80079f90(void) {
 }
 
-void func_80079F98(void) {
+void EndingNoopCallback_80079f98(void) {
 }
 
-void func_80079FA0(void) {
+void EndingNoopCallback_80079fa0(void) {
 }
 
-void func_80079FA8(void) {
+void EndingNoopCallback_80079fa8(void) {
 }
 
 void EndingEntityDestroyCallback_2034_V5(SpriteEntity *entity, s32 flags) {
@@ -290,10 +290,10 @@ void EndingEntityDestroyCallback_20AC(SpriteEntity *entity, s32 flags) {
     }
 }
 
-void func_8007A0DC(void) {
+void EndingNoopCallback_8007a0dc(void) {
 }
 
-void func_8007A0E4(void) {
+void EndingNoopCallback_8007a0e4(void) {
 }
 
 void FreeEntityNoTeardown_8007a120(Entity *e, u32 size);
