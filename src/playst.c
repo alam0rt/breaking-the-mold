@@ -7,6 +7,7 @@ extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event, u32 arg2, u32
 extern s32 PlayerEntityCollisionHandler(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
 extern void RemoveEntityFromAllLists(GameState *gs, Entity *entity);
 extern void PlayEntityPositionSound(Entity *e, u32 soundId);
+extern void SetEntityStateFlagWithValue(void *e, u8 val);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessBounceCollision);
 
@@ -225,7 +226,24 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CollisionDamageSetup);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkToRunTransition);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CollisionTrailEntityUpdate);
+/* Collision-handler wrapper for the trail entity: forwards to
+ * PlayerEntityCollisionHandler, then on release (event 2) flushes the queued
+ * FSM callback, and on event 1 with arg 0x10022814 sets the glide entity's
+ * state flag. */
+s32 PlayerCallback_CollisionTrailEntityUpdate(PlayerEntity *e, u16 event, u32 arg2, u32 arg3) {
+    s32 ret2; /* load-bearing survival copy: keeps the return value in $s2 */
+    s32 ret;
+
+    ret = PlayerEntityCollisionHandler(e, event, arg2, arg3);
+    if (event == 2) {
+        EntityProcessCallbackQueue((Entity *)e);
+    }
+    ret2 = ret;
+    if ((event == 1) && (arg2 == 0x10022814)) {
+        SetEntityStateFlagWithValue(e->glideEntity, 1);
+    }
+    return ret2;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", TryActivatePowerup);
 
