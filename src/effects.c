@@ -31,9 +31,6 @@ extern void UpdateEntityRender(Entity *e);
 extern void UploadEntityTextureIfDirty(Entity *e);
 extern u8 IsEntityOffScreenY(Entity *e);
 
-typedef void (*GsNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
-typedef struct { s32 arg; GsNotifyCB fn; } GsNotifySlot;
-
 typedef struct DecorEventEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u16 timer;
@@ -450,45 +447,12 @@ INCLUDE_ASM("asm/nonmatchings/effects", IsEntityOutsideSpawnBounds);
  * pre-call pushes the slot pair into callee-saved $s0/$s1 (fn $t0,
  * self $s2). */
 void EntityTick_UploadTextureWithCallback(Entity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$8");   /* fn home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$17");   /* then-fn (relays into fn) */
-    FSM_REG(s32, slotArg, "$16");
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
-    FSM_REG(Entity *, self, "$18");
+    GS_NOTIFY_DECLS_S(Entity *);
 
     self = e;
     UploadEntityTextureIfDirty(self);
     if (*((u8 *)self + 0x109) != 0) {
-        gs = g_pGameState;
-        m = ((s16 *)&gs->event_marker)[1];
-        if (m == 0) {
-            return;
-        }
-        t = m;
-        FSM_RELAY(s, t);
-        if (m > 0) {
-            GsNotifySlot *base =
-                *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-            slotArg = base[m - 1].arg;
-            ft = base[m - 1].fn;
-            FSM_RELAY(fn, ft);
-        } else {
-            fn = (GsNotifyCB)gs->event_callback;
-        }
-        slotArgWide = slotArg;
-        lo = ((s16 *)&gs->event_marker)[0];
-        if (s > 0) {
-            adj = (s16)slotArgWide + lo;
-        } else {
-            adj = lo;
-        }
-        fn((void *)((u8 *)gs + adj), 3, 0, self);
+        GS_NOTIFY_DISPATCH(0, self);
     }
 }
 
@@ -625,45 +589,12 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitDebrisParticleEntity);
  * exits the screen vertically, notify the GameState event FSM
  * (EVT_GAME_NOTIFY, arg 0, srcEntity=e) so the emitter can recycle it. */
 void DebrisParticleTickCallback(Entity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$8");   /* fn home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$17");   /* then-fn (relays into fn) */
-    FSM_REG(s32, slotArg, "$16");
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
-    FSM_REG(Entity *, self, "$18");
+    GS_NOTIFY_DECLS_S(Entity *);
 
     self = e;
     EntityUpdateCallback(self);
     if (IsEntityOffScreenY(self) != 0) {
-        gs = g_pGameState;
-        m = ((s16 *)&gs->event_marker)[1];
-        if (m == 0) {
-            return;
-        }
-        t = m;
-        FSM_RELAY(s, t);
-        if (m > 0) {
-            GsNotifySlot *base =
-                *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-            slotArg = base[m - 1].arg;
-            ft = base[m - 1].fn;
-            FSM_RELAY(fn, ft);
-        } else {
-            fn = (GsNotifyCB)gs->event_callback;
-        }
-        slotArgWide = slotArg;
-        lo = ((s16 *)&gs->event_marker)[0];
-        if (s > 0) {
-            adj = (s16)slotArgWide + lo;
-        } else {
-            adj = lo;
-        }
-        fn((void *)((u8 *)gs + adj), 3, 0, self);
+        GS_NOTIFY_DISPATCH(0, self);
     }
 }
 
@@ -699,44 +630,12 @@ INCLUDE_ASM("asm/nonmatchings/effects", InitGridSpriteContext);
  * survivor pins to $a2 instead of $t3. Formerly split as
  * "NotifyGameStateZero" (phantom symbol, merged 2026-07-02). */
 void EntityDespawnIfFlagSet(Entity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
-    s32 slotArg;
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
+    GS_NOTIFY_DECLS_T;
 
     if (*((u8 *)e + 0x7C) == 0) {
         return;
     }
-    gs = g_pGameState;
-    m = ((s16 *)&gs->event_marker)[1];
-    if (m == 0) {
-        return;
-    }
-    t = m;
-    FSM_RELAY(s, t);
-    if (m > 0) {
-        GsNotifySlot *base =
-            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-        slotArg = base[m - 1].arg;
-        ft = base[m - 1].fn;
-        FSM_RELAY(fn, ft);
-    } else {
-        fn = (GsNotifyCB)gs->event_callback;
-    }
-    slotArgWide = slotArg;
-    lo = ((s16 *)&gs->event_marker)[0];
-    if (s > 0) {
-        adj = (s16)slotArgWide + lo;
-    } else {
-        adj = lo;
-    }
-    fn((void *)((u8 *)gs + adj), 3, 0, e);
+    GS_NOTIFY_DISPATCH(0, e);
 }
 
 
@@ -746,16 +645,7 @@ INCLUDE_ASM("asm/nonmatchings/effects", CreatePlayerParticleEntity);
  * the GameState event FSM with EVT_GAME_NOTIFY (3, arg 0, srcEntity=e).
  * Same a3-family template as EntityDespawnIfFlagSet. */
 void EntityTimerDespawnCallback(Entity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
-    s32 slotArg;
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
+    GS_NOTIFY_DECLS_T;
     u8 timer;
 
     timer = *((u8 *)e + 0x80);
@@ -767,30 +657,7 @@ void EntityTimerDespawnCallback(Entity *e) {
     if (timer != 0) {
         return;
     }
-    gs = g_pGameState;
-    m = ((s16 *)&gs->event_marker)[1];
-    if (m == 0) {
-        return;
-    }
-    t = m;
-    FSM_RELAY(s, t);
-    if (m > 0) {
-        GsNotifySlot *base =
-            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-        slotArg = base[m - 1].arg;
-        ft = base[m - 1].fn;
-        FSM_RELAY(fn, ft);
-    } else {
-        fn = (GsNotifyCB)gs->event_callback;
-    }
-    slotArgWide = slotArg;
-    lo = ((s16 *)&gs->event_marker)[0];
-    if (s > 0) {
-        adj = (s16)slotArgWide + lo;
-    } else {
-        adj = lo;
-    }
-    fn((void *)((u8 *)gs + adj), 3, 0, e);
+    GS_NOTIFY_DISPATCH(0, e);
 }
 
 INCLUDE_ASM("asm/nonmatchings/effects", UpdateAndUploadSpriteToVRAM);
@@ -912,44 +779,12 @@ void RippleEffectRenderCallback(RippleExpandEntity *e) {
  * EntityDespawnIfFlagSet. Formerly split as "NotifyGameStateOne" +
  * "NullStubFunction" (phantom symbols, merged 2026-07-02). */
 void ExpiredEntityDespawnEvent(CountdownTimerEntity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
-    s32 slotArg;
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
+    GS_NOTIFY_DECLS_T;
 
     if (e->expiredFlag == 0) {
         return;
     }
-    gs = g_pGameState;
-    m = ((s16 *)&gs->event_marker)[1];
-    if (m == 0) {
-        return;
-    }
-    t = m;
-    FSM_RELAY(s, t);
-    if (m > 0) {
-        GsNotifySlot *base =
-            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-        slotArg = base[m - 1].arg;
-        ft = base[m - 1].fn;
-        FSM_RELAY(fn, ft);
-    } else {
-        fn = (GsNotifyCB)gs->event_callback;
-    }
-    slotArgWide = slotArg;
-    lo = ((s16 *)&gs->event_marker)[0];
-    if (s > 0) {
-        adj = (s16)slotArgWide + lo;
-    } else {
-        adj = lo;
-    }
-    fn((void *)((u8 *)gs + adj), 3, 1, e);
+    GS_NOTIFY_DISPATCH(1, e);
 }
 
 
@@ -1012,44 +847,12 @@ void BeamEffectRenderCallback(BeamEffectEntity *e) {
  * when the beam timer runs out). Formerly split as "NotifyGameStateOneAlt"
  * (phantom symbol, merged 2026-07-02). */
 void BeamEffectDespawnEvent(BeamEffectEntity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
-    s32 slotArg;
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
+    GS_NOTIFY_DECLS_T;
 
     if (e->expiredFlag == 0) {
         return;
     }
-    gs = g_pGameState;
-    m = ((s16 *)&gs->event_marker)[1];
-    if (m == 0) {
-        return;
-    }
-    t = m;
-    FSM_RELAY(s, t);
-    if (m > 0) {
-        GsNotifySlot *base =
-            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-        slotArg = base[m - 1].arg;
-        ft = base[m - 1].fn;
-        FSM_RELAY(fn, ft);
-    } else {
-        fn = (GsNotifyCB)gs->event_callback;
-    }
-    slotArgWide = slotArg;
-    lo = ((s16 *)&gs->event_marker)[0];
-    if (s > 0) {
-        adj = (s16)slotArgWide + lo;
-    } else {
-        adj = lo;
-    }
-    fn((void *)((u8 *)gs + adj), 3, 1, e);
+    GS_NOTIFY_DISPATCH(1, e);
 }
 
 
@@ -1091,44 +894,12 @@ INCLUDE_ASM("asm/nonmatchings/effects", FadeAndExpireEntityTick);
  * (set by FadeAndExpireEntityTick when the fade completes). Formerly split
  * as "NotifyGameStateOneAlt2" (phantom symbol, merged 2026-07-02). */
 void FadeExpireEntityDespawnEvent(Entity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$10"); /* $t2 home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$9");  /* $t1 then-fn (relays into $t2) */
-    s32 slotArg;
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
+    GS_NOTIFY_DECLS_T;
 
     if (*((u8 *)e + 0x24) == 0) {
         return;
     }
-    gs = g_pGameState;
-    m = ((s16 *)&gs->event_marker)[1];
-    if (m == 0) {
-        return;
-    }
-    t = m;
-    FSM_RELAY(s, t);
-    if (m > 0) {
-        GsNotifySlot *base =
-            *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-        slotArg = base[m - 1].arg;
-        ft = base[m - 1].fn;
-        FSM_RELAY(fn, ft);
-    } else {
-        fn = (GsNotifyCB)gs->event_callback;
-    }
-    slotArgWide = slotArg;
-    lo = ((s16 *)&gs->event_marker)[0];
-    if (s > 0) {
-        adj = (s16)slotArgWide + lo;
-    } else {
-        adj = lo;
-    }
-    fn((void *)((u8 *)gs + adj), 3, 1, e);
+    GS_NOTIFY_DISPATCH(1, e);
 }
 
 

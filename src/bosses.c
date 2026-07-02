@@ -165,52 +165,16 @@ EntityCallback JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_CALLBACK asm("D_800A5C24");
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
-typedef void (*GsNotifyCB)(void *dst, s16 eventId, s32 arg, void *src);
-typedef struct { s32 arg; GsNotifyCB fn; } GsNotifySlot;
-
 /* Standard entity tick + ready-flag check: when +0x101 is set, notify the
  * GameState event FSM (EVT_GAME_NOTIFY, arg 0, srcEntity=e). S-reg
  * dispatch family (slot pair $s0/$s1, fn $t0, self $s2). */
 void EntityTickWithReadyCheck(Entity *e) {
-    GameState *gs;
-    s16 m;
-    FSM_REG(GsNotifyCB, fn, "$8");   /* fn home (jalr target) */
-    FSM_REG(GsNotifyCB, ft, "$17");   /* then-fn (relays into fn) */
-    FSM_REG(s32, slotArg, "$16");
-    s32 adj;
-    s32 lo;
-    int slotArgWide;
-    s16 t;
-    s16 s;
-    FSM_REG(Entity *, self, "$18");
+    GS_NOTIFY_DECLS_S(Entity *);
 
     self = e;
     EntityUpdateCallback(self);
     if (*((u8 *)self + 0x101) != 0) {
-        gs = g_pGameState;
-        m = ((s16 *)&gs->event_marker)[1];
-        if (m == 0) {
-            return;
-        }
-        t = m;
-        FSM_RELAY(s, t);
-        if (m > 0) {
-            GsNotifySlot *base =
-                *(GsNotifySlot **)((u8 *)gs + *(s16 *)&gs->event_callback);
-            slotArg = base[m - 1].arg;
-            ft = base[m - 1].fn;
-            FSM_RELAY(fn, ft);
-        } else {
-            fn = (GsNotifyCB)gs->event_callback;
-        }
-        slotArgWide = slotArg;
-        lo = ((s16 *)&gs->event_marker)[0];
-        if (s > 0) {
-            adj = (s16)slotArgWide + lo;
-        } else {
-            adj = lo;
-        }
-        fn((void *)((u8 *)gs + adj), 3, 0, self);
+        GS_NOTIFY_DISPATCH(0, self);
     }
 }
 
