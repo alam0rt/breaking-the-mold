@@ -502,7 +502,7 @@ void EntityFadeOutTickCallback(Entity *e);
 /* Fading sprite fragment spawned on player death: semi-transparent (blend mode
  * 1) + a fade-out tick = the dissolving death debris. */
 SpriteEntity *InitPlayerDeathParticle(SpriteEntity *e, s32 spawnArg) {
-    ParticleRenderCtx *ctx;
+    RenderSprite *ctx;
     PaddedEntSlot u;
     s16 m1;
     void (*fn)();
@@ -518,10 +518,10 @@ SpriteEntity *InitPlayerDeathParticle(SpriteEntity *e, s32 spawnArg) {
     u.s.markerHi = m1;
     u.s.fn = fn;
     *(EntCallbackSlot *)&e->base.tickMarker = u.s;
-    ctx = (ParticleRenderCtx *)e->base.spriteContext;
-    cx = ctx->x;
-    cy = ctx->y;
-    ctx->tpage = GetTPage(ctx->depth, 1, cx & -0x40, cy & -0x100);
+    ctx = (RenderSprite *)e->base.spriteContext;
+    cx = ctx->vramX;
+    cy = ctx->vramY;
+    ctx->tpage = GetTPage(ctx->colorMode, 1, cx & -0x40, cy & -0x100);
     return e;
 }
 

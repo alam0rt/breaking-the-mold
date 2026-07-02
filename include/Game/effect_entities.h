@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/spracc_records.h"
 
 /* =============================================================================
  * VISUAL-EFFECT ENTITY LAYOUTS
@@ -180,16 +181,5 @@ typedef struct CompoundEntity {
     /* 0x100 */ u8 pad100[4];
     /* 0x104 */ void *child;
 } CompoundEntity;
-
-/* Sprite render context (Entity.spriteContext) fields touched here. */
-typedef struct ParticleRenderCtx {
-    /* 0x00 */ u8  pad0[0x10];
-    /* 0x10 */ s16 x;
-    /* 0x12 */ s16 y;
-    /* 0x14 */ u8  pad14[0x10];
-    /* 0x24 */ s16 tpage;
-    /* 0x26 */ u8  pad26[0xC];
-    /* 0x32 */ u8  depth;
-} ParticleRenderCtx;
 
 #endif /* EFFECT_ENTITIES_H */
