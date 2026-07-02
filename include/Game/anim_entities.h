@@ -40,7 +40,7 @@ typedef struct AnimEntity {
     u8 pad00[0xC0];
     /* 0xC0 */ u32 pendingFrame;
     /* 0xC4 */ u32 pendingLoopFrame;
-    /* 0xC8 */ u32 pendingSpriteSource;
+    /* 0xC8 */ u32 pendingTargetFrame; /* 32-bit slot; flag 0x020 copies to targetFrame@0xDE */
     u8 padCC[0xE0 - 0xCC];
     /* 0xE0 */ u16 animChangeFlags;
     u8 padE2[0xF3 - 0xE2];

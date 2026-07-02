@@ -113,7 +113,7 @@ void SetAnimationSpriteId(AnimEntity *entity, u32 spriteId) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags;
 
-    entity->pendingSpriteSource = (u16)spriteId;
+    entity->pendingTargetFrame = (u16)spriteId;
     newFlags = (flags | 0x20) & 0xF7FF;
     entity->animChangeFlags = newFlags;
     if (((flags | 0x20) & 3) == 0) {
@@ -129,7 +129,7 @@ void SetAnimationSpriteCallback(AnimEntity *entity, u8 *callback) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x820;
 
-    entity->pendingSpriteSource = (u32)callback;
+    entity->pendingTargetFrame = (u32)callback;
     entity->animChangeFlags = newFlags;
     if ((newFlags & 3) == 0) {
         entity->animChangeFlags = flags | 0x821;
