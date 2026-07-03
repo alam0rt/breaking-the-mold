@@ -205,37 +205,44 @@ s32 PlayerProcessEnemyHit(PlayerEntity *e, Entity *enemy) {
  * player is mid grow/shrink, scalePowerupX == 0x8000), then the player's
  * worldX must lie inside the enemy's horizontal span and the player's screen
  * bottom must reach below that adjusted top edge. Ignored while the player is
- * invincible (+0x128). Verified-equivalent C (compiles to a 2-register swap
- * of the saved-register assignment only):
+ * invincible (+0x128).
  *
- *   void CheckPlayerHitByEnemy(PlayerEntity *e, Entity *enemy, s32 hitboxExpand) {
- *       s16 enemyBounds[4], playerBounds[4], playerX;
- *       s32 adj, marker; EntityCallback fn;
- *       GetEntityScreenBounds(enemy, enemyBounds);
- *       GetEntityScreenBounds((Entity *)e, playerBounds);
- *       adj = hitboxExpand >> 16;
- *       if (*(s32 *)((u8 *)e + 0x58) == 0x8000) adj = (hitboxExpand * 2) >> 16;
- *       adj -= 0xD;
- *       if ((enemyBounds[1] - adj) < playerBounds[3]) {
- *           playerX = e->sprite.base.worldX;
- *           if (playerX >= enemyBounds[0] && enemyBounds[2] >= playerX &&
- *               e->invincibilityTimer == 0) {
- *               if (PLAYER_STATE_DATA->powerup_flags & 1) {
- *                   if (playerX < enemy->worldX) { marker = PlayerQuickTurnMarker; fn = PlayerQuickTurnFn; }
- *                   else { marker = PlayerBounceDownMarker; fn = PlayerBounceDownFn; }
- *               } else if (*(u16 *)&e->powerupTimer != 0) { marker = PlayerRespawnMarker; fn = PlayerRespawnFn; }
- *               else { marker = PlayerDeathMarker; fn = PlayerDeathFn; }
- *               EntitySetState((Entity *)e, marker, fn);
- *           }
- *       }
- *   }
- *
- * Residual: the target assigns player->s1, enemy->s2, hitboxExpand->s0; gcc
- * gives this source player->s0, hitboxExpand->s1 (a saved-register priority
- * tie resolved the other way). Pinning player to $17 corrects the assignment
- * but reorders the prologue arg-moves; pinning hitboxExpand grows the frame.
- * All other instructions match. */
-INCLUDE_ASM("asm/nonmatchings/playst", CheckPlayerHitByEnemy);
+ * Byte-match levers: `hitboxExpand *= 2;` as a statement reproduces the
+ * in-place `sll s0,s0,1`; the adj if/else split (not assign-then-overwrite)
+ * keeps adj's range clear of the scale/0x8000 compare so the else-arm sra
+ * fills the bne delay; FSM_KEEP_LIVE(hitboxExpand) after the if adds the ref
+ * that wins it s0 over the player in the saved-register priority tie
+ * (target: hitboxExpand->s0, player->s1, enemy->s2) while keeping the
+ * doubled def alive (before the if, the *=2 store gets elided into a temp);
+ * adj pinned $v0. */
+extern void GetEntityScreenBounds(Entity *entity, s16 *out);
+void CheckPlayerHitByEnemy(PlayerEntity *e, Entity *enemy, s32 hitboxExpand) {
+    s16 enemyBounds[4], playerBounds[4], playerX;
+    FSM_REG(s32, adj, "$2");
+    s32 marker; EntityCallback fn;
+    GetEntityScreenBounds(enemy, enemyBounds);
+    GetEntityScreenBounds((Entity *)e, playerBounds);
+    if (e->sprite.base.scalePowerupX == 0x8000) {
+        hitboxExpand *= 2;
+        adj = hitboxExpand >> 16;
+    } else {
+        adj = hitboxExpand >> 16;
+    }
+    FSM_KEEP_LIVE(hitboxExpand);
+    adj -= 0xD;
+    if ((enemyBounds[1] - adj) < playerBounds[3]) {
+        playerX = e->sprite.base.worldX;
+        if (playerX >= enemyBounds[0] && enemyBounds[2] >= playerX &&
+            e->invincibilityTimer == 0) {
+            if (PLAYER_STATE_DATA->powerup_flags & 1) {
+                if (playerX < enemy->worldX) { marker = PlayerQuickTurnMarker; fn = PlayerQuickTurnFn; }
+                else { marker = PlayerBounceDownMarker; fn = PlayerBounceDownFn; }
+            } else if (*(u16 *)&e->powerupTimer != 0) { marker = PlayerRespawnMarker; fn = PlayerRespawnFn; }
+            else { marker = PlayerDeathMarker; fn = PlayerDeathFn; }
+            EntitySetState((Entity *)e, marker, fn);
+        }
+    }
+}
 
 /* Bulk-installs four caller-supplied (marker, callback) FSM slots onto an
  * entity -- tick (+0x00), event (+0x08), +0x104, and render (+0x1C) -- each
