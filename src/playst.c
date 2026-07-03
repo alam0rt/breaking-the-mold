@@ -388,11 +388,45 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerTickCallback);
  * 0x30..0xAF). Both hand-offs share a single EntitySetState tail, then
  * PlayerTickCallback.
  *
- * SHELVED (single-instruction scheduling diff, same class as
- * PlayerSetupCallbacksAndSprite): the long-timer path matches byte-for-byte,
- * but on the short-timer fall-through path TARGET schedules the arg setup
- * (move a0,s0 / lw a1,a2) ahead of the `sb` reroll store, while cc1 emits the
- * store first. Not reachable from source ordering; permuter floored above 200. */
+ * SHELVED -- one instruction from a match. The verified C below reproduces
+ * the outer/inner branch structure+polarity, the early per-arm `base =
+ * &e->sprite.base` arg setup (pinned $a0, matching the target's schedule of
+ * arg setup ahead of the reroll store), and every register assignment. The
+ * lone residual: the long-timer reroll `(rand() & 0x100) + 0x200` -- cc1's
+ * combine pass proves the AND and the added constant's bits never overlap
+ * and canonicalizes the ADD into an OR (`ori`), but the target keeps a real
+ * `addiu`. Confirmed NOT source-reachable: tried commuted operands, an
+ * intervening named/pinned temp, a shift+multiply reformulation (folds back
+ * to the same AND by constant propagation), and reordering relative to the
+ * `base` assignment -- cc1 reaches the identical canonical RTL every time
+ * and always emits `ori`. Equivalent C (parked in
+ * nonmatchings/PlayerState_IdleRandom):
+ *   extern s32 rand(void);
+ *   u32 PlayerIdleAnimAMarker asm("D_800A5DA0");
+ *   EntityCallback PlayerIdleAnimAFn asm("D_800A5DA4");
+ *   u32 PlayerIdleAnimBMarker asm("D_800A5DA8");
+ *   EntityCallback PlayerIdleAnimBFn asm("D_800A5DAC");
+ *   void PlayerState_IdleRandom(PlayerEntity *e) {
+ *       u32 marker; EntityCallback fn; u16 reroll;
+ *       Entity *base;
+ *       e->fidgetTimerLong -= 1;
+ *       if (e->fidgetTimerLong == 0) {
+ *           base = &e->sprite.base;
+ *           reroll = (rand() & 0x100) + 0x200;  // target: addiu; cc1: ori
+ *           marker = PlayerIdleAnimAMarker; fn = PlayerIdleAnimAFn;
+ *           e->fidgetTimerLong = reroll;
+ *       } else {
+ *           e->fidgetTimerShort -= 1;
+ *           if (e->fidgetTimerShort != 0) goto skip;
+ *           base = &e->sprite.base;
+ *           reroll = (rand() & 0x7F) + 0x30;
+ *           marker = PlayerIdleAnimBMarker; fn = PlayerIdleAnimBFn;
+ *           e->fidgetTimerShort = reroll;
+ *       }
+ *       EntitySetState(base, marker, fn);
+ *   skip:
+ *       PlayerTickCallback(e);
+ *   } */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_IdleRandom);
 
 
