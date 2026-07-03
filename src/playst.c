@@ -679,7 +679,88 @@ s32 PlayerCallback_CollisionHandlerWithQueue(PlayerEntity *e, u32 event, u32 arg
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerBounceCallback);
+/* Bounce collision callback: forwards to PlayerEntityCollisionHandler (return
+ * value passed through), drains the callback queue on event 2, and on event 1
+ * with arg2 matching the bounce-source hash 0x1A800898 applies a hitstun
+ * bounce: landingTimer=5, cushionVelY=-0x1200, velocityY -= 6.0 (16.16 fixed,
+ * clamped to -9.0), zeroes bounceLockTimer/jumpHoldCounter/altSpeed, installs
+ * PlayerCallback_FallingPhysicsMain as the render-slot FSM callback, and (if
+ * an entity is attached via interactEntity) fires its move-Y FSM slot with
+ * event 0x1005 ("released") forwarding the (possibly halved) velocity, same
+ * as PlayerNotifyEntityRelease. */
+extern void PlayerCallback_FallingPhysicsMain(PlayerEntity *e);
+typedef void (*BareFn2)();
+
+s32 PlayerBounceCallback(PlayerEntity *e, u32 event, u32 arg2, u32 arg3) {
+    FSM_REG(s32, result, "$18");
+    FSM_REG(u32, maskedEvent, "$17");
+    FSM_REG(u32, arg2s, "$19");
+    maskedEvent = event & 0xFFFF;
+    arg2s = arg2;
+    result = PlayerEntityCollisionHandler(e, maskedEvent, arg2s, arg3);
+    if (maskedEvent == 2) {
+        EntityProcessCallbackQueue((Entity *)e);
+    }
+    if (maskedEvent == 1 && arg2s == 0x1A800898) {
+        s32 v;
+        FSM_REG(Entity *, held, "$4");
+        e->landingTimer = 5;
+        e->cushionVelY = -0x1200;
+        v = e->velocityY_fixed + (s32)0xFFFA0000;
+        e->bounceLockTimer = 0;
+        e->jumpHoldCounter = 0;
+        e->altSpeed = 0;
+        e->velocityY_fixed = v;
+        if (v < (s32)0xFFF70000) {
+            e->velocityY_fixed = (s32)0xFFF70000;
+        }
+        {
+            PadSlot slot;
+            FSM_REG(BareFn2, fn, "$3");
+            fn = (BareFn2)PlayerCallback_FallingPhysicsMain;
+            FSM_KEEP_LIVE(fn);
+            slot.s.markerLo = 0; slot.s.markerHi = -1; slot.s.fn = fn;
+            *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s;
+        }
+        held = e->interactEntity;
+        if (held != NULL) {
+            FSM_REG(s32, rawVelY, "$5");
+            s32 vel;
+            s16 markerHi;
+            s32 markerLo;
+            FSM_REG(s32, xOff, "$2");
+            FSM_REG(s32, slotArg, "$20");
+            FSM_REG(ReleaseNotifyCallback, fn2, "$8");
+
+            rawVelY = e->velocityY_fixed;
+            vel = rawVelY;
+            if (e->sprite.base.scalePowerupX == 0x8000) {
+                vel = (s32)(rawVelY << 16) >> 17;
+            }
+            FSM_KEEP_LIVE(rawVelY);
+            vel = (s16)vel;
+            markerHi = *(s16 *)((u8 *)held + 0xA);
+            if (markerHi != 0) {
+                s16 s = markerHi;
+                if (markerHi > 0) {
+                    FSM_REG(ReleaseNotifyCallback, ft, "$21");
+                    u8 *tbl = *(u8 **)((u8 *)held + *(s16 *)((u8 *)held + 0xC));
+                    slotArg = *(s32 *)(tbl + markerHi * 8 - 8);
+                    ft = *(ReleaseNotifyCallback *)(tbl + markerHi * 8 - 4);
+                    FSM_RELAY(fn2, ft);
+                } else {
+                    fn2 = *(ReleaseNotifyCallback *)((u8 *)held + 0xC);
+                }
+                markerLo = *(s16 *)((u8 *)held + 8);
+                if (s > 0) xOff = (s16)slotArg + markerLo;
+                else xOff = markerLo;
+                fn2((u8 *)held + xOff, 0x1005, vel, e);
+            }
+            e->interactEntity = NULL;
+        }
+    }
+    return result;
+}
 
 /* Player event handler installed during the teleporter (level-exit) animation.
  * Forwards the event to PlayerEntityEventHandler (return value passed through),
@@ -1079,6 +1160,96 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithJump);
  */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithFall);
 
+/* Per-tick input handler for the jump/wall-collision state. Picks forward/back
+ * turn masks from facing (facing right -> fwd 0x8000/back 0x2000, facing left ->
+ * swapped). When the FSM allows special input (PLAYER_STATE_DATA->swirly_q_count)
+ * and the "look" mask is pressed, it either queues the special move (specialMoveMode
+ * set) or hands off to the special-look state. On the "drop" mask it probes the
+ * tile above (worldY-0x40) and ducks/pickups unless blocked (tile 0x65). Otherwise
+ * it tries a powerup, then on a forward-turn press wall-checks and (if blocked)
+ * flips facing + hands off to the wall-turn state, or on a back press bails, else
+ * lands. All seven hand-offs share a single EntitySetState tail.
+ *
+ * SHELVED: the C below reproduces the exact logic (every branch, all seven
+ * dispatch pairs, the facing flip, and both mask tests match byte-for-byte) EXCEPT
+ * one non-source-reachable register-allocation residual at the CheckTileCollisionOverride
+ * out-param reload — the identical coin-flip already documented on the sibling
+ * PlayerCallback_WalkInputWithFall. The original reloads `tile` into v0 and tests
+ * it with `lbu v0; nop; xori v0,v0,0x65; beqz` (4 slots), whereas cc1 parks tile
+ * in v1 and materialises `lbu v1; li v0,0x65; bne v1,v0` (3 slots). That one-slot
+ * codegen difference makes cc1's body 4 bytes shorter, cascading a uniform -4
+ * offset drift onto every GP-relative marker/mask load after it, so the whole
+ * tail mis-diffs. Neither the goto tail-merge form nor `== 0x65` / `!= 0x65`
+ * reorderings dislodge it (same as the sibling), so the asm is retained.
+ *
+ *   extern s32 CheckWallCollision(Entity *entity, s32 dir);
+ *   extern s32 CheckTileCollisionOverride(PlayerEntity *entity, u8 *tile);
+ *   extern u16 g_JumpLookInputMask asm("D_800A596E");
+ *   extern u16 g_JumpDropInputMask asm("D_800A596C");
+ *   u32 JumpSpecialLookMarker asm("D_800A5E38");
+ *   EntityCallback JumpSpecialLookFn asm("D_800A5E3C");
+ *   u32 JumpDropSpecialMarker asm("D_800A5E00");
+ *   EntityCallback JumpDropSpecialFn asm("D_800A5E04");
+ *   u32 JumpWallSpecialMarker asm("D_800A5E08");
+ *   EntityCallback JumpWallSpecialFn asm("D_800A5E0C");
+ *   u32 JumpWallTurnMarker asm("D_800A5E18");
+ *   EntityCallback JumpWallTurnFn asm("D_800A5E1C");
+ *   u32 JumpLandSpecialMarker asm("D_800A5E40");
+ *   EntityCallback JumpLandSpecialFn asm("D_800A5E44");
+ *   u32 JumpLandMarker asm("D_800A5E60");
+ *   EntityCallback JumpLandFn asm("D_800A5E64");
+ *   (pickup pair reuses PLAYER_PICKUP_STATE_MARKER/CALLBACK @ D_800A5DB0/4)
+ *
+ *   void PlayerCallback_JumpWallCollisionInput(PlayerEntity *e) {
+ *       u32 fwdMask; u32 backMask; u8 tile; u32 marker; EntityCallback fn; u16 held;
+ *       backMask = 0x2000;
+ *       fwdMask = 0x8000;
+ *       if (e->sprite.base.facing != 0) {
+ *           backMask = 0x8000;
+ *           fwdMask = 0x2000;
+ *       }
+ *       if (PLAYER_STATE_DATA->swirly_q_count != 0) {
+ *           if ((e->pInput->buttons_pressed & g_JumpLookInputMask) != 0) {
+ *               if (e->specialMoveMode != 0) {
+ *                   e->specialMoveQueued = 1;
+ *                   return;
+ *               }
+ *               marker = JumpSpecialLookMarker; fn = JumpSpecialLookFn;
+ *               goto setState;
+ *           }
+ *       }
+ *       if ((e->pInput->buttons_pressed & g_JumpDropInputMask) != 0) {
+ *           tile = EntityApplyMovementCallbacks((Entity *)e, e->sprite.base.worldX,
+ *                       (s16)(*(u16 *)&e->sprite.base.worldY - 0x40));
+ *           CheckTileCollisionOverride(e, &tile);
+ *           if (tile == 0x65) return;
+ *           if (e->specialMoveMode != 0) {
+ *               marker = JumpDropSpecialMarker; fn = JumpDropSpecialFn;
+ *           } else {
+ *               marker = PLAYER_PICKUP_STATE_MARKER; fn = PLAYER_PICKUP_STATE_CALLBACK;
+ *           }
+ *           goto setState;
+ *       }
+ *       if ((u8)TryActivatePowerup(e) != 0) return;
+ *       held = e->pInput->buttons_held;
+ *       if ((fwdMask & held) != 0) {
+ *           if ((u8)CheckWallCollision((Entity *)e, e->sprite.base.facing < 1) == 0) return;
+ *           {
+ *               u8 newFacing = e->sprite.base.facing < 1;
+ *               u8 sm = e->specialMoveMode;
+ *               e->sprite.base.facing = newFacing;
+ *               if (sm != 0) { marker = JumpWallSpecialMarker; fn = JumpWallSpecialFn; }
+ *               else         { marker = JumpWallTurnMarker;    fn = JumpWallTurnFn; }
+ *           }
+ *           goto setState;
+ *       }
+ *       if ((backMask & held) != 0) return;
+ *       if (e->specialMoveMode != 0) { marker = JumpLandSpecialMarker; fn = JumpLandSpecialFn; }
+ *       else                        { marker = JumpLandMarker;        fn = JumpLandFn; }
+ *   setState:
+ *       EntitySetState((Entity *)e, marker, fn);
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpWallCollisionInput);
 
 /* PlayerCallback_JumpInputAndCounters: unit spans 0x800602E0..0x800605D8 — absorbs former split symbols PlayerCallback_JumpDirectionAndCounters (Ghidra labels with no external references; merged 2026-07-02). */
