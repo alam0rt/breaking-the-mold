@@ -1582,6 +1582,64 @@ Entity *InitHUDAnimatedEntity(Entity *e, s16 x, s16 y, s32 facing, s32 anchor) {
     return e;
 }
 
+/*
+ * CreateHaloEntity(Entity *e, Entity *owner) -> Entity*
+ *
+ * Sub-entity constructor for the player "halo" indicator. Sets up the menu
+ * entity base + destructor vtable, installs the per-frame tick callback
+ * (FinnSubentityUpdatePositionFromParent) into the tick slot at e+0x00, heap-
+ * allocates and initialises a child HUD-icon entity (stored at e+0x24, with a
+ * flag byte set at child+0x1E7), then seeds this entity's screen position from
+ * the stored owner (e+0x1C): worldX from owner+0x68, and 0x22 from
+ * owner->worldY (owner+0x6A) + owner->renderOffsetY (owner+0x3A). The
+ * renderOffsetY read comes via an 8-byte alignment-1 by-value copy of the
+ * owner's render-bounds block (owner+0x38..0x3F) into a stack temp that gcc
+ * keeps un-scalarised (lwl/lwr + swl/swr), reading back only the halfword at
+ * +2.
+ *
+ * VERIFIED C (logic byte-exact; SHELVED on a stack-layout coin-flip):
+ *
+ *   extern void InitMenuEntityWithVtable(Entity *entity, s32 arg);
+ *   extern void *InitHUDIconEntity(u8 *alloc, s32 arg);
+ *   extern void FinnSubentityUpdatePositionFromParent();
+ *   extern u8 D_800117A4[];
+ *
+ *   Entity *CreateHaloEntity(Entity *e, Entity *owner) {
+ *       TripadSlot u;
+ *       void (*fn)();
+ *       Entity *p;
+ *       InitMenuEntityWithVtable(e, 0x3E9);
+ *       *(u8 **)((u8 *)e + 0x18) = D_800117A4;
+ *       *(Entity **)((u8 *)e + 0x1C) = owner;
+ *       fn = (void (*)())FinnSubentityUpdatePositionFromParent;
+ *       u.s.markerLo = 0; u.s.markerHi = -1; u.s.fn = fn;
+ *       *(CallbackSlot *)((u8 *)e + 0) = u.s;
+ *       *(void **)((u8 *)e + 0x24) =
+ *           InitHUDIconEntity(AllocateFromHeap((u8 *)g_pBlbHeapBase, 0x1E8, 1, 0), 0);
+ *       *(u8 *)(*(u8 **)((u8 *)e + 0x24) + 0x1E7) = 1;
+ *       *(u16 *)((u8 *)e + 0x20) = *(u16 *)((u8 *)*(Entity **)((u8 *)e + 0x1C) + 0x68);
+ *       {
+ *           struct HaloBytes8 { u8 b[8]; } tmp;
+ *           tmp = *(struct HaloBytes8 *)((u8 *)*(Entity **)((u8 *)e + 0x1C) + 0x38);
+ *           *(u8 *)((u8 *)e + 0x2C) = 0;
+ *           p = *(Entity **)((u8 *)e + 0x1C);
+ *           *(u16 *)((u8 *)e + 0x22) =
+ *               *(s16 *)((u8 *)p + 0x6A) + *(u16 *)((u8 *)&tmp + 2);
+ *       }
+ *       return e;
+ *   }
+ *
+ * Residual (non-source-reachable): the callback-slot staging temp and the
+ * 8-byte render-bounds copy temp have disjoint lifetimes; the original packs
+ * them into ONE overlapping 12-byte scratch region (slot@sp+0x14 over the low
+ * copy@sp+0x10, frame 0x30). Every local layout expressible in C gives one of:
+ * two adjacent slots (frame 0x38), a single fully-coalesced slot (frame 0x28),
+ * or slot@0x14 with a fresh non-overlapping copy@0x20 (frame 0x38) -- never the
+ * partial 0x14/0x10 overlay. There is also a paired lh-vs-lhu sign coin-flip on
+ * the owner->worldY read (immediately truncated by the sh store, so gcc is free
+ * to pick either). Both are compiler stack-packing/scheduling choices with no
+ * C-source lever; matching would require the permuter.
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", CreateHaloEntity);
 
 extern u8 PLAYER_DESTRUCTOR_VTABLE_17A4[] asm("D_800117A4");
