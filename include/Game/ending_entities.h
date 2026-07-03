@@ -30,7 +30,9 @@ typedef struct EndingCreditsEntity {
     /* 0x104 */ u8           pad104[0x32];
     /* 0x136 */ u16          scrollCounter1;
     /* 0x138 */ u8           pad138[0x8];
-    /* 0x140 */ u16          field140;
+    /* 0x140 */ u16          scrollCounter3; /* Phase-3 scroll countdown; decremented in the
+                                             * credits scroll loop (ending.c:124), sibling of
+                                             * scrollCounter1/scrollCounter2. */
     /* 0x142 */ u16          scrollCounter2;
     /* 0x144 */ u16          scrollY;
     /* 0x146 */ u8           pad146[2];

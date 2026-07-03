@@ -1327,7 +1327,7 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_PlayRandomIdleAnimation);
 extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
 
 void PlayerState_UpdateTPageAndHideHalo(PlayerEntity *e) {
-    RenderSprite *ctx = (RenderSprite *)e->sprite.base.spriteContext;
+    RenderSpriteObj *ctx = (RenderSpriteObj *)e->sprite.base.spriteContext;
     Entity *halo;
     s32 cx, cy;
     cx = ctx->vramX;

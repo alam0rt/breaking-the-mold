@@ -31,11 +31,14 @@ typedef struct BossVoice144Entity {
     /* 0x144 */ s32 voiceHandle;
 } BossVoice144Entity;
 
-typedef struct HazardTimerEntity {
+/* NOTE: distinct from enemy_entities.h's HazardTimerEntity, which is a DIFFERENT
+ * entity with its timer at +0x110. Renamed here to break the name collision
+ * (the two were never layout-compatible: behaviorTimer@0x114 vs timer@0x110). */
+typedef struct BossHazardTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x114 - 0x100];
     /* 0x114 */ u16 behaviorTimer;
-} HazardTimerEntity;
+} BossHazardTimerEntity;
 
 typedef struct ShrineyGuardEntity {
     /* 0x000 */ SpriteEntity sprite;

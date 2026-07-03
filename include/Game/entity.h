@@ -529,7 +529,7 @@ typedef struct {
     /* 0x100 */ InputState *pInput;       /* Controller input pointer */
     /* 0x104 */ s32         nFlightSpeed; /* Current flight speed (0 at init) */
     /* 0x108 */ s32         flightStateFlags; /* Flight state bitfield (Ghidra nFlightStateFlags) */
-    /* 0x10C */ s32         handle10C;    /* SPU voice handle, init -1 (Ghidra nSpuVoice) */
+    /* 0x10C */ s32         spuVoice;     /* SPU voice handle, init -1 (Ghidra nSpuVoice; matches RunnPlayerEntity.spuVoice) */
     /* 0x110 */ u8          _pad110[2];
     /* 0x112 */ u8          stateTimer;   /* State transition timer */
     /* 0x113 */ u8          _pad113[5];

@@ -150,7 +150,7 @@ void FinnSubState_SetIdleSpriteAndPause(FinnSubentityStateFlags *e) {
     slot.s[0].fn = NULL;
     *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
     SetEntitySpriteId((Entity *)e, 0xC87CA082, 1);
-    if (e->pad10E == 0) {
+    if (e->animPauseFlag == 0) {
         SetAnimationActive((Entity *)e, 0);
     }
 }
