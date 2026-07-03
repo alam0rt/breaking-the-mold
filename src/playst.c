@@ -1498,7 +1498,46 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_StartSwimming);
 
 INCLUDE_ASM("asm/nonmatchings/playst", HamsterSpriteCallback);
 
-INCLUDE_ASM("asm/nonmatchings/playst", InitShadowMirrorSubentity);
+extern Entity *InitEntityWithSprite(Entity *entity, u8 *spriteDef, s32 z, s16 x, s16 y);
+extern u8 D_8009C254[];
+extern u8 D_800117E4[];
+extern void EntityTick_ShadowMirror();
+extern s32 ScaleXByEntityScale(Entity *entity, s16 value);
+extern s32 ScaleYByEntityScale(Entity *entity, s16 value);
+
+/* Allocates+inits a shadow/mirror subentity: sprite from D_8009C254 at
+ * z-order 0x424, installs the D_800117E4 collision vtable, stashes the owner
+ * at +0x100 and allocSize 0x3E9, then wires EntityTick_ShadowMirror as the
+ * per-frame tick and ScaleX/YByEntityScale as the worldX/Y move-transform FSM
+ * slots (marker 0xFFFF0000 = direct call). Returns the entity. */
+Entity *InitShadowMirrorSubentity(Entity *e, void *owner) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntityWithSprite(e, D_8009C254, 0x424, 0, 0);
+    e->collisionVtable = D_800117E4;
+    *(void **)((u8 *)e + 0x100) = owner;
+    e->allocSize = 0x3E9;
+    do {} while (0);
+    fn = (void (*)())EntityTick_ShadowMirror;
+    m1 = -1;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->tickMarker = u.s;
+    fn = (void (*)())ScaleXByEntityScale;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->moveMarkerX = u.s;
+    fn = (void (*)())ScaleYByEntityScale;
+    u.s.markerLo = 0;
+    u.s.markerHi = m1;
+    u.s.fn = fn;
+    *(CallbackSlot *)&e->moveMarkerY = u.s;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", EntityTick_ShadowMirror);
 
