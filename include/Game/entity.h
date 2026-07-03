@@ -529,7 +529,7 @@ typedef struct {
     /* 0x100 */ InputState *pInput;       /* Controller input pointer */
     /* 0x104 */ s32         nFlightSpeed; /* Current flight speed (0 at init) */
     /* 0x108 */ s32         flightStateFlags; /* Flight state bitfield (Ghidra nFlightStateFlags) */
-    /* 0x10C */ s32         handle10C;    /* SPU voice handle, init -1 (Ghidra nSpuVoice) */
+    /* 0x10C */ s32         spuVoice;     /* SPU voice handle, init -1 (Ghidra nSpuVoice; matches RunnPlayerEntity.spuVoice) */
     /* 0x110 */ u8          _pad110[2];
     /* 0x112 */ u8          stateTimer;   /* State transition timer */
     /* 0x113 */ u8          _pad113[5];
@@ -766,7 +766,10 @@ typedef struct {
     /* 0x08 */ u16  xCenter;     /* Center X spawn position */
     /* 0x0A */ u16  yCenter;     /* Center Y spawn position */
     /* 0x0C */ u16  variant;     /* Entity variant / subtype parameter */
-    /* 0x0E */ u32  padding0E;   /* Padding / unused */
+    /* 0x0E */ u8   padding0E[4]; /* Padding / unused. Byte array, not u32: offset 0x0E
+                                   * is not u32-aligned, so a `u32` here bumps to 0x10 and
+                                   * breaks the documented 0x18 layout (caught by
+                                   * tools/analysis layout asserts). */
     /* 0x12 */ u16  entityType;  /* Entity type index into EntityTypeCallback table */
     /* 0x14 */ u16  layer;       /* Layer assignment */
     /* 0x16 */ u16  padding16;   /* Padding */

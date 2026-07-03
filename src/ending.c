@@ -111,7 +111,7 @@ void EndingCreditsScrollTick2(EndingCreditsEntity *e) {
 }
 
 /* Phase 3 / "complete" tick: every 4th frame, advances scrollY until
- * field140 runs out, then stops the scroll-SFX voice, plays the
+ * scrollCounter3 runs out, then stops the scroll-SFX voice, plays the
  * completion SFX (0x40023E30), sets flag149=1, and installs either
  * EndingTickCallback (if flag14C is set) or EndingCreditsFadeOutTick +
  * the fade-SFX (0x02990901) for the final fade-out phase. */
@@ -121,8 +121,8 @@ void EndingCreditsCompleteTick(EndingCreditsEntity *e) {
     register void (*fn)() asm("$3");
 
     if ((g_pGameState->frame_counter & 0x3) == 0) {
-        if (e->field140 != 0) {
-            e->field140--;
+        if (e->scrollCounter3 != 0) {
+            e->scrollCounter3--;
             e->scrollY++;
         } else {
             StopSPUVoice(e->soundHandle);

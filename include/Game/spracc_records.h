@@ -18,7 +18,11 @@
  * +0x37/+0x38 as semi-transparency flags.
  */
 
-typedef struct RenderSprite {
+/* NOTE: named RenderSpriteObj (not RenderSprite) to avoid shadowing the engine
+ * function symbol RenderSprite @ 0x8007BDE8 (symbol_addrs.txt). A `RenderSprite`
+ * typedef sits in the ordinary namespace and would conflict with any prototype of
+ * that function in a TU that includes this header (playst.c and spracc.c both do). */
+typedef struct RenderSpriteObj {
     s16 x;          /* 0x00 screen X (SPRT x0) */
     s16 y;          /* 0x02 screen Y (SPRT y0) */
     s16 width;      /* 0x04 sprite/texture width in px (SPRT p->w) */
@@ -50,7 +54,7 @@ typedef struct RenderSprite {
     u8 semiTransFlag2; /* 0x38 alternate semi-transparency request (OR'd with 0x37) */
     u8 pad39[0x54 - 0x39];
     u8 unk54;       /* 0x54 likely per-sprite visibility / sort-bucket flag */
-} RenderSprite;
+} RenderSpriteObj;
 
 /*
  * The prim-buffer object initialized by InitSpriteObject and flushed by

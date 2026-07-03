@@ -1,6 +1,13 @@
 #ifndef GAME_FSM_DISPATCH_H
 #define GAME_FSM_DISPATCH_H
 
+/* Self-sufficient includes: this header uses base types (s16/s32/u8) and
+ * GameState but historically relied on the includer pulling in common.h /
+ * game_state.h first. The guards make these no-ops for existing includers, so
+ * adding them is codegen-neutral and lets the header compile standalone. */
+#include "common.h"
+#include "Game/game_state.h"
+
 /* Helpers for byte-matching the FSM-slot callback dispatch family in anim.c
  * (InvokeEntityRenderCallback, Transform{X,Y}Coord, GetEntity{X,Y}Position).
  *

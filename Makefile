@@ -183,7 +183,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force
+.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force analyze analyze-baseline
 
 # Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
@@ -557,6 +557,18 @@ check-asset-ids:
 # Decomp-specific checks (struct redefs, broken INCLUDE_ASM paths, duplicates)
 lint-decomp:
 	@$(PYTHON) tools/lint_decomp.py
+
+# Analysis build (advisory) - modern-compiler diagnostics + machine-checked
+# struct-layout invariants. NEVER feeds the matching build or the ROM bytes.
+# See tools/analysis/README.md. Layout drift is a hard failure; warnings are a
+# delta vs tools/analysis/warnings.baseline.txt.
+analyze:
+	@bash tools/analysis/run_analyze.sh check
+
+# Re-snapshot the advisory warning baseline (run after an intentional change
+# that legitimately alters the warning set).
+analyze-baseline:
+	@bash tools/analysis/run_analyze.sh baseline
 
 # C clarity checks (non-blocking while the decomp still has known cleanup debt)
 lint-clarity:

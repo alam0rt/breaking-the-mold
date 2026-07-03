@@ -17,7 +17,8 @@ typedef struct FinnSubentityStateFlags {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x10D - 0x100];
     /* 0x10D */ u8 stateFlag;
-    /* 0x10E */ u8 pad10E;
+    /* 0x10E */ u8 animPauseFlag; /* Live field, not padding: when 0, FinnSubState_* calls
+                                   * SetAnimationActive(e, 0) to pause animation (finn.c:153). */
     /* 0x10F */ u8 stateValue;
 } FinnSubentityStateFlags;
 

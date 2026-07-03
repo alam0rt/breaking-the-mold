@@ -1,0 +1,26 @@
+src/anim.c:992:9: warning: variable 'ft' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/bosses.c:100:9: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/bosses.c:1024:6: error: conflicting types for 'ShrineyGuardSetLoopingAttackState'
+src/bosses.c:995:6: error: conflicting types for 'ShrineyGuardSetAttackState'
+src/effects.c:288:9: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:396:9: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:430:9: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:471:5: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:492:5: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:608:5: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:674:5: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:720:5: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/effects.c:932:6: error: conflicting types for 'FreeEntityNoTeardown_800389ac'
+src/enemies.c:1363:6: error: conflicting types for 'InitEntityState_Idle'
+src/enemies.c:1432:6: error: conflicting types for 'InitEntityState_Animated'
+src/enemies.c:1634:9: warning: unused variable 'sprite' [-Wunused-variable]
+src/enemies.c:1652:30: warning: declaration shadows a local variable [-Wshadow]
+src/enemies.c:2555:6: error: conflicting types for 'EntityStateSetSpecial'
+src/entinit.c:416:13: error: conflicting types for 'AddToUpdateQueue'
+src/finn.c:100:9: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/gamecd.c:65:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+src/gamecd.c:72:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+src/gamecd.c:79:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+src/pickups.c:149:5: warning: variable 'slotArg' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
+src/playst.c:1473:13: error: conflicting types for 'EntitySetRenderFlags'
+src/playst.c:497:13: error: conflicting types for 'EntitySetState'

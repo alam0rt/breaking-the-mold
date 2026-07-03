@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "Game/entity.h"
-#include "Game/spracc_records.h"    /* RenderSprite (Entity+0x34 sprite context) */
+#include "Game/spracc_records.h"    /* RenderSpriteObj (Entity+0x34 sprite context) */
 
 /* =============================================================================
  * PICKUP / DECOR ENTITY LAYOUTS

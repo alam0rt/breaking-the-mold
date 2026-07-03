@@ -41,7 +41,9 @@ typedef struct EnemyTimerStateEntity {
     /* 0x104 */ u16 stateTimer;
     /* 0x106 */ u8 pad106[0xA];
     /* 0x110 */ u8 stateDelay;
-    /* 0x111 */ u8 pad111;
+    /* 0x111 */ u8 stateInitDelay; /* Live field, not padding: written per-state at init
+                                    * (InitShooterEnemyState A/B set 0x2F/0x14). Exact
+                                    * gameplay meaning inferred from writes only. */
     /* 0x112 */ u8 walkDelay;
     /* 0x113 */ u8 pad113;
     /* 0x114 */ u32 *spriteIds;     /* Per-state sprite id table (>= 6 entries: sparkle, walk, sparkleCollect, idle, ?, attack) */
@@ -115,6 +117,9 @@ typedef struct HazardVoiceEntity {
     /* 0x110 */ s32 voiceId;
 } HazardVoiceEntity;
 
+/* NOTE: distinct from boss_entities.h's BossHazardTimerEntity (timer at +0x114).
+ * This enemy/bounce-clay variant keeps its timer at +0x110. Same name previously
+ * collided across both headers with incompatible layouts; the boss side was renamed. */
 typedef struct HazardTimerEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x10];

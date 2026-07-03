@@ -393,7 +393,7 @@ void EntityDestructor_WithSPUVoiceStopAndClear(BossWithSpuVoiceEntity *e, u32 fl
 }
 
 void Hazard_TickWithBehaviorTransition(Entity *e) {
-    HazardTimerEntity *entity = (HazardTimerEntity *)e;
+    BossHazardTimerEntity *entity = (BossHazardTimerEntity *)e;
     CollectibleTickCallback(e);
     if (entity->behaviorTimer != 0) {
         entity->behaviorTimer -= 1;

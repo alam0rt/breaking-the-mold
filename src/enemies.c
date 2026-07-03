@@ -1060,7 +1060,7 @@ void InitShooterEnemyStateA(EnemyTimerStateEntity *e) {
     PadSlot slot;
     s16 m1;
     void (*fn)();
-    e->pad111 = 0x2F;
+    e->stateInitDelay = 0x2F;
     do {} while (0);
     fn = CollectibleTickCallback;
     m1 = -1;
@@ -1076,7 +1076,7 @@ void InitShooterEnemyStateB(EnemyTimerStateEntity *e) {
     PadSlot slot;
     s16 m1;
     void (*fn)();
-    e->pad111 = 0x14;
+    e->stateInitDelay = 0x14;
     do {} while (0);
     fn = CollectibleTickCallback;
     m1 = -1;
