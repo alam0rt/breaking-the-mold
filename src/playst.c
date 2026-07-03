@@ -847,6 +847,107 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithJump);
 
+/* Per-tick input handler while walking-into-a-fall. Picks the directional turn
+ * bit from facing (right -> 0x2000, left -> 0x8000). When the FSM allows special
+ * input (PLAYER_STATE_DATA[0x13]) and the "look up" mask is pressed, it either
+ * queues the special move (if specialMoveMode is set) or ducks. Otherwise, on
+ * the "drop through" mask it probes the tile above (worldY-0x40) and hands off
+ * to duck/pickup unless blocked (tile 0x65). With no such input it tries a
+ * powerup, then either a directional turn (unless the turn-block mask is held)
+ * or a land/landAlt hand-off. All seven hand-offs share a single EntitySetState
+ * tail.
+ *
+ * SHELVED: the C below reproduces the exact logic, but two register-allocation
+ * residuals at the shared EntitySetState tail-merge are not source-reachable
+ * under gcc-2.7.2's regalloc (same class as the sibling PlayerCallback_
+ * FallInputHandler, whose flip runs the OPPOSITE direction — proof it is a
+ * coin-flip): (1) the original reloads the CheckTileCollisionOverride out-param
+ * `tile` into v0 and tests it with `nop; xori v0,v0,0x65; beqz`, whereas cc1
+ * parks tile in v1 and materialises `li v0,0x65; bne v1,v0`. That one-slot codegen
+ * difference makes cc1's body 4 bytes shorter, cascading a uniform -4 offset drift
+ * onto every GP-relative marker/mask load after it (and the PLAYER_STATE_DATA
+ * absolute load), so the whole tail mis-diffs. (2) the shared `dirMask & held`
+ * test canonicalises to `and v0,v1,s1` (held first) under cc1 but `and v0,s1,v1`
+ * (dirMask first) in the original; commutative-operand order is not source-
+ * reachable. Neither the goto tail-merge form nor `held & dirMask` reorderings
+ * dislodge them, so the original asm is retained to preserve the byte match.
+ *
+ *   extern s32 CheckTileCollisionOverride(PlayerEntity *entity, u8 *tile);
+ *   u32 WalkFallSpecialDuckMarker asm("D_800A5E38");
+ *   EntityCallback WalkFallSpecialDuckFn asm("D_800A5E3C");
+ *   u32 WalkFallDuckMarker asm("D_800A5E00");
+ *   EntityCallback WalkFallDuckFn asm("D_800A5E04");
+ *   u32 WalkFallPickupMarker asm("D_800A5DB0");
+ *   EntityCallback WalkFallPickupFn asm("D_800A5DB4");
+ *   u32 WalkFallLandMarker asm("D_800A5E40");
+ *   EntityCallback WalkFallLandFn asm("D_800A5E44");
+ *   u32 WalkFallLandAltMarker asm("D_800A5E48");
+ *   EntityCallback WalkFallLandAltFn asm("D_800A5E4C");
+ *   u32 WalkFallTurnMarker asm("D_800A5E58");
+ *   EntityCallback WalkFallTurnFn asm("D_800A5E5C");
+ *   extern u16 g_WalkFallLookInputMask asm("D_800A596E");
+ *   extern u16 g_WalkFallDropInputMask asm("D_800A596C");
+ *   extern u16 g_WalkFallTurnBlockMask asm("D_800A5970");
+ *
+ *   void PlayerCallback_WalkInputWithFall(PlayerEntity *e) {
+ *       u32 dirMask;
+ *       u8 tile;
+ *       u32 marker;
+ *       EntityCallback fn;
+ *       u16 held;
+ *
+ *       dirMask = 0x2000;
+ *       if (e->sprite.base.facing != 0) {
+ *           dirMask = 0x8000;
+ *       }
+ *       if (((u8 *)PLAYER_STATE_DATA)[0x13] != 0) {
+ *           if ((e->pInput->buttons_pressed & g_WalkFallLookInputMask) != 0) {
+ *               if (e->specialMoveMode != 0) {
+ *                   e->specialMoveQueued = 1;
+ *                   return;
+ *               }
+ *               marker = WalkFallSpecialDuckMarker;
+ *               fn = WalkFallSpecialDuckFn;
+ *               goto setState;
+ *           }
+ *       }
+ *       if ((e->pInput->buttons_pressed & g_WalkFallDropInputMask) != 0) {
+ *           tile = EntityApplyMovementCallbacks((Entity *)e, e->sprite.base.worldX,
+ *                                               (s16)(*(u16 *)&e->sprite.base.worldY - 0x40));
+ *           CheckTileCollisionOverride(e, &tile);
+ *           if (tile == 0x65) {
+ *               return;
+ *           }
+ *           if (e->specialMoveMode != 0) {
+ *               marker = WalkFallDuckMarker;
+ *               fn = WalkFallDuckFn;
+ *           } else {
+ *               marker = WalkFallPickupMarker;
+ *               fn = WalkFallPickupFn;
+ *           }
+ *           goto setState;
+ *       }
+ *       if ((u8)TryActivatePowerup(e) != 0) {
+ *           return;
+ *       }
+ *       held = e->pInput->buttons_held;
+ *       if ((dirMask & held) != 0) {
+ *           if ((g_WalkFallTurnBlockMask & held) != 0) {
+ *               return;
+ *           }
+ *           marker = WalkFallTurnMarker;
+ *           fn = WalkFallTurnFn;
+ *       } else if (e->specialMoveMode != 0) {
+ *           marker = WalkFallLandMarker;
+ *           fn = WalkFallLandFn;
+ *       } else {
+ *           marker = WalkFallLandAltMarker;
+ *           fn = WalkFallLandAltFn;
+ *       }
+ *   setState:
+ *       EntitySetState((Entity *)e, marker, fn);
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkInputWithFall);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpWallCollisionInput);
