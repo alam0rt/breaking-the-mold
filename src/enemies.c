@@ -2509,7 +2509,28 @@ s32 EntityEventHandlerWalkWithTimer(EnemyTimerStateEntity *e, u32 event, u32 arg
     return result;
 }
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapMovementCallback);
+extern u16 CalcEntityYFromTileHeight(Entity *e, u32 tile, s16 x, s16 y);
+
+/* Two-probe ground snap: after applying the animation's position offsets,
+ * sample the tile just above (worldY-7) and just below (worldY+2) the entity.
+ * The first probe that reports a solid ground tile (nonzero, < 0x3C) settles
+ * the entity's worldY onto that tile's slope height. */
+void EntityGroundSnapMovementCallback(Entity *e) {
+    u8 tile;
+
+    ApplyAnimationPositionOffsets(e);
+    tile = EntityApplyMovementCallbacks(e, e->worldX, (s16)(e->worldY - 7));
+    if (tile != 0 && tile < 0x3C) {
+        e->worldY = CalcEntityYFromTileHeight(e, tile, e->worldX,
+                                              (s16)(e->worldY - 7));
+        return;
+    }
+    tile = EntityApplyMovementCallbacks(e, e->worldX, (s16)(e->worldY + 2));
+    if (tile != 0 && tile < 0x3C) {
+        e->worldY = CalcEntityYFromTileHeight(e, tile, e->worldX,
+                                              (s16)(e->worldY + 2));
+    }
+}
 
 extern void CollectibleScaledTickCallback(Entity *e);
 
