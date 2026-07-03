@@ -249,22 +249,39 @@ void CheckPlayerHitByEnemy(PlayerEntity *e, Entity *enemy, s32 hitboxExpand) {
  * marshalled through a shared local scratch, then swaps the sprite. Used to
  * wire up a player-helper entity's callbacks in one shot.
  *
- * SHELVED (single-instruction scheduling diff): frame (0x28), the sp+4 scratch
- * hole (padded slot struct -> scratch at sp+0x14), and all four callback-pair
- * struct copies match byte-for-byte. The only diff: TARGET loads the last
- * (stack) arg `spriteId` into $a1 at instruction 2 -- reusing $a1 right after
- * spilling its original value -- and holds it across the whole body, while cc1
- * loads it just before the SetEntitySpriteId call. A `u32 sid = spriteId;`
- * hoist local did not move it (prologue reg-alloc choice, not source-reachable),
- * and the permuter (-j4, 150s) floored at 70. Equivalent C (parked in
- * nonmatchings/PlayerSetupCallbacksAndSprite):
- *   typedef struct { s32 marker; void *fn; } SetupSlot;      // 4 by-value pairs
- *   typedef struct { s32 pad; SetupSlot s; } PaddedSetupSlot; // sp+4 hole
- *   PaddedSetupSlot u;
- *   u.s = tick;  *(SetupSlot*)&e->tickMarker  = u.s;   // then event@0x8,
- *   ...          *(SetupSlot*)((u8*)e+0x104)  = u.s;   // slot104, render@0x1C
- *   SetEntitySpriteId(e, spriteId, 1); */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerSetupCallbacksAndSprite);
+ * Structural discovery: the target's double memory round-trip per pair
+ * (shadow-arg -> scratch -> entity, not a single shadow -> entity copy) only
+ * falls out of source if the four (marker,fn) pairs are BY-VALUE `SetupSlot`
+ * struct PARAMETERS (not raw scalar marker/fn args) assigned into a reused
+ * scratch local before the store to the entity -- gcc-2.7.2's o32 aggregate
+ * ABI packs a byval SetupSlot across regs/stack exactly like two scalars
+ * (tick in a1/a2, event.marker in a3, the rest spilling to the stack args
+ * area), so the register/stack layout is identical either way; only the
+ * codegen shape differs. spriteId (the last, stack-passed scalar arg) is
+ * pinned $a1 and re-assigned right after entry so it re-spills to its own
+ * shadow slot immediately, holding it live across the whole body the way the
+ * target does (an unpinned local instead gets reloaded from the stack just
+ * before the SetEntitySpriteId call). */
+typedef struct { s32 marker; void *fn; } SetupSlot;
+typedef struct { s32 pad; SetupSlot s; } PaddedSetupSlot;
+extern s32 SetEntitySpriteId(PlayerEntity *e, u32 spriteId, s32 flag);
+
+void PlayerSetupCallbacksAndSprite(Entity *e, SetupSlot tick, SetupSlot event,
+                                   SetupSlot slot104, SetupSlot render,
+                                   u32 spriteId) {
+    PaddedSetupSlot u;
+    FSM_REG(u32, sid, "$5");
+    sid = spriteId;
+    u.s = tick;
+    *(SetupSlot *)&e->tickMarker = u.s;
+    u.s = event;
+    *(SetupSlot *)((u8 *)e + 0x8) = u.s;
+    u.s = slot104;
+    *(SetupSlot *)((u8 *)e + 0x104) = u.s;
+    u.s = render;
+    *(SetupSlot *)((u8 *)e + 0x1C) = u.s;
+    SetEntitySpriteId((PlayerEntity *)e, sid, 1);
+}
 
 /* Spawns an RGB-tinted particle attached to the player (stored in
  * attachedEntity/+0x1A0). Positions it at the player's X and Y+attachedYOff,
