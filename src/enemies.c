@@ -2293,7 +2293,7 @@ void EntityHideWithTimer(TimedByteEntity *e) {
     *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s[0];
     fn = InitSwitchActivatedState;
     slot.s[0].markerLo = 0; slot.s[0].markerHi = m1; slot.s[0].fn = fn;
-    *(CallbackSlot *)((u8 *)e + 0x98) = slot.s[0];
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s[0];
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitSwitchActivatedState);
