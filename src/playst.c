@@ -1541,7 +1541,46 @@ Entity *InitShadowMirrorSubentity(Entity *e, void *owner) {
 
 INCLUDE_ASM("asm/nonmatchings/playst", EntityTick_ShadowMirror);
 
-INCLUDE_ASM("asm/nonmatchings/playst", InitHUDAnimatedEntity);
+extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
+extern u8 D_800117C4[];
+
+/* Allocates+inits a HUD animated entity (sprite 0x1E1000B3 at z 0x3E7), installs
+ * the D_800117C4 vtable, allocSize 0x3E9, and facing byte. Unless the anchor
+ * value is 0x10000 (the "no anchor" sentinel), it stashes the anchor into the
+ * four words at +0x50..+0x5C and wires ScaleX/YByEntityScale as the worldX/Y
+ * move-transform FSM slots. Finally installs the frame callback 0x182D840C and
+ * clears render flags. Returns the entity. */
+Entity *InitHUDAnimatedEntity(Entity *e, s16 x, s16 y, s32 facing, s32 anchor) {
+    TripadSlot u;
+    s16 m1;
+    void (*fn)();
+
+    InitEntitySprite(e, 0x1E1000B3, 0x3E7, x, y, 0);
+    e->collisionVtable = D_800117C4;
+    e->allocSize = 0x3E9;
+    *(u8 *)((u8 *)e + 0x74) = facing;
+    if (anchor != 0x10000) {
+        *(s32 *)((u8 *)e + 0x50) = anchor;
+        *(s32 *)((u8 *)e + 0x54) = anchor;
+        *(s32 *)((u8 *)e + 0x58) = anchor;
+        *(s32 *)((u8 *)e + 0x5C) = anchor;
+        do {} while (0);
+        fn = (void (*)())ScaleXByEntityScale;
+        m1 = -1;
+        u.s.markerLo = 0;
+        u.s.markerHi = m1;
+        u.s.fn = fn;
+        *(CallbackSlot *)&e->moveMarkerX = u.s;
+        fn = (void (*)())ScaleYByEntityScale;
+        u.s.markerLo = 0;
+        u.s.markerHi = m1;
+        u.s.fn = fn;
+        *(CallbackSlot *)&e->moveMarkerY = u.s;
+    }
+    SetAnimationFrameCallback((PlayerEntity *)e, 0x182D840C);
+    EntitySetRenderFlags(e, 0);
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", CreateHaloEntity);
 
