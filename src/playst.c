@@ -1491,6 +1491,55 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Idle);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetIdleStateCallbacks);
 
+/*
+ * PlayerState_IdleLookAround (0x80066F70, 0x15C) — SHELVED 2026-07-03.
+ *
+ * Installs the idle look-around FSM: tick=PlayerTickCallback,
+ * event=PlayerCallback_EventHandlerWithQueue, input=PlayerCallback_IdleInputHandler,
+ * render=(e->interactEntity ? PlayerCallback_RidingPlatformPhysics
+ *                           : PlayerCallback_HorizontalWallCollision),
+ * SetEntitySpriteId(e, 0x5900C41E, 1), then queued=PlayerCallback_SetIdleStateCallbacks.
+ *
+ * Verified C (instruction-for-instruction identical; the ONLY residual is the
+ * stack-frame layout coin-flip — same class as PlayerStateInit_FallingWithInput):
+ * target uses frame 0x68 with the six CallbackSlot scratch areas at
+ * sp+0x14/0x1C/0x24/0x2C(render)/0x38(cond scratch)/0x44(double-copy temp), i.e.
+ * a leading pad plus two internal 4-byte pads before the scratch and temp slots;
+ * cc1 packs the six bare CallbackSlot locals tight (frame 0x48, slots at
+ * 0x10/0x18/0x20/0x28/0x30/0x38). Wrapping in padded structs 8-aligns the group
+ * and shifts scratch/temp the wrong way (proven exhaustively for FallingWithInput).
+ * Not source-reachable.
+ *
+ *   extern void PlayerTickCallback();
+ *   extern void PlayerCallback_IdleInputHandler();
+ *   extern void PlayerCallback_HorizontalWallCollision();
+ *   extern void PlayerCallback_RidingPlatformPhysics();
+ *   extern void PlayerCallback_SetIdleStateCallbacks();
+ *   // PlayerCallback_EventHandlerWithQueue, SetEntitySpriteId already declared above.
+ *
+ *   void PlayerState_IdleLookAround(PlayerEntity *e) {
+ *       CallbackSlot tick, event, input, render, scratch, cur;
+ *       tick.markerLo = 0;  tick.markerHi = -1;  tick.fn = (void (*)())PlayerTickCallback;
+ *       event.markerLo = 0; event.markerHi = -1;
+ *       event.fn = (void (*)())PlayerCallback_EventHandlerWithQueue;
+ *       input.markerLo = 0; input.markerHi = -1;
+ *       input.fn = (void (*)())PlayerCallback_IdleInputHandler;
+ *       scratch.markerLo = 0; scratch.markerHi = -1;
+ *       if (e->interactEntity != NULL)
+ *           scratch.fn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+ *       else
+ *           scratch.fn = (void (*)())PlayerCallback_HorizontalWallCollision;
+ *       render = scratch;
+ *       cur = tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = cur;
+ *       cur = event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = cur;
+ *       cur = input;  *(CallbackSlot *)&e->inputStateMarker         = cur;
+ *       cur = render; *(CallbackSlot *)&e->sprite.base.renderMarker = cur;
+ *       SetEntitySpriteId(e, 0x5900C41E, 1);
+ *       cur.markerLo = 0; cur.markerHi = -1;
+ *       cur.fn = (void (*)())PlayerCallback_SetIdleStateCallbacks;
+ *       *(CallbackSlot *)&e->sprite.queuedStateMarker = cur;
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_IdleLookAround);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_PlayRandomIdleAnimation);
