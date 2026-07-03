@@ -32,54 +32,52 @@ void PlayerClearSwirlPortalEntity(PlayerEntity *e) {
  * the player's Y velocity, halved when the shrink powerup (scale 0x8000) is
  * active. Clears interactEntity afterward.
  *
- * SHELVED as asm: the C below reproduces the exact algorithm, but gcc 2.7.2
- * pins `held` to a1 (target keeps it in a0 to fold the final held+xOff into
- * the fn's a0 arg), rotating every register in the body, and schedules the
- * velY/scale loads and the two slot-table loads (-8/-4) in the opposite
- * order. All are allocation/scheduling residuals not reachable by source
- * restructuring, so the original asm is retained to preserve the byte-match.
- *
- * typedef void (*ReleaseNotifyCallback)(void *target, s32 event, s16 vel,
- *                                       PlayerEntity *sender);
- * void PlayerNotifyEntityRelease(PlayerEntity *e) {
- *     Entity *held;
- *     s32 rawVelY;
- *     s32 vel;
- *     s16 markerHi;
- *     s16 markerLo;
- *     s16 xOff;
- *     s32 slotArg;
- *     ReleaseNotifyCallback fn;
- *
- *     held = e->interactEntity;
- *     if (held != NULL) {
- *         rawVelY = e->velocityY_fixed;
- *         vel = rawVelY;
- *         if (e->sprite.base.scalePowerupX == 0x8000) {
- *             vel = (s32)(rawVelY << 16) >> 17;
- *         }
- *         markerHi = *(s16 *)((u8 *)held + 0xA);
- *         if (markerHi != 0) {
- *             if (markerHi > 0) {
- *                 u8 *tbl = *(u8 **)((u8 *)held + *(s16 *)((u8 *)held + 0xC));
- *                 slotArg = *(s32 *)(tbl + markerHi * 8 - 8);
- *                 fn = *(ReleaseNotifyCallback *)(tbl + markerHi * 8 - 4);
- *             } else {
- *                 fn = *(ReleaseNotifyCallback *)((u8 *)held + 0xC);
- *             }
- *             markerLo = *(s16 *)((u8 *)held + 8);
- *             if (markerHi > 0) {
- *                 xOff = (s16)slotArg + markerLo;
- *             } else {
- *                 xOff = markerLo;
- *             }
- *             fn((u8 *)held + xOff, 0x1005, (s16)vel, e);
- *         }
- *         e->interactEntity = NULL;
- *     }
- * }
- */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerNotifyEntityRelease);
+ * FSM-slot dispatch t-reg family (see Game/fsm_dispatch.h): held pinned $a0
+ * (folds the final held+xOff into the callback's first arg), fn/$t2 home with
+ * $t1 relay, separate s16 survivor copy (a1->v0->a3), and an in-place
+ * `vel = (s16)vel` truncation statement (target schedules it before the
+ * marker test, so it cannot be a cast at the call). */
+typedef void (*ReleaseNotifyCallback)(void *target, s32 event, s32 vel,
+                                      PlayerEntity *sender);
+void PlayerNotifyEntityRelease(PlayerEntity *e) {
+    FSM_REG(Entity *, held, "$4");
+    FSM_REG(s32, rawVelY, "$5");
+    s32 vel;
+    s16 markerHi;
+    s32 markerLo;
+    s32 xOff;
+    s32 slotArg;
+
+    held = e->interactEntity;
+    if (held != NULL) {
+        FSM_REG(ReleaseNotifyCallback, fn2, "$10");
+        rawVelY = e->velocityY_fixed;
+        vel = rawVelY;
+        if (e->sprite.base.scalePowerupX == 0x8000) {
+            vel = (s32)(rawVelY << 16) >> 17;
+        }
+        FSM_KEEP_LIVE(rawVelY);
+        vel = (s16)vel;
+        markerHi = *(s16 *)((u8 *)held + 0xA);
+        if (markerHi != 0) {
+            s16 s = markerHi;
+            if (markerHi > 0) {
+                FSM_REG(ReleaseNotifyCallback, ft, "$9");
+                u8 *tbl = *(u8 **)((u8 *)held + *(s16 *)((u8 *)held + 0xC));
+                slotArg = *(s32 *)(tbl + markerHi * 8 - 8);
+                ft = *(ReleaseNotifyCallback *)(tbl + markerHi * 8 - 4);
+                FSM_RELAY(fn2, ft);
+            } else {
+                fn2 = *(ReleaseNotifyCallback *)((u8 *)held + 0xC);
+            }
+            markerLo = *(s16 *)((u8 *)held + 8);
+            if (s > 0) xOff = (s16)slotArg + markerLo;
+            else xOff = markerLo;
+            fn2((u8 *)held + xOff, 0x1005, vel, e);
+        }
+        e->interactEntity = NULL;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerProcessTileCollision);
 
