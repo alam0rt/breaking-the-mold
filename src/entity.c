@@ -116,7 +116,7 @@ INCLUDE_ASM("asm/nonmatchings/entity", CalculateEntityScreenBounds);
  * doesn't need to know about platform riding to draw. Output is
  * {x1,y1,x2,y2} (4 s16's), mirroring facing==1/flipY==1 about worldX/worldY
  * instead of adding the offset. */
-void CalculateEntityRenderBounds(Entity *entity, void *bounds) {
+void CalculateEntityRenderBounds(Entity *entity, s16 *bounds) {
     s16 *out = bounds;
 
     if (entity->facing != 0) {

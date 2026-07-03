@@ -980,7 +980,7 @@ void EnemyDeathState(Entity *e) {
 
 typedef s16 (*XformCB)();
 typedef struct { s32 arg; XformCB fn; } XformSlot;
-extern void CalculateEntityRenderBounds(Entity *e, void *bounds);
+extern void CalculateEntityRenderBounds(Entity *e, s16 *bounds);
 
 /* True if the entity (after parallax) sits more than 0x140 px left of the
  * camera. Resolves its X via the moveCallbackX FSM slot (GetEntityXPosition
