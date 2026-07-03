@@ -418,6 +418,68 @@ void PlayerState_FallWithRotation(Entity *e) {
     PlayerTickCallback(e);
 }
 
+/* Pickup/pull-in transition tick. Unless the "pickup in progress" game flag is
+ * set, transitions the player into the death FSM state (when the active sprite
+ * id is the death marker 0x1E28E0D4) or the pickup state otherwise, flags the
+ * sprite context visible (+0xA) and marks the gamestate grounded (+0x170).
+ * Then dispatches the current input-state callback (standard marker decode on
+ * inputStateMarker/inputStateCallback), runs the standard entity update, and
+ * decays the invincibility timer. Verified-equivalent C:
+ *
+ *   extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
+ *   u32 PLAYER_DEATH_STATE_MARKER     asm("D_800A5D98");
+ *   EntityCallback PLAYER_DEATH_STATE_CALLBACK  asm("D_800A5D9C");
+ *   u32 PLAYER_PICKUP_STATE_MARKER    asm("D_800A5DB0");
+ *   EntityCallback PLAYER_PICKUP_STATE_CALLBACK asm("D_800A5DB4");
+ *
+ *   void PlayerState_TransitionToPickup(PlayerEntity *e) {
+ *       s16 markerHi, markerLo;
+ *       s32 xOff, slotArg;
+ *       EntityCallback fn;
+ *       if (!(g_GameFlags & 1)) {
+ *           u8 *sctx; u32 marker; EntityCallback stateFn;
+ *           if (e->sprite.currentSpriteId == 0x1E28E0D4) {
+ *               marker = PLAYER_DEATH_STATE_MARKER;
+ *               stateFn = PLAYER_DEATH_STATE_CALLBACK;
+ *               sctx = e->sprite.base.spriteContext;
+ *           } else {
+ *               marker = PLAYER_PICKUP_STATE_MARKER;
+ *               stateFn = PLAYER_PICKUP_STATE_CALLBACK;
+ *               sctx = e->sprite.base.spriteContext;
+ *               e->disableScale = 0;
+ *           }
+ *           sctx[0xA] = 1;
+ *           EntitySetState(&e->sprite.base, marker, stateFn);
+ *           ((u8 *)g_pGameState)[0x170] = 1;
+ *       }
+ *       markerHi = *(s16 *)((u8 *)e + 0x106);
+ *       if (markerHi != 0) {
+ *           if (markerHi > 0) {
+ *               u8 *tbl = *(u8 **)((u8 *)e + *(s16 *)((u8 *)e + 0x108));
+ *               slotArg = *(s32 *)(tbl + markerHi * 8 - 8);
+ *               fn = *(EntityCallback *)(tbl + markerHi * 8 - 4);
+ *           } else {
+ *               fn = *(EntityCallback *)((u8 *)e + 0x108);
+ *           }
+ *           markerLo = *(s16 *)((u8 *)e + 0x104);
+ *           if (markerHi > 0) xOff = (s16)slotArg + markerLo;
+ *           else xOff = markerLo;
+ *           fn((Entity *)((u8 *)e + xOff));
+ *       }
+ *       EntityUpdateCallback(&e->sprite.base);
+ *       if (e->invincibilityTimer != 0) e->invincibilityTimer -= 1;
+ *   }
+ *
+ * Residual (register-assignment coin-flip, same class as CheckPlayerHitByEnemy
+ * and PlayerNotifyEntityRelease): the store value 1 is shared by sctx[0xA]=1
+ * (in the EntitySetState delay slot) and gamestate[0x170]=1 (after the call),
+ * so it lives across the EntitySetState call. gcc 2.7.2 promotes that 1 into
+ * saved reg s0, displacing the entity pointer e from s0 to s1; the target
+ * instead re-materializes `li v0,1` on each side of the call and keeps e in s0.
+ * That one decision rotates every saved-register assignment (e s0<->s1, decode
+ * temps s3<->a2, the two slot-table loads at -8/-4 emitted in swapped order).
+ * All are allocation/scheduling residuals not reachable by source
+ * restructuring. */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
 
 void PlayerState_QueuedCallbackTimer(PlayerEntity *e) {
