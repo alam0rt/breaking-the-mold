@@ -859,7 +859,83 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpInputAndCounters);
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_JumpTickHandler);
 
 
-
+/* Per-tick input handler while the player is falling. Reads controller
+ * buttons_pressed and hands the FSM off to the appropriate state: a special-move
+ * mask (queued when specialMoveMode is set, else the special state), a "look up"
+ * mask that probes the tile above (worldY-0x40) and branches to duck/pickup, a
+ * left/right turn (SQUARE/CIRCLE toggle facing) — or, with no directional input,
+ * a powerup activation attempt followed by a land/landAlt hand-off. All seven
+ * hand-off branches share a single EntitySetState tail.
+ *
+ * SHELVED: the C below reproduces the exact logic, but two register-allocation /
+ * scheduling residuals at the shared EntitySetState tail-merge are not
+ * source-reachable under gcc-2.7.2's regalloc/sched2 (same class as
+ * PlayerCallback_VerticalCollisionCheck): (1) the original defers `a0 = e`
+ * (move a0,s0) to the single merge point, placing it in the EntitySetState jal
+ * delay slot, whereas cc1 coalesces e into a0 early and pre-positions the move in
+ * each predecessor branch (so the facing store becomes sb v0,0x74(a0) instead of
+ * the original's sb v0,0x74(s0)); (2) the original parks the CheckTileCollision
+ * out-param `tile` in v1 and materialises `li v0,0x65` into the lbu load-delay
+ * slot for the == compare, while cc1 parks tile in v0 and stalls with a nop.
+ * Neither the shared-var (goto tail-merge) form nor per-branch EntitySetState
+ * calls dislodge them, so the original asm is retained to preserve the byte match.
+ *
+ *   extern s32 CheckTileCollisionOverride(PlayerEntity *entity, u8 *tile);
+ *   extern u16 g_PlayerFallSpecialInputMask asm("D_800A596E");
+ *   extern u16 g_PlayerFallLookInputMask asm("D_800A596C");
+ *   u32 PlayerFallSpecialMarker   asm("D_800A5E88");
+ *   EntityCallback PlayerFallSpecialFn  asm("D_800A5E8C");
+ *   u32 PlayerFallDuckMarker      asm("D_800A5E00");
+ *   EntityCallback PlayerFallDuckFn     asm("D_800A5E04");
+ *   u32 PlayerFallPickupMarker    asm("D_800A5DB0");
+ *   EntityCallback PlayerFallPickupFn   asm("D_800A5DB4");
+ *   u32 PlayerFallTurnMarker      asm("D_800A5E90");
+ *   EntityCallback PlayerFallTurnFn     asm("D_800A5E94");
+ *   u32 PlayerFallLandMarker      asm("D_800A5E98");
+ *   EntityCallback PlayerFallLandFn     asm("D_800A5E9C");
+ *   u32 PlayerFallLandAltMarker   asm("D_800A5EA0");
+ *   EntityCallback PlayerFallLandAltFn  asm("D_800A5EA4");
+ *
+ *   void PlayerCallback_FallInputHandler(PlayerEntity *e) {
+ *       u16 buttons;
+ *       u8 tile;
+ *       u32 marker;
+ *       EntityCallback fn;
+ *       if (((u8 *)PLAYER_STATE_DATA)[0x13] != 0) {
+ *           if ((e->pInput->buttons_pressed & g_PlayerFallSpecialInputMask) != 0) {
+ *               if (e->specialMoveMode != 0) { e->specialMoveQueued = 1; return; }
+ *               marker = PlayerFallSpecialMarker; fn = PlayerFallSpecialFn;
+ *               goto setState;
+ *           }
+ *       }
+ *       buttons = e->pInput->buttons_pressed;
+ *       if ((buttons & g_PlayerFallLookInputMask) != 0) {
+ *           tile = EntityApplyMovementCallbacks((Entity *)e, e->sprite.base.worldX,
+ *                      (s16)(e->sprite.base.worldY - 0x40));
+ *           CheckTileCollisionOverride(e, &tile);
+ *           if (tile == 0x65) return;
+ *           if (e->specialMoveMode != 0) { marker = PlayerFallDuckMarker; fn = PlayerFallDuckFn; }
+ *           else { marker = PlayerFallPickupMarker; fn = PlayerFallPickupFn; }
+ *           goto setState;
+ *       }
+ *       if ((buttons & 0x8000) != 0) {
+ *           if (e->sprite.base.facing != 0) return;
+ *           e->sprite.base.facing = 1;
+ *           marker = PlayerFallTurnMarker; fn = PlayerFallTurnFn; goto setState;
+ *       }
+ *       if ((buttons & 0x2000) != 0) {
+ *           if (e->sprite.base.facing == 0) return;
+ *           e->sprite.base.facing = 0;
+ *           marker = PlayerFallTurnMarker; fn = PlayerFallTurnFn; goto setState;
+ *       }
+ *       if ((u8)TryActivatePowerup(e) != 0) return;
+ *       if ((e->pInput->buttons_held & 0x4000) != 0) return;
+ *       if (e->specialMoveMode != 0) { marker = PlayerFallLandMarker; fn = PlayerFallLandFn; }
+ *       else { marker = PlayerFallLandAltMarker; fn = PlayerFallLandAltFn; }
+ *   setState:
+ *       EntitySetState((Entity *)e, marker, fn);
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_FallInputHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_CrouchClimbInputHandler);
