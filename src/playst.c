@@ -1227,6 +1227,13 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_HorizontalWallCollision);
  * register-allocation/coalescing residuals that no source restructuring
  * (&&, explicit two-if, ternary, goto tail-merge; u8/u32 collType) could
  * dislodge, so the original asm is retained to preserve the byte-match.
+ * ALSO TRIED (2026-07-03, hard-reg-pin arsenal from PlayerState_TransitionToPickup
+ * et al.): pinning the boolean to $v1 with a second $v0-pinned `cond = boolVal;`
+ * copy, plus FSM_KEEP_LIVE barriers on both -- cc1's compare-and-branch peephole
+ * uses whichever register holds the value at the branch regardless of which
+ * named/pinned pseudo it's assigned through, and always elides the trivial
+ * copy since nothing else ever needs `cond` in a distinct register. Confirms
+ * the original verdict from a different angle: not source-reachable.
  *
  * extern u16 PlayerApplyPositionWithCollision(void *e, u32 collType,
  *                                             s16 x, s16 y);
