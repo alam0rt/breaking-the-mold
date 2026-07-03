@@ -188,10 +188,11 @@ void GliderStateInit_WakeUp(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
 }
 
 void GliderSetActiveState(Entity *e) {
+    SpriteEntity *se = (SpriteEntity *)e;
     TripadSlot slot;
     s16 m1;
     void (*fn)();
@@ -213,7 +214,7 @@ void GliderSetActiveState(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    *(CallbackSlot *)&se->queuedStateMarker = slot.s;
 }
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GliderWaitState);
@@ -506,7 +507,7 @@ void HazardIdleWithSound(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
     EntitySetCallback(e, HAZARD_IDLE_WITH_SOUND_STATE_MARKER,
                       HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK);
 }
@@ -1047,7 +1048,7 @@ void ShrineyGuardSetLoopingAttackState(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
 }
 
 /* Passive idle state, dispatched from the FINISH_ATTACK marker (after the
@@ -1161,7 +1162,7 @@ void ShrineyGuardReadyAttackState(Entity *e) {
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s[0]; }
 }
 
 /* Entered from BossEventHandler/event 0x1002 (damage but hp > 0). Sets
@@ -1484,7 +1485,7 @@ void KloggSetMoveState(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
 }
 
 void EnemyIdleTimerState(Entity *e) {
@@ -1513,7 +1514,7 @@ void EnemyIdleTimerState(Entity *e) {
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s[0]; }
 }
 
 void EnemySpriteState(Entity *e) {
@@ -1541,7 +1542,7 @@ void EnemySpriteState(Entity *e) {
     slot.s[0].markerLo = 0;
     slot.s[0].markerHi = m1;
     slot.s[0].fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s[0];
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s[0]; }
 }
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyDefeatState);

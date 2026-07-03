@@ -441,9 +441,10 @@ INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithDelayedWalk);
  * frame is nonzero. Then runs the same two-probe (worldY-7 / worldY+2) ground
  * snap onto the first solid tile found. */
 void EntityGroundSnapWithAnimation(Entity *e) {
+    SpriteEntity *se = (SpriteEntity *)e;
     u8 tile;
 
-    if (((SpriteEntity *)e)->currentFrame == 0) {
+    if (se->currentFrame == 0) {
         if (((u8 *)e)[0x111] != 0) {
             ApplyAnimationPositionOffsets(e);
             ((u8 *)e)[0x111] = 0;
@@ -1170,7 +1171,7 @@ void AnimatedEntityToggleSpriteA(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
 }
 
 /* Animated-decor toggle state B: the sister of AnimatedEntityToggleSpriteA.
@@ -1200,7 +1201,7 @@ void AnimatedEntityToggleSpriteB(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
 }
 
 /* Enemy state init for the "looping animation" mode (e.g. a fan, spinning
@@ -1225,7 +1226,7 @@ void EnemySetLoopingAnimation(Entity *e) {
     slot.s.markerLo = 0;
     slot.s.markerHi = m1;
     slot.s.fn = fn;
-    *(CallbackSlot *)&((SpriteEntity *)e)->queuedStateMarker = slot.s;
+    { SpriteEntity *se = (SpriteEntity *)e; *(CallbackSlot *)&se->queuedStateMarker = slot.s; }
 }
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitTimerBasedMenuEntity);
