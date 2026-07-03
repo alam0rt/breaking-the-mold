@@ -424,63 +424,75 @@ void PlayerState_FallWithRotation(Entity *e) {
  * sprite context visible (+0xA) and marks the gamestate grounded (+0x170).
  * Then dispatches the current input-state callback (standard marker decode on
  * inputStateMarker/inputStateCallback), runs the standard entity update, and
- * decays the invincibility timer. Verified-equivalent C:
+ * decays the invincibility timer.
  *
- *   extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
- *   u32 PLAYER_DEATH_STATE_MARKER     asm("D_800A5D98");
- *   EntityCallback PLAYER_DEATH_STATE_CALLBACK  asm("D_800A5D9C");
- *   u32 PLAYER_PICKUP_STATE_MARKER    asm("D_800A5DB0");
- *   EntityCallback PLAYER_PICKUP_STATE_CALLBACK asm("D_800A5DB4");
- *
- *   void PlayerState_TransitionToPickup(PlayerEntity *e) {
- *       s16 markerHi, markerLo;
- *       s32 xOff, slotArg;
- *       EntityCallback fn;
- *       if (!(g_GameFlags & 1)) {
- *           u8 *sctx; u32 marker; EntityCallback stateFn;
- *           if (e->sprite.currentSpriteId == 0x1E28E0D4) {
- *               marker = PLAYER_DEATH_STATE_MARKER;
- *               stateFn = PLAYER_DEATH_STATE_CALLBACK;
- *               sctx = e->sprite.base.spriteContext;
- *           } else {
- *               marker = PLAYER_PICKUP_STATE_MARKER;
- *               stateFn = PLAYER_PICKUP_STATE_CALLBACK;
- *               sctx = e->sprite.base.spriteContext;
- *               e->disableScale = 0;
- *           }
- *           sctx[0xA] = 1;
- *           EntitySetState(&e->sprite.base, marker, stateFn);
- *           ((u8 *)g_pGameState)[0x170] = 1;
- *       }
- *       markerHi = *(s16 *)((u8 *)e + 0x106);
- *       if (markerHi != 0) {
- *           if (markerHi > 0) {
- *               u8 *tbl = *(u8 **)((u8 *)e + *(s16 *)((u8 *)e + 0x108));
- *               slotArg = *(s32 *)(tbl + markerHi * 8 - 8);
- *               fn = *(EntityCallback *)(tbl + markerHi * 8 - 4);
- *           } else {
- *               fn = *(EntityCallback *)((u8 *)e + 0x108);
- *           }
- *           markerLo = *(s16 *)((u8 *)e + 0x104);
- *           if (markerHi > 0) xOff = (s16)slotArg + markerLo;
- *           else xOff = markerLo;
- *           fn((Entity *)((u8 *)e + xOff));
- *       }
- *       EntityUpdateCallback(&e->sprite.base);
- *       if (e->invincibilityTimer != 0) e->invincibilityTimer -= 1;
- *   }
- *
- * Residual (register-assignment coin-flip, same class as CheckPlayerHitByEnemy
- * and PlayerNotifyEntityRelease): the store value 1 is shared by sctx[0xA]=1
- * (in the EntitySetState delay slot) and gamestate[0x170]=1 (after the call),
- * so it lives across the EntitySetState call. gcc 2.7.2 promotes that 1 into
- * saved reg s0, displacing the entity pointer e from s0 to s1; the target
- * instead re-materializes `li v0,1` on each side of the call and keeps e in s0.
- * That one decision rotates every saved-register assignment (e s0<->s1, decode
- * temps s3<->a2, the two slot-table loads at -8/-4 emitted in swapped order).
- * All are allocation/scheduling residuals not reachable by source
- * restructuring. */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_TransitionToPickup);
+ * Register pins (byte-match levers, see Game/fsm_dispatch.h):
+ *  - `one`/$v0: cse invalidates hard regs (not pseudos) at calls, so pinning
+ *    the stored 1 forces `li v0,1` to re-materialize on both sides of the
+ *    EntitySetState call; unpinned, cc1 folds both 1s into one pseudo live
+ *    across the call, promotes it to s0, and rotates every saved register.
+ *  - `base`/$a0: assigned first in the else arm; cse deletes the fallthrough
+ *    arm's copy (a0 still holds e from entry), leaving the target's
+ *    else-arm-only `move a0,s0`, which also blocks the delay-filler from
+ *    hoisting the per-arm `li v0,1` into the bne delay slot.
+ *  - decode block: standard FSM-slot dispatch recipe — fn2/$a1 home with
+ *    $s3 relay, slotArg/$s2, separate `s16 s` survivor copy (a0->v0->a2),
+ *    xOff/$v0 so the cast chain doesn't compute in-place in s2. */
+extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
+u32 PLAYER_DEATH_STATE_MARKER asm("D_800A5D98");
+EntityCallback PLAYER_DEATH_STATE_CALLBACK asm("D_800A5D9C");
+u32 PLAYER_PICKUP_STATE_MARKER asm("D_800A5DB0");
+EntityCallback PLAYER_PICKUP_STATE_CALLBACK asm("D_800A5DB4");
+
+void PlayerState_TransitionToPickup(PlayerEntity *e) {
+    s16 markerHi;
+    s32 markerLo;
+    FSM_REG(s32, xOff, "$2");
+    if (!(g_GameFlags & 1)) {
+        u8 *sctx; u32 marker; EntityCallback stateFn;
+        FSM_REG(s32, one, "$2");
+        FSM_REG(Entity *, base, "$4");
+        if (e->sprite.currentSpriteId == 0x1E28E0D4) {
+            marker = PLAYER_DEATH_STATE_MARKER;
+            stateFn = PLAYER_DEATH_STATE_CALLBACK;
+            sctx = e->sprite.base.spriteContext;
+            base = &e->sprite.base;
+            one = 1;
+        } else {
+            base = &e->sprite.base;
+            marker = PLAYER_PICKUP_STATE_MARKER;
+            stateFn = PLAYER_PICKUP_STATE_CALLBACK;
+            sctx = e->sprite.base.spriteContext;
+            one = 1;
+            e->disableScale = 0;
+        }
+        sctx[0xA] = one;
+        EntitySetState(base, marker, stateFn);
+        one = 1;
+        ((u8 *)g_pGameState)[0x170] = one;
+    }
+    markerHi = *(s16 *)((u8 *)e + 0x106);
+    if (markerHi != 0) {
+        s16 s = markerHi;
+        FSM_REG(EntityCallback, fn2, "$5");
+        FSM_REG(s32, slotArgS, "$18");
+        if (markerHi > 0) {
+            FSM_REG(EntityCallback, ft, "$19");
+            u8 *tbl = *(u8 **)((u8 *)e + *(s16 *)((u8 *)e + 0x108));
+            slotArgS = *(s32 *)(tbl + markerHi * 8 - 8);
+            ft = *(EntityCallback *)(tbl + markerHi * 8 - 4);
+            FSM_RELAY(fn2, ft);
+        } else {
+            fn2 = *(EntityCallback *)((u8 *)e + 0x108);
+        }
+        markerLo = *(s16 *)((u8 *)e + 0x104);
+        if (s > 0) xOff = (s16)slotArgS + markerLo;
+        else xOff = markerLo;
+        fn2((Entity *)((u8 *)e + xOff));
+    }
+    EntityUpdateCallback(&e->sprite.base);
+    if (e->invincibilityTimer != 0) e->invincibilityTimer -= 1;
+}
 
 void PlayerState_QueuedCallbackTimer(PlayerEntity *e) {
     u16 *ctr = (u16 *)&e->respawnTimer;
