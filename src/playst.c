@@ -1496,6 +1496,61 @@ void PlayerState_CheckpointRestoreComplete(PlayerEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/playst", UniverseEnemaActivate);
 
+/*
+ * UniverseEnemaKillAllEnemies (0x8006C278, 0x134) — SHELVED (register-allocation coin-flip).
+ *
+ * Verified C below is logically and STRUCTURALLY exact: after the `s32 off` fix
+ * (forces the signed `lh` load of obj+8, killing a spurious `lhu`), the compiled
+ * body is instruction-identical to the original modulo register numbers only.
+ *
+ * void UniverseEnemaKillAllEnemies(PlayerEntity *player) {
+ *     EntityListNode *node;
+ *     Entity *obj;
+ *     s16 cnt;
+ *     void (*fn)();
+ *     s32 off;
+ *     s32 rec0;
+ *
+ *     node = g_pGameState->collision_list_head;
+ *     while (node != 0) {
+ *         obj = node->entity;
+ *         if (*(u16 *)((u8 *)obj + 0x12) & 4) {
+ *             cnt = *(s16 *)((u8 *)obj + 0xA);
+ *             if (cnt != 0) {
+ *                 if (cnt > 0) {
+ *                     s32 *base = *(s32 **)((u8 *)obj + *(s16 *)((u8 *)obj + 0xC));
+ *                     s32 *rec = base + cnt * 2;
+ *                     rec0 = rec[-2];
+ *                     fn = (void (*)())rec[-1];
+ *                 } else {
+ *                     fn = (void (*)()) * (s32 *)((u8 *)obj + 0xC);
+ *                 }
+ *                 off = *(s16 *)((u8 *)obj + 8);
+ *                 if (cnt > 0) {
+ *                     off = (s16)rec0 + off;
+ *                 }
+ *                 fn((u8 *)obj + off, 0x1002, 0, player);
+ *             }
+ *         }
+ *         node = node->next;
+ *     }
+ *     PLAYER_STATE_DATA->universe_enemas--;
+ *     g_pGameState->checkpoint_restore_pending = 0;
+ *     if (*(u8 *)((u8 *)player + 0x128) == 0) {
+ *         *(u8 *)((u8 *)player + 0x128) = 1;
+ *     }
+ * }
+ *
+ * Residual (non-source-reachable): gcc-2.7.2 assigns the short-lived `rec0` to s1
+ * and copies `player` into s2 *inside* the loop, leaving `fn` in caller-saved t0 —
+ * 3 callee-saved regs, frame 0x28. The original copies `player` into s1 at function
+ * ENTRY, then rec0->s2 and fn->s3 (with a `move t0,s3` before the call) — 4 callee-
+ * saved regs, frame 0x30. This is purely which pseudo wins s1 and where the param
+ * copy is inserted; no C-source lever changes it (tried u32/s16 rec0, dead-store
+ * rec0=0, s32 off, struct-typed record read, for/while loop forms). Needs permuter.
+ * The frame-size delta produces downstream gp-offset size-cascade i-diffs that are
+ * not real within-function bugs.
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", UniverseEnemaKillAllEnemies);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_CheckpointEntry);
