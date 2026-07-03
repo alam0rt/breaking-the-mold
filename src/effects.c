@@ -367,7 +367,7 @@ s32 OverlayEntityCallback(OverlayCallbackEntity *e, u32 ev) {
 typedef void (*GsEventCB)();
 typedef struct { s32 arg; GsEventCB fn; } GsEventSlot;
 
-void DispatchGsEventOnFlag34(Entity *e) {
+void DispatchGsEventOnFlag34(OverlayCallbackEntity *e) {
     GameState *gs;
     s32 arg;
     u8 *gsb;
@@ -381,12 +381,12 @@ void DispatchGsEventOnFlag34(Entity *e) {
     s32 lo;
     FSM_REG(s16, s, "$11");        /* $t3 marker survivor (staged via $v0) */
 
-    if (*(u8 *)((u8 *)e + 0x34) == 0) {
+    if (e->hiddenFlag == 0) {
         return;
     }
     gs = g_pGameState;
     m = ((s16 *)&gs->event_marker)[1];
-    arg = *(s32 *)((u8 *)e + 0x20);
+    arg = (s32)e->child;
     gsb = (u8 *)gs;
     if (m == 0) {
         return;
@@ -587,10 +587,10 @@ void RippleEffectRenderCallback(RippleExpandEntity *e) {
     void *child;
     s32 cx, cy;
     cx = gs->camera_x;
-    *(s16 *)((u8 *)*(void **)((u8 *)e + 0x20) + 0) = *(u16 *)((u8 *)e + 0x24) - cx;
+    *(s16 *)((u8 *)e->renderPrim + 0) = e->localX - cx;
     cy = gs->camera_y;
-    *(s16 *)((u8 *)*(void **)((u8 *)e + 0x20) + 2) = *(u16 *)((u8 *)e + 0x26) - cy;
-    child = *(void **)((u8 *)e + 0x20);
+    *(s16 *)((u8 *)e->renderPrim + 2) = e->localY - cy;
+    child = e->renderPrim;
     *((u8 *)child + 0x3A7) = 1;
 }
 

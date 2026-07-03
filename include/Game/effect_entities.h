@@ -64,7 +64,14 @@ typedef struct OverlayCallbackEntity {
 typedef struct RippleExpandEntity {
     /* 0x000 */ u8 pad0[0xC];
     /* 0x00C */ void *eventVtable;
-    /* 0x010 */ u8 pad10[0x390];
+    /* 0x010 */ u8 pad10[0x10];
+    /* 0x020 */ void *renderPrim;  /* child render-primitive slot; freed by
+                                      DestroyRippleExpandEffect (via base
+                                      renderCallback), driven each frame by
+                                      RippleEffectRenderCallback */
+    /* 0x024 */ u16 localX;        /* effect-local world X, projected to screen */
+    /* 0x026 */ u16 localY;        /* effect-local world Y, projected to screen */
+    /* 0x028 */ u8 pad28[0x378];
     /* 0x3A0 */ s16 red;
     /* 0x3A2 */ s16 green;
     /* 0x3A4 */ s16 blue;
