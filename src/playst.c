@@ -1246,6 +1246,56 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_DeathStart);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Death);
 
+/*
+ * PlayerState_LevelExitTeleporter (0x8006A214, 0xFC) — SHELVED (installer
+ * frame-padding coin-flip). Verified C below reproduces the exact algorithm;
+ * the compiled body is instruction-identical to the original EXCEPT the stack
+ * frame: gcc-2.7.2 packs the reused 8-byte CallbackSlot staging temp tightly
+ * (frame 0x30, temp@0x14, s0@0x20), while the original reserves 0x18 extra
+ * bytes of dead padding (frame 0x48, temp@0x14, 28-byte gap 0x1C-0x37, s0@0x38).
+ * The frame-size delta cascades into uniform s/i prologue/epilogue offset diffs;
+ * there is no within-body diff. Frame padding on these marker-installer routines
+ * is a non-source-reachable gcc coin-flip (see the PlayerStateInit_* family),
+ * so the asm is retained to preserve the byte-match. The fn-pointer register
+ * (target v1) is pinned with `register ... asm("$3")` as in
+ * PlayerCallback_CollisionDamageSetup.
+ *
+ * void PlayerState_LevelExitTeleporter(PlayerEntity *e) {
+ *     PadSlot slot;
+ *     void *p;
+ *     void *q;
+ *
+ *     *(u8 *)((u8 *)e + 0x1B2) = 1;
+ *     StopCDStreaming();
+ *     p = *(void **)((u8 *)e + 0x168);
+ *     if (p != NULL) {
+ *         *(u8 *)((u8 *)p + 0x2C) = 1;
+ *         *(void **)((u8 *)e + 0x168) = NULL;
+ *     }
+ *     *(u8 *)((u8 *)e + 0x128) = 0;
+ *     *(u32 *)((u8 *)e + 0x10C) = 0;
+ *     *(u32 *)((u8 *)e + 0x110) = 0;
+ *
+ *     slot.s.markerLo = 0;
+ *     slot.s.markerHi = -1;
+ *     {
+ *         register void (*fn)() asm("$3") = (void (*)())EntityUpdateCallback;
+ *         slot.s.fn = fn;
+ *     }
+ *     *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+ *     slot.s.markerLo = 0; slot.s.markerHi = 0; slot.s.fn = 0;
+ *     *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+ *     slot.s.markerLo = 0; slot.s.markerHi = 0; slot.s.fn = 0;
+ *     *(CallbackSlot *)&e->inputStateMarker = slot.s;
+ *     slot.s.markerLo = 0; slot.s.markerHi = 0; slot.s.fn = 0;
+ *     *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s;
+ *
+ *     SetAnimationTargetFrameIndex((Entity *)e, e->sprite.currentFrame);
+ *     EntitySetRenderFlags((Entity *)e, 0);
+ *     q = *(void **)((u8 *)e + 0x34);
+ *     *(u8 *)((u8 *)q + 0xA) = 0;
+ * }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_LevelExitTeleporter);
 
 extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
