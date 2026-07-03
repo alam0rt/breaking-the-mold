@@ -394,7 +394,7 @@ void EntityDestructor_WithSPUVoiceStopAndClear(BossWithSpuVoiceEntity *e, u32 fl
 }
 
 void Hazard_TickWithBehaviorTransition(Entity *e) {
-    BossHazardTimerEntity *entity = (BossHazardTimerEntity *)e;
+    GlennYntisHazardEntity *entity = (GlennYntisHazardEntity *)e;
     CollectibleTickCallback(e);
     if (entity->behaviorTimer != 0) {
         entity->behaviorTimer -= 1;
@@ -421,12 +421,13 @@ INCLUDE_ASM("asm/nonmatchings/bosses", GlennYntisDeathEventHandler);
  * HAZARD_TIMER_EXPIRED_STATE), sets the active sprite (0x8068815C), and
  * queues the HAZARD_STOP_SOUND_STATE on the regular queued-state slot. */
 void HazardActivateWithSound(Entity *e) {
+    GlennYntisHazardEntity *hz = (GlennYntisHazardEntity *)e;
     PadSlot slot;
     s16 m1;
     void (*fn)();
 
-    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, FX_BOSS_YNT_IDLE_01);
-    *(u16 *)((u8 *)e + 0x114) = 0x12C;
+    hz->voiceHandle = PlayEntityPositionSound(e, FX_BOSS_YNT_IDLE_01);
+    hz->behaviorTimer = 0x12C;
     do {} while (0);
     fn = (void (*)())GlennYntisEventHandler;
     m1 = -1;
@@ -444,7 +445,7 @@ void HazardActivateWithSound(Entity *e) {
                       HAZARD_STOP_SOUND_STATE_CALLBACK);
 }
 
-void HazardStopSound(BossVoiceEntity *e) {
+void HazardStopSound(GlennYntisHazardEntity *e) {
     StopSPUVoice(e->voiceHandle);
     e->voiceHandle = -1;
 }
@@ -482,11 +483,12 @@ void CollectibleAnimState(Entity *e) {
 }
 
 void HazardIdleWithSound(Entity *e) {
+    GlennYntisHazardEntity *hz = (GlennYntisHazardEntity *)e;
     PadSlot slot;
     s16 m1;
     void (*fn)();
 
-    *(s32 *)((u8 *)e + 0x118) = PlayEntityPositionSound(e, FX_BOSS_YNT_IDLE_02);
+    hz->voiceHandle = PlayEntityPositionSound(e, FX_BOSS_YNT_IDLE_02);
     do {} while (0);
     fn = (void (*)())GlennYntisAttackEventHandler;
     m1 = -1;
@@ -512,7 +514,7 @@ void HazardIdleWithSound(Entity *e) {
                       HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK);
 }
 
-void HazardStopSoundAlt(BossVoiceEntity *e) {
+void HazardStopSoundAlt(GlennYntisHazardEntity *e) {
     StopSPUVoice(e->voiceHandle);
     e->voiceHandle = -1;
 }

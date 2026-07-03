@@ -117,7 +117,7 @@ typedef struct HazardVoiceEntity {
     /* 0x110 */ s32 voiceId;
 } HazardVoiceEntity;
 
-/* NOTE: distinct from boss_entities.h's BossHazardTimerEntity (timer at +0x114).
+/* NOTE: distinct from boss_entities.h's GlennYntisHazardEntity (timer at +0x114).
  * This enemy/bounce-clay variant keeps its timer at +0x110. Same name previously
  * collided across both headers with incompatible layouts; the boss side was renamed. */
 typedef struct HazardTimerEntity {

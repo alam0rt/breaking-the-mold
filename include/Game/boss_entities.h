@@ -19,26 +19,27 @@ typedef struct BossTimedSpriteEntity {
     /* 0x104 */ u16 shortTimer;
 } BossTimedSpriteEntity;
 
-typedef struct BossVoiceEntity {
-    /* 0x000 */ SpriteEntity sprite;
-    /* 0x100 */ u8 pad100[0x118 - 0x100];
-    /* 0x118 */ s32 voiceHandle;
-} BossVoiceEntity;
-
 typedef struct BossVoice144Entity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x144 - 0x100];
     /* 0x144 */ s32 voiceHandle;
 } BossVoice144Entity;
 
-/* NOTE: distinct from enemy_entities.h's HazardTimerEntity, which is a DIFFERENT
- * entity with its timer at +0x110. Renamed here to break the name collision
- * (the two were never layout-compatible: behaviorTimer@0x114 vs timer@0x110). */
-typedef struct BossHazardTimerEntity {
+/* Glenn-Yntis sound-hazard entity. The state-setters HazardActivateWithSound /
+ * HazardIdleWithSound write BOTH the behaviour timer (+0x114) and the SPU voice
+ * handle (+0x118) on the same entity, so both fields live in one struct here.
+ * (Formerly split across the incomplete BossHazardTimerEntity/BossVoiceEntity
+ * single-field slices, which each modelled only half the entity.)
+ * NOTE: distinct from enemy_entities.h's HazardTimerEntity, a DIFFERENT entity
+ * whose timer is at +0x110 (never layout-compatible: behaviorTimer@0x114 vs
+ * timer@0x110). */
+typedef struct GlennYntisHazardEntity {
     /* 0x000 */ SpriteEntity sprite;
     /* 0x100 */ u8 pad100[0x114 - 0x100];
     /* 0x114 */ u16 behaviorTimer;
-} BossHazardTimerEntity;
+    /* 0x116 */ u8 pad116[0x118 - 0x116];
+    /* 0x118 */ s32 voiceHandle;
+} GlennYntisHazardEntity;
 
 typedef struct ShrineyGuardEntity {
     /* 0x000 */ SpriteEntity sprite;
