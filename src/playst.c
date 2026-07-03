@@ -1538,13 +1538,47 @@ EntityCallback PlayerHiddenIdleFn asm("D_800A5F18");
  * (+0x104) and render (+0x1C) slots, freezes the anim frame, hides render +
  * sprite (spriteContext->enabled=0), then EntitySetCallback(HiddenIdle pair).
  *
- * SHELVED (4-instr prologue rotation): body matches except cc1 places the
- * `sw ra,0x34(sp)` prologue save BEFORE the g_pGameState load + li 1 block,
- * target places it after. Both fn-address temps (a0/a3), the 0x38 frame
- * (PadSlot + dead PadSlot hole), scratch reuse, and the tail (marker temp +
- * fence, sb in jal delay) are exact. Not source-reachable (same class as
- * PlayerSetupCallbacksAndSprite); permuter 5min floored at 60. Draft kept in
- * nonmatchings/PlayerState_HideAndClearBounce/base.c. */
+ * SHELVED. Corrects the prior note's diagnosis: the "4-instr prologue
+ * rotation" was actually a missing 16 bytes of frame -- a SECOND, unused
+ * PadSlot-sized local (`volatile PadSlot unused;`, needed to defeat dead-
+ * store elimination) reproduces the target's 0x38 frame exactly, the same
+ * "dead pad" idiom as PlayerStateInit_FallingWithInput/PlayerState_JumpApex.
+ * With that fixed, the only residual is scheduling: target computes BOTH
+ * fn-address temps (tick's `lui a0/addiu a0` AND event's `lui a3/addiu a3`)
+ * before the g_pGameState load + `li v0,1` flag-store block; cc1 always
+ * defers one of the two (whichever isn't immediately reused) until right
+ * before its first use, and reuses that temp's now-dead register for the
+ * -1 marker constant instead of allocating a fresh one. Pinning tickFn to
+ * $a0 fixes exactly that first block, but the pinned pseudo's extended
+ * hard-reg lifetime then perturbs an unrelated tail choice (ctx computed
+ * into a reused $s0 instead of $v0) -- a net wash, not source-reachable
+ * without a coupled pin covering both temps + the tail, which was not
+ * found. Equivalent C (parked in nonmatchings/PlayerState_HideAndClearBounce):
+ *   typedef void (*BareFn)();
+ *   void PlayerState_HideAndClearBounce(PlayerEntity *e) {
+ *       PadSlot slot;
+ *       volatile PadSlot unused;
+ *       BareFn tickFn, eventFn;
+ *       GameState *gs;
+ *       RenderSprite *ctx;
+ *       tickFn = (BareFn)EntityUpdateCallback;
+ *       eventFn = (BareFn)PlayerEvent_ZoneTriggerHandler;
+ *       gs = g_pGameState;
+ *       gs->bounce_active_flag = 1;
+ *       slot.s.markerLo = 0; slot.s.markerHi = -1; slot.s.fn = tickFn;
+ *       *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+ *       slot.s.markerLo = 0; slot.s.markerHi = -1; slot.s.fn = eventFn;
+ *       *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
+ *       slot.s.markerLo = 0; slot.s.markerHi = 0; slot.s.fn = 0;
+ *       *(CallbackSlot *)&e->inputStateMarker = slot.s;
+ *       slot.s.markerLo = 0; slot.s.markerHi = 0; slot.s.fn = 0;
+ *       *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s;
+ *       SetAnimationTargetFrameIndex((Entity *)e, e->sprite.currentFrame);
+ *       EntitySetRenderFlags((Entity *)e, 0);
+ *       ctx = (RenderSprite *)e->sprite.base.spriteContext;
+ *       EntitySetCallback((Entity *)e, PlayerHiddenIdleMarker, PlayerHiddenIdleFn);
+ *       ctx->enabled = 0;
+ *   } */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_HideAndClearBounce);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_CheckpointExit);
