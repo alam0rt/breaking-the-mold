@@ -1360,7 +1360,28 @@ void CollectibleIdleState(Entity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitAnimatedTimedCollectible);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", CollectibleFrameConditionalTick);
+/* Collectible tick gated by a per-entity frame phase: once every 152 global
+ * frames (when frame_counter % 152 matches this entity's phase), retargets the
+ * animation to frame (frame_counter / 76), rewinds it, and reinstalls
+ * CollectibleTickCallback into the tick slot. Runs the collectible tick every
+ * frame regardless. */
+void CollectibleFrameConditionalTick(ConditionalPhaseEntity *e) {
+    PadSlot slot;
+    s16 m1;
+    void (*fn)();
+
+    if (g_pGameState->frame_counter % 152 == e->framePhase) {
+        SetAnimationTargetFrameIndex((Entity *)e, -1);
+        SetAnimationLoopFrameIndex((Entity *)e, 0);
+        SetAnimationFrameIndex((Entity *)e, 0);
+        do {} while (0);
+        fn = CollectibleTickCallback;
+        m1 = -1;
+        slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+        *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
+    }
+    CollectibleTickCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleVariant);
 
