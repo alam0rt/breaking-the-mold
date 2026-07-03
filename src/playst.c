@@ -1786,6 +1786,67 @@ Entity *InitShadowMirrorSubentity(Entity *e, void *owner) {
     return e;
 }
 
+/* EntityTick_ShadowMirror @ 0x8006DBBC (size 0x1DC): per-frame tick for the
+ * shadow/mirror subentity. Copies the owner (source player, stashed at +0x100
+ * by InitShadowMirrorSubentity) facing/position, remaps the owner's active
+ * sprite id through a fixed 6-entry lookup, syncs the animation frame, mirrors
+ * the owner's RGB tint (+ a sprite-context flag byte), and inherits its render
+ * and powerup scales before running the standard render update.
+ *
+ * SHELVED: register-allocation coin-flip in the trailing field-copy tail. The
+ * switch decision-tree (the source-reachable logic) matches byte-for-byte after
+ * ordering the case bodies as below. The residual is entirely non-source:
+ *   (1) the SetAnimationFrameIndex arg lands in v0 (re-sign-extended into a1 via
+ *       sll/sra) in the target vs directly in a1 (lh) in the build;
+ *   (2) the 3-byte RGB copy (tint local + struct-copy to spriteContext+0x34)
+ *       keeps all three bytes live in a0/a1/v1 in the target but only v0/v1 in
+ *       the build, forcing lbu reloads from the dead sp temp;
+ *   (3) that pressure cascades into the +0x38 copy and scale-block scheduling
+ *       (a stray pInput reload).
+ * None of (1)-(3) is reachable from C source form; verified C below.
+ *
+ *   extern void SetAnimationFrameIndex(Entity *e, s32 frame);
+ *   typedef struct { u8 r; u8 g; u8 b; } RgbTriple;
+ *
+ *   void EntityTick_ShadowMirror(PlayerEntity *e) {
+ *       u32 spriteId;
+ *       RgbTriple tint;
+ *
+ *       e->sprite.base.facing = ((PlayerEntity *)e->pInput)->sprite.base.facing;
+ *       *(u16 *)&e->sprite.base.worldX = *(u16 *)&((PlayerEntity *)e->pInput)->sprite.base.worldX;
+ *       *(u16 *)&e->sprite.base.worldY = *(u16 *)&((PlayerEntity *)e->pInput)->sprite.base.worldY;
+ *
+ *       spriteId = e->sprite.currentSpriteId;
+ *       switch (((PlayerEntity *)e->pInput)->sprite.currentSpriteId) {
+ *       case 0x0628A800: spriteId = 0xA628E009; break;
+ *       case 0x112AE088: spriteId = 0x8139A088; break;
+ *       case 0x8569A090: spriteId = 0x9629A000; break;
+ *       case 0x0708A4A0: spriteId = 0xD70880A4; break;
+ *       case 0x052AA082: spriteId = 0x0538A2EA; break;
+ *       case 0x8524A880: spriteId = 0x2524E089; break;
+ *       }
+ *       if (spriteId != e->sprite.currentSpriteId) {
+ *           SetEntitySpriteId(e, spriteId, 1);
+ *       }
+ *
+ *       if (((PlayerEntity *)e->pInput)->sprite.currentFrame != e->sprite.currentFrame) {
+ *           SetAnimationFrameIndex((Entity *)e, ((PlayerEntity *)e->pInput)->sprite.currentFrame);
+ *       }
+ *
+ *       tint.r = ((PlayerEntity *)e->pInput)->currentRGB[0];
+ *       tint.g = ((PlayerEntity *)e->pInput)->currentRGB[1];
+ *       tint.b = ((PlayerEntity *)e->pInput)->currentRGB[2];
+ *       *(RgbTriple *)((u8 *)e->sprite.base.spriteContext + 0x34) = tint;
+ *       *(u8 *)((u8 *)e->sprite.base.spriteContext + 0x38) =
+ *           *(u8 *)((u8 *)((PlayerEntity *)e->pInput)->sprite.base.spriteContext + 0x38);
+ *
+ *       e->sprite.base.scaleRender = ((PlayerEntity *)e->pInput)->sprite.base.scaleRender;
+ *       e->sprite.base.scaleRender2 = ((PlayerEntity *)e->pInput)->sprite.base.scaleRender;
+ *       e->sprite.base.scalePowerupX = ((PlayerEntity *)e->pInput)->sprite.base.scalePowerupX;
+ *       e->sprite.base.scalePowerupY = ((PlayerEntity *)e->pInput)->sprite.base.scalePowerupX;
+ *       EntityUpdateCallback((Entity *)e);
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", EntityTick_ShadowMirror);
 
 extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 y, s32 flags);
