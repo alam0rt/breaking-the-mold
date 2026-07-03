@@ -1461,7 +1461,86 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_WalkingCollisionHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_FallingPhysicsMain);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_KnockbackPhysics);
+extern s16 TransformYCoordWithScaleSnapped(Entity *e, s32 val);
+
+u32 PlayerKnockbackCeilingMarker asm("D_800A5EC0");
+EntityCallback PlayerKnockbackCeilingFn asm("D_800A5EC4");
+u32 PlayerKnockbackLandMarker asm("D_800A5EF4");
+EntityCallback PlayerKnockbackLandFn asm("D_800A5EF8");
+
+/* Inlined tile-override check (mirrors CheckTileCollisionOverride in player.c):
+ * destructible tiles are phased through while invincible (rewriting the probe
+ * result to PLAYER_TILE_PASSABLE) and block otherwise. */
+static inline u8 KnockbackTileOverride(PlayerEntity *e, u8 *tile) {
+    u8 t = *tile;
+    if ((u8)(t + 0x4B) < 3 || (t & 0xFF) == 0xC9 || (t & 0xFF) == 0xCB ||
+        (u8)(t + 0x23) < 3) {
+        if (e->invincibilityTimer != 0) {
+            *tile = 0x65;
+            return 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+void PlayerCallback_KnockbackPhysics(PlayerEntity *e) {
+    s32 posX;
+    s32 posY;
+    u8 tileUp;
+    u8 tileDown;
+
+    posX = (e->sprite.base.worldX << 16) + *(u16 *)&e->sprite.base.velocityX;
+    posY = (e->sprite.base.worldY << 16) + *(u16 *)&e->sprite.base.velocityY;
+    if (e->sprite.base.facing != 0) {
+        posX -= e->sprite.frameMotionX;
+    } else {
+        posX += e->sprite.frameMotionX;
+    }
+    if (e->sprite.base.flipY != 0) {
+        posY -= e->sprite.frameMotionY;
+    } else {
+        posY += e->sprite.frameMotionY;
+    }
+    e->sprite.base.worldX = posX >> 16;
+    e->sprite.base.worldY = posY >> 16;
+    *(s16 *)&e->sprite.base.velocityX = posX;
+    *(s16 *)&e->sprite.base.velocityY = posY;
+    if (e->sprite.frameMotionY < 0) {
+        tileUp = EntityApplyMovementCallbacks((Entity *)e, e->sprite.base.worldX,
+                                              e->sprite.base.worldY - 0x40);
+        if (KnockbackTileOverride(e, &tileUp)) {
+            g_pGameState->camera_follow_direction = 0;
+            if (e->swirlPortalEntity != NULL) {
+                RemoveEntityFromAllLists(g_pGameState, e->swirlPortalEntity);
+                e->swirlPortalEntity = NULL;
+            }
+            PlayerProcessBounceCollision(e, tileUp);
+        } else if (tileUp != 0x7D) {
+            e->sprite.base.worldY = TransformYCoordWithScaleSnapped(
+                                        (Entity *)e,
+                                        (s16)(e->sprite.base.worldY - 0x30)) + 0x40;
+            *(s16 *)&e->sprite.base.velocityY = 0;
+            EntitySetState((Entity *)e, PlayerKnockbackCeilingMarker,
+                           PlayerKnockbackCeilingFn);
+        }
+    } else {
+        tileDown = EntityApplyMovementCallbacks((Entity *)e,
+                                                e->sprite.base.worldX,
+                                                e->sprite.base.worldY);
+        if (KnockbackTileOverride(e, &tileDown)) {
+            g_pGameState->camera_follow_direction = 0;
+            if (e->swirlPortalEntity != NULL) {
+                RemoveEntityFromAllLists(g_pGameState, e->swirlPortalEntity);
+                e->swirlPortalEntity = NULL;
+            }
+            PlayerProcessBounceCollision(e, tileDown);
+        } else if (tileDown != 0x7D) {
+            EntitySetState((Entity *)e, PlayerKnockbackLandMarker,
+                           PlayerKnockbackLandFn);
+        }
+    }
+}
 
 u32 PlayerSwimExitMarker asm("D_800A5D30");
 EntityCallback PlayerSwimExitFn asm("D_800A5D34");
