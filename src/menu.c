@@ -173,7 +173,7 @@ void SetupMenuIdleAnimation(Entity *entity) {
     u.s[0].markerLo = 0;
     u.s[0].markerHi = m1;
     u.s[0].fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x98) = u.s[0];
+    { SpriteEntity *se = (SpriteEntity *)entity; *(MenuCallbackSlot *)&se->queuedStateMarker = u.s[0]; }
 }
 
 /* Transition handler that swaps the menu character from idle to its
@@ -213,7 +213,7 @@ void InitRunnLevelEntity(Entity *entity) {
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x98) = u.s;
+    { SpriteEntity *se = (SpriteEntity *)entity; *(MenuCallbackSlot *)&se->queuedStateMarker = u.s; }
 }
 
 /* Allocates+inits a "button highlight" SpriteEntity from the D_8009CBE8
@@ -293,7 +293,7 @@ void SetupMenuButtonAnimation(Entity *entity) {
     u.s.markerLo = 0;
     u.s.markerHi = m1;
     u.s.fn = fn;
-    *(MenuCallbackSlot *)((u8 *)entity + 0x98) = u.s;
+    { SpriteEntity *se = (SpriteEntity *)entity; *(MenuCallbackSlot *)&se->queuedStateMarker = u.s; }
 }
 
 /* Tail-call helper: clears the event-callback pair at +0x08/+0x0C and
