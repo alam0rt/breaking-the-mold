@@ -275,11 +275,11 @@ void PlayerSetupCallbacksAndSprite(Entity *e, SetupSlot tick, SetupSlot event,
     u.s = tick;
     *(SetupSlot *)&e->tickMarker = u.s;
     u.s = event;
-    *(SetupSlot *)((u8 *)e + 0x8) = u.s;
+    *(SetupSlot *)&e->eventMarker = u.s;
     u.s = slot104;
     *(SetupSlot *)((u8 *)e + 0x104) = u.s;
     u.s = render;
-    *(SetupSlot *)((u8 *)e + 0x1C) = u.s;
+    *(SetupSlot *)&e->renderMarker = u.s;
     SetEntitySpriteId((PlayerEntity *)e, sid, 1);
 }
 
@@ -2400,12 +2400,12 @@ Entity *InitHUDAnimatedEntity(Entity *e, s16 x, s16 y, s32 facing, s32 anchor) {
     InitEntitySprite(e, 0x1E1000B3, 0x3E7, x, y, 0);
     e->collisionVtable = D_800117C4;
     e->allocSize = 0x3E9;
-    *(u8 *)((u8 *)e + 0x74) = facing;
+    e->facing = facing;
     if (anchor != 0x10000) {
-        *(s32 *)((u8 *)e + 0x50) = anchor;
-        *(s32 *)((u8 *)e + 0x54) = anchor;
-        *(s32 *)((u8 *)e + 0x58) = anchor;
-        *(s32 *)((u8 *)e + 0x5C) = anchor;
+        e->scaleRender = anchor;
+        e->scaleRender2 = anchor;
+        e->scalePowerupX = anchor;
+        e->scalePowerupY = anchor;
         do {} while (0);
         fn = (void (*)())ScaleXByEntityScale;
         m1 = -1;
