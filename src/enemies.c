@@ -202,6 +202,7 @@ Entity *CreateCollectibleAtPosition(Entity *e, u8 *spriteDef, s16 x, s16 y) {
 INCLUDE_ASM("asm/nonmatchings/enemies", InitCollectibleEntity);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", CalcEntityYFromTileHeight);
+extern u16 CalcEntityYFromTileHeight(Entity *e, u32 tile, s16 x, s16 y);
 
 INCLUDE_ASM("asm/nonmatchings/enemies", UpdateCollectibleTriggerZone);
 
@@ -434,7 +435,34 @@ s32 EntityEventHandlerWithRandomWalk(Entity *e, u16 event, u32 unused, u32 attac
  * cc1 keeps it in $s1 throughout. Permuter territory. */
 INCLUDE_ASM("asm/nonmatchings/enemies", EntityEventHandlerWithDelayedWalk);
 
-INCLUDE_ASM("asm/nonmatchings/enemies", EntityGroundSnapWithAnimation);
+/* As EntityGroundSnapMovementCallback, but gated by the animation state: only
+ * (re)applies the animation's position offsets when the current frame is 0 and
+ * the one-shot +0x111 flag is set (clearing it), or unconditionally while the
+ * frame is nonzero. Then runs the same two-probe (worldY-7 / worldY+2) ground
+ * snap onto the first solid tile found. */
+void EntityGroundSnapWithAnimation(Entity *e) {
+    u8 tile;
+
+    if (((SpriteEntity *)e)->currentFrame == 0) {
+        if (((u8 *)e)[0x111] != 0) {
+            ApplyAnimationPositionOffsets(e);
+            ((u8 *)e)[0x111] = 0;
+        }
+    } else {
+        ApplyAnimationPositionOffsets(e);
+    }
+    tile = EntityApplyMovementCallbacks(e, e->worldX, (s16)(e->worldY - 7));
+    if (tile != 0 && tile < 0x3C) {
+        e->worldY = CalcEntityYFromTileHeight(e, tile, e->worldX,
+                                              (s16)(e->worldY - 7));
+        return;
+    }
+    tile = EntityApplyMovementCallbacks(e, e->worldX, (s16)(e->worldY + 2));
+    if (tile != 0 && tile < 0x3C) {
+        e->worldY = CalcEntityYFromTileHeight(e, tile, e->worldX,
+                                              (s16)(e->worldY + 2));
+    }
+}
 
 /* Enter walk state with a random walk-hold (rand()&0xF + 4 frames) and a
  * 0x2D-frame state timer before the next transition. */
@@ -2508,8 +2536,6 @@ s32 EntityEventHandlerWalkWithTimer(EnemyTimerStateEntity *e, u32 event, u32 arg
     }
     return result;
 }
-
-extern u16 CalcEntityYFromTileHeight(Entity *e, u32 tile, s16 x, s16 y);
 
 /* Two-probe ground snap: after applying the animation's position offsets,
  * sample the tile just above (worldY-7) and just below (worldY+2) the entity.
