@@ -613,6 +613,67 @@ s32 PlayerCallback_CollisionHandlerWithQueue(PlayerEntity *e, u32 event, u32 arg
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerBounceCallback);
 
+/* Player event handler installed during the teleporter (level-exit) animation.
+ * Forwards the event to PlayerEntityEventHandler (return value passed through),
+ * drains the callback queue on event 2, and on event 1 dispatches the current
+ * anim marker (arg2) to one of three actions:
+ *   - 0x2809A510: spawn the swirl portal entity
+ *   - 0x382C92C1: spawn a dust puff behind the player (X +0x14, or -0x14 when
+ *                 facing left; Y = worldY + apexVelocity; sprite 0x49289C14)
+ *   - 0x221017CA: if a special move is queued, re-arm the swirl anim callback
+ *                 and clear the queued flag, else clear the special-move mode.
+ *
+ * SHELVED: the verified C below reproduces every instruction EXCEPT the
+ * InitParticleEntity packedXY setup in the 0x382C92C1 case. The target reloads
+ * BOTH pos.x/pos.y from their stack slots (lhu 0x20/0x22) after AllocateFromHeap
+ * and fills the store window with the reloads, growing the frame to 0x48; gcc
+ * instead keeps pos.x live in a register and emits a 0x40 frame. This is the
+ * same non-source-reachable dust-particle reload/spill residual documented on
+ * PlayerSpawnDustParticle / SpawnPlayerDeathEffect — no source form (u32 temp,
+ * explicit pack, flipped operands, split statements) dislodges it. Every other
+ * instruction (the full BST switch, both non-particle cases, the queue drain,
+ * and both callback calls) matches byte-for-byte. Retained as INCLUDE_ASM.
+ *
+ *   extern void SpawnSwirlPortalEntity(PlayerEntity *e);
+ *   extern Entity *InitParticleEntity(u8 *mem, u32 spriteId, u32 packedXY,
+ *                       u8 facing, s32 scaleRender, s32 arg5, s32 arg6);
+ *   s32 PlayerCallback_TeleporterAnimHandler(PlayerEntity *e, u32 event,
+ *                                            u32 arg2, u32 arg3) {
+ *       struct { u16 x; u16 y; } pos;
+ *       u8 *mem; Entity *particle; s32 result;
+ *       u32 maskedEvent = event & 0xFFFF;
+ *       result = PlayerEntityEventHandler(e, maskedEvent, arg2, arg3);
+ *       if (maskedEvent == 2) {
+ *           EntityProcessCallbackQueue((Entity *)e);
+ *       }
+ *       if (maskedEvent == 1) {
+ *           switch (arg2) {
+ *           case 0x2809A510:
+ *               SpawnSwirlPortalEntity(e);
+ *               break;
+ *           case 0x382C92C1:
+ *               pos.x = (u16)e->sprite.base.worldX + 0x14;
+ *               if (e->sprite.base.facing != 0) {
+ *                   pos.x = (u16)e->sprite.base.worldX - 0x14;
+ *               }
+ *               pos.y = (u16)e->sprite.base.worldY + (u16)e->apexVelocity;
+ *               mem = AllocateFromHeap(g_pBlbHeapBase, 0x108, 1, 0);
+ *               particle = InitParticleEntity(mem, 0x49289C14, pos.x | (pos.y << 16),
+ *                              e->sprite.base.facing, e->sprite.base.scalePowerupX, 0x3D4, 0);
+ *               AddEntityToSortedRenderList((u8 *)g_pGameState, particle);
+ *               break;
+ *           case 0x221017CA:
+ *               if (e->specialMoveQueued != 0) {
+ *                   SetAnimationFrameCallback(e, 0x2809A510);
+ *                   e->specialMoveQueued = 0;
+ *               } else {
+ *                   e->specialMoveMode = 0;
+ *               }
+ *               break;
+ *           }
+ *       }
+ *       return result;
+ *   } */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_TeleporterAnimHandler);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_BounceEventHandler);
