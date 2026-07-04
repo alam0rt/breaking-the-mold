@@ -166,11 +166,6 @@ SECTIONS
         build/src/finn.o(.data);
         build/src/playdtor.o(.data);
         build/src/menu.o(.data);
-        build/src/passwd.o(.data);
-        build/src/results.o(.data);
-        build/src/ending.o(.data);
-        build/src/level.o(.data);
-        build/src/blbacc.o(.data);
         build/src/vehicle.o(.data);
         build/src/lvlload.o(.data);
         build/src/libc.o(.data);
@@ -178,7 +173,12 @@ SECTIONS
         build/asm/libs/libgpu.o(.data);
         build/asm/libs/libspu.o(.data);
         build/src/prim.o(.data);
-        build/asm/data/8D300.data.o(.data);
+        build/src/passwd.o(.data);
+        build/src/results.o(.data);
+        build/src/ending.o(.data);
+        build/src/level.o(.data);
+        build/src/blbacc.o(.data);
+        build/asm/data/8D37C.data.o(.data);
         build/src/sound.o(.data);
         build/src/gstate.o(.data);
         build/asm/data/8DA28.data.o(.data);
