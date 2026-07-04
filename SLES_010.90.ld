@@ -178,7 +178,7 @@ SECTIONS
         build/src/ending.o(.data);
         build/src/level.o(.data);
         build/src/blbacc.o(.data);
-        build/asm/data/8D37C.data.o(.data);
+        build/asm/data/8D3AC.data.o(.data);
         build/src/sound.o(.data);
         build/src/gstate.o(.data);
         build/asm/data/8DA28.data.o(.data);
