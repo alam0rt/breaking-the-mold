@@ -1866,61 +1866,67 @@ void PlayerState_Running(PlayerEntity *e) {
     *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
 }
 
-/*
- * Enters the jump-apex state: seeds apex velocity threshold (-0x28), clears
- * Y velocity / jump param, flags special-move mode, then installs the
- * tick/event/input/render FSM callback slots (WalkInput driving, render
- * routed to WalkingOnPlatform when standing on an interact entity else the
- * normal movement/collision handler), queues PlayerState_Falling, and arms
- * the apex-transition callback via EntitySetCallback.
- *
- * SHELVED: verified algorithm below compiles to a byte-for-byte semantic
- * match, but gcc 2.7.2's instruction scheduler / register allocator diverges
- * in ways that are NOT reachable from clean source:
- *   - the two independent zero-stores (velocityY_fixed @0x110, jumpParam
- *     @0x156) are scheduled BEFORE `sb specialMoveMode,0x135` in the target
- *     but AFTER the first callback-address materialization in our output
- *     (the scheduler collapses `li v0,1; sb v0,0x135` to shorten v0's live
- *     range; the original build keeps v0=1 live across the zero-stores);
- *   - the shared markerHi=-1 constant is held in a2 for the first four slot
- *     installs and reloaded into v0 after the SetAnimationSpriteFlags call
- *     (our output reloads into a2); and a `li v0,-0x28` / `sw ra` pair is
- *     swapped in the prologue.
- * All remaining diffs are semantically-equivalent reorderings. Verified C:
- *
- *   void PlayerState_JumpApex(PlayerEntity *e) {
- *       PadSlot slot;
- *       register s16 m1 asm("$6");
- *       e->apexVelocity = -0x28;
- *       e->velocityY_fixed = 0;
- *       e->jumpParam = 0;
- *       e->specialMoveMode = 1;
- *       m1 = -1;
- *       slot.s.markerLo = 0; slot.s.markerHi = m1;
- *       slot.s.fn = (void (*)())PlayerTickCallback;
- *       *(CallbackSlot *)&e->sprite.base.tickMarker = slot.s;
- *       slot.s.markerLo = 0; slot.s.markerHi = m1;
- *       slot.s.fn = (void (*)())PlayerCallback_TeleporterAnimHandler;
- *       *(CallbackSlot *)&e->sprite.base.eventMarker = slot.s;
- *       slot.s.markerLo = 0; slot.s.markerHi = m1;
- *       slot.s.fn = (void (*)())PlayerCallback_WalkInputHandler;
- *       *(CallbackSlot *)&e->inputStateMarker = slot.s;
- *       slot.s.markerLo = 0; slot.s.markerHi = m1;
- *       if (e->interactEntity != NULL)
- *           slot.s.fn = (void (*)())PlayerCallback_WalkingOnPlatform;
- *       else
- *           slot.s.fn = (void (*)())PlayerCallback_HandleMovementAndCollision;
- *       *(CallbackSlot *)&e->sprite.base.renderMarker = slot.s;
- *       SetAnimationSpriteFlags(e, 0x88B9833C, 1);
- *       m1 = -1;
- *       slot.s.markerLo = 0; slot.s.markerHi = m1;
- *       slot.s.fn = (void (*)())PlayerState_Falling;
- *       *(CallbackSlot *)&e->sprite.queuedStateMarker = slot.s;
- *       EntitySetCallback((Entity *)e, PlayerJumpApexNextMarker,
- *                         PlayerJumpApexNextFn);
- *   }
- */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_JumpApex);
+extern void PlayerCallback_TeleporterAnimHandler();
+extern void SetAnimationSpriteFlags(PlayerEntity *e, u32 spriteId, s32 flags);
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
+u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
+EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
+
+/* PlayerState_JumpApex @ 0x80067798 (0x13C, frame 0x28) -- MATCHED. Member of
+ * the frame-0x28 special-move installer family (twin of SpecialMove1/2). Seeds
+ * apexVelocity(0x136)=-0x28, velocityY_fixed(0x110)=0, jumpParam(0x156)=0,
+ * specialMoveMode(0x135)=1, then installs five (markerLo,markerHi,fn) slots via
+ * a single reused PadSlot scratch (sp+0x14): tick(0x0)->PlayerTickCallback,
+ * event(0x8)->PlayerCallback_TeleporterAnimHandler, input(0x104)->
+ * PlayerCallback_WalkInputHandler, render(0x1C) if/else on interactEntity
+ * (WalkingOnPlatform / HandleMovementAndCollision), SetAnimationSpriteFlags(
+ * e,0x88B9833C,1), queued(0x98)->PlayerState_Falling, then
+ * EntitySetCallback(e, D_800A5F04, D_800A5F08).
+ * KEY LEVER: `register s16 m1 asm("$6")` pins the held -1 to $a2 across the four
+ * fixed slots (cracks the coin-flip that had shelved this). Tick fn via `rfn`
+ * temp before m1=-1 (prologue const order); render fn via per-arm `rfn`/
+ * `markerLo=0` (asymmetric delay-slot fill); queued fn via `qfn` pinned with
+ * FSM_KEEP_LIVE (fn in $v1 before fresh `li v0,-1`). */
+void PlayerState_JumpApex(PlayerEntity *e) {
+    PadSlot u;
+    void (*rfn)();
+    void (*qfn)();
+    register s16 m1 asm("$6");
+    e->apexVelocity = -0x28;
+    e->velocityY_fixed = 0;
+    e->jumpParam = 0;
+    e->specialMoveMode = 1;
+    FSM_KEEP_LIVE(e);
+    rfn = (void (*)())PlayerTickCallback;
+    m1 = -1;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = rfn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = (void (*)())PlayerCallback_TeleporterAnimHandler;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = (void (*)())PlayerCallback_WalkInputHandler;
+    *(CallbackSlot *)&e->inputStateMarker = u.s;
+    if (e->interactEntity != NULL) {
+        rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+        u.s.markerLo = 0;
+    } else {
+        rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;
+        u.s.markerLo = 0;
+    }
+    u.s.markerHi = m1;
+    u.s.fn = rfn;
+    *(CallbackSlot *)&e->sprite.base.renderMarker = u.s;
+    SetAnimationSpriteFlags(e, 0x88B9833C, 1);
+    qfn = (void (*)())PlayerState_Falling;
+    FSM_KEEP_LIVE(qfn);
+    u.s.markerLo = 0; u.s.markerHi = -1;
+    u.s.fn = qfn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = u.s;
+    EntitySetCallback((Entity *)e, PlayerSpecialMoveNextMarker,
+                      PlayerSpecialMoveNextFn);
+}
 
 extern void PlayerCallback_WalkInputWithJump();
 extern void PlayerCallback_WalkingOnPlatform();
@@ -1972,12 +1978,6 @@ void PlayerState_Falling(PlayerEntity *e) {
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEnterLandingState);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerSetupIdleState);
-
-extern void PlayerCallback_TeleporterAnimHandler();
-extern void SetAnimationSpriteFlags(PlayerEntity *e, u32 spriteId, s32 flags);
-extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
-u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
-EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
 
 /* PlayerState_SpecialMove2 @ 0x80067CF0 (0x138, frame 0x28) -- MATCHED. Sibling
  * of SpecialMove1; identical installer minus the velocityY store (this one only
