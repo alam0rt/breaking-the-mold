@@ -327,11 +327,22 @@ char *GetLevelNameFromGameState(GameState *gs) {
 
 INCLUDE_ASM("asm/nonmatchings/blb", GetStageIndexFromGameState);
 
-INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructor_Simple2);
+/* Forward decl: the size argument is currently ignored by the callee body. */
+extern void FreeEntityNoTeardown_80025964(u8 *entity, s32 size);
+
+/* Level-teardown destructor: installs the level-destroy vtable at +0x18, then
+ * (when the caller requests it via bit 0) frees the entity's storage. */
+void EntityDestructor_Simple2(Entity *e, u32 flags) {
+    *(u8 **)((u8 *)e + 0x18) = g_EntityVtable_LevelDestroy;
+    if (flags & 1) {
+        FreeEntityNoTeardown_80025964((u8 *)e, 0x1C);
+    }
+}
 
 /* Returns an entity's backing storage to the BLB heap without running any
- * teardown/destructor logic first. */
-void FreeEntityNoTeardown_80025964(u8 *entity) {
+ * teardown/destructor logic first. `size` is accepted for call-site symmetry
+ * but is not consulted by the free path. */
+void FreeEntityNoTeardown_80025964(u8 *entity, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
 
