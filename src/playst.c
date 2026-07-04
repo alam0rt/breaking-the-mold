@@ -1973,72 +1973,67 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerEnterLandingState);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerSetupIdleState);
 
-/* PlayerState_SpecialMove2 @ 0x80067CF0 (0x138) -- installs the special-move
- * FSM. Sets apexVelocity(0x136)/specialMoveMode(0x135)/carryMotionX(0x10C)
- * scalars, then blocks in five FSM (marker,fn) pairs through a single reused
- * stack scratch (frame 0x28, scratch at sp+0x14): tick(0x0)->PlayerTickCallback,
+extern void PlayerCallback_TeleporterAnimHandler();
+extern void SetAnimationSpriteFlags(PlayerEntity *e, u32 spriteId, s32 flags);
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
+u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
+EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
+
+/* PlayerState_SpecialMove2 @ 0x80067CF0 (0x138, frame 0x28) -- MATCHED. Sibling
+ * of SpecialMove1; identical installer minus the velocityY store (this one only
+ * zeroes carryMotionX). Single reused PadSlot scratch at sp+0x14. Sets
+ * apexVelocity(0x136)=-0x28, specialMoveMode(0x135)=1, carryMotionX(0x10C)=0,
+ * then five (markerLo,markerHi,fn) installs: tick(0x0)->PlayerTickCallback,
  * event(0x8)->PlayerCallback_TeleporterAnimHandler, input(0x104)->
- * PlayerCallback_IdleInputHandler, render(0x1C) chosen at runtime by
- * e->interactEntity (RidingPlatformPhysics / HorizontalWallCollision),
- * SetAnimationSpriteFlags(e, 0x8D01C734, 1), queued(0x98)->PlayerStateInit_Idle,
- * then EntitySetCallback(e, D_800A5F04, D_800A5F08).
- *
- * SHELVED (installer register-allocation coin-flip). The verified C below
- * reproduces the 0x28 frame exactly (via PadSlot: scratch at sp+0x14, s0@0x20,
- * ra@0x24), every scalar store, all five (lo,hi,fn) installs with per-slot
- * re-stores, the interactEntity render conditional, and both helper calls with
- * the correct args/offsets. The ONLY residual is register naming: the target
- * holds the constant markerHi (-1) in $a2 across the first four slots (`li a2,-1`
- * once, `sh a2,0x16` x4) because $v0/$v1 are reserved for the two copy temps
- * (`lw v0,0x14; lw v1,0x18; sw v0; sw v1`). cc1 2.7.2 here allocates -1 to $v1
- * instead, forcing the copy temp to $a0, and reloads -1 fresh per region -- a
- * uniform hold=$a2/temp=$v1 vs hold=$v1/temp=$a0 shift, plus the downstream
- * render-slot markerLo scheduling (target hoists `sh zero,0x14` into both branch
- * arms; cc1 puts the fn store in the j-delay slot). Not source-reachable: the
- * markerLo/markerHi must be re-assigned each slot (the block copy reads them),
- * and the held-constant hard-register choice ($a2 vs $v1) is an allocator
- * coin-flip -- same class as the shelved sibling PlayerStateInit_FallingWithInput.
- *
- *   extern void PlayerTickCallback();
- *   extern void PlayerCallback_TeleporterAnimHandler();
- *   extern void PlayerCallback_IdleInputHandler();
- *   extern void PlayerCallback_RidingPlatformPhysics();
- *   extern void PlayerCallback_HorizontalWallCollision();
- *   extern void PlayerStateInit_Idle();
- *   extern void SetAnimationSpriteFlags(PlayerEntity *e, u32 spriteId, s32 flags);
- *   extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
- *   u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
- *   EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
- *
- *   void PlayerState_SpecialMove2(PlayerEntity *e) {
- *       PadSlot u;
- *       e->apexVelocity = -0x28;
- *       e->specialMoveMode = 1;
- *       e->carryMotionX = 0;
- *       u.s.markerLo = 0; u.s.markerHi = -1;
- *       u.s.fn = (void (*)())PlayerTickCallback;
- *       *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
- *       u.s.markerLo = 0; u.s.markerHi = -1;
- *       u.s.fn = (void (*)())PlayerCallback_TeleporterAnimHandler;
- *       *(CallbackSlot *)&e->sprite.base.eventMarker = u.s;
- *       u.s.markerLo = 0; u.s.markerHi = -1;
- *       u.s.fn = (void (*)())PlayerCallback_IdleInputHandler;
- *       *(CallbackSlot *)&e->inputStateMarker = u.s;
- *       u.s.markerLo = 0; u.s.markerHi = -1;
- *       if (e->interactEntity != NULL)
- *           u.s.fn = (void (*)())PlayerCallback_RidingPlatformPhysics;
- *       else
- *           u.s.fn = (void (*)())PlayerCallback_HorizontalWallCollision;
- *       *(CallbackSlot *)&e->sprite.base.renderMarker = u.s;
- *       SetAnimationSpriteFlags(e, 0x8D01C734, 1);
- *       u.s.markerLo = 0; u.s.markerHi = -1;
- *       u.s.fn = (void (*)())PlayerStateInit_Idle;
- *       *(CallbackSlot *)&e->sprite.queuedStateMarker = u.s;
- *       EntitySetCallback((Entity *)e, PlayerSpecialMoveNextMarker,
- *                         PlayerSpecialMoveNextFn);
- *   }
- */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialMove2);
+ * PlayerCallback_IdleInputHandler, render(0x1C) if/else on interactEntity
+ * (RidingPlatformPhysics / HorizontalWallCollision), SetAnimationSpriteFlags(
+ * e,0x8D01C734,1), queued(0x98)->PlayerStateInit_Idle, then
+ * EntitySetCallback(e, D_800A5F04, D_800A5F08).
+ * KEY LEVER: `register s16 m1 asm("$6")` pins the held -1 to $a2 across the four
+ * fixed slots (cracks the $a2-vs-$v1 coin-flip that shelved this for months).
+ * Tick fn via `rfn` temp before m1=-1 (prologue const order); render fn via
+ * per-arm `rfn`/`markerLo=0` (asymmetric delay-slot fill); queued fn via `qfn`
+ * pinned with FSM_KEEP_LIVE (fn in $v1 before fresh `li v0,-1`). */
+void PlayerState_SpecialMove2(PlayerEntity *e) {
+    PadSlot u;
+    void (*rfn)();
+    void (*qfn)();
+    register s16 m1 asm("$6");
+    e->apexVelocity = -0x28;
+    e->specialMoveMode = 1;
+    e->carryMotionX = 0;
+    FSM_KEEP_LIVE(e);
+    rfn = (void (*)())PlayerTickCallback;
+    m1 = -1;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = rfn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = (void (*)())PlayerCallback_TeleporterAnimHandler;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = (void (*)())PlayerCallback_IdleInputHandler;
+    *(CallbackSlot *)&e->inputStateMarker = u.s;
+    if (e->interactEntity != NULL) {
+        rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+        u.s.markerLo = 0;
+    } else {
+        rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+        u.s.markerLo = 0;
+    }
+    u.s.markerHi = m1;
+    u.s.fn = rfn;
+    *(CallbackSlot *)&e->sprite.base.renderMarker = u.s;
+    SetAnimationSpriteFlags(e, 0x8D01C734, 1);
+    qfn = (void (*)())PlayerStateInit_Idle;
+    FSM_KEEP_LIVE(qfn);
+    u.s.markerLo = 0; u.s.markerHi = -1;
+    u.s.fn = qfn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = u.s;
+    EntitySetCallback((Entity *)e, PlayerSpecialMoveNextMarker,
+                      PlayerSpecialMoveNextFn);
+}
+
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Jump);
 
@@ -2305,11 +2300,6 @@ void PlayerState_StandingIdle(PlayerEntity *e) {
     *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
 }
 
-extern void PlayerCallback_TeleporterAnimHandler();
-extern void SetAnimationSpriteFlags(PlayerEntity *e, u32 spriteId, s32 flags);
-extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
-u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
-EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
 
 /* PlayerState_SpecialMove1 @ 0x80068A0C (0x13C, frame 0x28) -- MATCHED. Twin of
  * the (previously shelved) SpecialMove2. Single reused PadSlot scratch at sp+0x14.
