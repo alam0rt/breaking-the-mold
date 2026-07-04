@@ -243,7 +243,14 @@ INCLUDE_ASM("asm/nonmatchings/blb", LoadTileDataToVRAM);
 
 INCLUDE_ASM("asm/nonmatchings/blb", GetEntitySpawnData);
 
-INCLUDE_ASM("asm/nonmatchings/blb", SetEntitySpawnData);
+extern void CopyTilemapLayerIndex(void *dst, void *src, u16 layerIndex);
+
+/* Copies the tilemap layer index for `layerIndex` from the level's tilemap
+ * region (src + 0x84) into the destination entity, returning it. */
+void *SetEntitySpawnData(void *dst, void *src, u32 layerIndex) {
+    CopyTilemapLayerIndex(dst, (u8 *)src + 0x84, (u16)layerIndex);
+    return dst;
+}
 
 /* Maps a facing/direction code to the horizontal glide-spawn offset stored in
  * GameState.glide_boss_state_x: 0 -> centred, 1 -> left (-0x30), 2 -> right
