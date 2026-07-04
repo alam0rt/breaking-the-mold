@@ -2511,6 +2511,7 @@ void PlayerState_RemoveAttachedEntity(PlayerEntity *e) {
  * (frame 0x70 vs 0x68); reproduced by enlarging curP.tail to [4]. event=Throw-
  * EventHandler, render Horizontal/Riding, spriteId 0x04084011, queued=Init_Idle.
  */
+extern void PlayerCallback_ThrowEventHandler();
 void PlayerStateInit_ThrowProjectile(PlayerEntity *e) {
     struct { s32 lead; CallbackSlot tick, event, input, render; } g;
     CallbackSlot scratch;
@@ -2614,7 +2615,49 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_CheckpointEntry);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ProjectileThrowAnim);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_PostThrowRecovery);
+/*
+ * PlayerStateInit_PostThrowRecovery (0x8006C668, 0x164) — MATCHED 2026-07-05.
+ * Variant B installer (no prologue store → leading fence) with a zeroed input
+ * slot (frame 0x70 via curP.tail[4]). event=BaseEventHandler, render Vertical-
+ * CollisionCheck/PlatformFollowUpdate, spriteId 0x48204012. After the sprite id
+ * it installs the deferred next-state via EntitySetCallback(e, D_800A5F54,
+ * D_800A5F58), then queues PlayerStateInit_Idle.
+ */
+extern void PlayerCallback_BaseEventHandler();
+extern void PlayerCallback_VerticalCollisionCheck();
+extern void PlayerCallback_PlatformFollowUpdate();
+u32 PlayerPostThrowNextMarker asm("D_800A5F54");
+EntityCallback PlayerPostThrowNextFn asm("D_800A5F58");
+void PlayerStateInit_PostThrowRecovery(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[4]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_BaseEventHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    g.input.markerLo = 0; g.input.markerHi = 0; g.input.fn = (void (*)())0;
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_VerticalCollisionCheck;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_PlatformFollowUpdate;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x48204012, 1);
+    EntitySetCallback((Entity *)e, PlayerPostThrowNextMarker, PlayerPostThrowNextFn);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_Idle;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 void PlayerState_ClearCheckpointAndSetInvincible(PlayerEntity *e) {
     g_pGameState->checkpoint_restore_pending = 0;
