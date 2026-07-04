@@ -2177,6 +2177,25 @@ void PlayerState_ClearBounceAndAirFlag(PlayerEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_JumpFromPlatform);
 
+/* SHELVED: PlayerStateInit_BounceJumpAnimation / PlayerStateInit_BounceActive
+ * (byte-identical twins, off 59CAC / 59E0C, size 0x154, frame 0x50).
+ * These use the FULL constant-hoisting codegen: all 4 callback fns are
+ * materialized up front into $a3/$t0/$t1/$t2 and the sprite id into $a1 before
+ * the g_pGameState->bounce_active_flag store. R&D findings:
+ *   - Register-pinning the 4 fns (register void(*)() asm("$7".."$10") +
+ *     FSM_KEEP_LIVE) reproduces the eager fn loads exactly.
+ *   - TWO remaining blockers prevented a match:
+ *     1. `sw ra` scheduling slot: cc1 flushes ra right after the keep-live
+ *        barriers, but the target delays it past sprite+gamestate+li-1.
+ *     2. D_800A5F14/D_800A5F18 (PlayerHiddenIdleMarker/Fn) sdata placement:
+ *        referencing them as C globals shifts them off by 4 (target gp+1472/
+ *        1476, C build gp+1476/1480).
+ * Body shape (for a future attempt): 4 pinned fns (CooldownTick, CollisionHandler,
+ * JumpInputAndCounters, FallingPhysicsMain), g_pGameState->bounce_active_flag=1,
+ * 4 slots via curP.tail[1], SetEntitySpriteId(e,0x1C3AA013,1),
+ * EntitySetRenderFlags(e,1), SetAnimationLoopFrame(e,0x1084280),
+ * SetAnimationSpriteCallback(e,0x2421405),
+ * EntitySetCallback(e, PlayerHiddenIdleMarker, PlayerHiddenIdleFn). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_BounceJumpAnimation);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_BounceActive);
