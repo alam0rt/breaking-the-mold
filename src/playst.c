@@ -2305,7 +2305,72 @@ void PlayerState_StandingIdle(PlayerEntity *e) {
     *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialMove1);
+extern void PlayerCallback_TeleporterAnimHandler();
+extern void SetAnimationSpriteFlags(PlayerEntity *e, u32 spriteId, s32 flags);
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
+u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
+EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
+
+/* PlayerState_SpecialMove1 @ 0x80068A0C (0x13C, frame 0x28) -- MATCHED. Twin of
+ * the (previously shelved) SpecialMove2. Single reused PadSlot scratch at sp+0x14.
+ * Prologue: apexVelocity(0x136)=-0x28, specialMoveMode(0x135)=1,
+ * carryMotionX(0x10C)=0, velocityY(0x110)=0. Four slots with the constant
+ * markerHi (-1) HELD in $a2 across the region (target reserves $v0/$v1 for the
+ * block-copy temps): tick(0x0)->PlayerTickCallback, event(0x8)->
+ * PlayerCallback_TeleporterAnimHandler, input(0x104)->PlayerCallback_IdleInputHandler,
+ * render(0x1C) if/else on interactEntity (RidingPlatformPhysics /
+ * HorizontalWallCollision). SetAnimationSpriteFlags(e,0x8D01C734,1), then a
+ * FRESH -1 for queued(0x98)->PlayerStateInit_Idle, then
+ * EntitySetCallback(e, D_800A5F04, D_800A5F08).
+ * KEY LEVER: `register s16 m1 asm("$6")` pins -1 to $a2 -- this cracks the
+ * $a2-vs-$v1 held-constant coin-flip that had shelved the SpecialMove2 twin.
+ * The tick fn goes through an `rfn` temp (loaded before m1=-1) so the tick
+ * lui/addiu schedules ahead of the `li a2,-1`; the render fn also flows through
+ * `rfn` (per-arm value + explicit per-arm markerLo=0) to reproduce the
+ * asymmetric branch delay-slot fill; the queued fn goes through a `qfn` temp
+ * pinned live with FSM_KEEP_LIVE so it materialises (in $v1) before the fresh
+ * `li v0,-1`. */
+void PlayerState_SpecialMove1(PlayerEntity *e) {
+    PadSlot u;
+    void (*rfn)();
+    void (*qfn)();
+    register s16 m1 asm("$6");
+    e->apexVelocity = -0x28;
+    e->specialMoveMode = 1;
+    e->carryMotionX = 0;
+    e->velocityY_fixed = 0;
+    FSM_KEEP_LIVE(e);
+    rfn = (void (*)())PlayerTickCallback;
+    m1 = -1;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = rfn;
+    *(CallbackSlot *)&e->sprite.base.tickMarker = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = (void (*)())PlayerCallback_TeleporterAnimHandler;
+    *(CallbackSlot *)&e->sprite.base.eventMarker = u.s;
+    u.s.markerLo = 0; u.s.markerHi = m1;
+    u.s.fn = (void (*)())PlayerCallback_IdleInputHandler;
+    *(CallbackSlot *)&e->inputStateMarker = u.s;
+    if (e->interactEntity != NULL) {
+        rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+        u.s.markerLo = 0;
+    } else {
+        rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+        u.s.markerLo = 0;
+    }
+    u.s.markerHi = m1;
+    u.s.fn = rfn;
+    *(CallbackSlot *)&e->sprite.base.renderMarker = u.s;
+    SetAnimationSpriteFlags(e, 0x8D01C734, 1);
+    qfn = (void (*)())PlayerStateInit_Idle;
+    FSM_KEEP_LIVE(qfn);
+    u.s.markerLo = 0; u.s.markerHi = -1;
+    u.s.fn = qfn;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = u.s;
+    EntitySetCallback((Entity *)e, PlayerSpecialMoveNextMarker,
+                      PlayerSpecialMoveNextFn);
+}
+
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_PickupItem);
 
@@ -2353,10 +2418,6 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialIdleAnim);
  * heavy render-conditional installer (pinned m1 $17 -> s1 saved -> frame 0x68).
  * Variant A 4-store prologue, queued=PlayerStateInit_Idle, trailing deferred
  * install EntitySetCallback(e, D_800A5F04, D_800A5F08). curP.tail[3]. */
-extern void PlayerCallback_TeleporterAnimHandler();
-extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
-u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
-EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
 void PlayerStateInit_TeleportIdleOnPlatform(PlayerEntity *e) {
     struct { s32 lead; CallbackSlot tick, event, input, render; } g;
     CallbackSlot scratch;
