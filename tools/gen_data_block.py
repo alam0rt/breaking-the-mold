@@ -89,10 +89,34 @@ def decode_bytes(lines, start, end):
     return out, relocs
 
 
+def decode_words(lines, start, end):
+    """Return list of (kind, value) for a symbol that is entirely .word.
+    kind 'num' -> int literal; kind 'sym' -> symbol name. Returns None if the
+    symbol contains any non-.word directive (shorts/bytes/strings)."""
+    out = []
+    for j in range(start + 1, end):
+        s = lines[j]
+        if re.match(r"\s*enddlabel\b", s):
+            break
+        if re.match(r"\s*dlabel\b", s):
+            continue
+        if not s.strip() or s.strip().startswith("#"):
+            continue
+        mw = re.search(r"\.word\s+(\S+)", s)
+        if not mw:
+            return None  # not a pure-word symbol
+        v = mw.group(1)
+        if v.startswith("0x") or v.lstrip("-").isdigit():
+            out.append(("num", int(v, 16) if v.startswith("0x") else int(v)))
+        else:
+            out.append(("sym", v))
+    return out
+
+
 def main():
     args = sys.argv[1:]
     mode = "per"
-    if args and args[0] in ("--single", "--group"):
+    if args and args[0] in ("--single", "--group", "--mixed"):
         mode = args[0][2:]
         args = args[1:]
     lo_name, hi_name = args[0], args[1]
@@ -117,6 +141,39 @@ def main():
             print(emit_rows(bs))
             print("};")
         return
+
+    if mode == "mixed":
+        # Per-symbol, but pointer tables (all .word, containing relocs) become
+        # void*[] arrays so the linker resolves the function-pointer relocs.
+        # Pure-data symbols emit as u8[]. Every symbol keeps its own asm("D_X")
+        # so ld lays them out contiguously in source order (all island symbols
+        # must start on their natural boundary — 4-aligned for the ptr tables).
+        externs = []
+        blocks = []
+        for k in range(lo_i, hi_i):
+            a, n, sl = labs[k]
+            bs, relocs = decode_bytes(lines, sl, labs[k + 1][2])
+            if not relocs:
+                blocks.append(f'u8 {n}[{len(bs)}] asm("{n}") = {{\n{emit_rows(bs)}\n}};')
+                continue
+            words = decode_words(lines, sl, labs[k + 1][2])
+            if words is None:
+                sys.exit(f"ERROR: {n} has relocs mixed with sub-word data — handle manually")
+            ents = []
+            for kind, v in words:
+                if kind == "num":
+                    ents.append(f"(void *)0x{v & 0xFFFFFFFF:08X}")
+                else:
+                    externs.append(v)
+                    ents.append(f"(void *){v}")
+            body = ",\n".join("    " + e for e in ents)
+            blocks.append(f'void *{n}[{len(words)}] asm("{n}") = {{\n{body},\n}};')
+        for e in dict.fromkeys(externs):
+            print(f"extern void {e}();")
+        print()
+        print("\n\n".join(blocks))
+        return
+
 
     # single / group: emit ONE u8 array + .set aliases for every island symbol.
     # The array body is copied verbatim from the gold ROM over the whole span,
