@@ -5,6 +5,24 @@
 
 extern u8 PLAYER_CALLBACK_TABLE[] asm("g_PlayerCallbackTable");
 
+/* player .sdata (0x800A5D20..0x800A5D38): three {marker=0xFFFF0000, state-init
+ * callback} descriptor pairs consumed by CreatePlayerEntity and the playst
+ * player-state callbacks. Migrated from the pooled asm sdata blob
+ * (sdata-under-split Phase 4). Address order == declaration order (cc1 2.7.2
+ * emits initialized .sdata in decl order). The state-init callbacks are defined
+ * in playst.c. D_800A5D30/D_800A5D34 also carry friendly names
+ * (PlayerSwimExitMarker / PlayerSwimExitFn) via tentative defs in playst.c that
+ * merge with these strong defs. */
+extern void PlayerStateInit_Idle(PlayerEntity *e);
+extern void PlayerState_HideAndClearBounce(PlayerEntity *e);
+extern void PlayerStateCallback_2(PlayerEntity *e);
+u32 D_800A5D20 asm("D_800A5D20") = 0xFFFF0000;
+EntityCallback D_800A5D24 asm("D_800A5D24") = (EntityCallback)PlayerStateInit_Idle;
+u32 D_800A5D28 asm("D_800A5D28") = 0xFFFF0000;
+EntityCallback D_800A5D2C asm("D_800A5D2C") = (EntityCallback)PlayerState_HideAndClearBounce;
+u32 D_800A5D30 asm("D_800A5D30") = 0xFFFF0000;
+EntityCallback D_800A5D34 asm("D_800A5D34") = (EntityCallback)PlayerStateCallback_2;
+
 #define PLAYER_TILE_PASSABLE                 0x65
 #define PLAYER_TILE_SPECIAL_MARKER           0x7D
 #define PLAYER_TILE_INVINCIBLE_OVERRIDE_C9   0xC9

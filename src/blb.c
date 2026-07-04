@@ -122,6 +122,26 @@ void EntityTickLoop(GameState *gameState) {
  * then walks the render list at +0x20 and calls each entity's render vtable. */
 INCLUDE_ASM("asm/nonmatchings/blb", RenderEntities);
 
+extern void PlatformRideComplete(Entity *entity);
+extern void PlatformRideStartUp(Entity *entity);
+extern void PlatformRideStartDown(Entity *entity);
+
+/* blb .sdata (0x800A5980..0x800A59A8): an 8-byte config header followed by the
+ * platform-ride state table read by EntityDestructCallback -- three
+ * {marker, callback} pairs (marker 0xFFFF0000 = -1 duration) plus an "END2"
+ * sentinel and a trailing pad word. Migrated from the pooled asm sdata blob to
+ * natural C definitions (sdata-under-split Phase 2). The exact D_ symbol names
+ * are preserved via asm() so the unmatched EntityDestructCallback asm still
+ * resolves each entry. */
+u8 D_800A5980[8] asm("D_800A5980") = {0x1F, 0x63, 0x07, 0x07, 0x07, 0x07, 0x03, 0x30};
+u32 D_800A5988 asm("D_800A5988") = 0xFFFF0000;
+void (*D_800A598C)(Entity *) asm("D_800A598C") = PlatformRideComplete;
+u32 D_800A5990 asm("D_800A5990") = 0xFFFF0000;
+void (*D_800A5994)(Entity *) asm("D_800A5994") = PlatformRideStartUp;
+u32 D_800A5998 asm("D_800A5998") = 0xFFFF0000;
+void (*D_800A599C)(Entity *) asm("D_800A599C") = PlatformRideStartDown;
+u32 D_800A59A0[2] asm("D_800A59A0") = {0x32444E45, 0x00000000};
+
 /* Default destruct vtable entry -- body is only 4 bytes. When dispatched
  * with type 3 (the "request kill" code used by DeferredEntityRemoval /
  * EntityRemoval / RemoveFromZOrderList) it stashes a3/a2 into the entity's

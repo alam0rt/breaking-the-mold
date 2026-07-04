@@ -29,9 +29,11 @@ extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x, s16 
 
 extern void InitPathFollowingDecorEntity(TimedPathEntity *e, DecorSpawnData *data, u8 flag);
 
-/* gp_rel tentative defs (sdata blob owns the strong defs). */
-u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8");
-EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC");
+/* gp_rel sdata: strong initialized defs live in the address-ordered block at the
+ * end of this file (sdata-under-split Phase 4). These are forward declarations so
+ * the mid-file state machines can reference them. */
+extern u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8");
+extern EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC");
 
 extern s32 GetTPage(s32 tp, s32 abr, s32 x, s32 y);
 extern u8 GREENBULLET_VTABLE[] asm("D_80010850");
@@ -662,11 +664,11 @@ extern Entity *InitEntityWithSprite(SpriteEntity *entity, u8 *spriteDef, s32 z, 
 extern void DecorCollisionTickWithSpawnAndSound(Entity *e);
 extern s32 rand(void);
 
-/* gp_rel tentative defs for the (marker, callback) state pair installed
- * by InitEntity_PathDecor2 -- marker is 0xFFFF0000 (direct call) and the
- * callback is DecorSetRandomTimer. */
-u32 DECOR_RANDOM_TIMER_STATE_MARKER asm("D_800A59C8");
-EntityCallback DECOR_RANDOM_TIMER_STATE_CALLBACK asm("D_800A59CC");
+/* gp_rel sdata (marker, callback) state pair installed by InitEntity_PathDecor2
+ * -- marker is 0xFFFF0000 (direct call) and the callback is DecorSetRandomTimer.
+ * Strong defs are in the end-of-file block (Phase 4); these are forward decls. */
+extern u32 DECOR_RANDOM_TIMER_STATE_MARKER asm("D_800A59C8");
+extern EntityCallback DECOR_RANDOM_TIMER_STATE_CALLBACK asm("D_800A59CC");
 
 /* SHELVED: register-allocation diff. Equivalent C is below but cc1
  * allocates `entity` to $s0 and `data` to $s1, while the original
@@ -997,4 +999,28 @@ void EntityDestructor_Vtable0x80010870_Q(Entity *entity, u32 flag) {
 void FreeEntityNoTeardown_80030cdc(Entity *e, u32 size) {
     FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
 }
+
+/* pickups .sdata (0x800A59A8..0x800A59E8): the decor state-descriptor table --
+ * seven {marker=0xFFFF0000, callback} pairs consumed by the pickups init /
+ * tick / collision handlers, followed by an "END2" sentinel and pad word.
+ * Migrated from the pooled asm sdata blob (sdata-under-split Phase 4). Defined in
+ * address order (cc1 emits initialized .sdata in declaration order). The exact
+ * D_ symbol names are preserved via asm() for the unmatched asm consumers; two
+ * pairs also carry their friendly names (forward-declared above) for the matched
+ * C code. Callbacks with non-Entity* signatures are cast to EntityCallback. */
+u32 D_800A59A8 asm("D_800A59A8") = 0xFFFF0000;
+EntityCallback D_800A59AC asm("D_800A59AC") = DecorSetSpriteActive;
+u32 D_800A59B0 asm("D_800A59B0") = 0xFFFF0000;
+EntityCallback D_800A59B4 asm("D_800A59B4") = DecorSetSpriteIdle;
+u32 D_800A59B8 asm("D_800A59B8") = 0xFFFF0000;
+EntityCallback D_800A59BC asm("D_800A59BC") = (EntityCallback)DecorStartAnimationAlt;
+u32 D_800A59C0 asm("D_800A59C0") = 0xFFFF0000;
+EntityCallback D_800A59C4 asm("D_800A59C4") = (EntityCallback)DecorStartAnimation;
+u32 DECOR_RANDOM_TIMER_STATE_MARKER asm("D_800A59C8") = 0xFFFF0000;
+EntityCallback DECOR_RANDOM_TIMER_STATE_CALLBACK asm("D_800A59CC") = (EntityCallback)DecorSetRandomTimer;
+u32 D_800A59D0 asm("D_800A59D0") = 0xFFFF0000;
+EntityCallback D_800A59D4 asm("D_800A59D4") = (EntityCallback)DecorStartWithRandomTimer;
+u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8") = 0xFFFF0000;
+EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC") = (EntityCallback)DecorPlaySoundAndAnimate;
+u32 D_800A59E0[2] asm("D_800A59E0") = {0x32444E45, 0x00000000};
 

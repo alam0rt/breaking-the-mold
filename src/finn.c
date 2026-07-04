@@ -25,9 +25,10 @@ extern void FinnTick_LevelExitCountdown(Entity *e);
 extern void FinnExitMoveRightTickCallback(Entity *e);
 extern void SetAnimationActive(Entity *entity, u8 value);
 
-/* gp_rel tentative defs (sdata blob owns the strong defs). */
-u32 FINN_DEATH_EXPLOSION_STATE_MARKER asm("D_800A5F8C");
-EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90");
+/* gp_rel sdata: strong initialized defs live in the address-ordered block at the
+ * end of this file (sdata-under-split Phase 4). Forward declarations here. */
+extern u32 FINN_DEATH_EXPLOSION_STATE_MARKER asm("D_800A5F8C");
+extern EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90");
 
 INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
 
@@ -495,4 +496,32 @@ void RunnRender_AnimOffsetWithSlide(SpriteEntity *e) {
 INCLUDE_ASM("asm/nonmatchings/finn", RunnEvent_CutsceneDebrisAndLevel);
 
 INCLUDE_ASM("asm/nonmatchings/finn", CreateSoarPlayerEntity);
+
+/* finn .sdata (0x800A5F64..0x800A5FAC): {marker=0xFFFF0000, callback} descriptor
+ * pairs for the FINN sub-state / init state machines, with two "END2" (0x32444E45)
+ * sentinel+pad terminators embedded mid-table. Migrated from the pooled asm sdata
+ * blob (sdata-under-split Phase 4). Address order == declaration order (cc1 2.7.2
+ * emits initialized .sdata in decl order). D_800A5F8C/D_800A5F90 also carry
+ * friendly names (forward-declared above) used by matched code earlier in the
+ * file. Callbacks with non-Entity* signatures are cast to EntityCallback. */
+extern void FinnSubState_AnimateAndQueueIdle();
+extern void FinnSubState_FaceRightAndAnimate();
+extern void FinnDeathExplosion();
+extern void PlatformState_SetBounceAndHideSprite();
+u32 D_800A5F64 asm("D_800A5F64") = 0xFFFF0000;
+EntityCallback D_800A5F68 asm("D_800A5F68") = (EntityCallback)FinnSubState_SetIdleSpriteAndPause;
+u32 D_800A5F6C asm("D_800A5F6C") = 0xFFFF0000;
+EntityCallback D_800A5F70 asm("D_800A5F70") = (EntityCallback)FinnSubState_AnimateAndQueueIdle;
+u32 D_800A5F74 asm("D_800A5F74") = 0xFFFF0000;
+EntityCallback D_800A5F78 asm("D_800A5F78") = (EntityCallback)FinnSubState_FaceRightAndAnimate;
+u32 D_800A5F7C[2] asm("D_800A5F7C") = {0x32444E45, 0x00000000};
+u32 D_800A5F84 asm("D_800A5F84") = 0xFFFF0000;
+EntityCallback D_800A5F88 asm("D_800A5F88") = (EntityCallback)FinnStateInit_SetSpriteByAngle;
+u32 FINN_DEATH_EXPLOSION_STATE_MARKER asm("D_800A5F8C") = 0xFFFF0000;
+EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90") = (EntityCallback)FinnDeathExplosion;
+u32 D_800A5F94 asm("D_800A5F94") = 0xFFFF0000;
+EntityCallback D_800A5F98 asm("D_800A5F98") = (EntityCallback)FinnStateInit_SetTimerAndTick;
+u32 D_800A5F9C[2] asm("D_800A5F9C") = {0x32444E45, 0x00000000};
+u32 D_800A5FA4 asm("D_800A5FA4") = 0xFFFF0000;
+EntityCallback D_800A5FA8 asm("D_800A5FA8") = (EntityCallback)PlatformState_SetBounceAndHideSprite;
 

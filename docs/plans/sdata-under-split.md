@@ -7,8 +7,12 @@ tags: [plans, splat, sdata, data, gp-rel, linker, migration]
 # Sdata / Data Under-Split Plan
 
 **Created:** July 4, 2026
-**Status:** Draft / not started
+**Status:** Phase 0 + Phase 1 complete (byte-matching). Phase 4 sweep done for the
+large single-owner sdata pieces (blb, pickups, player, finn, vehicle, enemies,
+bosses, playst — all byte-matching). `.data` blob + `.bss`/`.sbss` and Phase 3
+(shared `D_800A595C`) pending — see Progress log.
 **Related:** `docs/architecture/compilation-units.md` §5 (split-correctness audit),
+`docs/analysis/sdata-ownership.md` (the committed Phase 0 ownership table),
 `docs/plans/rodata-sdata-migration.md` (the rodata sibling — SOLVED),
 memories `gp-rel-small-global-d800a595c`, `rodata-migration-mechanism`.
 
@@ -164,6 +168,47 @@ addressed (not gp-relative), so its offset constraint is looser — closer to th
 rodata case. `.bss`/`.sbss` last (splat notes bss is trickier — often discarded
 from the final binary).
 
+### `.data` blob — pilot done, but materially harder than `.sdata`
+The `.data` blob (`data('80FEC')`, 0x800907EC..0x800A5953) is NOT a
+straightforward extension of the sdata sweep. Ownership analysis
+(`python3 tools/map_sdata_ownership.py data`) reports **365 symbols: 269
+single-owner, 18 shared, 78 unreferenced**, and — critically — they are heavily
+**interleaved by TU** (e.g. blb tables, then an `effects` symbol at 0x8009B144,
+then more blb) and mixed in size (2-byte shorts sitting next to KB-scale tables).
+New failure modes vs sdata:
+- **`-G8` moves tiny initialized globals to `.sdata`.** A ≤8-byte `.data` symbol
+  (e.g. the 2-byte `D_8009B14C`) defined as a plain C global lands in `.sdata`,
+  shifting its address. Keep such symbols large (arrays >8 bytes) or leave them
+  in asm.
+- **All-zero `.data` symbols sink to `.bss`/COMMON.** The 42KB `D_800907EC` and
+  480B `D_8009AE58` are zero-fills; an uninitialized (or even `= {0}`) C def can
+  land in bss and shift everything. Leave zero-fills in asm.
+- **78 unreferenced symbols** can't be attributed to a TU (referenced only via
+  pointers inside other data) — keep them in shared asm pieces.
+- **Interleaving** means a single-owner contiguous run rarely spans a whole TU;
+  carve per-run, not per-TU.
+
+**`.data` recipe (validated by the pilot below):**
+1. `local dotdata(start, name) = subsegment(start, '.data', name);` (added).
+2. Carve one contiguous single-owner run out of the pooled blob: keep
+   `data('80FEC', 'data')` (now ends at the run start), insert
+   `dotdata('<runoff>', '<tu>')`, then `data('<nextoff>', 'data')` for the
+   remainder. splat auto-splits the blob at these offsets; the dot-prefix `.data`
+   subsegment links `build/src/<tu>.o(.data)` at the run position and is removed
+   from the early auto-link block (same "option b" as sdata).
+3. Define the symbol(s) in the TU's `.c` with a type **compatible with existing
+   consumers** and **>8 bytes** so `-G8` keeps them in `.data`. Non-zero content
+   only.
+4. `make config && make extract && make check` — gate on the gold SHA1.
+
+**Pilot (byte-matching `5a14b65c`):** `D_8009C11C` (owner bosses, 88-byte radius-63
+cos/sin `(x,y)` table read by `MaskAngleCosineEntry`). bosses.c already had
+`extern u8 D_8009C11C[]` used with u8 negative-index arithmetic, so it was defined
+as `u8 D_8009C11C[88] = { <little-endian bytes> }` at EOF (u8[] to keep the
+consumer's addressing/stride identical; s16[] would change the pointer stride and
+break the match). Carved via `dotdata('8C91C','bosses')` between the clayball
+(`D_8009C0F4`) and player (`D_8009C174`) neighbours. First-try match.
+
 ## Risks
 
 - **gp-offset preservation (the big one).** Sdata is gp-relative; any reordering
@@ -191,10 +236,154 @@ sdata/data split is config-only (jsonnet), no new tooling.
 
 ## Success criteria
 
-- [ ] Phase 0 ownership table committed; two-place-linking strategy decided on a
-      throwaway pilot.
-- [ ] `.sdata`/`.data` blobs split into per-TU named asm subsegments, `make check`
-      green (Phase 1).
-- [ ] One TU fully migrated to `.sdata` with gp-offsets preserved (Phase 2).
+- [x] Phase 0 ownership table committed (`docs/analysis/sdata-ownership.md`);
+      two-place-linking strategy decided on a throwaway pilot.
+- [x] `.sdata` blob split into per-TU named asm subsegments, `make check`
+      green (Phase 1). *(`.data` blob split deferred to Phase 4.)*
+- [x] One TU fully migrated to `.sdata` with gp-offsets preserved (Phase 2 —
+      `blb`, byte-matching; see Progress log).
 - [ ] `FindLayerSlot` (+ initialized-sdata siblings) un-shelved (Phase 3).
 - [ ] Tentative-def gp_rel tricks removed from migrated TUs (natural definitions).
+
+## Progress log
+
+### Phase 0 — DONE (evidence + make-or-break pilot)
+
+- **Ownership table:** `docs/analysis/sdata-ownership.md` (regenerate with
+  `python3 tools/map_sdata_ownership.py sdata`). 454 sdata symbols: **428
+  single-owner, 20 shared (>1 TU), 6 unreferenced**. Blob symbol order == VRAM
+  order == link order (verbatim dump); TU boundaries are contiguous runs.
+- **Two-place-linking risk RESOLVED — option (b) works.** With
+  `ld_legacy_generation`, a **dot-prefix** `.sdata` subsegment declared at its
+  late YAML offset links ONLY at the correct late position (the gp region near
+  `main_SDATA_END`), and is automatically removed from the early
+  `main_SDATA_START` auto-link block. Pilot ld showed `build/src/level.o(.sdata)`
+  appearing once, between the two asm blob pieces. **No need to drop `.sdata`
+  from `auto_link_sections`.**
+- **CRITICAL addressing-mode constraint (refines Problem §2).** A symbol can only
+  be provided by a C `.sdata` definition WITHOUT breaking the match if **gold
+  accesses it via gp_rel**. Absolute-accessed symbols must STAY in asm. The pilot
+  proved this: `level`'s `D_800A6058` is accessed **absolute** (`lui/%hi` +
+  `addiu/%lo`, 8 bytes) in gold; defining it as a small C global forced gp_rel
+  (4 bytes), shrank `level.o(.text)` by 4 and cascaded the SHA. cc1 emitted the
+  correct sdata bytes — the break was purely the caller's addressing width.
+- **Tentative-def pattern already handles INITIALIZED gp_rel sdata** (corrects
+  Problem §2's "fails outright for initialized small data"). `enemies.c` declares
+  e.g. `EntityCallback X asm("D_800A5A54");` (no initializer, no `extern`) and
+  matches today, even though the blob initializes `D_800A5A54 = .word
+  StartAnimSequence4A`. The 4-byte tentative **common** merges with the blob's
+  4-byte strong def (strong wins, no storage added, no shift) while telling cc1
+  the symbol is small → gp_rel. The real blocker for `D_800A595C`/`FindLayerSlot`
+  is that it must be used as a **20-entry array base**; declaring it at the full
+  array size makes it large → absolute + segment shift. Declaring it as a 4-byte
+  **pointer** (`LayerRenderSlot *g_LayerRenderSlots asm("D_800A595C");`, matching
+  the single `.word` the blob stores) should clear blocker 1 via the same
+  merge-clean pattern — leaving only blocker 2 (the `beq`/`bne` branch-sense),
+  which is ordinary permuter work, NOT a linking/segmentation problem.
+
+### Phase 1 — DONE (byte-neutral named split)
+
+- `SLES_010.90.jsonnet`: added a `sdata(start, name)` helper and replaced the
+  single `data('96154','sdata')` line with an ordered per-TU split (10 named
+  pieces: blb, pickups, gamecd, movie, enemies, bosses, player, playst, finn,
+  vehicle) plus 3 unnamed pieces (the shared engine-globals head `0x800A5954`,
+  the `0x800A5D10` 16-byte gap, and the interleaved `0x800A603C` tail). All still
+  asm (`build/asm/data/*.sdata.o(.sdata)`), same bytes.
+- `make config && make extract && make check` → **✓ BUILD MATCHES**
+  (`5a14b65cb44813bfed1ee53c6a3f4456bc230f97`). Verified the named pieces link in
+  order at the late `main_SDATA_END` position in the generated ld.
+
+### Phase 2 — DONE (`blb` migrated to C `.sdata`, byte-matching)
+
+- Chose `blb` (smallest single-owner piece, 0x800A5980..0x800A59A8, 40 B). Its
+  only consumer is the **unmatched-asm** `EntityDestructCallback` — so the
+  addressing-mode constraint does not apply (verbatim asm references the symbols
+  by name); only byte-identity + exact gp-offsets are required.
+- `src/blb.c`: added `extern` decls for the three `PlatformRide*` callbacks and
+  eight initialized globals (keeping the exact `asm("D_800A59xx")` names so the
+  asm consumer still resolves): the 8-byte config header `D_800A5980`, three
+  `{marker=0xFFFF0000, callback}` word pairs, and an `"END2"`+pad sentinel
+  (`D_800A59A0[2]`). The trailing pad word MUST be an explicit initialized array
+  element (`{0x32444E45, 0}`) — a standalone `= 0` global would sink to `.sbss`
+  and shift `pickups` by 4.
+- `SLES_010.90.jsonnet`: added `dotsdata(start,name)` helper and flipped
+  `sdata('96180','blb')` → `dotsdata('96180','blb')` (splat type `.sdata` =
+  linked from `build/src/blb.o(.sdata)`). After `make extract`,
+  `asm/data/blb.sdata.s` is gone and the ld links `build/src/blb.o(.sdata)` at the
+  same late position — auto-removed from the early auto-link block (option b,
+  confirmed again).
+- **`make check` → ✓ BUILD MATCHES on the first try.** `objdump -t build/src/blb.o`
+  shows the eight symbols at `.sdata` offsets 0x00/0x08/0x0C/0x10/0x14/0x18/0x1C/
+  0x20, linking at 0x800A5980..0x800A59A0 exactly. **cc1 2.7.2 emits initialized
+  `.sdata` in declaration order (no reorder)** — declare in address order and
+  sizes/offsets line up. This is the reusable Phase 4 recipe.
+
+### Phase 3 — NEXT (not started)
+
+- Phase 4 has begun: **`pickups` migrated** as the second TU (0x800A59A8..
+  0x800A59E8, byte-matching). It validated the **friendly-name + asm-name
+  coexistence** pattern the sweep needs: symbols that matched C code references by
+  a friendly name (e.g. `DECOR_TRIGGERED_STATE_MARKER`) get `<type> <friendly>
+  asm("D_800A59D8") = <init>;` — the `asm()` ties the output symbol to the D_
+  address (so unmatched asm consumers resolve) while the C name stays usable.
+  Because the initialized block sits at the END of the file (so all `Decor*`
+  callbacks are in scope, no forward decls needed for them), the friendly names
+  used earlier in the file were converted from tentative-defs to `extern`
+  declarations at their original sites. Callbacks with non-`Entity*` signatures are
+  cast to `EntityCallback`. `make check` green on the first try.
+
+- Phase 3 `D_800A595C` is a **shared** engine global (entinit, gstate, layer,
+  lvlload) sitting mid-block at gp+8 — carving it into a `.c`-provided `.sdata`
+  slot without shifting `g_pGameState` (gp+12) is the delicate part, AND its
+  consumer (`FindLayerSlot`) is **matched C**, so the addressing-mode constraint
+  DOES apply there (unlike blb). Declaring `D_800A595C` as a 4-byte pointer should
+  give gp_rel; blocker 2 (the `beq`/`bne` branch-sense) is permuter work with
+  uncertain payoff. Recommend confirming approach before investing.
+- Phase 4 sweep: the blb recipe generalizes to every single-owner initialized
+  piece — declare each label as an initialized `asm("D_...")` global in ADDRESS
+  order, keep trailing pad words inside an initialized array (never a bare `= 0`),
+  flip `sdata(...)` → `dotsdata(...)`, `make extract && make check`. TUs whose
+  sdata is all-zero (gamecd, movie) are `.sbss`/common — already handled by the
+  existing tentative-def trick, not a `.sdata` migration.
+
+- **Phase 4 sweep completed for the large single-owner sdata pieces** (all
+  byte-matching `5a14b65c…`): `blb`, `pickups`, `player`, `finn`, `vehicle`,
+  `enemies`, `bosses`, `playst`. Remaining sdata asm blobs are the shared head
+  `data('96154')`, the all-zero `gamecd`/`movie` (`.sbss`/common), the 16-byte
+  gap `data('96510')`, and the tail `data('9683C')` — these stay as asm. The
+  `.data` blob `data('80FEC')` (~365 syms, absolute-addressed → looser
+  constraint) and `.bss`/`.sbss` remain for a later pass.
+
+- **Generator tool** `tools/gen_sdata_block.py` (untracked helper) automates the
+  block for a TU: `python3 tools/gen_sdata_block.py asm/data/<tu>.sdata.s
+  src/<tu>.c`. It prints `EXTERN:` lines (callbacks referenced but not defined in
+  the `.c`) then the address-ordered C block — markers → `u32 … = 0xFFFF0000`,
+  END2 sentinels → `u32 X[2] = {0x32444E45, 0x00000000}` (skips the pad word),
+  raw code addresses → `(EntityCallback)0x…`, symbols → `(EntityCallback)Sym`,
+  and (fix) `.asciz` strings → `char X[] = "…"`. `friendly_map` skips comment
+  lines (`*`/`/*`/`//`) and uses `setdefault` so a friendly name is only bound
+  from a *real* decl (never a commented-out example), and it now emits a
+  `// WARNING: gap …` when consecutive addresses aren't contiguous.
+
+- **Two techniques the sweep relies on** (both byte-verified):
+  1. *Raw-address callbacks* — an sdata slot holding a code address with no
+     symbol becomes `(EntityCallback)0xADDR`; byte-identical to gold's `.word
+     0xADDR`. `EntityCallback` = `void(*)(Entity*)`; casting any fn to it is safe.
+  2. *Same-TU tentative + strong merge* — a tentative-def `u32 X asm("D_Y");`
+     earlier in a TU and an initialized strong-def `u32 X asm("D_Y") = v;` in the
+     appended block, using the **same C name**, merge to one `.sdata` entry (decl
+     order, no error). So scattered friendly tentative-defs can be **left in
+     place** (as in `playst`) instead of converted to `extern` — provided the
+     block reuses the exact same C name for that address. A *different* C name on
+     the same `asm()` output symbol → two conflicting output-symbol definitions →
+     assembler error.
+
+- **`playst` gotcha (string in the sdata range):** g_FntFmt_PercentS @0x800A5EC8
+  is a 4-byte `"%s\0\0"` string sitting *between* two descriptor slots. The
+  generator's original `.word`-only parser silently dropped it, leaving a 4-byte
+  hole → every later slot shifted and the symbol went undefined. Fixed the
+  generator to parse `.asciz`; the manual entry is
+  `char g_FntFmt_PercentS[4] asm("g_FntFmt_PercentS") = "%s";`. Lesson for the
+  `.data` blob: always verify address contiguity of the emitted block (the
+  generator's gap-warning now does this) — string/float data can hide between
+  `.word` rows.

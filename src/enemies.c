@@ -107,8 +107,9 @@ extern void *ENTITY_FREE_ONLY_VTABLE asm("D_800111C8");
 extern void *ALT_PATH_FOLLOWING_ENTITY_VTABLE asm("D_800111E8");
 extern void *ENEMY_ENTITY_VTABLE asm("D_80011228");
 extern void *ENEMY_FREE_ONLY_ENTITY_VTABLE asm("D_80011248");
-u32 ENEMY_ANIMATED_CALLBACK_MARKER asm("D_800A5AD0");
-EntityCallback ENEMY_ANIMATED_CALLBACK_FN asm("D_800A5AD4");
+/* gp_rel sdata: strong initialized defs live in the end-of-file block (Phase 4). */
+extern u32 ENEMY_ANIMATED_CALLBACK_MARKER asm("D_800A5AD0");
+extern EntityCallback ENEMY_ANIMATED_CALLBACK_FN asm("D_800A5AD4");
 extern void RemoveEntityFromAllLists(GameState *gs, s32 idx);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
@@ -154,15 +155,16 @@ void EntityConditionalActivateTick();
 void PlatformTimerTickCallback();
 s32 EntityNullEventHandler(void);
 
-/* gp_rel tentative defs (resolved via the .sdata blob's strong defs). */
-u32 SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER asm("D_800A5A68");
-EntityCallback SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK asm("D_800A5A6C");
-u32 PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER asm("D_800A5AE8");
-EntityCallback PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK asm("D_800A5AEC");
-u32 HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B08");
-EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B0C");
-u32 HAZARD_READY_STATE_MARKER asm("D_800A5B10");
-EntityCallback HAZARD_READY_STATE_CALLBACK asm("D_800A5B14");
+/* gp_rel sdata tentative defs -> now forward declarations; strong initialized
+ * defs live in the address-ordered block at the end of this file (Phase 4). */
+extern u32 SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER asm("D_800A5A68");
+extern EntityCallback SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK asm("D_800A5A6C");
+extern u32 PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER asm("D_800A5AE8");
+extern EntityCallback PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK asm("D_800A5AEC");
+extern u32 HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B08");
+extern EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B0C");
+extern u32 HAZARD_READY_STATE_MARKER asm("D_800A5B10");
+extern EntityCallback HAZARD_READY_STATE_CALLBACK asm("D_800A5B14");
 
 INCLUDE_ASM("asm/nonmatchings/enemies", LineSegmentIntersectsRect);
 
@@ -2724,4 +2726,84 @@ void SetEntityAnimationState(BackgroundSparkleEntity *sparkle) {
 void StartBackgroundSparkleFade(BackgroundSparkleEntity *e) {
     e->revealTimer = 0x14;
 }
+
+/* enemies .sdata (0x800A5A50..0x800A5B60): {marker=0xFFFF0000, callback}
+ * descriptor pairs for the enemy / collectible / platform / hazard / teleporter
+ * state machines, with three "END2" (0x32444E45) sentinel+pad terminators
+ * embedded mid-table. Migrated from the pooled asm sdata blob (sdata-under-split
+ * Phase 4). Address order == declaration order (cc1 2.7.2 emits initialized
+ * .sdata in decl order). Five pairs carry friendly names (forward-declared
+ * above) used by matched code earlier in the file; the rest use D_ names.
+ * Callbacks defined elsewhere are extern-declared; all are cast to EntityCallback. */
+extern void EnemyStartMovingWithSound();
+extern void EntityShowAndActivate();
+extern void PlatformShowAndActivate();
+extern void HazardActiveState();
+extern void TeleporterActivate();
+extern void TeleporterExitState();
+u32 D_800A5A50 asm("D_800A5A50") = 0xFFFF0000;
+EntityCallback D_800A5A54 asm("D_800A5A54") = (EntityCallback)StartAnimSequence4A;
+u32 D_800A5A58 asm("D_800A5A58") = 0xFFFF0000;
+EntityCallback D_800A5A5C asm("D_800A5A5C") = (EntityCallback)StartAnimSequence4B;
+u32 D_800A5A60 asm("D_800A5A60") = 0xFFFF0000;
+EntityCallback D_800A5A64 asm("D_800A5A64") = (EntityCallback)StartAnimSequence4C;
+u32 SOUND_EMITTER_STUN_EXPIRED_STATE_MARKER asm("D_800A5A68") = 0xFFFF0000;
+EntityCallback SOUND_EMITTER_STUN_EXPIRED_STATE_CALLBACK asm("D_800A5A6C") = (EntityCallback)EnemyStartMovingWithSound;
+u32 D_800A5A70 asm("D_800A5A70") = 0xFFFF0000;
+EntityCallback D_800A5A74 asm("D_800A5A74") = (EntityCallback)EnemyEnterSoundEmitterState;
+u32 D_800A5A78 asm("D_800A5A78") = 0xFFFF0000;
+EntityCallback D_800A5A7C asm("D_800A5A7C") = (EntityCallback)LaserMonkeyIdleState;
+u32 D_800A5A80 asm("D_800A5A80") = 0xFFFF0000;
+EntityCallback D_800A5A84 asm("D_800A5A84") = (EntityCallback)LaserMonkeyWalkState;
+u32 D_800A5A88 asm("D_800A5A88") = 0xFFFF0000;
+EntityCallback D_800A5A8C asm("D_800A5A8C") = (EntityCallback)EnemyPatrolState;
+u32 D_800A5A90 asm("D_800A5A90") = 0xFFFF0000;
+EntityCallback D_800A5A94 asm("D_800A5A94") = (EntityCallback)EnemyDeathState;
+u32 D_800A5A98 asm("D_800A5A98") = 0xFFFF0000;
+EntityCallback D_800A5A9C asm("D_800A5A9C") = (EntityCallback)StartAnimSequence3A;
+u32 D_800A5AA0 asm("D_800A5AA0") = 0xFFFF0000;
+EntityCallback D_800A5AA4 asm("D_800A5AA4") = (EntityCallback)StartAnimSequence3B;
+u32 D_800A5AA8 asm("D_800A5AA8") = 0xFFFF0000;
+EntityCallback D_800A5AAC asm("D_800A5AAC") = (EntityCallback)StartAnimSequence9Frames;
+u32 D_800A5AB0 asm("D_800A5AB0") = 0xFFFF0000;
+EntityCallback D_800A5AB4 asm("D_800A5AB4") = (EntityCallback)EnemySetLoopingAnimation;
+u32 D_800A5AB8 asm("D_800A5AB8") = 0xFFFF0000;
+EntityCallback D_800A5ABC asm("D_800A5ABC") = (EntityCallback)CollectibleIdleState;
+u32 D_800A5AC0 asm("D_800A5AC0") = 0xFFFF0000;
+EntityCallback D_800A5AC4 asm("D_800A5AC4") = (EntityCallback)CollectibleWalkState;
+u32 D_800A5AC8 asm("D_800A5AC8") = 0xFFFF0000;
+EntityCallback D_800A5ACC asm("D_800A5ACC") = (EntityCallback)InitEntityState_Idle;
+u32 ENEMY_ANIMATED_CALLBACK_MARKER asm("D_800A5AD0") = 0xFFFF0000;
+EntityCallback ENEMY_ANIMATED_CALLBACK_FN asm("D_800A5AD4") = (EntityCallback)EntitySetFacingRight;
+u32 D_800A5AD8[2] asm("D_800A5AD8") = {0x32444E45, 0x00000000};
+u32 D_800A5AE0 asm("D_800A5AE0") = 0xFFFF0000;
+EntityCallback D_800A5AE4 asm("D_800A5AE4") = (EntityCallback)EntityHideAndDisable;
+u32 PLATFORM_ACTIVATE_BY_FRAME_STATE_MARKER asm("D_800A5AE8") = 0xFFFF0000;
+EntityCallback PLATFORM_ACTIVATE_BY_FRAME_STATE_CALLBACK asm("D_800A5AEC") = (EntityCallback)EntityShowAndActivate;
+u32 D_800A5AF0 asm("D_800A5AF0") = 0xFFFF0000;
+EntityCallback D_800A5AF4 asm("D_800A5AF4") = (EntityCallback)PlatformShowAndActivate;
+u32 D_800A5AF8 asm("D_800A5AF8") = 0xFFFF0000;
+EntityCallback D_800A5AFC asm("D_800A5AFC") = (EntityCallback)PlatformHideAndDisable;
+u32 D_800A5B00 asm("D_800A5B00") = 0xFFFF0000;
+EntityCallback D_800A5B04 asm("D_800A5B04") = (EntityCallback)BounceClay_IdleState;
+u32 HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B08") = 0xFFFF0000;
+EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B0C") = (EntityCallback)HazardActiveState;
+u32 HAZARD_READY_STATE_MARKER asm("D_800A5B10") = 0xFFFF0000;
+EntityCallback HAZARD_READY_STATE_CALLBACK asm("D_800A5B14") = (EntityCallback)BounceClay_DestroyingState;
+u32 D_800A5B18 asm("D_800A5B18") = 0xFFFF0000;
+EntityCallback D_800A5B1C asm("D_800A5B1C") = (EntityCallback)EntityHideWithTimer;
+u32 D_800A5B20 asm("D_800A5B20") = 0xFFFF0000;
+EntityCallback D_800A5B24 asm("D_800A5B24") = (EntityCallback)TeleporterActivate;
+u32 D_800A5B28 asm("D_800A5B28") = 0xFFFF0000;
+EntityCallback D_800A5B2C asm("D_800A5B2C") = (EntityCallback)TeleporterExitState;
+u32 D_800A5B30[2] asm("D_800A5B30") = {0x32444E45, 0x00000000};
+u32 D_800A5B38 asm("D_800A5B38") = 0xFFFF0000;
+EntityCallback D_800A5B3C asm("D_800A5B3C") = (EntityCallback)StartAnimSequence13Frames;
+u32 D_800A5B40 asm("D_800A5B40") = 0xFFFF0000;
+EntityCallback D_800A5B44 asm("D_800A5B44") = (EntityCallback)StartAnimSequence7Frames;
+u32 D_800A5B48 asm("D_800A5B48") = 0xFFFF0000;
+EntityCallback D_800A5B4C asm("D_800A5B4C") = (EntityCallback)EnemySetWalkSprite;
+u32 D_800A5B50 asm("D_800A5B50") = 0xFFFF0000;
+EntityCallback D_800A5B54 asm("D_800A5B54") = (EntityCallback)EnemySetIdleSprite;
+u32 D_800A5B58[2] asm("D_800A5B58") = {0x32444E45, 0x00000000};
 

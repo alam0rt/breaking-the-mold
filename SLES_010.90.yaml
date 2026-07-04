@@ -303,7 +303,60 @@
     - 528364
     - "data"
   -
+    - 575772
+    - ".data"
+    - "bosses"
+  -
+    - 575860
+    - "data"
+  -
     - 614740
+    - "sdata"
+  -
+    - 614784
+    - ".sdata"
+    - "blb"
+  -
+    - 614824
+    - ".sdata"
+    - "pickups"
+  -
+    - 614888
+    - "sdata"
+    - "gamecd"
+  -
+    - 614928
+    - "sdata"
+    - "movie"
+  -
+    - 614992
+    - ".sdata"
+    - "enemies"
+  -
+    - 615264
+    - ".sdata"
+    - "bosses"
+  -
+    - 615696
+    - "sdata"
+  -
+    - 615712
+    - ".sdata"
+    - "player"
+  -
+    - 615736
+    - ".sdata"
+    - "playst"
+  -
+    - 616292
+    - ".sdata"
+    - "finn"
+  -
+    - 616364
+    - ".sdata"
+    - "vehicle"
+  -
+    - 616508
     - "sdata"
   - "start": 616736
     "type": "sbss"

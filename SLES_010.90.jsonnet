@@ -12,7 +12,10 @@ local subsegment(start, kind, name=null) =
 local asm(start, name) = subsegment(start, 'asm', name);
 local c(start, name) = subsegment(start, 'c', name);
 local rodata(start, name) = subsegment(start, 'rodata', name);
+local sdata(start, name) = subsegment(start, 'sdata', name);
+local dotsdata(start, name) = subsegment(start, '.sdata', name);
 local data(start, kind) = subsegment(start, kind);
+local dotdata(start, name) = subsegment(start, '.data', name);
 local bss(start, kind, vram) = {
   start: Hex(start),
   type: kind,
@@ -180,11 +183,35 @@ local bss(start, kind, vram) = {
         // .data section: 0x80090FEC - 0x800A5953
         // =====================================================================
         data('80FEC', 'data'),
+        // Phase 4 .data pilot: carve the single 88-byte cos/sin table
+        // D_8009C11C (owner bosses, absolute-addressed) out of the pooled .data
+        // blob into build/src/bosses.o(.data). Neighbours stay asm.
+        dotdata('8C91C', 'bosses'),    // 0x8009C11C -> MIGRATED to build/src/bosses.o(.data) (Phase 4)
+        data('8C974', 'data'),         // 0x8009C174 remainder of .data (asm)
 
         // =====================================================================
         // .sdata section: 0x800A5954 - 0x800A611F (GP-relative small data)
+        // Phase 1 (sdata-under-split): the pooled blob is split into per-TU
+        // NAMED asm subsegments at the single-owner boundaries found by
+        // tools/map_sdata_ownership.py. Still asm, still byte-neutral — this is
+        // a pure relabel that gives every future data migration a clean per-TU
+        // target. Boundaries verified contiguous & symbol-aligned; the leading
+        // engine-globals block and the interleaved ending..main tail stay in
+        // unnamed shared pieces (cannot be attributed to a single TU).
         // =====================================================================
-        data('96154', 'sdata'),
+        data('96154', 'sdata'),        // 0x800A5954 shared engine globals (g_pBlbHeapBase, g_pGameState, D_800A595C, ...)
+        dotsdata('96180', 'blb'),      // 0x800A5980 -> MIGRATED to build/src/blb.o(.sdata) (Phase 2)
+        dotsdata('961A8', 'pickups'),  // 0x800A59A8 -> MIGRATED to build/src/pickups.o(.sdata) (Phase 4)
+        sdata('961E8', 'gamecd'),      // 0x800A59E8
+        sdata('96210', 'movie'),       // 0x800A5A10
+        dotsdata('96250', 'enemies'),  // 0x800A5A50 -> MIGRATED to build/src/enemies.o(.sdata) (Phase 4)
+        dotsdata('96360', 'bosses'),   // 0x800A5B60 -> MIGRATED to build/src/bosses.o(.sdata) (Phase 4)
+        data('96510', 'sdata'),        // 0x800A5D10 unowned gap (16B)
+        dotsdata('96520', 'player'),   // 0x800A5D20 -> MIGRATED to build/src/player.o(.sdata) (Phase 4)
+        dotsdata('96538', 'playst'),   // 0x800A5D38 -> MIGRATED to build/src/playst.o(.sdata) (Phase 4)
+        dotsdata('96764', 'finn'),     // 0x800A5F64 -> MIGRATED to build/src/finn.o(.sdata) (Phase 4)
+        dotsdata('967AC', 'vehicle'),  // 0x800A5FAC -> MIGRATED to build/src/vehicle.o(.sdata) (Phase 4)
+        data('9683C', 'sdata'),        // 0x800A603C interleaved ending/menu/passwd/level/blbacc/sound/lvlload/main tail
 
         // =====================================================================
         // .sbss section: 0x800A6120 - 0x800AD953 (GP-relative uninitialized data)

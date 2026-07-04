@@ -62,29 +62,30 @@ extern Entity *CreateFadeOverlayEntity(Entity *e);
 extern void AddToZOrderList(GameState *gs, Entity *entity);
 extern PlayerState *PLAYER_STATE_DATA asm("D_800A597C");
 
-/* gp_rel tentative defs (sdata blob owns the strong defs). */
-u32   GLIDER_WAKE_STATE_MARKER asm("D_800A5B68");
-EntityCallback GLIDER_WAKE_STATE_CALLBACK asm("D_800A5B6C");
-u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98");
-EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C");
-u32   HAZARD_STOP_SOUND_STATE_MARKER asm("D_800A5BC0");
-EntityCallback HAZARD_STOP_SOUND_STATE_CALLBACK asm("D_800A5BC4");
-u32   HAZARD_IDLE_WITH_SOUND_STATE_MARKER asm("D_800A5BC8");
-EntityCallback HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK asm("D_800A5BCC");
-u32   GLENN_YNTIS_ANIM_B_STATE_MARKER asm("D_800A5BD0");
-EntityCallback GLENN_YNTIS_ANIM_B_STATE_CALLBACK asm("D_800A5BD4");
-u32   GLENN_YNTIS_ANIM_IDLE_STATE_MARKER asm("D_800A5BD8");
-EntityCallback GLENN_YNTIS_ANIM_IDLE_STATE_CALLBACK asm("D_800A5BDC");
-u32   GLENN_YNTIS_ANIM_C_STATE_MARKER asm("D_800A5BE0");
-EntityCallback GLENN_YNTIS_ANIM_C_STATE_CALLBACK asm("D_800A5BE4");
-u32   SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER asm("D_800A5BF0");
-EntityCallback SHRINEY_GUARD_IDLE_TIMEOUT_STATE_CALLBACK asm("D_800A5BF4");
-u32   SHRINEY_GUARD_REPEAT_ATTACK_STATE_MARKER asm("D_800A5C10");
-EntityCallback SHRINEY_GUARD_REPEAT_ATTACK_STATE_CALLBACK asm("D_800A5C14");
-u32   SHRINEY_GUARD_FINISH_ATTACK_STATE_MARKER asm("D_800A5C18");
-EntityCallback SHRINEY_GUARD_FINISH_ATTACK_STATE_CALLBACK asm("D_800A5C1C");
-u32   JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_MARKER asm("D_800A5C20");
-EntityCallback JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_CALLBACK asm("D_800A5C24");
+/* gp_rel sdata: strong initialized defs live in the address-ordered block at the
+ * end of this file (sdata-under-split Phase 4). These are forward declarations. */
+extern u32   GLIDER_WAKE_STATE_MARKER asm("D_800A5B68");
+extern EntityCallback GLIDER_WAKE_STATE_CALLBACK asm("D_800A5B6C");
+extern u32   HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98");
+extern EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C");
+extern u32   HAZARD_STOP_SOUND_STATE_MARKER asm("D_800A5BC0");
+extern EntityCallback HAZARD_STOP_SOUND_STATE_CALLBACK asm("D_800A5BC4");
+extern u32   HAZARD_IDLE_WITH_SOUND_STATE_MARKER asm("D_800A5BC8");
+extern EntityCallback HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK asm("D_800A5BCC");
+extern u32   GLENN_YNTIS_ANIM_B_STATE_MARKER asm("D_800A5BD0");
+extern EntityCallback GLENN_YNTIS_ANIM_B_STATE_CALLBACK asm("D_800A5BD4");
+extern u32   GLENN_YNTIS_ANIM_IDLE_STATE_MARKER asm("D_800A5BD8");
+extern EntityCallback GLENN_YNTIS_ANIM_IDLE_STATE_CALLBACK asm("D_800A5BDC");
+extern u32   GLENN_YNTIS_ANIM_C_STATE_MARKER asm("D_800A5BE0");
+extern EntityCallback GLENN_YNTIS_ANIM_C_STATE_CALLBACK asm("D_800A5BE4");
+extern u32   SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER asm("D_800A5BF0");
+extern EntityCallback SHRINEY_GUARD_IDLE_TIMEOUT_STATE_CALLBACK asm("D_800A5BF4");
+extern u32   SHRINEY_GUARD_REPEAT_ATTACK_STATE_MARKER asm("D_800A5C10");
+extern EntityCallback SHRINEY_GUARD_REPEAT_ATTACK_STATE_CALLBACK asm("D_800A5C14");
+extern u32   SHRINEY_GUARD_FINISH_ATTACK_STATE_MARKER asm("D_800A5C18");
+extern EntityCallback SHRINEY_GUARD_FINISH_ATTACK_STATE_CALLBACK asm("D_800A5C1C");
+extern u32   JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_MARKER asm("D_800A5C20");
+extern EntityCallback JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_CALLBACK asm("D_800A5C24");
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitKloggBossEntity);
 
@@ -1684,3 +1685,162 @@ INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F190);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MaskAngleCosineEntry);
 
+/* bosses .sdata (0x800A5B60..0x800A5D10): {marker=0xFFFF0000, callback} descriptor
+ * pairs for the glider / hazard / GlennYntis / ShrineyGuard / JoeHeadJoe / projectile
+ * / clayball boss state machines, with three "END2" (0x32444E45) sentinel+pad
+ * terminators embedded mid-table. Migrated from the pooled asm sdata blob
+ * (sdata-under-split Phase 4). Address order == declaration order (cc1 2.7.2 emits
+ * initialized .sdata in decl order). Eleven pairs carry friendly names
+ * (forward-declared near the top of the file) used by matched code; the rest use
+ * D_ names. Callbacks defined elsewhere are extern-declared; all cast to EntityCallback. */
+extern void GliderStateInit_ResetAtSpawn();
+extern void EntityDestroyWithEffects();
+extern void BossState_DefeatedWithParticles();
+extern void BossState_SpawnDeathParticle();
+extern void GlennYntisDefeatedState();
+extern void ShrineyGuardDeathState();
+extern void ShrineyGuardStartLoopingAttackState();
+extern void JoeHeadJoeSelectAttackPattern();
+extern void JoeHeadJoeDeathAnimState();
+extern void EnemyDefeatState();
+extern void EnemyStateInit_SetSpriteAndHandler();
+extern void EnemyState_TurnAroundWithToken();
+extern void ProjectileEnterActiveState();
+extern void ProjectileState_HomingActive();
+extern void ProjectileState_HomingActiveVariant2();
+extern void ProjectileState_HomingActiveVariant3();
+extern void ProjectileState_HomingMissileTrack();
+extern void JoeHeadJoeBallRegularInitState();
+extern void JoeHeadJoeState_HideAndNotifyGameState();
+extern void JoeHeadJoeState_EnterCollisionState();
+extern void JoeHeadJoeBallStopSound();
+extern void JoeHeadJoeState_CollisionTick();
+extern void JoeHeadJoeState_IdleAfterCollision();
+extern void ClayballIndicatorState_Wait();
+extern void ClayballState_DestroyWithDebris();
+extern void ShrineyGuardDeactivateWithSound();
+extern void ClayballState_HideIndicatorAndWait();
+u32 D_800A5B60 asm("D_800A5B60") = 0xFFFF0000;
+EntityCallback D_800A5B64 asm("D_800A5B64") = (EntityCallback)GliderStateInit_WakeUp;
+u32 GLIDER_WAKE_STATE_MARKER asm("D_800A5B68") = 0xFFFF0000;
+EntityCallback GLIDER_WAKE_STATE_CALLBACK asm("D_800A5B6C") = (EntityCallback)GliderStateInit_ResetAtSpawn;
+u32 D_800A5B70 asm("D_800A5B70") = 0xFFFF0000;
+EntityCallback D_800A5B74 asm("D_800A5B74") = (EntityCallback)EntityDestroyWithEffects;
+u32 D_800A5B78 asm("D_800A5B78") = 0xFFFF0000;
+EntityCallback D_800A5B7C asm("D_800A5B7C") = (EntityCallback)BossState_DefeatedWithParticles;
+u32 D_800A5B80 asm("D_800A5B80") = 0xFFFF0000;
+EntityCallback D_800A5B84 asm("D_800A5B84") = (EntityCallback)BossState_SpawnDeathParticle;
+u32 D_800A5B88 asm("D_800A5B88") = 0xFFFF0000;
+EntityCallback D_800A5B8C asm("D_800A5B8C") = (EntityCallback)EntityStopSound;
+u32 D_800A5B90 asm("D_800A5B90") = 0xFFFF0000;
+EntityCallback D_800A5B94 asm("D_800A5B94") = (EntityCallback)HazardActivateWithSound;
+u32 HAZARD_TIMER_EXPIRED_STATE_MARKER asm("D_800A5B98") = 0xFFFF0000;
+EntityCallback HAZARD_TIMER_EXPIRED_STATE_CALLBACK asm("D_800A5B9C") = (EntityCallback)HazardSelectRandomBehavior;
+u32 D_800A5BA0 asm("D_800A5BA0") = 0xFFFF0000;
+EntityCallback D_800A5BA4 asm("D_800A5BA4") = (EntityCallback)CollectibleAnimState;
+u32 D_800A5BA8 asm("D_800A5BA8") = 0xFFFF0000;
+EntityCallback D_800A5BAC asm("D_800A5BAC") = (EntityCallback)HazardIdleWithSound;
+u32 D_800A5BB0 asm("D_800A5BB0") = 0xFFFF0000;
+EntityCallback D_800A5BB4 asm("D_800A5BB4") = (EntityCallback)GlennYntisDefeatedState;
+u32 D_800A5BB8 asm("D_800A5BB8") = 0xFFFF0000;
+EntityCallback D_800A5BBC asm("D_800A5BBC") = (EntityCallback)CollectibleActiveState;
+u32 HAZARD_STOP_SOUND_STATE_MARKER asm("D_800A5BC0") = 0xFFFF0000;
+EntityCallback HAZARD_STOP_SOUND_STATE_CALLBACK asm("D_800A5BC4") = (EntityCallback)HazardStopSound;
+u32 HAZARD_IDLE_WITH_SOUND_STATE_MARKER asm("D_800A5BC8") = 0xFFFF0000;
+EntityCallback HAZARD_IDLE_WITH_SOUND_STATE_CALLBACK asm("D_800A5BCC") = (EntityCallback)HazardStopSoundAlt;
+u32 GLENN_YNTIS_ANIM_B_STATE_MARKER asm("D_800A5BD0") = 0xFFFF0000;
+EntityCallback GLENN_YNTIS_ANIM_B_STATE_CALLBACK asm("D_800A5BD4") = (EntityCallback)GlennYntisAnimStateB;
+u32 GLENN_YNTIS_ANIM_IDLE_STATE_MARKER asm("D_800A5BD8") = 0xFFFF0000;
+EntityCallback GLENN_YNTIS_ANIM_IDLE_STATE_CALLBACK asm("D_800A5BDC") = (EntityCallback)GlennYntisIdleAnimState;
+u32 GLENN_YNTIS_ANIM_C_STATE_MARKER asm("D_800A5BE0") = 0xFFFF0000;
+EntityCallback GLENN_YNTIS_ANIM_C_STATE_CALLBACK asm("D_800A5BE4") = (EntityCallback)GlennYntisAnimStateC;
+u32 D_800A5BE8 asm("D_800A5BE8") = 0xFFFF0000;
+EntityCallback D_800A5BEC asm("D_800A5BEC") = (EntityCallback)BossRandomAttackChoice;
+u32 SHRINEY_GUARD_IDLE_TIMEOUT_STATE_MARKER asm("D_800A5BF0") = 0xFFFF0000;
+EntityCallback SHRINEY_GUARD_IDLE_TIMEOUT_STATE_CALLBACK asm("D_800A5BF4") = (EntityCallback)ShrineyGuardAttackCounterState;
+u32 D_800A5BF8 asm("D_800A5BF8") = 0xFFFF0000;
+EntityCallback D_800A5BFC asm("D_800A5BFC") = (EntityCallback)ShrineyGuardDeathState;
+u32 D_800A5C00 asm("D_800A5C00") = 0xFFFF0000;
+EntityCallback D_800A5C04 asm("D_800A5C04") = (EntityCallback)ShrineyGuardStartLoopingAttackState;
+u32 D_800A5C08 asm("D_800A5C08") = 0xFFFF0000;
+EntityCallback D_800A5C0C asm("D_800A5C0C") = (EntityCallback)ShrineyGuardReadyAttackState;
+u32 SHRINEY_GUARD_REPEAT_ATTACK_STATE_MARKER asm("D_800A5C10") = 0xFFFF0000;
+EntityCallback SHRINEY_GUARD_REPEAT_ATTACK_STATE_CALLBACK asm("D_800A5C14") = (EntityCallback)ShrineyGuardAttackAnimState;
+u32 SHRINEY_GUARD_FINISH_ATTACK_STATE_MARKER asm("D_800A5C18") = 0xFFFF0000;
+EntityCallback SHRINEY_GUARD_FINISH_ATTACK_STATE_CALLBACK asm("D_800A5C1C") = (EntityCallback)ShrineyGuardIdleState;
+u32 JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_MARKER asm("D_800A5C20") = 0xFFFF0000;
+EntityCallback JOE_HEAD_JOE_ATTACK_TIMEOUT_STATE_CALLBACK asm("D_800A5C24") = (EntityCallback)JoeHeadJoeSelectAttackPattern;
+u32 D_800A5C28 asm("D_800A5C28") = 0xFFFF0000;
+EntityCallback D_800A5C2C asm("D_800A5C2C") = (EntityCallback)JoeHeadJoeDeathAnimState;
+u32 D_800A5C30 asm("D_800A5C30") = 0xFFFF0000;
+EntityCallback D_800A5C34 asm("D_800A5C34") = (EntityCallback)JoeHeadJoeEnterActiveState;
+u32 D_800A5C38 asm("D_800A5C38") = 0xFFFF0000;
+EntityCallback D_800A5C3C asm("D_800A5C3C") = (EntityCallback)JoeHeadJoeReturnToIdleState;
+u32 D_800A5C40 asm("D_800A5C40") = 0xFFFF0000;
+EntityCallback D_800A5C44 asm("D_800A5C44") = (EntityCallback)JoeHeadJoeReturnToIdleStateAlt;
+u32 D_800A5C48 asm("D_800A5C48") = 0xFFFF0000;
+EntityCallback D_800A5C4C asm("D_800A5C4C") = (EntityCallback)JoeHeadJoeClearVoice;
+u32 D_800A5C50 asm("D_800A5C50") = 0xFFFF0000;
+EntityCallback D_800A5C54 asm("D_800A5C54") = (EntityCallback)JoeHeadJoeClearVoiceAlt;
+u32 D_800A5C58 asm("D_800A5C58") = 0xFFFF0000;
+EntityCallback D_800A5C5C asm("D_800A5C5C") = (EntityCallback)EnemyIdleTimerState;
+u32 D_800A5C60 asm("D_800A5C60") = 0xFFFF0000;
+EntityCallback D_800A5C64 asm("D_800A5C64") = (EntityCallback)EnemyDefeatState;
+u32 D_800A5C68 asm("D_800A5C68") = 0xFFFF0000;
+EntityCallback D_800A5C6C asm("D_800A5C6C") = (EntityCallback)EnemySpriteState;
+u32 D_800A5C70[2] asm("D_800A5C70") = {0x32444E45, 0x00000000};
+u32 D_800A5C78 asm("D_800A5C78") = 0xFFFF0000;
+EntityCallback D_800A5C7C asm("D_800A5C7C") = (EntityCallback)EnemyStateInit_SetSpriteAndHandler;
+u32 D_800A5C80 asm("D_800A5C80") = 0xFFFF0000;
+EntityCallback D_800A5C84 asm("D_800A5C84") = (EntityCallback)EnemyState_TurnAroundWithToken;
+u32 D_800A5C88 asm("D_800A5C88") = 0xFFFF0000;
+EntityCallback D_800A5C8C asm("D_800A5C8C") = (EntityCallback)ProjectileEnterActiveState;
+u32 D_800A5C90 asm("D_800A5C90") = 0xFFFF0000;
+EntityCallback D_800A5C94 asm("D_800A5C94") = (EntityCallback)ProjectileState_HomingActive;
+u32 D_800A5C98 asm("D_800A5C98") = 0xFFFF0000;
+EntityCallback D_800A5C9C asm("D_800A5C9C") = (EntityCallback)ProjectileState_HomingActiveVariant2;
+u32 D_800A5CA0 asm("D_800A5CA0") = 0xFFFF0000;
+EntityCallback D_800A5CA4 asm("D_800A5CA4") = (EntityCallback)ProjectileState_HomingActiveVariant3;
+u32 D_800A5CA8 asm("D_800A5CA8") = 0xFFFF0000;
+EntityCallback D_800A5CAC asm("D_800A5CAC") = (EntityCallback)ProjectileState_HomingMissileTrack;
+u32 D_800A5CB0 asm("D_800A5CB0") = 0xFFFF0000;
+EntityCallback D_800A5CB4 asm("D_800A5CB4") = (EntityCallback)JoeHeadJoeBallRegularInitState;
+u32 D_800A5CB8 asm("D_800A5CB8") = 0xFFFF0000;
+EntityCallback D_800A5CBC asm("D_800A5CBC") = (EntityCallback)JoeHeadJoeState_HideAndNotifyGameState;
+u32 D_800A5CC0 asm("D_800A5CC0") = 0xFFFF0000;
+EntityCallback D_800A5CC4 asm("D_800A5CC4") = (EntityCallback)JoeHeadJoeState_EnterCollisionState;
+u32 D_800A5CC8 asm("D_800A5CC8") = 0xFFFF0000;
+EntityCallback D_800A5CCC asm("D_800A5CCC") = (EntityCallback)JoeHeadJoeBallStopSound;
+u32 D_800A5CD0 asm("D_800A5CD0") = 0xFFFF0000;
+EntityCallback D_800A5CD4 asm("D_800A5CD4") = (EntityCallback)JoeHeadJoeState_CollisionTick;
+u32 D_800A5CD8 asm("D_800A5CD8") = 0xFFFF0000;
+EntityCallback D_800A5CDC asm("D_800A5CDC") = (EntityCallback)JoeHeadJoeState_IdleAfterCollision;
+u32 D_800A5CE0[2] asm("D_800A5CE0") = {0x32444E45, 0x00000000};
+u32 D_800A5CE8 asm("D_800A5CE8") = 0xFFFF0000;
+EntityCallback D_800A5CEC asm("D_800A5CEC") = (EntityCallback)ClayballIndicatorState_Wait;
+u32 D_800A5CF0 asm("D_800A5CF0") = 0xFFFF0000;
+EntityCallback D_800A5CF4 asm("D_800A5CF4") = (EntityCallback)ClayballState_DestroyWithDebris;
+u32 D_800A5CF8 asm("D_800A5CF8") = 0xFFFF0000;
+EntityCallback D_800A5CFC asm("D_800A5CFC") = (EntityCallback)ShrineyGuardDeactivateWithSound;
+u32 D_800A5D00 asm("D_800A5D00") = 0xFFFF0000;
+EntityCallback D_800A5D04 asm("D_800A5D04") = (EntityCallback)ClayballState_HideIndicatorAndWait;
+u32 D_800A5D08[2] asm("D_800A5D08") = {0x32444E45, 0x00000000};
+
+
+/* .data (0x8009C11C): 22 (x,y) s16 pairs — a radius-63 cos/sin lookup consumed
+ * by MaskAngleCosineEntry via u8 negative-index arithmetic. Migrated from the
+ * pooled .data blob (sdata-under-split Phase 4 .data pilot). Kept u8[88] to
+ * match the `extern u8 D_8009C11C[]` decl and preserve absolute addressing. */
+u8 D_8009C11C[88] asm("D_8009C11C") = {
+    0x3C, 0x00, 0x18, 0x00, 0x36, 0x00, 0x23, 0x00,
+    0x2E, 0x00, 0x2D, 0x00, 0x24, 0x00, 0x35, 0x00,
+    0x19, 0x00, 0x3B, 0x00, 0x0D, 0x00, 0x3E, 0x00,
+    0x01, 0x00, 0x3F, 0x00, 0xF4, 0xFF, 0x3E, 0x00,
+    0xE8, 0xFF, 0x3B, 0x00, 0xDD, 0xFF, 0x35, 0x00,
+    0xD4, 0xFF, 0x2D, 0x00, 0xCC, 0xFF, 0x23, 0x00,
+    0xC6, 0xFF, 0x18, 0x00, 0xC2, 0xFF, 0x0C, 0x00,
+    0xC1, 0xFF, 0x00, 0x00, 0xC2, 0xFF, 0xF3, 0xFF,
+    0xC6, 0xFF, 0xE7, 0xFF, 0xCC, 0xFF, 0xDC, 0xFF,
+    0xD4, 0xFF, 0xD3, 0xFF, 0xDD, 0xFF, 0xCB, 0xFF,
+    0xE8, 0xFF, 0xC5, 0xFF, 0xF4, 0xFF, 0xC1, 0xFF,
+};
