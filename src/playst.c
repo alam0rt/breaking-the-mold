@@ -2505,14 +2505,42 @@ void PlayerState_RemoveAttachedEntity(PlayerEntity *e) {
 }
 
 /*
- * PlayerStateInit_ThrowProjectile (0x8006BDD4, 0x158) — SHELVED.
- * Body bytes match the Variant-A template (prologue carryMotionX=0,
- * event=ThrowEventHandler, input=NULL zeroed slot, render Horizontal/Riding,
- * spriteId 0x04084011, queued=PlayerStateInit_Idle) but the target reserves an
- * extra 8-byte stack scratch (frame 0x70 vs 0x68). The zeroed input slot does
- * not reproduce that layout; needs the exact local-declaration idiom. TODO.
+ * PlayerStateInit_ThrowProjectile (0x8006BDD4, 0x158) — MATCHED 2026-07-04.
+ * Variant A installer with a NULL input slot (markerLo=0, markerHi=0, fn=NULL).
+ * The zeroed input slot makes the target reserve an extra 8-byte stack scratch
+ * (frame 0x70 vs 0x68); reproduced by enlarging curP.tail to [4]. event=Throw-
+ * EventHandler, render Horizontal/Riding, spriteId 0x04084011, queued=Init_Idle.
  */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ThrowProjectile);
+void PlayerStateInit_ThrowProjectile(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[4]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    e->carryMotionX = 0;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_ThrowEventHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    g.input.markerLo = 0; g.input.markerHi = 0; g.input.fn = (void (*)())0;
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x04084011, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_Idle;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_CheckpointRestore);
 
