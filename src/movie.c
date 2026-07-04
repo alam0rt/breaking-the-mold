@@ -56,3 +56,11 @@ void SeekAndStartCDRead(u8 *loc) {
 
 INCLUDE_ASM("asm/nonmatchings/movie", SetMovieDisplayEnvironment);
 
+
+/* .data island 0x8009B4CC..0x8009B4DC (16B, movie halfword table) migrated from asm. */
+/* group island: 0-byte pad at 0x8009B4CC, 8 aliased symbol(s); anchor D_8009B4CC (16B). */
+u8 D_8009B4CC[16] asm("D_8009B4CC") = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+asm(".globl D_8009B4CE\n.set D_8009B4CE, D_8009B4CC + 2\n.globl D_8009B4D0\n.set D_8009B4D0, D_8009B4CC + 4\n.globl D_8009B4D2\n.set D_8009B4D2, D_8009B4CC + 6\n.globl D_8009B4D4\n.set D_8009B4D4, D_8009B4CC + 8\n.globl D_8009B4D6\n.set D_8009B4D6, D_8009B4CC + 10\n.globl D_8009B4D8\n.set D_8009B4D8, D_8009B4CC + 12\n.globl D_8009B4DA\n.set D_8009B4DA, D_8009B4CC + 14\n");
