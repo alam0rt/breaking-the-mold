@@ -199,7 +199,9 @@ local bss(start, kind, vram) = {
         dotdata('8C408', 'bosses'),    // 0x8009BC08 (1388B: 9 boss cos/sin + hitbox tables grouped, D_8009BC0A..D_8009C11C aliased) -> build/src/bosses.o(.data)
         data('8C974', 'data'),         // 0x8009C174 gap up to sound island (asm)
         dotdata('8D418', 'sound'),     // 0x8009CC18 (1552B: sound bank/voice tables grouped, D_8009CC2F..D_8009D224 aliased) -> build/src/sound.o(.data)
-        data('8DA28', 'data'),         // 0x8009D228 remainder of .data (asm)
+        data('8DA28', 'data'),         // 0x8009D228 gap up to entinit island (asm)
+        dotdata('8E1FC', 'entinit'),   // 0x8009D9FC (228B: collectible/enemy config + sprite hash tables grouped, D_8009DA18..D_8009DAB4 aliased) -> build/src/entinit.o(.data)
+        data('8E2E0', 'data'),         // 0x8009DAE0 remainder of .data (asm)
 
         // =====================================================================
         // .sdata section: 0x800A5954 - 0x800A611F (GP-relative small data)
