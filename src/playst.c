@@ -2047,7 +2047,62 @@ void PlayerState_StopSoundAndClear(PlayerEntity *e) {
     e->soundHandle = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Walking);
+extern void PlayerCallback_JumpWallCollisionInput();
+extern void SetAnimationSpriteCallback(PlayerEntity *e, u32 animId);
+/*
+ * PlayerStateInit_Walking (0x80067FC8, 0x168) — MATCHED.
+ * Walking-state installer (frame 0x60, no queued store). Seeds jumpParam=0xC
+ * and clears velocityY_fixed, installs the four state callbacks (tick=Player-
+ * TickCallback, event=PlayerEntityEventHandler, input=JumpWallCollisionInput,
+ * render=HandleMovementAndCollision / WalkingOnPlatform when riding an interact
+ * entity), then sets sprite id 0x1E089010 and arms the walk animation via three
+ * tail calls (SetAnimationSpriteCallback / SetAnimationLoopFrame /
+ * SetAnimationFrameIndex).
+ *
+ * Register/scheduling notes (this variant has no queued store, so the shared
+ * markerHi -1 dies before any call and lives in a *temp*, not the $s1 pin used
+ * by the queued-store siblings). Matching required three levers together:
+ *   - `register s16 m1 asm("$2")` pins -1 to $v0 so it time-shares the reg that
+ *     held the 0xC jumpParam literal (both are short-lived temps in $v0).
+ *   - `FSM_KEEP_LIVE(e)` after the velocityY store is a scheduling barrier that
+ *     stops `li $v0,-1` from hoisting above the jumpParam store (which would
+ *     evict 0xC from $v0).
+ *   - the first `fn = PlayerTickCallback` is emitted *before* `m1 = -1`, and a
+ *     per-slot `FSM_KEEP_LIVE(fn)` sits between the markerLo/Hi writes and the
+ *     fn store, forcing the target's per-slot interleave
+ *     (fn-load, markerLo, markerHi, fn-store) instead of clumping.
+ */
+void PlayerStateInit_Walking(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$2");
+    e->jumpParam = 0xC;
+    e->velocityY_fixed = 0;
+    FSM_KEEP_LIVE(e);
+    fn = (void (*)())PlayerTickCallback;
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  FSM_KEEP_LIVE(fn); g.tick.fn = fn;
+    fn = (void (*)())PlayerEntityEventHandler;
+    g.event.markerLo = 0; g.event.markerHi = m1; FSM_KEEP_LIVE(fn); g.event.fn = fn;
+    fn = (void (*)())PlayerCallback_JumpWallCollisionInput;
+    g.input.markerLo = 0; g.input.markerHi = m1; FSM_KEEP_LIVE(fn); g.input.fn = fn;
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x1E089010, 1);
+    SetAnimationSpriteCallback(e, 0x2421405);
+    SetAnimationLoopFrame(e, 0x70D006D8);
+    SetAnimationFrameIndex((Entity *)e, 0);
+}
 
 /*
  * PlayerStateInit_ResumeWalking (0x80068130, 0x174) — MATCHED 2026-07-04.
