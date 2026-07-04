@@ -245,13 +245,11 @@ EntityCallback D_800A6030 asm("D_800A6030") = (EntityCallback)FinnSetTurnState;
 u32 D_800A6034 asm("D_800A6034") = 0xFFFF0000;
 EntityCallback D_800A6038 asm("D_800A6038") = (EntityCallback)0x80074D18;
 
-/* .data island 0x8009CADC..0x8009CB00 (vehicle config tables) migrated from asm; grouped u8[] + .set aliases. */
-/* group island: 0-byte pad at 0x8009CADC, 2 aliased symbol(s); anchor D_8009CADC (36B). */
-u8 D_8009CADC[36] asm("D_8009CADC") = {
-    0x14, 0xC0, 0x01, 0x0C, 0x8C, 0xE0, 0x29, 0x8C,
-    0x1C, 0xD0, 0x09, 0x4D, 0x00, 0x00, 0x00, 0x00,
-    0x33, 0x0C, 0x28, 0x1B, 0x58, 0x08, 0x28, 0x1B,
-    0x40, 0x88, 0x08, 0x5A, 0x00, 0x89, 0xA1, 0x0A,
-    0x00, 0x00, 0x00, 0x00,
+/* .data island 0x8009CADC..0x8009CB00 (36B, vehicle config tables) migrated from asm. */
+/* Two null-terminated packed 32-bit lists: config at +0 and +16 (D_8009CAEC). */
+u32 D_8009CADC[9] asm("D_8009CADC") = {
+    0x0C01C014, 0x8C29E08C, 0x4D09D01C, 0x00000000,
+    0x1B280C33, 0x1B280858, 0x5A088840, 0x0AA18900,
+    0x00000000,
 };
 asm(".globl D_8009CAEC\n.set D_8009CAEC, D_8009CADC + 16\n");
