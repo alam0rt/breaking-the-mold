@@ -158,9 +158,10 @@ SECTIONS
         build/asm/data/8B658.data.o(.data);
         build/src/blb.o(.data);
         build/src/edtor.o(.data);
+        build/asm/data/8B944.data.o(.data);
         build/src/decor.o(.data);
         build/src/pickups.o(.data);
-        build/asm/data/8B944.data.o(.data);
+        build/asm/data/8BAC4.data.o(.data);
         build/src/effects.o(.data);
         build/asm/data/8BBD8.data.o(.data);
         build/src/gamecd.o(.data);
