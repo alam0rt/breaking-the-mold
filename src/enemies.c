@@ -2807,3 +2807,96 @@ u32 D_800A5B50 asm("D_800A5B50") = 0xFFFF0000;
 EntityCallback D_800A5B54 asm("D_800A5B54") = (EntityCallback)EnemySetIdleSprite;
 u32 D_800A5B58[2] asm("D_800A5B58") = {0x32444E45, 0x00000000};
 
+
+/* .data island 0x8009B55C..0x8009B634 (216B, enemy behavior dispatch tables) migrated from asm. */
+extern void EntityStartWalkWithTimer0x2d();
+extern void EntitySetSparkleDelay1();
+extern void EntityStateSetSparkleCollectible();
+extern void StartAnimSequence4A();
+extern void EntitySetSparkleDelay2();
+extern void StartAnimSequence4B();
+extern void EntitySetSparkleDelay3();
+extern void StartAnimSequence4C();
+extern void InitCollectibleTimer0x3c_SpriteB();
+extern void InitShooterEnemyStateB();
+extern void StartAnimSequence3A();
+extern void InitCollectibleTimer0x3c_SpriteA();
+extern void InitShooterEnemyStateA();
+extern void StartAnimSequence3B();
+extern void InitCollectibleTimer0x1e_SpriteC();
+extern void InitCollectibleIdleStateB();
+extern void InitCollectibleTimer0x1e();
+extern void InitCollectibleIdleState();
+extern void StartAnimSequence9Frames();
+
+void *D_8009B55C[8] asm("D_8009B55C") = {
+    (void *)0xFFFF0000,
+    (void *)EntityStartWalkWithTimer0x2d,
+    (void *)0xFFFF0000,
+    (void *)EntitySetSparkleDelay1,
+    (void *)0xFFFF0000,
+    (void *)EntityStateSetSparkleCollectible,
+    (void *)0xFFFF0000,
+    (void *)StartAnimSequence4A,
+};
+
+void *D_8009B57C[8] asm("D_8009B57C") = {
+    (void *)0xFFFF0000,
+    (void *)EntityStartWalkWithTimer0x2d,
+    (void *)0xFFFF0000,
+    (void *)EntitySetSparkleDelay2,
+    (void *)0xFFFF0000,
+    (void *)EntityStateSetSparkleCollectible,
+    (void *)0xFFFF0000,
+    (void *)StartAnimSequence4B,
+};
+
+void *D_8009B59C[8] asm("D_8009B59C") = {
+    (void *)0xFFFF0000,
+    (void *)EntityStartWalkWithTimer0x2d,
+    (void *)0xFFFF0000,
+    (void *)EntitySetSparkleDelay3,
+    (void *)0xFFFF0000,
+    (void *)EntityStateSetSparkleCollectible,
+    (void *)0xFFFF0000,
+    (void *)StartAnimSequence4C,
+};
+
+void *D_8009B5BC[6] asm("D_8009B5BC") = {
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleTimer0x3c_SpriteB,
+    (void *)0xFFFF0000,
+    (void *)InitShooterEnemyStateB,
+    (void *)0xFFFF0000,
+    (void *)StartAnimSequence3A,
+};
+
+void *D_8009B5D4[6] asm("D_8009B5D4") = {
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleTimer0x3c_SpriteA,
+    (void *)0xFFFF0000,
+    (void *)InitShooterEnemyStateA,
+    (void *)0xFFFF0000,
+    (void *)StartAnimSequence3B,
+};
+
+void *D_8009B5EC[18] asm("D_8009B5EC") = {
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleTimer0x1e_SpriteC,
+    (void *)0xFFFF0000,
+    (void *)InitShooterEnemyStateA,
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleTimer0x1e_SpriteC,
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleIdleStateB,
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleTimer0x1e,
+    (void *)0xFFFF0000,
+    (void *)InitShooterEnemyStateB,
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleTimer0x1e,
+    (void *)0xFFFF0000,
+    (void *)InitCollectibleIdleState,
+    (void *)0xFFFF0000,
+    (void *)StartAnimSequence9Frames,
+};

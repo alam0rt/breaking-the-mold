@@ -157,8 +157,9 @@ SECTIONS
         build/asm/data/8BBD8.data.o(.data);
         build/src/gamecd.o(.data);
         build/src/movie.o(.data);
-        build/src/enemies.o(.data);
         build/asm/data/8BCDC.data.o(.data);
+        build/src/enemies.o(.data);
+        build/asm/data/8BE34.data.o(.data);
         build/src/bosses.o(.data);
         build/asm/data/8C974.data.o(.data);
         build/src/playst.o(.data);
