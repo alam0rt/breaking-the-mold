@@ -326,7 +326,16 @@ INCLUDE_ASM("asm/nonmatchings/blb", InitializePlayerState);
 
 INCLUDE_ASM("asm/nonmatchings/blb", MarkLevelCompleteAndClearCollectibles);
 
-INCLUDE_ASM("asm/nonmatchings/blb", DecrementPlayerLives);
+/* On player death: clears the active powerup bitfield and boss HP, then spends a
+ * life (guarded so it never underflows past zero). */
+void DecrementPlayerLives(PlayerState *p) {
+    u8 lives = p->lives;
+    p->powerup_flags = 0;
+    p->boss_hp = 0;
+    if (lives != 0) {
+        p->lives = lives - 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", AddSwirlys);
 
