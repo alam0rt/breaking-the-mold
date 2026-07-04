@@ -143,11 +143,17 @@ u32 D_800A5998 asm("D_800A5998") = 0xFFFF0000;
 void (*D_800A599C)(Entity *) asm("D_800A599C") = PlatformRideStartDown;
 u32 D_800A59A0[2] asm("D_800A59A0") = {0x32444E45, 0x00000000};
 
-/* Default destruct vtable entry -- body is only 4 bytes. When dispatched
- * with type 3 (the "request kill" code used by DeferredEntityRemoval /
- * EntityRemoval / RemoveFromZOrderList) it stashes a3/a2 into the entity's
- * +0x34/+0x38 kill-request slots; for any other type returns 0 with no effect. */
-INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructCallback);
+/* Default destruct vtable entry. When dispatched with type 3 (the "request
+ * kill" code used by DeferredEntityRemoval / EntityRemoval /
+ * RemoveFromZOrderList) it stashes arg3/arg2 into the entity's +0x34/+0x38
+ * kill-request slots; for any other type it returns 0 with no effect. */
+s32 EntityDestructCallback(Entity *entity, u16 msg, u32 arg2, u32 arg3) {
+    if (msg == 3) {
+        *(u32 *)((u8 *)entity + 0x34) = arg3;
+        *(u32 *)((u8 *)entity + 0x38) = arg2;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", AddToZOrderList);
 
