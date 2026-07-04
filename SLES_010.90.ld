@@ -160,10 +160,11 @@ SECTIONS
         build/src/enemies.o(.data);
         build/asm/data/8BCCC.data.o(.data);
         build/src/bosses.o(.data);
-        build/src/player.o(.data);
         build/asm/data/8C974.data.o(.data);
         build/src/playst.o(.data);
         build/asm/data/8CA70.data.o(.data);
+        build/src/player.o(.data);
+        build/asm/data/8CBC4.data.o(.data);
         build/src/finn.o(.data);
         build/src/playdtor.o(.data);
         build/src/vehicle.o(.data);
