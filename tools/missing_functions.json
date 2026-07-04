@@ -1,0 +1,835 @@
+{
+  "text_range": [
+    2147549184,
+    2148075500
+  ],
+  "counts": {
+    "jal": 831,
+    "ptr": 878,
+    "sym": 2296,
+    "unknown": 0,
+    "uncarved": 110,
+    "uncarved_pureasm": 86,
+    "uncarved_other": 24
+  },
+  "unknown": [],
+  "uncarved_other": [
+    {
+      "addr": 2148046648,
+      "name": "DumpTPage",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148046744,
+      "name": "DumpClut",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148047896,
+      "name": "DumpDrawEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148048172,
+      "name": "DumpDispEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148050112,
+      "name": "ClearImage2",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148050468,
+      "name": "MoveImage",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148051000,
+      "name": "DrawPrim",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148051472,
+      "name": "DrawOTagEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148051756,
+      "name": "GetDrawEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148053004,
+      "name": "GetDispEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148053108,
+      "name": "SetTexWindow",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148053500,
+      "name": "SetDrawEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148055588,
+      "name": "otc",
+      "tags": [
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148055820,
+      "name": "clr",
+      "tags": [
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148056424,
+      "name": "dws",
+      "tags": [
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148056996,
+      "name": "drs",
+      "tags": [
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148057700,
+      "name": "cwb",
+      "tags": [
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148057904,
+      "name": "addque",
+      "tags": [
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148061280,
+      "name": "csin_1",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064032,
+      "name": "DecDCTPutEnv",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064356,
+      "name": "DecDCTinSync",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064416,
+      "name": "DecDCToutSync",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064476,
+      "name": "DecDCTinCallback",
+      "tags": [
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148070036,
+      "name": "spu_Fr_8008F294",
+      "tags": [
+        "prologue"
+      ]
+    }
+  ],
+  "uncarved_pureasm": [
+    {
+      "addr": 2147549184,
+      "name": "memset_entrypoint",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148046532,
+      "name": "strlen",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148046548,
+      "name": "memset_1",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148046624,
+      "name": "GetClut",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148046924,
+      "name": "AddPrims",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148046984,
+      "name": "CatPrim",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047020,
+      "name": "TermPrim",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047164,
+      "name": "SetPolyG3",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047224,
+      "name": "SetPolyFT4",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047284,
+      "name": "SetSprt8",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047304,
+      "name": "SetSprt16",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047324,
+      "name": "SetSprt",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047344,
+      "name": "SetTile1",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148047404,
+      "name": "SetTile",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148048344,
+      "name": "ResetGraph",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148049008,
+      "name": "SetGraphDebug",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148049668,
+      "name": "checkRECT",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148049964,
+      "name": "ClearImage",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148050268,
+      "name": "LoadImage",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148050664,
+      "name": "ClearOTag",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148051096,
+      "name": "DrawOTag",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148051212,
+      "name": "PutDrawEnv",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148051812,
+      "name": "PutDispEnv",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148053168,
+      "name": "SetDrawArea",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148053412,
+      "name": "SetDrawMode",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148054036,
+      "name": "SetDrawEnv2",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148054692,
+      "name": "get_mode",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148054780,
+      "name": "get_cs",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148054984,
+      "name": "get_ce",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148055188,
+      "name": "get_ofs",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148055256,
+      "name": "get_tw",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148055388,
+      "name": "get_dx",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148057780,
+      "name": "cwc",
+      "tags": [
+        "jal",
+        "ptr"
+      ]
+    },
+    {
+      "addr": 2148057940,
+      "name": "addque2",
+      "tags": [
+        "jal",
+        "ptr",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148058676,
+      "name": "exeque",
+      "tags": [
+        "jal",
+        "ptr"
+      ]
+    },
+    {
+      "addr": 2148060100,
+      "name": "set_alarm",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148060152,
+      "name": "get_alarm",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148060736,
+      "name": "memset_2",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148060780,
+      "name": "GPU_cw",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148060796,
+      "name": "ccos",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148060992,
+      "name": "csincos",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148061440,
+      "name": "csin",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148061752,
+      "name": "csqrt_1",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148062092,
+      "name": "csqrt",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148062248,
+      "name": "catan",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148062604,
+      "name": "SetRotMatrix",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148062652,
+      "name": "SetTransMatrix",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148063184,
+      "name": "Lzc",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148063676,
+      "name": "patch_gte",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148064200,
+      "name": "DecDCTin",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064324,
+      "name": "DecDCTout",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064548,
+      "name": "MDEC_reset",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064800,
+      "name": "MDEC_in",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148064948,
+      "name": "MDEC_out",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148065092,
+      "name": "MDEC_in_sync",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148065244,
+      "name": "MDEC_out_sync",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148065396,
+      "name": "MDEC_status",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148065776,
+      "name": "DecDCTvlc2",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148066640,
+      "name": "DecDCTvlcBuild",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148067256,
+      "name": "InitHeap",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148067324,
+      "name": "SsUtReverbOff",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148067356,
+      "name": "SpuInit",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148067604,
+      "name": "SpuStart",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148067728,
+      "name": "OpenEvent",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148067744,
+      "name": "EnableEvent",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148067760,
+      "name": "spu_init",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148068420,
+      "name": "spu_FwriteByIO",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148069244,
+      "name": "spu_t",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148069900,
+      "name": "spu_Fw",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070140,
+      "name": "spu_FsetRXX",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070212,
+      "name": "spu_FsetRXXa",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070532,
+      "name": "spu_FsetDelayW",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070576,
+      "name": "spu_FsetDelayR",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070724,
+      "name": "SpuDataCallback",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148070884,
+      "name": "CloseEvent",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070900,
+      "name": "DisableEvent",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148070916,
+      "name": "SpuSetVoiceAttr",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148071464,
+      "name": "SpuGetKeyStatus",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148071612,
+      "name": "SpuRead",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148071708,
+      "name": "SpuSetTransferStartAddr",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148071796,
+      "name": "SpuSetTransferMode",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148071848,
+      "name": "SpuIsTransferCompleted",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148072016,
+      "name": "TestEvent",
+      "tags": [
+        "jal"
+      ]
+    },
+    {
+      "addr": 2148072032,
+      "name": "SpuSetCommonAttr",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148072948,
+      "name": "SpuRSetVoiceAttr",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    },
+    {
+      "addr": 2148074688,
+      "name": "spu_note2pitch",
+      "tags": [
+        "jal",
+        "prologue"
+      ]
+    }
+  ]
+}
