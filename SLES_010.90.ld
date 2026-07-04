@@ -177,6 +177,7 @@ SECTIONS
         build/src/ending.o(.data);
         build/src/level.o(.data);
         build/src/blbacc.o(.data);
+        build/asm/data/8C974.data.o(.data);
         build/src/sound.o(.data);
         build/src/gstate.o(.data);
         build/src/entinit.o(.data);
@@ -187,7 +188,7 @@ SECTIONS
         build/src/memmove.o(.data);
         build/src/libs/libvoice.o(.data);
         build/asm/libs/libspu2.o(.data);
-        build/asm/data/8C974.data.o(.data);
+        build/asm/data/8DA28.data.o(.data);
         main_DATA_END = .;
         main_DATA_SIZE = ABSOLUTE(main_DATA_END - main_DATA_START);
         build/asm/crt0.o(.rodata);
