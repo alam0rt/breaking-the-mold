@@ -182,10 +182,6 @@ SECTIONS
         build/asm/data/8DA28.data.o(.data);
         build/src/lvlload.o(.data);
         build/src/libc.o(.data);
-        build/src/libs/libcd.o(.data);
-        build/asm/libs/libgpu.o(.data);
-        build/asm/libs/libspu.o(.data);
-        build/src/prim.o(.data);
         build/src/entinit.o(.data);
         build/src/main.o(.data);
         build/src/gstctor.o(.data);
@@ -193,6 +189,11 @@ SECTIONS
         build/src/blbmem.o(.data);
         build/src/memmove.o(.data);
         build/asm/data/8E440.data.o(.data);
+        build/src/libs/libcd.o(.data);
+        build/asm/libs/libgpu.o(.data);
+        build/asm/libs/libspu.o(.data);
+        build/src/prim.o(.data);
+        build/asm/data/8E9E0.data.o(.data);
         build/src/libs/libvoice.o(.data);
         build/asm/libs/libspu2.o(.data);
         main_DATA_END = .;

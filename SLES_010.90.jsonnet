@@ -217,6 +217,8 @@ local bss(start, kind, vram) = {
         dotdata('8E1FC', 'entinit'),   // 0x8009D9FC (228B: collectible/enemy config + sprite hash tables grouped, D_8009DA18..D_8009DAB4 aliased) -> build/src/entinit.o(.data)
         dotdata('8E2E0', 'main'),      // 0x8009DAE0 (352B: main .data island grouped) -> build/src/main.o(.data)
         data('8E440', 'data'),         // 0x8009DC40 remainder of .data (asm)
+        dotdata('8E9C4', 'libs/libcd'), // 0x8009E1C4 (28B: libcd table) -> build/src/libs/libcd.o(.data)
+        data('8E9E0', 'data'),         // 0x8009E1E0 remainder of .data (asm)
         dotdata('95DF4', 'libs/libvoice'), // 0x800A55F4 (864B: SPU voice reg tables) -> build/src/libs/libvoice.o(.data)
 
         // =====================================================================

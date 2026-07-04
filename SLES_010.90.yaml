@@ -415,6 +415,13 @@
     - 582720
     - "data"
   -
+    - 584132
+    - ".data"
+    - "libs/libcd"
+  -
+    - 584160
+    - "data"
+  -
     - 613876
     - ".data"
     - "libs/libvoice"
