@@ -9,7 +9,7 @@ extern s32 PlayerEntityEventHandler(PlayerEntity *e, u32 event, u32 arg2, u32 ar
 extern s32 PlayerEntityEventHandlerAlt(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
 extern s32 PlayerEntityCollisionHandler(PlayerEntity *e, u32 event, u32 arg2, u32 arg3);
 extern void RemoveEntityFromAllLists(GameState *gs, Entity *entity);
-extern void PlayEntityPositionSound(Entity *e, u32 soundId);
+extern s32 PlayEntityPositionSound(Entity *e, u32 soundId);
 extern void SetEntityStateFlagWithValue(void *e, u8 val);
 extern s32 PlayerEvent_ZoneTriggerHandler();
 
@@ -2035,7 +2035,55 @@ void PlayerState_SpecialMove2(PlayerEntity *e) {
 }
 
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Jump);
+extern void PlayerCallback_WalkInputWithFall();
+u32 PlayerJumpNextMarker asm("D_800A5F0C");
+EntityCallback PlayerJumpNextFn asm("D_800A5F10");
+
+/* PlayerState_Jump @ 0x80067E28 (0x168, frame 0x60) -- MATCHED. Aggregate-struct
+ * installer variant (same shape as PlayerState_WalkingRight): four slots staged
+ * into a `g` struct then block-copied via a `curP` scratch. Prologue stops the
+ * active SPU voice (soundHandle@0x174), starts the jump sound and stores the new
+ * handle, sets jumpParam(0x156)=0xC. Slots: tick(0x0)->PlayerTickCallback,
+ * event(0x8)->PlayerEntityEventHandler, input(0x104)->
+ * PlayerCallback_WalkInputWithFall, render(0x1C) default->HandleMovementAndCollision
+ * overridden to WalkingOnPlatform when interactEntity!=NULL. No queued store;
+ * ends with SetEntitySpriteId(e,0x92B8480,1) then
+ * EntitySetCallback(e, D_800A5F0C, D_800A5F10). Held -1 is a caller-saved TEMP
+ * ($v0 pin) because it dies before the SetEntitySpriteId call (no queued store
+ * to keep it live -- contrast WalkingRight which needs the $s1 pin). */
+void PlayerState_Jump(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$2");
+    StopSPUVoice(e->soundHandle);
+    e->soundHandle = PlayEntityPositionSound((Entity *)e, 0x248E52);
+    e->jumpParam = 0xC;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_WalkInputWithFall; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x92B8480, 1);
+    EntitySetCallback((Entity *)e, PlayerJumpNextMarker, PlayerJumpNextFn);
+}
 
 void PlayerState_StopSoundAndClear(PlayerEntity *e) {
     StopSPUVoice(e->soundHandle);
