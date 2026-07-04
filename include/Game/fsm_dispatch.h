@@ -77,6 +77,19 @@
 #define FSM_COMMIT_SLOT(tmp, staged, dst)                                      \
     (tmp) = (staged); *(CallbackSlot *)&(dst) = (tmp)
 
+/* "Eager KEEP_LIVE" slot variant (the PlayerStateInit_Walking sub-family): the
+ * fn temp is loaded on its own line and the liveness use sits INLINE between the
+ * markerHi store and the fn store, with NO inter-slot do-while fence. Distinct
+ * token order from FSM_STAGE_SLOT, so it is its own macro. */
+#define FSM_STAGE_SLOT_KL(fn, slot, m1, FN)                                    \
+    (fn) = (void (*)())(FN);                                                   \
+    (slot).markerLo = 0; (slot).markerHi = (m1); FSM_KEEP_LIVE(fn); (slot).fn = (fn)
+
+#define FSM_STAGE_SLOT_KL_FIRST(fn, slot, m1, FN)                              \
+    (fn) = (void (*)())(FN);                                                   \
+    (m1) = -1;                                                                 \
+    (slot).markerLo = 0; (slot).markerHi = (m1); FSM_KEEP_LIVE(fn); (slot).fn = (fn)
+
 /* Render slot with an interactEntity-style conditional override, staged through
  * `scratch` (a plain CallbackSlot local) into the aggregate. cc1 reproduces the
  * target only when the fn is chosen into a temp (`rfn`) then stored once — not
