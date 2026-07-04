@@ -1640,6 +1640,79 @@ void PlayerState_UpdateTPageAndHideHalo(PlayerEntity *e) {
     }
 }
 
+/* PlayerState_WalkingRight / PlayerState_WalkingLeft (0x160 each)
+ *
+ * Installs the walking FSM: clears jumpParam, then tick/event/input/render
+ * callback slots (render routed to WalkingOnPlatform when standing on an
+ * interact entity, else the normal movement/collision handler),
+ * SetEntitySpriteId(e, <spriteId>, 1), then queues the next state.
+ * Same slot-install shape as PlayerState_IdleLookAround.
+ *
+ * The two functions are a structural TWIN pair (identical modulo four
+ * literals): swap PlayerCallback_EventHandlerWithQueue -> _WalkToRunTransition
+ * (event fn), spriteId 0x292E8480 -> 0x18298210, and PlayerState_Falling ->
+ * PlayerStateInit_Idle (queued-state fn). The verified C below is byte-exact
+ * for both bodies with only those literals changed (see docs/analysis/
+ * function-families.md — exemplar-sweep candidate).
+ *
+ * SHELVED at a ~6-instruction prologue-scheduling residual (was the whole
+ * frame layout — now CRACKED). Everything matches: frame size 0x68, all six
+ * stack-slot offsets, the full install body, the render conditional, the
+ * sprite call, and the tail. Remaining diff is only prologue instruction order
+ * (sw ra vs sw s1, li s1 position, fn-load vs marker-store within the first
+ * slots) — a sched1 coin-flip; decomp-permuter floors at ~325 from base 1080.
+ *
+ * FRAME CRACK (the reusable idiom): separate CallbackSlot locals are each
+ * BLKmode → assign_stack_local forces 8-align (gcc mips.h BIGGEST_ALIGNMENT
+ * 64), so they pack tight at sp+0x10 and can NEVER hit the target's 4-aligned
+ * origin (sp+0x14). The target's tick/event/input/render are FIELDS OF ONE
+ * aggregate whose 8-aligned base + a leading s32 puts the first slot at 0x14
+ * and pushes scratch to 0x38; a 4-pad staging struct lands the copy-temp at
+ * 0x44 with the right trailing pad. This reproduces the exact 6-slot layout
+ * that ~8 hand attempts and 11k permuter iterations on separate locals could
+ * not. Should transfer to the whole playst frame-0x68 FSM family (see
+ * docs/analysis/function-families.md, [[playst-fsm-frame-coinflip]]).
+ *
+ * The two functions are a structural TWIN pair (identical modulo four
+ * literals): event.fn EventHandlerWithQueue->WalkToRunTransition, spriteId
+ * 0x292E8480->0x18298210, tick.fn(fall) PlayerState_Falling->PlayerStateInit_Idle.
+ * Verified near-match C (byte-exact but for the prologue-schedule residual;
+ * WalkingLeft is the same body with those three literals swapped):
+ *
+ *   extern void PlayerTickCallback(), PlayerCallback_WalkInputHandler(),
+ *               PlayerCallback_WalkingOnPlatform(),
+ *               PlayerCallback_HandleMovementAndCollision(), PlayerState_Falling();
+ *   // PlayerCallback_EventHandlerWithQueue, SetEntitySpriteId declared above.
+ *
+ *   void PlayerState_WalkingRight(PlayerEntity *e) {
+ *       struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+ *       CallbackSlot scratch;
+ *       struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;  // staging temp @0x44 + trailing pad
+ *       void (*rfn)();
+ *       register s16 m1 asm("$17");         // markerHi=-1, survives sprite call
+ *       e->jumpParam = 0;
+ *       m1 = -1;
+ *       g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = (void (*)())PlayerTickCallback;
+ *       do {} while (0);                    // per-slot fences: keep marker+fn stores together
+ *       g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = (void (*)())PlayerCallback_EventHandlerWithQueue;
+ *       do {} while (0);
+ *       g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = (void (*)())PlayerCallback_WalkInputHandler;
+ *       do {} while (0);
+ *       scratch.markerLo = 0; scratch.markerHi = m1;
+ *       rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;  // default; one store
+ *       if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+ *       scratch.fn = rfn;
+ *       g.render = scratch;
+ *       curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+ *       curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+ *       curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+ *       curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+ *       SetEntitySpriteId(e, 0x292E8480, 1);
+ *       g.tick.markerLo = 0; g.tick.markerHi = m1;
+ *       g.tick.fn = (void (*)())PlayerState_Falling;
+ *       *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;  // fall slot: DIRECT copy
+ *   }
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_WalkingRight);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_WalkingLeft);
