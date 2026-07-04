@@ -1571,55 +1571,50 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Idle);
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetIdleStateCallbacks);
 
 /*
- * PlayerState_IdleLookAround (0x80066F70, 0x15C) — SHELVED 2026-07-03.
- *
- * Installs the idle look-around FSM: tick=PlayerTickCallback,
- * event=PlayerCallback_EventHandlerWithQueue, input=PlayerCallback_IdleInputHandler,
- * render=(e->interactEntity ? PlayerCallback_RidingPlatformPhysics
- *                           : PlayerCallback_HorizontalWallCollision),
- * SetEntitySpriteId(e, 0x5900C41E, 1), then queued=PlayerCallback_SetIdleStateCallbacks.
- *
- * Verified C (instruction-for-instruction identical; the ONLY residual is the
- * stack-frame layout coin-flip — same class as PlayerStateInit_FallingWithInput):
- * target uses frame 0x68 with the six CallbackSlot scratch areas at
- * sp+0x14/0x1C/0x24/0x2C(render)/0x38(cond scratch)/0x44(double-copy temp), i.e.
- * a leading pad plus two internal 4-byte pads before the scratch and temp slots;
- * cc1 packs the six bare CallbackSlot locals tight (frame 0x48, slots at
- * 0x10/0x18/0x20/0x28/0x30/0x38). Wrapping in padded structs 8-aligns the group
- * and shifts scratch/temp the wrong way (proven exhaustively for FallingWithInput).
- * Not source-reachable.
- *
- *   extern void PlayerTickCallback();
- *   extern void PlayerCallback_IdleInputHandler();
- *   extern void PlayerCallback_HorizontalWallCollision();
- *   extern void PlayerCallback_RidingPlatformPhysics();
- *   extern void PlayerCallback_SetIdleStateCallbacks();
- *   // PlayerCallback_EventHandlerWithQueue, SetEntitySpriteId already declared above.
- *
- *   void PlayerState_IdleLookAround(PlayerEntity *e) {
- *       CallbackSlot tick, event, input, render, scratch, cur;
- *       tick.markerLo = 0;  tick.markerHi = -1;  tick.fn = (void (*)())PlayerTickCallback;
- *       event.markerLo = 0; event.markerHi = -1;
- *       event.fn = (void (*)())PlayerCallback_EventHandlerWithQueue;
- *       input.markerLo = 0; input.markerHi = -1;
- *       input.fn = (void (*)())PlayerCallback_IdleInputHandler;
- *       scratch.markerLo = 0; scratch.markerHi = -1;
- *       if (e->interactEntity != NULL)
- *           scratch.fn = (void (*)())PlayerCallback_RidingPlatformPhysics;
- *       else
- *           scratch.fn = (void (*)())PlayerCallback_HorizontalWallCollision;
- *       render = scratch;
- *       cur = tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = cur;
- *       cur = event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = cur;
- *       cur = input;  *(CallbackSlot *)&e->inputStateMarker         = cur;
- *       cur = render; *(CallbackSlot *)&e->sprite.base.renderMarker = cur;
- *       SetEntitySpriteId(e, 0x5900C41E, 1);
- *       cur.markerLo = 0; cur.markerHi = -1;
- *       cur.fn = (void (*)())PlayerCallback_SetIdleStateCallbacks;
- *       *(CallbackSlot *)&e->sprite.queuedStateMarker = cur;
- *   }
+ * PlayerState_IdleLookAround (0x80066F60, 0x15C) — MATCHED 2026-07-04.
+ * Frame-0x68 FSM installer, structural twin of PlayerState_WalkingRight but
+ * with NO jumpParam store. Cracked with the same idiom: aggregate-struct slot
+ * group + per-slot fn-into-KEEP_LIVE-temp-before-markers (tick fn computed
+ * first). See [[playst-fsm-frame-coinflip]].
  */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_IdleLookAround);
+extern void PlayerTickCallback();
+extern void PlayerCallback_IdleInputHandler();
+extern void PlayerCallback_HorizontalWallCollision();
+extern void PlayerCallback_RidingPlatformPhysics();
+extern void PlayerCallback_SetIdleStateCallbacks();
+
+void PlayerState_IdleLookAround(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_EventHandlerWithQueue; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_IdleInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x5900C41E, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerCallback_SetIdleStateCallbacks;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_PlayRandomIdleAnimation);
 
@@ -1713,9 +1708,79 @@ void PlayerState_UpdateTPageAndHideHalo(PlayerEntity *e) {
  *       *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;  // fall slot: DIRECT copy
  *   }
  */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_WalkingRight);
+extern void PlayerTickCallback(), PlayerCallback_WalkInputHandler(),
+            PlayerCallback_WalkingOnPlatform(),
+            PlayerCallback_HandleMovementAndCollision(), PlayerState_Falling();
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_WalkingLeft);
+void PlayerState_WalkingRight(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    e->jumpParam = 0;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_EventHandlerWithQueue; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_WalkInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x292E8480, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerState_Falling;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
+
+extern void PlayerStateInit_Idle();
+
+void PlayerState_WalkingLeft(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    e->jumpParam = 0;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_WalkToRunTransition; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_WalkInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x18298210, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_Idle;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Running);
 
@@ -2076,7 +2141,46 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportFallVariant);
  * PlayerState_JumpApex). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_FallingWithInput);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Falling);
+/*
+ * PlayerStateInit_Falling (0x8006A940, 0x15C) — MATCHED 2026-07-04.
+ * Structural twin of PlayerState_IdleLookAround (no jumpParam, same render
+ * pair). See [[playst-fsm-frame-coinflip]].
+ */
+extern void PlayerCallback_FallInputHandler();
+extern void PlayerStateInit_FallingWithInput();
+
+void PlayerStateInit_Falling(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_EventHandlerWithQueue; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_FallInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x0AABC010, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_FallingWithInput;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportLanding);
 
