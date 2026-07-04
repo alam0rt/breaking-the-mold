@@ -2436,47 +2436,37 @@ void PlayerState_TransitionToLevelExit(PlayerEntity *e) {
 }
 
 /*
- * PlayerStateInit_ClimbIdle (0x8006B304, 0xF4) — SHELVED.
- *
- * Multi-slot "installer": stages four 8-byte callback slots on the stack, then
- * copies each into the entity through a single shared 8-byte scratch temp
- * (double-copy: slots[i] -> t@sp+0x3C -> entity), then SetEntitySpriteId.
- *
- * Verified C (logic byte-exact; the whole copy body matches as pure stack-offset
- * shifts). Requires these forward decls (moved here so the shelve leaves no
- * stray externs; PlayerEntityEventHandlerAlt is already declared at file top):
- *     extern void PlayerTickCallback();
- *     extern void PlayerCallback_CrouchClimbInputHandler();
- *
- * void PlayerStateInit_ClimbIdle(Entity *e) {
- *     CallbackSlot slots[4];
- *     CallbackSlot t;
- *     slots[0].markerLo = 0; slots[0].markerHi = -1;
- *     slots[0].fn = (void (*)())PlayerTickCallback;
- *     slots[1].markerLo = 0; slots[1].markerHi = -1;
- *     slots[1].fn = (void (*)())PlayerEntityEventHandlerAlt;
- *     slots[2].markerLo = 0; slots[2].markerHi = -1;
- *     slots[2].fn = (void (*)())PlayerCallback_CrouchClimbInputHandler;
- *     slots[3].markerLo = 0; slots[3].markerHi = 0; slots[3].fn = 0;
- *     t = slots[0]; *(CallbackSlot *)((u8 *)e + 0x0)   = t;
- *     t = slots[1]; *(CallbackSlot *)((u8 *)e + 0x8)   = t;
- *     t = slots[2]; *(CallbackSlot *)((u8 *)e + 0x104) = t;
- *     t = slots[3]; *(CallbackSlot *)((u8 *)e + 0x1C)  = t;
- *     SetEntitySpriteId((PlayerEntity *)e, 0x708A4A0, 1);
- * }
- *
- * Residual (non-source-reachable):
- *   - Frame size: original reserves 0x58 (slots@0x14-0x33, shared temp@0x3C,
- *     ra@0x50, with an 8-byte gap 0x34-0x3B and 12-byte pad 0x44-0x4F). The C
- *     above yields frame 0x40 (slots@0x10, temp@0x30) — the extra padding is a
- *     gcc stack-allocation choice with no C-source lever. slots[5]/slots[7]
- *     grow the frame but never reproduce the exact base offsets + gap.
- *   - Top-of-function marker-store scheduling: original loads each slot's fn
- *     then stores (markerLo, markerHi, fn) per slot with v0=-1 hoisted once;
- *     the C batches the fn-pointer stores separately. A gcc scheduling coin-flip.
- * Matching requires the permuter (not run per project policy).
+ * PlayerStateInit_ClimbIdle (0x8006B304, 0xF4) — MATCHED 2026-07-05.
+ * Lightweight installer sub-family: entity stays in $a0 (no queued store after
+ * the sprite call, so e never needs a callee-saved home) and markerHi(-1) lives
+ * in a temp reg (no $s1 pin). Render slot is written zero unconditionally (no
+ * interactEntity branch). Frame 0x58 reproduced with the lead-prefixed g
+ * aggregate + curP double-buffer padded with tail[3].
  */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ClimbIdle);
+extern void PlayerCallback_CrouchClimbInputHandler();
+void PlayerStateInit_ClimbIdle(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*fn)();
+    s16 m1;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandlerAlt; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_CrouchClimbInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    g.render.markerLo = 0; g.render.markerHi = 0; g.render.fn = (void (*)())0;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x0708A4A0, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_DamageKnockback);
 
