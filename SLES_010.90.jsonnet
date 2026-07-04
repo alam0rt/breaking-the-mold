@@ -182,11 +182,20 @@ local bss(start, kind, vram) = {
         // =====================================================================
         // .data section: 0x80090FEC - 0x800A5953
         // =====================================================================
-        data('80FEC', 'data'),
-        // Phase 4 .data pilot: carve the single 88-byte cos/sin table
-        // D_8009C11C (owner bosses, absolute-addressed) out of the pooled .data
-        // blob into build/src/bosses.o(.data). Neighbours stay asm.
-        dotdata('8C91C', 'bosses'),    // 0x8009C11C -> MIGRATED to build/src/bosses.o(.data) (Phase 4)
+        data('80FEC', 'data'),         // 0x800907EC zero region up to first table
+        // Phase 4 .data migration: carve per-TU pure-data islands (every member
+        // >8 bytes, non-zero, single-owner, no relocs) out of the pooled blob
+        // into build/src/<TU>.o(.data). Gaps and mixed/zero/tiny runs stay asm.
+        dotdata('8B640', 'vram'),      // 0x8009AE40 (24B)  -> build/src/vram.o(.data)
+        data('8B658', 'data'),         // 0x8009AE58 layer scratch buffer + gap (asm)
+        dotdata('8B838', 'blb'),       // 0x8009B038 (268B) -> build/src/blb.o(.data)
+        data('8B944', 'data'),         // 0x8009B144 gap incl. decor+pickups (2-mod-4 starts, left asm)
+        dotdata('8BBA0', 'effects'),   // 0x8009B3A0 (56B)  -> build/src/effects.o(.data)
+        data('8BBD8', 'data'),         // 0x8009B3D8 gap (asm)
+        dotdata('8BC3C', 'gamecd'),    // 0x8009B43C (144B) -> build/src/gamecd.o(.data)
+        data('8BCCC', 'data'),         // 0x8009B4CC gap up to bosses pilot (asm)
+        // bosses cos/sin table D_8009C11C (88B) migrated in the .data pilot.
+        dotdata('8C91C', 'bosses'),    // 0x8009C11C -> build/src/bosses.o(.data)
         data('8C974', 'data'),         // 0x8009C174 remainder of .data (asm)
 
         // =====================================================================

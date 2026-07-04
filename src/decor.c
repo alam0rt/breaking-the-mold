@@ -94,4 +94,3 @@ INCLUDE_ASM("asm/nonmatchings/decor", EntityTick_EasedMovementInterpolation);
 INCLUDE_ASM("asm/nonmatchings/decor", InitDecorEntityWithScreenOffset);
 
 INCLUDE_ASM("asm/nonmatchings/decor", SpawnDecorParticleEffect);
-

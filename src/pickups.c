@@ -1023,4 +1023,3 @@ EntityCallback D_800A59D4 asm("D_800A59D4") = (EntityCallback)DecorStartWithRand
 u32 DECOR_TRIGGERED_STATE_MARKER asm("D_800A59D8") = 0xFFFF0000;
 EntityCallback DECOR_TRIGGERED_STATE_CALLBACK asm("D_800A59DC") = (EntityCallback)DecorPlaySoundAndAnimate;
 u32 D_800A59E0[2] asm("D_800A59E0") = {0x32444E45, 0x00000000};
-

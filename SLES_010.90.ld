@@ -145,6 +145,7 @@ SECTIONS
         build/asm/libs/libgpu.o(.data);
         build/asm/libs/libspu.o(.data);
         build/src/prim.o(.data);
+        build/asm/data/80FEC.data.o(.data);
         build/src/vram.o(.data);
         build/src/vibrate.o(.data);
         build/src/sprite.o(.data);
@@ -154,15 +155,18 @@ SECTIONS
         build/src/entity.o(.data);
         build/src/sprset.o(.data);
         build/src/anim.o(.data);
+        build/asm/data/8B658.data.o(.data);
         build/src/blb.o(.data);
         build/src/edtor.o(.data);
         build/src/decor.o(.data);
         build/src/pickups.o(.data);
+        build/asm/data/8B944.data.o(.data);
         build/src/effects.o(.data);
+        build/asm/data/8BBD8.data.o(.data);
         build/src/gamecd.o(.data);
         build/src/movie.o(.data);
         build/src/enemies.o(.data);
-        build/asm/data/80FEC.data.o(.data);
+        build/asm/data/8BCCC.data.o(.data);
         build/src/bosses.o(.data);
         build/src/player.o(.data);
         build/src/finn.o(.data);
