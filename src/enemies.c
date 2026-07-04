@@ -110,6 +110,16 @@ extern void *ENEMY_FREE_ONLY_ENTITY_VTABLE asm("D_80011248");
 /* gp_rel sdata: strong initialized defs live in the end-of-file block (Phase 4). */
 extern u32 ENEMY_ANIMATED_CALLBACK_MARKER asm("D_800A5AD0");
 extern EntityCallback ENEMY_ANIMATED_CALLBACK_FN asm("D_800A5AD4");
+
+/* One entry of a scripted animation callback sequence played by
+ * StartAnimationSequence / StepAnimationSequence (SpriteEntity+0x94). Each
+ * step installs (marker, fn) into the entity's active-state slot in turn.
+ * marker is always 0xFFFF0000 for these enemy sequences. */
+typedef struct {
+    u32 marker;
+    EntityCallback fn;
+} AnimSequenceStep;
+
 extern void RemoveEntityFromAllLists(GameState *gs, s32 idx);
 extern void EntitySetState(Entity *e, u32 marker, EntityCallback fn);
 extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
@@ -624,9 +634,9 @@ void EntityStateSetSparkle(Entity *e) {
     SetAnimationFrameIndex(e, 0);
 }
 
-extern u8 ENEMY_ANIM_SEQUENCE_4A_DATA[] asm("D_8009B55C");
-extern u8 ENEMY_ANIM_SEQUENCE_4B_DATA[] asm("D_8009B57C");
-extern u8 ENEMY_ANIM_SEQUENCE_4C_DATA[] asm("D_8009B59C");
+extern AnimSequenceStep ENEMY_ANIM_SEQUENCE_4A_DATA[] asm("D_8009B55C");
+extern AnimSequenceStep ENEMY_ANIM_SEQUENCE_4B_DATA[] asm("D_8009B57C");
+extern AnimSequenceStep ENEMY_ANIM_SEQUENCE_4C_DATA[] asm("D_8009B59C");
 
 /* StartAnimSequence4{A,B,C}: kick off a 4-frame canned animation sequence from
  * the corresponding ENEMY_ANIM_SEQUENCE_4{A,B,C}_DATA table. */
@@ -1075,9 +1085,9 @@ void InitCollectibleIdleStateB(Entity *e) {
     SetEntitySpriteId(e, 0x20211E5F, 1);
 }
 
-extern u8 ENEMY_ANIM_SEQUENCE_3A_DATA[] asm("D_8009B5BC");
-extern u8 ENEMY_ANIM_SEQUENCE_3B_DATA[] asm("D_8009B5D4");
-extern u8 ENEMY_ANIM_SEQUENCE_9_FRAME_DATA[] asm("D_8009B5EC");
+extern AnimSequenceStep ENEMY_ANIM_SEQUENCE_3A_DATA[] asm("D_8009B5BC");
+extern AnimSequenceStep ENEMY_ANIM_SEQUENCE_3B_DATA[] asm("D_8009B5D4");
+extern AnimSequenceStep ENEMY_ANIM_SEQUENCE_9_FRAME_DATA[] asm("D_8009B5EC");
 
 void StartAnimSequence3A(SpriteEntity *e) {
     StartAnimationSequence(e, (s32)ENEMY_ANIM_SEQUENCE_3A_DATA, 3);
@@ -2829,74 +2839,47 @@ extern void InitCollectibleTimer0x1e();
 extern void InitCollectibleIdleState();
 extern void StartAnimSequence9Frames();
 
-void *D_8009B55C[8] asm("D_8009B55C") = {
-    (void *)0xFFFF0000,
-    (void *)EntityStartWalkWithTimer0x2d,
-    (void *)0xFFFF0000,
-    (void *)EntitySetSparkleDelay1,
-    (void *)0xFFFF0000,
-    (void *)EntityStateSetSparkleCollectible,
-    (void *)0xFFFF0000,
-    (void *)StartAnimSequence4A,
+AnimSequenceStep ENEMY_ANIM_SEQUENCE_4A_DATA[4] asm("D_8009B55C") = {
+    {0xFFFF0000, (EntityCallback)EntityStartWalkWithTimer0x2d},
+    {0xFFFF0000, (EntityCallback)EntitySetSparkleDelay1},
+    {0xFFFF0000, (EntityCallback)EntityStateSetSparkleCollectible},
+    {0xFFFF0000, (EntityCallback)StartAnimSequence4A},
 };
 
-void *D_8009B57C[8] asm("D_8009B57C") = {
-    (void *)0xFFFF0000,
-    (void *)EntityStartWalkWithTimer0x2d,
-    (void *)0xFFFF0000,
-    (void *)EntitySetSparkleDelay2,
-    (void *)0xFFFF0000,
-    (void *)EntityStateSetSparkleCollectible,
-    (void *)0xFFFF0000,
-    (void *)StartAnimSequence4B,
+AnimSequenceStep ENEMY_ANIM_SEQUENCE_4B_DATA[4] asm("D_8009B57C") = {
+    {0xFFFF0000, (EntityCallback)EntityStartWalkWithTimer0x2d},
+    {0xFFFF0000, (EntityCallback)EntitySetSparkleDelay2},
+    {0xFFFF0000, (EntityCallback)EntityStateSetSparkleCollectible},
+    {0xFFFF0000, (EntityCallback)StartAnimSequence4B},
 };
 
-void *D_8009B59C[8] asm("D_8009B59C") = {
-    (void *)0xFFFF0000,
-    (void *)EntityStartWalkWithTimer0x2d,
-    (void *)0xFFFF0000,
-    (void *)EntitySetSparkleDelay3,
-    (void *)0xFFFF0000,
-    (void *)EntityStateSetSparkleCollectible,
-    (void *)0xFFFF0000,
-    (void *)StartAnimSequence4C,
+AnimSequenceStep ENEMY_ANIM_SEQUENCE_4C_DATA[4] asm("D_8009B59C") = {
+    {0xFFFF0000, (EntityCallback)EntityStartWalkWithTimer0x2d},
+    {0xFFFF0000, (EntityCallback)EntitySetSparkleDelay3},
+    {0xFFFF0000, (EntityCallback)EntityStateSetSparkleCollectible},
+    {0xFFFF0000, (EntityCallback)StartAnimSequence4C},
 };
 
-void *D_8009B5BC[6] asm("D_8009B5BC") = {
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleTimer0x3c_SpriteB,
-    (void *)0xFFFF0000,
-    (void *)InitShooterEnemyStateB,
-    (void *)0xFFFF0000,
-    (void *)StartAnimSequence3A,
+AnimSequenceStep ENEMY_ANIM_SEQUENCE_3A_DATA[3] asm("D_8009B5BC") = {
+    {0xFFFF0000, (EntityCallback)InitCollectibleTimer0x3c_SpriteB},
+    {0xFFFF0000, (EntityCallback)InitShooterEnemyStateB},
+    {0xFFFF0000, (EntityCallback)StartAnimSequence3A},
 };
 
-void *D_8009B5D4[6] asm("D_8009B5D4") = {
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleTimer0x3c_SpriteA,
-    (void *)0xFFFF0000,
-    (void *)InitShooterEnemyStateA,
-    (void *)0xFFFF0000,
-    (void *)StartAnimSequence3B,
+AnimSequenceStep ENEMY_ANIM_SEQUENCE_3B_DATA[3] asm("D_8009B5D4") = {
+    {0xFFFF0000, (EntityCallback)InitCollectibleTimer0x3c_SpriteA},
+    {0xFFFF0000, (EntityCallback)InitShooterEnemyStateA},
+    {0xFFFF0000, (EntityCallback)StartAnimSequence3B},
 };
 
-void *D_8009B5EC[18] asm("D_8009B5EC") = {
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleTimer0x1e_SpriteC,
-    (void *)0xFFFF0000,
-    (void *)InitShooterEnemyStateA,
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleTimer0x1e_SpriteC,
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleIdleStateB,
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleTimer0x1e,
-    (void *)0xFFFF0000,
-    (void *)InitShooterEnemyStateB,
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleTimer0x1e,
-    (void *)0xFFFF0000,
-    (void *)InitCollectibleIdleState,
-    (void *)0xFFFF0000,
-    (void *)StartAnimSequence9Frames,
+AnimSequenceStep ENEMY_ANIM_SEQUENCE_9_FRAME_DATA[9] asm("D_8009B5EC") = {
+    {0xFFFF0000, (EntityCallback)InitCollectibleTimer0x1e_SpriteC},
+    {0xFFFF0000, (EntityCallback)InitShooterEnemyStateA},
+    {0xFFFF0000, (EntityCallback)InitCollectibleTimer0x1e_SpriteC},
+    {0xFFFF0000, (EntityCallback)InitCollectibleIdleStateB},
+    {0xFFFF0000, (EntityCallback)InitCollectibleTimer0x1e},
+    {0xFFFF0000, (EntityCallback)InitShooterEnemyStateB},
+    {0xFFFF0000, (EntityCallback)InitCollectibleTimer0x1e},
+    {0xFFFF0000, (EntityCallback)InitCollectibleIdleState},
+    {0xFFFF0000, (EntityCallback)StartAnimSequence9Frames},
 };
