@@ -335,7 +335,25 @@ void FreeEntityNoTeardown_80025964(u8 *entity) {
     FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blb", InitHUDEntity);
+extern void InitEntityDataPointers(void *entity, void *dataBase);
+
+/* Zeroes a HUD entity's header counters and installs its data pointers off the
+ * fixed HUD data base at 0x80780000. Returns the entity. */
+typedef struct HUDEntityHeader {
+    s16 field_0x0; /* 0x0 */
+    s16 field_0x2; /* 0x2 */
+    u8  field_0x4; /* 0x4 */
+    u8  field_0x5; /* 0x5 */
+} HUDEntityHeader;
+
+HUDEntityHeader *InitHUDEntity(HUDEntityHeader *e) {
+    e->field_0x0 = 0;
+    e->field_0x2 = 0;
+    e->field_0x4 = 0;
+    e->field_0x5 = 0;
+    InitEntityDataPointers(e, (void *)0x80780000);
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", UpdateInputState);
 
