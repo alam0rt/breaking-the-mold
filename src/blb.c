@@ -155,7 +155,58 @@ s32 EntityDestructCallback(Entity *entity, u16 msg, u32 arg2, u32 arg3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blb", AddToZOrderList);
+/* Inserts `entity` into the GameState's z-sorted tick list (head at +0x1C),
+ * keeping nodes ascending by Entity.allocSize (+0x10). Allocates an 8-byte EntityListNode
+ * from the BLB heap for each insert. Empty-list and append-at-tail cases share
+ * the node-init tail. */
+void AddToZOrderList(GameState *list, Entity *entity) {
+    EntityListNode *newNode;
+    EntityListNode *node;
+    EntityListNode *head;
+    EntityListNode *prev;
+    s32 align;
+    s32 key;
+    u8 inserted;
+
+    head = list->tick_list_head;
+    if (head == NULL) {
+        newNode = (EntityListNode *)AllocateFromHeap(g_pBlbHeapBase, 8, 1, 0);
+        list->tick_list_head = newNode;
+        goto init;
+    }
+    node = head;
+    prev = NULL;
+    inserted = 0;
+    key = entity->allocSize;
+loop:
+    if (node != NULL) {
+        do {
+            align = 8;
+            if (node->entity->allocSize >= key) {
+                newNode = (EntityListNode *)AllocateFromHeap(g_pBlbHeapBase, align, 1, 0);
+                if (prev == NULL) {
+                    list->tick_list_head = newNode;
+                } else {
+                    prev->next = newNode;
+                }
+                newNode->next = node;
+                newNode->entity = entity;
+                inserted = 1;
+            } else {
+                prev = node;
+                node = node->next;
+                goto loop;
+            }
+        } while (0);
+    }
+    if (inserted == 0) {
+        newNode = (EntityListNode *)AllocateFromHeap(g_pBlbHeapBase, 8, 1, 0);
+        prev->next = newNode;
+    init:
+        newNode->next = NULL;
+        newNode->entity = entity;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", AddToXPositionList);
 

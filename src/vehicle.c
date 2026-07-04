@@ -250,6 +250,8 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSteeringTick);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetIdleState);
 
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetInitState);
+
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetActiveState);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnAnimationEndCallback);
@@ -282,6 +284,8 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", FinnState_Spawn);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetTurnState);
 
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetInitState);
+
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetActiveState);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnAnimationEndCallback);
@@ -295,9 +299,9 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_80074f68);
  * with two "END2" (0x32444E45) sentinel+pad terminators embedded mid-table.
  * Migrated from the pooled asm sdata blob (sdata-under-split Phase 4). Address
  * order == declaration order (cc1 2.7.2 emits initialized .sdata in decl order).
- * Consumed only by unmatched asm; all entries use their D_ names. Two callbacks
- * (D_800A6010, D_800A6038) reference unnamed functions and are emitted as raw
- * absolute code addresses (byte-identical to the gold .word). */
+ * Consumed only by unmatched asm; all entries use their D_ names. D_800A6010
+ * and D_800A6038 point at RunnSetInitState / FinnSetInitState (state installers
+ * carved out of their predecessors' glued .s; see symbol_addrs.txt). */
 extern void EntityEnterAnimatedIdleState();
 extern void SoarStateInit_BeginFlightMode();
 extern void RunnEntityDamageEffect();
@@ -308,10 +312,12 @@ extern void PlatformStateInit_LandFromFlight();
 extern void PlatformState_StopSound();
 extern void PlatformState_EnablePlayerInput();
 extern void RunnSetIdleState();
+extern void RunnSetInitState();
 extern void RunnSetActiveState();
 extern void FinnState_Spawn();
 extern void FinnSetActiveState();
 extern void FinnSetTurnState();
+extern void FinnSetInitState();
 u32 D_800A5FAC asm("D_800A5FAC") = 0xFFFF0000;
 EntityCallback D_800A5FB0 asm("D_800A5FB0") = (EntityCallback)EntityEnterAnimatedIdleState;
 u32 D_800A5FB4 asm("D_800A5FB4") = 0xFFFF0000;
@@ -336,7 +342,7 @@ EntityCallback D_800A6000 asm("D_800A6000") = (EntityCallback)RunnSetIdleState;
 u32 D_800A6004 asm("D_800A6004") = 0xFFFF0000;
 EntityCallback D_800A6008 asm("D_800A6008") = (EntityCallback)RunnSetActiveState;
 u32 D_800A600C asm("D_800A600C") = 0xFFFF0000;
-EntityCallback D_800A6010 asm("D_800A6010") = (EntityCallback)0x80073DE0;
+EntityCallback D_800A6010 asm("D_800A6010") = (EntityCallback)RunnSetInitState;
 u32 D_800A6014[2] asm("D_800A6014") = {0x32444E45, 0x00000000};
 u32 D_800A601C asm("D_800A601C") = 0xFFFF0000;
 EntityCallback D_800A6020 asm("D_800A6020") = (EntityCallback)FinnState_Spawn;
@@ -345,7 +351,7 @@ EntityCallback D_800A6028 asm("D_800A6028") = (EntityCallback)FinnSetActiveState
 u32 D_800A602C asm("D_800A602C") = 0xFFFF0000;
 EntityCallback D_800A6030 asm("D_800A6030") = (EntityCallback)FinnSetTurnState;
 u32 D_800A6034 asm("D_800A6034") = 0xFFFF0000;
-EntityCallback D_800A6038 asm("D_800A6038") = (EntityCallback)0x80074D18;
+EntityCallback D_800A6038 asm("D_800A6038") = (EntityCallback)FinnSetInitState;
 
 /* .data island 0x8009CADC..0x8009CB00 (36B, vehicle config tables) migrated from asm. */
 /* Two null-terminated packed 32-bit lists: config at +0 and +16 (D_8009CAEC). */
