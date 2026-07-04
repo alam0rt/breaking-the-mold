@@ -19,7 +19,7 @@ extern void *g_pGameState;
 extern u8 MENU_BUTTON_VTABLE[] asm("D_80012034"); /* menu-button vtable, +0x18 install slot */
 extern u8 MENU_HIGHLIGHT_VTABLE[] asm("D_8001208C"); /* menu-button-highlight vtable */
 extern u8 PASSWORD_BUTTON_VTABLE[] asm("D_80011FDC"); /* password-button vtable (post-cursor override) */
-extern u8 MENU_HIGHLIGHT_SPRITE_TABLE[] asm("D_8009CBE8"); /* menu-button-highlight sprite table */
+extern u32 MENU_HIGHLIGHT_SPRITE_TABLE[] asm("D_8009CBE8"); /* menu-button-highlight sprite table */
 extern s32 GetWorldPositionX(Entity *entity, s16 localX);
 extern s32 GetWorldPositionY(Entity *entity, s16 localY);
 
@@ -676,9 +676,8 @@ void Menu_DecrementCounter(MenuSkullIconEntity *entity) {
     PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
 }
 
-/* .data island 0x8009CBE8..0x8009CBF8 (16B, menu table) migrated from asm; grouped u8[]. */
-/* group island: 0-byte pad at 0x8009CBE8, 1 aliased symbol(s); anchor D_8009CBE8 (16B). */
-u8 D_8009CBE8[16] asm("D_8009CBE8") = {
-    0x19, 0x06, 0x90, 0x39, 0x59, 0x8E, 0x84, 0x63,
-    0x1B, 0x8E, 0x80, 0x33, 0x00, 0x00, 0x00, 0x00,
+/* .data island 0x8009CBE8..0x8009CBF8 (16B, menu highlight sprite table) migrated from asm. */
+/* 3 packed 32-bit sprite ids followed by a null terminator word. */
+u32 MENU_HIGHLIGHT_SPRITE_TABLE[4] asm("D_8009CBE8") = {
+    0x39900619, 0x63848E59, 0x33808E1B, 0x00000000,
 };
