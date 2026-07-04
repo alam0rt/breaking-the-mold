@@ -2202,7 +2202,51 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_BounceActive);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialIdleAnim);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportIdleOnPlatform);
+/* PlayerStateInit_TeleportIdleOnPlatform @ 0x800698B8 (0x184, frame 0x68) --
+ * heavy render-conditional installer (pinned m1 $17 -> s1 saved -> frame 0x68).
+ * Variant A 4-store prologue, queued=PlayerStateInit_Idle, trailing deferred
+ * install EntitySetCallback(e, D_800A5F04, D_800A5F08). curP.tail[3]. */
+extern void PlayerCallback_TeleporterAnimHandler();
+extern void EntitySetCallback(Entity *e, u32 marker, EntityCallback fn);
+u32 PlayerSpecialMoveNextMarker asm("D_800A5F04");
+EntityCallback PlayerSpecialMoveNextFn asm("D_800A5F08");
+void PlayerStateInit_TeleportIdleOnPlatform(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    register s16 m1 asm("$17");
+    e->apexVelocity = -0x28;
+    e->specialMoveMode = 1;
+    e->specialMoveQueued = 0;
+    e->carryMotionX = 0;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_TeleporterAnimHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_IdleInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x8D01C734, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_Idle;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+    EntitySetCallback((Entity *)e, PlayerSpecialMoveNextMarker, PlayerSpecialMoveNextFn);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportWalking);
 
