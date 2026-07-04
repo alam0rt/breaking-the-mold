@@ -317,20 +317,23 @@ typedef struct {
     /* 0xB4 */ s32      frameMotionX;       /* Per-frame X motion vector (16.16 fixed) */
     /* 0xB8 */ s32      frameMotionY;       /* Per-frame Y motion vector (16.16 fixed) */
 
-    /* Pending sprite change (0xBC-0xCB) - latched by SetEntitySpriteId */
+    /* Pending sprite change (0xBC-0xCB) - latched by SetEntitySpriteId.
+     * pendingFrame/pendingLoopFrame/pendingTargetFrame are 32-bit slots
+     * whose low 16 bits hold the actual signed frame value (ApplyPendingSpriteState
+     * reads each one via both `lh` for the -1-marker compare and `lw` when
+     * forwarding it whole to FindFrameIndexByValue / storing it truncated) -
+     * NOT s16 + padding. */
     /* 0xBC */ u32      pendingSpriteId;    /* Sprite ID queued for change */
-    /* 0xC0 */ s16      pendingFrame;       /* Pending start frame */
-    /* 0xC2 */ s16      _padC2;
-    /* 0xC4 */ s16      pendingLoopFrame;   /* Pending loop start frame */
-    /* 0xC6 */ s16      _padC6;
-    /* 0xC8 */ s16      pendingTargetFrame; /* Pending target/end frame */
-    /* 0xCA */ s16      _padCA;
+    /* 0xC0 */ u32      pendingFrame;       /* Pending start frame */
+    /* 0xC4 */ u32      pendingLoopFrame;   /* Pending loop start frame */
+    /* 0xC8 */ u32      pendingTargetFrame; /* Pending target/end frame */
 
     /* Current sprite state (0xCC-0xDF) */
     /* 0xCC */ u32      currentSpriteId;    /* Active sprite bank ID (hash) */
     /* 0xD0 */ u32      displayedSpriteId;  /* Last rendered sprite ID */
     /* 0xD4 */ s32      pixelBufferSize;
-    /* 0xD8 */ u16      curSpriteFrameCount;/* Frame count of current sprite */
+    /* 0xD8 */ s16      curSpriteFrameCount;/* Frame count of current sprite (signed:
+                                             * AdvanceAnimationFrame's wrap compare is lh) */
     /* 0xDA */ s16      currentFrame;       /* Current animation frame index */
     /* 0xDC */ s16      loopFrame;          /* Frame to loop back to */
     /* 0xDE */ s16      targetFrame;        /* Target frame (stop/loop point) */

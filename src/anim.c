@@ -25,7 +25,7 @@ typedef struct { s32 a; s32 b; } S32Pair;
  * is committed into +0xDA currentFrame on the next entity tick by
  * ApplyPendingSpriteState. Bit 0x200 is cleared so the value is taken
  * as a literal index (not a callback-resolved key). */
-void SetAnimationFrameIndex(AnimEntity *entity, u32 value) {
+void SetAnimationFrameIndex(SpriteEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags;
 
@@ -41,7 +41,7 @@ void SetAnimationFrameIndex(AnimEntity *entity, u32 value) {
  * but also sets bit 0x200, telling ApplyPendingSpriteState to resolve
  * the stored value via FindFrameIndexByValue rather than using it as a
  * literal index. Lets gameplay code reference frames by symbolic tag. */
-void SetAnimationFrameCallback(AnimEntity *entity, u32 value) {
+void SetAnimationFrameCallback(SpriteEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x208;
 
@@ -56,7 +56,7 @@ void SetAnimationFrameCallback(AnimEntity *entity, u32 value) {
  * the frame the animation loops back to. If a sprite change is also queued
  * (bit 0x004), the value is mirrored into pendingFrame so the new sprite
  * starts at this loop point. Literal-index variant of SetAnimationLoopFrame. */
-void SetAnimationLoopFrameIndex(AnimEntity *entity, u32 value) {
+void SetAnimationLoopFrameIndex(SpriteEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
     u16 orFlags = flags | 0x10;
     u16 newFlags = orFlags & 0xFBFF;
@@ -82,7 +82,7 @@ void SetAnimationLoopFrameIndex(AnimEntity *entity, u32 value) {
  * (+0xC4) and sets bits 0x410 (LOOP_FRAME | callback-lookup), so
  * ApplyPendingSpriteState resolves the value via callback. Mirrors the
  * sprite-change-primes-pendingFrame branch from SetAnimationLoopFrameIndex. */
-void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
+void SetAnimationLoopFrame(SpriteEntity *entity, u32 value) {
     u16 flags = entity->animChangeFlags;
 
     entity->pendingLoopFrame = value;
@@ -107,7 +107,7 @@ void SetAnimationLoopFrame(AnimEntity *entity, u32 value) {
  * the end/stop (target) frame for the current animation as a literal index
  * (-1 = last frame). Literal-index variant of SetAnimationSpriteCallback; NOT a
  * sprite-id setter (that is SetEntitySpriteId @0x8001D080, +0xBC/flag 0x004). */
-void SetAnimationTargetFrameIndex(AnimEntity *entity, u32 spriteId) {
+void SetAnimationTargetFrameIndex(SpriteEntity *entity, u32 spriteId) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags;
 
@@ -123,7 +123,7 @@ void SetAnimationTargetFrameIndex(AnimEntity *entity, u32 spriteId) {
  * but with ANIM_CHG_TARGET_BY_VALUE (0x800) set so the stored value is
  * treated as a lookup key resolved via callback rather than a literal
  * frame index. Likely should be SetAnimationTargetFrameByValue. */
-void SetAnimationSpriteCallback(AnimEntity *entity, u8 *callback) {
+void SetAnimationSpriteCallback(SpriteEntity *entity, u8 *callback) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x820;
 
@@ -138,7 +138,7 @@ void SetAnimationSpriteCallback(AnimEntity *entity, u8 *callback) {
  * state machine (+0xF5 pendingAnimActive, flag ANIM_CHG_ANIM_ACTIVE 0x100).
  * When committed to +0xF2 animActive, TickEntityAnimation gates the
  * frame-advance loop on it. */
-void SetAnimationActive(AnimEntity *entity, u8 value) {
+void SetAnimationActive(SpriteEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x100;
 
@@ -152,7 +152,7 @@ void SetAnimationActive(AnimEntity *entity, u8 value) {
 /* NB: name MISLEADING -- writes to pendingLoopFlag (+0xF4, flag
  * ANIM_CHG_LOOP_FLAG 0x080), the "loop animation on completion" toggle,
  * not any render flags. Likely should be SetAnimationLoopFlag. */
-void EntitySetRenderFlags(AnimEntity *entity, u8 value) {
+void EntitySetRenderFlags(SpriteEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x80;
 
@@ -165,7 +165,7 @@ void EntitySetRenderFlags(AnimEntity *entity, u8 value) {
 
 /* Pending-direction setter (+0xF3 pendingDirection, flag
  * ANIM_CHG_DIRECTION 0x040). 0 = forward playback, 1 = reverse. */
-void SetAnimationDirection(AnimEntity *entity, u8 value) {
+void SetAnimationDirection(SpriteEntity *entity, u8 value) {
     u16 flags = entity->animChangeFlags;
     u16 newFlags = flags | 0x40;
 
@@ -189,7 +189,7 @@ INCLUDE_ASM("asm/nonmatchings/anim", TickEntityAnimation);
  * is reached it returns to loopFrame (+0xDC) if looping is enabled,
  * otherwise stops. Wraps at the total frameCount boundary. The actual
  * frame-index integrator driving every sprite animation. */
-void AdvanceAnimationFrame(AdvAnimState *e) {
+void AdvanceAnimationFrame(SpriteEntity *e) {
     s16 current = e->currentFrame;
     s16 target = e->targetFrame;
 
@@ -203,14 +203,14 @@ void AdvanceAnimationFrame(AdvAnimState *e) {
     if (e->animDirection == 0) {
         s16 newVal = current + 1;
         e->currentFrame = newVal;
-        if (newVal >= e->frameCount) {
+        if (newVal >= e->curSpriteFrameCount) {
             e->currentFrame = 0;
         }
     } else {
         s16 newVal = current - 1;
         e->currentFrame = newVal;
         if (newVal < 0) {
-            e->currentFrame = e->frameCount - 1;
+            e->currentFrame = e->curSpriteFrameCount - 1;
         }
     }
 }

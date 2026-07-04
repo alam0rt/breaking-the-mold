@@ -9,12 +9,11 @@
  * UpdateEntityRender @ 0x8001D988, which consumes the pending fields
  * and clears the dirty bits in animChangeFlags.
  *
- * Local layout view — only fields these two functions touch are
- * named. Bits 0x004..0x100 of animChangeFlags are the per-pending
- * "dirty" bits set by the various Set* helpers in this file.
+ * Bits 0x004..0x100 of animChangeFlags are the per-pending "dirty"
+ * bits set by the various Set* helpers in this file.
  */
 
-#include "Game/sprset_records.h"
+#include "Game/entity.h"
 
 /*
  * SetEntitySpriteId @ 0x8001D080
@@ -26,7 +25,7 @@
  * default"), pendingFrame / pendingLoopFrame to 0, pendingDirection
  * to 0, and the loop/active flags to 1.
  */
-void SetEntitySpriteId(SpriteEntity_PendingView *entity, u32 spriteId, u16 flags)
+void SetEntitySpriteId(SpriteEntity *entity, u32 spriteId, u16 flags)
 {
     entity->animChangeFlags = flags | 0x1FC;
     entity->pendingTargetFrame = 0xFFFF;
@@ -45,7 +44,7 @@ void SetEntitySpriteId(SpriteEntity_PendingView *entity, u32 spriteId, u16 flags
  * bit into animChangeFlags. Caller is expected to keep the existing
  * frame / loop / direction state untouched.
  */
-void SetAnimationSpriteFlags(SpriteEntity_PendingView *entity, u32 spriteId, u16 flags)
+void SetAnimationSpriteFlags(SpriteEntity *entity, u32 spriteId, u16 flags)
 {
     entity->animChangeFlags = flags | 0x4;
     entity->pendingSpriteId = spriteId;
