@@ -183,7 +183,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-lua lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force analyze analyze-baseline
+.PHONY: all clean extract config expected diff context check tools help lint lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force analyze analyze-baseline
 
 # Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
@@ -218,8 +218,7 @@ help:
 	@echo "  clean            - Remove build artifacts"
 	@echo ""
 	@echo "Code Quality:"
-	@echo "  lint             - Run all linters (Lua)"
-	@echo "  lint-lua         - Lint Lua scripts with luacheck"
+	@echo "  lint             - Run all linters"
 	@echo "  lint-clarity     - Report ast-grep C clarity cleanup candidates"
 	@echo ""
 	@echo "Emulator/Debugging:"
@@ -532,13 +531,8 @@ setup-hooks:
 # Code Quality / Linting
 # =============================================================================
 
-# Lint Lua scripts
-lint-lua:
-	@echo "Running luacheck on Lua scripts..."
-	@luacheck scripts/*.lua --globals PCSX bit mem --no-max-line-length --no-unused-args --codes || true
-
 # Check Lua syntax (fast check without full analysis)
-check-lua: lint-lua
+check-lua:
 	@echo "Checking Lua syntax..."
 	@for f in scripts/*.lua; do \
 		luac -p "$$f" || exit 1; \
@@ -546,7 +540,7 @@ check-lua: lint-lua
 	@echo "✓ All Lua scripts have valid syntax"
 
 # Lint all code
-lint: lint-lua lint-decomp check-asset-ids
+lint: lint-decomp check-asset-ids
 	@echo "Linting complete!"
 
 # Flag raw asset-id literals in src/ that should use an asset_ids.h constant.
@@ -575,12 +569,7 @@ lint-clarity:
 	@echo "Running ast-grep clarity checks..."
 	@$(AST_GREP) scan --config sgconfig.yml --report-style medium src include || true
 
-# Fix common Lua issues automatically
-lint-fix:
-	@echo "Auto-fixing Lua scripts not yet implemented (luacheck doesn't auto-fix)"
-	@echo "Please manually fix issues reported by: make lint-lua"
-
-.PHONY: lint lint-lua lint-decomp lint-clarity lint-fix
+.PHONY: lint lint-decomp lint-clarity lint-fix
 
 # =============================================================================
 # Launch PCSX-Redux in debug mode (requires nixGL for OpenGL on non-NixOS)

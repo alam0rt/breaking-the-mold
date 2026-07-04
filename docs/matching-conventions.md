@@ -182,6 +182,8 @@ with `make clean && make check`, never apply blindly to committed matched code):
 
 ## See also
 
+- `docs/matching-idioms.md` — *symptom → fix index*: given a residual `fdiff`,
+  which idiom to reach for (the reverse lookup for this doc + compiler-quirks).
 - `docs/compiler-quirks.md` — *why* the compiler needs each nudge (cc1 codegen).
 - `docs/ghidra/struct-workflow.md` — recovering real types/offsets to replace casts.
 - effects.c worked examples; `docs/plans/effects-dispatch-family.md`.

@@ -9,6 +9,8 @@ tags: [compiler, quirks]
 > This doc explains *why* cc1 needs each nudge (codegen mechanics). For *how to
 > apply* armor without obtuse source — tagging hacks, `volatile pad` over padded
 > struct types, offset-named fields — see **`docs/matching-conventions.md`**.
+> For the *reverse lookup* — a residual `fdiff` symptom → which idiom to try —
+> see **`docs/matching-idioms.md`**.
 
 Findings from the first real matching session (2026-06-12), decompiling the
 tail of the `Game/RENDER` module (`func_80019F2C` / `func_80019F88`). These
