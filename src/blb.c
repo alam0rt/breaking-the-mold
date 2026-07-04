@@ -320,6 +320,10 @@ void ClearHamsterCount(PlayerState *p) {
     p->hamster_count = 0;
 }
 
+/* NOTE: ResetPlayerCollectibles accesses the g_pPlayerState pointer at
+ * D_800A597C gp-relatively. That symbol is splat-owned initialized .sdata, so
+ * cc1 can only emit gp-relative loads for it once the data definition is
+ * migrated from asm/data into this TU. Left as asm until that migration. */
 INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerCollectibles);
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitializePlayerState);
