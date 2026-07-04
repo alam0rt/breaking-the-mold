@@ -2784,7 +2784,44 @@ void PlayerStateInit_DamageKnockback(PlayerEntity *e) {
     SetEntitySpriteId(e, 0x052AA082, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_DamageKnockback);
+extern s32 PlaySoundEffectRet(u32 soundId, s32 volume, s32 channel) asm("PlaySoundEffect");
+u32 PlayerDamageKnockbackNextMarker asm("D_800A5F34");
+EntityCallback PlayerDamageKnockbackNextFn asm("D_800A5F38");
+/*
+ * PlayerState_DamageKnockback (0x8006B4F4, 0x140) — MATCHED 2026-07-06.
+ * Damage-knockback installer: silences the active SPU voice, retriggers the
+ * knockback sound effect, installs the four state callbacks (frame 0x50 via
+ * curP tail[1], same as the lightweight DamageKnockback twin) and queues the
+ * deferred next-state install via EntitySetCallback(D_800A5F34/D_800A5F38).
+ */
+void PlayerState_DamageKnockback(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
+    void (*fn)();
+    s16 m1;
+    StopSPUVoice(e->soundHandle);
+    e->soundHandle = PlaySoundEffectRet(0x421586C2, 0xA0, 0);
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandlerAlt; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_CrouchClimbTickHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_KnockbackPhysics; FSM_KEEP_LIVE(fn);
+    g.render.markerLo = 0; g.render.markerHi = m1; g.render.fn = fn;
+    do {} while (0);
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x8569A090, 1);
+    EntitySetCallback((Entity *)e, PlayerDamageKnockbackNextMarker, PlayerDamageKnockbackNextFn);
+}
 
 void PlayerDestroyVoiceCallback(PlayerEntity *e) {
     StopSPUVoice(e->soundHandle);
