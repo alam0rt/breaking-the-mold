@@ -1,6 +1,7 @@
 #include "common.h"
 #include "functions.h"
 #include "Game/blb_records.h"
+#include "Game/player_state.h"
 
 extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_SimpleDestruct[];
@@ -244,13 +245,53 @@ INCLUDE_ASM("asm/nonmatchings/blb", GetEntitySpawnData);
 
 INCLUDE_ASM("asm/nonmatchings/blb", SetEntitySpawnData);
 
-INCLUDE_ASM("asm/nonmatchings/blb", SetSpawnOffsetGroup1);
+/* Maps a facing/direction code to the horizontal glide-spawn offset stored in
+ * GameState.glide_boss_state_x: 0 -> centred, 1 -> left (-0x30), 2 -> right
+ * (+0x30). Any other value leaves the field untouched. */
+void SetSpawnOffsetGroup1(GameState *gs, u8 dir) {
+    switch (dir) {
+    case 0:
+        gs->glide_boss_state_x = 0;
+        break;
+    case 1:
+        gs->glide_boss_state_x = -0x30;
+        break;
+    case 2:
+        gs->glide_boss_state_x = 0x30;
+        break;
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/blb", SetSpawnOffsetGroup2);
+/* Vertical counterpart of SetSpawnOffsetGroup1: maps the direction code to
+ * GameState.glide_boss_state_y (0 / -0x30 / +0x30). */
+void SetSpawnOffsetGroup2(GameState *gs, u8 dir) {
+    switch (dir) {
+    case 0:
+        gs->glide_boss_state_y = 0;
+        break;
+    case 1:
+        gs->glide_boss_state_y = -0x30;
+        break;
+    case 2:
+        gs->glide_boss_state_y = 0x30;
+        break;
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/blb", GetLevelAssetIndexFromGameState);
+extern u8 GetCurrentLevelAssetIndex(LevelDataContext *ctx);
+extern char *GetCurrentLevelDisplayName(LevelDataContext *ctx);
 
-INCLUDE_ASM("asm/nonmatchings/blb", GetLevelNameFromGameState);
+/* Thin GameState wrapper: resolves the asset index of the current level from
+ * the LevelDataContext embedded at GameState+0x84. */
+u8 GetLevelAssetIndexFromGameState(GameState *gs) {
+    return GetCurrentLevelAssetIndex(&gs->level_context);
+}
+
+/* GameState wrapper: fetches the current level's display name string from the
+ * embedded LevelDataContext. */
+char *GetLevelNameFromGameState(GameState *gs) {
+    return GetCurrentLevelDisplayName(&gs->level_context);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", GetStageIndexFromGameState);
 
@@ -274,7 +315,10 @@ INCLUDE_ASM("asm/nonmatchings/blb", DecodePassword);
 
 INCLUDE_ASM("asm/nonmatchings/blb", initPlayerState);
 
-INCLUDE_ASM("asm/nonmatchings/blb", ClearHamsterCount);
+/* Zeroes the player's hamster collectible counter (PlayerState+0x1A). */
+void ClearHamsterCount(PlayerState *p) {
+    p->hamster_count = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerCollectibles);
 

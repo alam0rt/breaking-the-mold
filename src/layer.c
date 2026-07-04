@@ -1,6 +1,7 @@
 #include "common.h"
 #include "Game/entity.h"
 #include "Game/layer_records.h"
+#include "Game/sprite.h"
 
 extern void FreeAllLayerRenderSlots(LayerRenderSlot *base);
 extern void builtin_delete(void *ptr);
@@ -117,7 +118,11 @@ INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableEntryByValue);
 
 INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableSlotById);
 
-INCLUDE_ASM("asm/nonmatchings/layer", GetSpriteFrameCount);
+/* Returns the total animation frame count of the SpriteContext referenced by
+ * the given slot (the slot's first member is a SpriteContext pointer). */
+u16 GetSpriteFrameCount(SpriteContext **ppSprite) {
+    return (*ppSprite)->total_frame_count;
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", GetSpriteFrameDataByIndex);
 
