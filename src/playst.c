@@ -3048,6 +3048,26 @@ INCLUDE_ASM("asm/nonmatchings/playst", UniverseEnemaActivate);
  */
 INCLUDE_ASM("asm/nonmatchings/playst", UniverseEnemaKillAllEnemies);
 
+/*
+ * PlayerStateInit_CheckpointEntry (0x8006C3AC, 0x168) — NON-MATCHING (scheduler
+ * residual, candidate for permuter).
+ * Enters the checkpoint cutscene state: flags the global checkpoint restore as
+ * pending (g_pGameState->checkpoint_restore_pending = 1), zeroes the carried-
+ * platform motion (e->carryMotionX), installs the four state callbacks (frame
+ * 0x70; tick=PlayerTickCallback, event=PlayerCallback_ProjectileEventHandler,
+ * input=NULL, render=VerticalCollisionCheck / PlatformFollowUpdate when
+ * e->interactEntity != NULL), sets sprite id 0x1C8C2437, and queues
+ * PlayerStateInit_ProjectileThrowAnim as the next installer.
+ *
+ * All substantive codegen matches byte-for-byte. The only residual is a
+ * ~4-instruction prologue weave: the target uses barrier-free natural gcc
+ * scheduling that hoists both fn address-loads to a0/a1 up top AND interleaves
+ * the callee-save stores (sw s1 / sw ra) late with the g_pGameState load and
+ * li v0 / li s1. Reproducing the a0/a1 hoist requires FSM_KEEP_LIVE barriers,
+ * but a volatile-asm barrier fragments the scheduling region and forces the
+ * saves to land right after a1 (early) instead of woven late — the two
+ * requirements are mutually exclusive in C source. Deferred to the permuter.
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_CheckpointEntry);
 
 /*
