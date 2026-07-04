@@ -585,10 +585,8 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", LoadTPage);
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", EXT_OBJ_A8);
 
 /* .data island 0x8009E1C4 (28B, libcd) migrated from asm. */
-/* group island: 0-byte pad at 0x8009E1C4, 1 aliased symbol(s); anchor D_8009E1C4 (28B). */
-u8 D_8009E1C4[28] asm("D_8009E1C4") = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00,
+/* CD test-parameter scratch: 7 s32 slots, index 0 is the parameter count
+ * (see CD_set_test_parmnum / CD_TEST_PARAM_COUNT above). */
+s32 D_8009E1C4[7] asm("D_8009E1C4") = {
+    0, 0, 0, 0, 0, 0, 0,
 };
