@@ -2381,49 +2381,41 @@ void PlayerStateInit_FallFromLedge(PlayerEntity *e) {
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_TeleportFallVariant);
 
 /* PlayerStateInit_FallingWithInput @ 0x8006A818 -- installs the falling-with-
- * input FSM: four CallbackSlots ({markerLo=0, markerHi=-1, fn}) written to the
- * entity's tick(0x0)/event(0x8)/input(0x104)/render(0x1C) marker fields, then
- * SetEntitySpriteId(e, 0x0E0AC230, 1). The render slot's fn is chosen at
- * runtime: e->interactEntity ? PlayerCallback_RidingPlatformPhysics
- *                            : PlayerCallback_HorizontalWallCollision.
- *
- * Verified C (semantically exact, instruction structure matches byte-for-byte
- * including the build-all-first shared-temp double-copy staging):
- *
- *   void PlayerStateInit_FallingWithInput(PlayerEntity *e) {
- *       CallbackSlot tick, event, input, render, scratch, cur;
- *       tick.markerLo = 0;  tick.markerHi = -1;  tick.fn = PlayerTickCallback;
- *       event.markerLo = 0; event.markerHi = -1;
- *       event.fn = (void (*)())PlayerEntityEventHandler;
- *       input.markerLo = 0; input.markerHi = -1;
- *       input.fn = PlayerCallback_FallInputHandler;
- *       scratch.markerLo = 0; scratch.markerHi = -1;
- *       if (e->interactEntity != NULL)
- *           scratch.fn = PlayerCallback_RidingPlatformPhysics;
- *       else
- *           scratch.fn = PlayerCallback_HorizontalWallCollision;
- *       render = scratch;
- *       cur = tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = cur;
- *       cur = event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = cur;
- *       cur = input;  *(CallbackSlot *)&e->inputStateMarker         = cur;
- *       cur = render; *(CallbackSlot *)&e->sprite.base.renderMarker = cur;
- *       SetEntitySpriteId(e, 0xE0AC230, 1);
- *   }
- *
- * SHELVED (stack-frame layout coin-flip): the C above reproduces the EXACT
- * instruction sequence -- build-all-first (six distinct slot scratch areas),
- * conditional render via a scratch copied into render, then each slot copied
- * through a shared temp into the entity (slotN -> temp -> field). The ONLY
- * residual is the local stack layout: target frame is 0x60 with the six slot
- * areas at sp+0x14/0x1C/0x24/0x2C(render)/0x38(scratch)/0x44(temp+cur), i.e. a
- * leading 4-byte pad plus 4-byte pads before the scratch and temp slots. cc1
- * 2.7.2 packs six bare CallbackSlot locals tighter (frame 0x48, no leading pad)
- * -> uniform +4 offset shift. Wrapping the first four in a padded group struct
- * plus two PadSlots fixes tick/event/input/render exactly but gcc 8-aligns the
- * group and each PadSlot, pushing scratch/temp +4/+8 high. The precise pad
- * placement is not source-reachable (same class as the shelved sibling
- * PlayerState_JumpApex). */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_FallingWithInput);
+ * input FSM (lightweight: no early calls, entity stays in a caller-saved reg;
+ * plain s16 m1 in v0). Four CallbackSlots to tick(0x0)/event(0x8)/input(0x104)/
+ * render(0x1C), render fn conditional on e->interactEntity, then
+ * SetEntitySpriteId(e, 0xE0AC230, 1). No queued store. Aggregate frame trick:
+ * g (lead+4 slots) + curP.tail[3] -> frame 0x60. Variant B -> leading fence. */
+extern void PlayerCallback_FallInputHandler();
+void PlayerStateInit_FallingWithInput(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    s16 m1;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_FallInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0xE0AC230, 1);
+}
 
 /*
  * PlayerStateInit_Falling (0x8006A940, 0x15C) — MATCHED 2026-07-04.
