@@ -3557,3 +3557,12 @@ u32 PlayerPostThrowNextMarker asm("D_800A5F54") = 0xFFFF0000;
 EntityCallback PlayerPostThrowNextFn asm("D_800A5F58") = (EntityCallback)PlayerState_ClearCheckpointAndSetInvincible;
 u32 PlayerRestoreShrinkNextMarker asm("D_800A5F5C") = 0xFFFF0000;
 EntityCallback PlayerRestoreShrinkNextFn asm("D_800A5F60") = (EntityCallback)PlayerCallback_RestoreNormalHitbox;
+
+/* .data island 0x8009C254..0x8009C270 (28B, playst table) migrated from asm. */
+/* group island: 0-byte pad at 0x8009C254, 1 aliased symbol(s); anchor D_8009C254 (28B). */
+u8 D_8009C254[28] asm("D_8009C254") = {
+    0x88, 0xA0, 0x39, 0x81, 0x00, 0xA0, 0x29, 0x96,
+    0xA4, 0x80, 0x08, 0xD7, 0x09, 0xE0, 0x28, 0xA6,
+    0xEA, 0xA2, 0x38, 0x05, 0x89, 0xE0, 0x24, 0x25,
+    0x00, 0x00, 0x00, 0x00,
+};

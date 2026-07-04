@@ -137,7 +137,6 @@ SECTIONS
         build/src/gfx.o(.data);
         build/src/hud.o(.data);
         build/src/clayball.o(.data);
-        build/src/playst.o(.data);
         build/asm/data/80FEC.data.o(.data);
         build/src/vram.o(.data);
         build/src/vibrate.o(.data);
@@ -163,6 +162,8 @@ SECTIONS
         build/src/bosses.o(.data);
         build/src/player.o(.data);
         build/asm/data/8C974.data.o(.data);
+        build/src/playst.o(.data);
+        build/asm/data/8CA70.data.o(.data);
         build/src/finn.o(.data);
         build/src/playdtor.o(.data);
         build/src/vehicle.o(.data);
