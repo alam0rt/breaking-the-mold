@@ -2078,7 +2078,40 @@ void PlayerStateInit_IdleWithZoneTrigger(PlayerEntity *e) {
     *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_IdleStanding);
+/*
+ * PlayerStateInit_IdleStanding (0x80068514, 0x140) — MATCHED 2026-07-05.
+ * Heavy Variant B but with SWAPPED saved regs: entity in $s1, m1(-1) in $s0
+ * (pin m1 to $16). Four real slots, queued=PlayerStateInit_Idle. Frame 0x58
+ * via curP tail[1]; leading fence anchors the reg saves.
+ */
+void PlayerStateInit_IdleStanding(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
+    void (*fn)();
+    register s16 m1 asm("$16");
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_EventHandlerWithQueue; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_IdleInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_HandleMovementAndCollision; FSM_KEEP_LIVE(fn);
+    g.render.markerLo = 0; g.render.markerHi = m1; g.render.fn = fn;
+    do {} while (0);
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x0A08C490, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_Idle;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateCallback_2);
 
