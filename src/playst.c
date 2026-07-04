@@ -2878,7 +2878,58 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ClimbWithMirror);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_HeavyDamageLaunch);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_DamageRecoilFall);
+extern void PlayerCallback_JumpInputAndCounters();
+extern u16 g_WalkFallTurnBlockMask[] asm("D_800A5970");
+u32 PlayerDamageRecoilNextMarker asm("D_800A5F3C");
+EntityCallback PlayerDamageRecoilNextFn asm("D_800A5F40");
+/*
+ * PlayerStateInit_DamageRecoilFall (0x8006BC04, 0x17C) — MATCHED 2026-07-06.
+ * Damage-recoil fall setup: seeds the velocity cap from the turn-block button
+ * mask, clears the landing/bounce/jump counters and alt-speed, floors the Y
+ * velocity to -0x90000, then installs the four state callbacks (frame 0x50)
+ * and queues the deferred next-state install (D_800A5F3C/D_800A5F40).
+ */
+void PlayerStateInit_DamageRecoilFall(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
+    void (*fn)();
+    s16 m1;
+    s32 vy;
+    if (*(u16 *)e->pInput & g_WalkFallTurnBlockMask[0])
+        e->maxVelocity = 0x38000;
+    else
+        e->maxVelocity = 0x28000;
+    vy = e->velocityY_fixed;
+    e->landingTimer = 0;
+    e->bounceLockTimer = 0;
+    e->jumpHoldCounter = 0;
+    e->altSpeed = 0;
+    e->cushionVelY = 0;
+    e->velocityX_fixed = 0;
+    e->timer13C = 0;
+    if (vy < (s32)0xFFF70000)
+        e->velocityY_fixed = (s32)0xFFF70000;
+    do {} while (0);
+    fn = (void (*)())PlayerState_CooldownTick; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_CollisionDamageSetup; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_JumpInputAndCounters; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_FallingPhysicsMain; FSM_KEEP_LIVE(fn);
+    g.render.markerLo = 0; g.render.markerHi = m1; g.render.fn = fn;
+    do {} while (0);
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x8524A880, 1);
+    EntitySetCallback((Entity *)e, PlayerDamageRecoilNextMarker, PlayerDamageRecoilNextFn);
+}
 
 void PlayerState_RemoveAttachedEntity(PlayerEntity *e) {
     Entity *portal;
