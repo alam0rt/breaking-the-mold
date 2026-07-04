@@ -1922,7 +1922,52 @@ void PlayerState_Running(PlayerEntity *e) {
  */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_JumpApex);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_Falling);
+extern void PlayerCallback_WalkInputWithJump();
+extern void PlayerCallback_WalkingOnPlatform();
+extern void PlayerCallback_HandleMovementAndCollision();
+/*
+ * PlayerState_Falling (0x800678D4, 0x160) — MATCHED 2026-07-06.
+ * Lightweight falling-state installer (entity kept in a caller-saved reg, no
+ * early calls). Prologue zeroes Y velocity and seeds the jump-hold window
+ * (jumpParam = 0xC when the previous sprite was one of the two jump banks,
+ * else 0). Then installs the four state callbacks with a render slot that
+ * flips to WalkingOnPlatform while interacting with a platform entity.
+ */
+void PlayerState_Falling(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    s16 m1;
+    e->velocityY_fixed = 0;
+    if (e->sprite.currentSpriteId == 0x92B8480 || e->sprite.currentSpriteId == 0x88B9833C)
+        e->jumpParam = 0xC;
+    else
+        e->jumpParam = 0;
+    e->velocityY_fixed = 0;
+    do {} while (0);
+    fn = (void (*)())PlayerState_FrameCountTick; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_WalkInputWithJump; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HandleMovementAndCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_WalkingOnPlatform;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x0B2084D0, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerEnterLandingState);
 
