@@ -396,11 +396,9 @@ s32 CheckTileCollisionOverride(PlayerEntity *entity, u8 *tile) {
     return 0;
 }
 
-/* .data island 0x8009C3A8..0x8009C3C4 (28B, player table) migrated from asm. */
-/* group island: 0-byte pad at 0x8009C3A8, 1 aliased symbol(s); anchor D_8009C3A8 (28B). */
-u8 D_8009C3A8[28] asm("D_8009C3A8") = {
-    0x84, 0x84, 0x60, 0x48, 0x15, 0xC0, 0x36, 0xF9,
-    0x14, 0xCD, 0x20, 0xFA, 0x34, 0xE4, 0x2C, 0x5D,
-    0x94, 0x83, 0xA0, 0x52, 0x30, 0x4C, 0x20, 0x5A,
-    0x45, 0xD0, 0x05, 0xD3,
+/* .data island 0x8009C3A8..0x8009C3C4 (28B, player candidate sprite-id table) migrated from asm. */
+/* 7 packed 32-bit player sprite ids probed by InitPlayerSpriteAvailability. */
+u32 D_8009C3A8[7] asm("D_8009C3A8") = {
+    0x48608484, 0xF936C015, 0xFA20CD14, 0x5D2CE434,
+    0x52A08394, 0x5A204C30, 0xD305D045,
 };
