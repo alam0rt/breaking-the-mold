@@ -191,3 +191,53 @@ and omits the **LIBETC** (pad+vsync+intr) split before LIBGPU.
 3. Optionally split `LIBCD` internally and add a `LIBETC` segment per §3.
 4. These remain *labels*; only the boundaries are evidence-backed.
 </content>
+
+---
+
+## 5. Split-correctness audit (2026-07-04)
+
+Re-checked against the question "are we splitting at wrong places and reshaping the
+bytes with unnatural C?" **Conclusion: the splits are structurally sound; almost all
+"weird C" is genuine cc1 codegen, not split compensation.**
+
+- **Coarse (rodata-anchored) boundaries: correct.** The 10 boundaries are
+  binary-confirmed (§1). Independent checks that pass today: rodata sub-block order
+  equals text order (gfx<hud<clayball<playst<vehicle<lvlload<libc in *both* sections),
+  and the full link is clean — **zero** `multiple definition` / overlap / region-overflow
+  errors, which a mis-placed coarse boundary would produce.
+- **Fine boundaries: mostly correct, occasionally too coarse (byte-safe).** Function-level
+  mis-splits do occur but are actively caught and merged in `symbol_addrs.txt` (~23
+  documented, e.g. `layer.c` FindLayerSlot loop tail, `finn.c` dispatch body,
+  `pickups.c` TriggerFadeOut). These do not force compensating C — the functions still
+  link in the same order.
+
+### The one real "reshaping" area: the shared `.sdata`/`.data` blobs
+
+`.data` and `.sdata` are each a **single pooled asm segment** (`data('80FEC','data')`,
+`data('96154','sdata')`), not split per owning TU. Ten game TUs reach into the sdata
+blob via the **tentative-def + `--use-comm-section` gp_rel trick** (finn, gamecd, menu,
+bosses, pickups, enemies, …). This yields *correct bytes* — it is a standard technique,
+not a bug — but it is the "unnatural construct" the splits push onto callers. It fails
+outright for **initialized** small globals (e.g. `D_800A595C = .word D_8009AE58`): the
+tentative def adds storage and shifts the whole sdata segment, so `FindLayerSlot` and
+~8 siblings stay shelved. The proper fix is a per-TU **data/sdata migration** (define the
+global in its owning C TU, excise it from the pooled blob at its exact gp offset) — the
+sdata analog of the rodata migration in `docs/plans/rodata-sdata-migration.md`.
+
+### splat warning: `clayball` rodata jumptable alignment
+
+`python -m splat split` emits:
+> The rodata segment 'clayball' has jumptables that are not aligned properly file-wise,
+> indicating one or more likely file split.  - [0x2004, rodata]
+
+Cause (verified, byte-safe — **not a correctness bug**): the `clayball` rodata segment
+(`0x80011628`–`0x80011844`) bundles **player**-owned rodata at its tail —
+`g_PlayerCallbackTable` (`0x80011804`–`0x80011844`, an entity destructor/render callback
+vtable) is referenced only by `CreatePlayerEntity` @ `0x800596E8` (player text unit
+`0x800596A4`), via **absolute** `lui/%hi + addiu/%lo`, not gp_rel. Because the order is
+still clayball-rodata < player-rodata < playst-rodata (matching clayball-text <
+player-text < playst-text), the bytes are correct; only the *label* is coarse. splat's
+jumptable-alignment heuristic correctly infers a missed file split at `0x2004`. To clear
+the warning and set up a future `player.o(.rodata)` migration, split the `clayball`
+rodata subsegment so `g_PlayerCallbackTable` (and any preceding player vtables) form a
+`player` rodata segment. Byte-match-neutral; deferred (not applied this pass).
