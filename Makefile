@@ -113,6 +113,11 @@ PYTHON := python3
 # splat binary splitting tool
 SPLAT := $(PYTHON) -m splat split
 
+# Post-splat rodata migration: re-applies compiler-emitted rodata (jump tables)
+# for functions migrated to C, since splat regenerates asm/ + .ld from the base
+# ROM on every extract. Idempotent. See tools/rodata_migrations.json.
+RODATA_MIGRATE := $(PYTHON) tools/migrate_rodata.py
+
 # m2c - MIPS to C decompiler
 M2C := $(PYTHON) tools/m2c/m2c.py
 
@@ -190,7 +195,7 @@ all: $(SPLAT_CONFIG)
 	@if [ ! -d "$(ASM_DIR)" ] || [ "$(SPLAT_CONFIG)" -nt "$(LD_SCRIPT)" ]; then \
 		echo "Config changed or ASM missing, re-extracting..."; \
 		rm -rf $(ASM_DIR) $(BUILD_DIR); \
-		$(SPLAT) $(SPLAT_CONFIG) && touch $(LD_SCRIPT); \
+		$(SPLAT) $(SPLAT_CONFIG) && $(RODATA_MIGRATE) && touch $(LD_SCRIPT); \
 	fi
 	@$(MAKE) --no-print-directory build
 	@echo "Build complete!"
@@ -276,6 +281,7 @@ extract: $(SPLAT_CONFIG)
 	rm -rf $(ASM_DIR) $(BUILD_DIR)
 	@echo "Extracting binary using splat..."
 	$(SPLAT) $(SPLAT_CONFIG)
+	@$(RODATA_MIGRATE)
 	@touch $(LD_SCRIPT)
 	@$(MAKE) --no-print-directory annotate-asm
 	@echo "Extraction complete. ASM files in $(ASM_DIR)/"
@@ -284,6 +290,7 @@ extract: $(SPLAT_CONFIG)
 $(LD_SCRIPT): $(SPLAT_CONFIG) $(BASEROM)
 	@echo "Running splat to generate linker script and ASM..."
 	$(SPLAT) $(SPLAT_CONFIG)
+	@$(RODATA_MIGRATE)
 	@touch $(LD_SCRIPT)
 
 # Annotate splat-extracted .s files in place with symbol/struct/asset/callee

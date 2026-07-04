@@ -600,46 +600,49 @@ void PlayerState_UpdateAttachedEntity(PlayerEntity *e) {
  * 0x1017 is a pure query: returns 1 when scale is not disabled and no level-exit
  * is pending, else 0; all other handled events return 0.
  *
- * SHELVED: the C below is VERIFIED byte-correct -- the compiled code diffs clean
- * across the whole function range. The only blocker is jump-table rodata
- * migration: gcc emits its own copy of jtbl_80011AE4 into build/src/playst.o's
- * .rodata, but the linker script only pulls build/asm/data/playst.rodata.o's
- * .rodata (jtbl lives there). Linking the compiled table would require editing
- * SLES_010.90.ld to add build/src/playst.o(.rodata) at the exact rodata offset
- * AND deleting jtbl_80011AE4 from asm/data/playst.rodata.s without disturbing
- * the surrounding rodata order -- an infra change deferred to a rodata-migration
- * pass. Keep as INCLUDE_ASM until then.
- *
- *   extern void PlayerEnterShrinkZone(void);
- *   extern void PlayerExitShrinkZone(void);
- *   u32 PlayerZoneEnterMarker asm("D_800A5DB8");
- *   EntityCallback PlayerZoneEnterFn asm("D_800A5DBC");
- *   u32 PlayerZoneWarpMarker asm("D_800A5DC0");
- *   EntityCallback PlayerZoneWarpFn asm("D_800A5DC4");
- *   s32 PlayerEvent_ZoneTriggerHandler(PlayerEntity *e, u32 event, u32 arg2,
- *                                      Entity *src) {
- *       s32 result = 0;
- *       switch (event & 0xFFFF) {
- *       case 0x100C: PlayerEnterShrinkZone(); break;
- *       case 0x100D: PlayerExitShrinkZone(); break;
- *       case 0x1010:
- *           if (e->disableScale != 0) break;
- *           if (e->levelExitFlag != 0) break;
- *           EntitySetState((Entity *)e, PlayerZoneEnterMarker, PlayerZoneEnterFn);
- *           break;
- *       case 0x100F:
- *           e->sprite.base.worldX = src->worldX;
- *           e->sprite.base.worldY = src->worldY + 0x20;
- *           EntitySetState((Entity *)e, PlayerZoneWarpMarker, PlayerZoneWarpFn);
- *           break;
- *       case 0x1017:
- *           if (e->disableScale != 0) break;
- *           result = (e->levelExitFlag == 0);
- *           break;
- *       }
- *       return result;
- *   } */
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerEvent_ZoneTriggerHandler);
+ * MATCHED via rodata migration (pilot, 2026-07-04). The switch jump table
+ * jtbl_80011AE4 is emitted by gcc into build/src/playst.o(.rodata) and spliced
+ * into the linker script at 0x80011AE4 by tools/migrate_rodata.py (registered in
+ * tools/rodata_migrations.json, run post-splat by the Makefile). See
+ * docs/plans/rodata-sdata-migration.md and the rodata-migrate skill.
+ * Two codegen levers were needed on top of the migration: the 0x100F warp reads
+ * src->worldY through an s32 temp to force `lh` (signed) feeding +0x20/sh; and the
+ * 0x1017 query is written `result = 0; if (disableScale == 0) result = (...)` so
+ * the result=0 fills the bnez delay slot. */
+extern void PlayerEnterShrinkZone(void);
+extern void PlayerExitShrinkZone(void);
+u32 PlayerZoneEnterMarker asm("D_800A5DB8");
+EntityCallback PlayerZoneEnterFn asm("D_800A5DBC");
+u32 PlayerZoneWarpMarker asm("D_800A5DC0");
+EntityCallback PlayerZoneWarpFn asm("D_800A5DC4");
+s32 PlayerEvent_ZoneTriggerHandler(PlayerEntity *e, u32 event, u32 arg2,
+                                   Entity *src) {
+    s32 result = 0;
+    switch (event & 0xFFFF) {
+    case 0x100C: PlayerEnterShrinkZone(); break;
+    case 0x100D: PlayerExitShrinkZone(); break;
+    case 0x1010:
+        if (e->disableScale != 0) break;
+        if (e->levelExitFlag != 0) break;
+        EntitySetState((Entity *)e, PlayerZoneEnterMarker, PlayerZoneEnterFn);
+        break;
+    case 0x100F: {
+        s32 warpY;
+        e->sprite.base.worldX = src->worldX;
+        warpY = src->worldY;
+        e->sprite.base.worldY = warpY + 0x20;
+        EntitySetState((Entity *)e, PlayerZoneWarpMarker, PlayerZoneWarpFn);
+        break;
+    }
+    case 0x1017:
+        result = 0;
+        if (e->disableScale == 0) {
+            result = (e->levelExitFlag == 0);
+        }
+        break;
+    }
+    return result;
+}
 
 
 /* PlayerEvent_ZoneTriggerHandlerAlt: unit spans 0x8005BF5C..0x8005C0A0 — absorbs former split symbols PlayerState_SetAndProcessQueue (Ghidra labels with no external references; merged 2026-07-02). */

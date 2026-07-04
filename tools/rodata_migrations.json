@@ -1,0 +1,11 @@
+[
+  {
+    "_comment": "PlayerEvent_ZoneTriggerHandler switch jump table. Migrated to C 2026-07-04; pilot for the rodata-split process (docs/plans/rodata-sdata-migration.md).",
+    "rodata_file": "asm/data/playst.rodata.s",
+    "symbol": "jtbl_80011AE4",
+    "part_b_file": "asm/data/playst_b.rodata.s",
+    "ld_asm_line": "build/asm/data/playst.rodata.o(.rodata);",
+    "ld_src_line": "build/src/playst.o(.rodata);",
+    "ld_part_b_line": "build/asm/data/playst_b.rodata.o(.rodata);"
+  }
+]
