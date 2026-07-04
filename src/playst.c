@@ -2256,7 +2256,54 @@ void PlayerStateInit_IdleStanding(PlayerEntity *e) {
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateCallback_2);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_StandingIdle);
+/*
+ * PlayerState_StandingIdle (0x8006888C, 0x180) — installer (frame 0x68, s1-pin,
+ * queued store). Clears velocityY_fixed and carryMotionX, picks the idle sprite
+ * id (default 0x3838801A, override 0x1C395196 when e->currentSpriteId==0x388110),
+ * installs tick=PlayerTickCallback, event=PlayerCallback_EventHandlerWithQueue,
+ * input=PlayerCallback_IdleInputHandler, render chosen by e->interactEntity
+ * (HorizontalWallCollision / RidingPlatformPhysics), then SetEntitySpriteId and
+ * queues PlayerStateInit_Idle into the queued-state slot (0x98). The sprite-id
+ * selection MUST be a ternary (not default+if-override): the ternary evaluates
+ * the condition first, so cc1 materialises the compare constant (0x388110)
+ * before the two result constants, matching the target's prologue emission order.
+ */
+void PlayerState_StandingIdle(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    u32 spriteId;
+    register s16 m1 asm("$17");
+    e->velocityY_fixed = 0;
+    e->carryMotionX = 0;
+    spriteId = (e->sprite.currentSpriteId == 0x388110) ? 0x1C395196 : 0x3838801A;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_EventHandlerWithQueue; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_IdleInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, spriteId, 1);
+    g.tick.markerLo = 0; g.tick.markerHi = m1;
+    g.tick.fn = (void (*)())PlayerStateInit_Idle;
+    *(CallbackSlot *)&e->sprite.queuedStateMarker = g.tick;
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialMove1);
 
