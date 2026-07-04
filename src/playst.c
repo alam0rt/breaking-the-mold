@@ -2450,6 +2450,28 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_BounceJumpAnimation);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_BounceActive);
 
+/* SHELVED: PlayerState_SpecialIdleAnim @ 0x80069754 (0x164, frame 0x58).
+ * Up-front-fn-load aggregate installer — SAME family/wall as the BounceActive
+ * twins above. Prologue: g_pGameState->bounce_active_flag=1, apexVelocity(0x136)
+ * =-0x27, specialMoveMode(0x135)=1, specialMoveQueued(0x134)=0. Four fixed slots
+ * (tick->CooldownTick, event->BounceEventHandler, input->JumpInputAndCounters,
+ * render->FallingPhysicsMain) pre-loaded into $a3/$t0/$t1/$t2, sprite id
+ * 0xC8099196 into $a1, all BEFORE the flag store. SetEntitySpriteId(e,0xC8099196,
+ * 1); queued store (0x98)->PlayerStateInit_BounceActive; EntitySetCallback(e,
+ * D_800A5F1C, D_800A5F20).
+ *
+ * NEAR-MATCH (this session): the winning shape is 4 fn locals pinned to
+ * $7/$8/$9/$10 (register void(*)()) + FSM_KEEP_LIVE on all four + `register s16
+ * m1 asm("$17")` + curP.tail[1] (frame 0x58). That reproduces the ENTIRE body
+ * and the eager fn loads exactly (a3/t0/t1/t2), leaving ONLY a 2-instruction
+ * residual: the target delays `sw s1,0x4C`/`sw ra,0x50` past the a1+gamestate
+ * loads (saving s1 just before `li s1,-1`), but the FSM_KEEP_LIVE fence that is
+ * REQUIRED to force the eager fn loads also flushes the callee-saved reg saves
+ * to the top of the prologue. Dropping the barriers fixes the save order but
+ * loses the eager fn loads (a1 hoists first / per-slot v0 reloads). No C-level
+ * lever separates "eager fn load" from "early reg-save flush" — this is exactly
+ * the twins' blocker #1. Shelve until a prologue-scheduling permuter push cracks
+ * it (fix should transfer to the whole up-front-fn sub-family). */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_SpecialIdleAnim);
 
 /* PlayerStateInit_TeleportIdleOnPlatform @ 0x800698B8 (0x184, frame 0x68) --
