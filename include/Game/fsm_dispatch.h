@@ -36,6 +36,66 @@
 #endif
 
 /* ------------------------------------------------------------------------
+ * Entity FSM slot INSTALLER template (the frame-0x68 PlayerStateInit_* family
+ * in playst.c). Each installer stages 3-4 (markerLo=0, markerHi=-1, fn) slots
+ * into an on-stack aggregate, then block-copies each into the entity.
+ *
+ * cc1 2.7.2 -O2 only reproduces the target's prologue/slot schedule when every
+ * slot is written as fn-into-a-KEEP_LIVE-temp BEFORE the marker stores, with a
+ * do-while fence separating slots, and with `m1 = -1` (markerHi) materialised
+ * between the FIRST slot's fn-load and its markers (so the tick fn's lui/addiu
+ * lands before `li s1,-1`). See memory playst-fsm-frame-coinflip / the plan in
+ * docs/plans/rodata-sdata-migration.md sibling notes.
+ *
+ * These macros expand to EXACTLY that hand-written token sequence, so they are
+ * byte-identical to the expanded form while keeping each installer readable.
+ * The caller declares the shared `void (*fn)();` and the (usually pinned)
+ * `s16 m1;`, then:
+ *
+ *     FSM_STAGE_SLOT_FIRST(fn, g.tick,  m1, TickFn);   // sets m1 = -1 in place
+ *     FSM_STAGE_SLOT      (fn, g.event, m1, EventFn);
+ *     FSM_STAGE_SLOT      (fn, g.input, m1, InputFn);
+ *     ...commit each staged slot into the entity...
+ *     FSM_COMMIT_SLOT(curP.s, g.tick,  e->sprite.base.tickMarker);
+ *
+ * Requires Game/callback_slot.h (CallbackSlot). Only expand inside a function
+ * that has declared the `fn`/`m1` locals; these are statements, not blocks.
+ */
+#include "Game/callback_slot.h"
+
+#define FSM_STAGE_SLOT(fn, slot, m1, FN)                                       \
+    (fn) = (void (*)())(FN); FSM_KEEP_LIVE(fn);                                \
+    (slot).markerLo = 0; (slot).markerHi = (m1); (slot).fn = (fn);             \
+    do {} while (0)
+
+#define FSM_STAGE_SLOT_FIRST(fn, slot, m1, FN)                                 \
+    (fn) = (void (*)())(FN); FSM_KEEP_LIVE(fn);                                \
+    (m1) = -1;                                                                 \
+    (slot).markerLo = 0; (slot).markerHi = (m1); (slot).fn = (fn);             \
+    do {} while (0)
+
+#define FSM_COMMIT_SLOT(tmp, staged, dst)                                      \
+    (tmp) = (staged); *(CallbackSlot *)&(dst) = (tmp)
+
+/* Render slot with an interactEntity-style conditional override, staged through
+ * `scratch` (a plain CallbackSlot local) into the aggregate. cc1 reproduces the
+ * target only when the fn is chosen into a temp (`rfn`) then stored once — not
+ * as two direct stores. */
+#define FSM_STAGE_RENDER(rfn, scratch, staged, m1, COND, DEFFN, ALTFN)         \
+    (scratch).markerLo = 0; (scratch).markerHi = (m1);                         \
+    (rfn) = (void (*)())(DEFFN);                                               \
+    if (COND) (rfn) = (void (*)())(ALTFN);                                     \
+    (scratch).fn = (rfn);                                                      \
+    (staged) = (scratch)
+
+/* Direct stage-and-commit of a single slot reusing an aggregate scratch slot
+ * (the trailing queued/deferred-state install after SetEntitySpriteId). */
+#define FSM_STAGE_COMMIT(scratch, m1, FN, dst)                                 \
+    (scratch).markerLo = 0; (scratch).markerHi = (m1);                         \
+    (scratch).fn = (void (*)())(FN);                                           \
+    *(CallbackSlot *)&(dst) = (scratch)
+
+/* ------------------------------------------------------------------------
  * GameState notify dispatch template (the EVT_GAME_NOTIFY funnel).
  *
  * A dozen-plus tick/despawn callbacks across effects.c, pickups.c, bosses.c,

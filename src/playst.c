@@ -1588,16 +1588,9 @@ void PlayerStateInit_Idle(PlayerEntity *e) {
     e->carryMotionX = 0;
     do {} while (0);
 
-    fn = (void (*)())PlayerState_IdleRandom; FSM_KEEP_LIVE(fn);
-    m1 = -1;
-    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
-    do {} while (0);
-    fn = (void (*)())PlayerEntityEventHandler; FSM_KEEP_LIVE(fn);
-    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
-    do {} while (0);
-    fn = (void (*)())PlayerCallback_IdleInputHandler; FSM_KEEP_LIVE(fn);
-    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
-    do {} while (0);
+    FSM_STAGE_SLOT_FIRST(fn, g.tick,  m1, PlayerState_IdleRandom);
+    FSM_STAGE_SLOT(fn, g.event, m1, PlayerEntityEventHandler);
+    FSM_STAGE_SLOT(fn, g.input, m1, PlayerCallback_IdleInputHandler);
 
     scratch.markerLo = 0; scratch.markerHi = m1;
     rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
@@ -1605,10 +1598,10 @@ void PlayerStateInit_Idle(PlayerEntity *e) {
     scratch.fn = rfn;
     g.render = scratch;
 
-    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
-    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
-    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
-    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    FSM_COMMIT_SLOT(curP.s, g.tick,   e->sprite.base.tickMarker);
+    FSM_COMMIT_SLOT(curP.s, g.event,  e->sprite.base.eventMarker);
+    FSM_COMMIT_SLOT(curP.s, g.input,  e->inputStateMarker);
+    FSM_COMMIT_SLOT(curP.s, g.render, e->sprite.base.renderMarker);
     SetEntitySpriteId(e, 0x48204012, 1);
 }
 
@@ -3398,7 +3391,50 @@ INCLUDE_ASM("asm/nonmatchings/playst", PlayerExitShrinkZone);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ExitShrinkWithRestore);
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_RestoreNormalFromShrink);
+extern void ClearEntityStateFlag();
+u32 PlayerRestoreShrinkNextMarker asm("D_800A5F5C");
+EntityCallback PlayerRestoreShrinkNextFn asm("D_800A5F60");
+/*
+ * PlayerStateInit_RestoreNormalFromShrink (0x8006D270, 0x158, frame 0x50) --
+ * up-front-fn installer, but WITHOUT the $s1 reg-save conflict that shelves the
+ * SpecialIdleAnim/BounceActive twins (here only s0/ra are saved, so the eager-
+ * load barriers flushing them to the top is exactly right). Clears the glide
+ * entity's state flag, sets groundedFlag=1, resets the global bounce flag and
+ * the player hitbox (width 0x28, y-offset -0x10), then installs the four state
+ * callbacks (tick->CooldownTick, event->PlayerEntityCollisionHandler,
+ * input->JumpInputAndCounters, render->FallingPhysicsMain) and the deferred
+ * next-state install (D_800A5F5C/D_800A5F60). No queued store.
+ */
+void PlayerStateInit_RestoreNormalFromShrink(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
+    register void (*f0)() asm("$7");
+    register void (*f1)() asm("$8");
+    register void (*f2)() asm("$9");
+    register void (*f3)() asm("$10");
+    s16 m1;
+    ClearEntityStateFlag(e->glideEntity);
+    f0 = (void (*)())PlayerState_CooldownTick;
+    f1 = (void (*)())PlayerEntityCollisionHandler;
+    f2 = (void (*)())PlayerCallback_JumpInputAndCounters;
+    f3 = (void (*)())PlayerCallback_FallingPhysicsMain;
+    FSM_KEEP_LIVE(f0); FSM_KEEP_LIVE(f1); FSM_KEEP_LIVE(f2); FSM_KEEP_LIVE(f3);
+    e->groundedFlag = 1;
+    g_pGameState->bounce_active_flag = 0;
+    g_pGameState->player_hitbox_width = 0x28;
+    g_pGameState->player_hitbox_y_offset = -0x10;
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = f0;
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = f1;
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = f2;
+    g.render.markerLo = 0; g.render.markerHi = m1; g.render.fn = f3;
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0xD0A5F094, 1);
+    EntitySetCallback((Entity *)e, PlayerRestoreShrinkNextMarker, PlayerRestoreShrinkNextFn);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_GrowFromShrink);
 
