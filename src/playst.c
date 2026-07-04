@@ -2468,7 +2468,38 @@ void PlayerStateInit_ClimbIdle(PlayerEntity *e) {
     SetEntitySpriteId(e, 0x0708A4A0, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_DamageKnockback);
+/*
+ * PlayerStateInit_DamageKnockback (0x8006B3F8, 0xFC) — MATCHED 2026-07-05.
+ * Lightweight installer twin; all four slots are real callbacks (markerHi=-1),
+ * render is PlayerCallback_KnockbackPhysics (not zeroed). Frame 0x50 via curP
+ * tail[1]. No queued store.
+ */
+extern void PlayerCallback_CrouchClimbTickHandler();
+void PlayerStateInit_DamageKnockback(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
+    void (*fn)();
+    s16 m1;
+    do {} while (0);
+    fn = (void (*)())PlayerTickCallback; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandlerAlt; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_CrouchClimbTickHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_KnockbackPhysics; FSM_KEEP_LIVE(fn);
+    g.render.markerLo = 0; g.render.markerHi = m1; g.render.fn = fn;
+    do {} while (0);
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x052AA082, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerState_DamageKnockback);
 
