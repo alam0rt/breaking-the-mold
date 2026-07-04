@@ -1566,7 +1566,48 @@ void PlayerCallback_SwimmingRisingPhysics(PlayerEntity *e) {
     *(s16 *)&e->sprite.base.velocityY = pos;
 }
 
-INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_Idle);
+extern void PlayerState_IdleRandom();
+extern void PlayerCallback_IdleInputHandler();
+extern void PlayerCallback_HorizontalWallCollision();
+extern void PlayerCallback_RidingPlatformPhysics();
+
+void PlayerStateInit_Idle(PlayerEntity *e) {
+    struct { s32 lead; CallbackSlot tick, event, input, render; } g;
+    CallbackSlot scratch;
+    struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
+    void (*rfn)();
+    void (*fn)();
+    s16 m1;
+
+    e->fidgetTimerShort = (rand() & 0x7F) + 0x30;
+    e->fidgetTimerLong = (rand() & 0xFF) + 0x100;
+    e->velocityY_fixed = 0;
+    e->carryMotionX = 0;
+    do {} while (0);
+
+    fn = (void (*)())PlayerState_IdleRandom; FSM_KEEP_LIVE(fn);
+    m1 = -1;
+    g.tick.markerLo = 0;  g.tick.markerHi = m1;  g.tick.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerEntityEventHandler; FSM_KEEP_LIVE(fn);
+    g.event.markerLo = 0; g.event.markerHi = m1; g.event.fn = fn;
+    do {} while (0);
+    fn = (void (*)())PlayerCallback_IdleInputHandler; FSM_KEEP_LIVE(fn);
+    g.input.markerLo = 0; g.input.markerHi = m1; g.input.fn = fn;
+    do {} while (0);
+
+    scratch.markerLo = 0; scratch.markerHi = m1;
+    rfn = (void (*)())PlayerCallback_HorizontalWallCollision;
+    if (e->interactEntity != NULL) rfn = (void (*)())PlayerCallback_RidingPlatformPhysics;
+    scratch.fn = rfn;
+    g.render = scratch;
+
+    curP.s = g.tick;   *(CallbackSlot *)&e->sprite.base.tickMarker   = curP.s;
+    curP.s = g.event;  *(CallbackSlot *)&e->sprite.base.eventMarker  = curP.s;
+    curP.s = g.input;  *(CallbackSlot *)&e->inputStateMarker         = curP.s;
+    curP.s = g.render; *(CallbackSlot *)&e->sprite.base.renderMarker = curP.s;
+    SetEntitySpriteId(e, 0x48204012, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerCallback_SetIdleStateCallbacks);
 
