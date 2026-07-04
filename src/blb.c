@@ -312,7 +312,11 @@ INCLUDE_ASM("asm/nonmatchings/blb", GetStageIndexFromGameState);
 
 INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructor_Simple2);
 
-INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityNoTeardown_80025964);
+/* Returns an entity's backing storage to the BLB heap without running any
+ * teardown/destructor logic first. */
+void FreeEntityNoTeardown_80025964(u8 *entity) {
+    FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitHUDEntity);
 
