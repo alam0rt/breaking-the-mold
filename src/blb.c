@@ -460,7 +460,16 @@ INCLUDE_ASM("asm/nonmatchings/blb", InitHUDItemEntity);
 
 INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_HUDItemUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/blb", UpdateHUDItemVisibility);
+/* Toggles a HUD sub-entity's hidden flag (byte +0x37 of the pointer at +0x34):
+ * shows it (1) while the current item index is still within the item count,
+ * hides it (0) otherwise. */
+void UpdateHUDItemVisibility(u8 *hud) {
+    if (hud[0x114] >= hud[0x116] + 1) {
+        *(*(u8 **)(hud + 0x34) + 0x37) = 0;
+    } else {
+        *(*(u8 **)(hud + 0x34) + 0x37) = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitEntity_8c510186);
 
