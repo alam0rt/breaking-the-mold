@@ -191,7 +191,7 @@ local bss(start, kind, vram) = {
         dotdata('8B838', 'blb'),       // 0x8009B038 (268B) -> build/src/blb.o(.data)
         data('8B944', 'data'),         // 0x8009B144 gap (asm)
         dotdata('8BA40', 'decor'),     // 0x8009B240 (132B incl 2B pad; D_8009B242 aliased) -> build/src/decor.o(.data)
-        data('8BAC4', 'data'),         // 0x8009B2C4 gap incl pickups (asm)
+        dotdata('8BAC4', 'pickups'),   // 0x8009B2C4 (220B: D_8009B2C4 2B + D_8009B2C6 218B grouped) -> build/src/pickups.o(.data)
         dotdata('8BBA0', 'effects'),   // 0x8009B3A0 (56B)  -> build/src/effects.o(.data)
         data('8BBD8', 'data'),         // 0x8009B3D8 gap (asm)
         dotdata('8BC3C', 'gamecd'),    // 0x8009B43C (144B) -> build/src/gamecd.o(.data)

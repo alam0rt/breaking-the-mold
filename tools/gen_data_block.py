@@ -1,25 +1,44 @@
 #!/usr/bin/env python3
 """Generate C .data migration definitions from the pooled .data blob.
 
-Usage: gen_data_block.py <lo_symbol> <hi_symbol_exclusive>
+Usage: gen_data_block.py [--single] <lo_symbol> <hi_symbol_exclusive>
        (reads asm/data/80FEC.data.s)
 
-Emits, for each dlabel in [lo, hi), a byte-exact C definition:
-  - pure numeric data  -> `u8 D_X[N] asm("D_X") = { 0x.., ... };`
-  - contains relocs    -> aborts with an error listing them (handle manually;
-    pointer tables need typed arrays, not u8[]).
+Default: emits, for each dlabel in [lo, hi), a byte-exact C definition
+  `u8 D_X[N] asm("D_X") = { 0x.., ... };`.
+
+--single: emits ONE u8 array anchored at the previous dlabel's end (absorbing
+any 2/4-byte alignment pad splat drops, read verbatim from bin/SLES_010.90),
+plus `.set` aliases for every island symbol. Use for islands whose start is
+not on the previous dlabel boundary (a "pad hole").
+
+Aborts if any symbol contains relocs (pointer tables need typed arrays).
 
 Bytes are decoded little-endian from .word/.half/.byte and verbatim from
 .asciz/.ascii, matching the on-disk layout so cc1 reproduces identical bytes.
 """
 import re
 import sys
+import glob
 
-BLOB = "asm/data/80FEC.data.s"
+BLOB_GLOB = "asm/data/*.data.s"
+GOLD = "bin/SLES_010.90"
+RAM_BASE = 0x80010000
+ROM_HDR = 0x800
+
+
+def rom_off(addr):
+    return addr - RAM_BASE + ROM_HDR
 
 
 def load():
-    lines = open(BLOB).read().splitlines()
+    # Concatenate all .data asm files (the pooled blob plus any carved gap
+    # files) so migrated islands living in gap segments are still visible.
+    lines = []
+    for path in sorted(glob.glob(BLOB_GLOB),
+                       key=lambda p: int(re.search(r"(\w+)\.data\.s$", p).group(1), 16)):
+        lines.append(f"# FILE {path}")
+        lines += open(path).read().splitlines()
     labs = []
     for i, l in enumerate(lines):
         m = re.match(r"\s*dlabel\s+(D_[0-9A-Fa-f]+)", l)
@@ -35,7 +54,9 @@ def decode_bytes(lines, start, end):
     relocs = []
     for j in range(start + 1, end):
         s = lines[j]
-        if re.match(r"\s*(dlabel|enddlabel)\b", s):
+        if re.match(r"\s*enddlabel\b", s):
+            break
+        if re.match(r"\s*dlabel\b", s):
             continue
         mw = re.search(r"\.word\s+(\S+)", s)
         mh = re.search(r"\.(?:half|short)\s+(\S+)", s)
@@ -69,23 +90,72 @@ def decode_bytes(lines, start, end):
 
 
 def main():
-    lo_name, hi_name = sys.argv[1], sys.argv[2]
+    args = sys.argv[1:]
+    mode = "per"
+    if args and args[0] in ("--single", "--group"):
+        mode = args[0][2:]
+        args = args[1:]
+    lo_name, hi_name = args[0], args[1]
     lines, labs = load()
     names = [n for _, n, _ in labs]
     lo_i = names.index(lo_name)
     hi_i = names.index(hi_name)
-    for k in range(lo_i, hi_i):
-        a, n, sl = labs[k]
-        end_line = labs[k + 1][2]
-        bs, relocs = decode_bytes(lines, sl, end_line)
-        if relocs:
-            sys.exit(f"ERROR: {n} contains relocs {relocs} — needs typed array, handle manually")
+
+    def emit_rows(bs):
         rows = []
         for x in range(0, len(bs), 8):
             rows.append("    " + ", ".join(f"0x{b:02X}" for b in bs[x:x + 8]) + ",")
-        print(f'u8 {n}[{len(bs)}] asm("{n}") = {{')
-        print("\n".join(rows))
-        print("};")
+        return "\n".join(rows)
+
+    if mode == "per":
+        for k in range(lo_i, hi_i):
+            a, n, sl = labs[k]
+            bs, relocs = decode_bytes(lines, sl, labs[k + 1][2])
+            if relocs:
+                sys.exit(f"ERROR: {n} contains relocs {relocs} — needs typed array, handle manually")
+            print(f'u8 {n}[{len(bs)}] asm("{n}") = {{')
+            print(emit_rows(bs))
+            print("};")
+        return
+
+    # single / group: emit ONE u8 array + .set aliases for every island symbol.
+    # The array body is copied verbatim from the gold ROM over the whole span,
+    # so any inter-symbol or leading alignment pad is captured exactly.
+    #   --single: anchor at the previous dlabel's end (absorbs the pad splat
+    #             drops before a 2-mod-4 island start).
+    #   --group : anchor exactly at lo (lo is already 4-aligned; groups several
+    #             symbols into one contiguous array so ld never re-aligns them).
+    lo_addr = labs[lo_i][0]
+    if mode == "single":
+        prev_addr, prev_name, prev_sl = labs[lo_i - 1]
+        prev_bs, _ = decode_bytes(lines, prev_sl, labs[lo_i][2])
+        anchor_addr = prev_addr + len(prev_bs)
+    else:  # group
+        anchor_addr = lo_addr
+    pad_len = lo_addr - anchor_addr
+    if pad_len < 0:
+        sys.exit(f"ERROR: negative pad ({pad_len}); anchor 0x{anchor_addr:X} > lo 0x{lo_addr:X}")
+    aliases = []
+    end_addr = lo_addr
+    for k in range(lo_i, hi_i):
+        a, n, sl = labs[k]
+        bs, relocs = decode_bytes(lines, sl, labs[k + 1][2])
+        if relocs:
+            sys.exit(f"ERROR: {n} contains relocs {relocs} — needs typed array, handle manually")
+        aliases.append((n, a - anchor_addr))
+        end_addr = a + len(bs)
+    gold = open(GOLD, "rb").read()
+    allb = list(gold[rom_off(anchor_addr):rom_off(end_addr)])
+    anchor = f"D_{anchor_addr:08X}"
+    print(f"/* {mode} island: {pad_len}-byte pad at 0x{anchor_addr:08X}, "
+          f"{len(aliases)} aliased symbol(s); anchor {anchor} ({len(allb)}B). */")
+    print(f'u8 {anchor}[{len(allb)}] asm("{anchor}") = {{')
+    print(emit_rows(allb))
+    print("};")
+    parts = "".join(f".globl {n}\\n.set {n}, {anchor} + {off}\\n"
+                    for n, off in aliases if off != 0 or n != anchor)
+    if parts:
+        print(f'asm("{parts}");')
 
 
 if __name__ == "__main__":

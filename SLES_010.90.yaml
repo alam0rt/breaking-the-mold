@@ -322,7 +322,8 @@
     - "decor"
   -
     - 572100
-    - "data"
+    - ".data"
+    - "pickups"
   -
     - 572320
     - ".data"
