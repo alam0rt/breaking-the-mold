@@ -115,4 +115,34 @@ INCLUDE_ASM("asm/nonmatchings/layer", FindLayerSlotByEntityPointer);
 
 INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableEntryByValue);
 
+INCLUDE_ASM("asm/nonmatchings/layer", FindOrderingTableSlotById);
+
+INCLUDE_ASM("asm/nonmatchings/layer", GetSpriteFrameCount);
+
+INCLUDE_ASM("asm/nonmatchings/layer", GetSpriteFrameDataByIndex);
+
+INCLUDE_ASM("asm/nonmatchings/layer", SetupSpriteFromFrame);
+
+INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlotsWrapper);
+
+INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots_CrtInit);
+
+INCLUDE_ASM("asm/nonmatchings/layer", InitMenuEntityWithVtable);
+
+INCLUDE_ASM("asm/nonmatchings/layer", InitMenuSpriteRenderContext);
+
+INCLUDE_ASM("asm/nonmatchings/layer", MenuEntityDestroyCallback);
+
+INCLUDE_ASM("asm/nonmatchings/layer", CLUTPaletteCycleTickCallback);
+
+INCLUDE_ASM("asm/nonmatchings/layer", CLUTColorLerpTickCallback);
+
+INCLUDE_ASM("asm/nonmatchings/layer", UploadTextureOrClut);
+
+INCLUDE_ASM("asm/nonmatchings/layer", CopyTextureData);
+
+INCLUDE_ASM("asm/nonmatchings/layer", SetTexturePageParams);
+
+INCLUDE_ASM("asm/nonmatchings/layer", InitCLUTColorLerpEffect);
+
 

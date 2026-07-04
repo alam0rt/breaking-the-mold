@@ -29,3 +29,19 @@ INCLUDE_ASM("asm/nonmatchings/gfx", TriggerBufferSwapIfReady);
  * used as a default callback slot (purpose unconfirmed).
  */
 INCLUDE_ASM("asm/nonmatchings/gfx", func_80013240);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", SetVideoModePAL);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", SsUtReverbOn);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", InitGraphicsSystem);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", ConditionalFreeMemory);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", ClearOrderingTables);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", FlushDebugFontAndEndFrame);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", WaitForVBlankIfNeeded);
+
+INCLUDE_ASM("asm/nonmatchings/gfx", SwapBuffersAndClearOT);

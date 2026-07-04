@@ -1685,6 +1685,272 @@ INCLUDE_ASM("asm/nonmatchings/bosses", func_8004F190);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MaskAngleCosineEntry);
 
+INCLUDE_ASM("asm/nonmatchings/bosses", ScaleByCosine);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", MaskAngleMagnitudeEntry);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", CalculateVectorMagnitude);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitScaledEntityWithSprite);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileUpdateWithCleanup);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityMoveHorizontalByFacing);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitEnemyEntityWithAI);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", GenericEntityDestroyCallback);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EnemyAIUpdateWithRandomization);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityEvent_ClearTargetOnDestroy);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityEventHandler_TokenReleaseAndQueueTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectile_TrackTarget);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", FindNearestTargetEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EnemyStateInit_SetSpriteAndHandler);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EnemyState_TurnAroundWithToken);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledSprite1);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EnemyTickWithCollisionAndOffscreen);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", MoveEntityForward5px);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitProjectileWithTimer);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityTick_CollisionWithTimerTransition);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollision_ProcessQueueOnly);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectileTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileEnterActiveState);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileDeactivate);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledAnimated1);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileEntityTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileMoveHorizontal);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitWalkingEnemyEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityTick_WithParticleSpawn);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", HomingMissileTrackTarget);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingActive);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingActiveVariant2);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingActiveVariant3);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileHomingTickState);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingMissileTrack);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitHomingProjectileEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityTickWithAutoDestroy);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileApplyVelocity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitAuraEffectAtPlayer);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileTickWithLifetime);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileZOrderCallback);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileKeyframeEventHandler);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", HudFollowPlayerPosition);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitSimpleParameterEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileTickWithCollision);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallFallCallback);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitAnimatedDirectionalEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PlayerDeathGrowingTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", DelayedDeathTimerTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", DeathAnimationTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitDirectionalPositionEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityTickCollisionNotify);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", BouncingProjectileTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallRegular);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", DestroySoundEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollisionStateChange);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", FallingSoundEntityTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventHandler);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallRegularInitState);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallStartRolling);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallStopSound);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_EnterCollisionState);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_HideAndNotifyGameState);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpiky);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDestroyCallback);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithSoundPanning);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeUpdatePosition);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpecial);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithCollision);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventHandler2);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventWithStateTransition);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_CollisionTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_IdleAfterCollision);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeClearChildFlag);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitConditionalStateEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithOffscreenCheck);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeApplyGravity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitNegativeVelocityEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithPlayerMessage);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeApplyGravitySlow);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledSprite2);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithTimer);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeApplyPhysicsWithBounce);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800113C8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800113E8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011408);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011428);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011488);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114A8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114C8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114E8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011508);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800115E8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011548);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011568);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011588);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800115C8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800115E8_800556b8);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_8005571c);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_80055724);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011608);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", FreeEntityNoTeardown_80055760);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", CalculatePathDistance);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", UpdateEntityAlongPath);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InterpolateTimedPathPosition);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitGenericSpriteEntity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitClayballProjectile);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", GenericSpriteEntityInitCallback);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityCheckTriggerZone);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", GenericSpriteEntityTickCallback);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollision_SpawnSwitchBlock);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityTick_InterpolateTimedPath);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitClockPlatformWithTimer);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestructor_WithChildEntityCleanup);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorWaitTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorExpandTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorTimerTick);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorEventHandler);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballState_HideIndicatorAndWait);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballState_DestroyWithDebris);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorState_Wait);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardDeactivateWithSound);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", UpdateChildEntityOffset);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitClayballOnPath);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerEventHandler);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerUpdatePosition);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerUpdateWithSpeedDown);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerUpdateWithSpeedUp);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", InitClayballAtWaypoint);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerTickWithCollision);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerTickWithOffscreenCheck);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerApplyFallVelocity);
+
+INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardEventHandler);
+
 /* bosses .sdata (0x800A5B60..0x800A5D10): {marker=0xFFFF0000, callback} descriptor
  * pairs for the glider / hazard / GlennYntis / ShrineyGuard / JoeHeadJoe / projectile
  * / clayball boss state machines, with three "END2" (0x32444E45) sentinel+pad

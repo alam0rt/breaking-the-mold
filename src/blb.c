@@ -148,6 +148,214 @@ u32 D_800A59A0[2] asm("D_800A59A0") = {0x32444E45, 0x00000000};
  * +0x34/+0x38 kill-request slots; for any other type returns 0 with no effect. */
 INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructCallback);
 
+INCLUDE_ASM("asm/nonmatchings/blb", AddToZOrderList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddToXPositionList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddToUpdateQueue);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddToEntityList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddToEntityDefList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddEntityToSortedRenderList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddLayerToRenderList_Standard);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddLayerToRenderList_Medium);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddLayerToRenderList_Small);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddEntityToBothLists);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InsertIntoZSortedRenderList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", RemoveFromTickList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", RemoveFromRenderList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", RemoveEntityFromUpdateQueue);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ChangeRenderZOrder);
+
+INCLUDE_ASM("asm/nonmatchings/blb", RemoveEntityFromAllLists);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ClearTickList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityListA);
+
+INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityListB);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ClearEntityDefList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityLists);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CheckPointCollisionAndNotify);
+
+INCLUDE_ASM("asm/nonmatchings/blb", DispatchEventToCollidingEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", BroadcastPointCollision);
+
+INCLUDE_ASM("asm/nonmatchings/blb", BroadcastBoxCollision);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SendMessageToPlayer);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SendMessageToPlayerVariant);
+
+INCLUDE_ASM("asm/nonmatchings/blb", TestPointAgainstEntities);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CheckBoxCollision);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CameraFollowTargetTick);
+
+INCLUDE_ASM("asm/nonmatchings/blb", UpdateCameraPositionSmooth);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SetCameraPositionDirect);
+
+INCLUDE_ASM("asm/nonmatchings/blb", GetTileAttributeAtPosition);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SpawnOnScreenEntities);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CleanupDeadEntities);
+
+INCLUDE_ASM("asm/nonmatchings/blb", IsEntityOffScreen_EntityLoop);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CheckTriggerZoneCollision);
+
+INCLUDE_ASM("asm/nonmatchings/blb", LoadBGColorFromTileHeader);
+
+INCLUDE_ASM("asm/nonmatchings/blb", LoadSecondaryColorFromTileHeader);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitPlayerSpawnPosition);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitLayersAndTileState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitTileAttributeState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", LoadEntitiesFromAsset501);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitAnimatedTileEntities);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddPreInitEntitiesToList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", LoadTileDataToVRAM);
+
+INCLUDE_ASM("asm/nonmatchings/blb", GetEntitySpawnData);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SetEntitySpawnData);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SetSpawnOffsetGroup1);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SetSpawnOffsetGroup2);
+
+INCLUDE_ASM("asm/nonmatchings/blb", GetLevelAssetIndexFromGameState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", GetLevelNameFromGameState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", GetStageIndexFromGameState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructor_Simple2);
+
+INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityNoTeardown_80025964);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitHUDEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", UpdateInputState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitEntityDataPointers);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EnableDemoPlaybackMode);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CRT_InitStaticData1);
+
+INCLUDE_ASM("asm/nonmatchings/blb", BuildPasswordFromPlayerState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", DecodePassword);
+
+INCLUDE_ASM("asm/nonmatchings/blb", initPlayerState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ClearHamsterCount);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerCollectibles);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitializePlayerState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", MarkLevelCompleteAndClearCollectibles);
+
+INCLUDE_ASM("asm/nonmatchings/blb", DecrementPlayerLives);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddSwirlys);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddPlayerLives);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddPlayerOrbs);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddPhoenixHands);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddPhartHeads);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddUniverseEnemas);
+
+INCLUDE_ASM("asm/nonmatchings/blb", Add1970Icons);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AwardSwirlyQsAndHamsters);
+
+INCLUDE_ASM("asm/nonmatchings/blb", AddSuperWillies);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerUnlocksByLevel);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitLevelTitleEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_ScaleFadeOut);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_ScaleFadeIn);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeOut);
+
+INCLUDE_ASM("asm/nonmatchings/blb", ResetEntityScaleState);
+
+INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeIn);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitCountdownTimerEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_PlatformRideIdle);
+
+INCLUDE_ASM("asm/nonmatchings/blb", PlatformInterpolatePosition);
+
+INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideStartUp);
+
+INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideStartDown);
+
+INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideComplete);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitDigitDisplayEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_DigitDisplayUpdate);
+
+INCLUDE_ASM("asm/nonmatchings/blb", UpdateDigitDisplay);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitHUDItemEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_HUDItemUpdate);
+
+INCLUDE_ASM("asm/nonmatchings/blb", UpdateHUDItemVisibility);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitEntity_8c510186);
+
+INCLUDE_ASM("asm/nonmatchings/blb", PlatformOscillateWithBobbingTick);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitTimerDisplayEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", PlatformOscillateWithRotationTick);
+
+INCLUDE_ASM("asm/nonmatchings/blb", InitFadeOverlayEntity);
+
+INCLUDE_ASM("asm/nonmatchings/blb", EntityDestructor_RemoveFromRenderList);
+
+INCLUDE_ASM("asm/nonmatchings/blb", TriggerFadeTransition);
+
+INCLUDE_ASM("asm/nonmatchings/blb", CreateMenuEntities);
+
 /* .data migration (Phase 4): pooled-blob island carved to this TU's .o(.data). */
 u8 D_8009B038[60] asm("D_8009B038") = {
     0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x01, 0x00,

@@ -118,6 +118,14 @@ SPLAT := $(PYTHON) -m splat split
 # ROM on every extract. Idempotent. See tools/rodata_migrations.json.
 RODATA_MIGRATE := $(PYTHON) tools/migrate_rodata.py
 
+# Post-splat blob splitter: spimdisasm glues indirectly-called functions (via
+# function-pointer tables) into single .s "blobs" when a sub-8-byte fragment at
+# a segment boundary stalls its boundary detector. This splits each blob at its
+# glabel/alabel function boundaries into one .s per function so they can be
+# individually decompiled. Byte-safe (moves identical instr bytes). See
+# tools/split_blobs.py.
+SPLIT_BLOBS := $(PYTHON) tools/split_blobs.py
+
 # m2c - MIPS to C decompiler
 M2C := $(PYTHON) tools/m2c/m2c.py
 
@@ -195,7 +203,7 @@ all: $(SPLAT_CONFIG)
 	@if [ ! -d "$(ASM_DIR)" ] || [ "$(SPLAT_CONFIG)" -nt "$(LD_SCRIPT)" ]; then \
 		echo "Config changed or ASM missing, re-extracting..."; \
 		rm -rf $(ASM_DIR) $(BUILD_DIR); \
-		$(SPLAT) $(SPLAT_CONFIG) && $(RODATA_MIGRATE) && touch $(LD_SCRIPT); \
+		$(SPLAT) $(SPLAT_CONFIG) && $(RODATA_MIGRATE) && $(SPLIT_BLOBS) && touch $(LD_SCRIPT); \
 	fi
 	@$(MAKE) --no-print-directory build
 	@echo "Build complete!"
@@ -282,6 +290,7 @@ extract: $(SPLAT_CONFIG)
 	@echo "Extracting binary using splat..."
 	$(SPLAT) $(SPLAT_CONFIG)
 	@$(RODATA_MIGRATE)
+	@$(SPLIT_BLOBS)
 	@touch $(LD_SCRIPT)
 	@$(MAKE) --no-print-directory annotate-asm
 	@echo "Extraction complete. ASM files in $(ASM_DIR)/"
@@ -291,6 +300,7 @@ $(LD_SCRIPT): $(SPLAT_CONFIG) $(BASEROM)
 	@echo "Running splat to generate linker script and ASM..."
 	$(SPLAT) $(SPLAT_CONFIG)
 	@$(RODATA_MIGRATE)
+	@$(SPLIT_BLOBS)
 	@touch $(LD_SCRIPT)
 
 # Annotate splat-extracted .s files in place with symbol/struct/asset/callee

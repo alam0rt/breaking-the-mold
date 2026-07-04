@@ -188,6 +188,108 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnLand_GroundContactAndWallCheck);
  */
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnLand_HazardDamageTransition);
 
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnRender_ApplyGravityAndVelocity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformEntityProcessInput);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformEntityCheckTriggerZones);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_ResumeWithSound);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformState_StopSound);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_BounceWithGravity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_IdleNoGravity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformState_SetBounceAndHideSprite);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", SoarStateInit_BeginFlightMode);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", SoarState_BeginFlight);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformState_EnablePlayerInput);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_LandFromFlight);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEntityDamageEffect);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnState_DeathAdvanceLevel);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", EntityEnterAnimatedIdleState);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_FadeAndTimer);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Vtable0x80011d54);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Vtable0x80011d74);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Simple);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_80073308);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", InitScaledSpriteEntity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", BossCollision_SpawnDebrisAndLayers);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", CreateRunnPlayerEntity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", EntityDestructor_WithSPUStopAndFree);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", EntityTick_ScaledSpriteWithSound);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_TouchTrigger);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_TriggerWithCallback);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_QueueProcess);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnVerticalMovementUpdate);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSteeringTick);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetIdleState);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetActiveState);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", RunnAnimationEndCallback);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", DestroyEntityWithFlags);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDestroyCallback_Simple);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_800740d0);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", CreateFinnPlayerEntity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDestroyWithSoundCleanup);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnMainTickCallback);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FINN_CollisionHandler);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnCollisionEventHandler);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnCollisionEventHandler_Alt);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDamageEventHandler);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FINN_ApplyHorizontalVelocity);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnStateIdle);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnState_Spawn);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetTurnState);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetActiveState);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnAnimationEndCallback);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDestroyCallback_Vtable0x80011e34);
+
+INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_80074f68);
+
 /* vehicle .sdata (0x800A5FAC..0x800A603C): {marker=0xFFFF0000, callback}
  * descriptor pairs for the Soar / Runn / Platform / Finn vehicle state machines,
  * with two "END2" (0x32444E45) sentinel+pad terminators embedded mid-table.

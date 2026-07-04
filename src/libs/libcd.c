@@ -584,6 +584,22 @@ INCLUDE_ASM("asm/nonmatchings/libs/libcd", LoadTPage);
 
 INCLUDE_ASM("asm/nonmatchings/libs/libcd", EXT_OBJ_A8);
 
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", LoadClut);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", LoadClut2);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", SetDefDrawEnv);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", SetDefDispEnv);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", SetDumpFnt);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", FntLoad);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", FntOpen);
+
+INCLUDE_ASM("asm/nonmatchings/libs/libcd", FntFlush);
+
 /* .data island 0x8009E1C4 (28B, libcd) migrated from asm. */
 /* CD test-parameter scratch: 7 s32 slots, index 0 is the parameter count
  * (see CD_set_test_parmnum / CD_TEST_PARAM_COUNT above). */
