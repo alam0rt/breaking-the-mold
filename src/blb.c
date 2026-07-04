@@ -240,7 +240,15 @@ INCLUDE_ASM("asm/nonmatchings/blb", IsEntityOffScreen_EntityLoop);
 
 INCLUDE_ASM("asm/nonmatchings/blb", CheckTriggerZoneCollision);
 
-INCLUDE_ASM("asm/nonmatchings/blb", LoadBGColorFromTileHeader);
+/* Marks the level background colour as valid (+0x130 = 1) and copies the RGB
+ * triple from the level's tile header into the entity at +0x131..+0x133. */
+void LoadBGColorFromTileHeader(u8 *entity) {
+    u8 *hdr = GetTileHeaderPtr((LevelDataContext *)(entity + 0x84));
+    entity[0x130] = 1;
+    entity[0x131] = hdr[0];
+    entity[0x132] = hdr[1];
+    entity[0x133] = hdr[2];
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", LoadSecondaryColorFromTileHeader);
 
