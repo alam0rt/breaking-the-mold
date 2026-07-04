@@ -157,7 +157,24 @@ INCLUDE_ASM("asm/nonmatchings/blb", AddToUpdateQueue);
 
 INCLUDE_ASM("asm/nonmatchings/blb", AddToEntityList);
 
-INCLUDE_ASM("asm/nonmatchings/blb", AddToEntityDefList);
+/* Singly-linked node prepended to an object's entity-definition list (head at
+ * +0x28). Each node is an 8-byte cell allocated from the BLB heap. */
+typedef struct EntityDefNode {
+    struct EntityDefNode *next; /* 0x0 */
+    void *item;                 /* 0x4 */
+} EntityDefNode;
+
+typedef struct EntityDefListOwner {
+    u8 pad[0x28];
+    struct EntityDefNode *defList; /* 0x28 */
+} EntityDefListOwner;
+
+void AddToEntityDefList(EntityDefListOwner *owner, void *item) {
+    EntityDefNode *n = (EntityDefNode *)AllocateFromHeap(g_pBlbHeapBase, 8, 1, 0);
+    n->next = owner->defList;
+    n->item = item;
+    owner->defList = n;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", AddEntityToSortedRenderList);
 
