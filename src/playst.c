@@ -2504,6 +2504,14 @@ void PlayerState_RemoveAttachedEntity(PlayerEntity *e) {
     }
 }
 
+/*
+ * PlayerStateInit_ThrowProjectile (0x8006BDD4, 0x158) — SHELVED.
+ * Body bytes match the Variant-A template (prologue carryMotionX=0,
+ * event=ThrowEventHandler, input=NULL zeroed slot, render Horizontal/Riding,
+ * spriteId 0x04084011, queued=PlayerStateInit_Idle) but the target reserves an
+ * extra 8-byte stack scratch (frame 0x70 vs 0x68). The zeroed input slot does
+ * not reproduce that layout; needs the exact local-declaration idiom. TODO.
+ */
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_ThrowProjectile);
 
 INCLUDE_ASM("asm/nonmatchings/playst", PlayerStateInit_CheckpointRestore);
