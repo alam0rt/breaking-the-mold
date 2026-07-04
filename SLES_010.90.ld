@@ -175,10 +175,11 @@ SECTIONS
         build/src/prim.o(.data);
         build/src/passwd.o(.data);
         build/src/results.o(.data);
+        build/asm/data/8D3AC.data.o(.data);
         build/src/ending.o(.data);
         build/src/level.o(.data);
         build/src/blbacc.o(.data);
-        build/asm/data/8D3AC.data.o(.data);
+        build/asm/data/8D3DC.data.o(.data);
         build/src/sound.o(.data);
         build/src/gstate.o(.data);
         build/asm/data/8DA28.data.o(.data);
