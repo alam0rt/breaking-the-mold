@@ -244,7 +244,15 @@ INCLUDE_ASM("asm/nonmatchings/blb", LoadBGColorFromTileHeader);
 
 INCLUDE_ASM("asm/nonmatchings/blb", LoadSecondaryColorFromTileHeader);
 
-INCLUDE_ASM("asm/nonmatchings/blb", InitPlayerSpawnPosition);
+/* Fetches the tile spawn coordinates for this level and converts them to
+ * pixel-space entity spawn position: x = (tileX << 4) + 8 (tile centre),
+ * y = (tileY << 4) + 15 (tile bottom). */
+void InitPlayerSpawnPosition(u8 *entity) {
+    u16 pos[2];
+    GetSpawnPosition((u8 *)pos, (LevelDataContext *)(entity + 0x84));
+    *(s16 *)(entity + 0x116) = (pos[0] << 4) + 8;
+    *(s16 *)(entity + 0x118) = (pos[1] << 4) + 0xF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitLayersAndTileState);
 
