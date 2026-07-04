@@ -675,3 +675,10 @@ void Menu_DecrementCounter(MenuSkullIconEntity *entity) {
     SetAnimationFrameIndex(entity->icon, *entity->value);
     PlaySoundEffect(FX_MENU_CYCLE, 0xA0, 0);
 }
+
+/* .data island 0x8009CBE8..0x8009CBF8 (16B, menu table) migrated from asm; grouped u8[]. */
+/* group island: 0-byte pad at 0x8009CBE8, 1 aliased symbol(s); anchor D_8009CBE8 (16B). */
+u8 D_8009CBE8[16] asm("D_8009CBE8") = {
+    0x19, 0x06, 0x90, 0x39, 0x59, 0x8E, 0x84, 0x63,
+    0x1B, 0x8E, 0x80, 0x33, 0x00, 0x00, 0x00, 0x00,
+};

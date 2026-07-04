@@ -165,7 +165,6 @@ SECTIONS
         build/asm/data/8C974.data.o(.data);
         build/src/finn.o(.data);
         build/src/playdtor.o(.data);
-        build/src/menu.o(.data);
         build/src/vehicle.o(.data);
         build/src/lvlload.o(.data);
         build/src/libc.o(.data);
@@ -180,6 +179,8 @@ SECTIONS
         build/src/level.o(.data);
         build/src/blbacc.o(.data);
         build/asm/data/8D3DC.data.o(.data);
+        build/src/menu.o(.data);
+        build/asm/data/8D3F8.data.o(.data);
         build/src/sound.o(.data);
         build/src/gstate.o(.data);
         build/asm/data/8DA28.data.o(.data);
