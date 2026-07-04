@@ -190,7 +190,7 @@ SECTIONS
         build/src/memmove.o(.data);
         build/src/libs/libvoice.o(.data);
         build/asm/libs/libspu2.o(.data);
-        build/asm/data/8E2E0.data.o(.data);
+        build/asm/data/8E440.data.o(.data);
         main_DATA_END = .;
         main_DATA_SIZE = ABSOLUTE(main_DATA_END - main_DATA_START);
         build/asm/crt0.o(.rodata);
