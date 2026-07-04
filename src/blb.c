@@ -241,7 +241,15 @@ INCLUDE_ASM("asm/nonmatchings/blb", AddPreInitEntitiesToList);
 
 INCLUDE_ASM("asm/nonmatchings/blb", LoadTileDataToVRAM);
 
-INCLUDE_ASM("asm/nonmatchings/blb", GetEntitySpawnData);
+extern u8 *GetTilemapLayerDataPtr(LevelDataContext *ctx, u16 layer_idx);
+extern u16 GetTilemapLayerWidth(LevelDataContext *ctx, u16 layer_idx);
+
+/* Resolves the spawn tilemap layer: writes the layer's data pointer to *outPtr
+ * and its width to *outWidth, reading from the level context embedded at +0x84. */
+void GetEntitySpawnData(u8 *base, u32 layerIndex, u8 **outPtr, u16 *outWidth) {
+    *outPtr = GetTilemapLayerDataPtr((LevelDataContext *)(base + 0x84), (u16)layerIndex);
+    *outWidth = GetTilemapLayerWidth((LevelDataContext *)(base + 0x84), (u16)layerIndex);
+}
 
 extern void CopyTilemapLayerIndex(void *dst, void *src, u16 layerIndex);
 

@@ -1,3 +1,4 @@
+SetEntitySpawnData = 0x80025630;
 memset_1 = 0x800896D4;
 GetTPage = 0x800896E4;
 GetClut = 0x80089720;
