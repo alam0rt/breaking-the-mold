@@ -996,9 +996,16 @@ void port_gpu_present(void) {
         static long s_frame = 0;
         long want = -1;
         const char *wf = getenv("PORT_CAPTURE_FRAME");
+        const char *ev = getenv("PORT_CAPTURE_EVERY");   /* capture every N frames */
+        long every = ev ? atol(ev) : 0;
         if (wf) want = atol(wf);
         s_frame++;
-        if (want < 0 || s_frame == want) {
+        if (want < 0 || s_frame == want || (every > 0 && s_frame % every == 0)) {
+            char pathbuf[512];
+            if (strchr(cap, '%')) {   /* e.g. PORT_CAPTURE=frame_%04ld.ppm */
+                snprintf(pathbuf, sizeof(pathbuf), cap, s_frame);
+                cap = pathbuf;
+            }
             int w = 0, h = 0;
             SDL_GL_GetDrawableSize(s_window, &w, &h);
             if (w > 0 && h > 0) {
