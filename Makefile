@@ -571,12 +571,14 @@ progress:
 	@PURE_ASM=$$(find $(ASM_DIR) -name '*.s' -not -path '*/nonmatchings/*' -exec grep -h '^\s*[ga]label ' {} + 2>/dev/null | awk '{print $$2}' | sort -u | wc -l); \
 	NM_FUNCS=$$(find $(ASM_DIR)/nonmatchings -name '*.s' -exec grep -h '^\s*[ga]label ' {} + 2>/dev/null | awk '{print $$2}' | sort -u | wc -l); \
 	DECOMPILED=$$(grep -r '^[a-zA-Z_].*(.*).*{' $(SRC_DIR) --include='*.c' 2>/dev/null | grep -v 'INCLUDE_ASM\|extern\|typedef\|struct ' | wc -l); \
+	PORT_SEEDS=$$(python3 tools/count_port_seeds.py 2>/dev/null); \
 	TOTAL=$$((PURE_ASM + NM_FUNCS + DECOMPILED)); \
 	echo "Decompilation Progress"; \
 	echo "====================="; \
 	echo "Fully decompiled:  $$DECOMPILED / $$TOTAL ($$(python3 -c "print(f'{100*$$DECOMPILED/$$TOTAL:.1f}%')" 2>/dev/null))"; \
 	echo "INCLUDE_ASM stubs: $$NM_FUNCS / $$TOTAL ($$(python3 -c "print(f'{100*$$NM_FUNCS/$$TOTAL:.1f}%')" 2>/dev/null))"; \
-	echo "Pure asm:          $$PURE_ASM / $$TOTAL ($$(python3 -c "print(f'{100*$$PURE_ASM/$$TOTAL:.1f}%')" 2>/dev/null))"
+	echo "Pure asm:          $$PURE_ASM / $$TOTAL ($$(python3 -c "print(f'{100*$$PURE_ASM/$$TOTAL:.1f}%')" 2>/dev/null))"; \
+	echo "Port seeds ready:  $$PORT_SEEDS shelved funcs have a port/decomp body (prime decomp targets)"
 
 # -----------------------------------------------------------------------------
 # Cleanup
