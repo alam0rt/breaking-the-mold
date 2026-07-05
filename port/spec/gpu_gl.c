@@ -116,6 +116,8 @@ typedef void   (*PFNglUseProgram)(GL_uint);
 typedef GL_int (*PFNglGetUniformLocation)(GL_uint, const GL_char *);
 typedef void   (*PFNglUniform1i)(GL_int, GL_int);
 typedef void   (*PFNglUniform2i)(GL_int, GL_int, GL_int);
+typedef void   (*PFNglBlendEquation)(GLenum);
+typedef void   (*PFNglBlendColor)(GLfloat, GLfloat, GLfloat, GLfloat);
 
 static PFNglCreateShader        pglCreateShader;
 static PFNglShaderSource        pglShaderSource;
@@ -132,10 +134,24 @@ static PFNglUseProgram          pglUseProgram;
 static PFNglGetUniformLocation  pglGetUniformLocation;
 static PFNglUniform1i           pglUniform1i;
 static PFNglUniform2i           pglUniform2i;
+static PFNglBlendEquation       pglBlendEquation;
+static PFNglBlendColor          pglBlendColor;
+
+/* Blend-equation / constant-colour constants (GL 1.4 / ARB_imaging). */
+#define GL_FUNC_ADD_COMPAT                 0x8006
+#define GL_FUNC_REVERSE_SUBTRACT_COMPAT    0x800B
+#define GL_CONSTANT_ALPHA_COMPAT           0x8003
+#define GL_ONE_MINUS_CONSTANT_ALPHA_COMPAT 0x8004
+
+static void glBlendEquation_compat(GLenum eq) {
+    if (pglBlendEquation) {
+        pglBlendEquation(eq);
+    }
+}
 
 static GLuint s_clut_prog;          /* CLUT-expansion shader program */
 static int    s_have_shader;        /* 1 once the program links */
-static GL_int s_u_bitdepth, s_u_pagebase, s_u_clutbase, s_u_vram, s_u_debugtransp;
+static GL_int s_u_bitdepth, s_u_pagebase, s_u_clutbase, s_u_vram, s_u_debugtransp, s_u_stpmode;
 #endif
 
 void port_gpu_set_window(void *sdl_window) {
@@ -303,6 +319,8 @@ static void clut_base(unsigned clut, int *cx, int *cy) {
     *cy = (int)((clut >> 6) & 0x1FF);
 }
 
+static void blend_for_abe(int abe, unsigned tpage);
+
 /* Emit one textured quad through the CLUT-expansion shader. Texcoords are
  * page-local texel coordinates (0..w within the texture page); the shader adds
  * the page base and does the index/CLUT lookup. rawTex!=0 draws the texture
@@ -310,7 +328,7 @@ static void clut_base(unsigned clut, int *cx, int *cy) {
  * primitive colour (0x80 = neutral). */
 static void quad_tex_ex(short px[4], short py[4], int pu[4], int pv[4],
                         unsigned tpage, unsigned clut,
-                        u_char r, u_char g, u_char b, int rawTex) {
+                        u_char r, u_char g, u_char b, int rawTex, int abe) {
     int bx, by, bd, cx, cy, i;
     tpage_decode(tpage, &bx, &by, &bd);
     clut_base(clut, &cx, &cy);
@@ -338,15 +356,34 @@ static void quad_tex_ex(short px[4], short py[4], int pu[4], int pv[4],
     } else {
         glColor4f(r / 128.0f, g / 128.0f, b / 128.0f, 1.0f);
     }
-    glBegin(GL_TRIANGLE_STRIP);
-    /* strip order: 0,1,2,3 = TL,TR,BL,BR */
-    { const int order[4] = {0, 1, 3, 2};
-      for (i = 0; i < 4; i++) {
-        int k = order[i];
-        glTexCoord2i(pu[k], pv[k]);
-        glVertex2i(px[k] + s_draw_off_x, py[k] + s_draw_off_y);
+    /* PSX STP rule: with ABE set only texels whose STP bit (VRAM bit 15) is set
+     * are blended; STP=0 texels draw opaque. Two passes: opaque texels first,
+     * then the STP texels with the tpage's blend rate. Without ABE everything
+     * non-zero is opaque. */
+    { int pass, npass = (abe && s_have_shader) ? 2 : 1;
+      for (pass = 0; pass < npass; pass++) {
+        if (s_have_shader) {
+            pglUniform1i(s_u_stpmode, npass == 1 ? 0 : (pass == 0 ? 1 : 2));
+        }
+        if (npass == 2 && pass == 0) {
+            glBlendFunc(GL_ONE, GL_ZERO);            /* opaque texels */
+        } else if (npass == 2) {
+            blend_for_abe(1, tpage);                 /* STP texels */
+        } else {
+            blend_for_abe(abe && !s_have_shader, tpage);
+        }
+        glBegin(GL_TRIANGLE_STRIP);
+        /* strip order: 0,1,2,3 = TL,TR,BL,BR */
+        { const int order[4] = {0, 1, 3, 2};
+          for (i = 0; i < 4; i++) {
+            int k = order[i];
+            glTexCoord2i(pu[k], pv[k]);
+            glVertex2i(px[k] + s_draw_off_x, py[k] + s_draw_off_y);
+          } }
+        glEnd();
       } }
-    glEnd();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
     if (s_have_shader) {
         pglUseProgram(0);
     }
@@ -356,12 +393,12 @@ static void quad_tex_ex(short px[4], short py[4], int pu[4], int pv[4],
 static void quad_tex(short x0, short y0, short x1, short y1,
                      int u0, int v0, int u1, int v1,
                      unsigned tpage, unsigned clut,
-                     u_char r, u_char g, u_char b, int rawTex) {
+                     u_char r, u_char g, u_char b, int rawTex, int abe) {
     short px[4] = { x0, x1, x1, x0 };   /* TL, TR, BR, BL */
     short py[4] = { y0, y0, y1, y1 };
     int   pu[4] = { u0, u1, u1, u0 };
     int   pv[4] = { v0, v0, v1, v1 };
-    quad_tex_ex(px, py, pu, pv, tpage, clut, r, g, b, rawTex);
+    quad_tex_ex(px, py, pu, pv, tpage, clut, r, g, b, rawTex, abe);
 }
 
 static void quad_solid(short x0, short y0, short x1, short y1,
@@ -379,17 +416,110 @@ static void quad_solid(short x0, short y0, short x1, short y1,
     glEnd();
 }
 
-/* Decode + render one primitive; returns the next-pointer (its tag word). */
+/* PORT_OT_LOG=N: log every primitive of OT-pass N (1-based) to stderr. */
+static int s_ot_log_active;
+
+static void ot_log_prim(u_char *p, u_char code) {
+    switch (code & 0xFC) {
+    case GP_SPRT: case GP_SPRT_8: case GP_SPRT_16: {
+        SPRT *s = (SPRT *)p;
+        port_log("ot: code=%02x SPRT xy=(%d,%d) wh=(%d,%d) uv=(%d,%d) clut=%04x tpage=%04x rgb=(%d,%d,%d)",
+                 code, s->x0, s->y0,
+                 (code & 0xFC) == GP_SPRT ? s->w : ((code & 0xFC) == GP_SPRT_8 ? 8 : 16),
+                 (code & 0xFC) == GP_SPRT ? s->h : ((code & 0xFC) == GP_SPRT_8 ? 8 : 16),
+                 s->u0, s->v0, s->clut, s_cur_tpage, s->r0, s->g0, s->b0);
+        break;
+    }
+    case GP_POLY_FT4: {
+        POLY_FT4 *q = (POLY_FT4 *)p;
+        port_log("ot: code=%02x FT4 xy0=(%d,%d) xy3=(%d,%d) uv0=(%d,%d) uv3=(%d,%d) clut=%04x tpage=%04x rgb=(%d,%d,%d)",
+                 code, q->x0, q->y0, q->x3, q->y3, q->u0, q->v0, q->u3, q->v3,
+                 q->clut, q->tpage, q->r0, q->g0, q->b0);
+        break;
+    }
+    case GP_POLY_GT4: {
+        POLY_GT4 *q = (POLY_GT4 *)p;
+        port_log("ot: code=%02x GT4 xy0=(%d,%d) xy3=(%d,%d) uv0=(%d,%d) clut=%04x tpage=%04x rgb=(%d,%d,%d)",
+                 code, q->x0, q->y0, q->x3, q->y3, q->u0, q->v0,
+                 q->clut, q->tpage, q->r0, q->g0, q->b0);
+        break;
+    }
+    case GP_TILE: {
+        TILE *t = (TILE *)p;
+        port_log("ot: code=%02x TILE xy=(%d,%d) wh=(%d,%d) rgb=(%d,%d,%d)",
+                 code, t->x0, t->y0, t->w, t->h, t->r0, t->g0, t->b0);
+        break;
+    }
+    case GP_POLY_F4: {
+        POLY_F4 *q = (POLY_F4 *)p;
+        port_log("ot: code=%02x F4 xy0=(%d,%d) xy3=(%d,%d) rgb=(%d,%d,%d)",
+                 code, q->x0, q->y0, q->x3, q->y3, q->r0, q->g0, q->b0);
+        break;
+    }
+    default:
+        if (code == GP_DR_TPAGE) {
+            port_log("ot: code=%02x DR_TPAGE tpage=%04x", code, ((u_short *)p)[2]);
+        } else if (code == GP_DR_OFFSET) {
+            port_log("ot: code=%02x DR_OFFSET ofs=(%d,%d)", code, ((short *)p)[2], ((short *)p)[3]);
+        } else {
+            port_log("ot: code=%02x (unhandled)", code);
+        }
+        break;
+    }
+}
+
+/* PSX semi-transparency (ABE): pick the GL blend for the tpage's ABR rate.
+ * 0: B/2+F/2  1: B+F  2: B-F  3: B+F/4. Rate 0 is approximated with constant
+ * 50% alpha; rate 3 by pre-scaling the source in the tint. */
+static void blend_for_abe(int abe, unsigned tpage) {
+    if (!abe) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
+        return;
+    }
+    switch ((tpage >> 5) & 3) {
+    case 0:
+        glBlendFunc(GL_CONSTANT_ALPHA_COMPAT, GL_ONE_MINUS_CONSTANT_ALPHA_COMPAT);
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
+        break;
+    case 1:
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
+        break;
+    case 2:
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendEquation_compat(GL_FUNC_REVERSE_SUBTRACT_COMPAT);
+        break;
+    default:
+        glBlendFunc(GL_ONE, GL_ONE);   /* + F/4 approximated as additive */
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
+        break;
+    }
+}
+
+/* Decode + render one primitive; returns the next-pointer (its tag word).
+ * The low two bits of poly/rect code bytes are the TGE (raw-texture) and ABE
+ * (semi-transparent) flags -- dispatch on the code with them masked off, so
+ * e.g. 0x66 (SPRT|ABE) and 0x7e (SPRT_16|ABE) decode as their base type. */
 static u_int render_prim(u_char *p) {
     u_int next = *(u_int *)p;
-    u_char code = p[7];               /* code byte (TAG_FIELDS offset 7) */
+    u_char rawcode = p[7];            /* code byte (TAG_FIELDS offset 7) */
+    u_char code = rawcode;
+    int abe = 0;
+    if (rawcode >= 0x20 && rawcode < 0x80) {
+        code = (u_char)(rawcode & ~0x03);
+        abe = (rawcode & 0x02) != 0;
+    }
+    if (s_ot_log_active) {
+        ot_log_prim(p, rawcode);
+    }
     switch (code) {
     case GP_SPRT: {
         SPRT *s = (SPRT *)p;
         int raw = (p[7] & 0x01) != 0;
         quad_tex(s->x0, s->y0, (short)(s->x0 + s->w), (short)(s->y0 + s->h),
                  s->u0, s->v0, s->u0 + s->w, s->v0 + s->h,
-                 s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw);
+                 s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw, abe);
         break;
     }
     case GP_SPRT_8: {
@@ -397,7 +527,7 @@ static u_int render_prim(u_char *p) {
         int raw = (p[7] & 0x01) != 0;
         quad_tex(s->x0, s->y0, (short)(s->x0 + 8), (short)(s->y0 + 8),
                  s->u0, s->v0, s->u0 + 8, s->v0 + 8,
-                 s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw);
+                 s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw, abe);
         break;
     }
     case GP_SPRT_16: {
@@ -405,18 +535,24 @@ static u_int render_prim(u_char *p) {
         int raw = (p[7] & 0x01) != 0;
         quad_tex(s->x0, s->y0, (short)(s->x0 + 16), (short)(s->y0 + 16),
                  s->u0, s->v0, s->u0 + 16, s->v0 + 16,
-                 s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw);
+                 s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw, abe);
         break;
     }
     case GP_TILE: {
         TILE *t = (TILE *)p;
+        blend_for_abe(abe, s_cur_tpage);
         quad_solid(t->x0, t->y0, (short)(t->x0 + t->w), (short)(t->y0 + t->h),
                    t->r0, t->g0, t->b0);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
         break;
     }
     case GP_POLY_F4: {
         POLY_F4 *q = (POLY_F4 *)p;
+        blend_for_abe(abe, s_cur_tpage);
         quad_solid(q->x0, q->y0, q->x3, q->y3, q->r0, q->g0, q->b0);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
         break;
     }
     case GP_POLY_FT4: {
@@ -426,7 +562,7 @@ static u_int render_prim(u_char *p) {
         short py[4] = { q->y0, q->y1, q->y3, q->y2 };
         int   pu[4] = { q->u0, q->u1, q->u3, q->u2 };
         int   pv[4] = { q->v0, q->v1, q->v3, q->v2 };
-        quad_tex_ex(px, py, pu, pv, q->tpage, q->clut, q->r0, q->g0, q->b0, raw);
+        quad_tex_ex(px, py, pu, pv, q->tpage, q->clut, q->r0, q->g0, q->b0, raw, abe);
         break;
     }
     case GP_POLY_GT4: {
@@ -436,7 +572,7 @@ static u_int render_prim(u_char *p) {
         short py[4] = { q->y0, q->y1, q->y3, q->y2 };
         int   pu[4] = { q->u0, q->u1, q->u3, q->u2 };
         int   pv[4] = { q->v0, q->v1, q->v3, q->v2 };
-        quad_tex_ex(px, py, pu, pv, q->tpage, q->clut, q->r0, q->g0, q->b0, raw);
+        quad_tex_ex(px, py, pu, pv, q->tpage, q->clut, q->r0, q->g0, q->b0, raw, abe);
         break;
     }
     case GP_DR_TPAGE: {
@@ -466,6 +602,16 @@ void DrawOTag(u_int *ot) {
     int guard = 0;
     if (!ot) {
         return;
+    }
+    {
+        /* PORT_OT_LOG=N: dump the Nth (1-based) OT pass primitive-by-primitive. */
+        static long s_ot_pass = 0;
+        const char *ol = getenv("PORT_OT_LOG");
+        s_ot_pass++;
+        s_ot_log_active = (ol && atol(ol) == s_ot_pass);
+        if (s_ot_log_active) {
+            port_log("ot: ---- pass %ld ----", s_ot_pass);
+        }
     }
     vram_upload();
     s_draw_off_x = 0;   /* draw origin resets each OT pass */
@@ -635,6 +781,7 @@ static const char *k_fs_src =
     "uniform ivec2 uPageBase;\n"
     "uniform ivec2 uClutBase;\n"
     "uniform int   uDebugTransp;\n"
+    "uniform int   uStpMode;\n"   /* 0=all, 1=only STP==0, 2=only STP==1 */
     "in vec2 vTexel;\n"
     "in vec4 vTint;\n"
     "out vec4 oColor;\n"
@@ -655,6 +802,9 @@ static const char *k_fs_src =
     "    color = vramAt(uClutBase.x + idx, uClutBase.y);\n"
     "  }\n"
     "  if (color == 0) { if (uDebugTransp != 0) { oColor = vec4(1.0,0.0,1.0,1.0); return; } discard; }\n"
+    "  int stp = (color >> 15) & 1;\n"
+    "  if (uStpMode == 1 && stp != 0) discard;\n"   /* opaque pass: skip STP texels */
+    "  if (uStpMode == 2 && stp == 0) discard;\n"   /* blend pass: only STP texels */
     "  float r = float(color & 0x1F) / 31.0;\n"
     "  float g = float((color >> 5) & 0x1F) / 31.0;\n"
     "  float b = float((color >> 10) & 0x1F) / 31.0;\n"
@@ -698,6 +848,11 @@ static int gpu_init_shader(void) {
     pglGetUniformLocation = (PFNglGetUniformLocation)SDL_GL_GetProcAddress("glGetUniformLocation");
     pglUniform1i          = (PFNglUniform1i)         SDL_GL_GetProcAddress("glUniform1i");
     pglUniform2i          = (PFNglUniform2i)         SDL_GL_GetProcAddress("glUniform2i");
+    pglBlendEquation      = (PFNglBlendEquation)     SDL_GL_GetProcAddress("glBlendEquation");
+    pglBlendColor         = (PFNglBlendColor)        SDL_GL_GetProcAddress("glBlendColor");
+    if (pglBlendColor) {
+        pglBlendColor(0.f, 0.f, 0.f, 0.5f);   /* ABE rate 0: B/2 + F/2 */
+    }
 
     if (!pglCreateShader || !pglShaderSource || !pglCompileShader || !pglGetShaderiv ||
         !pglCreateProgram || !pglAttachShader || !pglLinkProgram || !pglGetProgramiv ||
@@ -727,6 +882,7 @@ static int gpu_init_shader(void) {
     s_u_pagebase = pglGetUniformLocation(s_clut_prog, "uPageBase");
     s_u_clutbase = pglGetUniformLocation(s_clut_prog, "uClutBase");
     s_u_debugtransp = pglGetUniformLocation(s_clut_prog, "uDebugTransp");
+    s_u_stpmode     = pglGetUniformLocation(s_clut_prog, "uStpMode");
     port_log("gpu: CLUT-expansion shader ready");
     return 1;
 }
@@ -794,7 +950,13 @@ void port_gpu_present(void) {
      * (BGR555 -> RGB, mask bit ignored) once, so textures/CLUTs can be inspected. */
     {
         const char *vd = getenv("PORT_VRAM_DUMP");
+        const char *vdf = getenv("PORT_VRAM_DUMP_FRAME");
         static int vdone = 0;
+        static long vframe = 0;
+        vframe++;
+        if (vd && vdf && vframe < atol(vdf)) {
+            vd = NULL;   /* wait for the requested frame */
+        }
         if (vd && !vdone) {
             FILE *f = fopen(vd, "wb");
             if (f) {
@@ -812,6 +974,16 @@ void port_gpu_present(void) {
                 }
                 fclose(f);
                 port_log("gpu: VRAM dumped -> %s", vd);
+            }
+            {
+                /* Also dump the raw 16-bit words (keeps the STP/mask bit). */
+                char rawpath[512];
+                snprintf(rawpath, sizeof(rawpath), "%s.bin", vd);
+                FILE *rf = fopen(rawpath, "wb");
+                if (rf) {
+                    fwrite(s_vram, 2, VRAM_W * VRAM_H, rf);
+                    fclose(rf);
+                }
             }
             vdone = 1;
         }

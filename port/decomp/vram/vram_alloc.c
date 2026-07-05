@@ -41,13 +41,20 @@ extern u8  GetMaxVRAMSlotSize(s32 base);         /* matched C, src/vram.c */
 #define PORT_VRAM_W 1024
 #define PORT_VRAM_H 512
 #define PORT_CLUT_Y0 256
-static s16 s_port_tex_x, s_port_tex_y, s_port_tex_shelf;
-static s16 s_port_clut_x, s_port_clut_y;
+/* Sprite textures live BELOW the CLUT rows, in the bottom half of VRAM
+ * (y 288..511). The top half is taken: x<320 is the PSX double framebuffer
+ * (unused for texturing but kept clear for fidelity) and x>=320 is the tile
+ * atlas (CalculateVRAMCoordinates). y 256..287 is reserved for CLUT rows
+ * (AllocateCLUTSlot bumps from 256). GetTPage/tpage_decode handle y>=256 via
+ * the tpage y-bit, and the sprite V byte is y-256, so addressing stays exact. */
+#define PORT_SPR_Y0 288
+static s16 s_port_tex_x, s_port_tex_y = PORT_SPR_Y0, s_port_tex_shelf = PORT_SPR_Y0;
+static s16 s_port_clut_x, s_port_clut_y = PORT_CLUT_Y0;
 
 static void port_vram_reset(void) {
     s_port_tex_x = 0;
-    s_port_tex_y = 0;
-    s_port_tex_shelf = 0;
+    s_port_tex_y = PORT_SPR_Y0;
+    s_port_tex_shelf = PORT_SPR_Y0;
     s_port_clut_x = 0;
     s_port_clut_y = PORT_CLUT_Y0;
 }
@@ -353,11 +360,11 @@ u8 AllocateVRAMSlot(void *base, u16 *pSlotOut, u8 mode, s16 width, s16 height) {
         s_port_tex_x = 0;
         s_port_tex_y = s_port_tex_shelf;
     }
-    if ((s32)s_port_tex_y + height > 256) {
-        /* Texture region (y<256) exhausted; wrap and reuse (best effort). */
+    if ((s32)s_port_tex_y + height > PORT_VRAM_H) {
+        /* Sprite region (y 288..511) exhausted; wrap and reuse (best effort). */
         s_port_tex_x = 0;
-        s_port_tex_y = 0;
-        s_port_tex_shelf = 0;
+        s_port_tex_y = PORT_SPR_Y0;
+        s_port_tex_shelf = PORT_SPR_Y0;
     }
     x = s_port_tex_x;
     y = s_port_tex_y;

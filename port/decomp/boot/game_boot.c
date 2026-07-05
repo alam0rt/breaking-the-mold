@@ -97,6 +97,7 @@ extern int  SetDispMask(int on);
 extern void FntLoad(int tx, int ty);
 extern int  FntOpen(int x, int y, int w, int h, int isbg, int n);
 extern void SetDumpFnt(int id);
+extern void ConstructStaticGameState(void);
 extern void initPlayerState(void *state);
 extern void InitGameState(void *gs, void *input);
 extern u8   GetLevelCount(void *ctx);
@@ -134,6 +135,11 @@ void port_game_boot_init(void) {
     InitGraphicsSystem(g_pBlbHeapBase);
 
     g_pGameState = (GameState *)g_GameStateBase;
+    /* PSX static-ctor equivalent: installs the GameState vtable (D_80012100)
+     * at gs+0x18. Its +0x1C slot is EntityRemoval, the frame loop's
+     * post-render pass that flushes dirty entity textures/CLUTs to VRAM --
+     * without this, entity sprites never upload and render invisible. */
+    ConstructStaticGameState();
     PadInit(0);
     InitGeom();
     SetDispMask(1);

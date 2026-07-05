@@ -7,7 +7,7 @@ tags: [plans, port, pc, sdl2, opengl, hal, spec]
 # PC Port Plan — native build of the Skullmonkeys decomp
 
 **Created:** 2026-07-05
-**Status:** Active — Phase 0 + Phase 1 HAL COMPLETE; Phase 2 IN PROGRESS (CP-2.1 done; CP-2.2/2.4: the entire boot→level-load→render-setup→player-spawn pipeline runs on real GAME.BLB data, boot reaches the title-screen menu-entity creation `InitMenuEntity`)
+**Status:** Active — Phase 0 + Phase 1 HAL COMPLETE; Phase 2 IN PROGRESS (CP-2.1/2.2 done; **CP-2.4 MILESTONE HIT: the title screen renders correctly** — full animated logo, menu, cursor; next: emulator pixel-diff + CP-2.5 menu→level-1)
 **Owner:** port
 **Model:** [TOMB5](https://github.com/TOMB5/TOMB5) (decomp-to-PC via a PSY-Q → PC HAL layer)
 **Related:** `docs/plans/c-migration-plan.md` (ASM→C roadmap — Phase 2 consumes it),
@@ -618,3 +618,42 @@ family batches (`c-migration-plan.md`).
   this is the title screen itself. Converting it + the 4 stages completes the MENU
   avatar and lets `InitGameState` return → the frame loop runs → CP-2.4 title render
   (then the PCSX-Redux first-frame diff).
+
+- **2026-07-05 (session 3) — CP-2.4 MILESTONE: the title screen renders correctly.**
+  Full animated logo (skull-head "O"), all four menu rows, clay-ball bullets, the
+  critter selection cursor (moves with input), skeleton-hand ambient sprites — no
+  corruption. Three GPU/render bugs fixed to get there:
+  - **ABE/TGE flag bits broke prim dispatch**: `render_prim`'s switch matched exact
+    code bytes, so any prim with the semi-transparent (0x02) or raw-texture (0x01)
+    flag set (`0x66` SPRT, `0x7e` SPRT_16, …) fell to `default` and was silently
+    skipped — the menu text and overlay tiles were invisible. Dispatch now masks
+    the low 2 bits for 0x20..0x7F codes; ABE blending implemented per tpage rate
+    (0: 50/50 via constant-alpha, 1: additive, 2: reverse-subtract, 3: ~additive).
+  - **PSX STP-bit semantics in the shader** (two-pass): with ABE set, only texels
+    with VRAM bit 15 blend; STP=0 texels draw opaque; texel 0 always transparent.
+    `quad_tex_ex` draws ABE prims twice (uStpMode=1 opaque pass, =2 blend pass).
+  - **THE big one — entity sprites never uploaded to VRAM** (every code=64/66
+    sprite was invisible; menu text only showed via the tile layer): the frame
+    loop's post-render dispatch (`(**(gs+0x18 vtable +0x1C))(gs+argOff)`) is the
+    per-frame texture/CLUT flush pass, and THREE pieces were missing: (1)
+    `ConstructStaticGameState()` was never called at boot (installs vtable
+    D_80012100 at GameState+0x18 — src/gstate.c's DEAD_ENTITY_VTABLE alias is a
+    misleading clean-room name; it's the live GameState vtable); (2) D_80012100
+    itself was weak-zeroed rodata → strong def in `port/decomp/data/
+    gamestate_vtable.c` {…, MainNoopCallback_80082844, EntityRemoval}; (3)
+    `EntityRemoval` (0x80020D28 — ALSO misnamed: it's the per-frame post-render
+    pass that walks the tick list dispatching each entity's vtable+0x1C =
+    `UploadEntityTextureIfDirty`) + `UploadEntityTextureIfDirty`/
+    `UploadCLUTToVRAM`/`UploadTextureToVRAM` converted (`port/decomp/blb/
+    EntityRemoval.c`, `port/decomp/sprite/upload_vram.c`).
+  - **VRAM region collision**: the PC-native sprite slot bump-allocator packed
+    y<256 across the full 1024 width, marching into the tile atlas (x>=320) →
+    garbage-textured sprites. Sprite textures now live at y 288..511 (below the
+    CLUT rows at 256..287); tpage y-bit + V-byte addressing stay exact.
+  - **Debug tooling added to gpu_gl.c**: `PORT_OT_LOG=N` (dump the Nth OT pass
+    prim-by-prim), `PORT_VRAM_DUMP_FRAME=N` (defer the VRAM dump), and the VRAM
+    dump now also writes a raw `.bin` (preserves the STP/mask bit the PPM loses).
+- _next:_ PCSX-Redux side-by-side pixel diff of the title frame (CP-2.4 verify);
+  then menu input → START GAME → level 1 load path (CP-2.5/2.6). Note the black
+  box + critter next to the selected row is CORRECT game behaviour (the critter
+  eats the selected row's text), not a render bug.
