@@ -71,7 +71,34 @@ void func_80014928(HeapConfigOwner *base, s32 fillValue) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/vram", ClearHeapBlocks);
+/* Fills every allocated heap block's memory with `fill`. Walks the
+ * allocated-block list from the head index (base+0xA648) via .next until the
+ * 0xFFFF terminator; for each block descriptor (pool at base+0xA320, stride 8:
+ * ptr@0, size16@4, next@6) memset32's [ptr, ptr + size16*0x10). */
+void ClearHeapBlocks(void *base, s32 fill) {
+    u16 idx = *(u16 *)((u8 *)base + 0xA648);
+    for (;;) {
+        u8 *e;
+        s32 *p;
+        s32 *end;
+        u8 *e2;
+        if (idx == 0xFFFF) {
+            break;
+        }
+        e = (u8 *)base + idx * 8;
+        p = *(s32 **)(e + 0xA320);
+        do {} while (0); /* force ptr load before size load (keeps p off e's reg) */
+        end = (s32 *)((u8 *)p + *(u16 *)(e + 0xA324) * 0x10);
+        if (p != end) {
+            do {
+                *p = fill;
+                p += 1;
+            } while (p != end);
+        }
+        e2 = (u8 *)base + idx * 8;
+        idx = *(u16 *)(e2 + 0xA326);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/vram", InitVRAMSlotArray);
 
