@@ -438,7 +438,8 @@
     - "libs/libvoice"
   -
     - 614740
-    - "sdata"
+    - ".sdata"
+    - "gfx"
   -
     - 614784
     - ".sdata"

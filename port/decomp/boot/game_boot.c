@@ -74,6 +74,18 @@ static InputState s_inputStateB;
 extern u8    D_8009AE58[] asm("D_8009AE58");           /* render-slot table  */
 extern void *g_LayerRenderSlots asm("D_800A595C");    /* -> D_8009AE58       */
 
+/* PC-port link backing for the gfx.c sdata-island pointer initializers.
+ * When the 0x800A5954 engine-globals island was migrated into src/gfx.c as
+ * natural C, its pointer members took the ROM initializers &D_800907EC
+ * (g_pBlbHeapBase), &D_8009B14C (g_pInputStateA) and &D_8009B160
+ * (g_pInputStateB) -- PSX .bss/.data addresses that don't exist on PC. These
+ * asm-aliased externs make gen_port_stubs.py emit weak zero backing so the
+ * native link resolves; the live pointers are re-seeded at boot below
+ * (input states -> s_inputStateA/s_inputStateB; heap base via InitGraphicsSystem). */
+extern u8    D_800907EC[] asm("D_800907EC");           /* g_pBlbHeapBase init */
+extern u8    D_8009B14C[] asm("D_8009B14C");           /* g_pInputStateA init */
+extern u8    D_8009B160[] asm("D_8009B160");           /* g_pInputStateB init */
+
 /* ---- boot/frame callees (HAL, matched C, or weak-stub-until-converted) ---- */
 extern void SsUtReverbOn(void);
 extern void ResetCallback(void);

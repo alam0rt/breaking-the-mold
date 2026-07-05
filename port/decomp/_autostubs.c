@@ -4,7 +4,7 @@
  * definition overrides. Regenerate with `python3 tools/gen_port_stubs.py`.
  * ========================================================================== */
 void port_stub(const char *fn);
-/* 1050 asm-only functions */
+/* 1053 asm-only functions */
 __attribute__((weak)) void Add1970Icons(void) { port_stub("Add1970Icons"); }
 __attribute__((weak)) void AddEntityToBothLists(void) { port_stub("AddEntityToBothLists"); }
 __attribute__((weak)) void AddEntityToSortedRenderList(void) { port_stub("AddEntityToSortedRenderList"); }
@@ -1019,6 +1019,9 @@ __attribute__((weak)) void cd_read_retry(void) { port_stub("cd_read_retry"); }
 __attribute__((weak)) void data_ready_callback(void) { port_stub("data_ready_callback"); }
 __attribute__((weak)) void dma_execute(void) { port_stub("dma_execute"); }
 __attribute__((weak)) void func_80013240(void) { port_stub("func_80013240"); }
+__attribute__((weak)) void func_80027210(void) { port_stub("func_80027210"); }
+__attribute__((weak)) void func_80027234(void) { port_stub("func_80027234"); }
+__attribute__((weak)) void func_80027240(void) { port_stub("func_80027240"); }
 __attribute__((weak)) void func_8004F190(void) { port_stub("func_8004F190"); }
 __attribute__((weak)) void func_80079D80(void) { port_stub("func_80079D80"); }
 __attribute__((weak)) void func_80083E34(void) { port_stub("func_80083E34"); }

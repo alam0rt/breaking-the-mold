@@ -522,7 +522,35 @@ INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideStartUp);
 
 INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideStartDown);
 
-INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideComplete);
+/* Default "ride complete / idle" state for platform-ride entities (installed
+ * via D_800A598C). Clears the render FSM slot (block-copy of a zeroed
+ * CallbackSlot into renderMarker/renderCallback so the entity stops advancing
+ * its ride animation), then raises two "settled" bytes in the extended entity
+ * region (offsets 0x10E-0x110 — the struct's field names there belong to other
+ * overlaid entity types, so accessed by raw offset). PaddedSlotPair pins the
+ * 0x18 leaf frame (slot at sp+4). */
+void PlatformRideComplete(Entity *entity) {
+    PaddedSlotPair slot;
+
+    slot.s[0].markerLo = 0;
+    slot.s[0].markerHi = 0;
+    slot.s[0].fn = NULL;
+    *(CallbackSlot *)&entity->renderMarker = slot.s[0];
+    *((u8 *)entity + 0x10F) = 1;
+    if (*((u8 *)entity + 0x10E) == 0) {
+        *((u8 *)entity + 0x110) = 1;
+    }
+}
+
+/* Three tiny UNREFERENCED helpers (dead code) that trailed PlatformRideComplete
+ * in its pre-split asm blob — same platform-ride field cluster (+0x10C timer,
+ * +0x110/+0x111 flags). No callers or data refs anywhere in the ROM (Ghidra +
+ * binary ptr-scan agree), so they keep splat's anonymous func_ names. */
+INCLUDE_ASM("asm/nonmatchings/blb", func_80027210);
+
+INCLUDE_ASM("asm/nonmatchings/blb", func_80027234);
+
+INCLUDE_ASM("asm/nonmatchings/blb", func_80027240);
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitDigitDisplayEntity);
 

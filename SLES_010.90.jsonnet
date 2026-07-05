@@ -234,7 +234,7 @@ local bss(start, kind, vram) = {
         // engine-globals block and the interleaved ending..main tail stay in
         // unnamed shared pieces (cannot be attributed to a single TU).
         // =====================================================================
-        data('96154', 'sdata'),        // 0x800A5954 shared engine globals (g_pBlbHeapBase, g_pGameState, D_800A595C, ...)
+        dotsdata('96154', 'gfx'),      // 0x800A5954 shared engine globals -> MIGRATED to build/src/gfx.o(.sdata)
         dotsdata('96180', 'blb'),      // 0x800A5980 -> MIGRATED to build/src/blb.o(.sdata) (Phase 2)
         dotsdata('961A8', 'pickups'),  // 0x800A59A8 -> MIGRATED to build/src/pickups.o(.sdata) (Phase 4)
         sdata('961E8', 'gamecd'),      // 0x800A59E8

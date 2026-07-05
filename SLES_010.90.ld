@@ -79,9 +79,6 @@ SECTIONS
         main_SDATA_START = .;
         build/asm/crt0.o(.sdata);
         build/src/crt0stub.o(.sdata);
-        build/src/gfx.o(.sdata);
-        build/src/hud.o(.sdata);
-        build/src/clayball.o(.sdata);
         build/src/gfx.o(.text);
         build/src/prim.o(.text);
         build/src/vram.o(.text);
@@ -204,7 +201,9 @@ SECTIONS
         build/src/crt0stub.o(.rodata);
         main_RODATA_END = .;
         main_RODATA_SIZE = ABSOLUTE(main_RODATA_END - main_RODATA_START);
-        build/asm/data/96154.sdata.o(.sdata);
+        build/src/gfx.o(.sdata);
+        build/src/hud.o(.sdata);
+        build/src/clayball.o(.sdata);
         build/src/blb.o(.sdata);
         build/src/edtor.o(.sdata);
         build/src/decor.o(.sdata);
