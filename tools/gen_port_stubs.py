@@ -40,6 +40,10 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASM_DIR = os.path.join(REPO, "asm", "nonmatchings")
 SRC_DIRS = [os.path.join(REPO, "src"), os.path.join(REPO, "src", "libs")]
+# Also scan the port's hand/m2c functional-C bodies: as those reference absolute
+# `asm("D_…")` game globals not in symbol_addrs.txt, they need weak backing too.
+# (INCLUDE_ASM never appears there, so the function scan is a harmless no-op.)
+ALIAS_SCAN_DIRS = SRC_DIRS + [os.path.join(REPO, "port", "decomp")]
 SYMBOL_ADDRS = os.path.join(REPO, "symbol_addrs.txt")
 OUT_DIR = os.path.join(REPO, "port", "decomp")
 STUBS_OUT = os.path.join(OUT_DIR, "_autostubs.c")
@@ -143,12 +147,16 @@ def collect_asm_functions() -> list[str]:
 
 def collect_data_aliases() -> set[str]:
     aliases: set[str] = set()
-    for d in SRC_DIRS:
+    for d in ALIAS_SCAN_DIRS:
         if not os.path.isdir(d):
             continue
         for root, _dirs, files in os.walk(d):
             for fn in files:
                 if not fn.endswith(".c"):
+                    continue
+                # Skip the generated backing file itself (it *defines* the
+                # aliases via asm("…") -- scanning it would be circular).
+                if fn in ("_autoglobals.c", "_autostubs.c"):
                     continue
                 with open(os.path.join(root, fn), encoding="utf-8", errors="replace") as f:
                     for m in DATA_ALIAS_RE.finditer(f.read()):

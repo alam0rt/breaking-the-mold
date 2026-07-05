@@ -10,10 +10,23 @@ See the full roadmap in [`../docs/plans/pc-port.md`](../docs/plans/pc-port.md).
 
 ## Status
 
-**Phase 0 complete** — the tree compiles 32-bit, links an executable, opens an
-SDL2 window + OpenGL 2.1 context, and aborts on the first unimplemented HAL/game
-call (`port_game_main`, wired in Phase 2). Phase 1 fills the SPEC/HAL backends;
-Phase 2 converts the boot/frame/render spine to functional C.
+**Phase 1 HAL backends complete.** All six SPEC backends (`gpu_gl`, `gte`,
+`cd_files`, `pad_sdl`, `spu_sdl`, `bios`) provide real behaviour — 42 game-called
+PSY-Q HAL symbols are strongly defined, none stubbed. `port_boot.c` drives a live
+50 Hz bring-up loop (SDL2 window + GL2.1, VRAM texture, ordering-table walk,
+input, VSync callback). The CD backend reads **GAME.BLB directly** as a flat
+sector device (not the ISO). Remaining fidelity work — pixel-exact GPU
+CLUT/texture sampling and SPU-ADPCM audio mixing — co-develops with Phase 2,
+which converts the boot/frame/render spine to functional C and wires
+`port_game_main` to the real game boot.
+
+Quick self-tests (headless-friendly):
+
+```bash
+PORT_MAX_FRAMES=25 ./build-linux-debug/skullmonkeys      # run 25 frames then exit
+PORT_GPU_SELFTEST=1 PORT_MAX_FRAMES=3 ./build-linux-debug/skullmonkeys  # draw a synthetic OT
+SKULLMONKEYS_BLB=/path/to/GAME.BLB ./build-linux-debug/skullmonkeys     # override disc
+```
 
 ## Building
 

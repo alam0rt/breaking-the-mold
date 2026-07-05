@@ -4,7 +4,7 @@
  * definition overrides. Regenerate with `python3 tools/gen_port_stubs.py`.
  * ========================================================================== */
 void port_stub(const char *fn);
-/* 1056 asm-only functions */
+/* 1051 asm-only functions */
 __attribute__((weak)) void Add1970Icons(void) { port_stub("Add1970Icons"); }
 __attribute__((weak)) void AddEntityToBothLists(void) { port_stub("AddEntityToBothLists"); }
 __attribute__((weak)) void AddEntityToSortedRenderList(void) { port_stub("AddEntityToSortedRenderList"); }
@@ -180,7 +180,6 @@ __attribute__((weak)) void CollectibleYellowBirdTickCallback(void) { port_stub("
 __attribute__((weak)) void ConditionalFreeMemory(void) { port_stub("ConditionalFreeMemory"); }
 __attribute__((weak)) void CopyTextureData(void) { port_stub("CopyTextureData"); }
 __attribute__((weak)) void CopyTilePixelData(void) { port_stub("CopyTilePixelData"); }
-__attribute__((weak)) void CopyTilemapLayerIndex(void) { port_stub("CopyTilemapLayerIndex"); }
 __attribute__((weak)) void CreateCameraEntity(void) { port_stub("CreateCameraEntity"); }
 __attribute__((weak)) void CreateCollectibleWithFlags(void) { port_stub("CreateCollectibleWithFlags"); }
 __attribute__((weak)) void CreateFadeOverlayEntity(void) { port_stub("CreateFadeOverlayEntity"); }
@@ -381,10 +380,6 @@ __attribute__((weak)) void GameModeCallback(void) { port_stub("GameModeCallback"
 __attribute__((weak)) void GenericEntityDestroyCallback(void) { port_stub("GenericEntityDestroyCallback"); }
 __attribute__((weak)) void GenericSpriteEntityInitCallback(void) { port_stub("GenericSpriteEntityInitCallback"); }
 __attribute__((weak)) void GenericSpriteEntityTickCallback(void) { port_stub("GenericSpriteEntityTickCallback"); }
-__attribute__((weak)) void GetCurrentModeReservedData(void) { port_stub("GetCurrentModeReservedData"); }
-__attribute__((weak)) void GetCurrentSectorCount(void) { port_stub("GetCurrentSectorCount"); }
-__attribute__((weak)) void GetCurrentSectorOffset(void) { port_stub("GetCurrentSectorOffset"); }
-__attribute__((weak)) void GetCurrentTertiaryDataSize(void) { port_stub("GetCurrentTertiaryDataSize"); }
 __attribute__((weak)) void GetEntitySpawnData(void) { port_stub("GetEntitySpawnData"); }
 __attribute__((weak)) void GetFrameMetadata(void) { port_stub("GetFrameMetadata"); }
 __attribute__((weak)) void GetFrameReadyFlag(void) { port_stub("GetFrameReadyFlag"); }

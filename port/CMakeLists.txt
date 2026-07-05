@@ -74,7 +74,11 @@ add_compile_options(
 # --- sources -----------------------------------------------------------------
 file(GLOB GAME_SRC       CONFIGURE_DEPENDS ${REPO_ROOT}/src/*.c)
 file(GLOB SPEC_SRC       CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/spec/*.c)
-file(GLOB DECOMP_SRC     CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/decomp/*.c)
+# decomp/ holds the generated weak stub/global TUs at the top level AND the
+# hand/m2c functional-C bodies for still-asm GAME functions under per-segment
+# subdirs (decomp/<seg>/<Func>.c). Recurse so both are compiled; a strong body
+# there overrides the weak stub in _autostubs.c automatically.
+file(GLOB_RECURSE DECOMP_SRC CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/decomp/*.c)
 
 # NOTE: src/libs/*.c (the decompiled PSY-Q libraries: libcd, libspu, libvoice)
 # are DELIBERATELY EXCLUDED. They are matched MIPS-faithful C that dereferences

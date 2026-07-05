@@ -7,7 +7,7 @@ tags: [plans, port, pc, sdl2, opengl, hal, spec]
 # PC Port Plan — native build of the Skullmonkeys decomp
 
 **Created:** 2026-07-05
-**Status:** Active — Phase 0 COMPLETE; Phase 1 next
+**Status:** Active — Phase 0 + Phase 1 HAL COMPLETE; Phase 2 IN PROGRESS (CP-2.1 done; CP-2.2/2.4: the entire boot→level-load→render-setup→player-spawn pipeline runs on real GAME.BLB data, boot reaches the title-screen menu-entity creation `InitMenuEntity`)
 **Owner:** port
 **Model:** [TOMB5](https://github.com/TOMB5/TOMB5) (decomp-to-PC via a PSY-Q → PC HAL layer)
 **Related:** `docs/plans/c-migration-plan.md` (ASM→C roadmap — Phase 2 consumes it),
@@ -205,20 +205,41 @@ SDL/GL/audio/input, even if most game logic is still stubbed.
   quad; CLUT/TPage select sampling; `DrawSync`/`VSync` frame gate → SDL present.
   Reference: `docs/systems/rendering-order.md` + emulator traces (the real semantics
   are in the *replaced* asm, so RE from docs/traces, not from decompiled C).
+  — **DONE (plumbing).** VRAM texture + transfers, exact `GetTPage`/`GetClut`,
+  `AddPrim`/`ClearOTag`/`DrawOTag` (PC-native **32-bit tag** scheme — host pointers
+  are 4 bytes under -m32, so the full pointer lives in the primitive `tag` word,
+  sidestepping the PSX 24-bit-pointer limit), decode dispatch (SPRT/POLY_FT4/GT4/
+  TILE/POLY_F4/DR_TPAGE → GL quads), `Set*` initialisers, env/`DrawSync`, minimal
+  Fnt. Synthetic 3-primitive OT self-test passes. CLUT/4-bit-texture pixel-exact
+  sampling is refined in Phase 2 against emulator traces (needs live game frames).
 - **CP-1.2 GTE** (`gte.c`): software `InitGeom`/`RotTransPers`/matrix ops (light — 2D game).
-- **CP-1.3 CD** (`cd_files.c`): map the disc/BLB file tree (`disks/pal/`, `disks/blb/`)
-  to a host directory; `CdSearchFile`/`CdRead*` → `fopen`/`fread`. Cross-check
-  `src/gamecd.c`, `src/blbacc.c`, `src/lvlload.c`.
-- **CP-1.4 SPU** (`spu_sdl.c`): decode SPU-ADPCM voices, mix to a stereo
-  `SDL_AudioStream`; `SpuSetKey`/pitch/volume. Cross-check `src/libs/libspu*.c`,
-  `libvoice.c`, `src/sound.c`.
-- **CP-1.5 PAD** (`pad_sdl.c`): SDL gamepad + keyboard → PSX button-mask format
-  (bit layout documented by the cheat table in `src/main.c`).
-- **CP-1.6 BIOS/runtime** (`bios.c`): `Enter/ExitCriticalSection`, `InterruptCallback`,
-  `VSyncCallback`, `ResetCallback`, heap/`malloc`, `rand/srand`, `mem*`, `printf`;
-  frame pacing at 50 Hz PAL in `host_main.c`.
+  — **DONE.**
+- **CP-1.3 CD** (`cd_files.c`): the game streams **all** data from **GAME.BLB** via
+  absolute-sector reads (`CdIntToPos`→`CdControl(Setloc)`→`CdRead`→`CdReadSync`). The
+  backend opens `disks/blb/GAME.BLB` **directly** (NOT the ISO) and treats it as a
+  flat 2048-byte sector device (sector 0 = start of GAME.BLB; PC boot sets
+  `BLB_BASE_SECTOR = 0`). Full `Cd*` surface + BCD MSF↔LBA. The game's BLB parser
+  (`blbacc/blbmem/lvlload`) runs unchanged on the fed bytes. Verified: reads sector 0,
+  magic `c9002000`. CD-audio commands accepted/no-op'd. — **DONE.**
+- **CP-1.4 SPU** (`spu_sdl.c`): the game-facing voice-control surface
+  (`SpuSetKey`/`SpuSetVoicePitch`/`SpuGetVoicePitch`/`SpuSetVoiceVolume`/
+  `SpuSetCommonCDVolume`/`SpuQuit`/`SsUtReverbOn`) is implemented as per-voice state;
+  ADPCM decode + mix to `SDL_AudioStream` lands in Phase 2 when the game keys voices.
+  — **DONE (surface).**
+- **CP-1.5 PAD** (`pad_sdl.c`): SDL keyboard **and** game controller → PSX 16-bit
+  button mask; `PadRead` returns it (post-invert convention matching
+  `src/libs/libcd.c PadRead`). — **DONE.**
+- **CP-1.6 BIOS/runtime** (`bios.c`): `Enter/ExitCriticalSection`, `DeliverEvent`,
+  `InterruptCallback`/`VSyncCallback`/`ResetCallback`/`DMACallback` registry, `VSync`
+  counter; frame pacing at 50 Hz PAL in `port_boot.c`. — **DONE.**
 - **CP-1.7** boot sequence (`main_8008E6E0` → … → `InitGameState`) runs without a HAL
-  abort. — **Phase 1 exit gate.**
+  abort. — **Phase 1 exit gate. HAL READY**: a bring-up harness (`port_boot.c`) drives
+  the full HAL in a live 50 Hz loop (clear → present → input → vsync-callback → pace)
+  with GPU/CD/pad self-tests passing; the *game-driven* boot lands with Phase 2 (it
+  needs the converted PSX `main`). Architecture decision: `src/libs/*.c` (the matched
+  PSY-Q lib C) is **excluded** from the port build — it dereferences PSX kernel/HW
+  globals that don't exist on PC — and the whole PSY-Q surface is provided by
+  `port/spec/` instead (42 game-called HAL symbols verified strong, none stubbed).
 
 ### Phase 2 — Convert the critical-path game functions to functional C
 Goal: title screen renders, then level 1 loads and is playable. Convert along the
@@ -226,8 +247,84 @@ Goal: title screen renders, then level 1 loads and is playable. Convert along th
 family batches (`c-migration-plan.md`).
 
 - **CP-2.1** `main` (boot + frame loop) + `gfx.c` OT-flush/buffer-swap glue → C.
+  — **DONE (boot spine).** The PSX `main` boot sequence + frame body are
+  reconstructed as functional C in `port/decomp/boot/game_boot.c`
+  (`port_game_boot_init` / `port_game_boot_frame`, from the working
+  `docs/analysis/decomp-drafts/main.c`), driven by `port_boot.c`'s
+  `port_game_main` (heap + HAL bring-up → boot init → frame loop with SDL
+  present/input/50 Hz pacing). Supporting pieces landed: `port/spec/port_heap.c`
+  (mallocs the 16 MB BLB heap, sets `g_pBlbHeapBase`); trivial gfx helpers
+  `WaitForVBlankIfNeeded` + `FlushDebugFontAndEndFrame`
+  (`port/decomp/gfx/gfx_port.c`) and `initPlayerState`
+  (`port/decomp/blb/initPlayerState.c`); and the CD-model `LoadGameAssetLocations`
+  **replacement** (`port/decomp/gamecd/`, sets `BLB_BASE_SECTOR = 0` for the
+  direct-GAME.BLB backend rather than doing ISO file searches). CMake `decomp/`
+  glob is now recursive; `gen_port_stubs.py` also scans `port/decomp/` so
+  converted bodies' `asm("D_…")` globals auto-get weak backing. **The boot now
+  runs live** through `SsUtReverbOn → ResetCallback → LoadGameAssetLocations` and
+  aborts (cleanly, by name) at the first still-asm callee — establishing the
+  iterative work queue. Two boot modes: default (game boot) and
+  `PORT_HAL_HARNESS=1` (HAL-only smoke loop).
+  - **NEXT (render core):** `InitGraphicsSystem` is the first abort. It sets up a
+    ~20-field **double-buffered GPU-context struct** in the BLB heap (screen w/h
+    @ base+0x0/0x2 = 0x140/0x100; `SetDefDrawEnv` @ base+0x4 & base+0x5044;
+    `SetDefDispEnv` @ base+0x60 & base+0x50A0; OT + prim-pool counts @
+    base+0xA084→; installs the VSync-ISR swap via `VSyncCallback`) and depends on
+    **`InitVRAMSlotTable`** and **`SwapBuffersAndClearOT`** (the buffer-swap that
+    calls `DrawOTag` — the render-present integration point). This is the render
+    architecture core: it needs the GPU-context struct layout verified against
+    Ghidra/`prim.c`/emulator traces, and a deliberate decision on how the game's
+    OT + double-buffer envs map onto the `gpu_gl.c` present path (candidate: PC
+    `SwapBuffersAndClearOT` = `DrawOTag(game_ot)` + `port_gpu_present()` +
+    `ClearOTag`, ignoring the PSX ISR-driven double-buffer). Do this deliberately,
+    not as an end-of-context transcription.
 - **CP-2.2** level load + asset path: `lvlload.c`, `blb.c`/`blbacc.c`/`blbmem.c`
   remaining stubs, `vram.c`, `sprset.c`, `sprite.c`.
+  — **IN PROGRESS.** The render core landed (`port/decomp/gfx/render_core.c`:
+  `InitGraphicsSystem`, `SwapBuffersAndClearOT`, `ClearOrderingTables`,
+  `GetFrameReadyFlag`, `TriggerBufferSwapIfReady`; `port/decomp/vram/
+  InitVRAMSlotTable.c`). The **double-buffered GPU context** is set up in the BLB
+  heap (buffers at base+0x4 / base+0x5044, ot ptr @ +0x70, prim pools @ +0x74);
+  `SwapBuffersAndClearOT` = the present (`DrawOTag(gpu->ot)` → GL, toggle buffer,
+  `ClearOTag`, reset pool counts), fired by the C `TriggerBufferSwapIfReady` VSync
+  ISR that `port_boot.c` runs each host frame. **KEY FIX:** `GetFrameReadyFlag` is
+  a dual-entry function — its *entry* returns `&D_800AE3E0` (a scratch buffer
+  pointer), only `+0xC` returns the `g_FrameReady` byte (the gfx.c plate comment
+  described only the latter). `InitGraphicsSystem` uses the entry to set the
+  BLB-header read buffer at heap+0xA650. Then the level-load spine converted:
+  `InitGameState` (`port/decomp/gstate/`: sets initial game-mode dispatch +
+  builds the sub-level asset list + calls the loaders), `LoadBLBHeader`
+  (`port/decomp/blb/`: reads the first 2 GAME.BLB header sectors via the CD
+  backend — **reads real GAME.BLB data** — then `InitLevelDataContext` +
+  `SetSpriteTables`, both matched C), `InitSPUDefaults` (no-op; SPU config
+  subsumed by the spu_sdl.c state model). The boot now runs the **entire**
+  power-on → HAL → graphics-init → level-load-entry path and reaches
+  **`InitializeAndLoadLevel`** (`lvlload.c`, 460 lines, ~40 callees) — the full
+  level asset/tile/sprite/entity-spawn subsystem, the next major work unit
+  (deserves a focused session + emulator runtime verification as tiles/sprites
+  upload to VRAM).
+  - **BLB heap allocator DONE + unit-tested** (`port/decomp/vram/heap_alloc.c`:
+    `InitHeapFreeList`, `ClearHeapBlocks`, `AllocateFromHeap`, `FreeFromHeap`).
+    This is the block-descriptor allocator the level loader carves every asset
+    buffer from (`InitHeapConfig`→`InitHeapFreeList`→`AllocateFromHeap`→
+    `ClearHeapBlocks` all appear on `InitializeAndLoadLevel`'s critical path).
+    Free-list = 100 descriptors at heap+0xA320 (`{s32 ptr; u16 size16; u16 next}`);
+    alloc reserves a 4-byte size header at ptr[0], returns ptr+4 (m2c mistyped the
+    pointer as +16 — verified `+0x4` bytes against the asm). Verified with
+    `tools/test_heap.c` (-m32): non-overlapping allocations, no aliasing, free
+    restores the free count, coalesce works — **ALL PASS**. Heap corruption is
+    silent, so this was tested standalone before being relied upon.
+  - **`InitializeAndLoadLevel` structure fully mapped** (see repo memory
+    `pc-port.md` for the offset-level breakdown). It's a movie/loading-screen
+    playback state machine (switch on `AdvancePlaybackSequence`→0-5 via
+    `jtbl_80012140`, so m2c can't auto-decompile it) whose tail does the real
+    asset→heap→VRAM load. ~18 still-asm callees remain (LevelDataParser,
+    LoadAssetContainer, LoadTileDataToVRAM, InitLayersAndTileState,
+    LoadEntitiesFromAsset501, the movie/loading-screen functions, …); ~12 more are
+    already matched C. Next-session approach: hand-write the driver from the .s
+    (jump table needed), no-op the movie/loading-screen path initially to reach
+    the tile/sprite load faster, and verify VRAM uploads against PCSX-Redux
+    (visible tiles = CP-2.4 "title renders").
 - **CP-2.3** entity tick + render dispatch: `entity.c`, `anim.c`, `entinit.c` stubs.
 - **CP-2.4** **Milestone: title screen renders.**
 - **CP-2.5** player/HUD/menu enough to play: `player.c`, `hud.c`, `menu.c`, `playst.c`.
@@ -318,3 +415,206 @@ family batches (`c-migration-plan.md`).
   `gpu_gl.c` (OT walk → GL quads) and `bios.c` (critical-section/rand/mem*),
   guided by `docs/systems/rendering-order.md` + emulator traces; then wire
   `port_game_main` (Phase 2) to the converted PSX `main`.
+- **2026-07-05 (cont.)** — **Phase 1 HAL backends COMPLETE.** All six SPEC backends
+  provide real (non-abort) behavior; 42 game-called HAL symbols verified strong.
+  Key decisions & findings:
+  - **Excluded `src/libs/*.c`** from the port build (the matched PSY-Q lib C
+    dereferences PSX kernel/HW globals — `BIOS_CALLBACK_TABLES`, `SPU_REGISTER_BASE`
+    — that are weak-backed zero on PC → would null-crash). The whole PSY-Q surface
+    is provided by `port/spec/` instead, per the plan's "replace the lib bodies".
+    Used the linker as the exhaustive work-list (exclude → link → fill → repeat).
+  - **CD = direct GAME.BLB, not ISO** (user directive). `cd_files.c` opens
+    `disks/blb/GAME.BLB` and serves it as a flat 2048-byte sector device; the game's
+    `CdIntToPos→CdControl(Setloc)→CdRead→CdReadSync` sequence reads it unchanged.
+    PC boot must set `BLB_BASE_SECTOR = 0` (it's weak-backed 0 by default; the
+    Phase-2 `LoadGameAssetLocations` replacement keeps it 0). Other regions' BLBs
+    work too (soft magic check).
+  - **GPU OT 24-bit-pointer problem SOLVED by -m32**: host pointers are 4 bytes, so
+    the full pointer is stored in the primitive's 4-byte `tag` word (the `code` byte
+    is a separate word). `AddPrim`/`ClearOTag`/`DrawOTag` agree on this; no low-16MB
+    arena needed. `GetTPage`/`GetClut` use exact PSX bit-packing. Synthetic
+    3-primitive OT self-test (`PORT_GPU_SELFTEST=1`) walks + renders cleanly.
+  - **`hal_stubs.c` `#pragma weak` design paid off**: each real backend definition
+    (gpu_gl/gte/spu_sdl/cd_files/pad_sdl/bios) shadows the abort stub automatically,
+    no exclusion lists to maintain.
+  - **`port_boot.c`** is the HAL bring-up harness driving a live 50 Hz loop
+    (`PORT_MAX_FRAMES=N` to auto-exit headless; `PORT_GPU_SELFTEST=1` to draw a
+    synthetic OT). It's also the skeleton the Phase-2 converted `main` grows from.
+  - Deferred to Phase 2 (they need live game data to validate): pixel-exact GPU
+    CLUT/4-bit texture sampling, and SPU-ADPCM voice decode/mix. Both co-develop
+    with the render/audio bring-up against PCSX-Redux traces.
+- _next (Phase 2):_ convert the boot→frame→render spine to functional C
+  (`main`, `gfx.c` OT-flush/swap glue), wire `port_game_main` → the converted boot,
+  then iterate the GPU/SPU pixel/audio fidelity against the emulator oracle.
+- **2026-07-05 (cont.)** — **Phase 2 CP-2.1 COMPLETE (boot spine).** The PSX `main`
+  boot + frame body are functional C (`port/decomp/boot/game_boot.c`), driven by
+  `port_game_main`; the port boots live through the HAL + heap + `SsUtReverbOn` +
+  `ResetCallback` + `LoadGameAssetLocations` and aborts by name at the first
+  still-asm callee (`InitGraphicsSystem`). Notes:
+  - **Iterative abort-driven conversion loop is live**: run → read the PANIC name →
+    convert that function under `port/decomp/<seg>/<Func>.c` → rebuild → repeat.
+    Each converted body is a strong def that shadows its weak stub automatically.
+  - **`port/decomp/` is now recursive** (CMake `GLOB_RECURSE`) and
+    `gen_port_stubs.py` scans it, so converted bodies' `asm("D_…")` globals get
+    weak backing without touching symbol_addrs.txt.
+  - **CD-model replacements**: functions that do ISO/CD lookups (e.g.
+    `LoadGameAssetLocations`) are *replaced* (set `BLB_BASE_SECTOR = 0`), not
+    faithfully decompiled — the direct-GAME.BLB backend has no ISO.
+  - **Heap**: `port_heap.c` mallocs 16 MB and sets `g_pBlbHeapBase` (PSX retail is
+    2 MB; oversized while struct sizes are still being confirmed). GameState weak
+    backing is exactly 0x1A0 (correct).
+  - **Render-core gate**: `InitGraphicsSystem` + `InitVRAMSlotTable` +
+    `SwapBuffersAndClearOT` are the next chunk and constitute the render
+    architecture — deferred to a focused session (needs GPU-context struct layout
+    verified vs Ghidra/prim.c/traces + a deliberate OT→present mapping). See the
+    CP-2.1 "NEXT (render core)" note above.
+- _next (Phase 2 cont.):_ design + convert the render core (InitGraphicsSystem /
+  SwapBuffersAndClearOT / InitVRAMSlotTable), then InitGameState + the level/asset/
+  sprite/entity render chain, driving toward CP-2.4 "title screen renders".
+- **2026-07-05 (cont.)** — **Phase 2 CP-2.2 render core + level-load spine.** The
+  boot now runs the *entire* power-on → HAL → graphics-init → level-load-entry path
+  and reaches `InitializeAndLoadLevel` (the level asset loader). Converted:
+  `render_core.c` (InitGraphicsSystem / SwapBuffersAndClearOT / ClearOrderingTables
+  / GetFrameReadyFlag / the C VSync ISR TriggerBufferSwapIfReady),
+  `vram/InitVRAMSlotTable.c` (minimal), `gstate/InitGameState.c` (from m2c),
+  `blb/LoadBLBHeader.c` (reads real GAME.BLB header via the CD backend),
+  `sound/InitSPUDefaults.c` (no-op). Notes:
+  - **Double-buffered GPU context** mapped onto gpu_gl.c: buffers at heap+0x4 /
+    heap+0x5044, `ot` ptr @ +0x70 → a static per-buffer list head; the game's
+    AddPrim links into it, SwapBuffersAndClearOT's DrawOTag walks it (the present).
+    Wired the VSync ISR to fire once per host frame between clear and present.
+  - **GetFrameReadyFlag dual-entry gotcha**: the function *entry* returns a scratch
+    BUFFER pointer (`&D_800AE3E0`), NOT the g_FrameReady byte the gfx.c plate
+    comment describes (that's the +0xC entry). InitGraphicsSystem uses the buffer
+    ptr for the BLB-header read destination. Clean-room docs can be wrong — verified
+    against the .s.
+  - **Global-backing rule for converted bodies**: reference absolute-address game
+    globals via `extern T x[] asm("D_xxxx");` (asm alias) so gen_port_stubs.py's
+    scanner backs them weakly; a plain `extern T D_xxxx;` link-fails.
+  - **Deferred bug** (documented in repo memory): BLB_ReadSectorsWrapper passes only
+    2 of CdBLB_ReadSectors' 3 args (the buffer is implicit on MIPS); on PC cdecl the
+    buffer arg is garbage — fix when the asset loader first uses the callback.
+- _next (Phase 2 cont., focused session):_ `InitializeAndLoadLevel` (lvlload.c, 460
+  lines, ~40 callees) — the full level asset/tile/sprite/entity-spawn subsystem +
+  the VRAM atlas allocator, converted with **emulator runtime verification** as
+  tiles/sprites upload to the VRAM texture (visible progress), driving to CP-2.4
+  "title screen renders".
+- **2026-07-05 (cont.)** — **BLB heap allocator DONE + unit-tested.** Converted
+  `InitHeapFreeList`, `ClearHeapBlocks`, `AllocateFromHeap`, `FreeFromHeap`
+  (`port/decomp/vram/heap_alloc.c`) — the block-descriptor allocator every level
+  asset buffer is carved from, directly on `InitializeAndLoadLevel`'s path. Notes:
+  - **Verified standalone** (`tools/test_heap.c`, -m32): non-overlapping
+    allocations, no pattern aliasing, free restores the free count, coalesce lets a
+    full re-allocation succeed — ALL PASS. Heap corruption is silent, so it was
+    tested before being relied on rather than "run the boot and hope".
+  - **m2c pointer-typing trap**: m2c rendered the payload offset as `u32* + 4`
+    (= +16 bytes); the asm is `addiu +0x4` (= +4 bytes). The size header is a single
+    4-byte word at ptr[0], payload = ptr+4. Verified against the .s — this is the
+    exact "silent corruption" risk the plan warns about, caught by reading the asm.
+  - **`InitializeAndLoadLevel` fully structure-mapped** (offset-level breakdown in
+    repo memory): a movie/loading-screen playback state machine (switch on
+    `AdvancePlaybackSequence`→0-5 via `jtbl_80012140`, so m2c can't auto-decompile
+    it) whose tail runs the asset→heap→VRAM load. ~18 still-asm callees remain,
+    ~12 are matched C. Boot still cleanly reaches its abort.
+- _next:_ hand-write `InitializeAndLoadLevel` from the .s (jump table needed);
+  no-op the movie/loading-screen path initially to reach the tile/sprite load, and
+  verify VRAM uploads against PCSX-Redux (CP-2.4 title renders).
+- **2026-07-05 (cont.)** — **`InitializeAndLoadLevel` DONE; boot reaches
+  `LevelDataParser`.** The 460-line level loader is converted
+  (`port/decomp/lvlload/InitializeAndLoadLevel.c`) from a full m2c draft — the key
+  was feeding m2c the jump table: `make decompile` only passes the function .s, so
+  run m2c manually with **both** `InitializeAndLoadLevel.s` and
+  `asm/data/lvlload.rodata.s` (which holds `jtbl_80012140`). Also converted:
+  `RemoveFromZOrderList` + `ClearEntityDefList` (`port/decomp/blb/entity_lists.c`),
+  `InitializePlayerState` (byte-identical to the earlier `initPlayerState`), and
+  no-op movie/loading functions (`port/decomp/lvlload/movie_stub.c`:
+  `DisplayLoadingScreen`/`PlayMovieFromCD`/`PlayMovieFromBLBSectors` — the real ones
+  are 181/289/280-line STR/MDEC subsystems, deferred to Phase 3). Notes:
+  - **Movie no-op strategy validated at runtime**: `DisplayLoadingScreen`→0
+    ("loading done") takes the level-select "ready" branch; `PlayMovie*`→0 advances
+    the sequence. The playback loop **terminates cleanly** at seq type 3/6 (no
+    infinite loop) and reaches the asset-load tail — confirmed by the boot advancing
+    past it to `LevelDataParser`.
+  - **PC memory-model fix**: the tail's `InitHeapConfig(heap, levelBuf+off,
+    0x801FC000 - (levelBuf+off))` assumes PSX's flat 2 MB RAM; `InitHeapConfig`
+    clamps the garbage-on-PC size to `0xFFFF0` (~1 MB), so the level-data staging
+    buffer `D_800AE3E0` was enlarged to **4 MB** in `render_core.c` to hold that
+    sub-heap. Fragile (watch for overruns once the asset loaders fill it) but
+    correct for now.
+- _next (focused session):_ `LevelDataParser` (168 lines) + `LoadAssetContainer`
+  (262 lines, recursive) — the BLB asset-container decoder. Needs the BLB level-data
+  format (`docs/blb.hexpat` = source of truth) + the `LevelDataContext` layout, with
+  field offsets verified against the format spec + emulator runtime (silent-
+  corruption risk). These unlock the tile/sprite asset load → `LoadTileDataToVRAM`
+  (VRAM atlas) → the tile/color/entity/layer init chain → CP-2.4 "title renders".
+- **2026-07-05 (cont.)** — **BLB asset decoder DONE; boot reads real GAME.BLB data
+  and reaches `LoadTileDataToVRAM`.** Converted `LevelDataParser`
+  (`port/decomp/level/`) + `LoadAssetContainer` (`port/decomp/blbacc/`, recursive) —
+  the BLB asset-container decoder — plus a `UploadAudioToSPU` no-op
+  (`port/decomp/sound/sound_stub.c`). The boot now runs the **entire asset-load
+  path**: it reads actual level asset data out of GAME.BLB via the CD backend,
+  parses every asset container, and reaches the tile→VRAM upload. Notes:
+  - **The `LevelDataContext` struct is fully named** in
+    `include/Game/level_data_context.h` (0x80 bytes) with the complete asset-ID→field
+    map in its header comment — used directly rather than guessing offsets, and
+    cross-checked against the `.s` switch.
+  - **Callback bug fixed**: the decomp's `BLB_ReadSectorsWrapper` is a MIPS-only
+    2-arg trampoline relying on `$a2=dst` register passthrough (breaks on PC cdecl).
+    `LoadBLBHeader` now installs a proper 3-arg `port_blb_read_sectors(sector,count,
+    dst)` as `LevelDataContext.sector_read_callback` (+0x64).
+  - **Record format asm-verified**: container `base[0]` = record count (u32 in
+    `LoadAssetContainer`, **u16** in `LevelDataParser` — a real difference), then
+    records at stride 0xC `{type @+4, size @+8, dataOffset @+0xC}`, `dataPtr = base +
+    dataOffset`. Header directory: `dir = blb + seq_index`; `type = dir[0xF36]`,
+    `subIdx = dir[0xF92]`; type-3 entry at `blb + subIdx*0x70`. All transcribed from
+    the `.s`, not m2c's struct guesses.
+  - Reached `LoadTileDataToVRAM` **without crashing** through the real BLB data —
+    strong evidence the parsed asset pointers are valid.
+- _next (focused session):_ `LoadTileDataToVRAM` (242 lines) + the VRAM atlas
+  allocator (`AllocateVRAMSlot`/`UploadTextureOrClut`/`InitVRAMSlotArray`) — the tile-
+  graphics decode + VRAM texture upload = **visible output**. `LoadImage` (HAL) already
+  uploads to the `gpu_gl.c` VRAM texture, so this is the CP-2.4 "title renders" push
+  and the point where **PCSX-Redux runtime comparison** matters (do tiles land at the
+  right VRAM coords?). Convert it + the slot allocator as a unit, then run and diff
+  the first frame vs the emulator.
+
+- **2026-07-05 (session 2) — CP-2.2/2.4: the ENTIRE boot→level-load→render-setup→
+  player-spawn pipeline now runs.** From the `LoadTileDataToVRAM` abort the boot was
+  driven all the way through `InitGameState`'s completion; it now reaches the
+  title-screen menu-entity creation (`InitMenuEntity`, `passwd/`). ~22 functions
+  converted this session (all under `port/decomp/`, MIPS byte-match build untouched).
+  - **Boot-progression bug fixed (NULL .sdata-pointer class):** many `asm("D_xxxx")`
+    globals are POINTERS whose PSX `.sdata` init targets a `.bss` struct. Weak-zero
+    backing makes them NULL, so guarded inits no-op and later `PTR[field]=x` writes
+    crash. `D_800A597C` (player state) was NULL → `initPlayerState` (`if(!p)return;`)
+    never ran and `InitGameState` deref'd NULL. Fixed by seeding a static zeroed
+    struct in `game_boot.c` before first use. Also: same symbol must be declared with
+    the SAME type across TUs (it was `u8*` in one file, `u8[]` in another).
+  - **Loading-screen stub semantics:** `DisplayLoadingScreen` must return NON-ZERO
+    ("screen still active") so `InitializeAndLoadLevel`'s case-4/5 transition block is
+    skipped, keeping the stage index (`s6`) at 1; else it clobbers to
+    `PLAYER_STATE[stage]`=0 and the tail read fetches the level entry's padding
+    (0 sectors → stale garbage). The MENU (seq[10], level slot 0) now loads correctly.
+  - **KEY WORKFLOW (user tip):** `export/SLES_010.90.c` (full Ghidra decompile w/
+    NAMED struct fields) + `export/datatypes.txt` are the primary reference for
+    INCLUDE_ASM conversions — far cleaner than raw asm + m2c. `src/*.c` is already
+    globbed into the port build, so every matched-C function is linked (only
+    INCLUDE_ASM funcs abort). Verified `InitLayersAndTileState`'s size-decision tree
+    offset-for-offset against the export.
+  - Converted: the `InitializeAndLoadLevel` tail (`tile_colors`, `anim_palette_list`,
+    `tile_attrib`, `entity_asset501`, `anim_tile_entities`), the layer subsystem
+    (`InitLayersAndTileState` + `AddLayerToRenderList_*` [one shared body — all 3
+    identical] + `InitLayerRenderContext_*` trio), the GPU-primitive layer
+    (`CatPrim` added to `gpu_gl.c` + `InitTilemapLayer16x16` tilemap→SPRT_16 builder),
+    `RemapEntityTypesForLevel` (the ~200-case authoring→runtime entity-id table),
+    `PlayCDAudioTrack` (no-op, CD-DA is Phase 3), `SpawnPlayerAndEntities` (the
+    flag-dispatched avatar/camera/HUD spawner), and `GetTileAttributeAtPosition`.
+  - **Deferred to CP-2.4 GPU verify (needs PCSX-Redux pixel-compare):** OT
+    termination for the built SPRT_16 chains, SPRT_16 CLUT/4-bit sampling in
+    `gpu_gl.c`, the 2 sibling tilemap builders (`InitTilemapLayerRendering`,
+    `InitTileLayerPrimitives`) + 3 parallax updaters (per-frame tick callbacks).
+- _next (focused session):_ the **menu/UI subsystem** — `InitMenuEntity` (`passwd/`,
+  119 lines) calls `InitMenuStage1-4` + `InitEntitySprite` + `UpdateBackgroundColor`;
+  this is the title screen itself. Converting it + the 4 stages completes the MENU
+  avatar and lets `InitGameState` return → the frame loop runs → CP-2.4 title render
+  (then the PCSX-Redux first-frame diff).

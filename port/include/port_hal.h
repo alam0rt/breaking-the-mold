@@ -26,6 +26,7 @@ void port_gpu_shutdown(void);
 void port_gpu_begin_frame(void);         /* bind default FBO, set viewport      */
 void port_gpu_present(void);             /* swap the SDL GL buffers             */
 void port_gpu_set_window(void *sdl_window); /* host_main hands us the window     */
+void port_gpu_selftest(void);            /* synthetic 3-primitive OT walk        */
 
 /* ---- pad_sdl.c ----------------------------------------------------------- */
 void   port_pad_init(void);
@@ -40,6 +41,14 @@ void port_spu_shutdown(void);
 int  port_cd_init(void);                 /* locate + open GAME.BLB               */
 int  port_cd_read_sectors(int lba, int nsectors, void *buf); /* 0 = ok           */
 void port_cd_set_blb_base(int base_lba); /* LBA subtracted from reads (default 0)*/
+
+/* ---- port_heap.c --------------------------------------------------------- */
+int  port_heap_init(void);               /* malloc BLB heap; set g_pBlbHeapBase */
+void port_heap_shutdown(void);
+
+/* ---- game_boot.c (port/decomp/boot) -------------------------------------- */
+void port_game_boot_init(void);          /* converted main() boot prologue      */
+void port_game_boot_frame(void);         /* one converted main() frame iteration */
 
 #ifdef __cplusplus
 }
