@@ -19,9 +19,10 @@
  * ========================================================================== */
 #include "common.h"
 #include "globals.h"
+#include <stdint.h>
 
-extern u8      AllocateVRAMSlot(u8 *heap, void *outRect, s32 mode, s16 w, s16 h);
-extern u8      AllocateCLUTSlot(u8 *heap, void *outRect);
+extern u8      AllocateVRAMSlot(void *base, u16 *outRect, u8 mode, s16 w, s16 h);
+extern s32     AllocateCLUTSlot(void *base, u32 out, u8 type);
 extern u16     GetTPage(s32 tp, s32 abr, s32 x, s32 y);
 extern u16     GetClut(s32 x, s32 y);
 
@@ -54,7 +55,7 @@ u8 *PrepareSpriteVRAMSlotForContext(void *param_1, s16 zOrder, s16 width, s16 he
     *(s16 *)(c + 0x2A) = 0;
     *(s16 *)(c + 0x2C) = 0;
 
-    c[0x2E] = AllocateVRAMSlot(heap, c + 0x10, (s32)c[0x32], width, height);
+    c[0x2E] = AllocateVRAMSlot(heap, (u16 *)(c + 0x10), c[0x32], width, height);
     if ((c[0x2E] & 0xFF) != 0) {
         s16 vx = *(s16 *)(c + 0x10);
         s16 vy = *(s16 *)(c + 0x12);
@@ -73,7 +74,7 @@ u8 *PrepareSpriteVRAMSlotForContext(void *param_1, s16 zOrder, s16 width, s16 he
     }
 
     if (c[0x32] != 2) {
-        if ((AllocateCLUTSlot(heap, c + 0x18) & 0xFF) != 0) {
+        if ((AllocateCLUTSlot(heap, (u32)(uintptr_t)(c + 0x18), c[0x32]) & 0xFF) != 0) {
             *(s16 *)(c + 0x26) = (s16)GetClut(*(s16 *)(c + 0x18), *(s16 *)(c + 0x1A));
             return c;
         }
