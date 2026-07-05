@@ -39,6 +39,18 @@ if(PYTHON3)
     if(NOT _gen_rc EQUAL 0)
         message(WARNING "gen_port_stubs.py failed (rc=${_gen_rc}); using existing generated files")
     endif()
+    # Faithfully transcribe splat pointer-table data segments (entity/render
+    # vtables) to C so the render/entity dispatch resolves to real symbols
+    # rather than weak-zeroed slots. Only pure pointer-table .s files here.
+    execute_process(
+        COMMAND ${PYTHON3} ${REPO_ROOT}/tools/gen_port_data.py
+                ${REPO_ROOT}/asm/data/gfx.rodata.s
+                --out ${CMAKE_CURRENT_SOURCE_DIR}/decomp/data
+        WORKING_DIRECTORY ${REPO_ROOT}
+        RESULT_VARIABLE _gendata_rc)
+    if(NOT _gendata_rc EQUAL 0)
+        message(WARNING "gen_port_data.py failed (rc=${_gendata_rc}); using existing generated files")
+    endif()
 else()
     message(WARNING "python3 not found; using checked-in port/decomp/_auto*.c as-is")
 endif()
