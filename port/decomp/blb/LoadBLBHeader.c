@@ -14,6 +14,7 @@
  * (InitSPUDefaults, InitLevelDataContext, SetSpriteTables) resolve to weak stubs
  * until converted. See docs/plans/pc-port.md CP-2.2.
  * ========================================================================== */
+#include <stdlib.h>
 #include "common.h"
 #include "globals.h"
 
@@ -59,6 +60,21 @@ void LoadBLBHeader(void *arg0) {
     *(u8 **)(gs + 0x3C) = buffer + 0x1000;
 
     CdBLB_ReadSectors(0, 2, buffer);
+
+    /* PORT_BOOT_LEVEL / PORT_BOOT_STAGE: boot straight into a level (same
+     * mechanism as scripts/game_watcher.lua's boot_level_override, which pokes
+     * 0x800AF316/0xF372/0xF373 = header+0xF36 game_mode, +0xF92 level, +0xF93
+     * stage). Setting mode 3 makes the initial InitializeAndLoadLevel load the
+     * level instead of the menu. */
+    {
+        const char *bl = getenv("PORT_BOOT_LEVEL");
+        if (bl != NULL) {
+            const char *bs = getenv("PORT_BOOT_STAGE");
+            buffer[0xF36] = 3;                          /* game mode: level */
+            buffer[0xF92] = (u8)atoi(bl);               /* level index */
+            buffer[0xF93] = (u8)(bs ? atoi(bs) : 0);    /* stage index */
+        }
+    }
 
     InitLevelDataContext(gs + 0x84, *(u8 **)(gs + 0x40), (void *)port_blb_read_sectors);
     SetSpriteTables(0, gs + 0x84);

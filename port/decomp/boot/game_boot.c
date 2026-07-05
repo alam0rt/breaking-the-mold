@@ -207,6 +207,20 @@ void port_game_boot_frame(void) {
         cb((u8 *)gs + baseOff);
     }
 
+    /* PORT_TRACE_GS=1: log GameState transition-flag changes (debug). */
+    if (getenv("PORT_TRACE_GS")) {
+        static u8 prev[8];
+        u8 cur[8];
+        cur[0] = *((u8 *)gs + 0x146); cur[1] = *((u8 *)gs + 0x147);
+        cur[2] = *((u8 *)gs + 0x148); cur[3] = *((u8 *)gs + 0x150);
+        cur[4] = *((u8 *)gs + 0x151); cur[5] = *((u8 *)gs + 0x149);
+        cur[6] = *((u8 *)gs + 0x14A); cur[7] = *((u8 *)gs + 0x14B);
+        if (memcmp(prev, cur, 8) != 0) {
+            port_log("gs: adv=%d next=%d direct=%d menu=%d fade=%d chk=%d/%d/%d",
+                     cur[0], cur[1], cur[2], cur[3], cur[4], cur[5], cur[6], cur[7]);
+            memcpy(prev, cur, 8);
+        }
+    }
     EntityTickLoop(gs);
     WaitForVBlankIfNeeded(g_pBlbHeapBase);
     RenderEntities(gs);

@@ -16,6 +16,16 @@
  * first unimplemented call. Useful for surveying how far boot gets. */
 int g_port_stub_nonfatal = 0;
 
+/* PORT_STUBS_NONFATAL=1: log-and-continue instead of panicking on stubbed
+ * functions. Diagnostic mode -- state may corrupt downstream; never rely on
+ * behaviour observed under it. */
+static void __attribute__((constructor)) port_stub_mode_init(void) {
+    const char *v = getenv("PORT_STUBS_NONFATAL");
+    if (v && *v && *v != '0') {
+        g_port_stub_nonfatal = 1;
+    }
+}
+
 void port_log(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);

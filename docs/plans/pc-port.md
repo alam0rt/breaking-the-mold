@@ -657,6 +657,52 @@ family batches (`c-migration-plan.md`).
   then menu input → START GAME → level 1 load path (CP-2.5/2.6). Note the black
   box + critter next to the selected row is CORRECT game behaviour (the critter
   eats the selected row's text), not a render bug.
+- **2026-07-06 (session 4) — LEVEL 1 FIRST LIGHT: direct boot into level 1
+  loads the full level and renders its tile layers (scrambled re-stamp, see
+  below); the player entity constructs and enters its state machine.**
+  - **`PORT_BOOT_LEVEL`/`PORT_BOOT_STAGE`** (LoadBLBHeader.c): boots straight
+    into a level by poking the BLB header exactly like `make record LEVEL=n` /
+    game_watcher's boot override does (header+0xF36 mode=3, +0xF92 level,
+    +0xF93 stage). This bypasses the menu's START flow entirely (note: menu
+    START is a whole animation-driven sequence — X only fires the item's
+    "highlight" callback; the actual transition chain was never reached and
+    remains unconverted).
+  - **`PORT_STUBS_NONFATAL=1`** (port_runtime.c): log-and-continue stub mode
+    for reconnaissance — one run lists every still-asm function on the
+    per-frame path instead of dying on the first.
+  - Converted this session (~12 functions): FINN_ClearSubentityState,
+    PlaySoundEffect (no-op stub, SPU mix is Phase 3), InitTileLayerPrimitives
+    (bounded tile layer builder), InitTilemapLayerRendering +
+    RenderTilemapSprites16x16 (wrap-scroll screen-grid layer; NOTE the export
+    plate comments mislabel the layer struct — +0x68 tileTable, +0x6C tilemap,
+    +0x70 colorTable, +0x74 origin, +0x78 dims, verified against the render
+    fn), SetupTilemapPrimitives + RenderTilemapHorizontal/VerticalScroll
+    (per-frame OT submission + delta re-stamp — PC version re-stamps the full
+    window on any delta), UpdateParallaxScrollWithWrap_Standard/_Small,
+    RenderTilemapWithWrapAround (simplified: submits all row chains, single
+    wrap copy), EntityCollision_HUDItemActivate (HUD widget-group reveal —
+    export comment describes a different function!), CreatePlayerEntity +
+    InitPlayerSpriteAvailability + PlayerStateCallback_2 (+ strong data:
+    g_PlayerCallbackTable, D_8009C174 spawn blob, g_RunButtonMask=0x26).
+  - **ABI traps found (write these down):** (1) `InitTilemapLayerRendering` is
+    void in the export but its CALLER consumes $v0 as the layer pointer —
+    x86 returns garbage; return `storage` explicitly (crashed the boot).
+    (2) `CreatePlayerEntity`'s Ghidra 5-param signature hides that
+    `InitEntityWithSprite` takes the clean 5-arg form (entity, D_8009C174,
+    0x3E8, x, y) — resolved from the .s, not the decompile. (3) The PSX
+    P_TAG len-byte write in the empty-cell path of RenderTilemapSprites16x16
+    would corrupt the PC 32-bit tag pointers — drop it, CatPrim carries the
+    semantics. (4) PSX fb-half Y bias (buf*0x100) and 11-bit +0x8000 offset
+    encoding in DR_OFFSET packets do not apply to the GL backend.
+  - **Known-broken / next (focused session):** level tile re-stamp is
+    scrambled (ring-slot vs screen-coord mapping in the PC full-window
+    re-stamp needs a PCSX-Redux side-by-side); `PlayerTickCallback` (0x6BC,
+    pulls in PlayerProcessTileCollision — the tile-collision engine) +
+    EntityTick_PlatformRideIdle + EntityTick_DigitDisplayUpdate are the three
+    remaining per-frame stubs on the level-1 path (visible via
+    PORT_STUBS_NONFATAL). Repro: `PORT_BOOT_LEVEL=1 PORT_STUBS_NONFATAL=1
+    ./port/build-linux-debug/skullmonkeys`.
+
 - **2026-07-05 (session 3 cont.) — START GAME accepted; level-1 load runs to the
   player-avatar spawn.** Headless input injection added (`PORT_AUTOINPUT=
   "frame:mask,..."` in pad_sdl.c, e.g. `200:4000` = press X at frame 200; also
