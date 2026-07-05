@@ -79,22 +79,33 @@ def split_rodata(rodata_file: Path, symbol: str, part_b_file: Path) -> bool:
 
 
 def patch_ld(asm_line: str, src_line: str, part_b_line: str) -> None:
-    """Replace the single asm rodata linker entry with the 3-line sequence."""
-    text = LD_SCRIPT.read_text()
-    lines = text.splitlines()
+    """Replace the single asm rodata linker entry with the 3-line sequence.
 
-    if any(l.strip() == src_line for l in lines):
-        return  # already patched
+    Idempotent. Handles two splat layouts for the migrated TU's own
+    `build/src/<tu>.o(.rodata)` line:
+      * TU rodata that splat already emits immediately after the asm pool
+        (e.g. playst) -- detected as already-patched, left untouched.
+      * TU rodata that splat sorts to its natural position elsewhere in the
+        pool (e.g. blbacc) -- the stray line is relocated up to sit between
+        part A and part B so the compiler-emitted table lands in the hole.
+    """
+    lines = LD_SCRIPT.read_text().splitlines()
 
+    # Already patched: src_line sits immediately after asm_line.
+    for i, l in enumerate(lines):
+        if l.strip() == asm_line and i + 1 < len(lines) and lines[i + 1].strip() == src_line:
+            return
+
+    # Drop any stray occurrence of the TU rodata line (splat's natural slot),
+    # then splice the 3-line sequence in at the asm pool boundary.
+    lines = [l for l in lines if l.strip() != src_line]
     out = []
     for l in lines:
+        out.append(l)
         if l.strip() == asm_line:
             indent = l[: len(l) - len(l.lstrip())]
-            out.append(indent + asm_line)
             out.append(indent + src_line)
             out.append(indent + part_b_line)
-        else:
-            out.append(l)
     LD_SCRIPT.write_text("\n".join(out) + "\n")
 
 

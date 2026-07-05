@@ -32,6 +32,8 @@ SECTIONS
         build/src/playst.o(.rodata);
         build/asm/data/playst_b.rodata.o(.rodata);
         build/asm/data/vehicle.rodata.o(.rodata);
+        build/src/blbacc.o(.rodata);
+        build/asm/data/vehicle_b.rodata.o(.rodata);
         build/asm/data/lvlload.rodata.o(.rodata);
         build/asm/data/libc.rodata.o(.rodata);
         build/asm/data/libs/libcd.rodata.o(.rodata);
@@ -64,7 +66,6 @@ SECTIONS
         build/src/results.o(.rodata);
         build/src/ending.o(.rodata);
         build/src/level.o(.rodata);
-        build/src/blbacc.o(.rodata);
         build/src/sound.o(.rodata);
         build/src/gstate.o(.rodata);
         build/src/entinit.o(.rodata);

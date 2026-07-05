@@ -7,5 +7,14 @@
     "ld_asm_line": "build/asm/data/playst.rodata.o(.rodata);",
     "ld_src_line": "build/src/playst.o(.rodata);",
     "ld_part_b_line": "build/asm/data/playst_b.rodata.o(.rodata);"
+  },
+  {
+    "_comment": "GetCurrentModeReservedData switch jump table (jtbl_800120EC). Migrated to C 2026-07-05. blbacc.o(.rodata) is emitted by splat at its natural src slot, so patch_ld relocates it up into the vehicle rodata hole.",
+    "rodata_file": "asm/data/vehicle.rodata.s",
+    "symbol": "jtbl_800120EC",
+    "part_b_file": "asm/data/vehicle_b.rodata.s",
+    "ld_asm_line": "build/asm/data/vehicle.rodata.o(.rodata);",
+    "ld_src_line": "build/src/blbacc.o(.rodata);",
+    "ld_part_b_line": "build/asm/data/vehicle_b.rodata.o(.rodata);"
   }
 ]

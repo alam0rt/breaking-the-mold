@@ -11,6 +11,25 @@ extern u8 DecodeRLESpriteCore(u8 *unused, u8 *src, u16 size, u8 *dst);
 u8 *SPRITE_TOC_TABLE asm("D_800A6060");
 u8 *SPRITE_DATA_TABLE asm("D_800A6064");
 
+/* Overlay views onto the BLB header for the mode-4/5 and mode-2 sector
+ * tables, which live in header pad regions not modelled as named members
+ * in BlbHeader. Indexed by the mode's sequence target slot. */
+typedef struct {
+    u8 _pad000[0xCC0];
+    /* 0xCC0 */ BlbSectorEntry entries[1];
+} SectorView45;
+
+typedef struct {
+    /* 0x00 */ u16 sector_offset;
+    /* 0x02 */ u16 sector_count;
+    /* 0x04 */ u8  _pad04[8];
+} Mode2SectorEntry;
+
+typedef struct {
+    u8 _pad000[0xF18];
+    /* 0xF18 */ Mode2SectorEntry entries[1];
+} Mode2View;
+
 u8 GetLevelCount(LevelDataContext *ctx) {
     return ((BlbHeader *)ctx->blb_header)->level_count;
 }
@@ -98,9 +117,39 @@ u8 GetLoadingScreenMaxDisplayTime(LevelDataContext *ctx) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorOffset);
+u16 GetCurrentSectorOffset(LevelDataContext *ctx) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 mode = header->sequence_modes[idx];
+    u8 slot;
+    switch (mode) {
+    case 4:
+    case 5:
+        slot = header->sequence_targets[idx];
+        return ((SectorView45 *)header)->entries[slot].sector_offset;
+    case 2:
+        slot = header->sequence_targets[idx];
+        return ((Mode2View *)header)->entries[slot].sector_offset;
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentSectorCount);
+u16 GetCurrentSectorCount(LevelDataContext *ctx) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 mode = header->sequence_modes[idx];
+    u8 slot;
+    switch (mode) {
+    case 4:
+    case 5:
+        slot = header->sequence_targets[idx];
+        return ((SectorView45 *)header)->entries[slot].sector_count;
+    case 2:
+        slot = header->sequence_targets[idx];
+        return ((Mode2View *)header)->entries[slot].sector_count;
+    }
+    return 0;
+}
 
 u8 GetAssetCount(LevelDataContext *ctx) {
     return ((BlbHeader *)ctx->blb_header)->movie_count;
@@ -172,7 +221,30 @@ u16 GetMovieSectorCount(LevelDataContext *ctx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentModeReservedData);
+u8 *GetCurrentModeReservedData(LevelDataContext *ctx) {
+    u8 slot;
+    switch (((BlbHeader *)ctx->blb_header)
+                ->sequence_modes[ctx->current_sequence_index]) {
+    case 3:
+        slot = ((BlbHeader *)ctx->blb_header)
+                   ->sequence_targets[ctx->current_sequence_index];
+        return (u8 *)((BlbHeader *)ctx->blb_header)->levels[slot].level_id;
+    case 1:
+        slot = ((BlbHeader *)ctx->blb_header)
+                   ->sequence_targets[ctx->current_sequence_index];
+        return (u8 *)((BlbHeader *)ctx->blb_header)->movies[slot].movie_id;
+    case 4:
+    case 5:
+        slot = ((BlbHeader *)ctx->blb_header)
+                   ->sequence_targets[ctx->current_sequence_index];
+        return (u8 *)((BlbHeader *)ctx->blb_header)->sectors[slot].code;
+    case 2:
+        slot = ((BlbHeader *)ctx->blb_header)
+                   ->sequence_targets[ctx->current_sequence_index];
+        return (u8 *)((Mode2View *)ctx->blb_header)->entries[slot]._pad04;
+    }
+    return NULL;
+}
 
 u8 GetCurrentLevelExtraFlag(LevelDataContext *ctx) {
     BlbHeader *header = (BlbHeader *)ctx->blb_header;
@@ -187,7 +259,22 @@ u8 GetCurrentLevelExtraFlag(LevelDataContext *ctx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", GetCurrentTertiaryDataSize);
+u32 GetCurrentTertiaryDataSize(LevelDataContext *ctx) {
+    BlbHeader *header = (BlbHeader *)ctx->blb_header;
+    u8 idx = ctx->current_sequence_index;
+    u8 mode = header->sequence_modes[idx];
+    if (mode == 6) {
+        return 0x7D000;
+    }
+    if (mode == 3) {
+        u32 sub = ctx->current_sub_block;
+        if (sub != 0) {
+            u8 slot = header->sequence_targets[idx];
+            return (u32)header->levels[slot].tert_data_off[sub - 1] << 5;
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blbacc", LoadAssetContainer);
 
@@ -374,7 +461,21 @@ u8 *GetTilemapLayerDataPtr(LevelDataContext *ctx, u16 layer_idx) {
     return NULL;
 }
 
-INCLUDE_ASM("asm/nonmatchings/blbacc", CopyTilemapLayerIndex);
+u8 *CopyTilemapLayerIndex(u8 *dst, LevelDataContext *ctx, u16 layer_idx) {
+    u8 *layers = (u8 *)ctx->anim_offsets;
+    if (layers != NULL) {
+        u16 idx = (layer_idx - 1) & 0xFFFF;
+        BlbToc12Entry *entry = (BlbToc12Entry *)(layers + idx * 12);
+        u32 offset = entry->data_offset;
+        __builtin_memcpy(dst, layers + offset, 4);
+    } else {
+        u16 zero[2];
+        zero[0] = 0;
+        zero[1] = 0;
+        __builtin_memcpy(dst, zero, 4);
+    }
+    return dst;
+}
 
 u16 GetTileHeaderField16(LevelDataContext *ctx) {
     return ((LevelShapeHeader *)ctx->tile_header)->field16;
