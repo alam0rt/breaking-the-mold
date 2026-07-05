@@ -30,7 +30,7 @@
 
 extern u8  *AllocateFromHeap(u8 *heap, s32 align, s32 size, s32 flags);
 extern void *InitEntitySprite(void *e, u32 spriteId, s16 z, s16 x, s16 y, u8 mode);
-extern void *InitEntityWithSprite(void *e, s32 spawnData);
+extern void *InitEntityWithSprite(void *e, s32 spawnData, s16 zOrder, s16 worldX, s16 worldY);
 extern void  AddEntityToSortedRenderList(void *gs, void *entity);
 extern void  EntitySetState(void *e, u32 marker, void *fn);
 extern void  AttachCursorToButton(void *e);
@@ -83,7 +83,7 @@ void InitMenuStage1(s32 param_1) {
 
     /* ---- 2. animated title entity ---- */
     e = AllocateFromHeap(heap, 0x104, 1, 0);
-    InitEntityWithSprite(e, (s32)(uintptr_t)D_8009CBDC);
+    InitEntityWithSprite(e, (s32)(uintptr_t)D_8009CBDC, 0x7D0, 0xA0, 0xA8);
     *(void **)(e + 0x18) = D_800120AC;
     *(u32 *)(e + 0x24) = 0xFFFF0000;
     *(void **)(e + 0x28) = (void *)GetWorldPositionX;
@@ -144,7 +144,7 @@ void InitMenuStage1(s32 param_1) {
             }
             if (hash == 0x40B18011) {
                 e = AllocateFromHeap(heap, 0x104, 1, 0);
-                InitEntityWithSprite(e, (s32)(uintptr_t)D_8009CBF8);
+                InitEntityWithSprite(e, (s32)(uintptr_t)D_8009CBF8, 0x44C, 0x9F, 0xA8);
                 *(void **)(e + 0x18) = D_80011EB4;
                 *(u32 *)(e + 0x08) = 0xFFFF0000;
                 *(void **)(e + 0x0C) = (void *)MenuLogoAnimEventHandler;
