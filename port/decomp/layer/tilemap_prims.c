@@ -40,6 +40,11 @@
 extern u8  *AllocateFromHeap(u8 *heap, s32 align, s32 size, s32 flags);
 extern void *CatPrim(void *p0, void *p1);
 
+/* Sprite render vtables at fixed rodata (weak-backed on PC). The sub-object's
+ * render-callback vtable at +0xC is what RenderEntities dispatches each frame. */
+extern u8 D_8001039C[] asm("D_8001039C");   /* PrimObject base vtable    */
+extern u8 D_80010364[] asm("D_80010364");   /* 16x16 tilemap render vtable */
+
 #define SUB_U16(c, off)  (*(u16 *)((u8 *)(c) + (off)))
 #define SUB_PTR(c, off)  (*(u8 **)((u8 *)(c) + (off)))
 
@@ -55,12 +60,13 @@ void *InitTilemapLayer16x16(void *storage, void *colorTable, s16 tileId, s32 til
     /* ---- sub-object header ---- */
     *(void **)(c + 0x68) = colorTable;
     SUB_U16(c, 0x08) = (u16)tileId;
-    *(void **)(c + 0x0C) = (void *)0;   /* vtable set below by renderer bind    */
+    *(void **)(c + 0x0C) = D_8001039C;   /* base vtable (overwritten below)   */
     *(u16 *)(c + 0x00) = 0;
     *(u16 *)(c + 0x02) = 0;
     *(u16 *)(c + 0x04) = 0;
     *(u16 *)(c + 0x06) = 0;
     c[0x0A] = 1;
+    *(void **)(c + 0x0C) = D_80010364;   /* 16x16 tilemap render vtable       */
     c[0x6C] = flagA;
     c[0x6D] = flagB;
     /* pos0 = {x@lo, y@hi}, pos1 = {w@lo, h@hi} */
