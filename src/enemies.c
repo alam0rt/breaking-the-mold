@@ -846,7 +846,7 @@ void EnemyPatrolState(Entity *e) {
     s16 m2;
     void (*fn)();
     u32 spriteId;
-    register Entity *callArg asm("$4");
+    register Entity *callArg PSX_REG("$4");
 
     ((EnemyTimerStateEntity *)e)->stateTimer = 10;
     /* @hack: SLOT_CLEAR routes the scratch-build + struct-value-store through the macro so the marker/fn write order matches the original codegen; see memories/repo/decomp-patterns.md. */
@@ -864,11 +864,11 @@ void EnemyPatrolState(Entity *e) {
     callArg = e;
     if (((u8 *)e)[0x119]) {
         /* @hack: clobber $a1 in each arm so cc1 re-materializes the sprite-id `lui` per branch (Quirk 6e), instead of hoisting a shared `lui` above the if. */
-        __asm__ volatile("" ::: "$5");
+        PSX_CLOBBER("$5");
         spriteId = 0x60B93CBD;
     } else {
         /* @hack: clobber $a1 in each arm so cc1 re-materializes the sprite-id `lui` per branch (Quirk 6e), instead of hoisting a shared `lui` above the if. */
-        __asm__ volatile("" ::: "$5");
+        PSX_CLOBBER("$5");
         spriteId = 0x60B9BCBD;
     }
     SetEntitySpriteId(callArg, spriteId, 1);
@@ -880,13 +880,13 @@ void EnemyPatrolState(Entity *e) {
 
 void InitEnemyFallingState(Entity *e) {
     PadSlot slot;
-    register void (*renderFn)() asm("$3");
-    register void (*tickFn)() asm("$7");
-    register void (*eventFn)() asm("$8");
+    register void (*renderFn)() PSX_REG("$3");
+    register void (*tickFn)() PSX_REG("$7");
+    register void (*eventFn)() PSX_REG("$8");
     s16 m1;
     u32 spriteId;
     u32 oldFlag;
-    register Entity *callArg asm("$4");
+    register Entity *callArg PSX_REG("$4");
 
     renderFn = EntityFallingGravityWithCollision;
     tickFn = EnemyDeathWithParticles;
@@ -912,11 +912,11 @@ void InitEnemyFallingState(Entity *e) {
     callArg = e;
     if (((u8 *)e)[0x119]) {
         /* @hack: clobber $a1 in each arm so cc1 re-materializes the sprite-id `lui` per branch (Quirk 6e). */
-        __asm__ volatile("" ::: "$5");
+        PSX_CLOBBER("$5");
         spriteId = 0x60A91C9C;
     } else {
         /* @hack: clobber $a1 in each arm so cc1 re-materializes the sprite-id `lui` per branch (Quirk 6e). */
-        __asm__ volatile("" ::: "$5");
+        PSX_CLOBBER("$5");
         spriteId = 0x61A91C9C;
     }
     SetEntitySpriteId(callArg, spriteId, 1);
@@ -932,7 +932,7 @@ void EnemyDeathState(Entity *e) {
     s16 m2;
     void (*fn)();
     u32 spriteId;
-    register Entity *callArg asm("$4");
+    register Entity *callArg PSX_REG("$4");
 
     /* @hack: SLOT_CLEAR routes the scratch-build + struct-value-store through the macro so the marker/fn write order matches the original codegen; see memories/repo/decomp-patterns.md. */
     SLOT_CLEAR(slot.s[0], e->renderMarker);
@@ -946,11 +946,11 @@ void EnemyDeathState(Entity *e) {
     callArg = e;
     if (((u8 *)e)[0x119]) {
         /* @hack: clobber $a1 in each arm so cc1 re-materializes the sprite-id `lui` per branch (Quirk 6e). */
-        __asm__ volatile("" ::: "$5");
+        PSX_CLOBBER("$5");
         spriteId = 0x60AA1C9C;
     } else {
         /* @hack: clobber $a1 in each arm so cc1 re-materializes the sprite-id `lui` per branch (Quirk 6e). */
-        __asm__ volatile("" ::: "$5");
+        PSX_CLOBBER("$5");
         spriteId = 0x62AA1C9C;
     }
     SetEntitySpriteId(callArg, spriteId, 1);
@@ -1397,9 +1397,9 @@ void InitEntityState_Idle(Entity *e) {
 void InitEnemyAnimatedWithDeathSpawn(Entity *e) {
     SpriteEntity *se = (SpriteEntity *)e;
     PaddedSlotPair slot;
-    register void (*tickFn)() asm("$3");
-    register void (*eventFn)() asm("$9");
-    register u32 spriteId asm("$5");
+    register void (*tickFn)() PSX_REG("$3");
+    register void (*eventFn)() PSX_REG("$9");
+    register u32 spriteId PSX_REG("$5");
     void (*fn)();
     s16 m1;
 
@@ -1645,7 +1645,7 @@ Entity *InitCollectibleEntity_Alt(Entity *e, u8 *spawn) {
     SetAnimationTargetFrameIndex(e, 0);
     EntitySetRenderFlags(e, 0);
     {
-        register s32 abr asm("$5");
+        register s32 abr PSX_REG("$5");
         SpriteRenderContext *sprite0;
         SpriteRenderContext *sprite;
         s32 maskX;
@@ -1682,7 +1682,7 @@ void EntityTimedStateSwitchTick(Entity *e) {
 
     EntityUpdateCallback(e);
     if (((g_pGameState->frame_counter + platRef->spawn->framePhaseOffset) % 80) < 2) {
-        register Entity *callArg asm("$4");
+        register Entity *callArg PSX_REG("$4");
 
         callArg = e;
         /* @hack: pin callArg into $a0 (register asm above) ahead of SetEntitySpriteId. */

@@ -14,8 +14,8 @@ void FreeVRAMSlot(s16 *vramBase, u32 packedXY, u32 packedSize) {
     u16 blocks[6];
     s16 height = ((s16 *)&packedSize)[1];
     s32 hBlocks = (s32)height + 0xF;
-    register s32 xb asm("$2");  /* $v0 */
-    register u32 lo asm("$7");  /* $a3 */
+    register s32 xb PSX_REG("$2");  /* $v0 */
+    register u32 lo PSX_REG("$7");  /* $a3 */
     if (hBlocks < 0) {
         hBlocks = (s32)height + 0x1E;
     }
@@ -59,8 +59,8 @@ INCLUDE_ASM("asm/nonmatchings/vram", InitHeapFreeList);
  * p/end pinned to $v0/$v1 to match the target's loop-var coloring (cc1
  * otherwise swaps them; no source-order trick works, but the pin does). */
 void func_80014928(HeapConfigOwner *base, s32 fillValue) {
-    register s32 *p asm("$2");   /* $v0 — loop pointer */
-    register s32 *end asm("$3"); /* $v1 */
+    register s32 *p PSX_REG("$2");   /* $v0 — loop pointer */
+    register s32 *end PSX_REG("$3"); /* $v1 */
     p = base->heapStart;
     end = (s32 *)((u8 *)p + base->heapSize);
     if (p != end) {

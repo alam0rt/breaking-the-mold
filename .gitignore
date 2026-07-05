@@ -18,6 +18,12 @@ build/
 *.bin
 *.map
 
+# PC port (docs/plans/pc-port.md): CMake build trees. The generated weak-stub /
+# global TUs (port/decomp/_auto*.c) ARE committed so the tree links without
+# running the generator; the CMake build directories are not.
+port/build-*/
+port/build/
+
 # misc
 
 *.jsonl

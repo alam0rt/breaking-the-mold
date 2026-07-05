@@ -906,7 +906,7 @@ s32 PlayerCallback_CollisionDamageSetup(PlayerEntity *e, u32 event, u32 arg2,
         }
         break;
     case 2: {
-        register void (*fn)() asm("$3") = (void (*)())PlayerEntityCollisionHandler;
+        register void (*fn)() PSX_REG("$3") = (void (*)())PlayerEntityCollisionHandler;
         slot.s.markerLo = 0;
         slot.s.markerHi = -1;
         slot.s.fn = fn;
@@ -1622,7 +1622,7 @@ void PlayerState_IdleLookAround(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     FSM_STAGE_SLOT(fn, g.event, m1, PlayerCallback_EventHandlerWithQueue);
@@ -1738,7 +1738,7 @@ void PlayerState_WalkingRight(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->jumpParam = 0;
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
@@ -1761,7 +1761,7 @@ void PlayerState_WalkingLeft(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->jumpParam = 0;
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
@@ -1790,7 +1790,7 @@ void PlayerState_Running(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->jumpParam = 0;
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
@@ -1831,7 +1831,7 @@ void PlayerState_JumpApex(PlayerEntity *e) {
     PadSlot u;
     void (*rfn)();
     void (*qfn)();
-    register s16 m1 asm("$6");
+    register s16 m1 PSX_REG("$6");
     e->apexVelocity = -0x28;
     e->velocityY_fixed = 0;
     e->jumpParam = 0;
@@ -1927,7 +1927,7 @@ void PlayerState_SpecialMove2(PlayerEntity *e) {
     PadSlot u;
     void (*rfn)();
     void (*qfn)();
-    register s16 m1 asm("$6");
+    register s16 m1 PSX_REG("$6");
     e->apexVelocity = -0x28;
     e->specialMoveMode = 1;
     e->carryMotionX = 0;
@@ -1986,7 +1986,7 @@ void PlayerState_Jump(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$2");
+    register s16 m1 PSX_REG("$2");
     StopSPUVoice(e->soundHandle);
     e->soundHandle = PlayEntityPositionSound((Entity *)e, 0x248E52);
     e->jumpParam = 0xC;
@@ -2039,7 +2039,7 @@ void PlayerStateInit_Walking(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$2");
+    register s16 m1 PSX_REG("$2");
     e->jumpParam = 0xC;
     e->velocityY_fixed = 0;
     FSM_KEEP_LIVE(e);
@@ -2069,7 +2069,7 @@ void PlayerStateInit_ResumeWalking(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->jumpParam = 0xC;
     e->velocityY_fixed = 0;
     do {} while (0);
@@ -2099,7 +2099,7 @@ void PlayerStateInit_CrouchSlide(PlayerEntity *e) {
     struct { s32 lead; CallbackSlot tick, event, input, render; } g;
     struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     fn = (void (*)())PlayerCallback_EventHandlerWithQueue; FSM_KEEP_LIVE(fn);
@@ -2126,7 +2126,7 @@ void PlayerStateInit_IdleWithZoneTrigger(PlayerEntity *e) {
     struct { s32 lead; CallbackSlot tick, event, input, render; } g;
     struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->_pad17B[1] = 3;
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
@@ -2151,7 +2151,7 @@ void PlayerStateInit_IdleStanding(PlayerEntity *e) {
     struct { s32 lead; CallbackSlot tick, event, input, render; } g;
     struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
     void (*fn)();
-    register s16 m1 asm("$16");
+    register s16 m1 PSX_REG("$16");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     FSM_STAGE_SLOT(fn, g.event, m1, PlayerCallback_EventHandlerWithQueue);
@@ -2186,7 +2186,7 @@ void PlayerState_StandingIdle(PlayerEntity *e) {
     void (*rfn)();
     void (*fn)();
     u32 spriteId;
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->velocityY_fixed = 0;
     e->carryMotionX = 0;
     spriteId = (e->sprite.currentSpriteId == 0x388110) ? 0x1C395196 : 0x3838801A;
@@ -2227,7 +2227,7 @@ void PlayerState_SpecialMove1(PlayerEntity *e) {
     PadSlot u;
     void (*rfn)();
     void (*qfn)();
-    register s16 m1 asm("$6");
+    register s16 m1 PSX_REG("$6");
     e->apexVelocity = -0x28;
     e->specialMoveMode = 1;
     e->carryMotionX = 0;
@@ -2339,7 +2339,7 @@ void PlayerStateInit_TeleportIdleOnPlatform(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->apexVelocity = -0x28;
     e->specialMoveMode = 1;
     e->specialMoveQueued = 0;
@@ -2372,7 +2372,7 @@ void PlayerStateInit_TeleportWalking(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->apexVelocity = -0x28;
     e->specialMoveMode = 1;
     e->specialMoveQueued = 0;
@@ -2403,7 +2403,7 @@ void PlayerStateInit_TeleportFalling(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[3]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->apexVelocity = -0x17;
     e->specialMoveMode = 1;
     e->specialMoveQueued = 0;
@@ -2563,7 +2563,7 @@ void PlayerStateInit_FallFromLedge(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->carryMotionX = 0;
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
@@ -2620,7 +2620,7 @@ void PlayerStateInit_Falling(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     FSM_STAGE_SLOT(fn, g.event, m1, PlayerCallback_EventHandlerWithQueue);
@@ -2646,7 +2646,7 @@ void PlayerStateInit_TeleportLanding(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[2]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     FSM_STAGE_SLOT(fn, g.event, m1, PlayerCallback_EventHandlerWithQueue);
@@ -2910,7 +2910,7 @@ void PlayerStateInit_ThrowProjectile(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[4]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     e->carryMotionX = 0;
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
@@ -3033,7 +3033,7 @@ void PlayerStateInit_ProjectileThrowAnim(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[4]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     fn = (void (*)())PlayerCallback_ProjectileEventHandler; FSM_KEEP_LIVE(fn);
@@ -3067,7 +3067,7 @@ void PlayerStateInit_PostThrowRecovery(PlayerEntity *e) {
     struct { s32 pad; CallbackSlot s; s32 tail[4]; } curP;
     void (*rfn)();
     void (*fn)();
-    register s16 m1 asm("$17");
+    register s16 m1 PSX_REG("$17");
     do {} while (0);
     FSM_STAGE_SLOT_FIRST(fn, g.tick, m1, PlayerTickCallback);
     fn = (void (*)())PlayerCallback_BaseEventHandler; FSM_KEEP_LIVE(fn);
@@ -3117,10 +3117,10 @@ EntityCallback PlayerRestoreShrinkNextFn asm("D_800A5F60");
 void PlayerStateInit_RestoreNormalFromShrink(PlayerEntity *e) {
     struct { s32 lead; CallbackSlot tick, event, input, render; } g;
     struct { s32 pad; CallbackSlot s; s32 tail[1]; } curP;
-    register void (*f0)() asm("$7");
-    register void (*f1)() asm("$8");
-    register void (*f2)() asm("$9");
-    register void (*f3)() asm("$10");
+    register void (*f0)() PSX_REG("$7");
+    register void (*f1)() PSX_REG("$8");
+    register void (*f2)() PSX_REG("$9");
+    register void (*f3)() PSX_REG("$10");
     s16 m1;
     ClearEntityStateFlag(e->glideEntity);
     f0 = (void (*)())PlayerState_CooldownTick;

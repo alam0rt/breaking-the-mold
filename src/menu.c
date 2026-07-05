@@ -152,7 +152,7 @@ s32 MenuEntityCallback(Entity *entity, u32 event) {
  * slot, sprite 0x5C699, queues InitRunnLevelEntity at +0x98. */
 void SetupMenuIdleAnimation(Entity *entity) {
     PaddedSlotPair u;
-    register s16 m1 asm("$17"); /* $s1 (entity stays $s0) */
+    register s16 m1 PSX_REG("$17"); /* $s1 (entity stays $s0) */
     void (*fn)(Entity *);
 
     *(s16 *)((u8 *)entity + 0x100) = (s16)((rand() & 0x7F) + 0xF0);
@@ -277,7 +277,7 @@ s32 MenuButtonCallback(Entity *entity, u32 event) {
  * MenuSetEntityIdle2 at +0x98. */
 void SetupMenuButtonAnimation(Entity *entity) {
     TripadSlot u;
-    register s16 m1 asm("$17"); /* $s1 */
+    register s16 m1 PSX_REG("$17"); /* $s1 */
     void (*fn)(Entity *);
 
     do {

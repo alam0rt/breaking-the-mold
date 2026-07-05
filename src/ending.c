@@ -40,7 +40,7 @@ INCLUDE_ASM("asm/nonmatchings/ending", EndingCreditsRevealTick);
 void EndingCreditsDelayTick(EndingCreditsEntity *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
 
     e->delayCounter--;
     if (e->delayCounter == 0) {
@@ -65,7 +65,7 @@ void EndingCreditsDelayTick(EndingCreditsEntity *e) {
 void EndingCreditsScrollTick(EndingCreditsEntity *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
 
     if ((g_pGameState->frame_counter & 0x3) == 0) {
         if (e->scrollCounter1 != 0) {
@@ -91,7 +91,7 @@ void EndingCreditsScrollTick(EndingCreditsEntity *e) {
 void EndingCreditsScrollTick2(EndingCreditsEntity *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
 
     if ((g_pGameState->frame_counter & 0x3) == 0) {
         if (e->scrollCounter2 != 0) {
@@ -118,7 +118,7 @@ void EndingCreditsScrollTick2(EndingCreditsEntity *e) {
 void EndingCreditsCompleteTick(EndingCreditsEntity *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
 
     if ((g_pGameState->frame_counter & 0x3) == 0) {
         if (e->scrollCounter3 != 0) {

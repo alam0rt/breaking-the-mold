@@ -75,7 +75,7 @@ SECTIONS
         build/src/blbmem.o(.rodata);
         build/src/memmove.o(.rodata);
         build/src/libs/libvoice.o(.rodata);
-        build/asm/libs/libspu2.o(.rodata);
+        build/src/libs/libspu2.o(.rodata);
         main_SDATA_START = .;
         build/asm/crt0.o(.sdata);
         build/src/crt0stub.o(.sdata);
@@ -127,9 +127,9 @@ SECTIONS
         build/src/memmove.o(.text);
         build/src/libs/libcd.o(.text);
         build/asm/libs/libgpu.o(.text);
-        build/asm/libs/libspu.o(.text);
+        build/src/libs/libspu.o(.text);
         build/src/libs/libvoice.o(.text);
-        build/asm/libs/libspu2.o(.text);
+        build/src/libs/libspu2.o(.text);
         main_TEXT_END = .;
         main_TEXT_SIZE = ABSOLUTE(main_TEXT_END - main_TEXT_START);
         main_DATA_START = .;
@@ -193,11 +193,11 @@ SECTIONS
         build/asm/data/8E440.data.o(.data);
         build/src/libs/libcd.o(.data);
         build/asm/libs/libgpu.o(.data);
-        build/asm/libs/libspu.o(.data);
+        build/src/libs/libspu.o(.data);
         build/src/prim.o(.data);
         build/asm/data/8E9E0.data.o(.data);
         build/src/libs/libvoice.o(.data);
-        build/asm/libs/libspu2.o(.data);
+        build/src/libs/libspu2.o(.data);
         main_DATA_END = .;
         main_DATA_SIZE = ABSOLUTE(main_DATA_END - main_DATA_START);
         build/asm/crt0.o(.rodata);
@@ -234,13 +234,13 @@ SECTIONS
         build/src/blbmem.o(.sdata);
         build/src/memmove.o(.sdata);
         build/src/libs/libvoice.o(.sdata);
-        build/asm/libs/libspu2.o(.sdata);
+        build/src/libs/libspu2.o(.sdata);
         build/src/vehicle.o(.sdata);
         build/src/lvlload.o(.sdata);
         build/src/libc.o(.sdata);
         build/src/libs/libcd.o(.sdata);
         build/asm/libs/libgpu.o(.sdata);
-        build/asm/libs/libspu.o(.sdata);
+        build/src/libs/libspu.o(.sdata);
         build/src/prim.o(.sdata);
         build/src/vram.o(.sdata);
         build/src/vibrate.o(.sdata);
@@ -266,7 +266,7 @@ SECTIONS
         build/src/libc.o(.sbss);
         build/src/libs/libcd.o(.sbss);
         build/asm/libs/libgpu.o(.sbss);
-        build/asm/libs/libspu.o(.sbss);
+        build/src/libs/libspu.o(.sbss);
         build/src/prim.o(.sbss);
         build/src/vram.o(.sbss);
         build/src/vibrate.o(.sbss);
@@ -304,7 +304,7 @@ SECTIONS
         build/src/blbmem.o(.sbss);
         build/src/memmove.o(.sbss);
         build/src/libs/libvoice.o(.sbss);
-        build/asm/libs/libspu2.o(.sbss);
+        build/src/libs/libspu2.o(.sbss);
         build/asm/data/96920.sbss.o(.sbss);
         main_SBSS_END = .;
         main_SBSS_SIZE = ABSOLUTE(main_SBSS_END - main_SBSS_START);
@@ -320,7 +320,7 @@ SECTIONS
         build/src/libc.o(.bss);
         build/src/libs/libcd.o(.bss);
         build/asm/libs/libgpu.o(.bss);
-        build/asm/libs/libspu.o(.bss);
+        build/src/libs/libspu.o(.bss);
         build/src/prim.o(.bss);
         build/src/vram.o(.bss);
         build/src/vibrate.o(.bss);
@@ -358,7 +358,7 @@ SECTIONS
         build/src/blbmem.o(.bss);
         build/src/memmove.o(.bss);
         build/src/libs/libvoice.o(.bss);
-        build/asm/libs/libspu2.o(.bss);
+        build/src/libs/libspu2.o(.bss);
         build/asm/data/96920.bss.o(.bss);
         main_BSS_END = .;
         main_BSS_SIZE = ABSOLUTE(main_BSS_END - main_BSS_START);

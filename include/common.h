@@ -92,6 +92,31 @@ typedef unsigned long u_long;
 #define USED __attribute__((used))
 
 /* -----------------------------------------------------------------------------
+ * Register-pin / scheduling-fence shims (byte-neutral on MIPS)
+ * -------------------------------------------------------------------------- *
+ * A handful of matched functions pin a value to a specific MIPS register to
+ * reproduce the original scheduler, e.g.
+ *     register s16 m1 asm("$17");
+ * Those pins are MIPS-only and meaningless on x86. They are written through the
+ * PSX_REG() wrapper so the PC port (TARGET_PC) drops the `asm("$N")` clause
+ * while the MIPS build expands to the identical tokens -> byte-identical output.
+ * PSX_FENCE() is the empty-`__asm__` scheduling barrier equivalent, and
+ * PSX_CLOBBER("$N") wraps an empty-asm with a register-clobber list (used to
+ * force cc1 to re-materialize a value per branch arm). All three vanish on x86.
+ *     register s16 m1 PSX_REG("$17");   // -> `... asm("$17")` on MIPS, `...` on PC
+ *     PSX_CLOBBER("$5");                // -> `__asm__ __volatile__("" ::: "$5")` on MIPS
+ */
+#ifdef TARGET_PC
+#define PSX_REG(n)
+#define PSX_FENCE() ((void)0)
+#define PSX_CLOBBER(r) ((void)0)
+#else
+#define PSX_REG(n) asm(n)
+#define PSX_FENCE() __asm__ __volatile__("")
+#define PSX_CLOBBER(r) __asm__ __volatile__("" ::: r)
+#endif
+
+/* -----------------------------------------------------------------------------
  * Include ASM macro
  * -------------------------------------------------------------------------- */
 /* 

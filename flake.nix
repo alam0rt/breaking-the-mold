@@ -105,6 +105,14 @@
           ${pkgs.bc}/bin/bc <<< "obase=16; ibase=16; ''${1^^} + 80010000 - 800"
         '';
 
+        # PC port compiler: gcc_multi does a full -m32 compile AND link (32-bit
+        # libgcc + /lib/32 loader). The devShell's stdenv gcc-wrapper only does
+        # the -m32 *compile*, so the native port build must use this wrapper.
+        # CMakePresets.json sets CMAKE_C_COMPILER=port-cc. See pc-port.md CP-0.7.
+        port-cc = pkgs.writeShellScriptBin "port-cc" ''
+          exec ${pkgs.gcc_multi}/bin/gcc "$@"
+        '';
+
       in
       {
         devShells.default = pkgs.mkShell {
@@ -120,6 +128,19 @@
             # MIPS cross-compilation toolchain
             pkgsCross.mipsel-linux-gnu.buildPackages.binutils
             pkgsCross.mipsel-linux-gnu.buildPackages.gcc
+
+            # --- PC port (native 32-bit) build deps -------------------------
+            # The port is built -m32 (see docs/plans/pc-port.md §2/§7): pointers
+            # stay 4 bytes so the game structs/vtables/asset layouts are
+            # preserved with zero refactoring. This needs a multilib host gcc
+            # (provides gnu/stubs-32.h + 32-bit libc/libgcc) plus 32-bit SDL2 +
+            # OpenGL for the SPEC/HAL window/audio/input backend.
+            gcc_multi                # host gcc with -m32 multilib support
+            pkgsi686Linux.SDL2       # 32-bit SDL2 (window / audio / gamepad)
+            pkgsi686Linux.libGL      # 32-bit OpenGL
+            pkgsi686Linux.glibc.dev  # 32-bit libc headers (gnu/stubs-32.h)
+            port-cc                  # `port-cc` wrapper -> gcc_multi (CMake CC)
+            # ---------------------------------------------------------------
 
             # Python
             pythonEnv
@@ -174,6 +195,12 @@
 
             # Set library path for Python packages that need libstdc++
             export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH"
+
+            # PC port: let pkg-config / cmake find the 32-bit SDL2 + GL for the
+            # native -m32 build (docs/plans/pc-port.md CP-0.7). Prepended so the
+            # i686 .pc files win over any 64-bit ones for the port's find_package.
+            export PKG_CONFIG_PATH_32="${pkgs.pkgsi686Linux.SDL2.dev}/lib/pkgconfig:${pkgs.pkgsi686Linux.libGL.dev}/lib/pkgconfig"
+            export PORT_PKG_CONFIG_PATH="$PKG_CONFIG_PATH_32"
 
             # Alias for pcsx-redux with impure nixGL (for non-NixOS systems)
             # Use this if the wrapped version doesn't work with your GPU drivers
