@@ -8,10 +8,10 @@
  * player was attached to an entity, dispatches event 0x1005 (detach) to it
  * with the current Y velocity.
  *
- * `_g_DefaultBGColorB` in the export is a junk Ghidra name: it is the u16
- * run-button mask at 0x800A5772 (ROM value 0x26), tested against
- * pInput->buttons_held to pick the faster fall cap. Defined strongly here
- * (it is .sdata-initialized on PSX, so weak-zero backing would lose it).
+ * `_g_DefaultBGColorB` in the export is a junk Ghidra name AND a wrong
+ * address: the .s loads the u16 run-button mask D_800A5970 (= 0x80, strong C
+ * in src/gfx.c's migrated sdata island), tested against buttons_held to pick
+ * the faster fall cap.
  * ========================================================================== */
 #include "common.h"
 #include "globals.h"
@@ -26,8 +26,8 @@ extern char PlayerEntityCollisionHandler[];
 extern char PlayerCallback_JumpInputAndCounters[];
 extern char PlayerCallback_FallingPhysicsMain[];
 
-/* run-button mask @ 0x800A5772 (.sdata init, ROM value 0x26) */
-u16 g_RunButtonMask asm("g_DefaultBGColorB") = 0x26;
+/* run-button mask (src/gfx.c sdata island, value 0x80) */
+extern u16 D_800A5970_mask asm("D_800A5970");
 
 typedef void (*EventFn)(void *base, s32 event, s32 arg, void *src);
 
@@ -37,7 +37,7 @@ void PlayerStateCallback_2(void *arg0) {
     u8 *interact;
 
     cap = 0x30000;
-    if ((g_RunButtonMask & *(u16 *)(*(u8 **)(e + 0x100))) == 0) {   /* buttons_held */
+    if ((D_800A5970_mask & *(u16 *)(*(u8 **)(e + 0x100))) == 0) {   /* buttons_held */
         cap = 0x20000;
     }
     *(u32 *)(e + 0x124) = cap | 0x8000;    /* maxVelocity */

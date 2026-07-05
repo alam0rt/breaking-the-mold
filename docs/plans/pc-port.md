@@ -657,6 +657,39 @@ family batches (`c-migration-plan.md`).
   then menu input → START GAME → level 1 load path (CP-2.5/2.6). Note the black
   box + critter next to the selected row is CORRECT game behaviour (the critter
   eats the selected row's text), not a render bug.
+- **2026-07-06 (session 4 cont.) — playst push: the player TICKS.** Converted
+  PlayerTickCallback (the per-frame player driver: input-slot dispatch, timers,
+  halo/yellow-bird companions, scale easing, damage-flash tint, particle trail),
+  PlayerProcessTileCollision + CheckTriggerZoneCollision,
+  PlayerCallback_JumpInputAndCounters, FindFrameIndexByValue. The per-frame
+  stub surface on level 1 is now exactly: **PlayerCallback_FallingPhysicsMain**
+  (0x18CC/818 export lines — the airborne physics + real tile collision core;
+  a focused session with ~10 callee deps: FallingPhysicsContinue sibling,
+  EntityApplyMovementCallbacks, bounce handlers, platform landing,
+  FallingInputHandler), PlayerEntityCollisionHandler (event), and the two
+  non-playst ticks (EntityTick_PlatformRideIdle, EntityTick_DigitDisplayUpdate).
+  - **CLEAN-ROOM NAME CORRECTIONS (verified against the .s; apply to Ghidra
+    when the MCP is up):**
+    - `PlayerProcessTileCollision` (0x8005A914) does NO tile collision — it is
+      the TRIGGER-ZONE processor (rect list at GameState+0x74/+0x78, BLB asset
+      602): level exits, game-mode zones 2-7, wind/conveyor pushes, autoscroll
+      toggles, clayball flags, tint zones. Suggest PlayerProcessTriggerZones.
+      Real tile collision is inside PlayerCallback_FallingPhysicsMain et al.
+    - `g_DefaultBGColorR/G/B` (0x800A5770-72) are NOT colors and Ghidra's
+      `_`-prefixed accesses resolve to the WRONG addresses — the actual loads
+      are the button-mask config words D_800A596C (0x40 jump), D_800A596E
+      (0x20 special), D_800A5970 (0x80 run), already strong C in src/gfx.c's
+      migrated sdata island.
+    - PlayerTickCallback / PlayerProcessTileCollision's extra Ghidra params
+      are register residue; both are 1-arg FSM callbacks.
+    - PlayerEntity +0x159 ("pendingStateChange") is specifically a pending
+      DEATH request (consumed by the D_800A5D98/9C DeathStart pair).
+    - The export's fsmSlot_* aliases map to the src/playst.c data island:
+      Hamster=D_800A5D90/94, DeathStart=D_800A5D98/9C, CrouchSlide=D_800A5D88/8C,
+      SpecialIdleAnim=D_800A5E68/6C, ExitShrinkWithRestore=D_800A5E70/74,
+      ShrinkAndFall=D_800A5E78/7C, GrowFromShrink=D_800A5E80/84 (all verified
+      via gp-rel loads in the .s).
+
 - **2026-07-06 (session 4) — LEVEL 1 FIRST LIGHT: direct boot into level 1
   loads the full level and renders its tile layers (scrambled re-stamp, see
   below); the player entity constructs and enters its state machine.**
