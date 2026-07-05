@@ -135,7 +135,7 @@ static PFNglUniform2i           pglUniform2i;
 
 static GLuint s_clut_prog;          /* CLUT-expansion shader program */
 static int    s_have_shader;        /* 1 once the program links */
-static GL_int s_u_bitdepth, s_u_pagebase, s_u_clutbase, s_u_vram;
+static GL_int s_u_bitdepth, s_u_pagebase, s_u_clutbase, s_u_vram, s_u_debugtransp;
 #endif
 
 void port_gpu_set_window(void *sdl_window) {
@@ -330,6 +330,7 @@ static void quad_tex_ex(short px[4], short py[4], int pu[4], int pv[4],
         pglUniform1i(s_u_bitdepth, bd);
         pglUniform2i(s_u_pagebase, bx, by);
         pglUniform2i(s_u_clutbase, cx, cy);
+        pglUniform1i(s_u_debugtransp, getenv("PORT_SHOW_TRANSP") ? 1 : 0);
     }
     glBindTexture(GL_TEXTURE_2D, s_vram_tex);
     if (rawTex) {
@@ -633,6 +634,7 @@ static const char *k_fs_src =
     "uniform int   uBitDepth;\n"
     "uniform ivec2 uPageBase;\n"
     "uniform ivec2 uClutBase;\n"
+    "uniform int   uDebugTransp;\n"
     "in vec2 vTexel;\n"
     "in vec4 vTint;\n"
     "out vec4 oColor;\n"
@@ -652,7 +654,7 @@ static const char *k_fs_src =
     "    int idx = (w >> ((u & 3) * 4)) & 0xF;\n"
     "    color = vramAt(uClutBase.x + idx, uClutBase.y);\n"
     "  }\n"
-    "  if (color == 0) discard;\n"
+    "  if (color == 0) { if (uDebugTransp != 0) { oColor = vec4(1.0,0.0,1.0,1.0); return; } discard; }\n"
     "  float r = float(color & 0x1F) / 31.0;\n"
     "  float g = float((color >> 5) & 0x1F) / 31.0;\n"
     "  float b = float((color >> 10) & 0x1F) / 31.0;\n"
@@ -724,6 +726,7 @@ static int gpu_init_shader(void) {
     s_u_bitdepth = pglGetUniformLocation(s_clut_prog, "uBitDepth");
     s_u_pagebase = pglGetUniformLocation(s_clut_prog, "uPageBase");
     s_u_clutbase = pglGetUniformLocation(s_clut_prog, "uClutBase");
+    s_u_debugtransp = pglGetUniformLocation(s_clut_prog, "uDebugTransp");
     port_log("gpu: CLUT-expansion shader ready");
     return 1;
 }

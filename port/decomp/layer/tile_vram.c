@@ -208,7 +208,7 @@ void LoadTileDataToVRAM(void *arg0) {
             s32 is4bit = ((flag & 2) == 0);   /* temp_v0_3 / temp_s0_4 */
             u8 *palCtx = (*(u8 ***)(gs + 0x110))[palIndices[i - 1]];
             u16 clutId = *(u16 *)(palCtx + 0x2C);
-            s32 rowBytes = is4bit ? 8 : 0x10;
+            s32 rowBytes = is4bit ? 0x10 : 8;
             RECT rect;
             u8 *rs;
 
