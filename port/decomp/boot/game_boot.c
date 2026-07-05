@@ -46,6 +46,16 @@ extern u16   D_800A60BE asm("D_800A60BE");                /* asset count mirror 
  * struct before the first use so the real init + all downstream reads work. */
 static u8 s_respawnPlayerState[0x400];
 
+/* PC-port seeding for the layer-render-slot / sprite-frame-cache table.
+ * On PSX, D_800A595C is an .sdata POINTER whose init value is &D_8009AE58 -- a
+ * zero-filled 0x1E0-byte .data table of 20 x 0x18-byte slots. It is used both as
+ * the sprite-frame cache (LoadSpriteFramesToVRAM/LoadSpriteHashArrayToVRAM index
+ * it by *0x18) and the layer-render-slot table (FindLayerSlotByEntityPointer).
+ * The port's weak-zero backing leaves the pointer NULL, so seed it at the
+ * (weak-backed) D_8009AE58 storage before the first level load. */
+extern u8    D_8009AE58[] asm("D_8009AE58");           /* render-slot table  */
+extern void *g_LayerRenderSlots asm("D_800A595C");    /* -> D_8009AE58       */
+
 /* ---- boot/frame callees (HAL, matched C, or weak-stub-until-converted) ---- */
 extern void SsUtReverbOn(void);
 extern void ResetCallback(void);
@@ -100,6 +110,7 @@ void port_game_boot_init(void) {
     FntLoad(0x3C0, 0x100);
     SetDumpFnt(FntOpen(0x10, 0x20, 0x120, 0xC8, 0, 0x200));
     PLAYER_STATE_DATA = s_respawnPlayerState;   /* give D_800A597C a real target */
+    g_LayerRenderSlots = D_8009AE58;            /* give D_800A595C a real target */
     initPlayerState(PLAYER_STATE_DATA);
     InitGameState(g_GameStateBase, g_pInputStateA);
 

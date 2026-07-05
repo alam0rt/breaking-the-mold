@@ -19,7 +19,6 @@
 
 extern u8  *AllocateFromHeap(u8 *heap, s32 align, s32 size, s32 flags);
 extern s32  InitSpriteContext(void *ctx, u32 spriteId);
-extern void InitSpriteContextWrapper(void *out, u32 spriteId);
 extern u8  *PrepareSpriteVRAMSlotForContext(void *ctx, s16 zOrder, s16 w, s16 h, s32 flag);
 
 void CreateMultiFrameRenderContext(void *entity, u16 tpage, u32 *frameList) {
@@ -33,7 +32,7 @@ void CreateMultiFrameRenderContext(void *entity, u16 tpage, u32 *frameList) {
     InitSpriteContext(e + 0x78, frameList[0]);
     for (; *frameList != 0; frameList++) {
         s16 w, h;
-        InitSpriteContextWrapper(scratch, *frameList);
+        InitSpriteContext(scratch, *frameList);
         w = *(s16 *)(scratch + 0xC);
         h = *(s16 *)(scratch + 0xE);
         if (maxW < w) {
