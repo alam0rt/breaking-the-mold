@@ -1,0 +1,293 @@
+{
+  "repo_notes": [
+    {
+      "author": "alam0rt",
+      "content": "WHAT THIS REPO IS. A byte-matching decompilation of Skullmonkeys (PlayStation 1, PAL, SLES-01090). The goal is to reproduce the original retail binary bit-for-bit from C source: `make check` compiles the C, links it, packs it with objcopy, and SHA1-verifies `build/SLES_010.90.bin` against the expected hash recorded in `SLES_010.90.yaml`. If the hash matches, the C is a perfect stand-in for the original machine code. This is NOT a normal application codebase and should not be documented like one."
+    },
+    {
+      "author": "alam0rt",
+      "content": "CLEAN-ROOM NAMING CAVEAT — THE SINGLE MOST IMPORTANT THING TO GET RIGHT. This is clean-room reverse engineering. No original source, symbols, or debug info exist. EVERY symbol name — functions, globals, struct names, struct field names — is a GUESS inferred from observed behavior. Documentation (docs/, Ghidra plate comments, CLAUDE.md, this file) can be wrong even when it claims to be 'verified'. When generating wiki text, present names as hypotheses backed by evidence, not as ground truth. Prefer phrasing like 'a function named LoadLevelFromBLB (name inferred)' over asserting the name is canonical. Never invent behavior a name merely suggests; describe what the code/data actually does. Where a doc and the code disagree, the code (src/*.c and asm/) wins."
+    },
+    {
+      "author": "alam0rt",
+      "content": "SOURCES OF TRUTH, IN PRIORITY ORDER. (1) The disassembly in asm/ and the retail binary — the final arbiter of behavior; asm/ is splat output and must never be hand-edited. (2) The C in src/*.c that has been confirmed to byte-match. (3) `symbol_addrs.txt` — the curated map of address -> inferred name (~2470 named function-range symbols). (4) For the BLB asset container format specifically, `docs/blb.hexpat` (an ImHex pattern) is the DECLARED source of truth over prose docs. (5) Runtime traces from PCSX-Redux (game_watcher.lua) for dynamic behavior and physics constants. Narrative docs under docs/ are secondary and may lag the code. Cite the concrete artifact (file, address, or asset offset) whenever possible."
+    },
+    {
+      "author": "alam0rt",
+      "content": "PROGRESS IS PARTIAL AND SPECIFIC — DO NOT OVERSTATE IT. Decompilation is incomplete. Roughly 1048 functions across ~37 src/*.c files are still shelved as `INCLUDE_ASM(...)` stubs — they are NOT yet byte-matched to C; they pull in raw assembly from asm/nonmatchings/. The remaining functions are decompiled to matching C. When a src/*.c file is described, distinguish decompiled-and-matching C from INCLUDE_ASM stubs. Per-doc status badges in docs/ (✅ Complete / ⚠️ Partial / 🔬 Research / 📋 Planned) are the AUTHOR'S estimate at time of writing, not a measured figure — repeat them as estimates, not facts."
+    },
+    {
+      "author": "alam0rt",
+      "content": "SOURCE LAYOUT (flat, Glover/soul-re convention) in src/. Core/flow: main.c (entry + main loop), gstate.c + gstctor.c (GameState + its constructor), playst.c (play-state tick), level.c + lvlload.c (level + level loader). Entities: entity.c + entinit.c (entity system + init dispatch), enemies.c, bosses.c, pickups.c, effects.c, decor.c, edtor.c. Player: player.c + playdtor.c (player + destructor), finn.c + vehicle.c + clayball.c (alternate/vehicle modes). Graphics: gfx.c, prim.c (GPU primitives), vram.c, sprite.c + spracc.c + sprset.c (sprites), layer.c (scrolling tile layers), anim.c (animation). Assets/IO: blb.c + blbacc.c + blbmem.c (BLB container access/memory), gamecd.c (CD I/O). Audio: sound.c. UI/flow: menu.c, hud.c, passwd.c (password system), results.c, movie.c (FMV), ending.c, vibrate.c (pad rumble). Runtime/libc shims: libc.c, memmove.c, nullfn.c, emptycb.c, crt0stub.c. PSY-Q SDK reimplementations live in src/libs/ (libcd.c, libspu.c, libspu2.c, libvoice.c)."
+    },
+    {
+      "author": "alam0rt",
+      "content": "BUILD PIPELINE. Enter the Nix dev shell first (`nix develop` or `direnv allow`); it supplies the MIPS cross-toolchain, PCSX-Redux, Ghidra, and Python venv. The PSX-era compiler bin/cc1-psx-26 is downloaded separately via ./tools/download-toolchain.sh; PSY-Q headers go in psyq/ (not committed). Pipeline: splat splits bin/SLES_010.90 into asm/ and generates the linker script + undefined_*.txt -> cpp -> tools/gcc-2.7.2-psx/cc1 (flags -O2 -G8 -fno-builtin -mno-abicalls -mcpu=3000, FIXED — do not tweak per-file, the byte-match depends on them) -> tools/maspsx/maspsx.py (replicates ASPSX.EXE quirks: gp-relative addressing, hazard NOPs, div/rem expansion) -> mipsel-unknown-linux-gnu-as -> ld with SLES_010.90.ld -> objcopy -O binary -> SHA1 check. Key make targets: `make`/`make check` (build+verify), `make extract` (re-run splat), `make context` (regen ctx.c for m2c), `make decompile FUNC=`, `make diff FUNC=` (asm-differ), `make permuter FUNC=`."
+    },
+    {
+      "author": "alam0rt",
+      "content": "RUNTIME VERIFICATION TOOLING. PCSX-Redux exposes a Lua API and a Web Server (must be enabled manually in the GUI). scripts/game_watcher.lua hooks key engine functions by ADDRESS (these addresses are inferred and may drift — verify against symbol_addrs.txt before trusting): e.g. PlayerTickCallback @0x80059E10, EntitySetState @0x8001EAAC, SetEntitySpriteId @0x8001D080, DispatchEventToCollidingEntity @0x800226F8 (formerly named CheckEntityCollision), LoadLevelFromBLB @0x8007E474. It streams JSONL traces used to verify decomp output and derive physics constants. scripts/gamestate_dumper.lua dumps GameState. scripts/pcsx_mcp_server.py bridges the web API as MCP tools (read_ram, read_u8/16/32, read_string, write_ram, read_vram, pause/resume/reset, read_disc_file, patch_disc_file, upload_symbols). Address conventions: RAM base 0x80010000; ROM offset = VRAM - 0x80010000 + 0x800; sdata starts at 0x800A5954 (== splat gp_value); -G8 keeps <=8-byte symbols GP-relative."
+    },
+    {
+      "author": "alam0rt",
+      "content": "THE PC PORT (port/) IS ADDITIVE AND MUST NOT BE CONFLATED WITH THE MIPS BUILD. port/ is a native PC build that reuses the shared game C in src/ UNCHANGED and swaps the PlayStation hardware libraries (PSY-Q: libgpu/libgte/libspu/libcd/BIOS) for PC backends under port/spec/ (the SPEC_PSXPC HAL: gpu_gl.c, gte.c, spu_sdl.c, cd_files.c, pad_sdl.c, bios.c, plus port_boot.c/host_main.c/port_runtime.c). The MIPS byte-match build never defines TARGET_PC and never sees port/, so it stays byte-identical. The pivot: CMake injects -include port_config.h -DTARGET_PC, which turns INCLUDE_ASM(...) into a no-op; each still-shelved function is satisfied by a WEAK stub (_autostubs.c) or a real body once written, and absolute-address globals get weak backing storage (_autoglobals.c), both generated by tools/gen_port_stubs.py. tools/portize.py sweeps MIPS-only register pins/fences to PSX_REG/PSX_CLOBBER macros that are byte-neutral on MIPS and empty on x86. INVARIANTS: never regress the byte-match (make check must stay green); 32-bit is load-bearing (a _Static_assert hard-fails 64-bit builds because the engine overlays pointers at fixed struct offsets and strides 8-byte callback slots)."
+    },
+    {
+      "author": "alam0rt",
+      "content": "DOCS MAP for cross-referencing (docs/ holds ~200+ markdown files; treat as secondary to code). Entry points: docs/README.md, docs/SYSTEMS_INDEX.md, docs/decompilation-guide.md, docs/compiler-quirks.md, docs/KNOWLEDGE_GAPS.md, docs/TODO.md. Format: docs/blb/ (+ docs/blb.hexpat). Per-system deep dives: docs/systems/ (game-loop, entities, fsm-callback-patterns, animation-framework, collision-complete, tiles-and-tilemaps, sprites, level-loading, rendering-order, audio, player/, enemies/, boss-ai/, bosses/, projectiles, combat-system, checkpoint-system, input-system-complete, menu-system-complete, hud-system-complete, password-system, movie-cutscene-system, secret-ending-system, camera). Reference tables: docs/reference/ (physics-constants, entity-types, items, cheat-codes, sound-ids-complete, sprite-ids-complete, game-functions, player-callback-inventory, official-enemy-names, level-flags, pal-jp-comparison). Architecture: docs/architecture/ (memory-layout, compilation-units, source-directory-hypothesis). Note: docs/MODULE_STRUCTURE.md uses older module/VRAM-range framing and older asm/pal/ paths — the current tree is the flat src/*.c layout above; prefer the flat layout."
+    },
+    {
+      "author": "alam0rt",
+      "content": "AUDIENCE & TONE. Readers are reverse engineers and decomp contributors. Useful wiki text: (a) states what a subsystem does and how its files/functions/structs relate; (b) grounds every claim in a concrete address, file, struct offset, or asset offset; (c) flags uncertainty explicitly and points to the relevant docs/ page or KNOWLEDGE_GAPS.md; (d) never presents an inferred name as if it were an official symbol. Avoid generic 'how to run the app' framing — the primary artifact is a binary reproduction, not a product. When describing a function, prefer linking behavior to the disassembly/decomp rather than paraphrasing the name."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Project Overview",
+      "parent": null,
+      "purpose": "Explain that this is a byte-matching decompilation of Skullmonkeys (PS1, PAL, SLES-01090): the goal (bit-for-bit reproduction of the retail binary from C, verified by SHA1 in make check against SLES_010.90.yaml), the clean-room premise (no original source/symbols; every name is an inferred hypothesis), and what makes this codebase different from a normal application. Set the frame the whole wiki reads under. Source: CLAUDE.md, README.md, docs/README.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Lead with the clean-room caveat and the byte-match goal. Do not describe this as a product or library to 'use'; it is a reproduction of an existing 1998 binary. State the expected-SHA1 verification mechanism explicitly."
+        }
+      ]
+    },
+    {
+      "title": "Repository Layout & Navigation",
+      "parent": "Project Overview",
+      "purpose": "Map the top-level directories and what lives where: src/ (flat decompiled C), src/libs/ (PSY-Q SDK reimplementations), include/ + include/Game/ (headers; common.h feeds ctx.c for m2c), asm/ (splat output, never hand-edited; asm/nonmatchings/ for INCLUDE_ASM), SLES_010.90.yaml/.ld (splat config + generated linker script), symbol_addrs.txt (curated address->name map), tools/ (vendored toolchain: gcc-2.7.2-psx, maspsx, m2c, asm-differ, decomp-permuter, splat_ext), scripts/ (runtime Lua + MCP bridge), port/ (PC port), docs/ (RE notes), disks/ (base ISO + extracted BLB). Provide a 'where do I find X' navigation table."
+    },
+    {
+      "title": "Build System & Toolchain",
+      "parent": null,
+      "purpose": "Document the full build pipeline end to end: splat split -> cpp -> cc1-psx (bin/cc1-psx-26, downloaded via tools/download-toolchain.sh) with the FIXED flags (-O2 -G8 -fno-builtin -mno-abicalls -mcpu=3000) -> maspsx.py (ASPSX quirk replication) -> mipsel as -> ld with SLES_010.90.ld + undefined_*.txt -> objcopy -O binary -> SHA1 check. Cover the key make targets (all/check, extract, context, decompile, diff, permuter, lint, clean) and why the compiler flags must not be changed per-file. Source: CLAUDE.md, Makefile.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Emphasize that compiler/assembler flags are load-bearing for the byte-match and are not to be tweaked per-file. Explain maspsx's role: reproducing ASPSX.EXE quirks (gp-relative addressing, hazard NOPs, div/rem expansion) that a modern assembler wouldn't emit."
+        }
+      ]
+    },
+    {
+      "title": "Compiler Quirks & Matching Conventions",
+      "parent": "Build System & Toolchain",
+      "purpose": "Explain the GCC 2.7.2 / ASPSX 2.86 code-generation quirks that a byte-match must reproduce, and the C idioms contributors use to coax the compiler into matching output. Cover what forces particular register allocation, stack layout, branch-delay-slot filling, and the div/rem and gp-relative behaviors. Source: docs/compiler-quirks.md, docs/matching-conventions.md, docs/matching-idioms.md."
+    },
+    {
+      "title": "Decompilation Workflow",
+      "parent": "Build System & Toolchain",
+      "purpose": "Describe the per-function decomp loop a contributor follows: INCLUDE_ASM stub -> m2c (make decompile FUNC=) to get a first-pass C guess -> iterate -> asm-differ side-by-side (make diff FUNC=) -> decomp-permuter (make permuter) to search for a byte-exact form. Explain ctx.c/make context (preprocessed common.h that m2c consumes), how INCLUDE_ASM references asm/nonmatchings/<segment>/<func>.s, and how a function graduates from stub to matched C. Source: docs/decompilation-guide.md, CLAUDE.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "State the current split: ~1048 functions remain as INCLUDE_ASM stubs (not yet byte-matched); the rest are matching C. m2c output is a starting guess, never automatically correct, and never byte-exact on its own."
+        }
+      ]
+    },
+    {
+      "title": "Nix Dev Environment",
+      "parent": "Build System & Toolchain",
+      "purpose": "Document the reproducible dev shell from flake.nix (entered via nix develop / direnv allow): the MIPS cross-toolchain (mipsel-unknown-linux-gnu-*), Python venv auto-created from tools/requirements-python.txt + pyghidra, PCSX-Redux (wrapped via nixGL), Ghidra with the PSX loader, luacheck, and the ram2off/off2ram helpers. Note what is NOT in Nix and must be fetched separately (cc1-psx-26 via download-toolchain.sh; PSY-Q headers into psyq/). Source: flake.nix, CLAUDE.md."
+    },
+    {
+      "title": "Game Engine Architecture",
+      "parent": null,
+      "purpose": "Give the big-picture engine map: the memory layout (RAM base 0x80010000, sdata at 0x800A5954/gp_value, ROM<->VRAM offset formula), how the flat src/*.c files correspond to engine subsystems, and how the major systems (main loop, game state, entities, animation, rendering, level loading) fit together. Anchor the address conventions used throughout the wiki. Source: docs/architecture/memory-layout.md, docs/architecture/source-directory-hypothesis.md, docs/MODULE_STRUCTURE.md (older framing).",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "docs/MODULE_STRUCTURE.md describes VRAM-range 'modules' and asm/pal/ paths from an earlier phase; the tree is now the flat src/*.c layout. Present the flat layout as current and treat the VRAM ranges as a historical/address-space view, not the file organization."
+        }
+      ]
+    },
+    {
+      "title": "Main Loop & Game State",
+      "parent": "Game Engine Architecture",
+      "purpose": "Document the boot-to-frame spine and the global GameState: the entry in main.c, the main loop, per-frame mode/callback dispatch and game-mode transitions (playst.c play-state tick), and the GameState structure with its constructor (gstate.c, gstctor.c) and the fields documented so far. Source: docs/systems/game-loop.md, docs/systems/gamestate-field-analysis.md, include/game_state.h, src/main.c, src/gstate.c, src/playst.c.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "GameState is only partially field-mapped (docs estimate ~75%). Present unmapped/uncertain fields as such and link KNOWLEDGE_GAPS.md."
+        }
+      ]
+    },
+    {
+      "title": "Entity System",
+      "parent": "Game Engine Architecture",
+      "purpose": "Document the core entity model shared by all game objects: the entity struct and records (include/entity.h, entity_records.h, entity_types.h), spawn/init dispatch (entinit.c + entinit_entities.h), destruction (edtor.c), position/velocity accessors, per-frame tick callbacks, and inter-entity collision/event dispatch (e.g. DispatchEventToCollidingEntity). Explain the 121-ish entity-type catalogue and how a type maps to its callbacks. Source: src/entity.c, src/entinit.c, docs/systems/entities.md, docs/systems/entity-init-architecture.md, docs/reference/entity-types.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "See docs/reference/ENTITY_REMAPPING_CORRECTION.md: entity type-number -> behavior mapping is LAYER-DEPENDENT and a common source of misidentification. Call this out explicitly rather than presenting a flat type table as universal."
+        }
+      ]
+    },
+    {
+      "title": "FSM & Callback-Slot Dispatch",
+      "parent": "Entity System",
+      "purpose": "Document the vtable/callback-slot state-machine pattern the engine uses pervasively: fixed-size (8-byte) callback slots, per-state function pointers, EntitySetState-style transitions, and how player/enemy/boss state machines are all instances of this pattern. Explain the slot-table convention and how it drives 32-bit-layout dependence in the PC port. Source: docs/systems/fsm-callback-patterns.md, include/callback_slot.h, include/fsm_dispatch.h, docs/systems/player/player-state-fsm.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "This is research-tier (🔬) in the docs. Frame the slot semantics as inferred structure, and connect it to the port's '32-bit is load-bearing' invariant (8-byte slot stride, pointers at fixed offsets)."
+        }
+      ]
+    },
+    {
+      "title": "Animation Framework",
+      "parent": "Game Engine Architecture",
+      "purpose": "Document the sprite animation system: the 5-layer animation framework, animation sequences and frame events, and the property-setter functions that drive animation state. Explain how entities reference animation data and how frames advance per tick. Source: src/anim.c, include/anim_entities.h, anim_frame_events.h, docs/systems/animation-framework.md, docs/systems/animation-setters-reference.md."
+    },
+    {
+      "title": "Rendering & Graphics Pipeline",
+      "parent": "Game Engine Architecture",
+      "purpose": "Document the GPU/VRAM rendering path: graphics init and PAL video mode, GPU primitive allocation and the ordering table (prim.c, prim_records.h), VRAM slot allocation/free (vram.c, vram_slot.h, vram_records.h), sprite storage/access/lookup and the RLE sprite format (sprite.c, spracc.c, sprset.c, sprite_records.h), and layer/entity z-ordering. Source: src/gfx.c, src/prim.c, src/vram.c, src/sprite.c, docs/systems/sprites.md, docs/systems/rendering-order.md."
+    },
+    {
+      "title": "Tiles, Layers & Camera",
+      "parent": "Game Engine Architecture",
+      "purpose": "Document the level geometry rendering: tile graphics and the tile header format, scrolling tilemap layers and layer records (layer.c, scrolling_layer.h, layer_entry.h, layer_records.h, tile_header.h), multi-layer parallax rendering with scroll, and the smooth-scrolling camera. Source: src/layer.c, docs/systems/tiles-and-tilemaps.md, docs/systems/camera.md, docs/systems/rendering-order.md."
+    },
+    {
+      "title": "Collision & Physics",
+      "parent": "Tiles, Layers & Camera",
+      "purpose": "Document tile collision and physics: the canonical tile collision-attribute reference (collision-complete.md supersedes older collision docs), how collision attributes are read from tile data, and the verified physics constants (gravity, speeds, bounce). Note derivation from runtime traces. Source: docs/systems/collision-complete.md, docs/reference/physics-constants.md, docs/PHYSICS_QUICK_REFERENCE.md, docs/systems/player/player-physics.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "collision-complete.md is the canonical collision doc; collision.md and tile-collision-complete.md are pointers/superseded stubs. Physics constants were largely derived from PCSX-Redux traces — cite them as trace-verified where the docs say so."
+        }
+      ]
+    },
+    {
+      "title": "Player System",
+      "parent": null,
+      "purpose": "Document the player character: the player state/record structures (player_state.h), normal platforming mode, powerups, damage and death, checkpoints, and the player destructor. Explain how player logic is organized across player.c and playdtor.c and how it plugs into the FSM/callback-slot dispatch. Source: src/player.c, src/playdtor.c, docs/systems/player/player-system.md, player-normal.md, checkpoint-system.md, combat-system.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "docs/reference/player-callback-inventory.md catalogs ~128 player-related functions with cluster analysis — a good anchor for enumerating player callbacks by inferred cluster."
+        }
+      ]
+    },
+    {
+      "title": "Player Physics & State Machine",
+      "parent": "Player System",
+      "purpose": "Detail the normal-mode player FSM (the callback-slot state table and its transitions) and the movement physics: horizontal/vertical speed constants, gravity, jump/bounce mechanics, and how input maps to state changes. Source: docs/systems/player/player-state-fsm.md, player-physics.md, player-bounce-mechanics.md, player-animation.md, trace-findings.md, include/player_state.h, include/input_state.h."
+    },
+    {
+      "title": "Vehicles & Alternate Player Modes",
+      "parent": "Player System",
+      "purpose": "Document the alternate player modes that replace normal control: the FINN vehicle (finn.c, finn_entities.h), the generic vehicle logic (vehicle.c), and the clayball mode (clayball.c, clayball_entities.h). Explain how the engine swaps the active player callbacks when entering/leaving these modes. Source: src/finn.c, src/vehicle.c, src/clayball.c, docs/systems/player/player-finn.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "FINN mechanics are only partially documented (⚠️). Do not overstate completeness; mark uncertain behavior."
+        }
+      ]
+    },
+    {
+      "title": "Enemies & Boss AI",
+      "parent": null,
+      "purpose": "Document enemy and boss behavior: the enemy AI patterns and per-type enemy logic (enemies.c, enemy_entities.h; docs/systems/enemies/ has ~27 type docs), and the boss system architecture — the multi-sprite boss init pattern and the five bosses (Shriney Guard, Glenn Yntis, Monkey Mage, plus others, up to Klogg the final boss). Cross-reference official enemy names. Source: src/enemies.c, src/bosses.c, include/boss_entities.h, docs/systems/enemy-ai-overview.md, docs/systems/enemies/, docs/systems/bosses.md, docs/systems/boss-ai/, docs/reference/official-enemy-names.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Enemy AI (~50%) and boss behaviors (~55%) are partially documented by the author's own estimate. Enumerate what is documented per type/boss and mark the rest as gaps. Use docs/reference/official-enemy-names.md to distinguish official names from inferred code names."
+        }
+      ]
+    },
+    {
+      "title": "Pickups, Effects & Combat",
+      "parent": "Enemies & Boss AI",
+      "purpose": "Document collectibles/powerups (pickups.c, pickups_entities.h; docs/reference/items.md), visual/gameplay effects and decor (effects.c, decor.c, effect_entities.h, decor_entities.h), and the projectile/weapon + damage systems. Source: src/pickups.c, src/effects.c, src/decor.c, docs/systems/projectiles.md, docs/systems/combat-system.md, docs/systems/damage-system-complete.md, docs/reference/items.md, docs/systems/collectibles/."
+    },
+    {
+      "title": "BLB Asset Format",
+      "parent": null,
+      "purpose": "Document GAME.BLB, the game's asset archive, and its access layer: the 0x1000-byte header, the level-metadata entries (0x70 bytes each), the TOC/sub-TOC structures, and the asset-type catalogue (types 100-700). Explain the in-memory access/allocation code (blb.c, blbacc.c, blbmem.c, blb_records.h, blbacc_records.h) and how assets are located and loaded. Source: docs/blb/ (README, header, level-metadata, toc-format, asset-types), src/blb.c, src/blbacc.c, src/blbmem.c.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "docs/blb.hexpat (ImHex pattern) is the DECLARED source of truth for the BLB binary format — prefer it over prose when they disagree, and say so. Key inferred addresses: blbHeaderBuffer 0x800AE3E0, g_GameBLBFile 0x8009B4B4, g_GameBLBSector 0x800A59F0 (start sector 0x146)."
+        }
+      ]
+    },
+    {
+      "title": "Level Loading Pipeline",
+      "parent": "BLB Asset Format",
+      "purpose": "Document how a level goes from BLB to a live, playable scene: the level-loading state machine, the LevelDataContext structure (128 bytes, GameState+0x84) that tracks load state, LoadLevelFromBLB and the spawn of player + entities, tilemap/layer setup, and CD I/O (gamecd.c). Source: src/level.c, src/lvlload.c, src/gamecd.c, docs/systems/level-loading.md, docs/reference/level-data-context.md, include/level_data_context.h, lvlload_records.h."
+    },
+    {
+      "title": "Audio System",
+      "parent": null,
+      "purpose": "Document sound: the SPU sample/SFX system, CD-XA streamed audio, and audio settings, plus the game-side audio API (sound.c, sound_records.h, sound.h) and the reimplemented PSY-Q audio libs (src/libs/libspu.c, libspu2.c, libvoice.c). Cover the sound-ID tables and playback functions. Source: src/sound.c, src/libs/libspu*.c, src/libs/libvoice.c, docs/systems/audio.md, docs/systems/audio-functions-reference.md, docs/reference/sound-ids-complete.md, docs/systems/sound-effects-reference.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Sound-effect ID mapping is partial (docs estimate ~35% mapped). Present the sound-ID table as incomplete."
+        }
+      ]
+    },
+    {
+      "title": "Menus, HUD, Password & Results",
+      "parent": null,
+      "purpose": "Document the front-end and in-game UI flow: the menu system (menu.c, menu_entities.h), the HUD (hud.c, hud_entities.h), the password save/continue system and its table (passwd.c, passwd_entities.h), the results/score screen (results.c), input handling, and demo/attract mode. Source: src/menu.c, src/hud.c, src/passwd.c, src/results.c, docs/systems/menu-system-complete.md, hud-system-complete.md, password-system.md, input-system-complete.md, demo-attract-mode.md, docs/PASSWORD_SYSTEM_ANALYSIS.md."
+    },
+    {
+      "title": "Movies, Cutscenes & Endings",
+      "parent": null,
+      "purpose": "Document the FMV/movie playback path (movie.c), cutscene sequencing, and the ending/credits sequence including the secret ending and its unlock condition (ending.c, ending_entities.h). Source: src/movie.c, src/ending.c, docs/systems/movie-cutscene-system.md, docs/systems/secret-ending-system.md, docs/JOE_HEAD_JOE_COMPLETE.md."
+    },
+    {
+      "title": "PC Port (SPEC HAL)",
+      "parent": null,
+      "purpose": "Document the additive native PC build under port/: how it reuses src/ unchanged and replaces the PSY-Q hardware libs with a PC HAL (port/spec/: gpu_gl.c OpenGL, gte.c, spu_sdl.c, cd_files.c reading GAME.BLB as a flat sector device, pad_sdl.c, bios.c; boot via port_boot.c/host_main.c). Explain the coexistence mechanism (the -DTARGET_PC/-include port_config.h pivot, INCLUDE_ASM->no-op, weak _autostubs.c/_autoglobals.c, portize.py's PSX_REG/PSX_CLOBBER sweep) and the invariants (never regress the MIPS byte-match; 32-bit is load-bearing). Cover the CMake presets and headless self-tests. Source: port/README.md, port/CMakeLists.txt, port/include/, port/spec/, tools/portize.py, tools/gen_port_stubs.py, docs/plans/pc-port.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Make unmistakably clear that the PC port never affects the MIPS build: the MIPS build never defines TARGET_PC and never sees port/. Do not describe port/ backends as part of the byte-match. Phase 1 HAL backends are complete; pixel-exact GPU sampling and SPU-ADPCM mixing are still in progress."
+        }
+      ]
+    },
+    {
+      "title": "Runtime Analysis & Debugging Tools",
+      "parent": null,
+      "purpose": "Document the dynamic-analysis toolchain used to verify decomp and derive behavior: PCSX-Redux (Lua API + Web Server), scripts/game_watcher.lua (hooks engine functions by address, streams JSONL traces; boot-directly-into-a-level via make record LEVEL= STAGE=), scripts/gamestate_dumper.lua (make dump-gamestate), scripts/pcsx_mcp_server.py (MCP bridge: read/write RAM, VRAM, disc files, symbols), and the Ghidra integration (pyghidra symbol export, make ghidra-export / ghidra-export-all -> symbol_addrs_new.txt for manual merge). Source: CLAUDE.md, scripts/, docs/game-watcher-usage.md.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "The function addresses hardcoded in game_watcher.lua are inferred and can drift; note that they should be checked against symbol_addrs.txt. Traces are the mechanism for deriving physics constants and confirming state machines."
+        }
+      ]
+    },
+    {
+      "title": "Reference Tables & Symbol Map",
+      "parent": null,
+      "purpose": "Aggregate the lookup material: symbol_addrs.txt (curated address->inferred-name map; how new Ghidra exports are merged via symbol_addrs_new.txt), plus the reference tables under docs/reference/ (entity-types/callback table, items/powerups, cheat-codes (22), sprite-ids, sound-ids, level-flags, game-functions, PAL vs JP differences). Explain how to translate between VRAM address, ROM offset, and asset offset (ram2off/off2ram, scripts/addr2offset.sh). Source: symbol_addrs.txt, docs/reference/, CLAUDE.md address conventions.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Every name in symbol_addrs.txt is an inferred guess, not an original symbol. Present the reference tables as working hypotheses and flag any the docs mark as partial or correctness-critical (e.g. ENTITY_REMAPPING_CORRECTION.md)."
+        }
+      ]
+    },
+    {
+      "title": "Knowledge Gaps & Project Status",
+      "parent": null,
+      "purpose": "Surface, honestly, what is NOT yet understood or matched: the open knowledge gaps, the decompilation backlog (~1048 INCLUDE_ASM stubs remaining vs matched C), naming/cleanup TODOs, and unconfirmed findings awaiting verification. This page keeps the wiki from reading as more complete than it is. Source: docs/KNOWLEDGE_GAPS.md, docs/TODO.md, docs/analysis/unconfirmed-findings.md, docs/SYSTEMS_INDEX.md status badges.",
+      "page_notes": [
+        {
+          "author": "alam0rt",
+          "content": "Do not resolve or paper over gaps — enumerate them. Status badges in docs/ are the author's estimates, not measured coverage; repeat them as estimates."
+        }
+      ]
+    },
+    {
+      "title": "Glossary",
+      "parent": null,
+      "purpose": "Define the project- and platform-specific vocabulary a reader needs: byte-match, clean-room RE, splat, INCLUDE_ASM, m2c, maspsx/ASPSX, asm-differ, decomp-permuter, PSY-Q, GTE, GPU ordering table, VRAM slot, gp-relative/-G8, sdata, BLB, TOC, LevelDataContext, GameState, callback slot / FSM dispatch, SPEC HAL (PC port), byte-neutral, weak stub. Keep definitions grounded in how the term is used in THIS repo."
+    }
+  ]
+}
