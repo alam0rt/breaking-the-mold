@@ -136,14 +136,9 @@ void SwapBuffersAndClearOT(void *base) {
     *(s32 *)(b + GG_VSYNC_OFF) = vsync;
 }
 
-/* ClearOrderingTables @ 0x800134B8: reset both buffers' ordering tables (used at
- * level (re)load via gstate.c). */
-void ClearOrderingTables(void *base) {
-    g_FrameReady = 0;
-    g_SwapInFlight = 1;
-    ClearOTag((u_int *)ctx_ot(base, GPU_CTX0_OFF), 1);
-    ClearOTag((u_int *)ctx_ot(base, GPU_CTX1_OFF), 1);
-}
+/* ClearOrderingTables is now real matched-C in src/gfx.c (globbed into the
+ * port build): it reads the OT head ptrs at base+0x74 / base+0x50B4 directly —
+ * the same slots ctx_ot(base, GPU_CTX{0,1}_OFF) computed here. */
 
 /* InitGraphicsSystem @ 0x80013268: bring up the double-buffered GPU context,
  * install the swap-on-vsync ISR, init VRAM slots, prime both buffers. */
