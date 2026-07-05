@@ -4,7 +4,7 @@
  * definition overrides. Regenerate with `python3 tools/gen_port_stubs.py`.
  * ========================================================================== */
 void port_stub(const char *fn);
-/* 1051 asm-only functions */
+/* 1050 asm-only functions */
 __attribute__((weak)) void Add1970Icons(void) { port_stub("Add1970Icons"); }
 __attribute__((weak)) void AddEntityToBothLists(void) { port_stub("AddEntityToBothLists"); }
 __attribute__((weak)) void AddEntityToSortedRenderList(void) { port_stub("AddEntityToSortedRenderList"); }
@@ -161,7 +161,6 @@ __attribute__((weak)) void ClearAllLayerRenderSlots(void) { port_stub("ClearAllL
 __attribute__((weak)) void ClearAllLayerRenderSlots_CrtInit(void) { port_stub("ClearAllLayerRenderSlots_CrtInit"); }
 __attribute__((weak)) void ClearEntityDefList(void) { port_stub("ClearEntityDefList"); }
 __attribute__((weak)) void ClearHamsterCount(void) { port_stub("ClearHamsterCount"); }
-__attribute__((weak)) void ClearHeapBlocks(void) { port_stub("ClearHeapBlocks"); }
 __attribute__((weak)) void ClearOrderingTables(void) { port_stub("ClearOrderingTables"); }
 __attribute__((weak)) void ClearTickList(void) { port_stub("ClearTickList"); }
 __attribute__((weak)) void Collectible1970IconTickCallback(void) { port_stub("Collectible1970IconTickCallback"); }

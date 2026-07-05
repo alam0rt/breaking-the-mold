@@ -34,6 +34,24 @@
 extern s32 FindFreeVRAMSlotEntry(s32 base);     /* matched C, src/vram.c */
 extern u8  GetMaxVRAMSlotSize(s32 base);         /* matched C, src/vram.c */
 
+/* ---- PC-native VRAM bump-allocator cursors (see AllocateVRAMSlot/CLUTSlot) ---
+ * Textures pack the top half of VRAM (y < 256, page bank 0); CLUTs the bottom
+ * (y >= 256), 16-aligned in x so GetClut is lossless. Reset per level in
+ * InitVRAMSlotArray. */
+#define PORT_VRAM_W 1024
+#define PORT_VRAM_H 512
+#define PORT_CLUT_Y0 256
+static s16 s_port_tex_x, s_port_tex_y, s_port_tex_shelf;
+static s16 s_port_clut_x, s_port_clut_y;
+
+static void port_vram_reset(void) {
+    s_port_tex_x = 0;
+    s_port_tex_y = 0;
+    s_port_tex_shelf = 0;
+    s_port_clut_x = 0;
+    s_port_clut_y = PORT_CLUT_Y0;
+}
+
 /* g_VRAMSlotXYTable template (3 x 8-byte {x, clut/tpage} records) -- real C
  * definition (D_8009AE40) lives in src/vram.c. */
 extern u8 D_8009AE40[] asm("D_8009AE40");
@@ -59,6 +77,7 @@ void InitVRAMSlotArray(void *base) {
     *(u16 *)(b + 0xA08C) = 0;             /* slab 0: mask */
     *(u8  *)(b + 0xA29C) = 0;             /* free-list head = slab 0 */
     *(u8  *)(b + 0xA29E) = 0x58;          /* availTotal */
+    port_vram_reset();                    /* reset the PC-native bump cursors */
 }
 
 /* =============================================================================
@@ -308,6 +327,54 @@ u32 AllocateVRAMSlotAligned(void *heap, u16 *outOffset, u8 reqSize, u8 bitWidth,
  * and emit final VRAM (x,y) into pSlotOut. (asm 0x800138F0)
  * ========================================================================== */
 u8 AllocateVRAMSlot(void *base, u16 *pSlotOut, u8 mode, s16 width, s16 height) {
+    /* PC-native override of the faithful bin-packer (whose slot-table init is
+     * not yet fully reproduced). Simple shelf bump-allocator in the top half of
+     * VRAM (y < 256 = texture page bank 0), 64-aligned in x so GetTPage packs the
+     * page base losslessly and the sprite's page-local U starts at 0. Upload
+     * location == reference location, so textures round-trip exactly. */
+    s32 hwWidth;
+    s16 x, y;
+    (void)base;
+
+    if (mode == 0) {
+        hwWidth = (((s32)width + 1) >> 2) + 1;
+    } else if (mode == 1) {
+        hwWidth = (((s32)width + 1) >> 1) + 1;
+    } else {
+        hwWidth = (s32)width + 1;
+    }
+    hwWidth &= 0xFFFE;
+    if (hwWidth < 2) hwWidth = 2;
+    if (height < 1) height = 1;
+
+    /* 64-align the x cursor so (x & 0x3F) == 0 -> page-local U == 0. */
+    s_port_tex_x = (s16)((s_port_tex_x + 63) & ~63);
+    if ((s32)s_port_tex_x + hwWidth > PORT_VRAM_W) {
+        s_port_tex_x = 0;
+        s_port_tex_y = s_port_tex_shelf;
+    }
+    if ((s32)s_port_tex_y + height > 256) {
+        /* Texture region (y<256) exhausted; wrap and reuse (best effort). */
+        s_port_tex_x = 0;
+        s_port_tex_y = 0;
+        s_port_tex_shelf = 0;
+    }
+    x = s_port_tex_x;
+    y = s_port_tex_y;
+    *(s16 *)((u8 *)pSlotOut + 0x0) = x;
+    *(s16 *)((u8 *)pSlotOut + 0x2) = y;
+    *(s16 *)((u8 *)pSlotOut + 0x4) = (s16)hwWidth;
+    *(s16 *)((u8 *)pSlotOut + 0x6) = height;
+    s_port_tex_x = (s16)(s_port_tex_x + hwWidth);
+    if ((s32)y + height > s_port_tex_shelf) {
+        s_port_tex_shelf = (s16)(y + height);
+    }
+    return 1;
+}
+
+/* faithful implementation retained for reference (unused) */
+__attribute__((unused))
+static u8 AllocateVRAMSlot_faithful(void *base, u16 *pSlotOut, u8 mode, s16 width, s16 height) {
     u8 *b = (u8 *)base;
     s32 hwWidth;
     s32 widthBlocks, heightBlocks;
@@ -367,14 +434,48 @@ u8 AllocateVRAMSlot(void *base, u16 *pSlotOut, u8 mode, s16 width, s16 height) {
  * param_2 = out address (receives the packed CLUT x/y); param_3 = 0/1 bit-depth.
  * ========================================================================== */
 s32 AllocateCLUTSlot(void *param_1, u32 param_2, u8 param_3) {
+    /* PC-native override: bump-allocate a CLUT row in the bottom half of VRAM
+     * (y >= 256), 16-aligned in x so GetClut packs (x,y) losslessly. 4-bit
+     * palettes take 16 entries, 8-bit take 256; both are 16-aligned widths. The
+     * palette upload (LoadClut/LoadImage) writes to the same (x,y), and the
+     * shader's clutBase decode recovers it exactly, so colours resolve. */
+    s16 x, y;
+    int width = (param_3 == 0) ? 16 : 256;
+    (void)param_1;
+
+    if ((s32)s_port_clut_x + width > PORT_VRAM_W) {
+        s_port_clut_x = 0;
+        s_port_clut_y = (s16)(s_port_clut_y + 1);
+    }
+    if (s_port_clut_y >= PORT_VRAM_H) {
+        s_port_clut_y = PORT_CLUT_Y0;    /* wrap (best effort) */
+        s_port_clut_x = 0;
+    }
+    x = s_port_clut_x;
+    y = s_port_clut_y;
+    s_port_clut_x = (s16)(s_port_clut_x + width);
+
+    *(s16 *)(uintptr_t)param_2       = x;
+    *(s16 *)((uintptr_t)param_2 + 2) = y;
+    return 1;
+}
+
+/* faithful implementation retained for reference (unused) */
+__attribute__((unused))
+static s32 AllocateCLUTSlot_faithful(void *param_1, u32 param_2, u8 param_3) {
     s16 *base16 = (s16 *)param_1;
     u32 uVar1, uVar4, uVar5;
     u32 *puVar2;
     s16 sVar3, sVar6, sVar7;
     s16 *psVar8;
     u8  *pbVar9;
-    s16 local_30;
-    u16 local_2e;
+    /* AllocateVRAMSlot writes an 8-byte {x@0, y@2, w@4, h@6} record through its
+     * out pointer. The export used two adjacent stack slots (local_30=x,
+     * local_2e=y); on PC separate C locals are not guaranteed adjacent, so a
+     * real 8-byte buffer is required or the y (CLUT row) reads back garbage. */
+    s16 slotRect[4];
+#define local_30 (slotRect[0])
+#define local_2e (slotRect[1])
 
     pbVar9 = (u8 *)(base16 + 0x5150);
     psVar8 = base16 + 0x5152;
@@ -421,7 +522,7 @@ s32 AllocateCLUTSlot(void *param_1, u32 param_2, u8 param_3) {
             if (param_3 == 1) {
                 sVar7 = 0x100;
             }
-            uVar5 = AllocateVRAMSlot(param_1, (u16 *)&local_30, 2, sVar7, 0x10);
+            uVar5 = AllocateVRAMSlot(param_1, (u16 *)slotRect, 2, sVar7, 0x10);
             if ((uVar5 & 0xFF) != 0) {
                 *pbVar9 = (u8)(param_3 | 2);
                 psVar8[-1] = 1;
@@ -453,3 +554,6 @@ done:
         sVar6 = sVar6 + 1;
     }
 }
+
+#undef local_30
+#undef local_2e

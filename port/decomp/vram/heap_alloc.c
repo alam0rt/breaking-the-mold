@@ -62,21 +62,11 @@ void InitHeapFreeList(void *base) {
     blk[99].next = 0xFFFF;
 }
 
-/* ClearHeapBlocks @ vram.c: fill every allocated block's memory with `fill`.
- * Walks the allocated-block list from headIndex via .next until 0xFFFF. */
-void ClearHeapBlocks(void *base, s32 fill) {
-    HeapBlock *blk = heap_blocks(base);
-    u16 idx = *(u16 *)((u8 *)base + HEAP_HDR_HEAD);
-
-    while (idx != 0xFFFF) {
-        s32 *p   = (s32 *)blk[idx].ptr;
-        s32 *end = (s32 *)((u8 *)p + blk[idx].size16 * 0x10);
-        while (p != end) {
-            *p++ = fill;
-        }
-        idx = blk[idx].next;
-    }
-}
+/* ClearHeapBlocks is provided as real matched-C in src/vram.c (globbed into the
+ * port build), so the port copy is intentionally omitted to avoid a
+ * multiple-definition link error. src/vram.c's version is behaviourally
+ * identical (same base+0xA648 alloc-list walk, same base+0xA320 block layout,
+ * memset32 per block). If you re-add anything here, do NOT redefine it. */
 
 /* AllocateFromHeap @ vram.c: first-fit allocate `align*size` bytes from the free
  * list. Each allocation reserves a 4-byte size header at ptr[0] (holding the

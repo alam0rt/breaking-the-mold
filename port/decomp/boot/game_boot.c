@@ -46,6 +46,24 @@ extern u16   D_800A60BE asm("D_800A60BE");                /* asset count mirror 
  * struct before the first use so the real init + all downstream reads work. */
 static u8 s_respawnPlayerState[0x400];
 
+/* Storage for the friendly-named player-state pointer from include/globals.h
+ * (g_pPlayerState, PSX .sdata @ 0x800A597C). The port never defined it, so
+ * code that relies on the header (e.g. CreateMenuEntities' HUD, reading
+ * g_pPlayerState->orb_count) would fail to link. Define it once here and seed
+ * it to the same PlayerState struct as the D_800A597C asm-alias users below --
+ * both names then observe identical player data. */
+PlayerState *g_pPlayerState;
+
+/* PC-port backing for the two controller InputState structs.
+ * On PSX, D_800A5964 (g_pInputStateA) and D_800A5968 (g_pInputStateB) are .sdata
+ * pointers to .bss InputState structs (0x14 bytes each). Weak-zero backing
+ * leaves them NULL, so the very first frame's UpdateInputState(g_pInputStateA,
+ * ...) dereferences NULL. Seed both pointers at zeroed static structs before the
+ * frame loop; on the title screen playback/record are off so the live-input path
+ * (buttons_held/buttons_pressed only) works with zeroed replay pointers. */
+static InputState s_inputStateA;
+static InputState s_inputStateB;
+
 /* PC-port seeding for the layer-render-slot / sprite-frame-cache table.
  * On PSX, D_800A595C is an .sdata POINTER whose init value is &D_8009AE58 -- a
  * zero-filled 0x1E0-byte .data table of 20 x 0x18-byte slots. It is used both as
@@ -110,6 +128,9 @@ void port_game_boot_init(void) {
     FntLoad(0x3C0, 0x100);
     SetDumpFnt(FntOpen(0x10, 0x20, 0x120, 0xC8, 0, 0x200));
     PLAYER_STATE_DATA = s_respawnPlayerState;   /* give D_800A597C a real target */
+    g_pPlayerState = (PlayerState *)s_respawnPlayerState; /* friendly-name alias */
+    g_pInputStateA = &s_inputStateA;            /* give D_800A5964 a real target */
+    g_pInputStateB = &s_inputStateB;            /* give D_800A5968 a real target */
     g_LayerRenderSlots = D_8009AE58;            /* give D_800A595C a real target */
     initPlayerState(PLAYER_STATE_DATA);
     InitGameState(g_GameStateBase, g_pInputStateA);
@@ -173,11 +194,17 @@ void port_game_boot_frame(void) {
     RenderEntities(gs);
     DrawSync(0);
 
-    /* postRenderCallbackContext dispatch: (**(ctx+0x1C))(gs + *(s16*)(ctx+0x18)) */
+    /* postRenderCallbackContext dispatch: (**(ctx+0x1C))(gs + *(s16*)(ctx+0x18)).
+     * On PSX gs->postRenderCallbackContext is always installed during level
+     * setup; the port has not yet converted that setter, so it can still be NULL
+     * here. Guard the dispatch (the callback is a render-finalize step, not
+     * required for the frame to composite) until the setter is ported. */
     {
-        void *postCtx = *(void **)((u8 *)gs + 0x0C);
-        void (*fn)(void *) = *(void (**)(void *))((u8 *)postCtx + 0x1C);
-        fn((u8 *)gs + *(s16 *)((u8 *)postCtx + 0x18));
+        void *postCtx = *(void **)((u8 *)gs + 0x18);   /* GameState.postRenderCallbackContext */
+        if (postCtx != NULL) {
+            void (*fn)(void *) = *(void (**)(void *))((u8 *)postCtx + 0x1C);
+            fn((u8 *)gs + *(s16 *)((u8 *)postCtx + 0x18));
+        }
     }
     DrawSync(0);
 

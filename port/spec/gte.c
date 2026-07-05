@@ -10,6 +10,7 @@
  * ========================================================================== */
 #include "psyq_pc.h"
 #include "port_runtime.h"
+#include <math.h>
 
 /* Current geometry matrices (mirrors the GTE's R and TR registers). */
 static MATRIX s_rot;
@@ -83,6 +84,44 @@ void RotTransPers(SVECTOR *v0, long *sxy, long *p, long *flag) {
     if (p) {
         *p = q >> 12;
     }
+    if (flag) {
+        *flag = 0;
+    }
+}
+
+/* RotMatrixZ(r, m) -- build a Z-axis rotation matrix into m. On PSX this
+ * right-multiplies the input matrix by Rz(r), but the only caller
+ * (RenderSpriteOrScaledQuad) always passes a freshly-set identity, so writing
+ * Rz(r) directly is equivalent. Angle r is in PSX units where 4096 (ONE) is a
+ * full turn; the 3x3 is 1.3.12 fixed point (4096 = 1.0). */
+void RotMatrixZ(long r, MATRIX *m) {
+    double rad;
+    short c, s;
+    if (!m) {
+        return;
+    }
+    rad = (double)(r & 0xFFF) * (2.0 * M_PI / 4096.0);
+    c = (short)(cos(rad) * 4096.0);
+    s = (short)(sin(rad) * 4096.0);
+    m->m[0][0] = c;  m->m[0][1] = (short)-s; m->m[0][2] = 0;
+    m->m[1][0] = s;  m->m[1][1] = c;         m->m[1][2] = 0;
+    m->m[2][0] = 0;  m->m[2][1] = 0;         m->m[2][2] = 0x1000;
+}
+
+/* RotTrans(v0, v1, flag) -- rotate v0 by the current R matrix and add the
+ * current translation (no perspective divide). v1 = s_rot * v0 + s_trans.
+ * Matches libgte's RotTrans; flag (overflow) is always 0 on this software path. */
+void RotTrans(SVECTOR *v0, VECTOR *v1, long *flag) {
+    long x, y, z;
+    if (!v0 || !v1) {
+        return;
+    }
+    x = (s_rot.m[0][0] * v0->vx + s_rot.m[0][1] * v0->vy + s_rot.m[0][2] * v0->vz) >> 12;
+    y = (s_rot.m[1][0] * v0->vx + s_rot.m[1][1] * v0->vy + s_rot.m[1][2] * v0->vz) >> 12;
+    z = (s_rot.m[2][0] * v0->vx + s_rot.m[2][1] * v0->vy + s_rot.m[2][2] * v0->vz) >> 12;
+    v1->vx = x + s_trans.t[0];
+    v1->vy = y + s_trans.t[1];
+    v1->vz = z + s_trans.t[2];
     if (flag) {
         *flag = 0;
     }
