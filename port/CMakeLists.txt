@@ -45,6 +45,7 @@ if(PYTHON3)
     execute_process(
         COMMAND ${PYTHON3} ${REPO_ROOT}/tools/gen_port_data.py
                 ${REPO_ROOT}/asm/data/gfx.rodata.s
+                ${REPO_ROOT}/asm/data/vehicle.rodata.s
                 --out ${CMAKE_CURRENT_SOURCE_DIR}/decomp/data
         WORKING_DIRECTORY ${REPO_ROOT}
         RESULT_VARIABLE _gendata_rc)
