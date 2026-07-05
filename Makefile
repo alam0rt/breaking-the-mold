@@ -33,6 +33,19 @@ ASM_DIR := asm
 SRC_DIR := src
 
 # -----------------------------------------------------------------------------
+# PC Port (native SDL2/OpenGL build) — see port/README.md
+# -----------------------------------------------------------------------------
+# Separate from the byte-matching MIPS build: reuses the shared game C under
+# src/ but compiles it 32-bit for the host with the PSY-Q surface replaced by
+# SDL2/OpenGL backends in port/spec/. Never touches the MIPS build.
+PORT_DIR       := port
+PORT_BUILD_DIR := $(PORT_DIR)/build-linux-debug
+PORT_BIN       := $(PORT_BUILD_DIR)/skullmonkeys
+# 32-bit host C compiler. Override with: make port PORT_CC=/path/to/multilib-gcc
+# Default resolution order: PORT_CC > port-cc on PATH > port-cc from the flake.
+PORT_CC        ?=
+
+# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # Toolchain Configuration
 # -----------------------------------------------------------------------------
@@ -196,7 +209,7 @@ LD_SCRIPT := $(PROJECT).ld
 # Targets
 # -----------------------------------------------------------------------------
 
-.PHONY: all clean extract config expected diff context check tools help lint lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force analyze analyze-baseline
+.PHONY: all clean extract config expected diff context check tools help lint lint-decomp lint-clarity check-lua lint-fix decompme progress setup-hooks ghidra-mcp ghidra-mcp-stop annotate-asm annotate-asm-force analyze analyze-baseline port port-run port-clean
 
 # Default target - re-extracts if config is newer than linker script or asm/ is missing
 all: $(SPLAT_CONFIG)
@@ -211,6 +224,40 @@ all: $(SPLAT_CONFIG)
 # Actual build target (called after ASM exists)
 .PHONY: build
 build: $(BUILD_DIR)/$(PROJECT).bin
+
+# -----------------------------------------------------------------------------
+# PC Port targets
+# -----------------------------------------------------------------------------
+.PHONY: port port-run port-clean
+# Configure + build the native PC port. Resolves a 32-bit-capable C compiler:
+#   1. $(PORT_CC) if set on the command line,
+#   2. port-cc on PATH (present inside 'nix develop'),
+#   3. port-cc from the flake devShell (via 'nix develop --command').
+port:
+	@command -v cmake >/dev/null 2>&1 || { echo "cmake not found — run 'nix develop' first"; exit 1; }
+	@CC="$(PORT_CC)"; \
+	 [ -n "$$CC" ] || CC="$$(command -v port-cc 2>/dev/null || true)"; \
+	 [ -n "$$CC" ] || CC="$$(nix develop --command sh -c 'command -v port-cc' 2>/dev/null | grep -E '/port-cc$$' | head -1 || true)"; \
+	 if [ -z "$$CC" ]; then \
+	   echo "No 32-bit port compiler found."; \
+	   echo "Run inside 'nix develop' (provides port-cc), or: make port PORT_CC=/path/to/gcc"; \
+	   exit 1; \
+	 fi; \
+	 echo ">> port compiler: $$CC"; \
+	 python3 tools/gen_port_stubs.py >/dev/null; \
+	 cmake -S $(PORT_DIR) -B $(PORT_BUILD_DIR) -G Ninja \
+	     -DCMAKE_C_COMPILER="$$CC" -DCMAKE_BUILD_TYPE=Debug >/dev/null && \
+	 cmake --build $(PORT_BUILD_DIR) -j
+	@echo "Port built: $(PORT_BIN)"
+
+# Build then run the port. FRAMES=N auto-exits after N frames (0 = run forever).
+port-run: port
+	PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN)
+
+# Remove the port build directory (keeps the checked-in generated sources).
+port-clean:
+	rm -rf $(PORT_BUILD_DIR) $(PORT_DIR)/build-probe
+
 
 # Show help
 help:
@@ -229,6 +276,11 @@ help:
 	@echo "  check            - Verify build matches original (quick)"
 	@echo "  verify           - Alias for 'check' (for compatibility)"
 	@echo "  clean            - Remove build artifacts"
+	@echo ""
+	@echo "PC Port (native SDL2/OpenGL):"
+	@echo "  port             - Configure + build the native PC port (port/build-linux-debug/)"
+	@echo "  port-run         - Build then run the port (FRAMES=N to auto-exit)"
+	@echo "  port-clean       - Remove the port build directory"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  lint             - Run all linters"
