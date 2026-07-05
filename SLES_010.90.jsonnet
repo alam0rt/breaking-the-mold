@@ -175,9 +175,9 @@ local bss(start, kind, vram) = {
         // =====================================================================
         c('73800', 'libs/libcd'),
         asm('79AE4', 'libs/libgpu'),
-        asm('80260', 'libs/libspu'),
+        c('80260', 'libs/libspu'),
         c('80F24', 'libs/libvoice'),
-        asm('80FD0', 'libs/libspu2'),
+        c('80FD0', 'libs/libspu2'),
 
         // =====================================================================
         // .data section: 0x80090FEC - 0x800A5953

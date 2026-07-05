@@ -8,8 +8,8 @@
     "ptr": 878,
     "sym": 2296,
     "unknown": 0,
-    "uncarved": 110,
-    "uncarved_pureasm": 86,
+    "uncarved": 107,
+    "uncarved_pureasm": 83,
     "uncarved_other": 24
   },
   "unknown": [],
@@ -805,30 +805,6 @@
       "name": "TestEvent",
       "tags": [
         "jal"
-      ]
-    },
-    {
-      "addr": 2148072032,
-      "name": "SpuSetCommonAttr",
-      "tags": [
-        "jal",
-        "prologue"
-      ]
-    },
-    {
-      "addr": 2148072948,
-      "name": "SpuRSetVoiceAttr",
-      "tags": [
-        "jal",
-        "prologue"
-      ]
-    },
-    {
-      "addr": 2148074688,
-      "name": "spu_note2pitch",
-      "tags": [
-        "jal",
-        "prologue"
       ]
     }
   ]

@@ -289,7 +289,7 @@
     - "libs/libgpu"
   -
     - 524896
-    - "asm"
+    - "c"
     - "libs/libspu"
   -
     - 528164
@@ -297,7 +297,7 @@
     - "libs/libvoice"
   -
     - 528336
-    - "asm"
+    - "c"
     - "libs/libspu2"
   -
     - 528364
