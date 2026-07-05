@@ -14,6 +14,8 @@
  *   0x1000 /\     0x2000 O       0x4000 X       0x8000 |_|
  *   0x0001 Select 0x0008 Start
  * ========================================================================== */
+#include <stdlib.h>
+
 #include "psyq_pc.h"
 #include "port_runtime.h"
 #include "port_hal.h"
@@ -145,9 +147,37 @@ int port_pad_quit_requested(void) {
  * The game reads pad 1/2 via PadRead(id) -> packed button mask. Bit 16..31 of
  * the return is pad 2; pad 1 in the low 16 bits. Only pad 1 (keyboard) is wired
  * for now; pad 2 reports "nothing pressed". */
+/* PORT_AUTOINPUT="frame:mask,frame:mask,..." (mask hex, frame decimal): hold
+ * each button mask for 4 frames starting at the given game frame. Headless
+ * test driver (e.g. "200:4000" presses X on frame 200 to confirm a menu item).
+ * PadRead is called twice per game frame (pads 1 and 2); only pad 1 injects. */
 u_long PadRead(int id) {
+    static long s_calls = 0;
+    unsigned inject = 0;
+    long frame;
+    const char *ai = getenv("PORT_AUTOINPUT");
+
+    if (id == 0 || s_calls == 0) {
+        /* count frames on the pad-1 read */
+    }
+    frame = s_calls / 2;
+    s_calls++;
+    if (ai && (s_calls & 1)) {   /* pad-1 read of this frame */
+        const char *p = ai;
+        while (*p) {
+            long f = strtol(p, (char **)&p, 10);
+            unsigned m = 0;
+            if (*p == ':') {
+                m = (unsigned)strtoul(p + 1, (char **)&p, 16);
+            }
+            if (frame >= f && frame < f + 4) {
+                inject |= m;
+            }
+            if (*p == ',') p++; else break;
+        }
+    }
     (void)id;
-    return (u_long)(s_buttons & 0xFFFF);
+    return (u_long)((s_buttons | inject) & 0xFFFF);
 }
 
 void PadInit(int mode)               { (void)mode; }

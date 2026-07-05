@@ -657,3 +657,15 @@ family batches (`c-migration-plan.md`).
   then menu input → START GAME → level 1 load path (CP-2.5/2.6). Note the black
   box + critter next to the selected row is CORRECT game behaviour (the critter
   eats the selected row's text), not a render bug.
+- **2026-07-05 (session 3 cont.) — START GAME accepted; level-1 load runs to the
+  player-avatar spawn.** Headless input injection added (`PORT_AUTOINPUT=
+  "frame:mask,..."` in pad_sdl.c, e.g. `200:4000` = press X at frame 200; also
+  `PORT_CAPTURE_EVERY` + `%`-pattern multi-frame capture in gpu_gl.c). Pressing
+  X on START GAME leaves the menu, runs ~200 frames of level-transition logic
+  (fade timers, sequence advance, level-1 asset load — loading screen/movies are
+  no-op stubs so the display stays on the title), and aborts cleanly at
+  **`FINN_ClearSubentityState`** (0x80075858, 0x64 bytes) — the first stub in the
+  level-1 player-avatar init. The `finn/` segment has ~20 asm functions; that
+  subsystem (plus whatever follows it in SpawnPlayerAndEntities' dispatch) is
+  the CP-2.5/2.6 work unit. Animations confirmed advancing (~every 4 frames)
+  via the multi-frame capture diff.
