@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "Game/blb_records.h"
 #include "Game/player_state.h"
+#include "Game/callback_slot.h"
 
 extern u8 *g_pBlbHeapBase;
 extern u8 g_EntityVtable_SimpleDestruct[];
