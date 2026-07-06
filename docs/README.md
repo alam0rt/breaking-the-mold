@@ -78,6 +78,7 @@ Ongoing research and unverified findings:
 |----------|-------------|
 | [KNOWLEDGE_GAPS.md](KNOWLEDGE_GAPS.md) | Knowledge gaps (canonical; absorbed the historical gap-analysis) |
 | [unconfirmed-findings.md](analysis/unconfirmed-findings.md) | Observations awaiting verification |
+| [port-decomp-findings.md](analysis/port-decomp-findings.md) | Struct maps / data tables / name corrections harvested from the `port/decomp/` functional-C reconstructions |
 | [struct-field-cleanup-2026-06-12.md](analysis/struct-field-cleanup-2026-06-12.md) | Ghidra-backed cleanup of placeholder struct field names |
 
 ### Project Status

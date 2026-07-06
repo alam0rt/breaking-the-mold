@@ -242,12 +242,22 @@ entity2[0x116] = g_pPlayerState[0x14];
 
 ### Pause Menu HUD (Lines 11209-11270)
 
-**Active Flags** (in HUD manager entity):
-- +0xa4: Overall HUD active
-- +0xa5: Checkpoint display active
-- +0xa6: 1970 icons display active
-- +0xa7: Green bullets display active
-- +0xa8: Phoenix hands display active
+**Active Flags** (in HUD manager entity) — CORRECTED: there are **ten** per-widget-group flags at `+0xa2..+0xab` (not five, and `+0xa4` is the *lives* counter, not "overall HUD active"). Full map from `UpdateHUDEntityVisibility` / the reveal event `0x1013` (`EntityCollision_HUDItemActivate`):
+
+| Flag | Widget group | PlayerState field |
+|------|--------------|-------------------|
+| +0xa2 | extra-life trio | — |
+| +0xa3 | orb counter | orb_count |
+| +0xa4 | **lives** counter | lives |
+| +0xa5 | swirly-Q | swirly_q_count |
+| +0xa6 | 1970-icon | icon_1970_count |
+| +0xa7 | hamster | hamster_count |
+| +0xa8 | phoenix-hands | phoenix_hands |
+| +0xa9 | phart-heads (4 sub-entities) | phart_heads |
+| +0xaa | universe-enemas | universe_enemas |
+| +0xab | super-willies | super_willies |
+
+See [port-decomp-findings.md](../analysis/port-decomp-findings.md) for the full lead/display sub-entity pointer runs.
 
 **Update Logic**:
 ```c

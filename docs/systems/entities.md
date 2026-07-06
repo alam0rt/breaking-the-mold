@@ -725,8 +725,8 @@ Vulnerability windows are controlled by:
 | 0x75 | u8 | flipY | Vertical flip |
 | 0x76 | u8 | textureDirty | Needs VRAM upload |
 | 0x77 | u8 | boundsValid | Screen bounds calculated |
-| 0x78 | ptr | moveCallbackY | Y movement callback |
-| 0x7C | ptr | moveCallbackX | X movement callback |
+| 0x78 | ptr | pFrameTable | Frame-metadata table base (0x24 bytes/frame). **Not a move callback** (corrected) — the world-coord transform FSM pairs are at `+0x24/+0x28` (X) and `+0x2C/+0x30` (Y); see `include/Game/entity.h` and [fsm-callback-patterns.md](fsm-callback-patterns.md). |
+| 0x7C | ptr | pPaletteData | Palette/CLUT data uploaded by `UploadEntityTextureIfDirty`. |
 
 ### Extended Entities
 
@@ -1084,8 +1084,8 @@ Fields beyond the 128-byte base are entity-type-specific:
 |--------|------|-------|-------------|
 | 0x80+ | ... | PlayerState | 30-byte PlayerState embedded |
 | 0xA0+ | ... | animation | Animation state machine |
-| 0xB4 | 4 | frame_x_scale | X scale (16.16 fixed-point) |
-| 0xB8 | 4 | frame_y_scale | Y scale (16.16 fixed-point) |
+| 0xB4 | 4 | frameMotionX | CORRECTED: per-frame X **motion** vector (16.16), computed `(frameDeltaX << 16) / frameRateDivisor` by `UpdateSpriteFrameData`. NOT a scale field (scale lives at 0x50-0x64). |
+| 0xB8 | 4 | frameMotionY | CORRECTED: per-frame Y **motion** vector (16.16), `(frameDeltaY << 16) / frameRateDivisor`. Matches `include/Game/entity.h`. |
 | 0xDA | 2 | current_frame | Current animation frame index |
 | 0xDE | 2 | target_frame | Target animation frame |
 | 0xE0 | 2 | pending_flags | Pending state change flags |

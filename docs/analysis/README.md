@@ -17,6 +17,7 @@ This directory contains comprehensive documentation for analyzing and decompilin
 | **QUICK_REFERENCE.md** | One-page cheat sheet | Need quick commands |
 | **ANALYSIS_WORKFLOW.md** | Complete step-by-step guide | First time or need details |
 | **ghidra_unknown_functions_report.md** | Full analysis report | Picking next target |
+| **port-decomp-findings.md** | Struct maps, data tables, and name corrections harvested from the `port/decomp/` functional-C reconstructions | Decompiling a still-`INCLUDE_ASM` function; need a struct offset map |
 
 > **Note**: The per-function decompilation workflow is driven by Makefile
 > targets, not standalone scripts. See `docs/decompilation-guide.md` and the

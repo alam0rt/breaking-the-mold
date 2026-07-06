@@ -279,7 +279,7 @@ happen through functions called by the main loop.
 | 0x3A | s16 | 2 | (camera_x_high) | | |
 | 0x3C | s16 | 2 | camera_y | Camera Y position (pixels) | UpdateCameraPositionSmooth |
 | 0x3E | s16 | 2 | (camera_y_high) | | |
-| 0x50 | ptr | 4 | input_state_ptr | g_pPlayer1Input pointer | InitGameState |
+| 0x50 | s32 | 4 | camera_velocity_y | Camera Y velocity (16.16). **CORRECTED** — this is not input_state_ptr; per `include/Game/game_state.h` the input-state pointer is at **0x140** (`InitGameState` writes `*(gs+0x140) = inputState`), see [gamestate-field-analysis.md](gamestate-field-analysis.md). |
 | 0x7C | ptr | 4 | callback_table_ptr | Entity type callback table (0x8009D5F8) | InitGameState |
 | 0x84 | struct | varies | level_data_context | LevelDataContext (0x8009DCC4) | Level loading functions |
 | 0x11C | u32 | 4 | player_scale | Player scale factor (0x8000-0x10000) | SpawnPlayerAndEntities |
@@ -553,8 +553,9 @@ void SpawnPlayerAndEntities(GameState* state, LevelDataContext* ctx,
         CreateMenuPlayerEntity(state, ctx, param3, param4);
     }
     else if (levelFlags & 0x2000) {
-        // Boss fight
-        CreateBossPlayerEntity(state, ctx, param3, param4);
+        // Results / ending screen (NOT a boss-player). Allocates 0x158 bytes and
+        // calls CreateResultsScreenEntity(e, input, gs[0x18E]/boss_player_type).
+        CreateResultsScreenEntity(state, ctx, param3, param4);
     }
     else if (levelFlags & 0x0100) {
         // RUNN (auto-run) level
@@ -589,7 +590,7 @@ Stored in the tile header (Asset 100), accessed via `GetLevelFlags` @ 0x8007b47c
 | RUNN | 0x0100 | Auto-run levels | `CreateRunnPlayerEntity` @ 0x80073934 |
 | MENU | 0x0200 | Menu/password | (menu handler) |
 | FINN | 0x0400 | Swimming levels | `CreateFinnPlayerEntity` @ 0x80074100 |
-| BOSS | 0x2000 | Boss fights | `CreateBossPlayerEntity` @ 0x80078200 |
+| BOSS | 0x2000 | Results/ending screen (not a boss-player entity) | `CreateResultsScreenEntity` @ 0x80078200 (symbol_addrs.txt; `CreateBossPlayerEntity` is a phantom name) |
 | (none) | 0x0000 | Normal platforming | `CreatePlayerEntity` @ 0x800596a4 |
 
 ### Flag Priority Order
@@ -962,7 +963,7 @@ void AttachCursorToButton(Entity* button) {
 | Runn | 0x110 (272 bytes) | CreateRunnPlayerEntity |
 | Glide | 0x11C (284 bytes) | CreateGlidePlayerEntity |
 | Soar | 0x128 (296 bytes) | CreateSoarPlayerEntity |
-| Boss | 0x158 (344 bytes) | CreateBossPlayerEntity |
+| Results/ending (flag 0x2000) | 0x158 (344 bytes) | CreateResultsScreenEntity |
 | Camera | 0x10C (268 bytes) | CreateCameraEntity |
 
 ### Player Tick Callback @ 0x8005b414
@@ -1176,7 +1177,7 @@ Used during level transitions.
 | 0x80070d68 | `CreateSoarPlayerEntity` | SOAR levels |
 | 0x80073934 | `CreateRunnPlayerEntity` | RUNN levels |
 | 0x80074100 | `CreateFinnPlayerEntity` | FINN levels |
-| 0x80078200 | `CreateBossPlayerEntity` | Boss fights |
+| 0x80078200 | `CreateResultsScreenEntity` | Results/ending screen (flag 0x2000); formerly mislabeled `CreateBossPlayerEntity` |
 
 ### Animation System
 

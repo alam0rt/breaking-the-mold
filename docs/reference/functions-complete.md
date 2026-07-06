@@ -141,7 +141,7 @@ This document consolidates all function discoveries from systematic C code analy
 | 0x8001ecc0 | InitLayerRenderContext_Standard | Init standard layer | 100% |
 | 0x8001f150 | InitLayerRenderContext_Medium | Init medium layer | 100% |
 | 0x8001f534 | InitLayerRenderContext_Small | Init small layer | 100% |
-| 0x80019650 | GetLayerProperty | Get layer field | 95% |
+| 0x80019650 | GetSpriteFrameDataByIndex | Sprite-frame lookup: index frame table by `frameIndex * 0x14`, return metadata ptr (0x24-byte record). Renamed from stale `GetLayerProperty` (no such symbol; `symbol_addrs.txt` owns this address as GetSpriteFrameDataByIndex). | 100% |
 | 0x800196d8 | **FreeAllLayerRenderSlotsWrapper** | Free layer slots wrapper | 100% |
 | 0x80019700 | **ClearAllLayerRenderSlots** | Initialize 20 layer slots | 100% |
 

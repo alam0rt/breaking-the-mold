@@ -3114,3 +3114,70 @@ applied; these are the judgment calls that remain. Grouped by file.
 | stale-name | \| 0x8009B508 \| 7 \| g_TempestPulsingMonkeySprites \| InitTempestPulsingMonkey @ 0x8003e0fc \| | symbol_addrs.txt maps 0x8003E0FC to InitSnoBloEnemy ('InitSnoBloEnemy = 0x8003E0FC'). The name 'InitTempestPulsingMonkey' does not appear anywhere in symbol_addrs.txt.… |
 | false-claim | ### Sprite Header (12 bytes)  ``` Offset  Size  Type    Description ------  ----  ----    ----------- 0x00    2     u… | Ground truth include/Game/sprite.h SpriteHeader is 24 bytes (Size: 0x18), with fields type/header_size/frames_end/padding/rle_size/sprite_id/frame_count/padding/format… |
 
+---
+
+## Port-decomp harvest (2026-07-06) — 🟡 CORRECTNESS
+
+The `port/decomp/` functional-C reconstructions (functions still `INCLUDE_ASM`
+in `src/`) surfaced a large batch of struct maps, data tables, and name
+corrections. The net-new material and the corroborated conflict fixes are
+consolidated in [port-decomp-findings.md](port-decomp-findings.md). The items
+below are the ones that remained **genuinely unsettled** after that pass and need
+a runtime/disassembly check before any authoritative doc (especially
+`docs/blb.hexpat`, the BLB source of truth) is changed.
+
+### Asset 302 tile-flags bit 2 (0x04): "skip" vs "animated" — CONFLICT 🔴
+
+Two port files disagree with each other about the meaning of bit `0x04` of the
+Asset-302 tile-flags byte, and the disagreement straddles the source-of-truth
+hexpat:
+
+- `port/decomp/blb/anim_tile_entities.c:8` (`InitAnimatedTileEntities`) selects the
+  level's **animated** tiles with `GetTileSizeFlags()[tile-1] & 4` — i.e. bit 2 set
+  = "this tile is animated / samples the shared animated-tile sheet."
+- `port/decomp/layer/tile_vram.c` (`LoadTileDataToVRAM`) treats bit 2 as **skip**
+  for the static VRAM upload, agreeing with the current docs.
+
+These are plausibly *reconcilable*: an animated tile would be **skipped from the
+static upload** precisely because it renders via the animated path — so bit 2
+could mean "animated (⇒ not statically uploaded)". But that is a hypothesis.
+Current docs assert only "skip" in three places:
+`docs/blb.hexpat:986` (TileFlags `skip:1`, source of truth),
+`docs/blb/asset-types.md` §302, `docs/systems/tiles-and-tilemaps.md`.
+
+**Action before editing the hexpat:** trace an animated-tile level in PCSX-Redux
+to confirm whether a bit-2 tile is (a) rendered via the animated sheet and (b)
+absent from the static upload. If both hold, relabel bit 2 "animated (implies not
+statically uploaded)" across all three docs; otherwise keep "skip" and document
+the animated-tile selector separately.
+
+### Asset 302 bit 1 (0x02): tile size vs pixel bit-depth — 🟡
+
+`port/decomp/layer/tile_vram.c` reads bit `0x02` as **CLUT pixel bit-depth**
+(`is4bit = ((flag&2)==0)`, driving upload width 8-vs-4 and `GetTPage` mode), and
+decides 16×16-vs-8×8 storage independently by tile *index* vs `tileHeader+0x10`.
+`docs/systems/tiles-and-tilemaps.md` §302 currently labels bit 1 as "tile size
+(0=16×16, 1=8×8)". Needs a runtime check on an 8×8-tile level. (upload height is
+always 16 rows per the port.)
+
+### Asset 501 byte +0x16 = runtime "spawned" flag, not padding — 🟢
+
+`port/decomp/blb/SpawnOnScreenEntities.c:41` uses `def+0x16` bit 0 as an
+"already spawned" latch (set at runtime). `docs/blb/asset-types.md` §501 labels
++0x16 "padding". The field may be zero on disk but is *used*, not inert — annotate
+rather than assert.
+
+### Other name-review items (see port-decomp-findings.md for sources)
+
+- `FindOrderingTableSlotById` is a **sprite-sheet cache lookup**, not a GPU
+  ordering-table op — likely misnomer.
+- `AddPreInitEntitiesToList` @ 0x800250C8 actually builds the **animated-palette
+  update list** — name misleading.
+- `g_PlayerCallbackTable+0x40` is Finn-shared `{arg,fn}` pairs with a zero tail,
+  not the "dense bounce-handler array" `fsm-callback-patterns.md` describes —
+  verify whether a separate adjacent symbol holds the bounce array.
+- Entity internal types 49/50/51 (ClayballOnPath vs Boss/BossPart), 79
+  (EnemySpawner vs Skullmonkey), 42-60 (SnoBlo vs SuperWillie) — clean-room name
+  divergences; port corroborates one internal doc against another but neither is
+  proven.
+
