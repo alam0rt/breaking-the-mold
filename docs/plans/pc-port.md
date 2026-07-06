@@ -736,6 +736,38 @@ family batches (`c-migration-plan.md`).
     PORT_STUBS_NONFATAL). Repro: `PORT_BOOT_LEVEL=1 PORT_STUBS_NONFATAL=1
     ./port/build-linux-debug/skullmonkeys`.
 
+- **2026-07-06 (session 5) — LEVEL-1 TILE SCRAMBLE FIXED: the level renders
+  coherent parallax layers.** The "scrambled re-stamp" was never a re-stamp/
+  ring-mapping bug — the tilemaps, tile table, VRAM pixels and CLUTs were all
+  verified byte-perfect against the BLB (offline python cross-check of the
+  dumped layer inputs vs extracted PHRO/stage0 assets; a python re-render of
+  layer 6 from the same data was pixel-coherent). Two GPU HAL bugs caused it:
+  1. **`SetDrawTPage` clobbered the chain**: it wrote `p->tag = 0`, but
+     `RenderTilemapSprites16x16` calls it AFTER CatPrim-chaining the DR packet,
+     so every occupied tile severed the SPRT_16 chain (the title-screen
+     builders set the code before chaining, which is why CP-2.4 looked fine).
+     Same latent hazard removed from `SetDrawOffset`. Rule: packet-builder
+     helpers must never touch the tag word on PC.
+  2. **`DR_TPAGE` was 4 bytes in psyq_pc.h** (`{u_int tag;}`); the real packet
+     is tag+code (8 bytes) and every pool allocates stride 8. In
+     `InitTileLayerPrimitives` the `pt++` walk advanced half a packet, so DR
+     code words overlapped the next packet's tag: the OT walker saw garbage
+     code bytes, never executed the DR_TPAGEs, and every tile drew with a
+     stale `s_cur_tpage` → per-tile wrong art on all row-chain layers.
+  - Debug additions: `PORT_LAYER_DUMP=dir` (tilemap_scroll.c) dumps each
+    wrap-layer's init inputs (params + tilemap/tiletable/colors bins) for
+    offline diffing; the OT logger now hexdumps unhandled prims (that dump —
+    consecutive stride-0x10 sprite pointers where a code word should be — is
+    what cracked the struct-size bug).
+  - Level-1 world identified: **PHRO stage0** (dumped layer tilemaps match the
+    extracted `200_tilemap_container.bin` slices exactly; dims 454x42 etc.).
+  - Verified: 260-frame boot renders stable, coherent spire/rock parallax
+    layers, no scramble, no stub hits (the session-4 falling-physics files
+    closed the per-frame stub surface — `PORT_STUBS_NONFATAL` run is clean).
+  - _next:_ PCSX-Redux side-by-side for exact framing/palette (scene is dark —
+    tint tables give 0x40s; confirm against emulator), player sprite
+    visibility at spawn, camera/scroll motion, then CP-2.6 playability pass.
+
 - **2026-07-05 (session 3 cont.) — START GAME accepted; level-1 load runs to the
   player-avatar spawn.** Headless input injection added (`PORT_AUTOINPUT=
   "frame:mask,..."` in pad_sdl.c, e.g. `200:4000` = press X at frame 200; also

@@ -462,7 +462,9 @@ static void ot_log_prim(u_char *p, u_char code) {
         } else if (code == GP_DR_OFFSET) {
             port_log("ot: code=%02x DR_OFFSET ofs=(%d,%d)", code, ((short *)p)[2], ((short *)p)[3]);
         } else {
-            port_log("ot: code=%02x (unhandled)", code);
+            port_log("ot: code=%02x (unhandled) @%p bytes=%02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x",
+                     code, (void *)p, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
+                     p[8], p[9], p[10], p[11]);
         }
         break;
     }
@@ -659,7 +661,11 @@ void SetShadeTex(void *p, int tge) {
 DR_TPAGE *SetDrawTPage(DR_TPAGE *p, int dfe, int dtd, int tpage) {
     (void)dfe; (void)dtd;
     if (p) {
-        p->tag = 0;
+        /* Do NOT touch p->tag: the PSY-Q macro only sets the tag's len byte,
+         * never the next-pointer. RenderTilemapSprites16x16 calls this AFTER
+         * CatPrim-chaining the packet -- zeroing the tag here severed the
+         * SPRT_16 chain at every occupied tile (the level-1 scrambled-tiles
+         * bug: stale s_cur_tpage for nearly every tile). */
         ((u_char *)p)[7] = GP_DR_TPAGE;
         ((u_short *)p)[2] = (u_short)tpage;
     }
@@ -672,7 +678,8 @@ DR_TPAGE *SetDrawTPage(DR_TPAGE *p, int dfe, int dtd, int tpage) {
  * after the tag word (offset 4/6) to match the GP_DR_OFFSET decoder. */
 void SetDrawOffset(void *p, u_short *ofs) {
     if (p) {
-        ((u_int *)p)[0] = 0;                 /* tag / next-pointer */
+        /* Leave the tag/next-pointer alone (same rule as SetDrawTPage): the
+         * packet may already be CatPrim-chained; AddPrim (re)links it. */
         ((u_char *)p)[7] = GP_DR_OFFSET;
         if (ofs) {
             ((short *)p)[2] = (short)ofs[0];

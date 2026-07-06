@@ -97,8 +97,13 @@ typedef struct { TAG_FIELDS; short x0, y0; u_char u0, v0; u_short clut; } SPRT_8
 typedef struct { TAG_FIELDS; short x0, y0; u_char u0, v0; u_short clut; } SPRT_16;
 typedef struct { TAG_FIELDS; short x0, y0, x1, y1; } LINE_F2;
 typedef struct { TAG_FIELDS; short x0, y0, x1, y1, x2, y2, x3, y3; } LINE_F4;
-typedef struct { u_int tag; } DR_TPAGE;
-typedef struct { u_int tag; } DR_MODE;
+/* DR packets are tag + ONE code word (8 bytes). The game's prim pools allocate
+ * them at stride 8 and step DR_TPAGE* pointers (InitTileLayerPrimitives pt++),
+ * so the struct size is load-bearing: the old 4-byte definition made pt++
+ * advance half a packet, overlapping every other DR_TPAGE and scrambling every
+ * tile layer's texture pages (level-1 first-light bug). */
+typedef struct { u_int tag; u_int code[1]; } DR_TPAGE;
+typedef struct { u_int tag; u_int code[1]; } DR_MODE;
 
 /* -----------------------------------------------------------------------------
  * LIBCD: disc position / file entry

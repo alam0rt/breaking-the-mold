@@ -37,6 +37,8 @@
 #include "globals.h"
 #include "port_hal.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 extern u8  *AllocateFromHeap(u8 *heap, s32 align, s32 size, s32 flags);
 extern void *CatPrim(void *p0, void *p1);
@@ -79,6 +81,37 @@ void *InitTilemapLayerRendering(void *storage, void *colorTable, s16 tileSizeFla
     *(u16 *)(c + 0x7A) = (u16)(pos1 >> 16);
     *(u16 *)(c + 0x7C) = wrapX;
     *(u16 *)(c + 0x7E) = wrapY;
+
+    /* TEMP DEBUG: PORT_LAYER_DUMP=dir dumps this layer's inputs for offline
+     * comparison against the extracted BLB assets. */
+    {
+        const char *dd = getenv("PORT_LAYER_DUMP");
+        if (dd) {
+            static int n = 0;
+            char pb[512];
+            FILE *f;
+            s16 w = (s16)(pos1 & 0xFFFF), h = (s16)(pos1 >> 16);
+            snprintf(pb, sizeof pb, "%s/layerW_%02d.txt", dd, n);
+            f = fopen(pb, "w");
+            if (f) {
+                fprintf(f, "tileSizeFlag=%d origin=(%d,%d) dims=(%d,%d) wrap=(%d,%d) attr=%d\n",
+                        tileSizeFlag, (s16)(pos0 & 0xFFFF), (s16)(pos0 >> 16), w, h,
+                        (s16)wrapX, (s16)wrapY, attrFlag);
+                fclose(f);
+            }
+            snprintf(pb, sizeof pb, "%s/layerW_%02d_tilemap.bin", dd, n);
+            f = fopen(pb, "wb");
+            if (f && w > 0 && h > 0) { fwrite(tilemap, 2, (size_t)w * h, f); }
+            if (f) fclose(f);
+            snprintf(pb, sizeof pb, "%s/layerW_%02d_tiletable.bin", dd, n);
+            f = fopen(pb, "wb");
+            if (f) { fwrite((void *)tileTable, 8, 2048, f); fclose(f); }
+            snprintf(pb, sizeof pb, "%s/layerW_%02d_colors.bin", dd, n);
+            f = fopen(pb, "wb");
+            if (f) { fwrite(colorTable, 3, 16, f); fclose(f); }
+            n++;
+        }
+    }
 
     hTiles = screen_tile_rows() & 0xFF;
     primCount = hTiles * 0x15;
