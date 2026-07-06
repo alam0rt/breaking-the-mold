@@ -52,25 +52,63 @@ def load_symbol_addrs() -> dict[int, str]:
     return addr2sym
 
 
+ASCIZ_RE = re.compile(r"\.asciz\s+(\".*\")\s*$")
+JTBL_WORD_RE = re.compile(r"\.word\s+\.L[0-9A-Fa-f]+\s*$")
+# splat names a NULL pointer slot `.L00000000_main` (address-0 label).
+NULL_WORD_RE = re.compile(r"\.word\s+\.L0+_[A-Za-z_0-9]+\s*$")
+
+
 def parse_file(path: str):
-    """Yield (label, [operands]) for each dlabel..enddlabel block."""
+    """Yield (label, kind, payload) for each dlabel..enddlabel block.
+
+    kind is one of:
+      'words'  -- payload is a list of .word operands (pointer table)
+      'asciz'  -- payload is the C string literal (path strings etc.)
+      'jtbl'   -- payload is the entry count; MIPS switch jump table whose
+                  .L targets are code addresses inside one MIPS function.
+                  Meaningless on PC (the owning function is either converted
+                  C or a weak stub), but the SYMBOL must still exist strongly
+                  or the weak 0x400-byte _autoglobals fallback covers it --
+                  emitted as a zeroed placeholder of the original size.
+    """
     blocks = []
     cur_label = None
     cur_words: list[str] = []
+    cur_asciz = None
+    cur_jtbl = 0
     with open(path, encoding="utf-8") as fh:
         for line in fh:
             m = DLABEL_RE.match(line)
             if m:
                 cur_label = m.group(1)
                 cur_words = []
+                cur_asciz = None
+                cur_jtbl = 0
                 continue
             m = ENDLABEL_RE.match(line)
             if m:
                 assert cur_label == m.group(1), f"label mismatch in {path}"
-                blocks.append((cur_label, cur_words))
+                if cur_asciz is not None:
+                    blocks.append((cur_label, "asciz", cur_asciz))
+                elif cur_jtbl:
+                    blocks.append((cur_label, "jtbl", cur_jtbl))
+                else:
+                    blocks.append((cur_label, "words", cur_words))
                 cur_label = None
                 continue
             if cur_label is not None:
+                if line.strip().startswith(".align"):
+                    continue
+                if NULL_WORD_RE.search(line):
+                    cur_words.append("0x0")
+                    continue
+                if JTBL_WORD_RE.search(line):
+                    cur_jtbl += 1
+                    continue
+                a = ASCIZ_RE.search(line)
+                if a:
+                    cur_asciz = a.group(1)
+                    continue
                 w = WORD_RE.search(line)
                 if w:
                     cur_words.append(w.group(1))
@@ -100,7 +138,17 @@ def main() -> int:
         unresolved: dict[str, int] = {}  # stub name -> address
         body_lines: list[str] = []
 
-        for label, words in blocks:
+        for label, kind, words in blocks:
+            if kind == "asciz":
+                body_lines.append(f"char {label}[] = {words};\n")
+                continue
+            if kind == "jtbl":
+                body_lines.append(
+                    f"/* MIPS switch jump table ({words} entries) -- code labels are\n"
+                    f" * meaningless on PC; zeroed placeholder keeps the symbol strong. */\n"
+                    f"void *{label}[{words}];\n"
+                )
+                continue
             entries = []
             for w in words:
                 if re.fullmatch(r"0x0+", w):
@@ -156,7 +204,8 @@ def main() -> int:
             out.write("\n")
             out.write("\n".join(body_lines))
 
-        n_ptr = sum(1 for _l, w in blocks for x in w if not re.fullmatch(r"0x0+", x))
+        n_ptr = sum(1 for _l, k, w in blocks if k == "words"
+                    for x in w if not re.fullmatch(r"0x0+", x))
         print(f"{out_path}: {len(blocks)} tables, {len(referenced)} symbols, "
               f"{len(unresolved)} unresolved, {n_ptr} pointer slots")
     return 0
