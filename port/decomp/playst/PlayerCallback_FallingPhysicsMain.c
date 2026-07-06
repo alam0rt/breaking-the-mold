@@ -420,6 +420,26 @@ block_54:
     }
     e->sprite.base.worldY = (s16) (var_s1 >> 0x10);
     e->sprite.base.velocityY = var_s1;
+    /* PORT_FLOOR=<y> debug aid: clamp the player to a floor at world Y <y>
+     * (pixels) instead of falling out of the map; PORT_FLOOR=1 floors at the
+     * bottom of the current camera view. */
+    {
+        static s32 s_floor = -2;   /* -2 = env unread, -1 = disabled */
+        if (s_floor == -2) {
+            const char *v = getenv("PORT_FLOOR");
+            s_floor = v ? atoi(v) : -1;
+        }
+        if (s_floor >= 0) {
+            s32 fl = (s_floor <= 1) ? (s32)g_pGameState->camera_y + 232 : s_floor;
+            if (e->sprite.base.worldY > fl) {
+                e->sprite.base.worldY = (s16)fl;
+                e->velocityY_fixed = 0;
+                var_s1 = fl << 0x10;
+                e->sprite.base.velocityY = (s16)var_s1;
+                e->groundedFlag = 1;
+            }
+        }
+    }
     if (e->velocityY_fixed < 0) {
         temp_v0_11 = EntityApplyMovementCallbacks(e, e->sprite.base.worldX, (s16) ((u16) e->sprite.base.worldY - 0x40));
         sp24 = temp_v0_11;
