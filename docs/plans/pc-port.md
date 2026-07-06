@@ -736,6 +736,50 @@ family batches (`c-migration-plan.md`).
     PORT_STUBS_NONFATAL). Repro: `PORT_BOOT_LEVEL=1 PORT_STUBS_NONFATAL=1
     ./port/build-linux-debug/skullmonkeys`.
 
+- **2026-07-06 (session 6) — LEVEL-1 ENTITY POPULATION SPAWNS AND RENDERS
+  (commit d78cc98): 800-frame run, exit 0, every PHRO-stage0 spawn-table
+  entity type constructs — clayballs/ammo/swirlys visible around Klaymen in
+  the frame captures.** ~24 functions converted (decor shell, pickup inits,
+  collectible/platform inits, engine plumbing — see the commit message for
+  the full list). Three crash root-causes worth remembering:
+  1. **EntityTickLoop dispatches through the collision VTABLE**
+     (`vtable+0x10/0x14`), so a weak-zero vtable = jump to NULL the moment
+     a decor entity registers. `gen_port_data.py` now transcribes
+     `hud.rodata.s` + `clayball.rodata.s` (new: `.asciz` blocks, MIPS jump
+     tables as zeroed placeholders, and splat's `.L00000000_main`
+     null-pointer-slot idiom — the latter was silently DROPPING zero words,
+     which had truncated `g_PlayerCallbackTable` to 6 of 16 words; the
+     hand-written player_vtable.c is deleted, superseded by the generator).
+  2. **Pointer-returning init weak stubs return NULL** into
+     AddEntityToSortedRenderList/AddToZOrderList. Fixed by mapping the
+     level's real needs: 501-record `(category, raw-id)` pairs →
+     RemapEntityTypesForLevel tables → runtime types {1,2,7,9,0x16,0x18,
+     0x2D,0x34,0x46,0x55,0x5F,0x6A-0x6C} → their 9 inner inits, all
+     converted (port/decomp/enemies/collectible_inits.c,
+     pickups/pickup_inits.c, bosses/InitGenericSpriteEntity.c).
+  3. **Sprite-def lists (D_8009B214 …) are hash arrays, not pointers** —
+     the ≥0x80000000 pointer heuristic would corrupt them; hand-transcribed
+     as strong data in port/decomp/data/sprite_def_lists.c.
+  - Ctor arity trap: the export drops InitEntityWithSprite's tail args —
+    the .s shows `(entity, defList, 0x3CA, spawn->x, spawn->y - 1)` for
+    collectibles, `(…, 0x3DE, x, y)` for decor. Check asm call sites.
+  - `port/decomp/decor/fsm_event.h`: shared event-slot dispatch
+    (marker@+8/+A, fn@+C — same offsets in Entity and GameState).
+  - Headless verify recipe (desktop runs hang on Wayland occlusion — vsync
+    swap never returns when the window is hidden): `nix shell nixpkgs#xvfb-run
+    --command xvfb-run -a -s "-screen 0 1024x768x24" env LIBGL_ALWAYS_SOFTWARE=1
+    SKULLMONKEYS_BLB=disks/blb/GAME.BLB PORT_BOOT_LEVEL=1
+    PORT_STUBS_NONFATAL=1 PORT_MAX_FRAMES=800 PORT_CAPTURE=... skullmonkeys`.
+    Note SDL_VIDEODRIVER=dummy has no GL → host_sdl_init fails → the game
+    NEVER RUNS (a "no stub hits" result that way is meaningless).
+  - _next:_ the per-frame behavior layer, in rough order of visible impact:
+    GenericSpriteEntityTickCallback + EntityTick_InterpolateTimedPath
+    (platforms move), PlayerState_DeathStart + RemoveEntityFromAllLists
+    (death/respawn; the player currently vanishes after falling),
+    CollectibleTickCallback/CollectibleOrbTickCallback/AddSwirlys (pickup
+    collection), EntityCheckTriggerZone, sound emitter ticks. Then the
+    PCSX-Redux side-by-side (framing/palette) and input smoke test.
+
 - **2026-07-06 (session 5 cont.) — PLAYER FALLS ON SCREEN, camera frames him.**
   The "player invisible at y=-65 / camera never follows" symptom was NOT a
   camera bug: UpdateCameraPositionSmooth, its easing tables (real data in
