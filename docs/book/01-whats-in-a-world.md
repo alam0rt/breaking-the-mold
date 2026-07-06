@@ -14,7 +14,7 @@ tags: [book, world, tiles, tilemaps, entities, rendering]
 > machine; trust the byte offsets more than the labels attached to them.
 
 Load a level in Skullmonkeys and the PlayStation shows you a world: a swamp, a
-shrine, a factory floor scrolling past at three different speeds, with a clay man
+shrine, a factory floor scrolling past at three different speeds, with Klaymen
 bouncing through it and monkeys lobbing fireballs from the ledges. It *looks* like
 a place. It is not. There is no "swamp" anywhere in memory — no bitmap of the
 level, no scene graph, nothing you could point at and call the world.
@@ -268,45 +268,94 @@ entries the four high bits of each cell select. Entry 0 is white (no tint).
 
 ### Turning a layer into pixels
 
-At load, `InitLayersAndTileState` (`0x80024778`) walks every layer, skips the ones
-flagged dead (`layer_type == 3` or `skip_render != 0`), and builds a render context
-sized to the grid's dimensions, slotting it into a priority-sorted render list.
+Here is where the naive picture — "walk the whole grid every frame and emit a
+sprite per cell" — turns out to be wrong, and the real design is far cannier.
 
-Per frame, each surviving layer draws itself by `RenderTilemapSprites16x16`
-(`0x8001713c`) — the loop that does the actual work of the scenery:
+A level is big: a layer's grid can be hundreds of tiles across. But the *screen*
+is not. At any instant you can see only about **21 columns by 15 rows** of tiles.
+So `InitTilemapLayerRendering` (`0x8001601c`) allocates exactly that much and no
+more: a fixed **screen-sized grid** of `0x15` (21) × (screen-height-in-tiles + 1)
+primitive cells — and, because the PlayStation renders one frame while building the
+next, *two* copies of it (double-buffered). Each cell owns two little packets: a
+16×16 sprite (`SPRT_16`) and a "which texture page" command (`DR_TPAGE`).
 
-```c
-for (y = 0; y < height; y++)
-  for (x = 0; x < width; x++) {
-      cell      = tilemap[y * width + x];
-      tile_idx  =  cell & 0x0FFF;
-      tint_idx  = (cell >> 12) & 0xF;
-      if (tile_idx == 0) continue;            // empty cell — nothing here
+The clever part is that these packets are **wired together once, at load time,
+into a single chain** and then left alone:
 
-      SetSprt16(sprite);                      // a 16x16 GPU sprite
-      sprite->x = layer_x + x * 16;           // grid step is always 16 px
-      sprite->y = layer_y + y * 16;
-      rgb = &color_tints[tint_idx * 3];
-      SetRGB0(sprite, rgb[0], rgb[1], rgb[2]); // apply the cell's tint
-      // texture coords -> this tile's rect in the VRAM atlas
-      AddPrim(ot[priority], sprite);          // file under the layer's depth
-  }
+```
+dr[0] → spr[0] → dr[1] → spr[1] → dr[2] → spr[2] → … → spr[n]
 ```
 
-Notice the cell step is **always 16 pixels** and the primitive is **always a
-`SetSprt16`**. That is how the two tile sizes reconcile: a 16×16 tile fills its
-cell pixel-for-pixel, while an 8×8 tile is half-resolution art *stretched* to fill
-the same 16×16 cell — chunkier, cheaper to store, and used where the extra
-sharpness wouldn't be missed (distant parallax, large flat fills).
+`CatPrim` is the little "point this packet's next-link at that one" primitive that
+threads them. After init, the whole screen-grid is one long pre-linked list. The
+per-frame job is *not* to rebuild it — it's to **edit it in place.**
 
-Every sprite the loop emits is added to the **ordering table** (OT) at the slot
-named by the layer's priority. The OT is the PlayStation's z-sort: a long array of
-linked-list heads, drawn from the back slot forward by one `DrawOTag`. Drop every
-layer's sprites — and, as we'll see next, every entity's sprite — into the OT by
-priority, and the single `DrawOTag` at the end of the frame paints the entire
-stack in the correct order. *That* is "drawing a world": not compositing pictures,
-but pouring thousands of little tinted 16×16 sprites into one sorted table and
-flushing it once.
+That editing is `RenderTilemapSprites16x16` (`0x8001713c`). Given a rectangular
+window of cells to refresh, it visits each slot and does one of two things:
+
+```c
+cell = in_bounds ? tilemap[(tx - originX) + (ty - originY) * mapW] : 0;
+
+if ((cell & 0x0FFF) == 0) {                 // empty (1-based; 0 = nothing here)
+    CatPrim(dr[i], dr[i+1]);                // UNLINK this cell's sprite:
+                                            //   dr hops straight to the next dr,
+                                            //   the GPU never sees spr[i]
+} else {                                    // occupied
+    CatPrim(dr[i], spr[i]);                 // RELINK the sprite back into the chain
+    tile = tileTable[cell & 0x0FFF];        // -> its rect in the VRAM atlas
+    tint = colorTable[cell >> 12];          // the cell's 4-bit tint
+    SetSprt16(spr[i]);                      // 16x16 sprite; screen pos = sx, sy
+    spr[i].u0/v0/clut = tile.uv, tile.clut; // texture coords into the atlas
+    spr[i].rgb        = tint;               // per-cell shading
+    SetDrawTPage(dr[i], tile.tpage);        // which VRAM page to sample
+}
+```
+
+So an **empty** cell isn't drawn-and-skipped — its sprite is *spliced out of the
+linked list entirely*, and the chain jumps over it. (On real hardware the empty
+path also zeroes the packet's length byte, so even the DMA skips its body.) An
+**occupied** cell splices its sprite back in and stamps it with the right texture,
+tint, and screen position. A background that's mostly sky becomes a chain that's
+mostly `DR_TPAGE` hops with a few sprites threaded between them.
+
+> **A packet is tag + code — eight bytes, not four.** Every one of these `SPRT_16`
+> and `DR_TPAGE` packets begins with a **tag word** (the "next" link that `CatPrim`
+> writes) followed by its payload. The two are load-bearing and separate: the tag
+> is the chain, the payload is the draw. Confuse the two — write a `DR_TPAGE` as if
+> it were four bytes, or let a "set the texture page" helper clobber the tag it was
+> just linked into — and you sever the chain at that cell. The scenery still *looks*
+> present in memory but draws with a stale texture page or vanishes. (This is
+> exactly the failure the port hit on level 1: coherent tile data, scrambled
+> output, because the chain — not the data — was broken.)
+
+**Why go to all this trouble?** Because now scrolling is nearly free. Move the
+camera one tile and 20 of your 21 columns are *still valid* — they held last frame
+and hold this frame. Only the single new column sliding in at the edge needs
+re-stamping, so the per-frame scroll callbacks (`RenderTilemapHorizontalScroll` /
+`…VerticalScroll`) re-run `RenderTilemapSprites16x16` on just that **edge strip**,
+and only when the integer tile position actually changed. The grid *wraps*: column
+21 reuses the packets of column 0, so a layer scrolls forever through a 21-wide
+ring of cells. Sub-tile smoothness — the 0–15px between whole-tile steps — comes
+not from re-stamping at all but from a single **`DR_OFFSET`** packet bracketing the
+chain (`SetupTilemapPrimitives`), which shifts the entire layer by the leftover
+pixels in one stroke. Whole tiles wrap; fractional pixels slide; almost nothing is
+rebuilt.
+
+Two details survive from the naive version and still matter. The cell step is
+**always 16 pixels** and the primitive is **always a `SetSprt16`** — that's how the
+two tile sizes reconcile: a 16×16 tile fills its cell pixel-for-pixel, while an 8×8
+tile is half-resolution art *stretched* to fill the same 16×16 cell — chunkier,
+cheaper to store, used where the sharpness wouldn't be missed (distant parallax,
+large flat fills).
+
+Finally, that pre-linked chain gets handed to the **ordering table** (OT) — the
+PlayStation's z-sort: a long array of linked-list heads, drawn back-to-front by one
+`DrawOTag`. `SetupTilemapPrimitives` drops the layer's whole chain in at the slot
+named by the layer's priority. Do that for every layer — and, as we'll see next,
+every entity's sprite — and the single `DrawOTag` at frame's end paints the entire
+stack in order. *That* is "drawing a world": not compositing pictures, and not even
+rebuilding the scenery each frame, but keeping a small ring of pre-wired sprites,
+nudging its edges as you move, and flushing one sorted table once.
 
 ---
 
@@ -409,7 +458,7 @@ entity's vtable. Each frame it:
 
 That last step is the payoff of the shared priority axis: the entity's sprite goes
 into the *same* ordering table as the tilemap layers, at *its* depth, and is sorted
-in among the scenery automatically. The clay man at priority 10000 lands in front
+in among the scenery automatically. Klaymen at priority 10000 lands in front
 of the foreground layer at 1350 without anyone comparing the two — the OT does it.
 
 ### The dispatch, and the once-per-frame walk
@@ -471,6 +520,9 @@ never a world there at all — only the recipe, and the box of parts.
 | Per-tile flags (size/skip/blend) | Asset 302 | `LoadTileDataToVRAM` |
 | Palettes (256-colour CLUTs) | Asset 400 | `LoadTileDataToVRAM` |
 | Tilemap grids (cells) | Asset 200 | `RenderTilemapSprites16x16` `0x8001713c` |
+| Screen-grid alloc + pre-chain | — | `InitTilemapLayerRendering` `0x8001601c` |
+| Per-frame edge re-stamp | — | `RenderTilemapHorizontalScroll` `0x80016838` / `…VerticalScroll` `0x80016ac8` |
+| Submit layer chain + scroll offset | — | `SetupTilemapPrimitives` `0x800178fc` |
 | Layer records (92 bytes) | Asset 201 | `InitLayersAndTileState` `0x80024778` |
 | Entity placements (24 bytes) | Asset 501 | per-type init dispatch |
 | Sprite art (RLE + palette) | Asset 600 | `LookupSpriteById` `0x8007bb10` |

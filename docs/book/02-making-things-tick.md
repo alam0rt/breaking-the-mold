@@ -15,7 +15,7 @@ In the last chapter we took a world apart and found it wasn't a place at all —
 just a recipe and a box of parts, reassembled into a picture sixty-ish times a
 second. But a picture that only ever *redraws* is a screensaver. What makes
 Skullmonkeys a game is that between one picture and the next, **things change**:
-the clay man drifts a pixel left, a monkey decides to throw a fireball, a timer
+Klaymen drifts a pixel left, a monkey decides to throw a fireball, a timer
 ticks toward zero, a pickup notices it's been touched and vanishes.
 
 This chapter is about that gap between two frames — the **tick**. A tick is one
@@ -355,7 +355,7 @@ foregone conclusion.
 The second is **uniformity**. Player, enemy, pickup, particle, boss, menu cursor,
 even the camera — to `EntityTickLoop` they are identical: a node on a list with a
 function pointer to call. There is no privileged "player update" path and no
-special-cased enemy manager. The clay man is the same kind of object as the sparkle
+special-cased enemy manager. Klaymen is the same kind of object as the sparkle
 he leaves behind; he merely has more interesting functions in his slots. That
 sameness is why the engine is so small for the variety it produces — write one
 scheduler, one dispatcher, one state-swapper, and then express *everything*, from a
@@ -397,3 +397,4 @@ and the monkeys go right back to rolling their dice.
 - [Enemy AI System Overview](../systems/enemy-ai-overview.md)
 - [Entity Events](../../include/Game/entity_events.h)
 - Previous chapter: [What's in a World?](01-whats-in-a-world.md)
+- Next chapter: [Making Klaymen Move](04-making-klaymen-move.md)
