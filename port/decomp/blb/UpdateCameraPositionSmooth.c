@@ -25,6 +25,8 @@
 #include "globals.h"
 #include "Game/game_state.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Camera easing / screen-shake lookup tables in PSX .sbss. Declared as weak-
  * backed absolute-address aliases; the port stub generator (gen_port_stubs.py)
@@ -79,6 +81,25 @@ void UpdateCameraPositionSmooth(GameState *gameState)
     s16  sVar6, sVar8, sVar9;
     s32  iVar10, iVar11, iVar12, iVar13, iVar18;
     u32  uVar15, uVar16, uVar17, uVar20;
+
+    /* PORT_CAM_DEBUG=1: periodic camera-state trace (kept -- camera work is
+     * ongoing until the PCSX-Redux side-by-side signs off CP-2.6). */
+    if (getenv("PORT_CAM_DEBUG")) {
+        static int n = 0;
+        if (n < 2000 && (n++ % 25) == 0) {
+            u8 *pe = (u8 *)gameState->player_entity_ptr;
+            fprintf(stderr, "[cam] player=%p freeze=%d cam=(%d,%d) vel=(%d,%d) "
+                    "world=(%u,%u) rofs=(%d,%d) limits(l/r/t/b)=%d/%d/%d/%d limxy=(%d,%d)\n",
+                    (void *)pe, gameState->pause_freeze_flag,
+                    gameState->camera_x, gameState->camera_y,
+                    gameState->camera_velocity_x, gameState->camera_velocity_y,
+                    pe ? *(u16 *)(pe + 0x68) : 0, pe ? *(u16 *)(pe + 0x6A) : 0,
+                    gameState->player_render_offset_x, gameState->player_render_offset_y,
+                    gameState->scroll_limit_left, gameState->scroll_limit_right,
+                    gameState->scroll_limit_top, gameState->scroll_limit_bottom,
+                    gameState->camera_limit_x, gameState->camera_limit_y);
+        }
+    }
 
     puVar14 = (u8 *)gameState->player_entity_ptr;
     if (puVar14 == NULL) {

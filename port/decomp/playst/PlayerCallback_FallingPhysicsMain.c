@@ -130,10 +130,13 @@ void PlayerCallback_FallingPhysicsMain(PlayerEntity *e) {
     s16 temp_v1_9;
     s16 var_a1_9;
     s16 var_a2_7;
-    s16 var_a3;
+    s32 var_a3;   /* X position accumulator -- FULL 32-bit register ($a3) in the
+                   * .s: sra v0,a3,16 -> worldX; sh a3,0x6C keeps the subpixel
+                   * half. m2c's s16 type truncated (worldX<<16) to 0 (the
+                   * player-teleports-to-origin bug). */
     s16 var_a3_2;
     s16 var_a3_3;
-    s16 var_s1;
+    s32 var_s1;   /* Y position accumulator -- same full-register pattern ($s1) */
     s16 var_v0_10;
     s16 var_v0_11;
     s16 var_v0_14;

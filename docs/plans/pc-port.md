@@ -736,6 +736,33 @@ family batches (`c-migration-plan.md`).
     PORT_STUBS_NONFATAL). Repro: `PORT_BOOT_LEVEL=1 PORT_STUBS_NONFATAL=1
     ./port/build-linux-debug/skullmonkeys`.
 
+- **2026-07-06 (session 5 cont.) — PLAYER FALLS ON SCREEN, camera frames him.**
+  The "player invisible at y=-65 / camera never follows" symptom was NOT a
+  camera bug: UpdateCameraPositionSmooth, its easing tables (real data in
+  src/blb.c), spawn position (PHRO stage0 spawns at tile (20,0) → px (328,15),
+  flags=0x1000 → legitimately no camera entity) all check out. Root cause: in
+  PlayerCallback_FallingPhysicsMain, m2c typed the X/Y position accumulators
+  `var_a3`/`var_s1` as s16 — but the .s keeps them in full 32-bit registers
+  (`sra v0,a3,16` → worldX; `sh a3,0x6C` stores only the sub-pixel half; the
+  Entity +0x6C/+0x6E velocity fields really ARE s16 sub-pixel latches). The s16
+  temp truncated `(worldX<<16)` to 0 → player teleported to (0,0) on tick 1 and
+  idled there forever, off-screen. Fixed: s32 accumulators. Verified: player
+  spawns at (328,15), falls with gravity on screen (capture frame 52 shows
+  Klaymen mid-drop over the spires), camera tracks.
+  - Debug method that cracked it: gdb hardware watchpoint on player+0x68
+    (break in the physics, `watch -l e->sprite.base.worldX`) — caught the
+    integration line red-handed after printf-tracing showed sane inputs.
+    `PORT_CAM_DEBUG=1` camera-state trace kept in UpdateCameraPositionSmooth.
+  - **m2c-conversion lesson for port/decomp: audit accumulator temp types.
+    Any `(x << 16) + subpixel` pattern must be s32 even when m2c infers s16.**
+  - _next:_ the run now reaches the LANDING at frame ~52 and stops at
+    `InitClayballWithRandomColor` (0x8002DBDC, 0x264, pickups; clayball
+    entity init — export decompile is clean, InitEntitySprite +
+    InitPathFollowingDecorEntity + random tint, callees mostly converted).
+    Converting it (+ whatever follows: CollectibleClaySingleTickCallback is
+    tiny) unblocks post-landing gameplay. Then: PCSX-Redux side-by-side
+    (framing + dark tint check), input smoke test, HUD/entity population.
+
 - **2026-07-06 (session 5) — LEVEL-1 TILE SCRAMBLE FIXED: the level renders
   coherent parallax layers.** The "scrambled re-stamp" was never a re-stamp/
   ring-mapping bug — the tilemaps, tile table, VRAM pixels and CLUTs were all
