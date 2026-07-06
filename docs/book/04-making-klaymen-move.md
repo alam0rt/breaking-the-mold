@@ -356,3 +356,4 @@ chapter well enough to write it.
 - [Tile Collision System](../systems/collision.md) · [Collision (complete)](../systems/collision-complete.md)
 - [Camera System](../systems/camera.md)
 - Previous chapter: [What's in a World?](01-whats-in-a-world.md) · [Making Things Tick](02-making-things-tick.md)
+- Next chapter: [Throwing Clay](05-throwing-clay.md)
