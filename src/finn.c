@@ -131,6 +131,13 @@ s32 FinnSubEvent_ProcessQueueOnReady(Entity *e, u32 ev) {
 }
 
 void ClearEntityStateFlag(FinnSubentityStateFlags *e) {
+#ifdef TARGET_PC
+    /* The game calls this with a NULL glide entity (no bird powerup); on PSX
+     * that writes harmlessly into kernel RAM at address 0, on PC it faults. */
+    if (e == NULL) {
+        return;
+    }
+#endif
     e->stateFlag = 0;
 }
 

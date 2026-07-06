@@ -21,6 +21,8 @@
  * Returns 1 when a valid sprite was resolved, else 0.
  * ========================================================================== */
 #include "common.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 extern void *LookupSpriteById(u32 spriteId);
 
@@ -44,6 +46,10 @@ s32 InitSpriteContext(void *param_1, u32 spriteId) {
 
     header = (u8 *)LookupSpriteById(spriteId);
     if (header == NULL) {
+        if (getenv("PORT_SPRITE_DEBUG") != NULL) {
+            fprintf(stderr, "[port] sprite: InitSpriteContext MISS id=%08X\n",
+                    spriteId);
+        }
         return 0;
     }
     count = *(u16 *)(header + 0x0);

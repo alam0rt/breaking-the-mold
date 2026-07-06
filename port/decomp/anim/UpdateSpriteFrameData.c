@@ -36,6 +36,13 @@ void UpdateSpriteFrameData(void *entityPtr) {
     u32 callbackId;
 
     if (*(u8 *)(e + 0xF7) == 0) {                       /* staticSpriteFlag */
+        /* PC divergence: when the pending sprite id missed every TOC,
+         * InitSpriteContext leaves the frame-metadata base NULL. The PSX build
+         * reads kernel RAM at ~0x0 harmlessly; on PC that's a segfault, so
+         * skip the frame update instead (the entity keeps its stale fields). */
+        if (*(u8 **)(e + 0x78) == NULL) {
+            return;
+        }
         record = *(u8 **)(e + 0x78) + (u16)*(u16 *)(e + 0xDA) * 0x24;
     } else {
         record = (u8 *)GetSpriteFrameDataByIndex(e + 0x8C, (u16)*(u16 *)(e + 0xDA));
