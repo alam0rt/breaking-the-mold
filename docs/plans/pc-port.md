@@ -851,3 +851,41 @@ family batches (`c-migration-plan.md`).
   subsystem (plus whatever follows it in SpawnPlayerAndEntities' dispatch) is
   the CP-2.5/2.6 work unit. Animations confirmed advancing (~every 4 frames)
   via the multi-frame capture diff.
+
+- **2026-07-07 (session 7) — LEVEL-1 PER-FRAME BEHAVIOR LAYER: player falls,
+  lands, and reaches the grounded idle state; no crash (commits 853f469,
+  fe61e0c).** 800-frame headless run exits 0. Converted the per-frame stub
+  surface that fires once Klaymen reaches the ground.
+  - **Death/land/platform/trigger tick layer (853f469, ~18 fns):**
+    `GenericSpriteEntityTickCallback` (platform/prop tick), `PlayerStateInit_
+    ShrinkAndFall` + `PlayerState_DeathStart` (the shrink/death state installers
+    — landing on a hazard reached these), the list-unlink family
+    (`RemoveEntityFromAllLists`/`RemoveFromTickList`/`RemoveEntityFromUpdateQueue`/
+    `FreeEntityLists`), `EntitySetCallback` + `EntityProcessCallbackQueue` (the
+    shared tagged-slot dispatchers), the platform ride easing
+    (`PlatformRideStartUp`/`StartDown`/`PlatformInterpolatePosition`,
+    `EntityTick_InterpolateTimedPath`), `SoundEmitterWithPanningTick`,
+    `AddSwirlys`, `EntityCheckTriggerZone`, `IsEntityNearSoundTrigger`,
+    `FreeTextureResource`.
+  - **Grounded idle-input dispatch (fe61e0c):** `PlayerCallback_IdleInputHandler`
+    + its `CheckWallCollision` dependency. The idle state now reads the pad and
+    routes to swirly-toss / jump / walk / turn / ledge-fall via EntitySetState.
+    Removed the 723-hit/frame idle stub; with the FSM advancing,
+    PlayerCallback_HorizontalWallCollision fell from 723 to 29 hits/frame.
+  - **Two PC-divergence guards** (PSX reads harmlessly at ~addr 0; PC faults),
+    both TARGET_PC-gated so the MIPS byte-match is untouched (`make check`
+    green, SHA1 5a14b65c...): `src/finn.c` ClearEntityStateFlag NULL glide-entity
+    guard; `anim/UpdateSpriteFrameData` skip when a missed-TOC sprite id leaves
+    the frame-metadata base NULL. **Sprite-miss note:** level-1's loaded TOC
+    (77+22 entries) does NOT contain many player/HUD sprite hashes incl. the
+    shrunk-fall sprite 0x987101B9 — the full 96-entry variant lives in BLB dir
+    entry 18's block, so the current level-1 (dir entry 1 / PHRO stage0) simply
+    doesn't ship them; the guard makes that a no-op instead of a crash. Worth a
+    later look at whether a second container should be loaded.
+  - _next:_ `PlayerCallback_HorizontalWallCollision` (466 lines, the grounded
+    event slot; m2c gives clean structure) is the largest remaining per-frame
+    stub. Then `PlayerEntityEventHandler` (167) and the one-shot
+    death/VRAM helpers (SpawnPlayerDeathEffect, PlayerApplyPositionWithCollision,
+    FreeAndCoalesceVRAMSlot). `EntityCollision_SpawnSwitchBlock` stays stubbed
+    until `InitSwitchBlockEntity` (still asm) is converted. Then the PCSX-Redux
+    side-by-side (framing/palette) + input smoke test.
