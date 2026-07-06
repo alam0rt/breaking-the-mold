@@ -214,8 +214,17 @@ struct Entity {
     /* Position (0x68-0x6F) */
     /* 0x68 */ s16             worldX;           /* World X position (pixels) */
     /* 0x6A */ s16             worldY;           /* World Y position (pixels) */
-    /* 0x6C */ s16             velocityX;        /* X velocity */
-    /* 0x6E */ s16             velocityY;        /* Y velocity */
+    /* 0x6C */ s16             velocityX;        /* NAME LIKELY WRONG: not velocity. The PC-port
+                                                  * reconstruction of PlayerCallback_FallingPhysicsMain
+                                                  * (port/decomp/playst/, commit ea21e59) shows 0x6C is the
+                                                  * SUB-PIXEL half of the 32-bit X position accumulator:
+                                                  * pos = (worldX<<16)|frac; sra->worldX, sh 0x6C->frac.
+                                                  * Real X velocity is velocityX_fixed @ 0x114 (16.16).
+                                                  * TODO: rename to subpixelX once verified against .s. */
+    /* 0x6E */ s16             velocityY;        /* NAME LIKELY WRONG: sub-pixel half of the 32-bit Y
+                                                  * position accumulator (same pattern as 0x6C). Real Y
+                                                  * velocity is velocityY_fixed @ 0x110 (16.16).
+                                                  * TODO: rename to subpixelY once verified against .s. */
     
     /* Target Position (0x70-0x73) */
     /* 0x70 */ s16             targetX;          /* Target X for movement */
