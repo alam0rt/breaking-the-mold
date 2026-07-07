@@ -780,6 +780,63 @@ memdump:
 	    || { echo "dump failed -- is PCSX-Redux running with -gdb on :$(GDB_PORT)?"; exit 1; }
 	@echo "analyze: tools/memreport.py $(MEMDUMP) --base $(MEMSTART) --summary"
 
+# Raw per-frame RAM capture for offline analysis (scripts/ram_dumper.lua).
+# The dumper does ZERO parsing in-emulator -- it copies the region to a sink and
+# ALL interpretation happens externally (tools/pcsx_stream.py / pcsx_trace.py),
+# which is why this replaces the heavy in-VM game_watcher.lua.
+#
+# Two sinks:
+#   DB=<file>  -> stream frames over a FIFO into a SQLite trace (delta frame
+#                 store for full-RAM reconstruction + decoded field table).
+#                 Query with: tools/pcsx_stream.py {info,watch,field,gs,frame,diffdb}
+#   OUT=<dir>  -> one raw .bin per frame + manifest.json (default game_watcher/dumps/<ts>).
+#                 Query with: tools/pcsx_trace.py {list,gs,watch,field,diff,diffdir}
+#
+# CPU speed: the interpreter is ~10x slower. A savestate runs under -dynarec
+# (fast); a LEVEL= boot override needs a breakpoint, so it uses -interpreter.
+#   STATE=<N|path> load PCSX-Redux save slot N (or a file) then dynarec-capture
+#   LEVEL=/STAGE=  boot override to a level (interpreter, slower)
+# Usage:
+#   make trace STATE=2 DB=game_watcher/l1.sqlite REGION=gamestate MAXFRAMES=600
+#   make trace LEVEL=1 STAGE=0 DB=game_watcher/l1.sqlite MAXFRAMES=600
+#   make trace STATE=2 OUT=game_watcher/dumps/l1_ref MAXFRAMES=300
+.PHONY: trace
+REGION    ?= full
+INTERVAL  ?= 1
+MAXFRAMES ?= 0
+KEYFRAME  ?= 50
+GS        ?= 0x8009DC40
+trace: check-lua
+	@set -e; \
+	region='$(REGION)'; state=''; \
+	if [ -n '$(STATE)' ]; then \
+	  case '$(STATE)' in \
+	    [0-9]) state="$$HOME/.config/pcsx-redux/$$(basename $(ISO)).sstate$(STATE)";; \
+	    *) state='$(STATE)';; \
+	  esac; \
+	  [ -f "$$state" ] || { echo "savestate not found: $$state"; exit 1; }; \
+	  echo "savestate: $$state"; \
+	fi; \
+	env="RAMDUMP_REGION=$$region RAMDUMP_INTERVAL=$(INTERVAL) RAMDUMP_MAX_FRAMES=$(MAXFRAMES)"; \
+	[ -n "$$state" ] && env="$$env RAMDUMP_STATE=$$state"; \
+	cpu='-dynarec'; \
+	if [ -n '$(LEVEL)' ]; then cpu='-interpreter -debugger'; \
+	  env="$$env RAMDUMP_LEVEL=$(LEVEL) RAMDUMP_STAGE=$(or $(STAGE),0)"; fi; \
+	if [ -n '$(DB)' ]; then \
+	  fifo="$$(mktemp -u).fifo"; mkfifo "$$fifo"; trap 'rm -f "'"$$fifo"'"' EXIT; \
+	  rm -f '$(DB)' '$(DB)'-wal '$(DB)'-shm; \
+	  python3 tools/pcsx_stream.py consume --fifo "$$fifo" --db '$(DB)' \
+	      --region "$$region" --gs $(GS) --keyframe $(KEYFRAME) \
+	      $(if $(LEVEL),--level $(LEVEL) --stage $(or $(STAGE),0),) & cons=$$!; \
+	  env $$env RAMDUMP_FIFO="$$fifo" $(PCSX) $$cpu -lua_stdout -iso $(ISO) \
+	      -dofile scripts/ram_dumper.lua -run; \
+	  wait $$cons; echo "trace -> $(DB)"; \
+	else \
+	  mkdir -p game_watcher/dumps; \
+	  env $$env $(if $(OUT),RAMDUMP_OUT=$(OUT),) $(PCSX) $$cpu -lua_stdout \
+	      -iso $(ISO) -dofile scripts/ram_dumper.lua -run; \
+	fi
+
 # Run a Lua script in PCSX-Redux.
 # Usage: make lua SCRIPT=scripts/hello.lua
 #        make lua SCRIPT=scripts/breaks.lua BREAK=1  # use -interpreter for breakpoints

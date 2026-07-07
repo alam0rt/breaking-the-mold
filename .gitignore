@@ -139,3 +139,10 @@ tools/name-game/assets/
 
 # Local RAM dumps + memreport output (not for commit)
 dumps/
+
+# PS1 RAM traces (mem-trace tooling) — data, not for commit
+game_watcher/*.sqlite
+game_watcher/*.sqlite-wal
+game_watcher/*.sqlite-shm
+game_watcher/dumps/
+game_watcher/logs/
