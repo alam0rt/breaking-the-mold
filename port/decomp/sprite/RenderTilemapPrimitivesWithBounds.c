@@ -56,24 +56,23 @@ void RenderTilemapPrimitivesWithBounds(u16 *param_1) {
     uVar1 = (u32)*(u8 *)(heap + 0xA088);          /* active buffer index */
     ot = *(void **)(*(s32 *)(heap + 0xA084) + 0x70);
 
-    /* ---- pre-scroll DR_OFFSET + the tilemap SPRT_16 chain ---- */
+    /* ---- pre-scroll DR_OFFSET + the tilemap SPRT_16 chain ----
+     * PC: SetDrawOffset takes a RAW signed pixel offset (gpu_gl.c's quad_tex_ex
+     * adds it straight to vertex coords). The PSX packet encoding -- the
+     * +0x8000 sign bias and the +buf*0x100 framebuffer-half bias below -- is a
+     * hardware artifact the single-texture PC backend must NOT apply, or a
+     * negative scroll wraps to a huge positive offset and the whole 16x16 layer
+     * draws off screen. Use the raw scroll, matching SetupTilemapPrimitives. */
     local_28 = 0;
-    local_26 = (s16)((u16)*(u8 *)(heap + 0xA088) << 8);
+    local_26 = 0;
     SetDrawOffset(param_1 + uVar1 * 6 + 0x10, &local_28);
     AddPrim(ot, param_1 + uVar1 * 6 + 0x10);
     AddPrims(ot, *(void **)(param_1 + uVar1 * 2 + 0x28),
                  *(void **)(param_1 + uVar1 * 2 + 0x2c));
 
-    /* ---- post-scroll DR_OFFSET (restore origin, offset by layer position) ---- */
+    /* ---- post-scroll DR_OFFSET: raw layer scroll (worldX, worldY) ---- */
     local_28 = param_1[0];
-    if ((s16)local_28 < 0) {
-        local_28 = local_28 + 0x8000;
-    }
-    local_26 = (s16)(uVar1 * 0x100);
-    if ((s32)((s32)(s16)param_1[1] + uVar1 * 0x100) < 0) {
-        local_26 = local_26 + -0x8000;
-    }
-    local_26 = param_1[1] + local_26;
+    local_26 = (s16)param_1[1];
     SetDrawOffset(param_1 + uVar1 * 6 + 0x1c, &local_28);
     AddPrim(ot, param_1 + uVar1 * 6 + 0x1c);
 }
