@@ -68,7 +68,14 @@ static void erl_insert(void **head, void *payload, s32 keyOff, s32 newBeforeWhen
 
 void AddEntityToSortedRenderList(void *gameState, void *entity) {
     u8 *gs = (u8 *)gameState;
-    void *spriteContext = *(void **)((u8 *)entity + 0x34);
+    void *spriteContext;
+    /* PC bring-up: a stubbed constructor (e.g. CreateCameraEntity on level 2)
+     * can hand us a NULL entity; skip rather than fault. Remove once the
+     * constructor is converted. */
+    if (entity == NULL) {
+        return;
+    }
+    spriteContext = *(void **)((u8 *)entity + 0x34);
     erl_insert((void **)(gs + 0x1C), entity, 0x10, 1);           /* tick list   */
     erl_insert((void **)(gs + 0x20), spriteContext, 0x08, 0);    /* render list */
 }
