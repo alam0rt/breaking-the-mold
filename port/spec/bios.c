@@ -115,6 +115,25 @@ void port_bios_advance_frame(void) {
     s_vblank_count++;
 }
 
+/* ---- rand / srand (BIOS A(2Fh)/A(30h)) ----------------------------------- *
+ * The game's rand/srand are BIOS-call thunks (src/libc.c INCLUDE_ASM), so on
+ * the port they would otherwise fall through to glibc's rand -- a different
+ * generator. Determinism against a PS1 reference (the attract demo path does
+ * srand(1) before enabling input playback, see SetupAndStartLevel) requires
+ * the exact PSX BIOS LCG:
+ *     seed = seed * 0x41C64E6D + 0x3039;  return (seed >> 16) & 0x7FFF;
+ * Defining them here overrides the libc versions at link time. */
+static unsigned int s_bios_rand_seed;
+
+int rand(void) {
+    s_bios_rand_seed = s_bios_rand_seed * 0x41C64E6Du + 0x3039u;
+    return (int)((s_bios_rand_seed >> 16) & 0x7FFF);
+}
+
+void srand(unsigned int seed) {
+    s_bios_rand_seed = seed;
+}
+
 unsigned port_bios_vblank_count(void) {
     return s_vblank_count;
 }

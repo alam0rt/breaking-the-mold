@@ -116,6 +116,15 @@ extern int  VSync(int mode);
 extern void ProcessDebugMenuInput(void);
 extern void FlushDebugFontAndEndFrame(void *base);
 
+/* demo-playback path (PORT_DEMO): matched C (blbacc.c) + port conversions
+ * (decomp/blb/EnableDemoPlaybackMode.c) + PSX-LCG srand (spec/bios.c). */
+extern u8  *GetDemoDataPtr(void *ctx);
+extern void InitEntityDataPointers(void *input, void *dataBase);
+extern void EnableDemoPlaybackMode(void *input, u8 enable);
+extern void srand(unsigned int seed);
+extern char *getenv(const char *name);
+extern long strtol(const char *s, char **end, int base);
+
 /* GameState is accessed here mostly by raw offset (matching the draft) to avoid
  * coupling to the full struct header while the layout is still being confirmed.
  *   +0x00 s16 event_marker      +0x02 s16 event_table_offset
@@ -151,6 +160,18 @@ void port_game_boot_init(void) {
     g_pInputStateB = &s_inputStateB;            /* give D_800A5968 a real target */
     g_LayerRenderSlots = D_8009AE58;            /* give D_800A595C a real target */
     initPlayerState(PLAYER_STATE_DATA);
+
+    /* PORT_LEVEL / PORT_STAGE: override the boot level before InitGameState.
+     * The boot-time InitializeAndLoadLevel path seeds its sequence-seek from
+     * RESPAWN_PLAYER_STATE[0] (level index) and [1] (stage/mode). Needed e.g.
+     * to boot straight into one of the demo-bearing levels (asset 700). */
+    {
+        const char *lv = getenv("PORT_LEVEL");
+        const char *st = getenv("PORT_STAGE");
+        if (lv && *lv) ((u8 *)PLAYER_STATE_DATA)[0] = (u8)strtol(lv, NULL, 0);
+        if (st && *st) ((u8 *)PLAYER_STATE_DATA)[1] = (u8)strtol(st, NULL, 0);
+    }
+
     InitGameState(g_GameStateBase, g_pInputStateA);
 
     /* Build the debug/level-select name tables from the loaded BLB TOC. */
@@ -172,6 +193,27 @@ void port_game_boot_init(void) {
     D_800A596E = 0x20;
     D_800A5970 = 0x80;
     g_pCurrentInputState = (InputState *)g_pInputStateA;
+
+    /* PORT_DEMO=1: replicate SetupAndStartLevel's attract-demo branch
+     * (gs->demo_return_flag path, asm @0x8007DB44..0x8007DB98) for the port's
+     * boot-time level load, which bypasses SetupAndStartLevel. Ordering matches
+     * the PS1: level load + entity spawn first, then srand(1), then playback on.
+     * With bios.c's PSX-LCG rand this makes a demo run deterministic and
+     * directly diffable against a PS1 reference trace (make port-trace).
+     * Requires a level that carries asset 700 (replay data): BOIL, BRG1, CAVE,
+     * FOOD, GLID, MENU, SCIE, TMPL, WEED -- combine with PORT_LEVEL. The PS1
+     * path also spawns a "demo" overlay sprite entity; skipped here for now. */
+    if (getenv("PORT_DEMO")) {
+        u8 *demoData = GetDemoDataPtr(ctx);
+        if (demoData != NULL) {
+            srand(1);
+            InitEntityDataPointers(g_pInputStateA, demoData);
+            EnableDemoPlaybackMode(g_pInputStateA, 1);
+            port_log("demo: playback on (%u RLE entries)", *(u16 *)demoData);
+        } else {
+            port_log("demo: no asset-700 replay data in this level; PORT_DEMO ignored");
+        }
+    }
 }
 
 void port_game_boot_frame(void) {
