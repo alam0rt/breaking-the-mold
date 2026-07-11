@@ -23,6 +23,9 @@ u32_ D_8009B54C[4] asm("D_8009B54C") = {   /* types 106/107/108 falling platform
 u32_ D_8009B6A4[3] asm("D_8009B6A4") = {   /* types 085/104/105 trigger zone */
     0x9B0AB1C6, 0x9389B8C4, 0
 };
+u32_ D_8009B6B0[3] asm("D_8009B6B0") = {   /* camera entity (CreateCameraEntity) */
+    0x9B0AB1C6, 0x1A2AB594, 0
+};
 u32_ D_8009B6BC[4] asm("D_8009B6BC") = {   /* type-045 bounce clay */
     0xF175320E, 0x657C322C, 0xE7443A6F, 0
 };

@@ -119,6 +119,7 @@ extern void FlushDebugFontAndEndFrame(void *base);
 /* demo-playback path (PORT_DEMO): matched C (blbacc.c) + port conversions
  * (decomp/blb/EnableDemoPlaybackMode.c) + PSX-LCG srand (spec/bios.c). */
 extern u8  *GetDemoDataPtr(void *ctx);
+extern u8   GetCurrentLevelAssetIndex(void *ctx);
 extern void InitEntityDataPointers(void *input, void *dataBase);
 extern void EnableDemoPlaybackMode(void *input, u8 enable);
 extern void srand(unsigned int seed);
@@ -193,6 +194,15 @@ void port_game_boot_init(void) {
     D_800A596E = 0x20;
     D_800A5970 = 0x80;
     g_pCurrentInputState = (InputState *)g_pInputStateA;
+
+    /* Log which level the boot sequence actually landed on (observable check
+     * for PORT_LEVEL -- without it the sequence stays at its start, the MENU). */
+    {
+        u8 lvlIdx = GetCurrentLevelAssetIndex(ctx);
+        port_log("boot: loaded level %u '%s'", lvlIdx,
+                 (lvlIdx < D_800A60BC && g_LevelNameTable[lvlIdx] != NULL)
+                     ? (const char *)g_LevelNameTable[lvlIdx] : "?");
+    }
 
     /* PORT_DEMO=1: replicate SetupAndStartLevel's attract-demo branch
      * (gs->demo_return_flag path, asm @0x8007DB44..0x8007DB98) for the port's

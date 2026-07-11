@@ -28,7 +28,15 @@
 #include "common.h"
 
 s8 DisplayLoadingScreen(s32 sectorOff, s32 sectorCnt, void *buf, s32 minTime, s32 maxTime) {
+    extern char *getenv(const char *);
     (void)sectorOff; (void)sectorCnt; (void)buf; (void)minTime; (void)maxTime;
+    /* PORT_LEVEL set: report "finished" so InitializeAndLoadLevel runs the
+     * respawn-seek transition (SeekToLevelInSequence(RESPAWN_PLAYER_STATE[0]),
+     * stage s6 = RESPAWN_PLAYER_STATE[1]) that game_boot seeded from the env.
+     * Without it the boot stays at the sequence start (the MENU level). */
+    if (getenv("PORT_LEVEL")) {
+        return 0;
+    }
     return 1;   /* loading screen still active -> skip the respawn-seek transition */
 }
 
