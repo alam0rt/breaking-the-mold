@@ -93,6 +93,7 @@ void port_game_main(void) {
         port_bios_fire_vsync();
         port_gpu_present();
 
+        port_trace_frame();         /* optional GameState dump (PORT_TRACE_* env) */
         port_bios_advance_frame();
         if (frame_cap && port_bios_vblank_count() >= frame_cap) break;
 #if defined(PORT_HAVE_SDL2)

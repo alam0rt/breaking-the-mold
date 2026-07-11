@@ -18,6 +18,10 @@ void port_stub(const char *fn);
 /* Game-boot entry: weak stub in port_runtime.c, strong override in Phase 2. */
 void port_game_main(void);
 
+/* Optional per-frame GameState dump for comparing the port against a PS1
+ * reference trace (port/spec/port_trace.c). No-op unless PORT_TRACE_* is set. */
+void port_trace_frame(void);
+
 #ifdef __cplusplus
 }
 #endif

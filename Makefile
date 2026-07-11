@@ -254,6 +254,35 @@ port:
 port-run: port
 	PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN)
 
+# Trace the port's GameState per frame into the SAME format as `make trace`, so
+# it can be diffed against a PS1 reference. The port has no contiguous RAM image,
+# so this dumps the one contiguous GameState object (g_GameStateBase, 0x1A0) via
+# port/spec/port_trace.c -- set the consumer region to 0x8009DC40:0x1A0 to match.
+# Usage:
+#   make port-trace DB=game_watcher/port.sqlite FRAMES=600     # stream -> SQLite
+#   make port-trace OUT=game_watcher/dumps/port_l1 FRAMES=300  # raw .bin + manifest
+# Compare (PS1 trace must cover the GameState, e.g. REGION=full or =gamestate):
+#   tools/pcsx_stream.py diffdb game_watcher/ps1.sqlite game_watcher/port.sqlite \
+#       --region 0x8009DC40:0x1A0
+.PHONY: port-trace
+PORT_TRACE_REGION := 0x8009DC40:0x1A0
+port-trace: port
+	@set -e; \
+	if [ -n '$(DB)' ]; then \
+	  fifo="$$(mktemp -u).fifo"; mkfifo "$$fifo"; trap 'rm -f "'"$$fifo"'"' EXIT; \
+	  rm -f '$(DB)' '$(DB)'-wal '$(DB)'-shm; \
+	  python3 tools/pcsx_stream.py consume --fifo "$$fifo" --db '$(DB)' \
+	      --region $(PORT_TRACE_REGION) --gs 0x8009DC40 --keyframe $(KEYFRAME) & cons=$$!; \
+	  PORT_TRACE_FIFO="$$fifo" PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN) || true; \
+	  wait $$cons; echo "port trace -> $(DB)"; \
+	elif [ -n '$(OUT)' ]; then \
+	  mkdir -p '$(OUT)'; \
+	  PORT_TRACE_OUT='$(OUT)' PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN) || true; \
+	  echo "port trace -> $(OUT)"; \
+	else \
+	  echo "set DB=<file> (stream->SQLite) or OUT=<dir> (raw .bin per frame)"; exit 1; \
+	fi
+
 # Remove the port build directory (keeps the checked-in generated sources).
 port-clean:
 	rm -rf $(PORT_BUILD_DIR) $(PORT_DIR)/build-probe
