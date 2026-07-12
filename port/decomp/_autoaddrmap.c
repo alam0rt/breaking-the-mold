@@ -314,7 +314,647 @@ extern char CreateSoarPlayerEntity[] __attribute__((weak));
 extern char CreateYellowBirdEntity[] __attribute__((weak));
 extern char DMACallback[] __attribute__((weak));
 extern char D_80010344[] __attribute__((weak));
+extern char D_80010354[] __attribute__((weak));
+extern char D_80010364[] __attribute__((weak));
+extern char D_80010374[] __attribute__((weak));
+extern char D_80010384[] __attribute__((weak));
 extern char D_8001039C[] __attribute__((weak));
+extern char D_8001048C[] __attribute__((weak));
+extern char D_800105CC[] __attribute__((weak));
+extern char D_800105EC[] __attribute__((weak));
+extern char D_8001060C[] __attribute__((weak));
+extern char D_80010690[] __attribute__((weak));
+extern char D_800106B0[] __attribute__((weak));
+extern char D_800106D0[] __attribute__((weak));
+extern char D_800106F0[] __attribute__((weak));
+extern char D_80010710[] __attribute__((weak));
+extern char D_80010730[] __attribute__((weak));
+extern char D_80010790[] __attribute__((weak));
+extern char D_800107B0[] __attribute__((weak));
+extern char D_800107D0[] __attribute__((weak));
+extern char D_800107F0[] __attribute__((weak));
+extern char D_80010810[] __attribute__((weak));
+extern char D_80010830[] __attribute__((weak));
+extern char D_80010850[] __attribute__((weak));
+extern char D_80010870[] __attribute__((weak));
+extern char D_80010890[] __attribute__((weak));
+extern char D_800108D0[] __attribute__((weak));
+extern char D_80010910[] __attribute__((weak));
+extern char D_80010950[] __attribute__((weak));
+extern char D_80010970[] __attribute__((weak));
+extern char D_80010980[] __attribute__((weak));
+extern char D_800109A0[] __attribute__((weak));
+extern char D_800109D0[] __attribute__((weak));
+extern char D_800109F0[] __attribute__((weak));
+extern char D_80010A10[] __attribute__((weak));
+extern char D_80010A30[] __attribute__((weak));
+extern char D_80010A48[] __attribute__((weak));
+extern char D_80010A68[] __attribute__((weak));
+extern char D_80010A88[] __attribute__((weak));
+extern char D_80010AA8[] __attribute__((weak));
+extern char D_80010AB8[] __attribute__((weak));
+extern char D_80010AD8[] __attribute__((weak));
+extern char D_80010AE8[] __attribute__((weak));
+extern char D_80010B00[] __attribute__((weak));
+extern char D_80010B18[] __attribute__((weak));
+extern char D_80010B28[] __attribute__((weak));
+extern char D_80010B78[] __attribute__((weak));
+extern char D_80010BA8[] __attribute__((weak));
+extern char D_80010BC8[] __attribute__((weak));
+extern char D_80010C44[] __attribute__((weak));
+extern char D_80010C64[] __attribute__((weak));
+extern char D_80010C84[] __attribute__((weak));
+extern char D_80010CE4[] __attribute__((weak));
+extern char D_80010D84[] __attribute__((weak));
+extern char D_80010DA4[] __attribute__((weak));
+extern char D_80010DC4[] __attribute__((weak));
+extern char D_80010DE4[] __attribute__((weak));
+extern char D_80010E04[] __attribute__((weak));
+extern char D_80011048[] __attribute__((weak));
+extern char D_80011068[] __attribute__((weak));
+extern char D_80011088[] __attribute__((weak));
+extern char D_800110A8[] __attribute__((weak));
+extern char D_800110E8[] __attribute__((weak));
+extern char D_80011108[] __attribute__((weak));
+extern char D_80011128[] __attribute__((weak));
+extern char D_80011148[] __attribute__((weak));
+extern char D_80011168[] __attribute__((weak));
+extern char D_80011188[] __attribute__((weak));
+extern char D_800111A8[] __attribute__((weak));
+extern char D_800111C8[] __attribute__((weak));
+extern char D_800111E8[] __attribute__((weak));
+extern char D_80011208[] __attribute__((weak));
+extern char D_80011228[] __attribute__((weak));
+extern char D_80011248[] __attribute__((weak));
+extern char D_80011268[] __attribute__((weak));
+extern char D_80011288[] __attribute__((weak));
+extern char D_800112C8[] __attribute__((weak));
+extern char D_800112E8[] __attribute__((weak));
+extern char D_80011308[] __attribute__((weak));
+extern char D_80011328[] __attribute__((weak));
+extern char D_80011348[] __attribute__((weak));
+extern char D_80011368[] __attribute__((weak));
+extern char D_80011388[] __attribute__((weak));
+extern char D_800113A8[] __attribute__((weak));
+extern char D_80011628[] __attribute__((weak));
+extern char D_80011648[] __attribute__((weak));
+extern char D_800116E8[] __attribute__((weak));
+extern char D_80011708[] __attribute__((weak));
+extern char D_80011784[] __attribute__((weak));
+extern char D_800117A4[] __attribute__((weak));
+extern char D_800117C4[] __attribute__((weak));
+extern char D_800117E4[] __attribute__((weak));
+extern char D_80011824[] __attribute__((weak));
+extern char D_80011CF4[] __attribute__((weak));
+extern char D_80011D14[] __attribute__((weak));
+extern char D_80011D34[] __attribute__((weak));
+extern char D_80011E54[] __attribute__((weak));
+extern char D_80011E74[] __attribute__((weak));
+extern char D_80011E94[] __attribute__((weak));
+extern char D_80011EB4[] __attribute__((weak));
+extern char D_80011FDC[] __attribute__((weak));
+extern char D_80012034[] __attribute__((weak));
+extern char D_8001208C[] __attribute__((weak));
+extern char D_800120AC[] __attribute__((weak));
+extern char D_800120CC[] __attribute__((weak));
+extern char D_80012100[] __attribute__((weak));
+extern char D_80012120[] __attribute__((weak));
+extern char D_80012758[] __attribute__((weak));
+extern char D_800907EC[] __attribute__((weak));
+extern char D_8009AE40[] __attribute__((weak));
+extern char D_8009AE58[] __attribute__((weak));
+extern char D_8009B038[] __attribute__((weak));
+extern char D_8009B074[] __attribute__((weak));
+extern char D_8009B0BC[] __attribute__((weak));
+extern char D_8009B104[] __attribute__((weak));
+extern char D_8009B14C[] __attribute__((weak));
+extern char D_8009B160[] __attribute__((weak));
+extern char D_8009B174[] __attribute__((weak));
+extern char D_8009B180[] __attribute__((weak));
+extern char D_8009B18C[] __attribute__((weak));
+extern char D_8009B214[] __attribute__((weak));
+extern char D_8009B240[] __attribute__((weak));
+extern char D_8009B2C4[] __attribute__((weak));
+extern char D_8009B3A0[] __attribute__((weak));
+extern char D_8009B3B4[] __attribute__((weak));
+extern char D_8009B3C8[] __attribute__((weak));
+extern char D_8009B3D8[] __attribute__((weak));
+extern char D_8009B43C[] __attribute__((weak));
+extern char D_8009B4B4[] __attribute__((weak));
+extern char D_8009B4CC[] __attribute__((weak));
+extern char D_8009B4DC[] __attribute__((weak));
+extern char D_8009B54C[] __attribute__((weak));
+extern char D_8009B55C[] __attribute__((weak));
+extern char D_8009B57C[] __attribute__((weak));
+extern char D_8009B59C[] __attribute__((weak));
+extern char D_8009B5BC[] __attribute__((weak));
+extern char D_8009B5D4[] __attribute__((weak));
+extern char D_8009B5EC[] __attribute__((weak));
+extern char D_8009B684[] __attribute__((weak));
+extern char D_8009B6A4[] __attribute__((weak));
+extern char D_8009B6B0[] __attribute__((weak));
+extern char D_8009B6BC[] __attribute__((weak));
+extern char D_8009B6CC[] __attribute__((weak));
+extern char D_8009B6D8[] __attribute__((weak));
+extern char D_8009B6E4[] __attribute__((weak));
+extern char D_8009B7A4[] __attribute__((weak));
+extern char D_8009B7DC[] __attribute__((weak));
+extern char D_8009B844[] __attribute__((weak));
+extern char D_8009BC08[] __attribute__((weak));
+extern char D_8009C174[] __attribute__((weak));
+extern char D_8009C254[] __attribute__((weak));
+extern char D_8009C3A8[] __attribute__((weak));
+extern char D_8009CA34[] __attribute__((weak));
+extern char D_8009CA7C[] __attribute__((weak));
+extern char D_8009CADC[] __attribute__((weak));
+extern char D_8009CB00[] __attribute__((weak));
+extern char D_8009CB0C[] __attribute__((weak));
+extern char D_8009CB0E[] __attribute__((weak));
+extern char D_8009CB10[] __attribute__((weak));
+extern char D_8009CB7C[] __attribute__((weak));
+extern char D_8009CBAC[] __attribute__((weak));
+extern char D_8009CBBC[] __attribute__((weak));
+extern char D_8009CBDC[] __attribute__((weak));
+extern char D_8009CBE8[] __attribute__((weak));
+extern char D_8009CBF8[] __attribute__((weak));
+extern char D_8009CC08[] __attribute__((weak));
+extern char D_8009CC18[] __attribute__((weak));
+extern char D_8009CC30[] __attribute__((weak));
+extern char D_8009CC68[] __attribute__((weak));
+extern char D_8009CE64[] __attribute__((weak));
+extern char D_8009CFB0[] __attribute__((weak));
+extern char D_8009CFD8[] __attribute__((weak));
+extern char D_8009CFD9[] __attribute__((weak));
+extern char D_8009D228[] __attribute__((weak));
+extern char D_8009D5F8[] __attribute__((weak));
+extern char D_8009D9C0[] __attribute__((weak));
+extern char D_8009D9C1[] __attribute__((weak));
+extern char D_8009D9C2[] __attribute__((weak));
+extern char D_8009D9FC[] __attribute__((weak));
+extern char D_8009DA18[] __attribute__((weak));
+extern char D_8009DA34[] __attribute__((weak));
+extern char D_8009DA50[] __attribute__((weak));
+extern char D_8009DA5C[] __attribute__((weak));
+extern char D_8009DA68[] __attribute__((weak));
+extern char D_8009DA78[] __attribute__((weak));
+extern char D_8009DA84[] __attribute__((weak));
+extern char D_8009DA90[] __attribute__((weak));
+extern char D_8009DA9C[] __attribute__((weak));
+extern char D_8009DAA8[] __attribute__((weak));
+extern char D_8009DAB4[] __attribute__((weak));
+extern char D_8009DAE0[] __attribute__((weak));
+extern char D_8009DE08[] __attribute__((weak));
+extern char D_8009DF18[] __attribute__((weak));
+extern char D_8009DF1C[] __attribute__((weak));
+extern char D_8009DF24[] __attribute__((weak));
+extern char D_8009DF28[] __attribute__((weak));
+extern char D_8009DF34[] __attribute__((weak));
+extern char D_8009DF38[] __attribute__((weak));
+extern char D_8009DF39[] __attribute__((weak));
+extern char D_8009E1C4[] __attribute__((weak));
+extern char D_8009E230[] __attribute__((weak));
+extern char D_8009E33C[] __attribute__((weak));
+extern char D_8009E3BA[] __attribute__((weak));
+extern char D_8009F440[] __attribute__((weak));
+extern char D_8009F4A4[] __attribute__((weak));
+extern char D_800A55F4[] __attribute__((weak));
+extern char D_800A595C[] __attribute__((weak));
+extern char D_800A5964[] __attribute__((weak));
+extern char D_800A5968[] __attribute__((weak));
+extern char D_800A596C[] __attribute__((weak));
+extern char D_800A596E[] __attribute__((weak));
+extern char D_800A5970[] __attribute__((weak));
+extern char D_800A5978[] __attribute__((weak));
+extern char D_800A597C[] __attribute__((weak));
+extern char D_800A5980[] __attribute__((weak));
+extern char D_800A5988[] __attribute__((weak));
+extern char D_800A598C[] __attribute__((weak));
+extern char D_800A5990[] __attribute__((weak));
+extern char D_800A5994[] __attribute__((weak));
+extern char D_800A5998[] __attribute__((weak));
+extern char D_800A599C[] __attribute__((weak));
+extern char D_800A59A0[] __attribute__((weak));
+extern char D_800A59A8[] __attribute__((weak));
+extern char D_800A59AC[] __attribute__((weak));
+extern char D_800A59B0[] __attribute__((weak));
+extern char D_800A59B4[] __attribute__((weak));
+extern char D_800A59B8[] __attribute__((weak));
+extern char D_800A59BC[] __attribute__((weak));
+extern char D_800A59C0[] __attribute__((weak));
+extern char D_800A59C4[] __attribute__((weak));
+extern char D_800A59C8[] __attribute__((weak));
+extern char D_800A59CC[] __attribute__((weak));
+extern char D_800A59D0[] __attribute__((weak));
+extern char D_800A59D4[] __attribute__((weak));
+extern char D_800A59D8[] __attribute__((weak));
+extern char D_800A59DC[] __attribute__((weak));
+extern char D_800A59E0[] __attribute__((weak));
+extern char D_800A59E8[] __attribute__((weak));
+extern char D_800A59E9[] __attribute__((weak));
+extern char D_800A59EA[] __attribute__((weak));
+extern char D_800A59EB[] __attribute__((weak));
+extern char D_800A59EC[] __attribute__((weak));
+extern char D_800A59F0[] __attribute__((weak));
+extern char D_800A59F4[] __attribute__((weak));
+extern char D_800A59F8[] __attribute__((weak));
+extern char D_800A5A44[] __attribute__((weak));
+extern char D_800A5A50[] __attribute__((weak));
+extern char D_800A5A54[] __attribute__((weak));
+extern char D_800A5A58[] __attribute__((weak));
+extern char D_800A5A5C[] __attribute__((weak));
+extern char D_800A5A60[] __attribute__((weak));
+extern char D_800A5A64[] __attribute__((weak));
+extern char D_800A5A68[] __attribute__((weak));
+extern char D_800A5A6C[] __attribute__((weak));
+extern char D_800A5A70[] __attribute__((weak));
+extern char D_800A5A74[] __attribute__((weak));
+extern char D_800A5A78[] __attribute__((weak));
+extern char D_800A5A7C[] __attribute__((weak));
+extern char D_800A5A80[] __attribute__((weak));
+extern char D_800A5A84[] __attribute__((weak));
+extern char D_800A5A88[] __attribute__((weak));
+extern char D_800A5A8C[] __attribute__((weak));
+extern char D_800A5A90[] __attribute__((weak));
+extern char D_800A5A94[] __attribute__((weak));
+extern char D_800A5A98[] __attribute__((weak));
+extern char D_800A5A9C[] __attribute__((weak));
+extern char D_800A5AA0[] __attribute__((weak));
+extern char D_800A5AA4[] __attribute__((weak));
+extern char D_800A5AA8[] __attribute__((weak));
+extern char D_800A5AAC[] __attribute__((weak));
+extern char D_800A5AB0[] __attribute__((weak));
+extern char D_800A5AB4[] __attribute__((weak));
+extern char D_800A5AB8[] __attribute__((weak));
+extern char D_800A5ABC[] __attribute__((weak));
+extern char D_800A5AC0[] __attribute__((weak));
+extern char D_800A5AC4[] __attribute__((weak));
+extern char D_800A5AC8[] __attribute__((weak));
+extern char D_800A5ACC[] __attribute__((weak));
+extern char D_800A5AD0[] __attribute__((weak));
+extern char D_800A5AD4[] __attribute__((weak));
+extern char D_800A5AD8[] __attribute__((weak));
+extern char D_800A5AE0[] __attribute__((weak));
+extern char D_800A5AE4[] __attribute__((weak));
+extern char D_800A5AE8[] __attribute__((weak));
+extern char D_800A5AEC[] __attribute__((weak));
+extern char D_800A5AF0[] __attribute__((weak));
+extern char D_800A5AF4[] __attribute__((weak));
+extern char D_800A5AF8[] __attribute__((weak));
+extern char D_800A5AFC[] __attribute__((weak));
+extern char D_800A5B00[] __attribute__((weak));
+extern char D_800A5B04[] __attribute__((weak));
+extern char D_800A5B08[] __attribute__((weak));
+extern char D_800A5B0C[] __attribute__((weak));
+extern char D_800A5B10[] __attribute__((weak));
+extern char D_800A5B14[] __attribute__((weak));
+extern char D_800A5B18[] __attribute__((weak));
+extern char D_800A5B1C[] __attribute__((weak));
+extern char D_800A5B20[] __attribute__((weak));
+extern char D_800A5B24[] __attribute__((weak));
+extern char D_800A5B28[] __attribute__((weak));
+extern char D_800A5B2C[] __attribute__((weak));
+extern char D_800A5B30[] __attribute__((weak));
+extern char D_800A5B38[] __attribute__((weak));
+extern char D_800A5B3C[] __attribute__((weak));
+extern char D_800A5B40[] __attribute__((weak));
+extern char D_800A5B44[] __attribute__((weak));
+extern char D_800A5B48[] __attribute__((weak));
+extern char D_800A5B4C[] __attribute__((weak));
+extern char D_800A5B50[] __attribute__((weak));
+extern char D_800A5B54[] __attribute__((weak));
+extern char D_800A5B58[] __attribute__((weak));
+extern char D_800A5B60[] __attribute__((weak));
+extern char D_800A5B64[] __attribute__((weak));
+extern char D_800A5B68[] __attribute__((weak));
+extern char D_800A5B6C[] __attribute__((weak));
+extern char D_800A5B70[] __attribute__((weak));
+extern char D_800A5B74[] __attribute__((weak));
+extern char D_800A5B78[] __attribute__((weak));
+extern char D_800A5B7C[] __attribute__((weak));
+extern char D_800A5B80[] __attribute__((weak));
+extern char D_800A5B84[] __attribute__((weak));
+extern char D_800A5B88[] __attribute__((weak));
+extern char D_800A5B8C[] __attribute__((weak));
+extern char D_800A5B90[] __attribute__((weak));
+extern char D_800A5B94[] __attribute__((weak));
+extern char D_800A5B98[] __attribute__((weak));
+extern char D_800A5B9C[] __attribute__((weak));
+extern char D_800A5BA0[] __attribute__((weak));
+extern char D_800A5BA4[] __attribute__((weak));
+extern char D_800A5BA8[] __attribute__((weak));
+extern char D_800A5BAC[] __attribute__((weak));
+extern char D_800A5BB0[] __attribute__((weak));
+extern char D_800A5BB4[] __attribute__((weak));
+extern char D_800A5BB8[] __attribute__((weak));
+extern char D_800A5BBC[] __attribute__((weak));
+extern char D_800A5BC0[] __attribute__((weak));
+extern char D_800A5BC4[] __attribute__((weak));
+extern char D_800A5BC8[] __attribute__((weak));
+extern char D_800A5BCC[] __attribute__((weak));
+extern char D_800A5BD0[] __attribute__((weak));
+extern char D_800A5BD4[] __attribute__((weak));
+extern char D_800A5BD8[] __attribute__((weak));
+extern char D_800A5BDC[] __attribute__((weak));
+extern char D_800A5BE0[] __attribute__((weak));
+extern char D_800A5BE4[] __attribute__((weak));
+extern char D_800A5BE8[] __attribute__((weak));
+extern char D_800A5BEC[] __attribute__((weak));
+extern char D_800A5BF0[] __attribute__((weak));
+extern char D_800A5BF4[] __attribute__((weak));
+extern char D_800A5BF8[] __attribute__((weak));
+extern char D_800A5BFC[] __attribute__((weak));
+extern char D_800A5C00[] __attribute__((weak));
+extern char D_800A5C04[] __attribute__((weak));
+extern char D_800A5C08[] __attribute__((weak));
+extern char D_800A5C0C[] __attribute__((weak));
+extern char D_800A5C10[] __attribute__((weak));
+extern char D_800A5C14[] __attribute__((weak));
+extern char D_800A5C18[] __attribute__((weak));
+extern char D_800A5C1C[] __attribute__((weak));
+extern char D_800A5C20[] __attribute__((weak));
+extern char D_800A5C24[] __attribute__((weak));
+extern char D_800A5C28[] __attribute__((weak));
+extern char D_800A5C2C[] __attribute__((weak));
+extern char D_800A5C30[] __attribute__((weak));
+extern char D_800A5C34[] __attribute__((weak));
+extern char D_800A5C38[] __attribute__((weak));
+extern char D_800A5C3C[] __attribute__((weak));
+extern char D_800A5C40[] __attribute__((weak));
+extern char D_800A5C44[] __attribute__((weak));
+extern char D_800A5C48[] __attribute__((weak));
+extern char D_800A5C4C[] __attribute__((weak));
+extern char D_800A5C50[] __attribute__((weak));
+extern char D_800A5C54[] __attribute__((weak));
+extern char D_800A5C58[] __attribute__((weak));
+extern char D_800A5C5C[] __attribute__((weak));
+extern char D_800A5C60[] __attribute__((weak));
+extern char D_800A5C64[] __attribute__((weak));
+extern char D_800A5C68[] __attribute__((weak));
+extern char D_800A5C6C[] __attribute__((weak));
+extern char D_800A5C70[] __attribute__((weak));
+extern char D_800A5C78[] __attribute__((weak));
+extern char D_800A5C7C[] __attribute__((weak));
+extern char D_800A5C80[] __attribute__((weak));
+extern char D_800A5C84[] __attribute__((weak));
+extern char D_800A5C88[] __attribute__((weak));
+extern char D_800A5C8C[] __attribute__((weak));
+extern char D_800A5C90[] __attribute__((weak));
+extern char D_800A5C94[] __attribute__((weak));
+extern char D_800A5C98[] __attribute__((weak));
+extern char D_800A5C9C[] __attribute__((weak));
+extern char D_800A5CA0[] __attribute__((weak));
+extern char D_800A5CA4[] __attribute__((weak));
+extern char D_800A5CA8[] __attribute__((weak));
+extern char D_800A5CAC[] __attribute__((weak));
+extern char D_800A5CB0[] __attribute__((weak));
+extern char D_800A5CB4[] __attribute__((weak));
+extern char D_800A5CB8[] __attribute__((weak));
+extern char D_800A5CBC[] __attribute__((weak));
+extern char D_800A5CC0[] __attribute__((weak));
+extern char D_800A5CC4[] __attribute__((weak));
+extern char D_800A5CC8[] __attribute__((weak));
+extern char D_800A5CCC[] __attribute__((weak));
+extern char D_800A5CD0[] __attribute__((weak));
+extern char D_800A5CD4[] __attribute__((weak));
+extern char D_800A5CD8[] __attribute__((weak));
+extern char D_800A5CDC[] __attribute__((weak));
+extern char D_800A5CE0[] __attribute__((weak));
+extern char D_800A5CE8[] __attribute__((weak));
+extern char D_800A5CEC[] __attribute__((weak));
+extern char D_800A5CF0[] __attribute__((weak));
+extern char D_800A5CF4[] __attribute__((weak));
+extern char D_800A5CF8[] __attribute__((weak));
+extern char D_800A5CFC[] __attribute__((weak));
+extern char D_800A5D00[] __attribute__((weak));
+extern char D_800A5D04[] __attribute__((weak));
+extern char D_800A5D08[] __attribute__((weak));
+extern char D_800A5D20[] __attribute__((weak));
+extern char D_800A5D24[] __attribute__((weak));
+extern char D_800A5D28[] __attribute__((weak));
+extern char D_800A5D2C[] __attribute__((weak));
+extern char D_800A5D30[] __attribute__((weak));
+extern char D_800A5D34[] __attribute__((weak));
+extern char D_800A5D38[] __attribute__((weak));
+extern char D_800A5D3C[] __attribute__((weak));
+extern char D_800A5D40[] __attribute__((weak));
+extern char D_800A5D44[] __attribute__((weak));
+extern char D_800A5D48[] __attribute__((weak));
+extern char D_800A5D4C[] __attribute__((weak));
+extern char D_800A5D50[] __attribute__((weak));
+extern char D_800A5D54[] __attribute__((weak));
+extern char D_800A5D58[] __attribute__((weak));
+extern char D_800A5D5C[] __attribute__((weak));
+extern char D_800A5D60[] __attribute__((weak));
+extern char D_800A5D64[] __attribute__((weak));
+extern char D_800A5D68[] __attribute__((weak));
+extern char D_800A5D6C[] __attribute__((weak));
+extern char D_800A5D70[] __attribute__((weak));
+extern char D_800A5D74[] __attribute__((weak));
+extern char D_800A5D78[] __attribute__((weak));
+extern char D_800A5D7C[] __attribute__((weak));
+extern char D_800A5D80[] __attribute__((weak));
+extern char D_800A5D84[] __attribute__((weak));
+extern char D_800A5D88[] __attribute__((weak));
+extern char D_800A5D8C[] __attribute__((weak));
+extern char D_800A5D90[] __attribute__((weak));
+extern char D_800A5D94[] __attribute__((weak));
+extern char D_800A5D98[] __attribute__((weak));
+extern char D_800A5D9C[] __attribute__((weak));
+extern char D_800A5DA0[] __attribute__((weak));
+extern char D_800A5DA4[] __attribute__((weak));
+extern char D_800A5DA8[] __attribute__((weak));
+extern char D_800A5DAC[] __attribute__((weak));
+extern char D_800A5DB0[] __attribute__((weak));
+extern char D_800A5DB4[] __attribute__((weak));
+extern char D_800A5DB8[] __attribute__((weak));
+extern char D_800A5DBC[] __attribute__((weak));
+extern char D_800A5DC0[] __attribute__((weak));
+extern char D_800A5DC4[] __attribute__((weak));
+extern char D_800A5DC8[] __attribute__((weak));
+extern char D_800A5DCC[] __attribute__((weak));
+extern char D_800A5DD0[] __attribute__((weak));
+extern char D_800A5DD4[] __attribute__((weak));
+extern char D_800A5DD8[] __attribute__((weak));
+extern char D_800A5DDC[] __attribute__((weak));
+extern char D_800A5DE0[] __attribute__((weak));
+extern char D_800A5DE4[] __attribute__((weak));
+extern char D_800A5DE8[] __attribute__((weak));
+extern char D_800A5DEC[] __attribute__((weak));
+extern char D_800A5DF0[] __attribute__((weak));
+extern char D_800A5DF4[] __attribute__((weak));
+extern char D_800A5DF8[] __attribute__((weak));
+extern char D_800A5DFC[] __attribute__((weak));
+extern char D_800A5E00[] __attribute__((weak));
+extern char D_800A5E04[] __attribute__((weak));
+extern char D_800A5E08[] __attribute__((weak));
+extern char D_800A5E0C[] __attribute__((weak));
+extern char D_800A5E10[] __attribute__((weak));
+extern char D_800A5E14[] __attribute__((weak));
+extern char D_800A5E18[] __attribute__((weak));
+extern char D_800A5E1C[] __attribute__((weak));
+extern char D_800A5E20[] __attribute__((weak));
+extern char D_800A5E24[] __attribute__((weak));
+extern char D_800A5E28[] __attribute__((weak));
+extern char D_800A5E2C[] __attribute__((weak));
+extern char D_800A5E30[] __attribute__((weak));
+extern char D_800A5E34[] __attribute__((weak));
+extern char D_800A5E38[] __attribute__((weak));
+extern char D_800A5E3C[] __attribute__((weak));
+extern char D_800A5E40[] __attribute__((weak));
+extern char D_800A5E44[] __attribute__((weak));
+extern char D_800A5E48[] __attribute__((weak));
+extern char D_800A5E4C[] __attribute__((weak));
+extern char D_800A5E50[] __attribute__((weak));
+extern char D_800A5E54[] __attribute__((weak));
+extern char D_800A5E58[] __attribute__((weak));
+extern char D_800A5E5C[] __attribute__((weak));
+extern char D_800A5E60[] __attribute__((weak));
+extern char D_800A5E64[] __attribute__((weak));
+extern char D_800A5E68[] __attribute__((weak));
+extern char D_800A5E6C[] __attribute__((weak));
+extern char D_800A5E70[] __attribute__((weak));
+extern char D_800A5E74[] __attribute__((weak));
+extern char D_800A5E78[] __attribute__((weak));
+extern char D_800A5E7C[] __attribute__((weak));
+extern char D_800A5E80[] __attribute__((weak));
+extern char D_800A5E84[] __attribute__((weak));
+extern char D_800A5E88[] __attribute__((weak));
+extern char D_800A5E8C[] __attribute__((weak));
+extern char D_800A5E90[] __attribute__((weak));
+extern char D_800A5E94[] __attribute__((weak));
+extern char D_800A5E98[] __attribute__((weak));
+extern char D_800A5E9C[] __attribute__((weak));
+extern char D_800A5EA0[] __attribute__((weak));
+extern char D_800A5EA4[] __attribute__((weak));
+extern char D_800A5EA8[] __attribute__((weak));
+extern char D_800A5EAC[] __attribute__((weak));
+extern char D_800A5EB0[] __attribute__((weak));
+extern char D_800A5EB4[] __attribute__((weak));
+extern char D_800A5EB8[] __attribute__((weak));
+extern char D_800A5EBC[] __attribute__((weak));
+extern char D_800A5EC0[] __attribute__((weak));
+extern char D_800A5EC4[] __attribute__((weak));
+extern char D_800A5ECC[] __attribute__((weak));
+extern char D_800A5ED0[] __attribute__((weak));
+extern char D_800A5ED4[] __attribute__((weak));
+extern char D_800A5ED8[] __attribute__((weak));
+extern char D_800A5EDC[] __attribute__((weak));
+extern char D_800A5EE0[] __attribute__((weak));
+extern char D_800A5EE4[] __attribute__((weak));
+extern char D_800A5EE8[] __attribute__((weak));
+extern char D_800A5EEC[] __attribute__((weak));
+extern char D_800A5EF0[] __attribute__((weak));
+extern char D_800A5EF4[] __attribute__((weak));
+extern char D_800A5EF8[] __attribute__((weak));
+extern char D_800A5EFC[] __attribute__((weak));
+extern char D_800A5F00[] __attribute__((weak));
+extern char D_800A5F04[] __attribute__((weak));
+extern char D_800A5F08[] __attribute__((weak));
+extern char D_800A5F0C[] __attribute__((weak));
+extern char D_800A5F10[] __attribute__((weak));
+extern char D_800A5F14[] __attribute__((weak));
+extern char D_800A5F18[] __attribute__((weak));
+extern char D_800A5F1C[] __attribute__((weak));
+extern char D_800A5F20[] __attribute__((weak));
+extern char D_800A5F24[] __attribute__((weak));
+extern char D_800A5F28[] __attribute__((weak));
+extern char D_800A5F2C[] __attribute__((weak));
+extern char D_800A5F30[] __attribute__((weak));
+extern char D_800A5F34[] __attribute__((weak));
+extern char D_800A5F38[] __attribute__((weak));
+extern char D_800A5F3C[] __attribute__((weak));
+extern char D_800A5F40[] __attribute__((weak));
+extern char D_800A5F44[] __attribute__((weak));
+extern char D_800A5F48[] __attribute__((weak));
+extern char D_800A5F4C[] __attribute__((weak));
+extern char D_800A5F50[] __attribute__((weak));
+extern char D_800A5F54[] __attribute__((weak));
+extern char D_800A5F58[] __attribute__((weak));
+extern char D_800A5F5C[] __attribute__((weak));
+extern char D_800A5F60[] __attribute__((weak));
+extern char D_800A5F64[] __attribute__((weak));
+extern char D_800A5F68[] __attribute__((weak));
+extern char D_800A5F6C[] __attribute__((weak));
+extern char D_800A5F70[] __attribute__((weak));
+extern char D_800A5F74[] __attribute__((weak));
+extern char D_800A5F78[] __attribute__((weak));
+extern char D_800A5F7C[] __attribute__((weak));
+extern char D_800A5F84[] __attribute__((weak));
+extern char D_800A5F88[] __attribute__((weak));
+extern char D_800A5F8C[] __attribute__((weak));
+extern char D_800A5F90[] __attribute__((weak));
+extern char D_800A5F94[] __attribute__((weak));
+extern char D_800A5F98[] __attribute__((weak));
+extern char D_800A5F9C[] __attribute__((weak));
+extern char D_800A5FA4[] __attribute__((weak));
+extern char D_800A5FA8[] __attribute__((weak));
+extern char D_800A5FAC[] __attribute__((weak));
+extern char D_800A5FB0[] __attribute__((weak));
+extern char D_800A5FB4[] __attribute__((weak));
+extern char D_800A5FB8[] __attribute__((weak));
+extern char D_800A5FBC[] __attribute__((weak));
+extern char D_800A5FC0[] __attribute__((weak));
+extern char D_800A5FC4[] __attribute__((weak));
+extern char D_800A5FC8[] __attribute__((weak));
+extern char D_800A5FCC[] __attribute__((weak));
+extern char D_800A5FD0[] __attribute__((weak));
+extern char D_800A5FD4[] __attribute__((weak));
+extern char D_800A5FD8[] __attribute__((weak));
+extern char D_800A5FDC[] __attribute__((weak));
+extern char D_800A5FE0[] __attribute__((weak));
+extern char D_800A5FE4[] __attribute__((weak));
+extern char D_800A5FE8[] __attribute__((weak));
+extern char D_800A5FEC[] __attribute__((weak));
+extern char D_800A5FF0[] __attribute__((weak));
+extern char D_800A5FF4[] __attribute__((weak));
+extern char D_800A5FFC[] __attribute__((weak));
+extern char D_800A6000[] __attribute__((weak));
+extern char D_800A6004[] __attribute__((weak));
+extern char D_800A6008[] __attribute__((weak));
+extern char D_800A600C[] __attribute__((weak));
+extern char D_800A6010[] __attribute__((weak));
+extern char D_800A6014[] __attribute__((weak));
+extern char D_800A601C[] __attribute__((weak));
+extern char D_800A6020[] __attribute__((weak));
+extern char D_800A6024[] __attribute__((weak));
+extern char D_800A6028[] __attribute__((weak));
+extern char D_800A602C[] __attribute__((weak));
+extern char D_800A6030[] __attribute__((weak));
+extern char D_800A6034[] __attribute__((weak));
+extern char D_800A6038[] __attribute__((weak));
+extern char D_800A6042[] __attribute__((weak));
+extern char D_800A6043[] __attribute__((weak));
+extern char D_800A6045[] __attribute__((weak));
+extern char D_800A6050[] __attribute__((weak));
+extern char D_800A6054[] __attribute__((weak));
+extern char D_800A6058[] __attribute__((weak));
+extern char D_800A6060[] __attribute__((weak));
+extern char D_800A6064[] __attribute__((weak));
+extern char D_800A6074[] __attribute__((weak));
+extern char D_800A6078[] __attribute__((weak));
+extern char D_800A607E[] __attribute__((weak));
+extern char D_800A607F[] __attribute__((weak));
+extern char D_800A6080[] __attribute__((weak));
+extern char D_800A6081[] __attribute__((weak));
+extern char D_800A6082[] __attribute__((weak));
+extern char D_800A6085[] __attribute__((weak));
+extern char D_800A6087[] __attribute__((weak));
+extern char D_800A6088[] __attribute__((weak));
+extern char D_800A608C[] __attribute__((weak));
+extern char D_800A6094[] __attribute__((weak));
+extern char D_800A609C[] __attribute__((weak));
+extern char D_800A60A4[] __attribute__((weak));
+extern char D_800A60BC[] __attribute__((weak));
+extern char D_800A60BE[] __attribute__((weak));
+extern char D_800A85F8[] __attribute__((weak));
+extern char D_800ACB98[] __attribute__((weak));
+extern char D_800ACBA8[] __attribute__((weak));
+extern char D_800ACBAC[] __attribute__((weak));
+extern char D_800AE3CC[] __attribute__((weak));
+extern char D_800AE3D0[] __attribute__((weak));
+extern char D_800AE3D8[] __attribute__((weak));
+extern char D_800AE3DC[] __attribute__((weak));
+extern char D_801FC400[] __attribute__((weak));
 extern char DeathAnimationTick[] __attribute__((weak));
 extern char DebrisParticlePhysicsTick[] __attribute__((weak));
 extern char DebrisParticleTickCallback[] __attribute__((weak));
@@ -2603,7 +3243,647 @@ PortAddrMapEntry g_port_addrmap[] = {
     { CreateYellowBirdEntity, 0x1B0u, 0x8006E1D8u },
     { DMACallback, 0x30u, 0x80087E78u },
     { D_80010344, 0x58u, 0x80010344u },
+    { D_80010354, 0x400u, 0x80010354u },
+    { D_80010364, 0x400u, 0x80010364u },
+    { D_80010374, 0x400u, 0x80010374u },
+    { D_80010384, 0x400u, 0x80010384u },
     { D_8001039C, 0x30u, 0x8001039Cu },
+    { D_8001048C, 0x400u, 0x8001048Cu },
+    { D_800105CC, 0x400u, 0x800105CCu },
+    { D_800105EC, 0x400u, 0x800105ECu },
+    { D_8001060C, 0x400u, 0x8001060Cu },
+    { D_80010690, 0x400u, 0x80010690u },
+    { D_800106B0, 0x400u, 0x800106B0u },
+    { D_800106D0, 0x400u, 0x800106D0u },
+    { D_800106F0, 0x400u, 0x800106F0u },
+    { D_80010710, 0x400u, 0x80010710u },
+    { D_80010730, 0x400u, 0x80010730u },
+    { D_80010790, 0x400u, 0x80010790u },
+    { D_800107B0, 0x400u, 0x800107B0u },
+    { D_800107D0, 0x400u, 0x800107D0u },
+    { D_800107F0, 0x400u, 0x800107F0u },
+    { D_80010810, 0x400u, 0x80010810u },
+    { D_80010830, 0x400u, 0x80010830u },
+    { D_80010850, 0x400u, 0x80010850u },
+    { D_80010870, 0x400u, 0x80010870u },
+    { D_80010890, 0x400u, 0x80010890u },
+    { D_800108D0, 0x400u, 0x800108D0u },
+    { D_80010910, 0x400u, 0x80010910u },
+    { D_80010950, 0x400u, 0x80010950u },
+    { D_80010970, 0x400u, 0x80010970u },
+    { D_80010980, 0x400u, 0x80010980u },
+    { D_800109A0, 0x400u, 0x800109A0u },
+    { D_800109D0, 0x400u, 0x800109D0u },
+    { D_800109F0, 0x400u, 0x800109F0u },
+    { D_80010A10, 0x400u, 0x80010A10u },
+    { D_80010A30, 0x400u, 0x80010A30u },
+    { D_80010A48, 0x400u, 0x80010A48u },
+    { D_80010A68, 0x400u, 0x80010A68u },
+    { D_80010A88, 0x400u, 0x80010A88u },
+    { D_80010AA8, 0x400u, 0x80010AA8u },
+    { D_80010AB8, 0x400u, 0x80010AB8u },
+    { D_80010AD8, 0x400u, 0x80010AD8u },
+    { D_80010AE8, 0x400u, 0x80010AE8u },
+    { D_80010B00, 0x400u, 0x80010B00u },
+    { D_80010B18, 0x400u, 0x80010B18u },
+    { D_80010B28, 0x400u, 0x80010B28u },
+    { D_80010B78, 0x400u, 0x80010B78u },
+    { D_80010BA8, 0x400u, 0x80010BA8u },
+    { D_80010BC8, 0x400u, 0x80010BC8u },
+    { D_80010C44, 0x400u, 0x80010C44u },
+    { D_80010C64, 0x400u, 0x80010C64u },
+    { D_80010C84, 0x400u, 0x80010C84u },
+    { D_80010CE4, 0x400u, 0x80010CE4u },
+    { D_80010D84, 0x400u, 0x80010D84u },
+    { D_80010DA4, 0x400u, 0x80010DA4u },
+    { D_80010DC4, 0x400u, 0x80010DC4u },
+    { D_80010DE4, 0x400u, 0x80010DE4u },
+    { D_80010E04, 0x400u, 0x80010E04u },
+    { D_80011048, 0x400u, 0x80011048u },
+    { D_80011068, 0x400u, 0x80011068u },
+    { D_80011088, 0x400u, 0x80011088u },
+    { D_800110A8, 0x400u, 0x800110A8u },
+    { D_800110E8, 0x400u, 0x800110E8u },
+    { D_80011108, 0x400u, 0x80011108u },
+    { D_80011128, 0x400u, 0x80011128u },
+    { D_80011148, 0x400u, 0x80011148u },
+    { D_80011168, 0x400u, 0x80011168u },
+    { D_80011188, 0x400u, 0x80011188u },
+    { D_800111A8, 0x400u, 0x800111A8u },
+    { D_800111C8, 0x400u, 0x800111C8u },
+    { D_800111E8, 0x400u, 0x800111E8u },
+    { D_80011208, 0x400u, 0x80011208u },
+    { D_80011228, 0x400u, 0x80011228u },
+    { D_80011248, 0x400u, 0x80011248u },
+    { D_80011268, 0x400u, 0x80011268u },
+    { D_80011288, 0x400u, 0x80011288u },
+    { D_800112C8, 0x400u, 0x800112C8u },
+    { D_800112E8, 0x400u, 0x800112E8u },
+    { D_80011308, 0x400u, 0x80011308u },
+    { D_80011328, 0x400u, 0x80011328u },
+    { D_80011348, 0x400u, 0x80011348u },
+    { D_80011368, 0x400u, 0x80011368u },
+    { D_80011388, 0x400u, 0x80011388u },
+    { D_800113A8, 0x400u, 0x800113A8u },
+    { D_80011628, 0x400u, 0x80011628u },
+    { D_80011648, 0x400u, 0x80011648u },
+    { D_800116E8, 0x400u, 0x800116E8u },
+    { D_80011708, 0x400u, 0x80011708u },
+    { D_80011784, 0x400u, 0x80011784u },
+    { D_800117A4, 0x400u, 0x800117A4u },
+    { D_800117C4, 0x400u, 0x800117C4u },
+    { D_800117E4, 0x400u, 0x800117E4u },
+    { D_80011824, 0x400u, 0x80011824u },
+    { D_80011CF4, 0x400u, 0x80011CF4u },
+    { D_80011D14, 0x400u, 0x80011D14u },
+    { D_80011D34, 0x400u, 0x80011D34u },
+    { D_80011E54, 0x400u, 0x80011E54u },
+    { D_80011E74, 0x400u, 0x80011E74u },
+    { D_80011E94, 0x400u, 0x80011E94u },
+    { D_80011EB4, 0x400u, 0x80011EB4u },
+    { D_80011FDC, 0x400u, 0x80011FDCu },
+    { D_80012034, 0x400u, 0x80012034u },
+    { D_8001208C, 0x400u, 0x8001208Cu },
+    { D_800120AC, 0x400u, 0x800120ACu },
+    { D_800120CC, 0x400u, 0x800120CCu },
+    { D_80012100, 0x400u, 0x80012100u },
+    { D_80012120, 0x400u, 0x80012120u },
+    { D_80012758, 0x400u, 0x80012758u },
+    { D_800907EC, 0x400u, 0x800907ECu },
+    { D_8009AE40, 0x400u, 0x8009AE40u },
+    { D_8009AE58, 0x400u, 0x8009AE58u },
+    { D_8009B038, 0x400u, 0x8009B038u },
+    { D_8009B074, 0x400u, 0x8009B074u },
+    { D_8009B0BC, 0x400u, 0x8009B0BCu },
+    { D_8009B104, 0x400u, 0x8009B104u },
+    { D_8009B14C, 0x400u, 0x8009B14Cu },
+    { D_8009B160, 0x400u, 0x8009B160u },
+    { D_8009B174, 0x400u, 0x8009B174u },
+    { D_8009B180, 0x400u, 0x8009B180u },
+    { D_8009B18C, 0x400u, 0x8009B18Cu },
+    { D_8009B214, 0x400u, 0x8009B214u },
+    { D_8009B240, 0x400u, 0x8009B240u },
+    { D_8009B2C4, 0x400u, 0x8009B2C4u },
+    { D_8009B3A0, 0x400u, 0x8009B3A0u },
+    { D_8009B3B4, 0x400u, 0x8009B3B4u },
+    { D_8009B3C8, 0x400u, 0x8009B3C8u },
+    { D_8009B3D8, 0x400u, 0x8009B3D8u },
+    { D_8009B43C, 0x400u, 0x8009B43Cu },
+    { D_8009B4B4, 0x400u, 0x8009B4B4u },
+    { D_8009B4CC, 0x400u, 0x8009B4CCu },
+    { D_8009B4DC, 0x400u, 0x8009B4DCu },
+    { D_8009B54C, 0x400u, 0x8009B54Cu },
+    { D_8009B55C, 0x400u, 0x8009B55Cu },
+    { D_8009B57C, 0x400u, 0x8009B57Cu },
+    { D_8009B59C, 0x400u, 0x8009B59Cu },
+    { D_8009B5BC, 0x400u, 0x8009B5BCu },
+    { D_8009B5D4, 0x400u, 0x8009B5D4u },
+    { D_8009B5EC, 0x400u, 0x8009B5ECu },
+    { D_8009B684, 0x400u, 0x8009B684u },
+    { D_8009B6A4, 0x400u, 0x8009B6A4u },
+    { D_8009B6B0, 0x400u, 0x8009B6B0u },
+    { D_8009B6BC, 0x400u, 0x8009B6BCu },
+    { D_8009B6CC, 0x400u, 0x8009B6CCu },
+    { D_8009B6D8, 0x400u, 0x8009B6D8u },
+    { D_8009B6E4, 0x400u, 0x8009B6E4u },
+    { D_8009B7A4, 0x400u, 0x8009B7A4u },
+    { D_8009B7DC, 0x400u, 0x8009B7DCu },
+    { D_8009B844, 0x400u, 0x8009B844u },
+    { D_8009BC08, 0x400u, 0x8009BC08u },
+    { D_8009C174, 0x400u, 0x8009C174u },
+    { D_8009C254, 0x400u, 0x8009C254u },
+    { D_8009C3A8, 0x400u, 0x8009C3A8u },
+    { D_8009CA34, 0x400u, 0x8009CA34u },
+    { D_8009CA7C, 0x400u, 0x8009CA7Cu },
+    { D_8009CADC, 0x400u, 0x8009CADCu },
+    { D_8009CB00, 0x400u, 0x8009CB00u },
+    { D_8009CB0C, 0x400u, 0x8009CB0Cu },
+    { D_8009CB0E, 0x400u, 0x8009CB0Eu },
+    { D_8009CB10, 0x400u, 0x8009CB10u },
+    { D_8009CB7C, 0x400u, 0x8009CB7Cu },
+    { D_8009CBAC, 0x400u, 0x8009CBACu },
+    { D_8009CBBC, 0x400u, 0x8009CBBCu },
+    { D_8009CBDC, 0x400u, 0x8009CBDCu },
+    { D_8009CBE8, 0x400u, 0x8009CBE8u },
+    { D_8009CBF8, 0x400u, 0x8009CBF8u },
+    { D_8009CC08, 0x400u, 0x8009CC08u },
+    { D_8009CC18, 0x400u, 0x8009CC18u },
+    { D_8009CC30, 0x400u, 0x8009CC30u },
+    { D_8009CC68, 0x400u, 0x8009CC68u },
+    { D_8009CE64, 0x400u, 0x8009CE64u },
+    { D_8009CFB0, 0x400u, 0x8009CFB0u },
+    { D_8009CFD8, 0x400u, 0x8009CFD8u },
+    { D_8009CFD9, 0x400u, 0x8009CFD9u },
+    { D_8009D228, 0x400u, 0x8009D228u },
+    { D_8009D5F8, 0x400u, 0x8009D5F8u },
+    { D_8009D9C0, 0x400u, 0x8009D9C0u },
+    { D_8009D9C1, 0x400u, 0x8009D9C1u },
+    { D_8009D9C2, 0x400u, 0x8009D9C2u },
+    { D_8009D9FC, 0x400u, 0x8009D9FCu },
+    { D_8009DA18, 0x400u, 0x8009DA18u },
+    { D_8009DA34, 0x400u, 0x8009DA34u },
+    { D_8009DA50, 0x400u, 0x8009DA50u },
+    { D_8009DA5C, 0x400u, 0x8009DA5Cu },
+    { D_8009DA68, 0x400u, 0x8009DA68u },
+    { D_8009DA78, 0x400u, 0x8009DA78u },
+    { D_8009DA84, 0x400u, 0x8009DA84u },
+    { D_8009DA90, 0x400u, 0x8009DA90u },
+    { D_8009DA9C, 0x400u, 0x8009DA9Cu },
+    { D_8009DAA8, 0x400u, 0x8009DAA8u },
+    { D_8009DAB4, 0x400u, 0x8009DAB4u },
+    { D_8009DAE0, 0x400u, 0x8009DAE0u },
+    { D_8009DE08, 0x400u, 0x8009DE08u },
+    { D_8009DF18, 0x400u, 0x8009DF18u },
+    { D_8009DF1C, 0x400u, 0x8009DF1Cu },
+    { D_8009DF24, 0x400u, 0x8009DF24u },
+    { D_8009DF28, 0x400u, 0x8009DF28u },
+    { D_8009DF34, 0x400u, 0x8009DF34u },
+    { D_8009DF38, 0x400u, 0x8009DF38u },
+    { D_8009DF39, 0x400u, 0x8009DF39u },
+    { D_8009E1C4, 0x400u, 0x8009E1C4u },
+    { D_8009E230, 0x400u, 0x8009E230u },
+    { D_8009E33C, 0x400u, 0x8009E33Cu },
+    { D_8009E3BA, 0x400u, 0x8009E3BAu },
+    { D_8009F440, 0x400u, 0x8009F440u },
+    { D_8009F4A4, 0x400u, 0x8009F4A4u },
+    { D_800A55F4, 0x400u, 0x800A55F4u },
+    { D_800A595C, 0x400u, 0x800A595Cu },
+    { D_800A5964, 0x400u, 0x800A5964u },
+    { D_800A5968, 0x400u, 0x800A5968u },
+    { D_800A596C, 0x400u, 0x800A596Cu },
+    { D_800A596E, 0x400u, 0x800A596Eu },
+    { D_800A5970, 0x400u, 0x800A5970u },
+    { D_800A5978, 0x400u, 0x800A5978u },
+    { D_800A597C, 0x400u, 0x800A597Cu },
+    { D_800A5980, 0x400u, 0x800A5980u },
+    { D_800A5988, 0x400u, 0x800A5988u },
+    { D_800A598C, 0x400u, 0x800A598Cu },
+    { D_800A5990, 0x400u, 0x800A5990u },
+    { D_800A5994, 0x400u, 0x800A5994u },
+    { D_800A5998, 0x400u, 0x800A5998u },
+    { D_800A599C, 0x400u, 0x800A599Cu },
+    { D_800A59A0, 0x400u, 0x800A59A0u },
+    { D_800A59A8, 0x400u, 0x800A59A8u },
+    { D_800A59AC, 0x400u, 0x800A59ACu },
+    { D_800A59B0, 0x400u, 0x800A59B0u },
+    { D_800A59B4, 0x400u, 0x800A59B4u },
+    { D_800A59B8, 0x400u, 0x800A59B8u },
+    { D_800A59BC, 0x400u, 0x800A59BCu },
+    { D_800A59C0, 0x400u, 0x800A59C0u },
+    { D_800A59C4, 0x400u, 0x800A59C4u },
+    { D_800A59C8, 0x400u, 0x800A59C8u },
+    { D_800A59CC, 0x400u, 0x800A59CCu },
+    { D_800A59D0, 0x400u, 0x800A59D0u },
+    { D_800A59D4, 0x400u, 0x800A59D4u },
+    { D_800A59D8, 0x400u, 0x800A59D8u },
+    { D_800A59DC, 0x400u, 0x800A59DCu },
+    { D_800A59E0, 0x400u, 0x800A59E0u },
+    { D_800A59E8, 0x400u, 0x800A59E8u },
+    { D_800A59E9, 0x400u, 0x800A59E9u },
+    { D_800A59EA, 0x400u, 0x800A59EAu },
+    { D_800A59EB, 0x400u, 0x800A59EBu },
+    { D_800A59EC, 0x400u, 0x800A59ECu },
+    { D_800A59F0, 0x400u, 0x800A59F0u },
+    { D_800A59F4, 0x400u, 0x800A59F4u },
+    { D_800A59F8, 0x400u, 0x800A59F8u },
+    { D_800A5A44, 0x400u, 0x800A5A44u },
+    { D_800A5A50, 0x400u, 0x800A5A50u },
+    { D_800A5A54, 0x400u, 0x800A5A54u },
+    { D_800A5A58, 0x400u, 0x800A5A58u },
+    { D_800A5A5C, 0x400u, 0x800A5A5Cu },
+    { D_800A5A60, 0x400u, 0x800A5A60u },
+    { D_800A5A64, 0x400u, 0x800A5A64u },
+    { D_800A5A68, 0x400u, 0x800A5A68u },
+    { D_800A5A6C, 0x400u, 0x800A5A6Cu },
+    { D_800A5A70, 0x400u, 0x800A5A70u },
+    { D_800A5A74, 0x400u, 0x800A5A74u },
+    { D_800A5A78, 0x400u, 0x800A5A78u },
+    { D_800A5A7C, 0x400u, 0x800A5A7Cu },
+    { D_800A5A80, 0x400u, 0x800A5A80u },
+    { D_800A5A84, 0x400u, 0x800A5A84u },
+    { D_800A5A88, 0x400u, 0x800A5A88u },
+    { D_800A5A8C, 0x400u, 0x800A5A8Cu },
+    { D_800A5A90, 0x400u, 0x800A5A90u },
+    { D_800A5A94, 0x400u, 0x800A5A94u },
+    { D_800A5A98, 0x400u, 0x800A5A98u },
+    { D_800A5A9C, 0x400u, 0x800A5A9Cu },
+    { D_800A5AA0, 0x400u, 0x800A5AA0u },
+    { D_800A5AA4, 0x400u, 0x800A5AA4u },
+    { D_800A5AA8, 0x400u, 0x800A5AA8u },
+    { D_800A5AAC, 0x400u, 0x800A5AACu },
+    { D_800A5AB0, 0x400u, 0x800A5AB0u },
+    { D_800A5AB4, 0x400u, 0x800A5AB4u },
+    { D_800A5AB8, 0x400u, 0x800A5AB8u },
+    { D_800A5ABC, 0x400u, 0x800A5ABCu },
+    { D_800A5AC0, 0x400u, 0x800A5AC0u },
+    { D_800A5AC4, 0x400u, 0x800A5AC4u },
+    { D_800A5AC8, 0x400u, 0x800A5AC8u },
+    { D_800A5ACC, 0x400u, 0x800A5ACCu },
+    { D_800A5AD0, 0x400u, 0x800A5AD0u },
+    { D_800A5AD4, 0x400u, 0x800A5AD4u },
+    { D_800A5AD8, 0x400u, 0x800A5AD8u },
+    { D_800A5AE0, 0x400u, 0x800A5AE0u },
+    { D_800A5AE4, 0x400u, 0x800A5AE4u },
+    { D_800A5AE8, 0x400u, 0x800A5AE8u },
+    { D_800A5AEC, 0x400u, 0x800A5AECu },
+    { D_800A5AF0, 0x400u, 0x800A5AF0u },
+    { D_800A5AF4, 0x400u, 0x800A5AF4u },
+    { D_800A5AF8, 0x400u, 0x800A5AF8u },
+    { D_800A5AFC, 0x400u, 0x800A5AFCu },
+    { D_800A5B00, 0x400u, 0x800A5B00u },
+    { D_800A5B04, 0x400u, 0x800A5B04u },
+    { D_800A5B08, 0x400u, 0x800A5B08u },
+    { D_800A5B0C, 0x400u, 0x800A5B0Cu },
+    { D_800A5B10, 0x400u, 0x800A5B10u },
+    { D_800A5B14, 0x400u, 0x800A5B14u },
+    { D_800A5B18, 0x400u, 0x800A5B18u },
+    { D_800A5B1C, 0x400u, 0x800A5B1Cu },
+    { D_800A5B20, 0x400u, 0x800A5B20u },
+    { D_800A5B24, 0x400u, 0x800A5B24u },
+    { D_800A5B28, 0x400u, 0x800A5B28u },
+    { D_800A5B2C, 0x400u, 0x800A5B2Cu },
+    { D_800A5B30, 0x400u, 0x800A5B30u },
+    { D_800A5B38, 0x400u, 0x800A5B38u },
+    { D_800A5B3C, 0x400u, 0x800A5B3Cu },
+    { D_800A5B40, 0x400u, 0x800A5B40u },
+    { D_800A5B44, 0x400u, 0x800A5B44u },
+    { D_800A5B48, 0x400u, 0x800A5B48u },
+    { D_800A5B4C, 0x400u, 0x800A5B4Cu },
+    { D_800A5B50, 0x400u, 0x800A5B50u },
+    { D_800A5B54, 0x400u, 0x800A5B54u },
+    { D_800A5B58, 0x400u, 0x800A5B58u },
+    { D_800A5B60, 0x400u, 0x800A5B60u },
+    { D_800A5B64, 0x400u, 0x800A5B64u },
+    { D_800A5B68, 0x400u, 0x800A5B68u },
+    { D_800A5B6C, 0x400u, 0x800A5B6Cu },
+    { D_800A5B70, 0x400u, 0x800A5B70u },
+    { D_800A5B74, 0x400u, 0x800A5B74u },
+    { D_800A5B78, 0x400u, 0x800A5B78u },
+    { D_800A5B7C, 0x400u, 0x800A5B7Cu },
+    { D_800A5B80, 0x400u, 0x800A5B80u },
+    { D_800A5B84, 0x400u, 0x800A5B84u },
+    { D_800A5B88, 0x400u, 0x800A5B88u },
+    { D_800A5B8C, 0x400u, 0x800A5B8Cu },
+    { D_800A5B90, 0x400u, 0x800A5B90u },
+    { D_800A5B94, 0x400u, 0x800A5B94u },
+    { D_800A5B98, 0x400u, 0x800A5B98u },
+    { D_800A5B9C, 0x400u, 0x800A5B9Cu },
+    { D_800A5BA0, 0x400u, 0x800A5BA0u },
+    { D_800A5BA4, 0x400u, 0x800A5BA4u },
+    { D_800A5BA8, 0x400u, 0x800A5BA8u },
+    { D_800A5BAC, 0x400u, 0x800A5BACu },
+    { D_800A5BB0, 0x400u, 0x800A5BB0u },
+    { D_800A5BB4, 0x400u, 0x800A5BB4u },
+    { D_800A5BB8, 0x400u, 0x800A5BB8u },
+    { D_800A5BBC, 0x400u, 0x800A5BBCu },
+    { D_800A5BC0, 0x400u, 0x800A5BC0u },
+    { D_800A5BC4, 0x400u, 0x800A5BC4u },
+    { D_800A5BC8, 0x400u, 0x800A5BC8u },
+    { D_800A5BCC, 0x400u, 0x800A5BCCu },
+    { D_800A5BD0, 0x400u, 0x800A5BD0u },
+    { D_800A5BD4, 0x400u, 0x800A5BD4u },
+    { D_800A5BD8, 0x400u, 0x800A5BD8u },
+    { D_800A5BDC, 0x400u, 0x800A5BDCu },
+    { D_800A5BE0, 0x400u, 0x800A5BE0u },
+    { D_800A5BE4, 0x400u, 0x800A5BE4u },
+    { D_800A5BE8, 0x400u, 0x800A5BE8u },
+    { D_800A5BEC, 0x400u, 0x800A5BECu },
+    { D_800A5BF0, 0x400u, 0x800A5BF0u },
+    { D_800A5BF4, 0x400u, 0x800A5BF4u },
+    { D_800A5BF8, 0x400u, 0x800A5BF8u },
+    { D_800A5BFC, 0x400u, 0x800A5BFCu },
+    { D_800A5C00, 0x400u, 0x800A5C00u },
+    { D_800A5C04, 0x400u, 0x800A5C04u },
+    { D_800A5C08, 0x400u, 0x800A5C08u },
+    { D_800A5C0C, 0x400u, 0x800A5C0Cu },
+    { D_800A5C10, 0x400u, 0x800A5C10u },
+    { D_800A5C14, 0x400u, 0x800A5C14u },
+    { D_800A5C18, 0x400u, 0x800A5C18u },
+    { D_800A5C1C, 0x400u, 0x800A5C1Cu },
+    { D_800A5C20, 0x400u, 0x800A5C20u },
+    { D_800A5C24, 0x400u, 0x800A5C24u },
+    { D_800A5C28, 0x400u, 0x800A5C28u },
+    { D_800A5C2C, 0x400u, 0x800A5C2Cu },
+    { D_800A5C30, 0x400u, 0x800A5C30u },
+    { D_800A5C34, 0x400u, 0x800A5C34u },
+    { D_800A5C38, 0x400u, 0x800A5C38u },
+    { D_800A5C3C, 0x400u, 0x800A5C3Cu },
+    { D_800A5C40, 0x400u, 0x800A5C40u },
+    { D_800A5C44, 0x400u, 0x800A5C44u },
+    { D_800A5C48, 0x400u, 0x800A5C48u },
+    { D_800A5C4C, 0x400u, 0x800A5C4Cu },
+    { D_800A5C50, 0x400u, 0x800A5C50u },
+    { D_800A5C54, 0x400u, 0x800A5C54u },
+    { D_800A5C58, 0x400u, 0x800A5C58u },
+    { D_800A5C5C, 0x400u, 0x800A5C5Cu },
+    { D_800A5C60, 0x400u, 0x800A5C60u },
+    { D_800A5C64, 0x400u, 0x800A5C64u },
+    { D_800A5C68, 0x400u, 0x800A5C68u },
+    { D_800A5C6C, 0x400u, 0x800A5C6Cu },
+    { D_800A5C70, 0x400u, 0x800A5C70u },
+    { D_800A5C78, 0x400u, 0x800A5C78u },
+    { D_800A5C7C, 0x400u, 0x800A5C7Cu },
+    { D_800A5C80, 0x400u, 0x800A5C80u },
+    { D_800A5C84, 0x400u, 0x800A5C84u },
+    { D_800A5C88, 0x400u, 0x800A5C88u },
+    { D_800A5C8C, 0x400u, 0x800A5C8Cu },
+    { D_800A5C90, 0x400u, 0x800A5C90u },
+    { D_800A5C94, 0x400u, 0x800A5C94u },
+    { D_800A5C98, 0x400u, 0x800A5C98u },
+    { D_800A5C9C, 0x400u, 0x800A5C9Cu },
+    { D_800A5CA0, 0x400u, 0x800A5CA0u },
+    { D_800A5CA4, 0x400u, 0x800A5CA4u },
+    { D_800A5CA8, 0x400u, 0x800A5CA8u },
+    { D_800A5CAC, 0x400u, 0x800A5CACu },
+    { D_800A5CB0, 0x400u, 0x800A5CB0u },
+    { D_800A5CB4, 0x400u, 0x800A5CB4u },
+    { D_800A5CB8, 0x400u, 0x800A5CB8u },
+    { D_800A5CBC, 0x400u, 0x800A5CBCu },
+    { D_800A5CC0, 0x400u, 0x800A5CC0u },
+    { D_800A5CC4, 0x400u, 0x800A5CC4u },
+    { D_800A5CC8, 0x400u, 0x800A5CC8u },
+    { D_800A5CCC, 0x400u, 0x800A5CCCu },
+    { D_800A5CD0, 0x400u, 0x800A5CD0u },
+    { D_800A5CD4, 0x400u, 0x800A5CD4u },
+    { D_800A5CD8, 0x400u, 0x800A5CD8u },
+    { D_800A5CDC, 0x400u, 0x800A5CDCu },
+    { D_800A5CE0, 0x400u, 0x800A5CE0u },
+    { D_800A5CE8, 0x400u, 0x800A5CE8u },
+    { D_800A5CEC, 0x400u, 0x800A5CECu },
+    { D_800A5CF0, 0x400u, 0x800A5CF0u },
+    { D_800A5CF4, 0x400u, 0x800A5CF4u },
+    { D_800A5CF8, 0x400u, 0x800A5CF8u },
+    { D_800A5CFC, 0x400u, 0x800A5CFCu },
+    { D_800A5D00, 0x400u, 0x800A5D00u },
+    { D_800A5D04, 0x400u, 0x800A5D04u },
+    { D_800A5D08, 0x400u, 0x800A5D08u },
+    { D_800A5D20, 0x400u, 0x800A5D20u },
+    { D_800A5D24, 0x400u, 0x800A5D24u },
+    { D_800A5D28, 0x400u, 0x800A5D28u },
+    { D_800A5D2C, 0x400u, 0x800A5D2Cu },
+    { D_800A5D30, 0x400u, 0x800A5D30u },
+    { D_800A5D34, 0x400u, 0x800A5D34u },
+    { D_800A5D38, 0x400u, 0x800A5D38u },
+    { D_800A5D3C, 0x400u, 0x800A5D3Cu },
+    { D_800A5D40, 0x400u, 0x800A5D40u },
+    { D_800A5D44, 0x400u, 0x800A5D44u },
+    { D_800A5D48, 0x400u, 0x800A5D48u },
+    { D_800A5D4C, 0x400u, 0x800A5D4Cu },
+    { D_800A5D50, 0x400u, 0x800A5D50u },
+    { D_800A5D54, 0x400u, 0x800A5D54u },
+    { D_800A5D58, 0x400u, 0x800A5D58u },
+    { D_800A5D5C, 0x400u, 0x800A5D5Cu },
+    { D_800A5D60, 0x400u, 0x800A5D60u },
+    { D_800A5D64, 0x400u, 0x800A5D64u },
+    { D_800A5D68, 0x400u, 0x800A5D68u },
+    { D_800A5D6C, 0x400u, 0x800A5D6Cu },
+    { D_800A5D70, 0x400u, 0x800A5D70u },
+    { D_800A5D74, 0x400u, 0x800A5D74u },
+    { D_800A5D78, 0x400u, 0x800A5D78u },
+    { D_800A5D7C, 0x400u, 0x800A5D7Cu },
+    { D_800A5D80, 0x400u, 0x800A5D80u },
+    { D_800A5D84, 0x400u, 0x800A5D84u },
+    { D_800A5D88, 0x400u, 0x800A5D88u },
+    { D_800A5D8C, 0x400u, 0x800A5D8Cu },
+    { D_800A5D90, 0x400u, 0x800A5D90u },
+    { D_800A5D94, 0x400u, 0x800A5D94u },
+    { D_800A5D98, 0x400u, 0x800A5D98u },
+    { D_800A5D9C, 0x400u, 0x800A5D9Cu },
+    { D_800A5DA0, 0x400u, 0x800A5DA0u },
+    { D_800A5DA4, 0x400u, 0x800A5DA4u },
+    { D_800A5DA8, 0x400u, 0x800A5DA8u },
+    { D_800A5DAC, 0x400u, 0x800A5DACu },
+    { D_800A5DB0, 0x400u, 0x800A5DB0u },
+    { D_800A5DB4, 0x400u, 0x800A5DB4u },
+    { D_800A5DB8, 0x400u, 0x800A5DB8u },
+    { D_800A5DBC, 0x400u, 0x800A5DBCu },
+    { D_800A5DC0, 0x400u, 0x800A5DC0u },
+    { D_800A5DC4, 0x400u, 0x800A5DC4u },
+    { D_800A5DC8, 0x400u, 0x800A5DC8u },
+    { D_800A5DCC, 0x400u, 0x800A5DCCu },
+    { D_800A5DD0, 0x400u, 0x800A5DD0u },
+    { D_800A5DD4, 0x400u, 0x800A5DD4u },
+    { D_800A5DD8, 0x400u, 0x800A5DD8u },
+    { D_800A5DDC, 0x400u, 0x800A5DDCu },
+    { D_800A5DE0, 0x400u, 0x800A5DE0u },
+    { D_800A5DE4, 0x400u, 0x800A5DE4u },
+    { D_800A5DE8, 0x400u, 0x800A5DE8u },
+    { D_800A5DEC, 0x400u, 0x800A5DECu },
+    { D_800A5DF0, 0x400u, 0x800A5DF0u },
+    { D_800A5DF4, 0x400u, 0x800A5DF4u },
+    { D_800A5DF8, 0x400u, 0x800A5DF8u },
+    { D_800A5DFC, 0x400u, 0x800A5DFCu },
+    { D_800A5E00, 0x400u, 0x800A5E00u },
+    { D_800A5E04, 0x400u, 0x800A5E04u },
+    { D_800A5E08, 0x400u, 0x800A5E08u },
+    { D_800A5E0C, 0x400u, 0x800A5E0Cu },
+    { D_800A5E10, 0x400u, 0x800A5E10u },
+    { D_800A5E14, 0x400u, 0x800A5E14u },
+    { D_800A5E18, 0x400u, 0x800A5E18u },
+    { D_800A5E1C, 0x400u, 0x800A5E1Cu },
+    { D_800A5E20, 0x400u, 0x800A5E20u },
+    { D_800A5E24, 0x400u, 0x800A5E24u },
+    { D_800A5E28, 0x400u, 0x800A5E28u },
+    { D_800A5E2C, 0x400u, 0x800A5E2Cu },
+    { D_800A5E30, 0x400u, 0x800A5E30u },
+    { D_800A5E34, 0x400u, 0x800A5E34u },
+    { D_800A5E38, 0x400u, 0x800A5E38u },
+    { D_800A5E3C, 0x400u, 0x800A5E3Cu },
+    { D_800A5E40, 0x400u, 0x800A5E40u },
+    { D_800A5E44, 0x400u, 0x800A5E44u },
+    { D_800A5E48, 0x400u, 0x800A5E48u },
+    { D_800A5E4C, 0x400u, 0x800A5E4Cu },
+    { D_800A5E50, 0x400u, 0x800A5E50u },
+    { D_800A5E54, 0x400u, 0x800A5E54u },
+    { D_800A5E58, 0x400u, 0x800A5E58u },
+    { D_800A5E5C, 0x400u, 0x800A5E5Cu },
+    { D_800A5E60, 0x400u, 0x800A5E60u },
+    { D_800A5E64, 0x400u, 0x800A5E64u },
+    { D_800A5E68, 0x400u, 0x800A5E68u },
+    { D_800A5E6C, 0x400u, 0x800A5E6Cu },
+    { D_800A5E70, 0x400u, 0x800A5E70u },
+    { D_800A5E74, 0x400u, 0x800A5E74u },
+    { D_800A5E78, 0x400u, 0x800A5E78u },
+    { D_800A5E7C, 0x400u, 0x800A5E7Cu },
+    { D_800A5E80, 0x400u, 0x800A5E80u },
+    { D_800A5E84, 0x400u, 0x800A5E84u },
+    { D_800A5E88, 0x400u, 0x800A5E88u },
+    { D_800A5E8C, 0x400u, 0x800A5E8Cu },
+    { D_800A5E90, 0x400u, 0x800A5E90u },
+    { D_800A5E94, 0x400u, 0x800A5E94u },
+    { D_800A5E98, 0x400u, 0x800A5E98u },
+    { D_800A5E9C, 0x400u, 0x800A5E9Cu },
+    { D_800A5EA0, 0x400u, 0x800A5EA0u },
+    { D_800A5EA4, 0x400u, 0x800A5EA4u },
+    { D_800A5EA8, 0x400u, 0x800A5EA8u },
+    { D_800A5EAC, 0x400u, 0x800A5EACu },
+    { D_800A5EB0, 0x400u, 0x800A5EB0u },
+    { D_800A5EB4, 0x400u, 0x800A5EB4u },
+    { D_800A5EB8, 0x400u, 0x800A5EB8u },
+    { D_800A5EBC, 0x400u, 0x800A5EBCu },
+    { D_800A5EC0, 0x400u, 0x800A5EC0u },
+    { D_800A5EC4, 0x400u, 0x800A5EC4u },
+    { D_800A5ECC, 0x400u, 0x800A5ECCu },
+    { D_800A5ED0, 0x400u, 0x800A5ED0u },
+    { D_800A5ED4, 0x400u, 0x800A5ED4u },
+    { D_800A5ED8, 0x400u, 0x800A5ED8u },
+    { D_800A5EDC, 0x400u, 0x800A5EDCu },
+    { D_800A5EE0, 0x400u, 0x800A5EE0u },
+    { D_800A5EE4, 0x400u, 0x800A5EE4u },
+    { D_800A5EE8, 0x400u, 0x800A5EE8u },
+    { D_800A5EEC, 0x400u, 0x800A5EECu },
+    { D_800A5EF0, 0x400u, 0x800A5EF0u },
+    { D_800A5EF4, 0x400u, 0x800A5EF4u },
+    { D_800A5EF8, 0x400u, 0x800A5EF8u },
+    { D_800A5EFC, 0x400u, 0x800A5EFCu },
+    { D_800A5F00, 0x400u, 0x800A5F00u },
+    { D_800A5F04, 0x400u, 0x800A5F04u },
+    { D_800A5F08, 0x400u, 0x800A5F08u },
+    { D_800A5F0C, 0x400u, 0x800A5F0Cu },
+    { D_800A5F10, 0x400u, 0x800A5F10u },
+    { D_800A5F14, 0x400u, 0x800A5F14u },
+    { D_800A5F18, 0x400u, 0x800A5F18u },
+    { D_800A5F1C, 0x400u, 0x800A5F1Cu },
+    { D_800A5F20, 0x400u, 0x800A5F20u },
+    { D_800A5F24, 0x400u, 0x800A5F24u },
+    { D_800A5F28, 0x400u, 0x800A5F28u },
+    { D_800A5F2C, 0x400u, 0x800A5F2Cu },
+    { D_800A5F30, 0x400u, 0x800A5F30u },
+    { D_800A5F34, 0x400u, 0x800A5F34u },
+    { D_800A5F38, 0x400u, 0x800A5F38u },
+    { D_800A5F3C, 0x400u, 0x800A5F3Cu },
+    { D_800A5F40, 0x400u, 0x800A5F40u },
+    { D_800A5F44, 0x400u, 0x800A5F44u },
+    { D_800A5F48, 0x400u, 0x800A5F48u },
+    { D_800A5F4C, 0x400u, 0x800A5F4Cu },
+    { D_800A5F50, 0x400u, 0x800A5F50u },
+    { D_800A5F54, 0x400u, 0x800A5F54u },
+    { D_800A5F58, 0x400u, 0x800A5F58u },
+    { D_800A5F5C, 0x400u, 0x800A5F5Cu },
+    { D_800A5F60, 0x400u, 0x800A5F60u },
+    { D_800A5F64, 0x400u, 0x800A5F64u },
+    { D_800A5F68, 0x400u, 0x800A5F68u },
+    { D_800A5F6C, 0x400u, 0x800A5F6Cu },
+    { D_800A5F70, 0x400u, 0x800A5F70u },
+    { D_800A5F74, 0x400u, 0x800A5F74u },
+    { D_800A5F78, 0x400u, 0x800A5F78u },
+    { D_800A5F7C, 0x400u, 0x800A5F7Cu },
+    { D_800A5F84, 0x400u, 0x800A5F84u },
+    { D_800A5F88, 0x400u, 0x800A5F88u },
+    { D_800A5F8C, 0x400u, 0x800A5F8Cu },
+    { D_800A5F90, 0x400u, 0x800A5F90u },
+    { D_800A5F94, 0x400u, 0x800A5F94u },
+    { D_800A5F98, 0x400u, 0x800A5F98u },
+    { D_800A5F9C, 0x400u, 0x800A5F9Cu },
+    { D_800A5FA4, 0x400u, 0x800A5FA4u },
+    { D_800A5FA8, 0x400u, 0x800A5FA8u },
+    { D_800A5FAC, 0x400u, 0x800A5FACu },
+    { D_800A5FB0, 0x400u, 0x800A5FB0u },
+    { D_800A5FB4, 0x400u, 0x800A5FB4u },
+    { D_800A5FB8, 0x400u, 0x800A5FB8u },
+    { D_800A5FBC, 0x400u, 0x800A5FBCu },
+    { D_800A5FC0, 0x400u, 0x800A5FC0u },
+    { D_800A5FC4, 0x400u, 0x800A5FC4u },
+    { D_800A5FC8, 0x400u, 0x800A5FC8u },
+    { D_800A5FCC, 0x400u, 0x800A5FCCu },
+    { D_800A5FD0, 0x400u, 0x800A5FD0u },
+    { D_800A5FD4, 0x400u, 0x800A5FD4u },
+    { D_800A5FD8, 0x400u, 0x800A5FD8u },
+    { D_800A5FDC, 0x400u, 0x800A5FDCu },
+    { D_800A5FE0, 0x400u, 0x800A5FE0u },
+    { D_800A5FE4, 0x400u, 0x800A5FE4u },
+    { D_800A5FE8, 0x400u, 0x800A5FE8u },
+    { D_800A5FEC, 0x400u, 0x800A5FECu },
+    { D_800A5FF0, 0x400u, 0x800A5FF0u },
+    { D_800A5FF4, 0x400u, 0x800A5FF4u },
+    { D_800A5FFC, 0x400u, 0x800A5FFCu },
+    { D_800A6000, 0x400u, 0x800A6000u },
+    { D_800A6004, 0x400u, 0x800A6004u },
+    { D_800A6008, 0x400u, 0x800A6008u },
+    { D_800A600C, 0x400u, 0x800A600Cu },
+    { D_800A6010, 0x400u, 0x800A6010u },
+    { D_800A6014, 0x400u, 0x800A6014u },
+    { D_800A601C, 0x400u, 0x800A601Cu },
+    { D_800A6020, 0x400u, 0x800A6020u },
+    { D_800A6024, 0x400u, 0x800A6024u },
+    { D_800A6028, 0x400u, 0x800A6028u },
+    { D_800A602C, 0x400u, 0x800A602Cu },
+    { D_800A6030, 0x400u, 0x800A6030u },
+    { D_800A6034, 0x400u, 0x800A6034u },
+    { D_800A6038, 0x400u, 0x800A6038u },
+    { D_800A6042, 0x400u, 0x800A6042u },
+    { D_800A6043, 0x400u, 0x800A6043u },
+    { D_800A6045, 0x400u, 0x800A6045u },
+    { D_800A6050, 0x400u, 0x800A6050u },
+    { D_800A6054, 0x400u, 0x800A6054u },
+    { D_800A6058, 0x400u, 0x800A6058u },
+    { D_800A6060, 0x400u, 0x800A6060u },
+    { D_800A6064, 0x400u, 0x800A6064u },
+    { D_800A6074, 0x400u, 0x800A6074u },
+    { D_800A6078, 0x400u, 0x800A6078u },
+    { D_800A607E, 0x400u, 0x800A607Eu },
+    { D_800A607F, 0x400u, 0x800A607Fu },
+    { D_800A6080, 0x400u, 0x800A6080u },
+    { D_800A6081, 0x400u, 0x800A6081u },
+    { D_800A6082, 0x400u, 0x800A6082u },
+    { D_800A6085, 0x400u, 0x800A6085u },
+    { D_800A6087, 0x400u, 0x800A6087u },
+    { D_800A6088, 0x400u, 0x800A6088u },
+    { D_800A608C, 0x400u, 0x800A608Cu },
+    { D_800A6094, 0x400u, 0x800A6094u },
+    { D_800A609C, 0x400u, 0x800A609Cu },
+    { D_800A60A4, 0x400u, 0x800A60A4u },
+    { D_800A60BC, 0x400u, 0x800A60BCu },
+    { D_800A60BE, 0x400u, 0x800A60BEu },
+    { D_800A85F8, 0x400u, 0x800A85F8u },
+    { D_800ACB98, 0x400u, 0x800ACB98u },
+    { D_800ACBA8, 0x400u, 0x800ACBA8u },
+    { D_800ACBAC, 0x400u, 0x800ACBACu },
+    { D_800AE3CC, 0x400u, 0x800AE3CCu },
+    { D_800AE3D0, 0x400u, 0x800AE3D0u },
+    { D_800AE3D8, 0x400u, 0x800AE3D8u },
+    { D_800AE3DC, 0x400u, 0x800AE3DCu },
+    { D_801FC400, 0x400u, 0x801FC400u },
     { DeathAnimationTick, 0xF0u, 0x80053664u },
     { DebrisParticlePhysicsTick, 0x160u, 0x800351BCu },
     { DebrisParticleTickCallback, 0xD0u, 0x800350ECu },
@@ -4582,4 +5862,4 @@ PortAddrMapEntry g_port_addrmap[] = {
     { v_wait, 0x8Cu, 0x80087D6Cu },
     { version, 0xD4u, 0x8008CD64u },
 };
-unsigned int g_port_addrmap_len = 2287;
+unsigned int g_port_addrmap_len = 2927;

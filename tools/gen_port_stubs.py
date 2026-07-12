@@ -235,10 +235,27 @@ def render_addrmap(sym_sizes: dict[str, tuple[int, int]]) -> str:
     entries at runtime and rewrites matching pointer words in RAM dumps to
     their PSX values, so whole-RAM diffdb sees PS1-shaped pointers.
     """
-    entries = sorted(
-        (name, addr, sz) for name, (addr, sz) in sym_sizes.items()
+    pool: dict[str, tuple[int, int]] = {
+        name: (addr, sz) for name, (addr, sz) in sym_sizes.items()
         if ADDRMAP_LO <= addr < ADDRMAP_HI
-        and name not in EXCLUDED
+    }
+    # asm("D_xxxxxxxx")-style aliases that never made it into symbol_addrs.txt
+    # (transcribed rodata, port-side data) encode their PSX address in the
+    # name; include them with the default size (host-extent clipping in
+    # port_trace.c keeps neighbours honest).
+    addr_name_re = re.compile(r"^(?:D|B|jpt|jtbl)_([0-9A-Fa-f]{8})$")
+    for name in collect_data_aliases():
+        if name in pool:
+            continue
+        m = addr_name_re.match(name)
+        if not m:
+            continue
+        addr = int(m.group(1), 16)
+        if ADDRMAP_LO <= addr < ADDRMAP_HI:
+            pool[name] = (addr, GLOBAL_SIZE_DEFAULT)
+    entries = sorted(
+        (name, addr, sz) for name, (addr, sz) in pool.items()
+        if name not in EXCLUDED
     )
     out = [HEADER.format(name="_autoaddrmap.c")]
     out.append("typedef struct { char *host; unsigned int size; "
