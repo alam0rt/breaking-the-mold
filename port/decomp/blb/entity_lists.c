@@ -54,3 +54,30 @@ void ClearEntityDefList(void *arg0) {
         node = *(u8 **)(gs + 0x28);
     }
 }
+
+/* RemoveFromRenderList @ blb.c (0x80021DC0): unlink the first render-list node
+ * (gs+0x20; node = {next @ +0x0, renderObj @ +0x4}) whose renderObj matches,
+ * free the 8-byte node, return 1. Returns 0 when not found. Without this the
+ * render list keeps dispatching freed objects whose memory has been recycled
+ * (observed: pickup frees its HUD icon, CreateHaloEntity's icon reuses the
+ * block, the stale node jumps through overwritten prim bytes). */
+s32 RemoveFromRenderList(void *arg0, void *obj) {
+    u8 *gs = (u8 *)arg0;
+    u8 *node = *(u8 **)(gs + 0x20);
+    u8 *prev = NULL;
+
+    while (node != NULL) {
+        if (*(u8 **)(node + 0x4) == (u8 *)obj) {
+            if (prev == NULL) {
+                *(u8 **)(gs + 0x20) = *(u8 **)(node + 0x0);
+            } else {
+                *(u8 **)(prev + 0x0) = *(u8 **)(node + 0x0);
+            }
+            FreeFromHeap((u8 *)g_pBlbHeapBase, node, 8, 0);
+            return 1;
+        }
+        prev = node;
+        node = *(u8 **)(node + 0x0);
+    }
+    return 0;
+}

@@ -566,6 +566,25 @@ static u_int render_prim(u_char *p) {
         glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
         break;
     }
+    case GP_POLY_G3: {
+        POLY_G3 *q = (POLY_G3 *)p;
+        blend_for_abe(abe, s_cur_tpage);
+        if (s_have_shader) {
+            pglUseProgram(0);
+        }
+        glDisable(GL_TEXTURE_2D);
+        glBegin(GL_TRIANGLES);
+        glColor4f(q->r0 / 255.0f, q->g0 / 255.0f, q->b0 / 255.0f, 1.0f);
+        glVertex2i(q->x0 + s_draw_off_x, q->y0 + s_draw_off_y);
+        glColor4f(q->r1 / 255.0f, q->g1 / 255.0f, q->b1 / 255.0f, 1.0f);
+        glVertex2i(q->x1 + s_draw_off_x, q->y1 + s_draw_off_y);
+        glColor4f(q->r2 / 255.0f, q->g2 / 255.0f, q->b2 / 255.0f, 1.0f);
+        glVertex2i(q->x2 + s_draw_off_x, q->y2 + s_draw_off_y);
+        glEnd();
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation_compat(GL_FUNC_ADD_COMPAT);
+        break;
+    }
     case GP_POLY_FT4: {
         POLY_FT4 *q = (POLY_FT4 *)p;
         int raw = (p[7] & 0x01) != 0;
@@ -651,6 +670,7 @@ static void set_code(void *p, u_char code) {
 
 void SetPolyF4(POLY_F4 *p)   { set_code(p, GP_POLY_F4); }
 void SetPolyFT4(POLY_FT4 *p) { set_code(p, GP_POLY_FT4); }
+void SetPolyG3(POLY_G3 *p)   { set_code(p, GP_POLY_G3); }
 void SetPolyG4(POLY_G4 *p)   { set_code(p, GP_POLY_G4); }
 void SetPolyGT4(POLY_GT4 *p) { set_code(p, GP_POLY_GT4); }
 void SetSprt(SPRT *p)        { set_code(p, GP_SPRT); }

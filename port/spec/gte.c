@@ -126,3 +126,91 @@ void RotTrans(SVECTOR *v0, VECTOR *v1, long *flag) {
         *flag = 0;
     }
 }
+
+/* -----------------------------------------------------------------------------
+ * ccos / csin / csin_1 / csincos -- libgte's table-free CORDIC sin/cos.
+ * Bit-exact transcription of the ROM code (ccos @0x8008CE7C, csincos
+ * @0x8008CF40, csin_1 @0x8008D060, csin @0x8008D100): angle unit is
+ * 4096 = full circle, result is 4.12 fixed (4096 = 1.0). Unlike the float
+ * helpers above, these MUST be integer-exact -- Render_RotatingStarEffect
+ * stores the results into entity-owned prim buffers inside the PSX-mirror
+ * arena, so any deviation shows up in whole-RAM trace diffs vs the PS1.
+ * The 6-entry arctan table lives at 0x800A01A8 in the ROM.
+ * -------------------------------------------------------------------------- */
+static const int s_cordic_atan[6] = { 0x1FF, 0x12E, 0x9F, 0x51, 0x29, 0x14 };
+
+/* csincos(a, &sin, &cos) -- first-quadrant core (a in [0,1024)). 6 CORDIC
+ * rotations from x=0x9B7 (gain-compensated 4096), then a linear correction
+ * by the residual angle z. */
+void csincos(int a, long *s, long *c) {
+    int x[7], y[7], z[7];
+    int i;
+    x[0] = 0x9B7;
+    y[0] = 0;
+    z[0] = a;
+    for (i = 0; i < 6; i++) {
+        if (z[i] >= 0) {
+            x[i + 1] = x[i] - (y[i] >> i);
+            y[i + 1] = y[i] + (x[i] >> i);
+            z[i + 1] = z[i] - s_cordic_atan[i];
+        } else {
+            x[i + 1] = x[i] + (y[i] >> i);
+            y[i + 1] = y[i] - (x[i] >> i);
+            z[i + 1] = z[i] + s_cordic_atan[i];
+        }
+    }
+    *c = x[6] - ((z[6] * y[6]) >> 12);
+    *s = y[6] + ((z[6] * x[6]) >> 12);
+}
+
+long ccos(int a) {
+    long s, c;
+    if (a < 0) {
+        a = -a;
+    }
+    a -= (a >> 12) << 12;               /* a %= 4096 (a >= 0 here) */
+    if (a < 0x400) {                    /* q0: +cos(a) */
+        csincos(a, &s, &c);
+        return c;
+    }
+    if (a < 0xC00) {                    /* q1: -cos(2047-a), q2: -cos(a-2048) */
+        csincos(a < 0x800 ? 0x7FF - a : a - 0x800, &s, &c);
+        return -c;
+    }
+    csincos(0xFFF - a, &s, &c);         /* q3: +cos(4095-a) */
+    return c;
+}
+
+/* csin_1 -- csin without the negative-angle fold (ROM keeps both). */
+long csin_1(int a) {
+    long s, c;
+    if (a < 0x400) {
+        csincos(a, &s, &c);
+        return s;
+    }
+    if (a < 0x800) {
+        csincos(0x7FF - a, &s, &c);
+        return s;
+    }
+    csincos(a < 0xC00 ? a - 0x800 : 0xFFF - a, &s, &c);
+    return -s;
+}
+
+long csin(int a) {
+    long s, c;
+    int neg = 0;
+    if (a < 0) {
+        a = -a;
+        neg = 1;
+    }
+    a -= (a >> 12) << 12;
+    if (a < 0x400) {
+        csincos(a, &s, &c);
+    } else if (a < 0x800) {
+        csincos(0x7FF - a, &s, &c);
+    } else {
+        csincos(a < 0xC00 ? a - 0x800 : 0xFFF - a, &s, &c);
+        s = -s;
+    }
+    return neg ? -s : s;
+}
