@@ -67,10 +67,15 @@ void PlayerCallback_FallingPhysicsMain(PlayerEntity *e) {
     u8 sp23;
     u8 sp24;
     u8 sp25;
-    s16 sp28;
-    s16 sp2A;
-    s16 sp2C;
-    s16 sp2E;
+    /* GetEntityScreenBounds fills FOUR contiguous halfwords {x0,y0,x1,y1};
+     * they were separate s16 locals (m2c stack-slot names), which let the
+     * out-param write past the first one -- stack-smash the moment the
+     * platform-landing path first ran. One real array, aliased below. */
+    s16 spBounds[4];
+#define sp28 spBounds[0]
+#define sp2A spBounds[1]
+#define sp2C spBounds[2]
+#define sp2E spBounds[3]
     s32 sp48;
     s16 (*sp4C)(u8 *, s16);
     s32 sp60;
@@ -834,7 +839,7 @@ block_244:
             if (e->sprite.base.scalePowerupX == 0x8000) {
                 var_s2_5 *= 2;
             }
-            GetEntityScreenBounds(var_s1_3, &sp28);
+            GetEntityScreenBounds(var_s1_3, spBounds);
             temp_lo = (s32) (sp28 << 0x10) / (s32) e->sprite.base.scalePowerupX;
             sp28 = (s16) temp_lo;
             temp_lo_2 = (s32) (sp2C << 0x10) / (s32) e->sprite.base.scalePowerupX;
