@@ -1068,3 +1068,34 @@ family batches (`c-migration-plan.md`).
     session that saves a savestate AT demo start — then
     `make trace STATE=<that state> REGION=full MAXFRAMES=600` captures the
     whole comparison window in seconds with offset ~0.
+
+- **2026-07-13 (session 12 cont. 2) — PS1 PARITY TO FRAME 400 (modulo one
+  transient): landing bug + input phase cracked.** The diff loop paid off
+  immediately; two commits.
+  - **SLOPE_HEIGHT_TABLE (D_8009D228) was weak-zero** — every floor probe got
+    slope 0, so IsEntityNearSoundTrigger (the landing qualifier: |refY -
+    ((y|0xF)-slope)/scale| < 10) missed flat floors (slope 0x10) by exactly
+    15px and Klaymen settled one tile row low. THE long-standing 447-vs-431
+    landing bug. Transcribed the 0x3C x 16 ROM table into
+    port/decomp/data/slope_table.c. Lesson: a weak-zero DATA table can fake
+    a physics bug — when a converted function's math checks out, audit the
+    tables it reads before suspecting the code.
+  - **Demo input stream ran one frame early**: PS1's SetupAndStartLevel
+    enables playback mid-frame (after that frame's UpdateInputState); the
+    port enabled it pre-frame-1. Invisible for 110 frames of neutral input,
+    then every input flip fired a frame early. port_demo_prestart now
+    extends the first RLE entry by +1 frame.
+  - **Result: GameState byte-identical vs PS1 for the whole 400-frame
+    window** except frame 1 (bg_color_change_flag boot transient) and a
+    2-byte render-list node address in frames 238..276 (heap recycling
+    order, self-heals; smallest remaining fish).
+  - **Switch block pair converted** (EntityCollision_SpawnSwitchBlock +
+    InitSwitchBlockEntity) after the fixed trajectory reached it, which
+    exposed + fixed a latent stack smash in FallingPhysicsMain
+    (GetEntityScreenBounds writes 4 halfwords; m2c had them as separate s16
+    locals — audit &spNN out-params in every m2c conversion).
+  - _next:_ the platform-riding trio the demo now reaches
+    (PlayerCallback_IdleOnPlatform / RidingPlatformPhysics /
+    WalkingOnPlatform, ~2750 lines asm); the frames-238..276 node-recycling
+    transient; Tier 2 defsym; PS1 full-RAM capture via a demo-start
+    savestate.
