@@ -1059,3 +1059,12 @@ family batches (`c-migration-plan.md`).
     0x13000 window, e.g. g_LevelNameTable at D_8009DE08); full-RAM PS1
     reference capture (make trace REGION=full + POKE recipe) for a
     whole-memory diff.
+  - _note:_ headless full-RAM PS1 capture attempt (make trace REGION=full
+    STATE=menu-savestate POKE=... under xvfb) failed: the poke alone does
+    NOT start the demo (the earlier ps1_demo.sqlite's gameplay at frame
+    6771 was the menu ATTRACT TIMER firing, not the poke), and PCSX-Redux
+    self-quit at frame ~3144 pre-attract (32-bit Mesa DRI errors in the
+    log; GUI path fragile under xvfb). Recommended: an interactive GUI
+    session that saves a savestate AT demo start — then
+    `make trace STATE=<that state> REGION=full MAXFRAMES=600` captures the
+    whole comparison window in seconds with offset ~0.
