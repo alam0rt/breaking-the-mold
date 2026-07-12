@@ -53,7 +53,9 @@ void ApplyPendingSpriteState(void *entityPtr) {
     flags = *(u16 *)(e + 0xE0);
     if ((flags & ANIM_CHG_FRAME) != 0) {
         if ((flags & 0x200) == 0) {
-            if (*(s32 *)(e + 0xC0) == -1) {
+            /* -1 sentinel test is a SIGNED HALFWORD compare in the asm (lh),
+             * so a pending value written as u16 0xFFFF must match too. */
+            if (*(s16 *)(e + 0xC0) == -1) {
                 *(s16 *)(e + 0xDA) = *(s16 *)(e + 0xD8) - 1;
             } else {
                 *(s16 *)(e + 0xDA) = (s16)*(s32 *)(e + 0xC0);
@@ -66,7 +68,7 @@ void ApplyPendingSpriteState(void *entityPtr) {
 
     if ((flags & ANIM_CHG_LOOP_FRAME) != 0) {
         if ((flags & 0x400) == 0) {
-            if (*(s32 *)(e + 0xC4) == -1) {
+            if (*(s16 *)(e + 0xC4) == -1) {          /* lh in asm, see above */
                 *(s16 *)(e + 0xDC) = *(s16 *)(e + 0xD8) - 1;
             } else {
                 *(s16 *)(e + 0xDC) = (s16)*(s32 *)(e + 0xC4);
@@ -78,7 +80,7 @@ void ApplyPendingSpriteState(void *entityPtr) {
 
     if ((*(u16 *)(e + 0xE0) & ANIM_CHG_TARGET_FRAME) != 0) {
         if ((*(u16 *)(e + 0xE0) & 0x800) == 0) {
-            if (*(s32 *)(e + 0xC8) == -1) {
+            if (*(s16 *)(e + 0xC8) == -1) {          /* lh in asm, see above */
                 *(s16 *)(e + 0xDE) = *(s16 *)(e + 0xD8) - 1;
             } else {
                 *(s16 *)(e + 0xDE) = (s16)*(s32 *)(e + 0xC8);

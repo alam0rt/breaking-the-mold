@@ -48,6 +48,12 @@ CONFIG.region     = CONFIG.region     or env("RAMDUMP_REGION", "full")
 CONFIG.state      = CONFIG.state      or env("RAMDUMP_STATE", nil)
 CONFIG.level      = CONFIG.level      or tonumber(env("RAMDUMP_LEVEL", "") or "")
 CONFIG.stage      = CONFIG.stage      or tonumber(env("RAMDUMP_STAGE", "0"))
+-- One-shot RAM poke: "0xADDR=VAL,0xADDR=VAL" (u8 writes), applied once,
+-- RAMDUMP_POKE_FRAME frames after the savestate loads (or after boot when no
+-- state). E.g. trigger the attract-demo branch from a menu savestate:
+--   RAMDUMP_POKE=0x8009DD88=2,0x8009DD92=1  (direct_level_load / demo_return_flag)
+CONFIG.poke       = CONFIG.poke       or env("RAMDUMP_POKE", nil)
+CONFIG.poke_frame = CONFIG.poke_frame or tonumber(env("RAMDUMP_POKE_FRAME", "2"))
 
 -- ---------------------------------------------------------------------------
 -- Known addresses / regions (PAL, SLES-01090)
@@ -225,6 +231,16 @@ local function on_frame()
     end
 
     state.frame = state.frame + 1
+
+    -- one-shot poke (RAMDUMP_POKE), applied at poke_frame
+    if CONFIG.poke and not state.poked and state.frame >= CONFIG.poke_frame then
+        state.poked = true
+        for a, v in CONFIG.poke:gmatch("(0?x?%x+)=(%x+)") do
+            write_u8(tonumber(a), tonumber(v))
+            print(string.format("[POKE] [0x%08X] = 0x%02X", tonumber(a), tonumber(v)))
+        end
+    end
+
     if (state.frame - state.last_dump) < CONFIG.interval then return end
     state.last_dump = state.frame
 

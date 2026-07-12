@@ -273,6 +273,21 @@ void port_game_boot_frame(void) {
             memcpy(prev, cur, 8);
         }
     }
+    /* PORT_TRACE_PLAYER=1: per-frame player-entity dump (debug). */
+    if (getenv("PORT_TRACE_PLAYER")) {
+        static unsigned dbg_frame;
+        u8 *pl = *(u8 **)((u8 *)gs + 0x2C);
+        dbg_frame++;
+        if (pl != NULL) {
+            u8 *in = *(u8 **)(pl + 0x100);
+            port_log("plr f=%u x=%d y=%d face=%d/%d vx=%d spd=%d conv=%d held=%04x prs=%04x tick=%p phys=%p",
+                     dbg_frame, *(s16 *)(pl + 0x68), *(s16 *)(pl + 0x6A),
+                     pl[0x74], pl[0x75], *(s32 *)(pl + 0xB4), *(s32 *)(pl + 0x124),
+                     *(s16 *)(pl + 0x160),
+                     in ? *(u16 *)(in + 0) : 0, in ? *(u16 *)(in + 2) : 0,
+                     *(void **)(pl + 0x04), *(void **)(pl + 0x20));
+        }
+    }
     EntityTickLoop(gs);
     WaitForVBlankIfNeeded(g_pBlbHeapBase);
     RenderEntities(gs);

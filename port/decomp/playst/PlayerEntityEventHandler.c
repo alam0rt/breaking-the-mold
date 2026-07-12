@@ -58,6 +58,15 @@ s32 PlayerEntityEventHandler(void *arg0, s32 eventId, s32 arg2, void *arg3) {
         }
         break;
     case 0x100F:
+        {
+            extern char *getenv(const char *);
+            extern void port_log(const char *fmt, ...);
+            if (getenv("PORT_TRACE_PLAYER")) {
+                port_log("warp 0x100F: src=%p src68/6A=(%d,%d) player was (%d,%d)",
+                         src, *(s16 *)(src + 0x68), *(s16 *)(src + 0x6A),
+                         *(s16 *)(e + 0x68), *(s16 *)(e + 0x6A));
+            }
+        }
         *(u16 *)(e + 0x68) = *(u16 *)(src + 0x68);
         *(s16 *)(e + 0x6A) = (s16)(*(s16 *)(src + 0x6A) + 0x20);
         EntitySetState(e, D_800A5DC0, D_800A5DC4);

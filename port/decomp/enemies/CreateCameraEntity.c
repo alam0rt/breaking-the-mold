@@ -115,5 +115,13 @@ void *CreateCameraEntity(void *arg0, s16 x, s16 y, s32 scale) {
         sctx[0x34] = 0x38; sctx[0x35] = 0x38; sctx[0x36] = 0x60;
     }
     e[0x100] = 0x5A;                            /* transition countdown (byte) */
+    {
+        extern char *getenv(const char *);
+        extern void port_log(const char *fmt, ...);
+        if (getenv("PORT_TRACE_PLAYER")) {
+            port_log("cam/portal created: arg=(%d,%d) e68/6A=(%d,%d) scale=%d",
+                     x, y, *(s16 *)(e + 0x68), *(s16 *)(e + 0x6A), scale);
+        }
+    }
     return e;
 }

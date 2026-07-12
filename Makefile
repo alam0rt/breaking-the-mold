@@ -848,6 +848,7 @@ trace: check-lua
 	fi; \
 	env="RAMDUMP_REGION=$$region RAMDUMP_INTERVAL=$(INTERVAL) RAMDUMP_MAX_FRAMES=$(MAXFRAMES)"; \
 	[ -n "$$state" ] && env="$$env RAMDUMP_STATE=$$state"; \
+	[ -n '$(POKE)' ] && env="$$env RAMDUMP_POKE=$(POKE) RAMDUMP_POKE_FRAME=$(or $(POKE_FRAME),2)"; \
 	cpu='-dynarec'; \
 	if [ -n '$(LEVEL)' ]; then cpu='-interpreter -debugger'; \
 	  env="$$env RAMDUMP_LEVEL=$(LEVEL) RAMDUMP_STAGE=$(or $(STAGE),0)"; fi; \

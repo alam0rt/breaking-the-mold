@@ -71,7 +71,7 @@ void PlayerCallback_JumpInputAndCounters(void *arg0) {
 
     /* air steering */
     if (e[0x11F] == 0) {                         /* jumpHoldCounter */
-        if ((held & 0x20) != 0) {                /* PAD_RIGHT */
+        if ((held & 0x2000) != 0) {              /* logical RIGHT (asm: andi 0x2000) */
             *(s32 *)(e + 0x114) = *(s32 *)(e + 0x124);   /* velX = +max */
             if (e[0x170] != 0 && e[0x74] != 0) {
                 e[0x74] = 0;
@@ -79,7 +79,7 @@ void PlayerCallback_JumpInputAndCounters(void *arg0) {
             } else {
                 e[0x74] = 0;
             }
-        } else if ((held & 0x80) != 0) {         /* PAD_LEFT */
+        } else if ((held & 0x8000) != 0) {       /* logical LEFT (asm: andi 0x8000) */
             *(s32 *)(e + 0x114) = -*(s32 *)(e + 0x124);  /* velX = -max */
             if (e[0x170] != 0 && e[0x74] == 0) {
                 e[0x74] = 1;
