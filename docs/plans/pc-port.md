@@ -968,3 +968,56 @@ family batches (`c-migration-plan.md`).
     EntityRenderWithScaledPosition) + PlayerState_IdleRandom (idle
     fidgets), + one-shots (StepAnimationSequence, RemoveFromRenderList,
     PlayerStateInit_JumpFromPlatform).
+
+- **2026-07-13 (session 12) — ZERO STUB HITS: the whole 1500-frame SCIE demo
+  replay runs on converted code.** Fifteen conversions + two infra pieces
+  across three commits (f146009 + two conversion commits), peeling the last
+  per-frame stubs and the two onion layers they exposed.
+  - **DR_OFFSET packet fix (f146009, gpu_gl.c):** y lives at +8, not +6 — a
+    short at +6 clobbers the code byte at +7 with its high byte, which had
+    silently killed every SetDrawOffset (tilemap scrolling) packet. Also
+    PORT_TILE_DEBUG=1 (solid-magenta SPRT_16s) for tile-layer triage.
+  - **Bit-exact libgte trig (spec/gte.c):** ccos/csin/csin_1/csincos
+    transcribed from ROM 0x8008CE7C..0x8008D228 — 6-round CORDIC from
+    x=0x9B7 with the atan table @0x800A01A8 {0x1FF,0x12E,0x9F,0x51,0x29,
+    0x14}, quadrant folding on a 4096-per-rev angle. Integer parity matters:
+    the effect renderers below store trig-derived vertices into entity-owned
+    prim buffers inside the PSX-mirror arena. Plus POLY_G3 backend support
+    (SetPolyG3 + gouraud-tri case in render_prim).
+  - **Render effects pair:** Render_RotatingStarEffect (0x80032920; 4
+    mirrored POLY_G3 pairs orbiting the entity, prims double-buffered
+    INSIDE the entity on heap+0xA088, DR_TPAGE @+0x1D0) and
+    RenderRippleExpandEffect (0x80036CFC; 8-segment ring, 16 POLY_G3s
+    between full-radius outer/half-radius inner vertex rings, vertical
+    squish |0x78-y|·radius/480, radius/vel/accel growth in the tick tail).
+  - **Crash class note (new instance of the freed-object family):** the star
+    effect's first live run segfaulted NOT from the effect but from
+    RemoveFromRenderList still being a stub — a picked-up orb's freed HUD
+    icon stayed on the render list, CreateHaloEntity's icon recycled the
+    heap block, and the stale node jumped through prim bytes written over
+    its old vtable word. Converting RemoveFromRenderList (0x80021DC0) fixed
+    it, and collapsed the ~1000/frame render-stub hit counts to a handful —
+    they were mostly stale dispatches of dead objects. Lesson: when a
+    conversion makes an object-freeing path live, audit which LIST-REMOVAL
+    helpers on that path are still stubs.
+  - **Idle + one-shots:** PlayerState_IdleRandom (fidget scheduler; BIOS-LCG
+    rand draw order preserved), EntityRenderWithScaledPosition,
+    StepAnimationSequence (deferred FSM-slot dispatch; the shared
+    {argOff s16, mode s16, fn-or-table} marker convention factored into a
+    dispatch_slot helper), CollectibleSparkleTickCallback + 
+    EntityStateSetRandomBehavior (sparkle glint/behavior),
+    PlayerStateInit_JumpFromPlatform (platform 0x1005 notify + airborne
+    install). AddEntityToSortedRenderList turned out already converted.
+  - **Jump layer (exposed by the installer going live — the demo player now
+    jumps off the platform):** PlayerCallback_JumpTickHandler (landing
+    sound, double-jump queue, coyote frames, glide handoffs, three-stage
+    gravity pinning), PlayerCallback_SetIdleStateCallbacks,
+    PlayerStateInit_BounceJumpAnimation, PlayerSetupBounceAnimation
+    (active/passive bounce variants), EntityEventHandler0x1001_1002_1008
+    (ride-platform touch/latch events).
+  - Verified: 1500-frame replay exit 0, zero unimplemented hits; frame-299/
+    310/700 captures show pickup, effects and later-level progress. 
+  - _next:_ arena Tier 2 defsym globals migration + Tier 3 fn-ptr
+    translation, then the first whole-RAM diffdb against a PS1 `make trace`
+    of the same demo; PCSX-Redux side-by-side pixel diff; input smoke test
+    (real pad play beyond the demo's input set).
