@@ -460,7 +460,7 @@ static void ot_log_prim(u_char *p, u_char code) {
         if (code == GP_DR_TPAGE) {
             port_log("ot: code=%02x DR_TPAGE tpage=%04x", code, ((u_short *)p)[2]);
         } else if (code == GP_DR_OFFSET) {
-            port_log("ot: code=%02x DR_OFFSET ofs=(%d,%d)", code, ((short *)p)[2], ((short *)p)[3]);
+            port_log("ot: code=%02x DR_OFFSET ofs=(%d,%d)", code, ((short *)p)[2], ((short *)p)[4]);
         } else {
             port_log("ot: code=%02x (unhandled) @%p bytes=%02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x",
                      code, (void *)p, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
@@ -535,6 +535,15 @@ static u_int render_prim(u_char *p) {
     case GP_SPRT_16: {
         SPRT_16 *s = (SPRT_16 *)p;
         int raw = (p[7] & 0x01) != 0;
+        /* TEMP DEBUG: PORT_TILE_DEBUG=1 draws every SPRT_16 as solid magenta
+         * to localize invisible tile layers (texture vs placement issues). */
+        static int s_tile_dbg = -1;
+        if (s_tile_dbg < 0) s_tile_dbg = getenv("PORT_TILE_DEBUG") != 0;
+        if (s_tile_dbg) {
+            quad_solid(s->x0, s->y0, (short)(s->x0 + 16), (short)(s->y0 + 16),
+                       255, 0, 255);
+            break;
+        }
         quad_tex(s->x0, s->y0, (short)(s->x0 + 16), (short)(s->y0 + 16),
                  s->u0, s->v0, s->u0 + 16, s->v0 + 16,
                  s_cur_tpage, s->clut, s->r0, s->g0, s->b0, raw, abe);
@@ -583,11 +592,14 @@ static u_int render_prim(u_char *p) {
     }
     case GP_DR_OFFSET: {
         /* SetDrawOffset packet: signed draw-origin translation applied to every
-         * subsequent primitive until the next DR_OFFSET. Stored as two shorts
-         * right after the tag word (offset 4/6). Used by the tilemap layers to
-         * shift a pre-built SPRT chain for scrolling. */
+         * subsequent primitive until the next DR_OFFSET. Layout: x s16 @+4,
+         * code @+7, y s16 @+8 (the packet slots are 12 bytes everywhere -- the
+         * PSX game reserves buf*12 strides -- so +8 is safe; y CANNOT live at
+         * +6 because its high byte would overwrite the code byte at +7, which
+         * silently killed every draw offset before this layout). Used by the
+         * tilemap layers to shift a pre-built SPRT chain for scrolling. */
         s_draw_off_x = ((short *)p)[2];
-        s_draw_off_y = ((short *)p)[3];
+        s_draw_off_y = ((short *)p)[4];
         break;
     }
     default:
@@ -679,14 +691,17 @@ DR_TPAGE *SetDrawTPage(DR_TPAGE *p, int dfe, int dtd, int tpage) {
 void SetDrawOffset(void *p, u_short *ofs) {
     if (p) {
         /* Leave the tag/next-pointer alone (same rule as SetDrawTPage): the
-         * packet may already be CatPrim-chained; AddPrim (re)links it. */
+         * packet may already be CatPrim-chained; AddPrim (re)links it.
+         * Layout: x @+4, code @+7, y @+8 -- see the GP_DR_OFFSET decoder.
+         * (Writing y at +6 clobbers the code byte at +7 with y's high byte,
+         * which made every DR_OFFSET packet decode as 0x00/0xFF garbage.) */
         ((u_char *)p)[7] = GP_DR_OFFSET;
         if (ofs) {
             ((short *)p)[2] = (short)ofs[0];
-            ((short *)p)[3] = (short)ofs[1];
+            ((short *)p)[4] = (short)ofs[1];
         } else {
             ((short *)p)[2] = 0;
-            ((short *)p)[3] = 0;
+            ((short *)p)[4] = 0;
         }
     }
 }
