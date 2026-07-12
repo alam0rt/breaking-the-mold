@@ -248,6 +248,16 @@ void port_demo_prestart(void *arg0) {
     InitEntityDataPointers(g_pInputStateA, demoData);
     EnableDemoPlaybackMode(g_pInputStateA, 1);
 
+    /* Frame-phase alignment: on PS1, SetupAndStartLevel enables playback
+     * MID-frame -- after that frame's UpdateInputState already ran -- so the
+     * first consuming UpdateInputState is one frame later than the port's
+     * (boot-init runs before frame 1). Extend the first RLE entry by one
+     * frame so every input flip lands on the same frame as the PS1 trace
+     * (measured: without this, the demo's first directional input -- the
+     * walk after the spawn landing -- fired one frame early, a constant
+     * 1-frame/3px lead for the whole run). */
+    ((InputState *)g_pInputStateA)->playback_timer += 1;
+
     /* demo_return_flag: set before SetupAndStartLevel on PS1 (attract
      * sequence); InitGameState just cleared it, so restore for parity. */
     gs[0x152] = 1;
