@@ -1021,3 +1021,41 @@ family batches (`c-migration-plan.md`).
     translation, then the first whole-RAM diffdb against a PS1 `make trace`
     of the same demo; PCSX-Redux side-by-side pixel diff; input smoke test
     (real pad play beyond the demo's input set).
+
+- **2026-07-13 (session 12 cont.) — PS1 GameState PARITY: frames 2..109
+  byte-identical to the emulator.** Arena Tier 3 + the first real PS1-vs-port
+  diff loop, three commits (0070ce8, 1318bdb + the diffdb --offset tooling).
+  - **Tier 3 dump-time pointer translation (0070ce8):** gen_port_stubs.py now
+    also emits `_autoaddrmap.c` — a weak-extern {host, size, psx} table for
+    every symbol_addrs.txt entry AND every `asm("D_xxxxxxxx")` alias (address
+    parsed from the name; the aliases-only symbols like D_8009D5F8/D_80012100
+    were the biggest untranslated pointers). port_trace.c rewrites dump words
+    that fall inside a mapped host extent to psx+offset (extents clipped at
+    the next symbol's host start; 4-aligned values only — unaligned matches
+    are ASLR-coincident junk and translated asymmetrically between runs).
+    PORT_TRACE_RAW=1 disables. Plus: the arena is seeded with the PS-EXE
+    image at boot (header t_addr/t_size, PORT_PSX_EXE override) — the
+    generalized "one-time init copy"; static regions now match a PS1 dump.
+    Cross-run full-RAM diff: 1099 -> ~200 bytes/frame (rest = host statics
+    stored in arena RAM + stale 0xEEEExx00 bytes in freed blocks).
+  - **PS1 diff loop (1318bdb):** `diffdb --offset 6771` against the existing
+    ps1_demo.sqlite GameState trace, then fix what it showed:
+    (1) the "demo" banner spawn + srand(1) must run BETWEEN level load and
+    SpawnPlayerAndEntities (new port_demo_prestart hook called from
+    InitGameState) — the banner's 0x100 alloc precedes the player's on PS1
+    (heap objects were uniformly 0x390 low) and spawn draws rand() for
+    entity baseRGB; (2) boot statics moved into the arena at their PS1
+    .bss addresses (PlayerState 0x8009B1D8, InputState A/B 0x8009B14C/60,
+    read from the ROM .sdata initializers); (3) port_trace_map_add
+    registers HAL stand-ins (port_blb_read_sectors = BLB_ReadSectorsWrapper
+    0x80020848 at gs+0xE8).
+  - **Result:** PS1-vs-port GameState object diff = ZERO bytes, frames
+    2..109. First real divergence: player_render_offset_y drifts 1px at
+    frame 110, growing to camera/list-order deltas by ~350 — an actual
+    physics/behavior bug with a frame-exact repro now.
+  - _next:_ chase the frame-110 divergence (bisect player fields around
+    frames 100-115 in the two traces); Tier 2 defsym migration for the
+    remaining live globals (the ~4KB/frame stale-static surface in the
+    0x13000 window, e.g. g_LevelNameTable at D_8009DE08); full-RAM PS1
+    reference capture (make trace REGION=full + POKE recipe) for a
+    whole-memory diff.
