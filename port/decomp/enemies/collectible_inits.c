@@ -13,6 +13,7 @@
  *   InitFloatingPlatformEntity   types 039/052 floating platform
  *   InitTriggerZoneEntity        types 085/104/105 teleporter/trigger zone
  *   InitCameraTrackingEntity     type 095 panning sound emitter
+ *   CreateCollectibleWithFlags   shared ctor behind the entinit.c wrappers
  *
  * All transcribed from export/SLES_010.90.c with ctor arities corrected
  * against the .s (InitEntityWithSprite takes (e, def, z, x, y-1); the export
@@ -61,6 +62,7 @@ extern u8 VT_BOUNCE_CLAY[]           asm("D_80011128");
 extern u8 VT_FLOATING_PLATFORM[]     asm("D_80011208");
 extern u8 VT_TRIGGER_ZONE[]          asm("D_800110A8");
 extern u8 VT_CAMERA_TRACKING[]       asm("D_80011048");
+extern u8 VT_COLLECTIBLE_CREATE[]    asm("D_80010DC4");
 
 /* sprite-def lists (strong data, sprite_def_lists.c) */
 extern u32 D_8009B4DC[];
@@ -72,6 +74,9 @@ extern u32 D_8009B6D8[];
 extern u32 D_8009B844[];
 
 /* FSM state slots (strong data, src/enemies.c sdata island) */
+extern u32 FSM_800A5A50 asm("D_800A5A50"); extern EntityCallback FSM_800A5A54 asm("D_800A5A54");
+extern u32 FSM_800A5A58 asm("D_800A5A58"); extern EntityCallback FSM_800A5A5C asm("D_800A5A5C");
+extern u32 FSM_800A5A60 asm("D_800A5A60"); extern EntityCallback FSM_800A5A64 asm("D_800A5A64");
 extern u32 FSM_800A5A78 asm("D_800A5A78"); extern EntityCallback FSM_800A5A7C asm("D_800A5A7C");
 extern u32 FSM_800A5A80 asm("D_800A5A80"); extern EntityCallback FSM_800A5A84 asm("D_800A5A84");
 extern u32 FSM_800A5AC8 asm("D_800A5AC8"); extern EntityCallback FSM_800A5ACC asm("D_800A5ACC");
@@ -351,5 +356,74 @@ Entity *InitCameraTrackingEntity(Entity *e, u8 *spawn) {
                                                x - g_pGameState->camera_x);
     e->tickMarker = -0x10000;
     e->tickCallback = (EntityCallback)SoundEmitterWithPanningTick;
+    return e;
+}
+
+/* CreateCollectibleWithFlags @ 0x8003B634 (asm/nonmatchings/enemies).
+ * Shared collectible constructor used by the entinit.c wrappers (matched C):
+ * builds the sprite entity from `defList` (the COLLECTIBLE_CONFIG_* sprite-def
+ * list), runs the collectible shell, then applies the two tint variants and a
+ * per-sprite-type FSM state:
+ *   cfg  != 0 -> counter mode (+0x11A..0x11D) + dark 0x40 tint
+ *   tint != 0 -> blue 0x4B/0x80/0xFF tint
+ * The sprite-type switch is jtbl_80010E24 (0x76 entries, decoded from ROM):
+ * three EntitySetState cases keyed on type mod the {0x56,0x70,0x73}+n rows;
+ * types 0x56..0x58 also mark +0x118 (else +0x10D like the variant init).
+ * Ends with the same ground snap as the other inits. */
+Entity *CreateCollectibleWithFlags(Entity *e, u8 *spawn, u8 *defList,
+                                   s32 cfg, s32 tint) {
+    u8 *tail = (u8 *)e;
+    RenderSpriteObj *spr;
+    u16 type;
+
+    InitEntityWithSprite(e, (s32)(uintptr_t)defList, 0x3CA,
+                         *(s16 *)(spawn + 8), (s16)(*(u16 *)(spawn + 10) - 1));
+    e->collisionVtable = COLLECTIBLE_ENTITY_VTABLE;
+    InitCollectibleEntity(e, spawn);
+
+    tail[0x119] = (u8)cfg;
+    e->collisionVtable = VT_COLLECTIBLE_CREATE;
+    tail[0x11E] = (u8)tint;
+    *(u8 **)(tail + 0x114) = defList;
+    tail[0x111] = 0;
+
+    if (tail[0x119] != 0) {
+        tail[0x11A] = 0;
+        tail[0x11B] = 3;
+        tail[0x11D] = 1;
+        tail[0x11C] = 1;
+        spr = (RenderSpriteObj *)e->spriteContext;
+        spr->r = (u8)(tail[0x11A] + 0x40);
+        spr->g = 0x40;
+        spr->b = 0x40;
+    }
+    if (tail[0x11E] != 0) {
+        spr = (RenderSpriteObj *)e->spriteContext;
+        spr->r = 0x4B;
+        spr->g = 0x80;
+        spr->b = 0xFF;
+    }
+
+    type = *(u16 *)(*(u8 **)(tail + 0x100) + 0x12);
+    tail[0x118] = (u8)((u16)(type - 0x56) < 3);
+    if (tail[0x118] == 0) {
+        tail[0x10D] = 1;
+    }
+
+    switch (type) {          /* jtbl_80010E24 */
+    case 0x00: case 0x56: case 0x70: case 0x73:
+        EntitySetState(e, FSM_800A5A50, FSM_800A5A54);
+        break;
+    case 0x03: case 0x57: case 0x71: case 0x74:
+        EntitySetState(e, FSM_800A5A58, FSM_800A5A5C);
+        break;
+    case 0x04: case 0x58: case 0x72: case 0x75:
+        EntitySetState(e, FSM_800A5A60, FSM_800A5A64);
+        break;
+    default:
+        break;
+    }
+
+    snap_to_ground(e);
     return e;
 }
