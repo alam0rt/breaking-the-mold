@@ -26,6 +26,7 @@
  * (port_trace.c) never emits the slack.
  * ========================================================================== */
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -93,6 +94,49 @@ int port_heap_init(void) {
              "g_pBlbHeapBase = %p",
              (void *)s_arena, s_mirrored ? "MIRRORED at 0x80000000" : "offset",
              ARENA_SLACK / (1024 * 1024), (void *)g_pBlbHeapBase);
+
+    /* Seed the arena with the PS-EXE image, exactly as the PS1 BIOS loads it
+     * (t_addr/t_size from the header, payload at file +0x800). This is the
+     * arena plan's "one-time init copy", generalized: the whole text/data/
+     * sdata image (0x80010000..0x800A6800 for SLES-010.90) gets its ROM-true
+     * initial bytes, so full-RAM dumps match a PS1 dump over every static
+     * region. Game code still reads/writes its HOST globals -- the seeded
+     * bytes are dump furniture until the Tier 2 defsym step migrates symbols
+     * into the arena -- so this changes no behavior. Optional: missing file
+     * just logs (PORT_PSX_EXE overrides the default path). */
+    {
+        const char *exe = getenv("PORT_PSX_EXE");
+        FILE *f;
+        if (!exe || !*exe) exe = "bin/SLES_010.90";
+        f = fopen(exe, "rb");
+        if (f) {
+            unsigned char hdr[0x20];
+            if (fread(hdr, 1, sizeof hdr, f) == sizeof hdr &&
+                memcmp(hdr, "PS-X EXE", 8) == 0) {
+                unsigned t_addr = hdr[0x18] | (hdr[0x19] << 8) |
+                                  ((unsigned)hdr[0x1A] << 16) |
+                                  ((unsigned)hdr[0x1B] << 24);
+                unsigned t_size = hdr[0x1C] | (hdr[0x1D] << 8) |
+                                  ((unsigned)hdr[0x1E] << 16) |
+                                  ((unsigned)hdr[0x1F] << 24);
+                if (t_addr >= PSX_RAM_BASE &&
+                    t_addr + t_size <= PSX_RAM_BASE + PSX_RAM_SIZE &&
+                    fseek(f, 0x800, SEEK_SET) == 0 &&
+                    fread(port_psx2host(t_addr), 1, t_size, f) == t_size) {
+                    port_log("heap: PS-EXE image seeded @ 0x%08x (+0x%x) from %s",
+                             t_addr, t_size, exe);
+                } else {
+                    port_log("heap: PS-EXE image seed FAILED (bad range/read) %s", exe);
+                }
+            } else {
+                port_log("heap: %s is not a PS-X EXE; arena not seeded", exe);
+            }
+            fclose(f);
+        } else {
+            port_log("heap: no PS-EXE at %s; arena stays zero-seeded "
+                     "(set PORT_PSX_EXE)", exe);
+        }
+    }
     return 0;
 }
 

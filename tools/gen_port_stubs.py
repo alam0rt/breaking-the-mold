@@ -48,6 +48,11 @@ SYMBOL_ADDRS = os.path.join(REPO, "symbol_addrs.txt")
 OUT_DIR = os.path.join(REPO, "port", "decomp")
 STUBS_OUT = os.path.join(OUT_DIR, "_autostubs.c")
 GLOBALS_OUT = os.path.join(OUT_DIR, "_autoglobals.c")
+ADDRMAP_OUT = os.path.join(OUT_DIR, "_autoaddrmap.c")
+
+# host->PSX address map covers the PS-EXE image range only.
+ADDRMAP_LO = 0x80010000
+ADDRMAP_HI = 0x80200000
 
 # Weak global backing size heuristics.
 GLOBAL_SIZE_DEFAULT = 0x400
@@ -220,6 +225,35 @@ def render_globals(globs: list[tuple[str, int]]) -> str:
     return "".join(out)
 
 
+def render_addrmap(sym_sizes: dict[str, tuple[int, int]]) -> str:
+    """host-symbol -> PSX-address table for dump-time pointer translation
+    (arena plan Tier 3, generalized to data symbols too).
+
+    One weak extern per symbol: resolves to wherever the symbol actually lives
+    in the native binary (real function, weak stub, weak blob, strong global)
+    or NULL when nothing defines it. port_trace.c filters NULL / in-arena
+    entries at runtime and rewrites matching pointer words in RAM dumps to
+    their PSX values, so whole-RAM diffdb sees PS1-shaped pointers.
+    """
+    entries = sorted(
+        (name, addr, sz) for name, (addr, sz) in sym_sizes.items()
+        if ADDRMAP_LO <= addr < ADDRMAP_HI
+        and name not in EXCLUDED
+    )
+    out = [HEADER.format(name="_autoaddrmap.c")]
+    out.append("typedef struct { char *host; unsigned int size; "
+               "unsigned int psx; } PortAddrMapEntry;\n\n")
+    for name, _addr, _sz in entries:
+        out.append('extern char {n}[] __attribute__((weak));\n'.format(n=name))
+    out.append("\nPortAddrMapEntry g_port_addrmap[] = {\n")
+    for name, addr, sz in entries:
+        out.append('    {{ {n}, 0x{s:X}u, 0x{a:08X}u }},\n'
+                   .format(n=name, s=sz, a=addr))
+    out.append("};\n")
+    out.append("unsigned int g_port_addrmap_len = {};\n".format(len(entries)))
+    return "".join(out)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true",
@@ -232,10 +266,12 @@ def main() -> int:
 
     stubs = render_stubs(funcs)
     globs_txt = render_globals(globs)
+    addrmap_txt = render_addrmap(sym_sizes)
 
     if args.check:
         stale = False
-        for path, content in ((STUBS_OUT, stubs), (GLOBALS_OUT, globs_txt)):
+        for path, content in ((STUBS_OUT, stubs), (GLOBALS_OUT, globs_txt),
+                              (ADDRMAP_OUT, addrmap_txt)):
             existing = ""
             if os.path.exists(path):
                 with open(path, encoding="utf-8") as f:
@@ -250,8 +286,11 @@ def main() -> int:
         f.write(stubs)
     with open(GLOBALS_OUT, "w", encoding="utf-8") as f:
         f.write(globs_txt)
+    with open(ADDRMAP_OUT, "w", encoding="utf-8") as f:
+        f.write(addrmap_txt)
     print("wrote {} ({} stubs)".format(STUBS_OUT, len(funcs)))
     print("wrote {} ({} globals)".format(GLOBALS_OUT, len(globs)))
+    print("wrote {} (addr map)".format(ADDRMAP_OUT))
     return 0
 
 

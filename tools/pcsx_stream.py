@@ -338,7 +338,9 @@ def cmd_frame(args):
 
 def cmd_diffdb(args):
     a, b = Store(args.dba), Store(args.dbb)
-    common = sorted(set(a.frame_numbers()) & set(b.frame_numbers()))
+    off = args.offset
+    common = sorted(set(a.frame_numbers()) &
+                    {f - off for f in b.frame_numbers()})
     if not common:
         sys.exit("no common frames")
     if args.region:
@@ -350,7 +352,7 @@ def cmd_diffdb(args):
     print(f"# diffdb {args.dba} vs {args.dbb} ({len(common)} common frames)")
     first = None
     for fr in common:
-        ba, bb = a.reconstruct(fr), b.reconstruct(fr)
+        ba, bb = a.reconstruct(fr), b.reconstruct(fr + off)
         if raddr is not None:
             sa, sb, base = a.read(ba, raddr, rsz), b.read(bb, raddr, rsz), raddr
         else:
@@ -404,7 +406,7 @@ def main():
     c = sub.add_parser("field"); c.add_argument("db"); c.add_argument("spec"); c.set_defaults(fn=cmd_field)
     c = sub.add_parser("gs"); c.add_argument("db"); c.add_argument("--frame", type=int); c.set_defaults(fn=cmd_gs)
     c = sub.add_parser("frame"); c.add_argument("db"); c.add_argument("n", type=int); c.add_argument("-o", required=True); c.set_defaults(fn=cmd_frame)
-    c = sub.add_parser("diffdb"); c.add_argument("dba"); c.add_argument("dbb"); c.add_argument("--region"); c.add_argument("--stop-first", action="store_true"); c.set_defaults(fn=cmd_diffdb)
+    c = sub.add_parser("diffdb"); c.add_argument("dba"); c.add_argument("dbb"); c.add_argument("--region"); c.add_argument("--stop-first", action="store_true"); c.add_argument("--offset", type=int, default=0, help="dbb frame = dba frame + OFFSET (e.g. 6771 for the PS1 SCIE demo reference)"); c.set_defaults(fn=cmd_diffdb)
     c = sub.add_parser("info"); c.add_argument("db"); c.set_defaults(fn=cmd_info)
 
     args = p.parse_args()

@@ -24,6 +24,7 @@
  *                             the pre-arena behavior; `make port-trace` always
  *                             sets the env from its REGION var, default full).
  * ========================================================================== */
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,89 @@ static unsigned       g_frame = 0;
 static unsigned       g_base  = GS_ADDR;  /* region base (PSX address) */
 static unsigned       g_size  = GS_SIZE;  /* region size in bytes      */
 static unsigned char *g_buf   = NULL;     /* staging copy of the region */
+
+/* ---- host->PSX pointer translation (arena plan Tier 3, generalized) -------
+ * Generated table (_autoaddrmap.c): one {host symbol, PSX address} pair per
+ * symbol_addrs.txt entry in the PS-EXE range. At init we keep the entries
+ * that resolved to real host storage OUTSIDE the mirrored arena (functions,
+ * weak stubs, weak blobs, strong globals) and sort them by host address; at
+ * dump time every aligned 4-byte word equal to such a host address is
+ * rewritten to its PSX value. With the arena mirrored at 0x80000000, data
+ * pointers into the arena are already PSX-true, so after this pass the only
+ * host-address residue is interior pointers (symbol+offset) and stale bytes
+ * in freed blocks. PORT_TRACE_RAW=1 disables the pass. */
+typedef struct { char *host; unsigned int size; unsigned int psx; } PortAddrMapEntry;
+extern PortAddrMapEntry g_port_addrmap[];
+extern unsigned int g_port_addrmap_len;
+
+static PortAddrMapEntry *g_xlat     = NULL;
+static unsigned          g_xlat_len = 0;
+
+static int xlat_cmp(const void *a, const void *b) {
+    uintptr_t ha = (uintptr_t)((const PortAddrMapEntry *)a)->host;
+    uintptr_t hb = (uintptr_t)((const PortAddrMapEntry *)b)->host;
+    return ha < hb ? -1 : ha > hb ? 1 : 0;
+}
+
+static void xlat_init(void) {
+    unsigned i, n = 0;
+    if (getenv("PORT_TRACE_RAW")) return;
+    g_xlat = (PortAddrMapEntry *)malloc(g_port_addrmap_len * sizeof *g_xlat);
+    if (!g_xlat) return;
+    for (i = 0; i < g_port_addrmap_len; i++) {
+        uintptr_t h = (uintptr_t)g_port_addrmap[i].host;
+        if (h == 0) continue;
+        if (h - (uintptr_t)PSX_RAM_BASE < PSX_RAM_SIZE) continue; /* in-arena */
+        g_xlat[n++] = g_port_addrmap[i];
+    }
+    g_xlat_len = n;
+    qsort(g_xlat, n, sizeof *g_xlat, xlat_cmp);
+    /* Symbol sizes come from symbol_addrs.txt PSX-gap heuristics; in HOST
+     * layout neighbours differ, so clip every extent at the next symbol's
+     * host start. Interior pointers (symbol+offset) then translate to
+     * psx+offset without one symbol's range swallowing another's base. */
+    for (i = 0; i + 1 < n; i++) {
+        uintptr_t next = (uintptr_t)g_xlat[i + 1].host;
+        uintptr_t here = (uintptr_t)g_xlat[i].host;
+        if (here + g_xlat[i].size > next) {
+            g_xlat[i].size = (unsigned)(next - here);
+        }
+    }
+    port_log("trace: host->PSX pointer map: %u/%u symbols resolved",
+             n, g_port_addrmap_len);
+}
+
+static void xlat_apply(unsigned char *buf, unsigned size) {
+    unsigned *w = (unsigned *)buf;
+    unsigned n = size / 4, i;
+    if (g_xlat_len == 0) return;
+    for (i = 0; i < n; i++) {
+        unsigned v = w[i];
+        unsigned lo = 0, hi = g_xlat_len, e;
+        /* only 4-aligned values can be stored object pointers here; unaligned
+         * hits are junk words that happen to fall in a host range under this
+         * run's ASLR (observed as asymmetric false translations) */
+        if (v & 3) {
+            continue;
+        }
+        /* cheap reject: outside the whole mapped host span */
+        if (v < (uintptr_t)g_xlat[0].host ||
+            v >= (uintptr_t)g_xlat[g_xlat_len - 1].host +
+                 g_xlat[g_xlat_len - 1].size) {
+            continue;
+        }
+        /* greatest entry with host <= v */
+        while (lo < hi) {
+            unsigned mid = (lo + hi) / 2;
+            if ((uintptr_t)g_xlat[mid].host <= v) lo = mid + 1; else hi = mid;
+        }
+        if (lo == 0) continue;
+        e = lo - 1;
+        if (v - (uintptr_t)g_xlat[e].host < g_xlat[e].size) {
+            w[i] = g_xlat[e].psx + (unsigned)(v - (uintptr_t)g_xlat[e].host);
+        }
+    }
+}
 
 static void put_u32le(FILE *f, unsigned v) {
     unsigned char b[4];
@@ -84,21 +168,29 @@ static void parse_region(const char *spec) {
 static const unsigned char *region_bytes(void) {
     unsigned lo, hi, dlo, dhi;
 
-    /* Bare-GameState region needs no arena at all (pre-arena fast path). */
-    if (g_base == GS_ADDR && g_size == GS_SIZE) {
+    /* Bare-GameState region needs no arena at all (pre-arena fast path) --
+     * but only when no pointer translation runs (xlat must not touch the
+     * LIVE object, only a staged copy). */
+    if (g_base == GS_ADDR && g_size == GS_SIZE && g_xlat_len == 0) {
         return g_GameStateBase;
     }
 
-    memcpy(g_buf, port_psx2host(g_base), g_size);
+    if (g_base == GS_ADDR && g_size == GS_SIZE) {
+        memcpy(g_buf, g_GameStateBase, g_size);
+    } else {
+        memcpy(g_buf, port_psx2host(g_base), g_size);
 
-    /* Overlay the GameState object at its PSX address (it lives outside the
-     * arena until globals move in — Tier 2 of the arena plan). */
-    lo = g_base; hi = g_base + g_size;
-    dlo = GS_ADDR < lo ? lo : GS_ADDR;
-    dhi = GS_ADDR + GS_SIZE > hi ? hi : GS_ADDR + GS_SIZE;
-    if (dlo < dhi) {
-        memcpy(g_buf + (dlo - lo), g_GameStateBase + (dlo - GS_ADDR), dhi - dlo);
+        /* Overlay the GameState object at its PSX address (it lives outside
+         * the arena until globals move in — Tier 2 of the arena plan). */
+        lo = g_base; hi = g_base + g_size;
+        dlo = GS_ADDR < lo ? lo : GS_ADDR;
+        dhi = GS_ADDR + GS_SIZE > hi ? hi : GS_ADDR + GS_SIZE;
+        if (dlo < dhi) {
+            memcpy(g_buf + (dlo - lo), g_GameStateBase + (dlo - GS_ADDR),
+                   dhi - dlo);
+        }
     }
+    xlat_apply(g_buf, g_size);
     return g_buf;
 }
 
@@ -109,7 +201,8 @@ static void port_trace_init(void) {
     if (!fifo && !dir) return;
 
     parse_region(getenv("PORT_TRACE_REGION"));
-    if (!(g_base == GS_ADDR && g_size == GS_SIZE)) {
+    xlat_init();
+    if (!(g_base == GS_ADDR && g_size == GS_SIZE) || g_xlat_len != 0) {
         g_buf = (unsigned char *)malloc(g_size);
         if (!g_buf) return;                        /* leave tracing off */
     }
