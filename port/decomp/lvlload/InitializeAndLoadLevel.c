@@ -24,9 +24,10 @@
  * to weak stubs until converted -- the first reached is the next task.
  *
  * PC MEMORY-MODEL NOTE: the sub-heap InitHeapConfig call uses the PSX RAM-top
- * constant 0x801FC000; InitHeapConfig clamps the resulting (garbage-on-PC) size
- * to 0xFFFF0, and the staging buffer (D_800AE3E0, sized 4 MB in render_core.c)
- * holds it. See docs/plans/pc-port.md CP-2.2.
+ * constant 0x801FC000. The staging buffer lives at its PSX offset inside the
+ * PSX-mirror arena (render_core.c / port_heap.c); when the arena is mapped at
+ * 0x80000000 the computed size is exact, otherwise it is garbage and
+ * InitHeapConfig's 0xFFFF0 clamp catches it. See docs/plans/psx-mirror-arena.md.
  * ========================================================================== */
 #include "common.h"
 #include "globals.h"

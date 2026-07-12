@@ -1,6 +1,16 @@
 # PSX-mirror arena: byte-comparable RAM/VRAM dumps from the PC port
 
-**Status:** proposed (2026-07-12). Not started.
+**Status:** Tier 1 + Tier 2 *mapping* done (2026-07-12). `port_heap.c` mmaps the
+arena AT `0x80000000` (`MAP_FIXED_NOREPLACE`, works on this host; malloc
+fallback kept, `PORT_NO_FIXED_ARENA=1` forces it), `g_pBlbHeapBase = 0x800907EC`
+bit-identical to PS1, and the `D_800AE3E0` level-staging buffer moved to its PSX
+offset — so heap, staged level data and the level sub-heap all reproduce the PS1
+RAM layout. `PORT_TRACE_REGION` (full | gamestate | 0xADDR:SIZE) dumps any RAM
+slice, with the GameState object overlaid at `0x8009DC40`. Measured on the SCIE
+demo replay: GameState pointer noise dropped from 36 words to 6 (the remaining
+6 = function pointers → Tier 3, plus non-arena globals → Tier 2's defsym step,
+both still open). Tier 2 *globals migration* (defsym + .sdata init copy) and
+Tier 3 fn-ptr translation are not started.
 **Motivation:** the demo-replay diff pipeline (`make port-trace` vs `make trace`,
 `pcsx_stream.py diffdb`) currently compares only the 0x1A0 GameState object and
 has to mask ~146 bytes of "pointer noise" per frame (host addresses vs PSX

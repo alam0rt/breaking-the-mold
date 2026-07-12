@@ -889,3 +889,36 @@ family batches (`c-migration-plan.md`).
     FreeAndCoalesceVRAMSlot). `EntityCollision_SpawnSwitchBlock` stays stubbed
     until `InitSwitchBlockEntity` (still asm) is converted. Then the PCSX-Redux
     side-by-side (framing/palette) + input smoke test.
+
+- **2026-07-12 (session 11) — PSX-MIRROR ARENA LIVE: port RAM is dumpable in
+  PS1 shape** (docs/plans/psx-mirror-arena.md Tier 1 + the Tier 2 mapping).
+  `port_heap.c` mmaps one 2 MB + 14 MB-slack arena AT `0x80000000`
+  (`MAP_FIXED_NOREPLACE`; malloc fallback, `PORT_NO_FIXED_ARENA=1` forces it) —
+  in the -m32 process the mapping just works, so `g_pBlbHeapBase = 0x800907EC`
+  and every heap pointer is bit-identical to PS1. The 4 MB `D_800AE3E0`
+  level-staging global (render_core.c) became `port_psx2host(0x800AE3E0)`, so
+  staged level data + the level sub-heap sit at their PSX offsets too (and the
+  `0x801FC000 - subheapStart` size math in InitializeAndLoadLevel is now exact,
+  not clamped garbage). New API: `port_ram_base()/port_psx2host()/
+  port_ram_mirrored()` (port_hal.h).
+  - `PORT_TRACE_REGION` (full | gamestate | 0xADDR:SIZE, mirrors RAMDUMP_REGION)
+    dumps any PSX RAM slice per frame; the GameState object (still a weak blob
+    outside the arena) is overlaid at `0x8009DC40`. `make port-trace` now
+    shares `make trace`'s `REGION ?= full` default and passes it to both the
+    consumer and the binary; verified end-to-end into SQLite (60 full-RAM
+    frames -> 1.1 MB db, keyframe+delta).
+  - Measured on the 308-frame SCIE demo replay: cross-run GameState diff
+    dropped from 36 pointer words to 6 — the residue is exactly fn pointers
+    (gs+0x4/0xC/0x18 vtable) -> arena-plan Tier 3, and non-arena globals
+    (gs+0x7C D_8009D5F8, gs+0xE8, gs+0x140 input-state ptr) -> Tier 2 defsym
+    step. Everything else in the arena is deterministic AND PSX-addressed:
+    heap header shows `heapStart=0x8017AB40`, ClearHeapBlocks' 0xEEEEEEEE fill
+    visible at the RAM top, 1.2 MB of live bytes per frame vs 416 before.
+  - Known issue (pre-existing, deterministic): the SCIE demo replay now
+    segfaults at frame 308 right after the first `CreateCollectibleWithFlags()`
+    stub hit (weak stub returns garbage into a pointer-consuming caller) —
+    that conversion is the next crash-path task.
+  - _next:_ Tier 2 globals migration (gen_port_stubs.py emits `--defsym`
+    fragments placing data symbols in the arena + one-time .sdata init copy),
+    then Tier 3 fn-ptr dump-time translation; then a PS1 `make trace` of the
+    same demo replay and the first whole-RAM `diffdb` against the port.

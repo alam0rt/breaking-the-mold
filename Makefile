@@ -254,30 +254,36 @@ port:
 port-run: port
 	PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN)
 
-# Trace the port's GameState per frame into the SAME format as `make trace`, so
-# it can be diffed against a PS1 reference. The port has no contiguous RAM image,
-# so this dumps the one contiguous GameState object (g_GameStateBase, 0x1A0) via
-# port/spec/port_trace.c -- set the consumer region to 0x8009DC40:0x1A0 to match.
+# Trace a PSX-addressed RAM region of the port per frame into the SAME format
+# as `make trace`, so it can be diffed against a PS1 reference. The PSX-mirror
+# arena (port/spec/port_heap.c) keeps the heap + level data + sub-heap at their
+# PSX offsets, so port/spec/port_trace.c can dump any slice of PSX RAM
+# (GameState overlaid at 0x8009DC40 until globals move into the arena).
+# REGION mirrors RAMDUMP_REGION: full | gamestate | 0xADDR:SIZE (shared default
+# `full` with `make trace` below; use REGION=0x8009DC40:0x1A0 for the cheap
+# bare-GameState-object behavior diff).
 # Usage:
 #   make port-trace DB=game_watcher/port.sqlite FRAMES=600     # stream -> SQLite
 #   make port-trace OUT=game_watcher/dumps/port_l1 FRAMES=300  # raw .bin + manifest
-# Compare (PS1 trace must cover the GameState, e.g. REGION=full or =gamestate):
+#   make port-trace DB=... REGION=0x8009DC40:0x1A0 FRAMES=600  # GameState only
+# Compare (PS1 trace must cover the same region):
 #   tools/pcsx_stream.py diffdb game_watcher/ps1.sqlite game_watcher/port.sqlite \
-#       --region 0x8009DC40:0x1A0
+#       --region <REGION>
 .PHONY: port-trace
-PORT_TRACE_REGION := 0x8009DC40:0x1A0
 port-trace: port
 	@set -e; \
 	if [ -n '$(DB)' ]; then \
 	  fifo="$$(mktemp -u).fifo"; mkfifo "$$fifo"; trap 'rm -f "'"$$fifo"'"' EXIT; \
 	  rm -f '$(DB)' '$(DB)'-wal '$(DB)'-shm; \
 	  python3 tools/pcsx_stream.py consume --fifo "$$fifo" --db '$(DB)' \
-	      --region $(PORT_TRACE_REGION) --gs 0x8009DC40 --keyframe $(KEYFRAME) & cons=$$!; \
-	  PORT_TRACE_FIFO="$$fifo" PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN) || true; \
+	      --region '$(REGION)' --gs 0x8009DC40 --keyframe $(KEYFRAME) & cons=$$!; \
+	  PORT_TRACE_REGION='$(REGION)' PORT_TRACE_FIFO="$$fifo" \
+	      PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN) || true; \
 	  wait $$cons; echo "port trace -> $(DB)"; \
 	elif [ -n '$(OUT)' ]; then \
 	  mkdir -p '$(OUT)'; \
-	  PORT_TRACE_OUT='$(OUT)' PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN) || true; \
+	  PORT_TRACE_REGION='$(REGION)' PORT_TRACE_OUT='$(OUT)' \
+	      PORT_MAX_FRAMES=$${FRAMES:-0} $(PORT_BIN) || true; \
 	  echo "port trace -> $(OUT)"; \
 	else \
 	  echo "set DB=<file> (stream->SQLite) or OUT=<dir> (raw .bin per frame)"; exit 1; \

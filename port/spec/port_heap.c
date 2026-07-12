@@ -1,52 +1,114 @@
 /* =============================================================================
- * port_heap.c  --  PC-port BLB heap + boot-global setup (TARGET_PC)
+ * port_heap.c  --  PSX-mirror RAM arena + boot-global setup (TARGET_PC)
  * =============================================================================
- * On PSX the early-init routine (`main_8008E6E0`, the gcc `__main` slot) carves
- * the game's main work heap out of RAM and stashes its base pointer in the
- * global `g_pBlbHeapBase` (0x800A5954). Everything downstream -- the GPU context
- * + double-buffered draw/disp envs + ordering table (InitGraphicsSystem), the
- * BLB asset heap (blbmem.c), the level/sprite buffers -- lives inside it.
+ * On PSX the early-init routine (`main_8008E6E0`, the gcc `__main` slot) points
+ * the global `g_pBlbHeapBase` (0x800A5954) at the game's working-RAM region at
+ * 0x800907EC. Everything downstream -- the GPU context + double-buffered
+ * draw/disp envs + ordering table (InitGraphicsSystem), the heap block
+ * descriptors, the level/sprite buffers -- lives at fixed offsets from it
+ * inside the flat 2 MB PSX RAM map.
  *
- * On PC there is no fixed RAM map, so we simply malloc a large zeroed block and
- * point g_pBlbHeapBase at it. The exact address is irrelevant; only that it is
- * valid, writable, and large enough for the GPU context (~0xF000 bytes at the
- * base) plus the asset heap that follows. See docs/plans/pc-port.md CP-2.1.
+ * On PC we reproduce that map with one arena representing PSX RAM
+ * 0x80000000..0x80200000 (docs/plans/psx-mirror-arena.md):
+ *
+ *   host = arena_base + (psx_addr - 0x80000000)          [Tier 1]
+ *
+ * and we first try to mmap the arena AT 0x80000000 (possible because the build
+ * is -m32), which makes host pointers into the arena bit-identical to PS1 RAM
+ * addresses [Tier 2's mapping]. If the fixed mapping is refused (hardened
+ * kernel, address in use, PORT_NO_FIXED_ARENA=1) we fall back to an anonymous
+ * mapping anywhere and Tier 1 constant-delta math still holds.
+ *
+ * The arena is over-allocated past the 2 MB PSX image with a slack region so
+ * PC-side size paranoia (buffers sized larger than their PSX footprint while
+ * struct sizes are still being confirmed) overruns into mapped memory instead
+ * of crashing. Only the first 2 MB is the PSX mirror; the trace dumper
+ * (port_trace.c) never emits the slack.
  * ========================================================================== */
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(__linux__) || defined(__APPLE__)
+#  include <sys/mman.h>
+#  define PORT_HAVE_MMAP 1
+#endif
 
 #include "common.h"
 #include "globals.h"
 #include "port_runtime.h"
 #include "port_hal.h"
 
-/* PSX retail runs the whole game in 2 MB of RAM. We give the heap a generous
- * 16 MB so nothing downstream can overrun it while struct sizes are still being
- * confirmed; the host has memory to spare. */
-#define PORT_HEAP_BYTES (16 * 1024 * 1024)
+#define PSX_RAM_BASE  0x80000000u
+#define PSX_RAM_SIZE  0x00200000u              /* 2 MB retail RAM image      */
+#define ARENA_SLACK   (14u * 1024u * 1024u)    /* overrun headroom (unmirrored) */
+#define ARENA_TOTAL   (PSX_RAM_SIZE + ARENA_SLACK)
 
-static unsigned char *s_heap;
+/* PSX address g_pBlbHeapBase points at (start of the .data working region). */
+#define PSX_HEAP_OWNER 0x800907ECu
+
+static unsigned char *s_arena;      /* host address of PSX 0x80000000        */
+static int            s_mirrored;   /* 1 = arena really sits at 0x80000000   */
+static int            s_arena_mmap; /* 1 = release with munmap, 0 = free     */
+
+unsigned char *port_ram_base(void) { return s_arena; }
+int port_ram_mirrored(void) { return s_mirrored; }
+
+void *port_psx2host(unsigned int psx_addr) {
+    return s_arena + (psx_addr - PSX_RAM_BASE);
+}
 
 int port_heap_init(void) {
-    if (s_heap) {
+    if (s_arena) {
         return 0;
     }
-    s_heap = (unsigned char *)malloc(PORT_HEAP_BYTES);
-    if (!s_heap) {
-        port_log("heap: malloc(%d) failed", PORT_HEAP_BYTES);
-        return -1;
+
+#if PORT_HAVE_MMAP && defined(MAP_FIXED_NOREPLACE)
+    if (!getenv("PORT_NO_FIXED_ARENA")) {
+        void *want = (void *)(uintptr_t)PSX_RAM_BASE;
+        void *got = mmap(want, ARENA_TOTAL, PROT_READ | PROT_WRITE,
+                         MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE,
+                         -1, 0);
+        if (got == want) {
+            s_arena = (unsigned char *)got;
+            s_mirrored = 1;
+            s_arena_mmap = 1;
+        } else if (got != MAP_FAILED) {
+            munmap(got, ARENA_TOTAL);   /* placed elsewhere: not useful here */
+        }
     }
-    memset(s_heap, 0, PORT_HEAP_BYTES);
-    g_pBlbHeapBase = s_heap;
-    port_log("heap: BLB heap = %p (%d MB)", (void *)s_heap,
-             PORT_HEAP_BYTES / (1024 * 1024));
+#endif
+    if (!s_arena) {
+        /* Tier 1 fallback: arena anywhere, constant-delta from PSX addrs. */
+        s_arena = (unsigned char *)malloc(ARENA_TOTAL);
+        if (!s_arena) {
+            port_log("heap: arena alloc(%u) failed", ARENA_TOTAL);
+            return -1;
+        }
+        memset(s_arena, 0, ARENA_TOTAL);
+    }
+
+    g_pBlbHeapBase = port_psx2host(PSX_HEAP_OWNER);
+    port_log("heap: PSX arena @ %p (%s, 2MB mirror + %uMB slack), "
+             "g_pBlbHeapBase = %p",
+             (void *)s_arena, s_mirrored ? "MIRRORED at 0x80000000" : "offset",
+             ARENA_SLACK / (1024 * 1024), (void *)g_pBlbHeapBase);
     return 0;
 }
 
 void port_heap_shutdown(void) {
-    if (s_heap) {
-        free(s_heap);
-        s_heap = NULL;
+    if (s_arena) {
+#if PORT_HAVE_MMAP
+        if (s_arena_mmap) {
+            munmap(s_arena, ARENA_TOTAL);
+        } else
+#endif
+        {
+            free(s_arena);
+        }
+        s_arena = NULL;
+        s_mirrored = 0;
+        s_arena_mmap = 0;
         g_pBlbHeapBase = NULL;
     }
 }

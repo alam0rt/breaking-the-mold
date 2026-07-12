@@ -36,11 +36,12 @@
  * InitGraphicsSystem aligns it up and stores it at base+0xA650 as the BLB header
  * read destination (LoadBLBHeader reads 0x1000 bytes into it, and the level
  * loader carves a ~1 MB sub-heap starting just after it -- see the InitHeapConfig
- * call in InitializeAndLoadLevel: `size = 0x801FC000 - (buf+off)` clamps to
- * 0xFFFF0). On PSX this is a fixed RAM address inside the flat 2 MB map; on PC it
- * must be a real region large enough to hold the staged level data + that
- * sub-heap, so it is sized 4 MB (not a few KB). */
-u8 D_800AE3E0[4 * 1024 * 1024] asm("D_800AE3E0");
+ * call in InitializeAndLoadLevel: `size = 0x801FC000 - (buf+off)`). On PSX this
+ * is the fixed RAM address 0x800AE3E0 inside the flat 2 MB map; on PC it lives
+ * at the same offset inside the PSX-mirror arena (port_psx2host), so the staged
+ * level data + sub-heap reproduce the PS1 RAM layout byte-for-byte. Overruns
+ * past the 2 MB image land in the arena's mapped slack region. */
+#define PSX_LEVEL_STAGING 0x800AE3E0u
 
 /* PSY-Q surface (implemented in port/spec/gpu_gl.c + bios.c). */
 extern void ResetGraph(int mode);
@@ -86,7 +87,7 @@ static u8 *ctx_ot(void *base, u32 ctx_off) {
  * The gfx.c plate comment describes only the +0xC behaviour; the function ENTRY
  * returns the buffer pointer, so that is what this C definition returns. */
 u32 GetFrameReadyFlag(void) {
-    return (u32)(uintptr_t)&D_800AE3E0[0];
+    return (u32)(uintptr_t)port_psx2host(PSX_LEVEL_STAGING);
 }
 
 /* SetGraphDebug: PSY-Q debug-level toggle -- no-op on PC. */

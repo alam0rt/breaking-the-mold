@@ -43,8 +43,11 @@ int  port_cd_read_sectors(int lba, int nsectors, void *buf); /* 0 = ok          
 void port_cd_set_blb_base(int base_lba); /* LBA subtracted from reads (default 0)*/
 
 /* ---- port_heap.c --------------------------------------------------------- */
-int  port_heap_init(void);               /* malloc BLB heap; set g_pBlbHeapBase */
+int  port_heap_init(void);               /* PSX-mirror arena; set g_pBlbHeapBase */
 void port_heap_shutdown(void);
+unsigned char *port_ram_base(void);      /* host address of PSX 0x80000000       */
+void *port_psx2host(unsigned int psx_addr); /* arena address of a PSX RAM addr   */
+int  port_ram_mirrored(void);            /* 1 = arena mapped AT 0x80000000       */
 
 /* ---- game_boot.c (port/decomp/boot) -------------------------------------- */
 void port_game_boot_init(void);          /* converted main() boot prologue      */
