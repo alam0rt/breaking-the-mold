@@ -35,6 +35,13 @@ static s32 port_blb_read_sectors(u32 sector, u32 count, u8 *dst) {
     return CdBLB_ReadSectors((u16)sector, (u16)count, dst);
 }
 
+/* Dump-parity: this static stands in for BLB_ReadSectorsWrapper (0x80020848),
+ * whose address the PS1 keeps in LevelDataContext.sector_read_callback (the
+ * GameState +0xE8 word). Register it so trace pointer translation maps the
+ * stored host address back to the PSX one (port_trace.c). */
+extern void port_trace_map_add(void *host, unsigned size, unsigned psx_addr);
+#define PSX_BLB_READ_SECTORS_WRAPPER 0x80020848u
+
 void LoadBLBHeader(void *arg0) {
     u8 *gs = (u8 *)arg0;
     u8 *buffer;
@@ -76,6 +83,8 @@ void LoadBLBHeader(void *arg0) {
         }
     }
 
+    port_trace_map_add((void *)port_blb_read_sectors, 0x24,
+                       PSX_BLB_READ_SECTORS_WRAPPER);
     InitLevelDataContext(gs + 0x84, *(u8 **)(gs + 0x40), (void *)port_blb_read_sectors);
     SetSpriteTables(0, gs + 0x84);
 }

@@ -49,6 +49,12 @@ unsigned char *port_ram_base(void);      /* host address of PSX 0x80000000      
 void *port_psx2host(unsigned int psx_addr); /* arena address of a PSX RAM addr   */
 int  port_ram_mirrored(void);            /* 1 = arena mapped AT 0x80000000       */
 
+/* ---- port_trace.c --------------------------------------------------------- */
+/* Register a host object that stands in for a PSX symbol (HAL statics not in
+ * the generated addr map) so dump-time pointer translation covers it. Call
+ * before the first traced frame. */
+void port_trace_map_add(void *host, unsigned size, unsigned psx_addr);
+
 /* ---- game_boot.c (port/decomp/boot) -------------------------------------- */
 void port_game_boot_init(void);          /* converted main() boot prologue      */
 void port_game_boot_frame(void);         /* one converted main() frame iteration */

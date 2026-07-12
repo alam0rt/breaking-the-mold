@@ -44,6 +44,7 @@ extern void RemapEntityTypesForLevel(void *gs);
 extern void ClearAlternateEntitySpawnFlags(void *gs);
 extern void StartCDAudioForLevel(int assetIdx, int stageIdx);
 extern void SpawnPlayerAndEntities(void *gs);
+extern void port_demo_prestart(void *gs);   /* PORT_DEMO parity, game_boot.c */
 
 void InitGameState(void *arg0, s32 arg1) {
     u8 *gs = (u8 *)arg0;
@@ -108,5 +109,14 @@ void InitGameState(void *arg0, s32 arg1) {
     }
 
     RESPAWN_PLAYER_STATE[4] = (u8)GetTileHeaderWorldIndex(gs + 0x84);
+
+    /* PORT_DEMO hook (game_boot.c): SetupAndStartLevel's demo branch runs
+     * srand(1) + playback-enable + the "demo" banner spawn BETWEEN the level
+     * load and SpawnPlayerAndEntities (asm @0x8007DB44..0x8007DC58). Both the
+     * heap layout (banner alloc precedes the player) and the rand stream
+     * (spawn draws rand() for entity baseRGB) depend on that order, so the
+     * hook must fire exactly here for PS1 trace parity. */
+    port_demo_prestart(arg0);
+
     SpawnPlayerAndEntities(arg0);
 }

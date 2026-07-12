@@ -66,6 +66,23 @@ extern unsigned int g_port_addrmap_len;
 static PortAddrMapEntry *g_xlat     = NULL;
 static unsigned          g_xlat_len = 0;
 
+/* Manual registrations for host objects that STAND IN for a PSX symbol but
+ * aren't visible to the generated map (statics in port/spec HAL code, e.g.
+ * LoadBLBHeader's port_blb_read_sectors replacing BLB_ReadSectorsWrapper).
+ * Must be called before the first traced frame (boot-time is fine). */
+#define XLAT_EXTRA_MAX 32
+static PortAddrMapEntry g_xlat_extra[XLAT_EXTRA_MAX];
+static unsigned         g_xlat_extra_len;
+
+void port_trace_map_add(void *host, unsigned size, unsigned psx_addr) {
+    if (host && g_xlat_extra_len < XLAT_EXTRA_MAX) {
+        g_xlat_extra[g_xlat_extra_len].host = (char *)host;
+        g_xlat_extra[g_xlat_extra_len].size = size ? size : 4;
+        g_xlat_extra[g_xlat_extra_len].psx  = psx_addr;
+        g_xlat_extra_len++;
+    }
+}
+
 static int xlat_cmp(const void *a, const void *b) {
     uintptr_t ha = (uintptr_t)((const PortAddrMapEntry *)a)->host;
     uintptr_t hb = (uintptr_t)((const PortAddrMapEntry *)b)->host;
@@ -75,13 +92,17 @@ static int xlat_cmp(const void *a, const void *b) {
 static void xlat_init(void) {
     unsigned i, n = 0;
     if (getenv("PORT_TRACE_RAW")) return;
-    g_xlat = (PortAddrMapEntry *)malloc(g_port_addrmap_len * sizeof *g_xlat);
+    g_xlat = (PortAddrMapEntry *)malloc(
+        (g_port_addrmap_len + g_xlat_extra_len) * sizeof *g_xlat);
     if (!g_xlat) return;
     for (i = 0; i < g_port_addrmap_len; i++) {
         uintptr_t h = (uintptr_t)g_port_addrmap[i].host;
         if (h == 0) continue;
         if (h - (uintptr_t)PSX_RAM_BASE < PSX_RAM_SIZE) continue; /* in-arena */
         g_xlat[n++] = g_port_addrmap[i];
+    }
+    for (i = 0; i < g_xlat_extra_len; i++) {
+        g_xlat[n++] = g_xlat_extra[i];
     }
     g_xlat_len = n;
     qsort(g_xlat, n, sizeof *g_xlat, xlat_cmp);

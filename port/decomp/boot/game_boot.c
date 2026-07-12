@@ -42,9 +42,11 @@ extern u16   D_800A60BE asm("D_800A60BE");                /* asset count mirror 
  * port's weak-zero global backing leaves the pointer NULL, so initPlayerState
  * early-returns (it guards `if (!p) return;`) and every later PlayerState access
  * (InitGameState's RESPAWN_PLAYER_STATE[0]=... writes, SpawnPlayerAndEntities,
- * pickups, bosses) would dereference NULL. Seed the pointer at a zeroed static
- * struct before the first use so the real init + all downstream reads work. */
-static u8 s_respawnPlayerState[0x400];
+ * pickups, bosses) would dereference NULL. On PS1 the .sdata initializer
+ * points it at the .bss struct @ 0x8009B1D8; the port now seeds the SAME
+ * address inside the PSX-mirror arena (port_psx2host), so the struct's live
+ * contents are dumpable and pointers to it are bit-identical to PS1. */
+#define PSX_PLAYER_STATE 0x8009B1D8u
 
 /* Storage for the friendly-named player-state pointer from include/globals.h
  * (g_pPlayerState, PSX .sdata @ 0x800A597C). The port never defined it, so
@@ -58,11 +60,12 @@ PlayerState *g_pPlayerState;
  * On PSX, D_800A5964 (g_pInputStateA) and D_800A5968 (g_pInputStateB) are .sdata
  * pointers to .bss InputState structs (0x14 bytes each). Weak-zero backing
  * leaves them NULL, so the very first frame's UpdateInputState(g_pInputStateA,
- * ...) dereferences NULL. Seed both pointers at zeroed static structs before the
- * frame loop; on the title screen playback/record are off so the live-input path
- * (buttons_held/buttons_pressed only) works with zeroed replay pointers. */
-static InputState s_inputStateA;
-static InputState s_inputStateB;
+ * ...) dereferences NULL. On PS1 the .sdata initializers point them at the
+ * .bss structs @ 0x8009B14C / 0x8009B160 (0x14 bytes each); the port seeds
+ * the SAME arena addresses so the input-state contents live in RAM dumps and
+ * the GameState's input_state_ptr (+0x140) is bit-identical to PS1. */
+#define PSX_INPUT_STATE_A 0x8009B14Cu
+#define PSX_INPUT_STATE_B 0x8009B160u
 
 /* PC-port seeding for the layer-render-slot / sprite-frame-cache table.
  * On PSX, D_800A595C is an .sdata POINTER whose init value is &D_8009AE58 -- a
@@ -123,6 +126,14 @@ extern u8   GetCurrentLevelAssetIndex(void *ctx);
 extern void InitEntityDataPointers(void *input, void *dataBase);
 extern void EnableDemoPlaybackMode(void *input, u8 enable);
 extern void srand(unsigned int seed);
+/* demo banner spawn (SetupAndStartLevel demo branch parity) */
+extern u8  *AllocateFromHeap(void *heap, u32 size, u32 count, u8 flag);
+extern Entity *InitEntitySprite(Entity *entity, u32 spriteId, s32 z, s16 x,
+                                s16 y, s32 flags);
+extern long GetTPage(int tp, int abr, int x, int y);
+extern void AddEntityToSortedRenderList(void *gs, void *ent);
+extern void GetWorldPositionX();
+extern void GetWorldPositionY();
 extern char *getenv(const char *name);
 extern long strtol(const char *s, char **end, int base);
 
@@ -155,10 +166,10 @@ void port_game_boot_init(void) {
     SetDispMask(1);
     FntLoad(0x3C0, 0x100);
     SetDumpFnt(FntOpen(0x10, 0x20, 0x120, 0xC8, 0, 0x200));
-    PLAYER_STATE_DATA = s_respawnPlayerState;   /* give D_800A597C a real target */
-    g_pPlayerState = (PlayerState *)s_respawnPlayerState; /* friendly-name alias */
-    g_pInputStateA = &s_inputStateA;            /* give D_800A5964 a real target */
-    g_pInputStateB = &s_inputStateB;            /* give D_800A5968 a real target */
+    PLAYER_STATE_DATA = port_psx2host(PSX_PLAYER_STATE);  /* D_800A597C target */
+    g_pPlayerState = (PlayerState *)PLAYER_STATE_DATA;    /* friendly-name alias */
+    g_pInputStateA = port_psx2host(PSX_INPUT_STATE_A);    /* D_800A5964 target */
+    g_pInputStateB = port_psx2host(PSX_INPUT_STATE_B);    /* D_800A5968 target */
     g_LayerRenderSlots = D_8009AE58;            /* give D_800A595C a real target */
     initPlayerState(PLAYER_STATE_DATA);
 
@@ -204,26 +215,61 @@ void port_game_boot_init(void) {
                      ? (const char *)g_LevelNameTable[lvlIdx] : "?");
     }
 
-    /* PORT_DEMO=1: replicate SetupAndStartLevel's attract-demo branch
-     * (gs->demo_return_flag path, asm @0x8007DB44..0x8007DB98) for the port's
-     * boot-time level load, which bypasses SetupAndStartLevel. Ordering matches
-     * the PS1: level load + entity spawn first, then srand(1), then playback on.
-     * With bios.c's PSX-LCG rand this makes a demo run deterministic and
-     * directly diffable against a PS1 reference trace (make port-trace).
-     * Requires a level that carries asset 700 (replay data): BOIL, BRG1, CAVE,
-     * FOOD, GLID, MENU, SCIE, TMPL, WEED -- combine with PORT_LEVEL. The PS1
-     * path also spawns a "demo" overlay sprite entity; skipped here for now. */
-    if (getenv("PORT_DEMO")) {
-        u8 *demoData = GetDemoDataPtr(ctx);
-        if (demoData != NULL) {
-            srand(1);
-            InitEntityDataPointers(g_pInputStateA, demoData);
-            EnableDemoPlaybackMode(g_pInputStateA, 1);
-            port_log("demo: playback on (%u RLE entries)", *(u16 *)demoData);
-        } else {
-            port_log("demo: no asset-700 replay data in this level; PORT_DEMO ignored");
-        }
+}
+
+/* PORT_DEMO=1: replicate SetupAndStartLevel's attract-demo branch
+ * (gs->demo_return_flag path, asm @0x8007DB44..0x8007DC58) for the port's
+ * boot-time level load, which bypasses SetupAndStartLevel. Called by
+ * InitGameState BETWEEN the level load and SpawnPlayerAndEntities -- the
+ * exact PS1 slot. Position is load-bearing twice over: the banner's 0x100
+ * heap allocation precedes the player's on PS1 (running it after boot-init
+ * left every later heap object 0x390 below its PS1 address), and
+ * SpawnPlayerAndEntities draws rand() (entity baseRGB), so srand(1) must
+ * precede it for RNG-stream parity. With bios.c's PSX-LCG rand this makes a
+ * demo run deterministic and directly diffable against a PS1 reference trace
+ * (make port-trace / diffdb --offset). Requires a level that carries asset
+ * 700 (replay data): BOIL, BRG1, CAVE, FOOD, GLID, MENU, SCIE, TMPL, WEED --
+ * combine with PORT_LEVEL. */
+void port_demo_prestart(void *arg0) {
+    u8 *gs = (u8 *)arg0;
+    void *ctx = (void *)(gs + 0x84);
+    u8 *demoData;
+
+    if (!getenv("PORT_DEMO")) {
+        return;
     }
+    demoData = GetDemoDataPtr(ctx);
+    if (demoData == NULL) {
+        port_log("demo: no asset-700 replay data in this level; PORT_DEMO ignored");
+        return;
+    }
+
+    srand(1);
+    InitEntityDataPointers(g_pInputStateA, demoData);
+    EnableDemoPlaybackMode(g_pInputStateA, 1);
+
+    /* demo_return_flag: set before SetupAndStartLevel on PS1 (attract
+     * sequence); InitGameState just cleared it, so restore for parity. */
+    gs[0x152] = 1;
+
+    /* the "demo" overlay banner (sprite 0x28C080DF, z 0x7530, at 160/32) */
+    {
+        u8 *e = AllocateFromHeap(g_pBlbHeapBase, 0x100, 1, 0);
+        u8 *prim;
+        InitEntitySprite((Entity *)e, 0x28C080DF, 0x7530, 0xA0, 0x20, 0);
+        *(u32 *)(e + 0x24) = 0xFFFF0000u;
+        *(void **)(e + 0x28) = (void *)GetWorldPositionX;
+        *(u32 *)(e + 0x2C) = 0xFFFF0000u;
+        *(void **)(e + 0x30) = (void *)GetWorldPositionY;
+        prim = *(u8 **)(e + 0x34);
+        *(s16 *)(prim + 0x24) =
+            (s16)GetTPage(prim[0x32], 1,
+                          *(s16 *)(prim + 0x10) & ~0x3F,
+                          *(s16 *)(prim + 0x12) & ~0xFF);
+        AddEntityToSortedRenderList(arg0, e);
+    }
+    port_log("demo: playback on (%u RLE entries), banner spawned",
+             *(u16 *)demoData);
 }
 
 void port_game_boot_frame(void) {
