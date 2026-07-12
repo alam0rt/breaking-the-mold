@@ -922,3 +922,24 @@ family batches (`c-migration-plan.md`).
     fragments placing data symbols in the arena + one-time .sdata init copy),
     then Tier 3 fn-ptr dump-time translation; then a PS1 `make trace` of the
     same demo replay and the first whole-RAM `diffdb` against the port.
+
+- **2026-07-12 (session 11 cont.) — COLLECTIBLE PATH LIVE: first real
+  collision-driven pickup on the port.** Converted the crash + hot-stub chain
+  the arena diffing surfaced, in order: `CreateCollectibleWithFlags` (fixed
+  the deterministic frame-308 segfault; jump table jtbl_80010E24 decoded from
+  ROM — three EntitySetState rows keyed by sprite type),
+  `CollectibleTickCallback` + `CheckCollectibleOffscreen` (the ~1200-hit
+  per-frame tick; reuses decor/fsm_event.h), and
+  `DispatchEventToCollidingEntity` (the CollisionCheckWrapper dispatcher:
+  mask==2 player fast path, else first-hit walk of the gs+0x24 list,
+  return-value-propagating variant of fsm_send_event). SCIE demo replay now
+  runs the full 1500-frame cap, exit 0, byte-deterministic across runs modulo
+  the 6 ASLR words, and shows a real pickup (SpawnCollectibleParticles) +
+  PlayerStateInit_JumpFromPlatform.
+  - _next:_ the effects ctor trio (InitParticleEntity 0x148,
+    InitScaledMenuEntityWithChild 0x144, InitDebrisParticleEntity 0x224) +
+    SpawnCollectibleParticles (asm read, transcription notes in the session-11
+    commits); then CollectibleOrbTickCallback (1265/frame) and the two render
+    stubs (EntityRenderWithScaledPosition, Render_RotatingStarEffect), and
+    PlayerState_IdleRandom. Then arena Tier 2 defsym globals + first
+    whole-RAM diffdb vs a PS1 trace.
