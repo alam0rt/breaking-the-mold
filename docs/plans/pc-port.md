@@ -943,3 +943,28 @@ family batches (`c-migration-plan.md`).
     stubs (EntityRenderWithScaledPosition, Render_RotatingStarEffect), and
     PlayerState_IdleRandom. Then arena Tier 2 defsym globals + first
     whole-RAM diffdb vs a PS1 trace.
+
+- **2026-07-12 (session 11 cont. 2) — FULL PICKUP GAMEPLAY LOOP: orbs
+  collected, halo worn, debris flies.** Ten more conversions in two commits:
+  the pickup effects cluster (SpawnCollectibleParticles + the ctor trio
+  InitScaledMenuEntityWithChild / InitDebrisParticleEntity [+ physics tick
+  DebrisParticlePhysicsTick and entity/IsEntityOffScreenY], with
+  InitParticleEntity found already converted) and the orb chain
+  (CollectibleOrbTickCallback + CreateHaloEntity +
+  FinnSubentityUpdatePositionFromParent). One crash root-cause worth
+  remembering, same class as the frame-308 one: a weak-stub CTOR that
+  "succeeds" leaves its object uninitialized, and the crash surfaces later in
+  EntityTickLoop as a jump through garbage — when a new gameplay flag turns
+  on (here: first orb pickup sets powerup_flags bit 0 -> PlayerTickCallback
+  allocs a halo and the stubbed CreateHaloEntity never filled it). When a new
+  behavior layer goes live, audit which pointer-returning/object-filling
+  ctors it can newly reach.
+  - Heap allocation order in transcriptions must match the asm exactly — the
+    PSX-mirror arena makes port heap layout byte-comparable to PS1, and
+    reordering allocs would silently break that parity.
+  - All verified: 1500-frame SCIE replay, exit 0, deterministic modulo the 6
+    ASLR words. Remaining per-frame stubs are render-only
+    (Render_RotatingStarEffect, RenderRippleExpandEffect,
+    EntityRenderWithScaledPosition) + PlayerState_IdleRandom (idle
+    fidgets), + one-shots (StepAnimationSequence, RemoveFromRenderList,
+    PlayerStateInit_JumpFromPlatform).
