@@ -1703,7 +1703,14 @@ INCLUDE_ASM("asm/nonmatchings/bosses", GenericEntityDestroyCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyAIUpdateWithRandomization);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityEvent_ClearTargetOnDestroy);
+s32 EntityEvent_ClearTargetOnDestroy(u8 *e, s32 eventId, s32 arg, s32 source) {
+    if ((eventId & 0xFFFF) == 0x1009) {
+        if (source == *(s32 *)(e + 0x108)) {
+            *(s32 *)(e + 0x108) = 0;
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityEventHandler_TokenReleaseAndQueueTick);
 
@@ -1719,7 +1726,15 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledSprite1);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyTickWithCollisionAndOffscreen);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", MoveEntityForward5px);
+void MoveEntityForward5px(u8 *e) {
+    s16 x;
+    if (e[0x74] != 0) {
+        x = *(u16 *)(e + 0x68) - 5;
+    } else {
+        x = *(u16 *)(e + 0x68) + 5;
+    }
+    *(s16 *)(e + 0x68) = x;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitProjectileWithTimer);
 
@@ -1848,7 +1863,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitNegativeVelocityEntity);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithPlayerMessage);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeApplyGravitySlow);
+void JoeHeadJoeApplyGravitySlow(u8 *e) {
+    s32 pos;
+    s32 vel;
+    pos = ((s32)*(s16 *)(e + 0x6A) << 16) + *(u16 *)(e + 0x6E);
+    vel = *(s32 *)(e + 0x100) + 0x1000;
+    pos += vel;
+    *(s32 *)(e + 0x100) = vel;
+    *(s16 *)(e + 0x6A) = pos >> 16;
+    *(s16 *)(e + 0x6E) = pos;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledSprite2);
 
@@ -1983,7 +2007,10 @@ INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerTickWithCollision);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerTickWithOffscreenCheck);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerApplyFallVelocity);
+void PathFollowerApplyFallVelocity(u8 *e) {
+    *(u16 *)(e + 0x6A) = *(u16 *)(e + 0x6A) + *(u16 *)(e + 0x128);
+    *(u16 *)(e + 0x128) = *(u16 *)(e + 0x128) + 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardEventHandler);
 

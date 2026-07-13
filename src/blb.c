@@ -954,7 +954,12 @@ void PlatformRideComplete(Entity *entity) {
  * in its pre-split asm blob — same platform-ride field cluster (+0x10C timer,
  * +0x110/+0x111 flags). No callers or data refs anywhere in the ROM (Ghidra +
  * binary ptr-scan agree), so they keep splat's anonymous func_ names. */
-INCLUDE_ASM("asm/nonmatchings/blb", func_80027210);
+void func_80027210(u8 *e) {
+    e[0x110] = 0;
+    if (*(u16 *)(e + 0x10C) < 0x78) {
+        *(u16 *)(e + 0x10C) = 0x78;
+    }
+}
 
 void func_80027234(u8 *e) {
     e[0x111] = 1;
