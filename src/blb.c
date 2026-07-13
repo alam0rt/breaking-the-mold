@@ -815,7 +815,34 @@ INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerUnlocksByLevel);
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitLevelTitleEntity);
 
-INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_ScaleFadeOut);
+extern void EntityUpdateCallback(Entity *entity);
+
+void EntityTick_ScaleFadeOut(u8 *e) {
+    u8 t;
+    e[0x101] = 0;
+    t = e[0x100] - 1;
+    e[0x100] = t;
+    if ((t & 0xFF) != 0) {
+        s32 v = *(s32 *)(e + 0x50) + 0xCCC;
+        *(s32 *)(e + 0x50) = v;
+        *(s32 *)(e + 0x54) = v;
+    } else {
+        PadSlot slot;
+        s16 m1;
+        register void (*fn)() asm("$3");
+        *(s32 *)(e + 0x50) = 0x10000;
+        *(s32 *)(e + 0x54) = 0x10000;
+        __asm__ __volatile__("" ::: "memory");
+        fn = (void (*)())EntityUpdateCallback;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x00) = slot.s;
+    }
+    EntityUpdateCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_ScaleFadeIn);
 
