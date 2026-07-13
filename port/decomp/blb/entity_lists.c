@@ -40,21 +40,6 @@ void RemoveFromZOrderList(void *arg0) {
     }
 }
 
-/* ClearEntityDefList @ blb.c: drain the singly-linked entity-def list at gs+0x28
- * (node = {next @ +0x0, data @ +0x4}, 8 bytes), freeing each node's data then the
- * node itself. */
-void ClearEntityDefList(void *arg0) {
-    u8 *gs = (u8 *)arg0;
-    u8 *node = *(u8 **)(gs + 0x28);
-
-    while (node != NULL) {
-        FreeFromHeap((u8 *)g_pBlbHeapBase, *(u8 **)(node + 0x4), 0, 0);
-        *(u8 **)(gs + 0x28) = *(u8 **)(node + 0x0);
-        FreeFromHeap((u8 *)g_pBlbHeapBase, node, 8, 0);
-        node = *(u8 **)(gs + 0x28);
-    }
-}
-
 /* RemoveFromRenderList @ blb.c (0x80021DC0): unlink the first render-list node
  * (gs+0x20; node = {next @ +0x0, renderObj @ +0x4}) whose renderObj matches,
  * free the 8-byte node, return 1. Returns 0 when not found. Without this the

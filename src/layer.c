@@ -133,7 +133,21 @@ void *GetSpriteFrameDataByIndex(SpriteContext **ppSprite, u16 frameIndex) {
     return *(void **)(table + frameIndex * 0x14);
 }
 
-INCLUDE_ASM("asm/nonmatchings/layer", SetupSpriteFromFrame);
+/* Copy a static sprite frame's texture parameters into the render primitive:
+ * tpage (preserving the primitive's semi-transparency bits 5-6), U/V texture
+ * coords, the CLUT id from the sprite asset +0x12, and the dirty flag. */
+void SetupSpriteFromFrame(SpriteContext **ppSprite, u8 *rs, u16 frameIndex) {
+    u8 *frame = (u8 *)(*ppSprite)->secondary_ptr + frameIndex * 0x14;
+    u16 tpage = *(u16 *)(frame + 0xC);
+    u8 u = frame[0xE];
+    u8 v = frame[0xF];
+
+    rs[0x2E] = 1;
+    *(u16 *)(rs + 0x24) = (tpage & 0xFF9F) | (*(u16 *)(rs + 0x24) & 0x60);
+    rs[0x30] = u;
+    rs[0x31] = v;
+    *(u16 *)(rs + 0x26) = *(u16 *)((u8 *)*ppSprite + 0x12);
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlotsWrapper);
 
@@ -173,11 +187,67 @@ INCLUDE_ASM("asm/nonmatchings/layer", CLUTPaletteCycleTickCallback);
 
 INCLUDE_ASM("asm/nonmatchings/layer", CLUTColorLerpTickCallback);
 
-INCLUDE_ASM("asm/nonmatchings/layer", UploadTextureOrClut);
+/* PSY-Q RECT (libgpu): 8-byte rectangle for VRAM transfers (same local
+ * definition pattern as effects.c). */
+typedef struct TextureUploadRect {
+    s16 x;
+    s16 y;
+    s16 w;
+    s16 h;
+} TextureUploadRect;
+
+extern void LoadImage(TextureUploadRect *r, u_long *p);
+extern void LoadClut(u_long *p, s32 x, s32 y);
+
+/* Upload a sprite render context's data to VRAM: type 0 (+0x34) is a texture
+ * (16x1 LoadImage at the context's VRAM coords +0x28/+0x2A), type 1 a CLUT. */
+void UploadTextureOrClut(u8 *c, u_long *data) {
+    u8 type = c[0x34];
+
+    if (type == 0) {
+        TextureUploadRect r;
+        r.x = *(u16 *)(c + 0x28);
+        r.y = *(u16 *)(c + 0x2A);
+        r.w = 0x10;
+        r.h = 1;
+        LoadImage(&r, data);
+    } else if (type == 1) {
+        LoadClut(data, *(s16 *)(c + 0x28), *(s16 *)(c + 0x2A));
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", CopyTextureData);
 
-INCLUDE_ASM("asm/nonmatchings/layer", SetTexturePageParams);
+extern void CLUTPaletteCycleTickCallback();
+
+/* Install the palette-animation cycle callback + params on a sprite render
+ * context (only if it has a CLUT backup buffer at +0x1C). */
+void SetTexturePageParams(void *ctx, u8 stepDelay, u8 startIdx, u8 count, u8 mode) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() PSX_REG("$3");
+    u8 *c = ctx;
+
+    if (*(s32 *)(c + 0x1C) != 0) {
+        m1 = -1;
+        /* fence: keep the callback-address lui below the param stores */
+        do {
+            c[0x35] = startIdx;
+            c[0x36] = count;
+            c[0x37] = mode;
+            c[0x38] = stepDelay;
+            c[0x39] = stepDelay;
+        } while (0);
+        fn = CLUTPaletteCycleTickCallback;
+        /* Pin fn to $v1 so cc1 keeps $v0 alive for m1=-1 and emits
+         * `li v0,-1` in the beqz delay slot. */
+        __asm__ volatile("" : "=r"(fn) : "0"(fn));
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)c = slot.s;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", InitCLUTColorLerpEffect);
 

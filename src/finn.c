@@ -30,7 +30,33 @@ extern void SetAnimationActive(Entity *entity, u8 value);
 extern u32 FINN_DEATH_EXPLOSION_STATE_MARKER asm("D_800A5F8C");
 extern EntityCallback FINN_DEATH_EXPLOSION_STATE_CALLBACK asm("D_800A5F90");
 
-INCLUDE_ASM("asm/nonmatchings/finn", FinnSubentityUpdatePositionFromParent);
+/* 8-byte all-u16 struct (align 2) — the copy from parent+0x38 is compiled
+ * as lwl/lwr + swl/swr because of the 2-byte alignment. */
+typedef struct FinnParentPosQuad {
+    u16 x0;
+    u16 x2;
+    u16 x4;
+    u16 x6;
+} FinnParentPosQuad;
+
+/* Halo/sub-entity tick: track the parent (+0x1C) — copy its render list ptr
+ * (+0x58), screen X (+0x68), and Y = parent+0x6A plus the +0x3A word of the
+ * parent's +0x38 quad. If flagged (+0x2C), hide the +0x24 sibling. */
+void FinnSubentityUpdatePositionFromParent(u8 *e) {
+    FinnParentPosQuad q;
+    s32 x2;
+    s32 y; /* s32 temp keeps the +0x6A read an lh (sh-store would fold to lhu) */
+
+    *(s32 *)(e + 0x28) = *(s32 *)(*(u8 **)(e + 0x1C) + 0x58);
+    *(u16 *)(e + 0x20) = *(u16 *)(*(u8 **)(e + 0x1C) + 0x68);
+    q = *(FinnParentPosQuad *)(*(u8 **)(e + 0x1C) + 0x38);
+    x2 = q.x2;
+    y = *(s16 *)(*(u8 **)(e + 0x1C) + 0x6A);
+    *(s16 *)(e + 0x22) = y + x2;
+    if (e[0x2C] != 0) {
+        (*(u8 **)(e + 0x24))[0xA] = 0;
+    }
+}
 
 /* FINN render callback: projects the entity's world position into its render
  * prim's screen coords (-camera). scale == 1.0 takes the direct path; any

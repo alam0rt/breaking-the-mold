@@ -70,36 +70,6 @@ void *InitMenuSpriteRenderContext(void *arg0, s8 type) {
     return arg0;
 }
 
-/* --- UploadTextureOrClut @ layer -------------------------------------------
- * Upload the context's palette data to VRAM: a CLUT (LoadClut) or a texture
- * (LoadImage), selected by the context type at +0x34. */
-void UploadTextureOrClut(void *arg0, void *data) {
-    u8 *c = (u8 *)arg0;
-    u8 type = c[0x34];
-    if (type == 0) {
-        RECT r;
-        r.x = *(s16 *)(c + 0x28);
-        r.y = *(s16 *)(c + 0x2A);
-        r.w = 0x10;
-        r.h = 1;
-        LoadImage(&r, (u_int *)data);
-    } else if (type == 1) {
-        LoadClut((u_int *)data, *(s16 *)(c + 0x28), *(s16 *)(c + 0x2A));
-    }
-}
-
-/* --- SetTexturePageParams @ layer ------------------------------------------
- * Install the palette-animation cycle callback + params on a context (only if
- * it has a CLUT backup buffer at +0x1C). */
-void SetTexturePageParams(void *arg0, s8 a1, s8 a2, s8 a3, u8 a4) {
-    u8 *c = (u8 *)arg0;
-    if (*(s32 *)(c + 0x1C) != 0) {
-        c[0x35] = (u8)a2; c[0x36] = (u8)a3; c[0x37] = a4;
-        c[0x38] = (u8)a1; c[0x39] = (u8)a1;
-        *(s16 *)(c + 0x00) = 0;
-        *(void **)(c + 0x04) = (void *)CLUTPaletteCycleTickCallback;
-    }
-}
 
 /* --- CopyTilePixelData @ layer ---------------------------------------------
  * Copy one tile's 16 rows of indexed pixels from the tile-pixel asset into a

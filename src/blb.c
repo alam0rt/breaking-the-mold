@@ -262,7 +262,21 @@ INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityListA);
 
 INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityListB);
 
-INCLUDE_ASM("asm/nonmatchings/blb", ClearEntityDefList);
+/* Frees every node of the entity-def list at entity+0x28: each node's payload
+ * (+0x4) first, then the 8-byte node itself, advancing the list head. */
+void ClearEntityDefList(u8 *entity) {
+    while (*(u8 **)(entity + 0x28) != NULL) {
+        u8 *node = *(u8 **)(entity + 0x28);
+        u8 *heap;
+        u8 *next;
+        FreeFromHeap(g_pBlbHeapBase, *(u8 **)(node + 4), 0, 0);
+        /* heap temp first: sinks the list-head store into the jal delay slot */
+        heap = g_pBlbHeapBase;
+        next = *(u8 **)node;
+        *(u8 **)(entity + 0x28) = next;
+        FreeFromHeap(heap, node, 8, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityLists);
 
@@ -294,7 +308,27 @@ INCLUDE_ASM("asm/nonmatchings/blb", SpawnOnScreenEntities);
 
 INCLUDE_ASM("asm/nonmatchings/blb", CleanupDeadEntities);
 
-INCLUDE_ASM("asm/nonmatchings/blb", IsEntityOffScreen_EntityLoop);
+/* Screen-bounds cull test: returns 1 if the entity's world position
+ * (+0x44/+0x46) is more than 16px outside the box (x1,y1,x2,y2 s16 quad),
+ * using the screen w/h pair at *g_pBlbHeapBase for the far edges. */
+s32 IsEntityOffScreen_EntityLoop(u8 *e, s16 *box) {
+    s32 result;
+    s16 x, y;
+    s16 *scr;
+
+    result = 0;
+    x = *(s16 *)(e + 0x44);
+    if (box[2] < x - 0x10) goto offscreen;
+    scr = (s16 *)g_pBlbHeapBase;
+    if (x + scr[0] + 0x10 < box[0]) goto offscreen;
+    y = *(s16 *)(e + 0x46);
+    if (box[3] < y - 0x10) goto offscreen;
+    if (y + scr[1] + 0x10 < box[1]) {
+    offscreen:
+        result = 1;
+    }
+    return result;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", CheckTriggerZoneCollision);
 
@@ -494,7 +528,39 @@ INCLUDE_ASM("asm/nonmatchings/blb", BuildPasswordFromPlayerState);
 
 INCLUDE_ASM("asm/nonmatchings/blb", DecodePassword);
 
-INCLUDE_ASM("asm/nonmatchings/blb", initPlayerState);
+/* Reset a PlayerState block to new-game defaults: 1 life-ish flags at +0/+1,
+ * 5 at +0x11 (health?), everything else zeroed, +0x10 = 1, and the 10-byte
+ * array at +6 cleared. Twin of InitializePlayerState (byte-identical body). */
+void initPlayerState(u8 *ps) {
+    s16 i;
+
+    ps[0] = 1;
+    ps[1] = 1;
+    ps[0x11] = 5;
+    ps[0x12] = 0;
+    ps[0x14] = 0;
+    ps[0x15] = 0;
+    ps[0x16] = 0;
+    ps[0x1C] = 0;
+    ps[0x13] = 0;
+    ps[0x19] = 0;
+    ps[0x1A] = 0;
+    ps[0x1B] = 0;
+    ps[0x17] = 0;
+    ps[0x18] = 0;
+    ps[0x1D] = 0;
+    ps[0x10] = 1;
+    *(s16 *)(ps + 2) = 0;
+    ps[4] = 0;
+    ps[5] = 0;
+    i = 0;
+    do {
+        /* addr temp keeps the addu base-first (a0 + i) */
+        u8 *p = &ps[i];
+        p[6] = 0;
+        i++;
+    } while (i < 10);
+}
 
 /* Zeroes the player's hamster collectible counter (PlayerState+0x1A). */
 void ClearHamsterCount(PlayerState *p) {
@@ -507,7 +573,37 @@ void ClearHamsterCount(PlayerState *p) {
  * migrated from asm/data into this TU. Left as asm until that migration. */
 INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerCollectibles);
 
-INCLUDE_ASM("asm/nonmatchings/blb", InitializePlayerState);
+/* Byte-identical twin of initPlayerState (the binary carries two copies). */
+void InitializePlayerState(u8 *ps) {
+    s16 i;
+
+    ps[0] = 1;
+    ps[1] = 1;
+    ps[0x11] = 5;
+    ps[0x12] = 0;
+    ps[0x14] = 0;
+    ps[0x15] = 0;
+    ps[0x16] = 0;
+    ps[0x1C] = 0;
+    ps[0x13] = 0;
+    ps[0x19] = 0;
+    ps[0x1A] = 0;
+    ps[0x1B] = 0;
+    ps[0x17] = 0;
+    ps[0x18] = 0;
+    ps[0x1D] = 0;
+    ps[0x10] = 1;
+    *(s16 *)(ps + 2) = 0;
+    ps[4] = 0;
+    ps[5] = 0;
+    i = 0;
+    do {
+        /* addr temp keeps the addu base-first (a0 + i) */
+        u8 *p = &ps[i];
+        p[6] = 0;
+        i++;
+    } while (i < 10);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", MarkLevelCompleteAndClearCollectibles);
 
