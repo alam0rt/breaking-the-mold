@@ -956,9 +956,14 @@ void PlatformRideComplete(Entity *entity) {
  * binary ptr-scan agree), so they keep splat's anonymous func_ names. */
 INCLUDE_ASM("asm/nonmatchings/blb", func_80027210);
 
-INCLUDE_ASM("asm/nonmatchings/blb", func_80027234);
+void func_80027234(u8 *e) {
+    e[0x111] = 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blb", func_80027240);
+void func_80027240(u8 *e) {
+    e[0x111] = 0;
+    *(u16 *)(e + 0x10C) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitDigitDisplayEntity);
 

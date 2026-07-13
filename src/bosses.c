@@ -1731,7 +1731,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectileTick);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileEnterActiveState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileDeactivate);
+void ProjectileDeactivate(u8 *e) {
+    u8 *sc = *(u8 **)(e + 0x34);
+    sc[0xA] = 0;
+    e[0xF1] = 0;
+    e[0x108] = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledAnimated1);
 
