@@ -823,11 +823,23 @@ INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeOut);
 
 INCLUDE_ASM("asm/nonmatchings/blb", ResetEntityScaleState);
 
-/* SetEntityScaleFadeIn @ 0x80026DAC — FSM-install prologue schedule: cc1
- * coalesces the tick-fn address and markerHi(-1) into one reg instead of
- * keeping fn in a separate survivor reg. Needs register pins (see
- * PlatformRideStartUp); shelved. */
-INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeIn);
+extern void EntityTick_ScaleFadeIn();
+
+void SetEntityScaleFadeIn(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    fn = (void (*)())EntityTick_ScaleFadeIn;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x00) = slot.s;
+    *(s32 *)(e + 0x50) = 0x10000;
+    *(s32 *)(e + 0x54) = 0x10000;
+    e[0x100] = 0x14;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitCountdownTimerEntity);
 

@@ -2062,7 +2062,26 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ClayballState_HideIndicatorAndWait);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ClayballState_DestroyWithDebris);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorState_Wait);
+extern void ClayballIndicatorWaitTick();
+extern void ClayballIndicatorEventHandler();
+
+void ClayballIndicatorState_Wait(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    fn = (void (*)())ClayballIndicatorWaitTick;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x00) = slot.s;
+    fn = (void (*)())ClayballIndicatorEventHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ShrineyGuardDeactivateWithSound);
 
