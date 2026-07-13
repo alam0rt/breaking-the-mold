@@ -151,7 +151,45 @@ void EntityTickLoop(GameState *gameState) {
  * the queued backdrop RGB at +0x131..+0x133 into both GPU draw-env buffers
  * on the BLB heap (offsets 0x1D and 0x505D -- the double-buffered DRAWENVs),
  * then walks the render list at +0x20 and calls each entity's render vtable. */
-INCLUDE_ASM("asm/nonmatchings/blb", RenderEntities);
+void RenderEntities(void *arg0) {
+    u8 *gs = (u8 *)arg0;
+    u8 *heap;
+    u8 *node;
+
+    if (gs[0x130] != 0) {
+        u8 r, g, b;
+        heap = (u8 *)g_pBlbHeapBase;
+        r = gs[0x131];
+        g = gs[0x132];
+        b = gs[0x133];
+        heap[0x1D] = r;
+        heap[0x1E] = g;
+        heap[0x1F] = b;
+        heap[0x505D] = r;
+        heap[0x505E] = g;
+        heap[0x505F] = b;
+        gs[0x130] = 0;
+    }
+
+    /* tick-list traversal (no per-node action in the original) */
+    {
+        u8 *t = *(u8 **)(gs + 0x1C);
+        while (t != NULL) {
+            t = *(u8 **)(t + 0x0);
+        }
+    }
+
+    /* render-list dispatch */
+    node = *(u8 **)(gs + 0x20);
+    while (node != NULL) {
+        u8 *obj = *(u8 **)(node + 0x4);
+        u8 *vtable = *(u8 **)(obj + 0xC);
+        s16 argOff = *(s16 *)(vtable + 0x8);
+        void (*fn)(void *) = *(void (**)(void *))(vtable + 0xC);
+        fn(obj + argOff);
+        node = *(u8 **)(node + 0x0);
+    }
+}
 
 extern void PlatformRideComplete(Entity *entity);
 extern void PlatformRideStartUp(Entity *entity);
