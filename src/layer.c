@@ -149,7 +149,10 @@ void SetupSpriteFromFrame(SpriteContext **ppSprite, u8 *rs, u16 frameIndex) {
     *(u16 *)(rs + 0x26) = *(u16 *)((u8 *)*ppSprite + 0x12);
 }
 
-INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlotsWrapper);
+extern u8 D_8009AE58[];
+void FreeAllLayerRenderSlotsWrapper(void) {
+    FreeAllLayerRenderSlots((LayerRenderSlot *)D_8009AE58);
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots_CrtInit);
 

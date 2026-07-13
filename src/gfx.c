@@ -71,11 +71,19 @@ INCLUDE_ASM("asm/nonmatchings/gfx", func_80013240);
 
 INCLUDE_ASM("asm/nonmatchings/gfx", SetVideoModePAL);
 
-INCLUDE_ASM("asm/nonmatchings/gfx", SsUtReverbOn);
+extern void SetVideoMode(s32 mode);
+void SsUtReverbOn(void) {
+    SetVideoMode(1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/gfx", InitGraphicsSystem);
 
-INCLUDE_ASM("asm/nonmatchings/gfx", ConditionalFreeMemory);
+extern void builtin_delete(void *ptr);
+void ConditionalFreeMemory(void *ptr, s32 flags) {
+    if (flags & 1) {
+        builtin_delete(ptr);
+    }
+}
 
 /* Resets both double-buffers' ordering tables (OT head ptrs at base+0x74 and
  * base+0x50B4) and re-arms the swap latch: frame not ready, swap in flight. */
