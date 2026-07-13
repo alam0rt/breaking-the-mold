@@ -1913,7 +1913,14 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallRegular);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", DestroySoundEntity);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollisionStateChange);
+extern u32 D_800A5CB8 asm("D_800A5CB8");
+extern EntityCallback D_800A5CBC asm("D_800A5CBC");
+void EntityCollisionStateChange(u8 *e) {
+    EntityUpdateCallback((Entity *)e);
+    if (CollisionCheckWrapper((Entity *)e, 2, 0x1000, 1)) {
+        EntitySetState((Entity *)e, D_800A5CB8, D_800A5CBC);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", FallingSoundEntityTick);
 
@@ -1955,7 +1962,7 @@ void JoeHeadJoeUpdatePosition(u8 *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpecial);
 
-extern void CollisionCheckWrapper(Entity *e, s32 a1, s32 a2, s32 a3);
+extern s32 CollisionCheckWrapper(Entity *e, s32 a1, s32 a2, s32 a3);
 void JoeHeadJoeTickWithCollision(u8 *e) {
     EntityUpdateCallback((Entity *)e);
     CollisionCheckWrapper((Entity *)e, 2, 0x1000, 2);
@@ -1968,7 +1975,17 @@ s32 JoeHeadJoeEventHandler2(Entity *e, s32 eventId, s32 a2, s32 a3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventWithStateTransition);
+extern u32 D_800A5CD8 asm("D_800A5CD8");
+extern EntityCallback D_800A5CDC asm("D_800A5CDC");
+s32 JoeHeadJoeEventWithStateTransition(u8 *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue((Entity *)e);
+    }
+    if ((eventId & 0xFFFF) == 0x1001) {
+        EntitySetState((Entity *)e, D_800A5CD8, D_800A5CDC);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_CollisionTick);
 
@@ -2227,7 +2244,19 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorWaitTick);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorExpandTick);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorTimerTick);
+extern u32 D_800A5CF8 asm("D_800A5CF8");
+extern EntityCallback D_800A5CFC asm("D_800A5CFC");
+void ClayballIndicatorTimerTick(u8 *e) {
+    u16 t = *(u16 *)(e + 0x134);
+    if (t != 0) {
+        t = t - 1;
+        *(u16 *)(e + 0x134) = t;
+        if ((t & 0xFFFF) == 0) {
+            EntitySetState((Entity *)e, D_800A5CF8, D_800A5CFC);
+        }
+    }
+    EntityUpdateCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorEventHandler);
 
