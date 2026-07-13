@@ -197,7 +197,10 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformEntityCheckTriggerZones);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_ResumeWithSound);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformState_StopSound);
+void PlatformState_StopSound(u8 *e) {
+    StopSPUVoice(*(s32 *)(e + 0x10C));
+    *(s32 *)(e + 0x10C) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_BounceWithGravity);
 
@@ -209,7 +212,12 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", SoarStateInit_BeginFlightMode);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", SoarState_BeginFlight);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformState_EnablePlayerInput);
+extern void SendMessageToPlayer(void *gs, s32 a, s32 b, s32 c, s32 d);
+extern void *g_pGameState;
+void PlatformState_EnablePlayerInput(u8 *e) {
+    e[0x11D] = 1;
+    SendMessageToPlayer(g_pGameState, 4, 0x100F, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_LandFromFlight);
 
@@ -275,11 +283,24 @@ void EntityTick_ScaledSpriteWithSound(u8 *e) {
     EntityUpdateCallback((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_TouchTrigger);
+extern void EntitySetState(Entity *e, u32 marker, void *fn);
+extern u32 D_800A6004 asm("D_800A6004");
+extern EntityCallback D_800A6008 asm("D_800A6008");
+s32 RunnEventHandler_TouchTrigger(Entity *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 0x1000) {
+        EntitySetState(e, D_800A6004, D_800A6008);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_TriggerWithCallback);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_QueueProcess);
+s32 RunnEventHandler_QueueProcess(Entity *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnVerticalMovementUpdate);
 
