@@ -36,5 +36,5 @@ fi
 cpp "${cpp_args[@]}" "$input" \
     | tools/gcc-2.7.2-psx/cc1 -O2 -G8 -fno-builtin -mno-abicalls -mcpu=3000 -o "$output.s"
 python3 tools/maspsx/maspsx.py --aspsx-version=2.86 --run-assembler \
-    --gnu-as-path=mipsel-unknown-linux-gnu-as -G8 -o "$output" \
+    --gnu-as-path=mipsel-unknown-linux-gnu-as -G8 --expand-div -o "$output" \
     -march=r3000 -mtune=r3000 -no-pad-sections -G8 -Iinclude "$output.s"
