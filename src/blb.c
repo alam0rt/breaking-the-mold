@@ -844,7 +844,30 @@ void EntityTick_ScaleFadeOut(u8 *e) {
     EntityUpdateCallback((Entity *)e);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_ScaleFadeIn);
+void EntityTick_ScaleFadeIn(u8 *e) {
+    u8 t = e[0x100] - 1;
+    e[0x100] = t;
+    if ((t & 0xFF) != 0) {
+        s32 v = *(s32 *)(e + 0x50) - 0xCCC;
+        *(s32 *)(e + 0x50) = v;
+        *(s32 *)(e + 0x54) = v;
+    } else {
+        PadSlot slot;
+        s16 m1;
+        register void (*fn)() asm("$3");
+        m1 = -1;
+        *(s32 *)(e + 0x50) = 0;
+        *(s32 *)(e + 0x54) = 0;
+        __asm__ __volatile__("" ::: "memory");
+        fn = (void (*)())EntityUpdateCallback;
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x00) = slot.s;
+        e[0x101] = 1;
+    }
+    EntityUpdateCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeOut);
 
