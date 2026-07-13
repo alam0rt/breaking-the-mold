@@ -1911,7 +1911,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", BouncingProjectileTick);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallRegular);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", DestroySoundEntity);
+extern u8 D_80011468[];
+void DestroySoundEntity(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011468;
+    StopSPUVoice(*(s32 *)(e + 0x100));
+    *(s32 *)(e + 0x100) = -1;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 extern u32 D_800A5CB8 asm("D_800A5CB8");
 extern EntityCallback D_800A5CBC asm("D_800A5CBC");
@@ -1946,7 +1955,16 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_HideAndNotifyGameState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpiky);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDestroyCallback);
+extern u8 D_80011448[];
+void JoeHeadJoeDestroyCallback(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011448;
+    StopSPUVoice(*(s32 *)(e + 0x104));
+    *(s32 *)(e + 0x104) = -1;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithSoundPanning);
 

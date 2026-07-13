@@ -254,7 +254,16 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", BossCollision_SpawnDebrisAndLayers);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", CreateRunnPlayerEntity);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", EntityDestructor_WithSPUStopAndFree);
+extern u8 D_80011DB4[];
+void EntityDestructor_WithSPUStopAndFree(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011DB4;
+    StopSPUVoice(*(s32 *)(e + 0x10C));
+    *(s32 *)(e + 0x10C) = -1;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", EntityTick_ScaledSpriteWithSound);
 
@@ -293,7 +302,15 @@ void FreeEntityNoTeardown_800740d0(u8 *e, s32 arg) {
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", CreateFinnPlayerEntity);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDestroyWithSoundCleanup);
+extern u8 D_80011E14[];
+void FinnDestroyWithSoundCleanup(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011E14;
+    StopSPUVoice(*(s32 *)(e + 0x110));
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnMainTickCallback);
 
