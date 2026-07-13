@@ -1955,7 +1955,11 @@ void JoeHeadJoeUpdatePosition(u8 *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpecial);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithCollision);
+extern void CollisionCheckWrapper(Entity *e, s32 a1, s32 a2, s32 a3);
+void JoeHeadJoeTickWithCollision(u8 *e) {
+    EntityUpdateCallback((Entity *)e);
+    CollisionCheckWrapper((Entity *)e, 2, 0x1000, 2);
+}
 
 s32 JoeHeadJoeEventHandler2(Entity *e, s32 eventId, s32 a2, s32 a3) {
     if ((eventId & 0xFFFF) == 2) {
@@ -2144,9 +2148,11 @@ void EntityDestroyCallback_Vt800115E8_800556b8(u8 *e, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_8005571c);
+void NopStub_8005571c(void) {
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_80055724);
+void NopStub_80055724(void) {
+}
 
 extern u8 D_80011608[];
 extern void FreeEntityNoTeardown_80055760(u8 *e, s32 arg);
@@ -2287,7 +2293,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerUpdateWithSpeedUp);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitClayballAtWaypoint);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerTickWithCollision);
+void PathFollowerTickWithCollision(u8 *e) {
+    EntityUpdateCallback((Entity *)e);
+    if (e[0x111] != 0) {
+        CollisionCheckWrapper((Entity *)e, 2, 0x1007, *(s32 *)(e + 0x114));
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", PathFollowerTickWithOffscreenCheck);
 
