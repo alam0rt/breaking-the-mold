@@ -1,3 +1,4 @@
+GetSpriteFrameDataByIndex = 0x80019650;
 SetEntitySpawnData = 0x80025630;
 memset_1 = 0x800896D4;
 GetTPage = 0x800896E4;

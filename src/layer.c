@@ -124,7 +124,13 @@ u16 GetSpriteFrameCount(SpriteContext **ppSprite) {
     return (*ppSprite)->total_frame_count;
 }
 
-INCLUDE_ASM("asm/nonmatchings/layer", GetSpriteFrameDataByIndex);
+/* Resolve the pointer to a static sprite frame's metadata record: index the
+ * slot's frame table (secondary_ptr) by frameIndex (0x14-byte entries) and
+ * return that entry's first word. */
+void *GetSpriteFrameDataByIndex(SpriteContext **ppSprite, u16 frameIndex) {
+    u8 *table = (*ppSprite)->secondary_ptr;
+    return *(void **)(table + frameIndex * 0x14);
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", SetupSpriteFromFrame);
 
