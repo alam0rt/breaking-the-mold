@@ -20,8 +20,6 @@ u8 BLB_ReadSectorsWrapper(u32 sector, u32 count) {
 extern void InitMenuEntityWithVtable(Entity *entity, s32 arg);
 extern u8 *PassThroughFunction(u8 *ptr);
 extern void RemoveEntityFromAllLists(Entity *entity, Entity *child);
-extern void RemoveEntityFromUpdateQueue(Entity *entity);
-extern void RemoveFromRenderList(Entity *entity);
 void RemoveFromUpdateQueue(u8 *entity);
 extern void RemoveFromZOrderList(u8 *entity);
 extern void ClearEntityDefList(u8 *entity);
@@ -246,11 +244,68 @@ INCLUDE_ASM("asm/nonmatchings/blb", AddEntityToBothLists);
 
 INCLUDE_ASM("asm/nonmatchings/blb", InsertIntoZSortedRenderList);
 
-INCLUDE_ASM("asm/nonmatchings/blb", RemoveFromTickList);
+/* Unlink the first tick-list node (head at GameState+0x1C; node = {next,
+ * entity}) whose entity matches, free the 8-byte node. Returns 1 on hit. */
+s32 RemoveFromTickList(u8 *gs, void *target) {
+    u8 *prev = NULL;
+    u8 *n = *(u8 **)(gs + 0x1C);
 
-INCLUDE_ASM("asm/nonmatchings/blb", RemoveFromRenderList);
+    while (n != NULL) {
+        if (*(void **)(n + 4) == target) {
+            if (prev == NULL) {
+                *(u8 **)(gs + 0x1C) = *(u8 **)n;
+            } else {
+                *(u8 **)prev = *(u8 **)n;
+            }
+            FreeFromHeap(g_pBlbHeapBase, n, 8, 0);
+            return 1;
+        }
+        prev = n;
+        n = *(u8 **)n;
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blb", RemoveEntityFromUpdateQueue);
+/* Same unlink on the render list (head at GameState+0x20). */
+s32 RemoveFromRenderList(u8 *gs, void *target) {
+    u8 *prev = NULL;
+    u8 *n = *(u8 **)(gs + 0x20);
+
+    while (n != NULL) {
+        if (*(void **)(n + 4) == target) {
+            if (prev == NULL) {
+                *(u8 **)(gs + 0x20) = *(u8 **)n;
+            } else {
+                *(u8 **)prev = *(u8 **)n;
+            }
+            FreeFromHeap(g_pBlbHeapBase, n, 8, 0);
+            return 1;
+        }
+        prev = n;
+        n = *(u8 **)n;
+    }
+    return 0;
+}
+
+/* Void variant on the update queue (head at +0x24). */
+void RemoveEntityFromUpdateQueue(u8 *gs, void *target) {
+    u8 *prev = NULL;
+    u8 *n = *(u8 **)(gs + 0x24);
+
+    while (n != NULL) {
+        if (*(void **)(n + 4) == target) {
+            if (prev == NULL) {
+                *(u8 **)(gs + 0x24) = *(u8 **)n;
+            } else {
+                *(u8 **)prev = *(u8 **)n;
+            }
+            FreeFromHeap(g_pBlbHeapBase, n, 8, 0);
+            return;
+        }
+        prev = n;
+        n = *(u8 **)n;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", ChangeRenderZOrder);
 
@@ -302,7 +357,42 @@ INCLUDE_ASM("asm/nonmatchings/blb", UpdateCameraPositionSmooth);
 
 INCLUDE_ASM("asm/nonmatchings/blb", SetCameraPositionDirect);
 
-INCLUDE_ASM("asm/nonmatchings/blb", GetTileAttributeAtPosition);
+/* Look up the collision-attribute byte for the tile containing world pixel
+ * (px,py): convert to tile coords, offset by the map origin (+0x6C/+0x6E),
+ * bounds-check against the map size (+0x70/+0x72), and index the attribute
+ * grid at +0x68. Returns 0 when out of bounds or no grid is loaded. */
+s32 GetTileAttributeAtPosition(u8 *gs, s16 px, s16 py) {
+    u8 *attr;
+    u8 *row;
+    s32 sx, sy;
+    s16 tx, ty, w;
+
+    attr = *(u8 **)(gs + 0x68);
+    if (attr == NULL) {
+        goto out_of_bounds;
+    }
+    sx = px >> 4;
+    sy = py >> 4;
+    tx = sx - *(u16 *)(gs + 0x6C);
+    ty = sy - *(u16 *)(gs + 0x6E);
+    if (tx < 0) {
+        goto out_of_bounds;
+    }
+    w = *(s16 *)(gs + 0x70);
+    if (tx >= w) {
+        goto out_of_bounds;
+    }
+    if (ty < 0) {
+        return 0;
+    }
+    if (ty >= *(s16 *)(gs + 0x72)) {
+        goto out_of_bounds;
+    }
+    row = attr + ty * w;
+    return row[tx];
+out_of_bounds:
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", SpawnOnScreenEntities);
 
@@ -656,9 +746,94 @@ INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_PlatformRideIdle);
 
 INCLUDE_ASM("asm/nonmatchings/blb", PlatformInterpolatePosition);
 
-INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideStartUp);
+extern void PlatformInterpolatePosition();
 
-INCLUDE_ASM("asm/nonmatchings/blb", PlatformRideStartDown);
+/* Begin a platform ride toward the "up" anchor (+0x106): record start/target
+ * Y, install PlatformInterpolatePosition on the render slot and
+ * PlatformRideComplete on the queued slot, direction flag (+0x10E) = 1. */
+void PlatformRideStartUp(Entity *entity) {
+    PadSlot slot;
+    s16 m1;
+    /* Pins reproduce the target's register file: the two worldY reads stay
+     * separate loads (hard regs block the cse merge) and both callback
+     * addresses materialise up front in $a3/$t0. */
+    register u16 y1 PSX_REG("$5");
+    register u16 y2 PSX_REG("$6");
+    register void (*fnI)() PSX_REG("$7");
+    register void (*fnD)() PSX_REG("$8");
+    register u16 tgt PSX_REG("$3");
+    u8 *e = (u8 *)entity;
+
+    fnI = PlatformInterpolatePosition;
+    fnD = (void (*)())PlatformRideComplete;
+    y1 = *(u16 *)(e + 0x6A);
+    /* coalesce barrier: force the second worldY read to stay a real load */
+    __asm__ volatile("" : "=r"(y1) : "0"(y1));
+    tgt = *(u16 *)(e + 0x106);
+    y2 = *(u16 *)(e + 0x6A);
+    e[0x10F] = 0;
+    e[0x110] = 0;
+    e[0x10A] = 0x14;
+    e[0x10B] = 0;
+    /* fence: keep the start-Y store from hoisting above this pair */
+    do {
+        *(s16 *)(e + 0x100) = tgt;
+        tgt -= y2;
+    } while (0);
+    *(s16 *)(e + 0x102) = y1;
+    *(s16 *)(e + 0x104) = tgt;
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fnI;
+    *(CallbackSlot *)(e + 0x1C) = slot.s;
+    e[0x10E] = 1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fnD;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
+
+/* Mirror of PlatformRideStartUp toward the "down" anchor (+0x108);
+ * direction flag (+0x10E) = 0. */
+void PlatformRideStartDown(Entity *entity) {
+    PadSlot slot;
+    s16 m1;
+    register u16 y1 PSX_REG("$5");
+    register u16 y2 PSX_REG("$6");
+    register void (*fnI)() PSX_REG("$7");
+    register void (*fnD)() PSX_REG("$8");
+    register u16 tgt PSX_REG("$3");
+    u8 *e = (u8 *)entity;
+
+    fnI = PlatformInterpolatePosition;
+    fnD = (void (*)())PlatformRideComplete;
+    y1 = *(u16 *)(e + 0x6A);
+    __asm__ volatile("" : "=r"(y1) : "0"(y1));
+    tgt = *(u16 *)(e + 0x108);
+    y2 = *(u16 *)(e + 0x6A);
+    e[0x10A] = 0x14;
+    m1 = -1;
+    e[0x10F] = 0;
+    e[0x110] = 0;
+    e[0x10B] = 0;
+    /* fence: keep the start-Y store from hoisting above this pair */
+    do {
+        *(s16 *)(e + 0x100) = tgt;
+        tgt -= y2;
+    } while (0);
+    *(s16 *)(e + 0x102) = y1;
+    *(s16 *)(e + 0x104) = tgt;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fnI;
+    *(CallbackSlot *)(e + 0x1C) = slot.s;
+    e[0x10E] = 0;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fnD;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 /* Default "ride complete / idle" state for platform-ride entities (installed
  * via D_800A598C). Clears the render FSM slot (block-copy of a zeroed

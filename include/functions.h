@@ -32,7 +32,7 @@ extern void DestroyEntityAndFreeMemory(SpriteEntity *entity, s32 flags);
 extern void EntityProcessCallbackQueue(Entity *entity);
 extern void EntityUpdateCallback(Entity *entity);
 extern void FreeEntityLists(Entity *entity);
-extern void RemoveFromTickList(Entity *entity, Entity *child);
+extern s32  RemoveFromTickList(u8 *gs, void *child); /* returns 1 if unlinked */
 extern u8   EntityApplyMovementCallbacks(Entity *entity, s16 x, s16 y);
 extern void AddEntityToSortedRenderList(u8 *list, Entity *entity);
 

@@ -1901,7 +1901,38 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitClayballProjectile);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GenericSpriteEntityInitCallback);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityCheckTriggerZone);
+extern s32 CheckTriggerZoneCollision(GameState *gs, s16 x, s16 y, s32 *outAttr, s32 *outData);
+extern s32 HandleGenericTriggerZone(s32 unused, u8 zoneId, u8 *outR, u8 *outG, u8 *outB);
+
+/* If the entity has a spawn record (+0x100), test its (x,y) @ +0x8/+0xA
+ * against the level's trigger zones; on a hit whose attribute resolves to an
+ * RGB tint, stamp the r/g/b into the render context (+0x34) at +0x34..+0x36. */
+void EntityCheckTriggerZone(u8 *e) {
+    u8 *spawnRec = *(u8 **)(e + 0x100);
+    s32 attr, data;
+    u8 r, g, b;
+    u8 *ctx;
+
+    if (spawnRec == NULL) {
+        return;
+    }
+    if ((CheckTriggerZoneCollision(g_pGameState, *(s16 *)(spawnRec + 0x8),
+                                   *(s16 *)(spawnRec + 0xA), &attr, &data) & 0xFF) == 0) {
+        return;
+    }
+    if ((HandleGenericTriggerZone((s32)g_pGameState, (u8)attr, &r, &g, &b) & 0xFF) == 0) {
+        return;
+    }
+    ctx = *(u8 **)(e + 0x34);
+    {
+        /* copy to non-addressable temps so all three loads hoist above the
+         * stores (r/g/b are address-taken and would otherwise alias ctx) */
+        u8 rr = r, gg = g, bb = b;
+        ctx[0x34] = rr;
+        ctx[0x35] = gg;
+        ctx[0x36] = bb;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", GenericSpriteEntityTickCallback);
 

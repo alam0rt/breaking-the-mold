@@ -4,7 +4,7 @@
  * definition overrides. Regenerate with `python3 tools/gen_port_stubs.py`.
  * ========================================================================== */
 void port_stub(const char *fn);
-/* 1053 asm-only functions */
+/* 1051 asm-only functions */
 __attribute__((weak)) void Add1970Icons(void) { port_stub("Add1970Icons"); }
 __attribute__((weak)) void AddEntityToBothLists(void) { port_stub("AddEntityToBothLists"); }
 __attribute__((weak)) void AddEntityToSortedRenderList(void) { port_stub("AddEntityToSortedRenderList"); }
@@ -159,7 +159,6 @@ __attribute__((weak)) void CleanupDeadEntities(void) { port_stub("CleanupDeadEnt
 __attribute__((weak)) void CleanupRespawnEntities(void) { port_stub("CleanupRespawnEntities"); }
 __attribute__((weak)) void ClearAllLayerRenderSlots(void) { port_stub("ClearAllLayerRenderSlots"); }
 __attribute__((weak)) void ClearAllLayerRenderSlots_CrtInit(void) { port_stub("ClearAllLayerRenderSlots_CrtInit"); }
-__attribute__((weak)) void ClearEntityDefList(void) { port_stub("ClearEntityDefList"); }
 __attribute__((weak)) void ClearHamsterCount(void) { port_stub("ClearHamsterCount"); }
 __attribute__((weak)) void ClearOrderingTables(void) { port_stub("ClearOrderingTables"); }
 __attribute__((weak)) void ClearTickList(void) { port_stub("ClearTickList"); }
@@ -349,7 +348,6 @@ __attribute__((weak)) void FinnState_Spawn(void) { port_stub("FinnState_Spawn");
 __attribute__((weak)) void FinnSubState_AnimateAndQueueIdle(void) { port_stub("FinnSubState_AnimateAndQueueIdle"); }
 __attribute__((weak)) void FinnSubState_FaceRightAndAnimate(void) { port_stub("FinnSubState_FaceRightAndAnimate"); }
 __attribute__((weak)) void FinnSubentityFollowWithDistanceCheck(void) { port_stub("FinnSubentityFollowWithDistanceCheck"); }
-__attribute__((weak)) void FinnSubentityUpdatePositionFromParent(void) { port_stub("FinnSubentityUpdatePositionFromParent"); }
 __attribute__((weak)) void FinnTick_LevelExitCountdown(void) { port_stub("FinnTick_LevelExitCountdown"); }
 __attribute__((weak)) void FinnUpdateRotationSprite(void) { port_stub("FinnUpdateRotationSprite"); }
 __attribute__((weak)) void FinnVehicleMovementUpdate(void) { port_stub("FinnVehicleMovementUpdate"); }
