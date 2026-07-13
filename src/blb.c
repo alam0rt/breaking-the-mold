@@ -93,7 +93,38 @@ INCLUDE_ASM("asm/nonmatchings/blb", EntityTickLoopWithCamera);
 /* Single-entity removal path used inside the tick loop. If the kill-request
  * fields at +0x34/+0x38 are set, drops from update / render / tick lists,
  * fires the destruct vtable (type 3), then clears the request. */
-INCLUDE_ASM("asm/nonmatchings/blb", DeferredEntityRemoval);
+/* Single-entity removal path used inside the tick loop. If the kill-request
+ * fields at +0x34/+0x38 are set, drops from update / render / tick lists,
+ * fires the destruct vtable (type 3), then clears the request. */
+void DeferredEntityRemoval(u8 *e) {
+    register u8 *req PSX_REG("$5"); /* pin: load lands directly in the a1 arg */
+
+    req = *(u8 **)(e + 0x34);
+    if (req == NULL) {
+        return;
+    }
+    if (*(s32 *)(e + 0x38) == 0) {
+        RemoveEntityFromAllLists((Entity *)e, (Entity *)req);
+        *(u32 *)(e + 0x34) = 0;
+    } else {
+        RemoveEntityFromUpdateQueue(e, req);
+        if (*(s32 *)(e + 0x38) != 1) {
+            RemoveFromRenderList(e, *(void **)(e + 0x38));
+        }
+        RemoveFromTickList(e, *(void **)(e + 0x34));
+        {
+            u8 *req2 = *(u8 **)(e + 0x34); /* unpinned: colors $v1 */
+            if (req2 != NULL) {
+                u8 *vt = *(u8 **)(req2 + 0x18);
+                s16 ofs = *(s16 *)(vt + 8);
+                void (*fn)(u8 *, s32) = *(void (**)(u8 *, s32))(vt + 0xC);
+                fn(req2 + ofs, 3);
+            }
+        }
+        *(u32 *)(e + 0x34) = 0;
+    }
+    *(u32 *)(e + 0x38) = 0;
+}
 
 /* Drains every entity from the update list (GameState+0x1C), firing the
  * secondary destruct vtable on each followed by the same teardown that
@@ -744,9 +775,35 @@ INCLUDE_ASM("asm/nonmatchings/blb", InitCountdownTimerEntity);
 
 INCLUDE_ASM("asm/nonmatchings/blb", EntityTick_PlatformRideIdle);
 
-INCLUDE_ASM("asm/nonmatchings/blb", PlatformInterpolatePosition);
+/* Per-tick eased platform move (render-slot callback): counter at +0x10B,
+ * duration at +0x10A. First half approaches with delta>>k, second half with
+ * delta - (delta>>k); when the counter passes the duration, snap to the
+ * target Y (+0x100) and fire the queued-slot callback. */
+void PlatformInterpolatePosition(u8 *e) {
+    s32 raw;
+    u8 next;
+    u32 dur;
+    s16 delta;
 
-extern void PlatformInterpolatePosition();
+    raw = e[0x10B] + 1;
+    next = raw;
+    dur = e[0x10A];
+    e[0x10B] = raw;
+    if (dur < next) {
+        *(s16 *)(e + 0x6A) = *(u16 *)(e + 0x100);
+        EntityProcessCallbackQueue((Entity *)e);
+    } else {
+        dur >>= 1; /* half; hoisted into the branch delay slot */
+        if (next <= dur) {
+            s32 k = dur - next + 1;
+            *(s16 *)(e + 0x6A) = *(u16 *)(e + 0x102) + (*(s16 *)(e + 0x104) >> k);
+        } else {
+            s32 k = next - dur + 1;
+            delta = *(s16 *)(e + 0x104);
+            *(s16 *)(e + 0x6A) = *(u16 *)(e + 0x102) + (delta - (delta >> k));
+        }
+    }
+}
 
 /* Begin a platform ride toward the "up" anchor (+0x106): record start/target
  * Y, install PlatformInterpolatePosition on the render slot and
