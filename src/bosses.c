@@ -1689,7 +1689,11 @@ INCLUDE_ASM("asm/nonmatchings/bosses", ScaleByCosine);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", MaskAngleMagnitudeEntry);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", CalculateVectorMagnitude);
+extern s32 csqrt(s32 x);
+
+s32 CalculateVectorMagnitude(s16 x, s16 y) {
+    return (csqrt((x * x + y * y) << 12) << 4) >> 16;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitScaledEntityWithSprite);
 
@@ -1720,7 +1724,17 @@ s32 EntityEvent_ClearTargetOnDestroy(u8 *e, s32 eventId, s32 arg, s32 source) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityEventHandler_TokenReleaseAndQueueTick);
+s32 EntityEventHandler_TokenReleaseAndQueueTick(Entity *e, s32 eventId, s32 a2, s32 source) {
+    if ((eventId & 0xFFFF) == 0x1009) {
+        if (source == *(s32 *)((u8 *)e + 0x108)) {
+            *(s32 *)((u8 *)e + 0x108) = 0;
+        }
+    }
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectile_TrackTarget);
 
