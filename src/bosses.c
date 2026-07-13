@@ -1748,7 +1748,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitProjectileWithTimer);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityTick_CollisionWithTimerTransition);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollision_ProcessQueueOnly);
+s32 EntityCollision_ProcessQueueOnly(Entity *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectileTick);
 
@@ -1835,7 +1840,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EntityCollisionStateChange);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", FallingSoundEntityTick);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventHandler);
+s32 JoeHeadJoeEventHandler(Entity *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallRegularInitState);
 
@@ -1870,7 +1880,12 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpecial);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithCollision);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventHandler2);
+s32 JoeHeadJoeEventHandler2(Entity *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeEventWithStateTransition);
 

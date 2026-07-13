@@ -380,6 +380,10 @@ INCLUDE_ASM("asm/nonmatchings/blb", ChangeRenderZOrder);
 
 INCLUDE_ASM("asm/nonmatchings/blb", RemoveEntityFromAllLists);
 
+/* ClearTickList @ 0x80022218 — cc1 hoists the FreeFromHeap size constant
+ * (li a2,8) into the loop-guard delay slot and reloads it post-call; the
+ * natural loop body doesn't reproduce that schedule (same class as
+ * FreeEntityLists). Shelved for permuter. */
 INCLUDE_ASM("asm/nonmatchings/blb", ClearTickList);
 
 INCLUDE_ASM("asm/nonmatchings/blb", FreeEntityListA);
@@ -803,6 +807,10 @@ INCLUDE_ASM("asm/nonmatchings/blb", AwardSwirlyQsAndHamsters);
 
 INCLUDE_ASM("asm/nonmatchings/blb", AddSuperWillies);
 
+/* ResetPlayerUnlocksByLevel @ 0x80026B18 — reads the g_pPlayerState pointer
+ * (D_800A597C) gp-relatively; a plain/asm-aliased extern emits absolute
+ * lui/lw and mints a tentative sdata symbol instead. gp-rel-extern blocker;
+ * shelved. */
 INCLUDE_ASM("asm/nonmatchings/blb", ResetPlayerUnlocksByLevel);
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitLevelTitleEntity);
