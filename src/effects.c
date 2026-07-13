@@ -706,7 +706,29 @@ void DestroyOscillatingScaleEntity(Entity *e, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/effects", FadeAndExpireEntityTick);
+void FadeAndExpireEntityTick(u8 *e) {
+    s16 c = *(u16 *)(e + 0x20) - 1;
+    *(s16 *)(e + 0x20) = c;
+    if (c < 0x1E) {
+        s16 f = *(u16 *)(e + 0x22) - 8;
+        *(s16 *)(e + 0x22) = f;
+        if (f < 0) {
+            *(s16 *)(e + 0x22) = 0;
+        }
+        {
+            u8 fade = e[0x22];
+            u8 *prim = *(u8 **)(e + 0x1C);
+            prim[0x40] = fade;
+            prim[0x41] = fade;
+            prim[0x42] = fade;
+        }
+    }
+    if (*(s16 *)(e + 0x20) == 0) {
+        u8 *prim = *(u8 **)(e + 0x1C);
+        prim[0xA] = 0;
+        e[0x24] = 1;
+    }
+}
 
 /* Fade-and-expire variant of the notifier quartet: guard byte at +0x24
  * (set by FadeAndExpireEntityTick when the fade completes). Formerly split
