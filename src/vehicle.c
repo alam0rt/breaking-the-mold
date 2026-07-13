@@ -235,9 +235,18 @@ void RunnDestroyCallback_Vtable0x80011d54(u8 *e, s32 flags) {
  * short. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Vtable0x80011d74);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Simple);
+extern u8 D_80011D94[];
+extern void FreeEntityNoTeardown_80073308(u8 *e, s32 arg);
+void RunnDestroyCallback_Simple(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011D94;
+    if (flags & 1) {
+        FreeEntityNoTeardown_80073308(e, 0x1C);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_80073308);
+void FreeEntityNoTeardown_80073308(u8 *e, s32 arg) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", InitScaledSpriteEntity);
 
@@ -269,9 +278,18 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnAnimationEndCallback);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", DestroyEntityWithFlags);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDestroyCallback_Simple);
+extern u8 D_80011DF4[];
+extern void FreeEntityNoTeardown_800740d0(u8 *e, s32 arg);
+void FinnDestroyCallback_Simple(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011DF4;
+    if (flags & 1) {
+        FreeEntityNoTeardown_800740d0(e, 0x1C);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_800740d0);
+void FreeEntityNoTeardown_800740d0(u8 *e, s32 arg) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", CreateFinnPlayerEntity);
 
@@ -301,9 +319,18 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetActiveState);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnAnimationEndCallback);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", FinnDestroyCallback_Vtable0x80011e34);
+extern u8 D_80011E34[];
+extern void FreeEntityNoTeardown_80074f68(u8 *e, s32 arg);
+void FinnDestroyCallback_Vtable0x80011e34(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011E34;
+    if (flags & 1) {
+        FreeEntityNoTeardown_80074f68(e, 0x1C);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", FreeEntityNoTeardown_80074f68);
+void FreeEntityNoTeardown_80074f68(u8 *e, s32 arg) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 /* vehicle .sdata (0x800A5FAC..0x800A603C): {marker=0xFFFF0000, callback}
  * descriptor pairs for the Soar / Runn / Platform / Finn vehicle state machines,
