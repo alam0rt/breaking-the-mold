@@ -1792,7 +1792,28 @@ s32 EntityCollision_ProcessQueueOnly(Entity *e, s32 eventId, s32 a2, s32 a3) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectileTick);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileEnterActiveState);
+void ProjectileDeactivate(u8 *e);
+s32 EntityCollision_ProcessQueueOnly();
+
+void ProjectileEnterActiveState(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    e[0x104] = 0xFF;
+    SetEntitySpriteId((Entity *)e, 0x9C6584D2, 1);
+    fn = (void (*)())EntityCollision_ProcessQueueOnly;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    fn = (void (*)())ProjectileDeactivate;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 void ProjectileDeactivate(u8 *e) {
     u8 *sc = *(u8 **)(e + 0x34);
