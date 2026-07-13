@@ -1860,15 +1860,104 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EntityTick_WithParticleSpawn);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", HomingMissileTrackTarget);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingActive);
+extern void ApplyAnimationPositionOffsets();
+extern void ProjectileHomingTickState();
+extern void EntityEventHandlerIdle();
+void ProjectileState_HomingActive(u8 *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {
+        fn = (void (*)())ApplyAnimationPositionOffsets;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x1C) = slot.s;
+    } while (0);
+    fn = (void (*)())EntityEventHandlerIdle;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x410818F9, 1);
+    fn = (void (*)())ProjectileHomingTickState;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingActiveVariant2);
+extern void ApplyAnimationPositionOffsets();
+extern void ProjectileHomingTickState();
+void ProjectileState_HomingActiveVariant2(u8 *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {
+        fn = (void (*)())ApplyAnimationPositionOffsets;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x1C) = slot.s;
+    } while (0);
+    fn = (void (*)())EntityEventHandlerIdle;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x410808F9, 1);
+    fn = (void (*)())ProjectileHomingTickState;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingActiveVariant3);
+extern void ApplyAnimationPositionOffsets();
+extern void ProjectileHomingTickState();
+void ProjectileState_HomingActiveVariant3(u8 *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {
+        fn = (void (*)())ApplyAnimationPositionOffsets;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x1C) = slot.s;
+    } while (0);
+    fn = (void (*)())EntityEventHandlerIdle;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x410800F9, 1);
+    fn = (void (*)())ProjectileHomingTickState;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileHomingTickState);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileState_HomingMissileTrack);
+extern void HomingMissileTrackTarget();
+extern void ProjectileHomingTickState();
+void ProjectileState_HomingMissileTrack(u8 *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {
+        fn = (void (*)())HomingMissileTrackTarget;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x1C) = slot.s;
+    } while (0);
+    fn = (void (*)())EntityEventHandlerIdle;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x40098A60, 1);
+    fn = (void (*)())ProjectileHomingTickState;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitHomingProjectileEntity);
 
@@ -2005,9 +2094,58 @@ s32 JoeHeadJoeEventWithStateTransition(u8 *e, s32 eventId, s32 a2, s32 a3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_CollisionTick);
+extern void JoeHeadJoeState_IdleAfterCollision();
+void JoeHeadJoeState_CollisionTick(u8 *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {
+        fn = (void (*)())JoeHeadJoeTickWithCollision;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x0) = slot.s;
+    } while (0);
+    fn = (void (*)())JoeHeadJoeEventWithStateTransition;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0xA116220C, 1);
+    fn = (void (*)())JoeHeadJoeState_IdleAfterCollision;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0; slot.s.markerHi = m1; slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_IdleAfterCollision);
+extern void JoeHeadJoeClearChildFlag();
+
+void JoeHeadJoeState_IdleAfterCollision(u8 *e) {
+    TripadSlot slot;
+    s16 m1;
+    void (*fn)();
+    do {
+        fn = (void (*)())EntityUpdateCallback;
+        __asm__ __volatile__("" : : "r"(fn));
+        m1 = -1;
+        slot.s.markerLo = 0;
+        slot.s.markerHi = m1;
+        slot.s.fn = fn;
+        *(CallbackSlot *)(e + 0x00) = slot.s;
+    } while (0);
+    fn = (void (*)())JoeHeadJoeEventHandler2;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0x657C322C, 1);
+    fn = (void (*)())JoeHeadJoeClearChildFlag;
+    __asm__ __volatile__("" : : "r"(fn));
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeClearChildFlag);
 
