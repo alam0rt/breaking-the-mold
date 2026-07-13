@@ -1954,23 +1954,86 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithTimer);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeApplyPhysicsWithBounce);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800113C8);
+extern u8 D_800113C8[];
+void EntityDestroyCallback_Vt800113C8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800113C8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800113E8);
+extern u8 D_800113E8[];
+void EntityDestroyCallback_Vt800113E8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800113E8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011408);
+extern u8 D_80011408[];
+void EntityDestroyCallback_Vt80011408(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011408;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011428);
+extern u8 D_80011428[];
+void EntityDestroyCallback_Vt80011428(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011428;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011488);
+extern u8 D_80011488[];
+void EntityDestroyCallback_Vt80011488(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011488;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114A8);
+extern u8 D_800114A8[];
+void EntityDestroyCallback_Vt800114A8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800114A8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114C8);
+extern u8 D_800114C8[];
+void EntityDestroyCallback_Vt800114C8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800114C8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114E8);
+extern u8 D_800114E8[];
+void EntityDestroyCallback_Vt800114E8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800114E8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011508);
+extern u8 D_80011508[];
+void EntityDestroyCallback_Vt80011508(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011508;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 extern u8 D_800115E8[];
 void EntityDestroyCallback_Vt800115E8(u8 *e, s32 flags) {
@@ -1981,7 +2044,14 @@ void EntityDestroyCallback_Vt800115E8(u8 *e, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011548);
+extern u8 D_80011548[];
+void EntityDestroyCallback_Vt80011548(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011548;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 extern u8 D_80011568[];
 void EntityDestroyCallback_Vt80011568(u8 *e, s32 flags) {
