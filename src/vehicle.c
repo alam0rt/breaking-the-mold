@@ -3,6 +3,7 @@
 #include "Game/entity.h"
 #include "Game/entity_events.h"
 
+extern u8 *g_pBlbHeapBase;
 extern s32 PlatformEntityOnCollision(Entity *entity, u32 event, u32 arg2, u32 arg3);
 
 /*
@@ -220,8 +221,18 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", EntityEnterAnimatedIdleState);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_FadeAndTimer);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Vtable0x80011d54);
+extern u8 D_80011D54[];
+void RunnDestroyCallback_Vtable0x80011d54(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011D54;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
+/* RunnDestroyCallback_Vtable0x80011d74 @ 0x80073260 - two trailing jr-ra
+ * stubs are merged into this label (fragment merge); body would be 0x10
+ * short. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Vtable0x80011d74);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnDestroyCallback_Simple);

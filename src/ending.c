@@ -213,6 +213,9 @@ INCLUDE_ASM("asm/nonmatchings/ending", func_80079D80);
  *       if (flags & 1) FreeFromHeap(g_pBlbHeapBase, (u8 *)e, 0, 0);
  *   }
  */
+/* EndingEntityDestroyCallback @ 0x80079D84 - stores flags to +0x100 in the
+ * pre-prologue slot (raw a1 before sp adjust); cc1 schedules it after the
+ * frame setup instead. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/ending", EndingEntityDestroyCallback);
 
 void EndingNoopCallback_80079dec(void) {
