@@ -308,7 +308,17 @@ void LoadBGColorFromTileHeader(u8 *entity) {
     entity[0x133] = hdr[2];
 }
 
-INCLUDE_ASM("asm/nonmatchings/blb", LoadSecondaryColorFromTileHeader);
+extern u8 *GetSecondaryColorPtr(LevelDataContext *ctx);
+
+/* Copies the level's secondary RGB triple from the tile header (via
+ * GetSecondaryColorPtr) into the entity at +0x127..+0x129. Sibling of
+ * LoadBGColorFromTileHeader, but with no "valid" flag byte. */
+void LoadSecondaryColorFromTileHeader(u8 *entity) {
+    u8 *ptr = GetSecondaryColorPtr((LevelDataContext *)(entity + 0x84));
+    entity[0x127] = ptr[0];
+    entity[0x128] = ptr[1];
+    entity[0x129] = ptr[2];
+}
 
 /* Fetches the tile spawn coordinates for this level and converts them to
  * pixel-space entity spawn position: x = (tileX << 4) + 8 (tile centre),
@@ -420,7 +430,7 @@ void FreeEntityNoTeardown_80025964(u8 *entity, s32 size) {
     FreeFromHeap(g_pBlbHeapBase, entity, 0, 0);
 }
 
-extern void InitEntityDataPointers(void *entity, void *dataBase);
+extern void InitEntityDataPointers(InputState *in, void *dataBase);
 
 /* Zeroes a HUD entity's header counters and installs its data pointers off the
  * fixed HUD data base at 0x80780000. Returns the entity. */
@@ -436,15 +446,47 @@ HUDEntityHeader *InitHUDEntity(HUDEntityHeader *e) {
     e->field_0x2 = 0;
     e->field_0x4 = 0;
     e->field_0x5 = 0;
-    InitEntityDataPointers(e, (void *)0x80780000);
+    InitEntityDataPointers((InputState *)e, (void *)0x80780000);
     return e;
 }
 
 INCLUDE_ASM("asm/nonmatchings/blb", UpdateInputState);
 
-INCLUDE_ASM("asm/nonmatchings/blb", InitEntityDataPointers);
+/* Aim the InputState's replay pointers at a demo/replay data base: frame
+ * count word at +0, RLE entry array at +4. (Also used by InitHUDEntity —
+ * the "HUDEntityHeader" there is really this InputState.) */
+void InitEntityDataPointers(InputState *in, void *dataBase) {
+    in->pFrameCount = dataBase;
+    in->pReplayBuffer = (u8 *)dataBase + 4;
+}
 
-INCLUDE_ASM("asm/nonmatchings/blb", EnableDemoPlaybackMode);
+/* Toggle demo input RECORDING. Ignored while playback is active. Enabling
+ * zeroes the replay frame count and resets the stream cursor. */
+void EnableDemoRecordingMode(InputState *in, u8 enable) {
+    if (in->playback_active == 0) {
+        in->record_active = enable;
+        if (enable != 0) {
+            in->playback_active = 0;
+            *(u16 *)in->pFrameCount = 0;
+            in->playback_index = 0;
+            in->playback_timer = 0;
+        }
+    }
+}
+
+/* Toggle demo input PLAYBACK. Re-enabling while already active is a no-op.
+ * Enabling stops recording, resets the stream cursor and primes the first
+ * RLE entry's duration. */
+void EnableDemoPlaybackMode(InputState *in, u8 enable) {
+    if (in->playback_active == 0 || enable == 0) {
+        in->playback_active = enable;
+        if (enable != 0) {
+            in->record_active = 0;
+            in->playback_index = 0;
+            in->playback_timer = *(u16 *)((u8 *)in->pReplayBuffer + 2);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/blb", CRT_InitStaticData1);
 

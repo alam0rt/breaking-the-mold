@@ -1,5 +1,6 @@
 #include "common.h"
 #include "Game/entity.h"
+#include "Game/callback_slot.h"
 #include "Game/layer_records.h"
 #include "Game/sprite.h"
 
@@ -138,7 +139,31 @@ INCLUDE_ASM("asm/nonmatchings/layer", FreeAllLayerRenderSlotsWrapper);
 
 INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots_CrtInit);
 
-INCLUDE_ASM("asm/nonmatchings/layer", InitMenuEntityWithVtable);
+extern u8 g_EntityVtable_Destroyed[];
+
+/* Zero-initialise the 0x1C-byte MenuEntityBase header and install the
+ * "destroyed" placeholder vtable; callers overwrite the vtable once the
+ * entity is fully built. Returns the entity (callers ignore it). `slot` is
+ * an unreferenced frame pad (0x10). */
+void *InitMenuEntityWithVtable(void *entity, s32 zOrder) {
+    PadSlot slot;
+    MenuEntityBase *e = entity;
+
+    /* fence: keep the `li 1` for `active` below the tick-slot stores */
+    do {
+        e->vtable = g_EntityVtable_Destroyed;
+        e->tickMarker = 0;
+        e->tickMarkerHi = 0;
+    } while (0);
+    e->tickCallback = NULL;
+    e->eventMarker = 0;
+    e->eventMarkerHi = 0;
+    e->eventCallback = NULL;
+    e->zOrder = zOrder;
+    e->active = 1;
+    e->reserved12 = 0;
+    return e;
+}
 
 INCLUDE_ASM("asm/nonmatchings/layer", InitMenuSpriteRenderContext);
 
