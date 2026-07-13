@@ -1711,7 +1711,14 @@ void EntityMoveHorizontalByFacing(u8 *e) {
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitEnemyEntityWithAI);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", GenericEntityDestroyCallback);
+extern u8 D_800115A8[];
+void GenericEntityDestroyCallback(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800115A8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyAIUpdateWithRandomization);
 
@@ -1965,17 +1972,51 @@ INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800114E8);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011508);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800115E8);
+extern u8 D_800115E8[];
+void EntityDestroyCallback_Vt800115E8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800115E8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011548);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011568);
+extern u8 D_80011568[];
+void EntityDestroyCallback_Vt80011568(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011568;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011588);
+extern u8 D_80011588[];
+void EntityDestroyCallback_Vt80011588(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011588;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800115C8);
+extern u8 D_800115C8[];
+void EntityDestroyCallback_Vt800115C8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800115C8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt800115E8_800556b8);
+void EntityDestroyCallback_Vt800115E8_800556b8(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_800115E8;
+    DestroyEntityAndFreeMemory((SpriteEntity *)e, 0);
+    if (flags & 1) {
+        FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_8005571c);
 
