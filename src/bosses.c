@@ -1841,7 +1841,10 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallRegularInitState);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallStartRolling);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallStopSound);
+void JoeHeadJoeBallStopSound(u8 *e) {
+    StopSPUVoice(*(s32 *)(e + 0x100));
+    *(s32 *)(e + 0x100) = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_EnterCollisionState);
 
@@ -1881,7 +1884,18 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitConditionalStateEntity);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithOffscreenCheck);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeApplyGravity);
+void JoeHeadJoeApplyGravity(u8 *e) {
+    s32 vel;
+    s32 pos;
+    vel = *(s32 *)(e + 0x100) + 0x2000;
+    *(s32 *)(e + 0x100) = vel;
+    if (0x40000 < vel) {
+        *(s32 *)(e + 0x100) = 0x40000;
+    }
+    pos = ((s32)*(s16 *)(e + 0x6A) << 16) + *(u16 *)(e + 0x6E) + *(s32 *)(e + 0x100);
+    *(s16 *)(e + 0x6A) = pos >> 16;
+    *(s16 *)(e + 0x6E) = pos;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitNegativeVelocityEntity);
 
@@ -1938,9 +1952,19 @@ INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_8005571c);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", NopStub_80055724);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestroyCallback_Vt80011608);
+extern u8 D_80011608[];
+extern void FreeEntityNoTeardown_80055760(u8 *e, s32 arg);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", FreeEntityNoTeardown_80055760);
+void EntityDestroyCallback_Vt80011608(u8 *e, s32 flags) {
+    *(void **)(e + 0x18) = D_80011608;
+    if (flags & 1) {
+        FreeEntityNoTeardown_80055760(e, 0x1C);
+    }
+}
+
+void FreeEntityNoTeardown_80055760(u8 *e, s32 arg) {
+    FreeFromHeap(g_pBlbHeapBase, e, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", CalculatePathDistance);
 

@@ -764,7 +764,15 @@ void InitializePlayerState(u8 *ps) {
     } while (i < 10);
 }
 
-INCLUDE_ASM("asm/nonmatchings/blb", MarkLevelCompleteAndClearCollectibles);
+void MarkLevelCompleteAndClearCollectibles(u8 *e) {
+    s16 i;
+    e[0x5] = 0;
+    e[0x4] = 0;
+    e[0x10] = e[0x10] + 1;
+    for (i = 0; i < 0xA; i++) {
+        (e + i)[6] = 0;
+    }
+}
 
 /* On player death: clears the active powerup bitfield and boss HP, then spends a
  * life (guarded so it never underflows past zero). */
@@ -807,6 +815,10 @@ INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeOut);
 
 INCLUDE_ASM("asm/nonmatchings/blb", ResetEntityScaleState);
 
+/* SetEntityScaleFadeIn @ 0x80026DAC — FSM-install prologue schedule: cc1
+ * coalesces the tick-fn address and markerHi(-1) into one reg instead of
+ * keeping fn in a separate survivor reg. Needs register pins (see
+ * PlatformRideStartUp); shelved. */
 INCLUDE_ASM("asm/nonmatchings/blb", SetEntityScaleFadeIn);
 
 INCLUDE_ASM("asm/nonmatchings/blb", InitCountdownTimerEntity);
