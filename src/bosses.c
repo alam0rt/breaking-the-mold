@@ -1747,7 +1747,21 @@ INCLUDE_ASM("asm/nonmatchings/bosses", HomingProjectile_TrackTarget);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", FindNearestTargetEntity);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EnemyStateInit_SetSpriteAndHandler);
+extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
+
+void EnemyStateInit_SetSpriteAndHandler(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    SetEntitySpriteId((Entity *)e, 0x9158A0F6, 1);
+    fn = (void (*)())EntityEvent_ClearTargetOnDestroy;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EnemyState_TurnAroundWithToken);
 
@@ -1827,6 +1841,9 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitAuraEffectAtPlayer);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileTickWithLifetime);
 
+/* ProjectileZOrderCallback @ 0x80052A68 - cc1 places the 0x291E04 (z=0x3E9)
+ * arm's basic block last (beq-forward) rather than first; source restructures
+ * don't reproduce that bb ordering. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileZOrderCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileKeyframeEventHandler);
