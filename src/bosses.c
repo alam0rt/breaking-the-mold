@@ -2240,7 +2240,22 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitClockPlatformWithTimer);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", EntityDestructor_WithChildEntityCleanup);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorWaitTick);
+extern u32 D_800A5CF0 asm("D_800A5CF0");
+extern EntityCallback D_800A5CF4 asm("D_800A5CF4");
+extern void GenericSpriteEntityTickCallback(Entity *e);
+extern void UpdateChildEntityOffset(Entity *e);
+void ClayballIndicatorWaitTick(u8 *e) {
+    u8 t = e[0x124];
+    if (t != 0) {
+        t = t - 1;
+        e[0x124] = t;
+        if ((t & 0xFF) == 0) {
+            EntitySetState((Entity *)e, D_800A5CF0, D_800A5CF4);
+        }
+    }
+    GenericSpriteEntityTickCallback((Entity *)e);
+    UpdateChildEntityOffset((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ClayballIndicatorExpandTick);
 
