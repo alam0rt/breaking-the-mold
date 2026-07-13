@@ -1763,7 +1763,25 @@ void EnemyStateInit_SetSpriteAndHandler(u8 *e) {
     *(CallbackSlot *)(e + 0x08) = slot.s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EnemyState_TurnAroundWithToken);
+void EnemyState_TurnAroundWithToken(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    SetEntityFacingDirection((Entity *)e, 2);
+    SetEntitySpriteId((Entity *)e, 0x9918A8E2, 1);
+    fn = (void (*)())EntityEventHandler_TokenReleaseAndQueueTick;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    fn = (void (*)())EnemyStateInit_SetSpriteAndHandler;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledSprite1);
 
