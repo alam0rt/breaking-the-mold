@@ -265,7 +265,15 @@ void EntityDestructor_WithSPUStopAndFree(u8 *e, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", EntityTick_ScaledSpriteWithSound);
+extern void UpdateEntitySoundPanning(Entity *e, s32 arg);
+extern void RunnSteeringTick(Entity *e);
+extern void EntityUpdateCallback(Entity *e);
+
+void EntityTick_ScaledSpriteWithSound(u8 *e) {
+    UpdateEntitySoundPanning((Entity *)e, *(s32 *)(e + 0x10C));
+    RunnSteeringTick((Entity *)e);
+    EntityUpdateCallback((Entity *)e);
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_TouchTrigger);
 
