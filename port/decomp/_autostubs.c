@@ -4,7 +4,7 @@
  * definition overrides. Regenerate with `python3 tools/gen_port_stubs.py`.
  * ========================================================================== */
 void port_stub(const char *fn);
-/* 1051 asm-only functions */
+/* 1047 asm-only functions */
 __attribute__((weak)) void Add1970Icons(void) { port_stub("Add1970Icons"); }
 __attribute__((weak)) void AddEntityToBothLists(void) { port_stub("AddEntityToBothLists"); }
 __attribute__((weak)) void AddEntityToSortedRenderList(void) { port_stub("AddEntityToSortedRenderList"); }
@@ -204,7 +204,6 @@ __attribute__((weak)) void DecorEntityDestroyWithParticles(void) { port_stub("De
 __attribute__((weak)) void DecorEntitySpawnExplosionPieces(void) { port_stub("DecorEntitySpawnExplosionPieces"); }
 __attribute__((weak)) void DecorEntityTickWithOffscreenCheck(void) { port_stub("DecorEntityTickWithOffscreenCheck"); }
 __attribute__((weak)) void DecrementPlayerLives(void) { port_stub("DecrementPlayerLives"); }
-__attribute__((weak)) void DeferredEntityRemoval(void) { port_stub("DeferredEntityRemoval"); }
 __attribute__((weak)) void DelayedDeathTimerTick(void) { port_stub("DelayedDeathTimerTick"); }
 __attribute__((weak)) void DeliverEvent(void) { port_stub("DeliverEvent"); }
 __attribute__((weak)) void DestroyEntityWithFlags(void) { port_stub("DestroyEntityWithFlags"); }
@@ -794,9 +793,6 @@ __attribute__((weak)) void ProjectileZOrderCallback(void) { port_stub("Projectil
 __attribute__((weak)) void RandomizedEntityBehaviorTick(void) { port_stub("RandomizedEntityBehaviorTick"); }
 __attribute__((weak)) void RemapEntityTypesForLevel(void) { port_stub("RemapEntityTypesForLevel"); }
 __attribute__((weak)) void RemoveEntityFromAllLists(void) { port_stub("RemoveEntityFromAllLists"); }
-__attribute__((weak)) void RemoveEntityFromUpdateQueue(void) { port_stub("RemoveEntityFromUpdateQueue"); }
-__attribute__((weak)) void RemoveFromRenderList(void) { port_stub("RemoveFromRenderList"); }
-__attribute__((weak)) void RemoveFromTickList(void) { port_stub("RemoveFromTickList"); }
 __attribute__((weak)) void RemoveFromZOrderList(void) { port_stub("RemoveFromZOrderList"); }
 __attribute__((weak)) void RemovePatchPad(void) { port_stub("RemovePatchPad"); }
 __attribute__((weak)) void RenderEntities(void) { port_stub("RenderEntities"); }
