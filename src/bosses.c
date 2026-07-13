@@ -1695,7 +1695,15 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitScaledEntityWithSprite);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileUpdateWithCleanup);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", EntityMoveHorizontalByFacing);
+void EntityMoveHorizontalByFacing(u8 *e) {
+    s16 x;
+    if (e[0x74] != 0) {
+        x = *(u16 *)(e + 0x68) - 0xA;
+    } else {
+        x = *(u16 *)(e + 0x68) + 0xA;
+    }
+    *(s16 *)(e + 0x68) = x;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitEnemyEntityWithAI);
 
@@ -1757,7 +1765,15 @@ INCLUDE_ASM("asm/nonmatchings/bosses", InitEntity_ScaledAnimated1);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileEntityTick);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", ProjectileMoveHorizontal);
+void ProjectileMoveHorizontal(u8 *e) {
+    s16 x;
+    if (e[0x74] != 0) {
+        x = *(u16 *)(e + 0x68) - 5;
+    } else {
+        x = *(u16 *)(e + 0x68) + 5;
+    }
+    *(s16 *)(e + 0x68) = x;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitWalkingEnemyEntity);
 
@@ -1837,7 +1853,15 @@ INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeDestroyCallback);
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeTickWithSoundPanning);
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeUpdatePosition);
+void JoeHeadJoeUpdatePosition(u8 *e) {
+    s16 x;
+    if (e[0x74] != 0) {
+        x = *(u16 *)(e + 0x68) + e[0x100];
+    } else {
+        x = *(u16 *)(e + 0x68) - e[0x100];
+    }
+    *(s16 *)(e + 0x68) = x;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", InitJoeHeadJoeBallSpecial);
 
