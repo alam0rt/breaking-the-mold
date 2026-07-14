@@ -4,7 +4,7 @@
  * definition overrides. Regenerate with `python3 tools/gen_port_stubs.py`.
  * ========================================================================== */
 void port_stub(const char *fn);
-/* 1047 asm-only functions */
+/* 1045 asm-only functions */
 __attribute__((weak)) void Add1970Icons(void) { port_stub("Add1970Icons"); }
 __attribute__((weak)) void AddEntityToBothLists(void) { port_stub("AddEntityToBothLists"); }
 __attribute__((weak)) void AddEntityToSortedRenderList(void) { port_stub("AddEntityToSortedRenderList"); }
@@ -318,7 +318,6 @@ __attribute__((weak)) void FINNCallback_DispatchToEntityHandler(void) { port_stu
 __attribute__((weak)) void FINN_ApplyHorizontalVelocity(void) { port_stub("FINN_ApplyHorizontalVelocity"); }
 __attribute__((weak)) void FINN_ClearSubentityState(void) { port_stub("FINN_ClearSubentityState"); }
 __attribute__((weak)) void FINN_CollisionHandler(void) { port_stub("FINN_CollisionHandler"); }
-__attribute__((weak)) void FadeAndExpireEntityTick(void) { port_stub("FadeAndExpireEntityTick"); }
 __attribute__((weak)) void FallingSoundEntityTick(void) { port_stub("FallingSoundEntityTick"); }
 __attribute__((weak)) void FindFrameIndexByValue(void) { port_stub("FindFrameIndexByValue"); }
 __attribute__((weak)) void FindLayerSlotByEntityPointer(void) { port_stub("FindLayerSlotByEntityPointer"); }
@@ -795,7 +794,6 @@ __attribute__((weak)) void RemapEntityTypesForLevel(void) { port_stub("RemapEnti
 __attribute__((weak)) void RemoveEntityFromAllLists(void) { port_stub("RemoveEntityFromAllLists"); }
 __attribute__((weak)) void RemoveFromZOrderList(void) { port_stub("RemoveFromZOrderList"); }
 __attribute__((weak)) void RemovePatchPad(void) { port_stub("RemovePatchPad"); }
-__attribute__((weak)) void RenderEntities(void) { port_stub("RenderEntities"); }
 __attribute__((weak)) void RenderFullScreenTileOverlay(void) { port_stub("RenderFullScreenTileOverlay"); }
 __attribute__((weak)) void RenderGridDistortionEffect(void) { port_stub("RenderGridDistortionEffect"); }
 __attribute__((weak)) void RenderPathEntitySegments(void) { port_stub("RenderPathEntitySegments"); }

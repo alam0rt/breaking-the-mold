@@ -836,7 +836,7 @@ void EntityTick_ScaleFadeOut(u8 *e) {
     } else {
         PadSlot slot;
         s16 m1;
-        register void (*fn)() asm("$3");
+        register void (*fn)() PSX_REG("$3");
         *(s32 *)(e + 0x50) = 0x10000;
         *(s32 *)(e + 0x54) = 0x10000;
         __asm__ __volatile__("" ::: "memory");
@@ -861,7 +861,7 @@ void EntityTick_ScaleFadeIn(u8 *e) {
     } else {
         PadSlot slot;
         s16 m1;
-        register void (*fn)() asm("$3");
+        register void (*fn)() PSX_REG("$3");
         m1 = -1;
         *(s32 *)(e + 0x50) = 0;
         *(s32 *)(e + 0x54) = 0;
@@ -885,7 +885,7 @@ extern void EntityTick_ScaleFadeIn();
 void SetEntityScaleFadeIn(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     fn = (void (*)())EntityTick_ScaleFadeIn;
     __asm__ __volatile__("" : : "r"(fn));
     m1 = -1;

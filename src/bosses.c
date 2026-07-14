@@ -1752,7 +1752,7 @@ extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 void EnemyStateInit_SetSpriteAndHandler(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     SetEntitySpriteId((Entity *)e, 0x9158A0F6, 1);
     fn = (void (*)())EntityEvent_ClearTargetOnDestroy;
     __asm__ __volatile__("" : : "r"(fn));
@@ -1766,7 +1766,7 @@ void EnemyStateInit_SetSpriteAndHandler(u8 *e) {
 void EnemyState_TurnAroundWithToken(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     SetEntityFacingDirection((Entity *)e, 2);
     SetEntitySpriteId((Entity *)e, 0x9918A8E2, 1);
     fn = (void (*)())EntityEventHandler_TokenReleaseAndQueueTick;
@@ -1816,7 +1816,7 @@ s32 EntityCollision_ProcessQueueOnly();
 void ProjectileEnterActiveState(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     e[0x104] = 0xFF;
     SetEntitySpriteId((Entity *)e, 0x9C6584D2, 1);
     fn = (void (*)())EntityCollision_ProcessQueueOnly;
@@ -2034,7 +2034,7 @@ extern void JoeHeadJoeBallStartRolling();
 void JoeHeadJoeBallRegularInitState(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     SetEntitySpriteId((Entity *)e, 0x3A3A49B2, 1);
     fn = (void (*)())JoeHeadJoeEventHandler;
     __asm__ __volatile__("" : : "r"(fn));
@@ -2067,7 +2067,7 @@ extern void JoeHeadJoeState_HideAndNotifyGameState();
 void JoeHeadJoeState_EnterCollisionState(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     SetEntitySpriteId((Entity *)e, 0x323AC9BE, 1);
     fn = (void (*)())JoeHeadJoeEventHandler;
     __asm__ __volatile__("" : : "r"(fn));
@@ -2485,7 +2485,7 @@ extern void ClayballIndicatorEventHandler();
 void ClayballState_HideIndicatorAndWait(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     e[0x124] = 0x1E;
     SetAnimationTargetFrameIndex((Entity *)*(void **)(e + 0x130), -1);
     fn = (void (*)())ClayballIndicatorWaitTick;
@@ -2510,7 +2510,7 @@ extern void ClayballIndicatorEventHandler();
 void ClayballIndicatorState_Wait(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     fn = (void (*)())ClayballIndicatorWaitTick;
     __asm__ __volatile__("" : : "r"(fn));
     m1 = -1;

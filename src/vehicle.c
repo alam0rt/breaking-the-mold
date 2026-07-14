@@ -191,7 +191,7 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnLand_GroundContactAndWallCheck);
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnLand_HazardDamageTransition);
 
 void RunnRender_ApplyGravityAndVelocity(u8 *arg) {
-    register u8 *e asm("$5") = arg;
+    register u8 *e PSX_REG("$5") = arg;
     s32 accX = ((s32)*(s16 *)(e + 0x68) << 16) + *(u16 *)(e + 0x6C);
     s32 accY = ((s32)*(s16 *)(e + 0x6A) << 16) + *(u16 *)(e + 0x6E);
     s32 grav = *(s32 *)(e + 0x108) + 0x5000;
@@ -338,7 +338,7 @@ extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
 void RunnSetIdleState(u8 *e) {
     PadSlot slot;
     s16 m1;
-    register void (*fn)() asm("$3");
+    register void (*fn)() PSX_REG("$3");
     do {
         e[0x108] = 0;
     } while (0);

@@ -85,6 +85,8 @@ void SpuQuit(void) {
     port_spu_shutdown();
 }
 
-void SsUtReverbOn(void) {
-}
+/* SsUtReverbOn (0x80013248) is NOT the PSY-Q SPU-reverb call here: it is a
+ * misnamed boot-sequence helper that runs SetVideoMode(1); the real body now
+ * lives in src/gfx.c and is byte-matched, so the port links that instead of an
+ * empty stub. (Kept out of this HAL file to avoid a duplicate-definition.) */
 
