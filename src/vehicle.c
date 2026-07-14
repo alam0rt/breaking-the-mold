@@ -190,7 +190,22 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnLand_GroundContactAndWallCheck);
  */
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnLand_HazardDamageTransition);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnRender_ApplyGravityAndVelocity);
+void RunnRender_ApplyGravityAndVelocity(u8 *arg) {
+    register u8 *e asm("$5") = arg;
+    s32 accX = ((s32)*(s16 *)(e + 0x68) << 16) + *(u16 *)(e + 0x6C);
+    s32 accY = ((s32)*(s16 *)(e + 0x6A) << 16) + *(u16 *)(e + 0x6E);
+    s32 grav = *(s32 *)(e + 0x108) + 0x5000;
+    *(s32 *)(e + 0x108) = grav;
+    if (0x80000 < grav) {
+        *(s32 *)(e + 0x108) = 0x80000;
+    }
+    accX += *(s32 *)(e + 0x104);
+    accY += *(s32 *)(e + 0x108);
+    *(s16 *)(e + 0x6A) = accY >> 16;
+    *(s16 *)(e + 0x68) = accX >> 16;
+    *(u16 *)(e + 0x6E) = accY;
+    *(u16 *)(e + 0x6C) = accX;
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformEntityProcessInput);
 
@@ -386,6 +401,14 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", FinnStateIdle);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnState_Spawn);
 
+/* FinnSetTurnState / FinnSetInitState @ 0x80074C84 / 0x80074D18 — the
+ * m1-in-$s1 two-slot installer sub-pattern (marker -1 held in callee-saved
+ * $s1 across the SetEntitySpriteId call; slots 0x08 + 0x98). Body fully
+ * derived & verified; the residual is a $v0-vs-$v1 coin-flip: the ROM reuses
+ * $v0 sequentially for the byte-store value / callback fn, which cc1 2.7.2
+ * won't reproduce (pinning $2 hoists the fn load and breaks the share;
+ * unpinned colors fn $v1). Permuter territory per the heterogeneous-installer
+ * coloring wall. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetTurnState);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", FinnSetInitState);

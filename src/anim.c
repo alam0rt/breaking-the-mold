@@ -428,11 +428,14 @@ INCLUDE_ASM("asm/nonmatchings/anim", EntityTick_AnimationFrameAdvance);
  * palette pointer. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateEntityScreenPosition);
 
-/* Computes the on-screen position from world coords minus camera, writes
- * it into the layer's render context (+0x20), and indexes into the
- * palette table at (+0x1C base + +0x30*16) to install the current
- * palette pointer at render-context +0x10. The palette-aware variant of
- * UpdateEntityScreenPosition. */
+/* UpdateEntityScreenPositionWithPalette @ 0x8001FC88 — the camera-relative
+ * branch of UpdateEntityScreenPosition (splat mis-split; the head `beqz` falls
+ * through here). Body is fully derived (camera-subtract path + shared tail that
+ * writes prim+0x2 and latches the e[0x30]-indexed palette pointer into
+ * prim+0x10) but the MERGED function has several register-coloring/scheduling
+ * divergences in the shared tail (sx colored $a0 vs $v0; an extra load-delay
+ * nop the ROM keeps that cc1 fills). Permuter territory; kept as two asm
+ * symbols. */
 INCLUDE_ASM("asm/nonmatchings/anim", UpdateEntityScreenPositionWithPalette);
 
 /* Constructor for the platformer PlayerEntity (the 0x3E8/0x44C alloc).
