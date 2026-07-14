@@ -2,6 +2,7 @@
 #include "functions.h"
 #include "Game/entity.h"
 #include "Game/entity_events.h"
+#include "Game/callback_slot.h"
 
 extern u8 *g_pBlbHeapBase;
 extern s32 PlatformEntityOnCollision(Entity *entity, u32 event, u32 arg2, u32 arg3);
@@ -223,6 +224,9 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", PlatformStateInit_LandFromFlight);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEntityDamageEffect);
 
+/* RunnState_DeathAdvanceLevel @ 0x80072FC4 - clears tick/render slots to zero
+ * + sets gs+0x146; the ROM uses a 0x20 frame with the slot scratch at sp+0x4
+ * that no CallbackSlot/PadSlot/Tripad variant reproduces. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnState_DeathAdvanceLevel);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", EntityEnterAnimatedIdleState);
@@ -293,7 +297,15 @@ s32 RunnEventHandler_TouchTrigger(Entity *e, s32 eventId, s32 a2, s32 a3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnEventHandler_TriggerWithCallback);
+s32 RunnEventHandler_TriggerWithCallback(Entity *e, s32 eventId, s32 a2, s32 a3) {
+    if ((eventId & 0xFFFF) == 0x1000) {
+        EntitySetState(e, D_800A6004, D_800A6008);
+    }
+    if ((eventId & 0xFFFF) == 2) {
+        EntityProcessCallbackQueue(e);
+    }
+    return 0;
+}
 
 s32 RunnEventHandler_QueueProcess(Entity *e, s32 eventId, s32 a2, s32 a3) {
     if ((eventId & 0xFFFF) == 2) {
