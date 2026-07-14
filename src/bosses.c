@@ -2029,7 +2029,31 @@ s32 JoeHeadJoeEventHandler(Entity *e, s32 eventId, s32 a2, s32 a3) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallRegularInitState);
+extern void JoeHeadJoeBallStartRolling();
+
+void JoeHeadJoeBallRegularInitState(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    SetEntitySpriteId((Entity *)e, 0x3A3A49B2, 1);
+    fn = (void (*)())JoeHeadJoeEventHandler;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    fn = (void (*)())EntityCollisionStateChange;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x00) = slot.s;
+    fn = (void (*)())JoeHeadJoeBallStartRolling;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeBallStartRolling);
 
@@ -2038,7 +2062,31 @@ void JoeHeadJoeBallStopSound(u8 *e) {
     *(s32 *)(e + 0x100) = -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_EnterCollisionState);
+extern void JoeHeadJoeState_HideAndNotifyGameState();
+
+void JoeHeadJoeState_EnterCollisionState(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    SetEntitySpriteId((Entity *)e, 0x323AC9BE, 1);
+    fn = (void (*)())JoeHeadJoeEventHandler;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    fn = (void (*)())EntityCollisionStateChange;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x00) = slot.s;
+    fn = (void (*)())JoeHeadJoeState_HideAndNotifyGameState;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x98) = slot.s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/bosses", JoeHeadJoeState_HideAndNotifyGameState);
 
