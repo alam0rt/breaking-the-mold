@@ -20,6 +20,14 @@ BasicPrimObject *InitBasicEntityWithVtable(BasicPrimObject *p, u16 val) {
 
 INCLUDE_ASM("asm/nonmatchings/sprite", PrepareSpriteVRAMSlotForContext);
 
+/* InitSpriteContextDefaults @ 0x80015614 — zero-init a sprite render context +
+ * install default vtable (+0xC), 1.0 scale (0x10000 @ +0x1C/+0x20), white tint
+ * (+0x34..0x36=0x40); id@+0x8, +0xA/+0x33=1. The ROM writes +0xC/+0x4/+0x6
+ * TWICE (a base-init prologue — vtable D_8001039C — then the sprite override
+ * to D_80010384), but cc1 2.7.2 dead-store-eliminates literal double
+ * assignments, so verbatim C collapses to one store each. The surviving dupes
+ * come from an inlined base-init helper whose exact source isn't recoverable
+ * here. Shelved. */
 INCLUDE_ASM("asm/nonmatchings/sprite", InitSpriteContextDefaults);
 
 INCLUDE_ASM("asm/nonmatchings/sprite", FreeTextureResource);
