@@ -256,9 +256,8 @@ void SetFinnPairValue(FinnPairEntity *e, FinnPairValue p) {
  * *(e + e[0x108]) (0x8-byte entries: [.-8] a signed position offset, [.-4] the
  * handler fn); <=0 uses the direct handler at *(e+0x108). Handler runs on e
  * advanced by the offset (+ e[0x104]). Body fully derived, but cc1's root
- * register choice for the index diverges (idx->$v1 vs ROM's $a1) and cascades
- * through the whole function plus a load-delay scheduling slot — permuter
- * territory. Shelved. */
+ * register choice for the index diverges (idx->$v1 vs ROM's $a1) and cascades.
+ * Permuter base kept at nonmatchings/FINNCallback_DispatchToEntityHandler. */
 INCLUDE_ASM("asm/nonmatchings/finn", FINNCallback_DispatchToEntityHandler);
 
 void GetPlayerCurrentRGB(PlayerEntity *e, u8 *o1, u8 *o2, u8 *o3) {
