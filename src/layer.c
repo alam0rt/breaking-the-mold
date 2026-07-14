@@ -154,7 +154,17 @@ void FreeAllLayerRenderSlotsWrapper(void) {
     FreeAllLayerRenderSlots((LayerRenderSlot *)D_8009AE58);
 }
 
-INCLUDE_ASM("asm/nonmatchings/layer", ClearAllLayerRenderSlots_CrtInit);
+/* CRT-init variant: unconditionally zero word 0 of all 20 layer-render slots
+ * (base @ D_8009AE58). Stores offset 0 directly (NOT ->entity at +4). */
+void ClearAllLayerRenderSlots_CrtInit(void) {
+    LayerRenderSlot *base = (LayerRenderSlot *)D_8009AE58;
+    s16 i = 0;
+    do {
+        LayerRenderSlot *slot = &base[i];
+        *(s32 *)slot = 0;
+        i++;
+    } while (i < 0x14);
+}
 
 extern u8 g_EntityVtable_Destroyed[];
 

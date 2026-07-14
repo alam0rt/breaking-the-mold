@@ -318,7 +318,24 @@ INCLUDE_ASM("asm/nonmatchings/vehicle", RunnVerticalMovementUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSteeringTick);
 
-INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetIdleState);
+extern void SetEntitySpriteId(Entity *e, u32 spriteId, s32 flags);
+
+void RunnSetIdleState(u8 *e) {
+    PadSlot slot;
+    s16 m1;
+    register void (*fn)() asm("$3");
+    do {
+        e[0x108] = 0;
+    } while (0);
+    fn = (void (*)())RunnEventHandler_TouchTrigger;
+    __asm__ __volatile__("" : : "r"(fn));
+    m1 = -1;
+    slot.s.markerLo = 0;
+    slot.s.markerHi = m1;
+    slot.s.fn = fn;
+    *(CallbackSlot *)(e + 0x08) = slot.s;
+    SetEntitySpriteId((Entity *)e, 0xC01C014, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/vehicle", RunnSetInitState);
 
