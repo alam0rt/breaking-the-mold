@@ -2703,6 +2703,13 @@ INCLUDE_ASM("asm/nonmatchings/enemies", InitBackgroundSparkleEntity);
  * keeps. Inline-asm barriers in either arm only partially help (swaps
  * arm order, still removes the j). No clean C-level idiom defeats cc1's
  * tail-merge for this specific shape. */
+/* BackgroundSparkleFadeTickCallback @ 0x800470F4 — ramps the sparkle's RGB
+ * tint (prim +0x34/+0x35) up then down as the 0x101 countdown decrements
+ * (level = counter*16 while counter&0xFF < 0xB, else (0x14-counter)*16; +0x40
+ * bias, blue +0x36 pinned 0x40), then runs EntityUpdateCallback. Body verified,
+ * but cc1 reorders the e[0x101] store into a branch delay slot and inverts the
+ * branch sense, and the ROM keeps a redundant `move v0,v1` copy of the stored
+ * value — scheduling/coloring wall (permuter territory). Shelved. */
 INCLUDE_ASM("asm/nonmatchings/enemies", BackgroundSparkleFadeTickCallback);
 
 s32 BackgroundSparkleContactEventHandler(BackgroundSparkleEntity *sparkle, u32 ev) {

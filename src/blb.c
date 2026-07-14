@@ -493,6 +493,13 @@ s32 IsEntityOffScreen_EntityLoop(u8 *e, s16 *box) {
     return result;
 }
 
+/* CheckTriggerZoneCollision @ 0x800245BC — point-in-rect scan of the entity's
+ * trigger-zone array (base +0x74, count +0x78; 0x10-byte entries: s16
+ * xMin,yMin,xMax,yMax + two s32 payloads), returns 1 + payloads on first hit.
+ * Body derived, but the ROM keeps TWO induction pointers (base t0 and base+0xC
+ * a1 with negative offsets) and hoists the count!=0 test into the loop head;
+ * single-pointer C restructures the loop (different size, shifts downstream).
+ * Permuter/two-IV territory — shelved. */
 INCLUDE_ASM("asm/nonmatchings/blb", CheckTriggerZoneCollision);
 
 /* Marks the level background colour as valid (+0x130 = 1) and copies the RGB
