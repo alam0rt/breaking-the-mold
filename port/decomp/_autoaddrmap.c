@@ -329,6 +329,7 @@ extern char D_800106D0[] __attribute__((weak));
 extern char D_800106F0[] __attribute__((weak));
 extern char D_80010710[] __attribute__((weak));
 extern char D_80010730[] __attribute__((weak));
+extern char D_80010770[] __attribute__((weak));
 extern char D_80010790[] __attribute__((weak));
 extern char D_800107B0[] __attribute__((weak));
 extern char D_800107D0[] __attribute__((weak));
@@ -3258,6 +3259,7 @@ PortAddrMapEntry g_port_addrmap[] = {
     { D_800106F0, 0x400u, 0x800106F0u },
     { D_80010710, 0x400u, 0x80010710u },
     { D_80010730, 0x400u, 0x80010730u },
+    { D_80010770, 0x400u, 0x80010770u },
     { D_80010790, 0x400u, 0x80010790u },
     { D_800107B0, 0x400u, 0x800107B0u },
     { D_800107D0, 0x400u, 0x800107D0u },
@@ -5862,4 +5864,4 @@ PortAddrMapEntry g_port_addrmap[] = {
     { v_wait, 0x8Cu, 0x80087D6Cu },
     { version, 0xD4u, 0x8008CD64u },
 };
-unsigned int g_port_addrmap_len = 2927;
+unsigned int g_port_addrmap_len = 2928;
